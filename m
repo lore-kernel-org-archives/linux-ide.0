@@ -1,85 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF1FD23099F;
-	Tue, 12 Nov 2024 11:25:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A14261CD209;
+	Tue, 12 Nov 2024 12:36:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731410712; cv=none; b=jADavnvC/XPNFpY0CcuDJsSoV1wlKMWtPqDSzOm2sLkLrU2mLoFXDXxaV0FxtwlsjiECIZUYHh+vDIoQksDbE8ahr/1kWfTG4/PrL+QrUwphzVU+3BHcRjijRFNmu8qYsh+GEn4IrYuZatOhvYKPi7XLaRLIJUWcBvfrU6uDCwM=
+	t=1731415018; cv=none; b=fAJ71uzqLWrxz30vYsF941vjGrgwT5cvRkQAjCxsTnvQl22Kp7x4Kw2Kqps/dNdCTQFQ87lJOFyusP+haEZWXqCtWrEsSdhrMAP2hBPMjgKdurIgMYVQ3tJOCB70g2UzpNOx384DNt1RTXUCsWK+d2hfPQlPI0MWGWck6dyse7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731410712; c=relaxed/simple;
-	bh=XlDTTHWw7KeaNRsoKYg7Sq9T/4InzW90Q+1dVA6MOlI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=luTELeXBvibQ0RmzLz3aNnWoSgAk7o1h7MVe0c79NmZHhx8c2jZGjs9encLBL0397ckeyymvuenT+sjevJ8/cAptHIJ+KY/y1iXb2G03xkELgMG0V3tfZSrGEBF3oEsqrTXLt3Jp936Llu+r3wyRaMyitQse9UATeupDHbnhwkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z8Nc876h; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731415018; c=relaxed/simple;
+	bh=Kjm50GlWkADfbPmKO9HpqOyEB9KY9gzdVAbYexdFo5o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YfgaMcVhnmdjSQIGvQEbLHqi0PTgMm7xvhF5SuBt7NjCceBIB/W1w8cB1X5UjUgbwfc0f4dclA1rwJF+jD06jeBjxFV5jVH6DKr4dmeT5OE5NNgIj0MZENX/j3OU7Mxs84/imbsCU+By7hrLOYGTROcpbRdxyqL4zVaNYmyhR/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W5qsyFyw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z8Nc876h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BBD3C4CECD;
-	Tue, 12 Nov 2024 11:25:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W5qsyFyw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEF18C4CECD;
+	Tue, 12 Nov 2024 12:36:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731410711;
-	bh=XlDTTHWw7KeaNRsoKYg7Sq9T/4InzW90Q+1dVA6MOlI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Z8Nc876hSVMqolsakMd1Gkh6Wccb7p8k4FxLNEAUn97iBGzyhQQ1XeLqago7SmQFO
-	 o/XuH/idG9vB8UO1eEXHxRvYt692/yV5KMVXtAMypS0ipnb1htnYk/gwbon2EEPMNA
-	 CPVqRouPMZUhajExIQaRf4bNQwOu99JaLRuMiZz9Zq1V2TN2MEdr7WwYB+eD9FMLKZ
-	 jbtsNySJ9stKtFoolhLwZF8THKTVlNXDBGXQLvuHAs//ljPw3U9378GMw/35rdkbma
-	 dYSRGGDin3dmI7Wll9nWmPQ1YN624dP6dNz/hGvVMqYC+Tq4nlhEKSGcRTVg+tg8pa
-	 4d24dQDV8TQAA==
+	s=k20201202; t=1731415018;
+	bh=Kjm50GlWkADfbPmKO9HpqOyEB9KY9gzdVAbYexdFo5o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=W5qsyFywbupCvXB6XPv88BdVgDCVY8j19r2OBJNz44yyUew+kON1s8Nbj9akYVB+a
+	 t479ehr4IbvuqLJqMmNw0aH1nyhaxOqpkMCOop7Ct7OvWGEKIZYJxJSc5+P1cf9++c
+	 FD62zxAqP8t7wf30/UtHkgHLEQDbXTlpYlXrPn8Uc/KhWTJ4oVbgWrj8b41UCgcQIs
+	 sv4E9B4Evoyjdq42l3Tk30TnzHhXZ8Ish2MogKlOp8w8BJuym0tR+l6ksNdZavsOwW
+	 xE0N1+4XWPf0vr5wkzYj9veuWzOZqc58G7WGRxioBu9e4FEM7SM+MMJKf+qMxTDdXr
+	 lqVmosCZUgf7A==
+Date: Tue, 12 Nov 2024 13:36:51 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Rob Herring <robh@kernel.org>,
+To: Rob Herring <robh@kernel.org>
+Cc: frank-w@public-files.de, Andrew Lunn <andrew@lunn.ch>,
+	Frank Wunderlich <linux@fw-web.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>,
-	Andrew Lunn <andrew@lunn.ch>,
 	Gregory Clement <gregory.clement@bootlin.com>,
 	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
 	Russell King <linux@armlinux.org.uk>,
-	Frank Wunderlich <linux@fw-web.de>
-Cc: Niklas Cassel <cassel@kernel.org>,
-	Frank Wunderlich <frank-w@public-files.de>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: (subset) [PATCH v1 0/3] fix some binding check errors for marvell
-Date: Tue, 12 Nov 2024 12:24:56 +0100
-Message-ID: <173141034159.1636325.1565605503934630907.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241109094623.37518-1-linux@fw-web.de>
+	Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v1 1/3] arm64: dts: marvell: Fix anyOf conditional failed
+Message-ID: <ZzNL4_dFxHfMmMcR@ryzen>
 References: <20241109094623.37518-1-linux@fw-web.de>
+ <20241109094623.37518-2-linux@fw-web.de>
+ <e534c723-6d65-433f-8ab5-1c0d424d7367@lunn.ch>
+ <9B1A5D20-3DE5-40C1-8B2D-B1C4F53FA5F4@public-files.de>
+ <CAL_JsqJnOa_9Poz86vOWBCQigvv-Ab4Tt1hrwTxSa5zNraVxXQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=748; i=cassel@kernel.org; h=from:subject:message-id; bh=XlDTTHWw7KeaNRsoKYg7Sq9T/4InzW90Q+1dVA6MOlI=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNKNrTlCF3e+N1BKMmFJVy7sOBErsiZxa9bilTcPbLqfk Fe1pH1HRykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACZyI5GR4XHrnfi52/kixS36 nlaWPNE53dO1MDrgXNer1681dlbwTGBkWCB2uSh1spehZXMd1y2P7kmMBck3Pxq4zjjOtzwgMeE ZNwA=
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAL_JsqJnOa_9Poz86vOWBCQigvv-Ab4Tt1hrwTxSa5zNraVxXQ@mail.gmail.com>
 
-On Sat, 09 Nov 2024 10:46:18 +0100, Frank Wunderlich wrote:
-> From: Frank Wunderlich <frank-w@public-files.de>
+On Mon, Nov 11, 2024 at 10:25:12AM -0600, Rob Herring wrote:
+> > >
+> > >I don't know the yaml too well, but it is not obvious how adding a few
+> > >status = "disabled"; status = "okay"; fixes a "'anyOf' conditional failed".
+> > >
+> > >Maybe you can expand the explanation a bit?
+> > >
+> > >       Andrew
+> >
+> > Hi angelo,
+> >
+> > I guess the dtbs_check only checks required properties from yaml if the node is enabled.
 > 
-> Thies series fixes some Errors reported by dtbs_check. First part is taken
-> from my old series [1] where i converted sata-platform txt binding to yaml
-> because it wasn't picked up.
+> Yes, that is exactly how it works.
 > 
-> [1] https://lore.kernel.org/linux-arm-kernel/20220311210357.222830-1-linux@fw-web.de/
-> 
-> [...]
+> Rob
 
-Applied to libata/linux.git (for-6.13), thanks!
+Hello Rob,
 
-[3/3] dt-bindings: ata: ahci-platform: add missing iommus property
-      https://git.kernel.org/libata/linux/c/e8a2389e
+If we look at e.g. this binding:
+Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+
+We can see that it does not define iommu-map in the binding,
+likewise the binding does have:
+unevaluatedProperties: false
 
 
-Assuming that patches 1/3 and 2/3 will go via the Marvell tree:
-git://git.kernel.org/pub/scm/linux/kernel/git/gclement/mvebu.git
+If I apply my patch that adds iommu-map for e.g. the pcie2x1l0 node:
+(the patch does not add anything to the binding above):
+https://lore.kernel.org/linux-rockchip/20241107123732.1160063-2-cassel@kernel.org/
+
+
+If look at the pcie2x1l0 node, it is marked as status = "disabled"
+in arch/arm64/boot/dts/rockchip/rk3588-extra.dtsi
+
+but is marked as status = "enabled"
+in arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts
+
+If I run CHECK_DTBS for this dts/dtb:
+$ ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make CHECK_DTBS=y rockchip/rk3588-rock-5b.dtb
+  DTC [C] arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dtb
+$ 
+
+No warnings.
+
+What am I missing?
+
+Considering the warning in this series where the binding also
+had unevaluatedProperties: false
+I would have expected the same error for the pcie2x1l0 node.
+
+(And if I look at most PCI controler bindings, they actually do define
+iommu-map, so it seems a requirement for it to be defined if used.)
 
 
 Kind regards,
