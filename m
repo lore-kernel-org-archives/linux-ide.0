@@ -1,121 +1,75 @@
-Received: from smtp.smtpout.orange.fr (smtp-18.smtpout.orange.fr [80.12.242.18])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92064157A5C;
-	Fri, 15 Nov 2024 21:09:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 046D38BE8
+	for <linux-ide@vger.kernel.org>; Sat, 16 Nov 2024 15:40:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731704965; cv=none; b=Fp9xsprANiqIZjMlExZ36BLYS32xNg2RLGR+kUtCNiAidxIpH9uL5DoOzZwhEUAvBbLxtUgdAHQjbdJR7uD+pJVS4Nvx8xXxuzw9vsIwQDc1DSe+rUjW7lZkTxHa57HAZ6fx+Bg1DE1Hd00/RKMOggs7tVDvARaorlsbs7jm0nI=
+	t=1731771637; cv=none; b=C0s4X6Sgh4XrFJYJtbT0LNxYCmwOcqc1wXyHUnAB+Em7nsozrtwTho9qX64Azto03h9JC96UgGw5EJZYjat4BgXSEvbk9r0aC8MmRjjmXeLgXOY4z7z/U+Rf8tyNvbztZsHNzkbjaxBqJlDbAurWvQpKkOAJNR83CNnOkP+Gw2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731704965; c=relaxed/simple;
-	bh=j5PhO6hZyF/dqerXvNn2rzqNQVErOMrMDzDDt3hFU0A=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hJgDK8ObuUNcEvdeldTl7u7x29ms3s291lwnfpNp96mp3gOmmcGsfipE+IjEkBeJteR4QzI1Ac9QqnbbpX34EcGfQqlPNSTtpsVkoqCK1pNtN+c08MgwNDC2jztW4kn7Id+yegA6+6d613hC4h44AxA4IqUo3rlOGqt75RASVas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=kVQnDZSq; arc=none smtp.client-ip=80.12.242.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+	s=arc-20240116; t=1731771637; c=relaxed/simple;
+	bh=Wd+7kLQISUZlzyPvYmSUTVOb8NV4Vyd3OpsFXw6X7a0=;
+	h=From:Message-ID:To:Subject:Date:MIME-Version:Content-Type; b=mUwAXVL1xp3nic0DclZceoUoKrYV1yAgKIpeVBigv7pgW62cLCUbNV//wrA3yqsaOE6nmMMADI/vI1LFEZW/9tawYxb+5ZWKII1xjBnsOJvJ/hMAxiMRF1cfqvIqrK83syZWdcB03YXTen2rcREMucxRsvCjqQHA3jiqmR+XxD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K/h6WZV1; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="kVQnDZSq"
-Received: from localhost.localdomain ([90.11.132.44])
-	by smtp.orange.fr with ESMTPA
-	id C3Z1tjZluyQmhC3Z1tlyCa; Fri, 15 Nov 2024 22:09:11 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1731704951;
-	bh=o6eHVQOitY/M/PTAZaPRvbBS8FQjCLk1MeUGKW9AhOE=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=kVQnDZSqQnsDjh5ACnFnnEqCAXkWPZ6E9m2R8jt6wMxDwJ/od1EktiqfIF7pmquED
-	 oLzSJc6BlJfxPCsmbNaqWSh1S8S0uUHiDH1lep0Kfw4GBKU4K8rPNfEmLzIWMsGO5L
-	 6D+k2y8fL3buhSDP3lqQfSENVP39DZvIjFyo8GoKeYpOYizRd0rrml487tzTrggCuf
-	 S+OmmQ/IN5P773vslkauV4KEiI/xo1fA/91vn6+qiXSoC02mi6iM4v/TuQsMfp7LNm
-	 pS1+BG7TafsqaDeft8IYgsAomqFVNsuMs1G5cnhpJRmin8Sa+faFKzpAd7xPQOtHFN
-	 08Wv6bq2LjFDg==
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Fri, 15 Nov 2024 22:09:11 +0100
-X-ME-IP: 90.11.132.44
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: Constify struct pci_device_id
-Date: Fri, 15 Nov 2024 22:08:55 +0100
-Message-ID: <8bddfee7f6f0f90eeb6da7156e30ab3bd553deb1.1731704917.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.47.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K/h6WZV1"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-20c805a0753so27362155ad.0
+        for <linux-ide@vger.kernel.org>; Sat, 16 Nov 2024 07:40:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1731771635; x=1732376435; darn=vger.kernel.org;
+        h=mime-version:date:subject:to:reply-to:message-id:from:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=XHEOkgJ64rwJ+cv0sVIqPUmbc8l+iTifR7HzGzNced0=;
+        b=K/h6WZV1avKeqHtH8myhAoF0GAE4jbeGORY/cdHA5SLaCgBD//xnKw4d2eChA5a/ob
+         qUJRMH22s8TgDInO7UKnBrS2Hka5AbEqkjaiRbJbRVTyM+kJ5+bHNhuh6p65TOT94REv
+         ml7d2Vktwe9s0tJf4V78LvPniNCn3uCfs2K04TYMHv9Tc2/jrowLnTbj/2ED63jQNGNd
+         opWMXooNl1zpohXZJIn8dJc988XyfExXNxs+n57n3hKRccp8FbpYl36Ne3DxC9JUSbv3
+         M5TdLdyEiozozqYyQs2wdlGMWXgZBRGQT1MZHn2Zvq4itcYoxxwwrvWDY4ZkVL90mjkH
+         5rFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731771635; x=1732376435;
+        h=mime-version:date:subject:to:reply-to:message-id:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XHEOkgJ64rwJ+cv0sVIqPUmbc8l+iTifR7HzGzNced0=;
+        b=NAGUr3OlWGSd1m5zuLKJj9MXViKUMUIH+qDaa9di6jUQdeB8rk5Tk+TUsx84xVveLM
+         wwaWP6QeFCZAvvWzKcLeQTUybjbpPzbC3eRLlnmcEaav5+allP+PaRkhKbTB4vewdwQc
+         Ew1nrZUX3jMiAR6gPUL4EBj4+wJpYpmx3zWOMtXfZTYP4I4m4pUGZR1Xe+XRApRTmmFo
+         Hb9JxvSapgcQvBQFnLMaTyOLfB6EEenU8XZMYw5Ehnq2Geppoz8dH+wn1V5tjf33Rwsl
+         o3buWPd68wGoFaRpYUsq3TSl5Az4KzF2RhZ0nXRS2NrqAzq3amfMC5YR5ccATabrCM7d
+         XQzw==
+X-Gm-Message-State: AOJu0YweYHoT+x3czw9H1Dv2g8Z/mislw2aBJfu9XegMiJcOGCrzn8K9
+	BN/RkmKGqTb39FyKAIoWjyBn2KidZTsa0uKX8xEX2RrMd41TkuL94Jtr5w==
+X-Google-Smtp-Source: AGHT+IG1Bazp/GoUprPDLJeek/VtEIf5JbsUpFCSrk60ZJ2ISba0R31f2bILtZktk6Nd+Tbr88GzVw==
+X-Received: by 2002:a17:902:d588:b0:211:eb00:63bf with SMTP id d9443c01a7336-211eb00650cmr48339855ad.42.1731771635211;
+        Sat, 16 Nov 2024 07:40:35 -0800 (PST)
+Received: from [103.67.163.162] ([103.67.163.162])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-211d0eca5a2sm29312955ad.110.2024.11.16.07.40.34
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 16 Nov 2024 07:40:34 -0800 (PST)
+From: "Van. HR" <fallelhadj31@gmail.com>
+X-Google-Original-From: "Van. HR" <infodesk@information.com>
+Message-ID: <a56e712e53bbde3a6279c41d19f98dc9ba177904b36fc316b73c32be6a0f89f4@mx.google.com>
+Reply-To: dirofdptvancollin@gmail.com
+To: linux-ide@vger.kernel.org
+Subject: Nov:16:24
+Date: Sat, 16 Nov 2024 10:40:32 -0500
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 
-'struct pci_device_id' is not modified in these drivers.
+Hello,
+I am a private investment consultant representing the interest of a multinational  conglomerate that wishes to place funds into a trust management portfolio.
 
-Constifying this structure moves some data to a read-only section, so
-increase overall security.
+Please indicate your interest for additional information.
 
-On a x86_64, with allmodconfig, as an example:
-Before:
-======
-   text	   data	    bss	    dec	    hex	filename
-   4245	   1454	      4	   5703	   1647	drivers/ata/ata_generic.o
+Regards,
 
-After:
-=====
-   text	   data	    bss	    dec	    hex	filename
-   4725	    974	      4	   5703	   1647	drivers/ata/ata_generic.o
-
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-Compile tested-only.
----
----
- drivers/ata/ata_generic.c  | 2 +-
- drivers/ata/pata_atp867x.c | 2 +-
- drivers/ata/pata_piccolo.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index 2f57ec00ab82..e70b6c089cf1 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -209,7 +209,7 @@ static int ata_generic_init_one(struct pci_dev *dev, const struct pci_device_id
- 	return ata_pci_bmdma_init_one(dev, ppi, &generic_sht, (void *)id, 0);
- }
- 
--static struct pci_device_id ata_generic[] = {
-+static const struct pci_device_id ata_generic[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_PCTECH, PCI_DEVICE_ID_PCTECH_SAMURAI_IDE), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_HOLTEK, PCI_DEVICE_ID_HOLTEK_6565), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8673F), },
-diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
-index aaef5924f636..308f86f9e2f0 100644
---- a/drivers/ata/pata_atp867x.c
-+++ b/drivers/ata/pata_atp867x.c
-@@ -525,7 +525,7 @@ static int atp867x_reinit_one(struct pci_dev *pdev)
- }
- #endif
- 
--static struct pci_device_id atp867x_pci_tbl[] = {
-+static const struct pci_device_id atp867x_pci_tbl[] = {
- 	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867A),	0 },
- 	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867B),	0 },
- 	{ },
-diff --git a/drivers/ata/pata_piccolo.c b/drivers/ata/pata_piccolo.c
-index ced906bf56be..beb53bd990be 100644
---- a/drivers/ata/pata_piccolo.c
-+++ b/drivers/ata/pata_piccolo.c
-@@ -97,7 +97,7 @@ static int ata_tosh_init_one(struct pci_dev *dev, const struct pci_device_id *id
- 	return ata_pci_bmdma_init_one(dev, ppi, &tosh_sht, NULL, 0);
- }
- 
--static struct pci_device_id ata_tosh[] = {
-+static const struct pci_device_id ata_tosh[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_3),  },
--- 
-2.47.0
+Van Collin.
 
