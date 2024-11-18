@@ -1,82 +1,50 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CC2E33E7;
-	Sun, 17 Nov 2024 13:04:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5657618B47E;
+	Mon, 18 Nov 2024 11:43:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731848686; cv=none; b=XlXambFHcFn3blwuIFxz2m9ZJ/A3sKdfQk2pBCz3gD+4qKJx4+0XhYO/ai1VAisTkfzHQiKEFjFh2/UMuqFTonh3Ve2t57aADLob7SCJfwcW95gDHSAqBjKALMzLrB4AW+8fBoaiSvUclDOwtrVaLp9Gw4goEdOvEtd7W8Eydbk=
+	t=1731930183; cv=none; b=hOiqZQY9llHpn/SPSbC8hgy6gwLe2o+caPGTyRpkwNEfJ34kXUIhjntPdSgF0mqpBPyTdirWyZyqaFd/8qiMK/a01PMaBkv6Wow4RVLlvthPHFJu27HU9uC5vrXFWuBuUQNx5wWiwxn4NNQJ6U2PerJKS4arj/2rcC/dBAdJhHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731848686; c=relaxed/simple;
-	bh=5SdhV08GdrhDRJV+bla6w9G+eu0AYSqpX38VRYxaB9g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=QxYSgHCAgKrySL/xKak0CQa9e00PewGhRQi5VUFptHSpqkqB5HkSWYUHA43ksclv4MbxkCmjbcLxNVNVboPV0WQXGxBEvNZT02KWrAWPMMAfroJ530lje7SG/8meORW+zohpzYF2bpFaHQwR5ce0ge/O5DlRhzm1s354ZXbFLVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.102] (213.87.151.247) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Sun, 17 Nov
- 2024 16:04:16 +0300
-Message-ID: <caafe4bf-7854-4ca9-b782-f317599ed1c8@omp.ru>
-Date: Sun, 17 Nov 2024 16:04:15 +0300
+	s=arc-20240116; t=1731930183; c=relaxed/simple;
+	bh=1Mu1Oe4up2k7/Ym+0BclLRPliMzcmd4nehsjMkkiK+4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SkpC6zcLndqvMj+cuKRCXo/BKLPe/l2M7yw+mfZ6HHhqQFIE8261tXujIjvaQEdyJn8tv74wB3TCMr+UilcAGqIGMhQRC+6gaola4svQ9EXWf/Yi6/PMgkqrkV5LQI/+awgiyMIivpCSAzidCfO14zIL2HTLIV5d8V5cTak1r10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U5znzDYc; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U5znzDYc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D219C4CECC;
+	Mon, 18 Nov 2024 11:43:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731930182;
+	bh=1Mu1Oe4up2k7/Ym+0BclLRPliMzcmd4nehsjMkkiK+4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=U5znzDYcfP7e/PkaQyn1TGyrHDIDHQVZ4sMoTAWqMVz7weOcUZOtx6BsHL362pNaF
+	 qSU0Cxnwls+yj0MtELD6fjB7C2Kegp4uhxQnIaf5MOlggl4P3OPXzQ7iW0uhZAID4T
+	 dJV2z9oQ8nLoUEL/wUYzQ0cCcgTrySqH32vYAw6yIf1zuLXofm2G0TQ1krRUglscwm
+	 phtgPlk3JnODOUB5S0m1R04UjvsFZgz9bErEW929ZXpOqci73BYvHq+E1y6/8ZNlvt
+	 zXiH3qIh8JKqbdfM7oUTjWQ0Z9Vx+UKjVm8y0WBViPRxRJY4mY+Bq0cfK2atH920wv
+	 15XlMts+gMx5w==
+Date: Mon, 18 Nov 2024 12:42:58 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: Constify struct pci_device_id
+Message-ID: <ZzsoQlOaDP4FJ8G-@ryzen>
+References: <8bddfee7f6f0f90eeb6da7156e30ab3bd553deb1.1731704917.git.christophe.jaillet@wanadoo.fr>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: Constify struct pci_device_id
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Damien Le Moal
-	<dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
-	<linux-ide@vger.kernel.org>
-References: <8bddfee7f6f0f90eeb6da7156e30ab3bd553deb1.1731704917.git.christophe.jaillet@wanadoo.fr>
-Content-Language: en-US
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <8bddfee7f6f0f90eeb6da7156e30ab3bd553deb1.1731704917.git.christophe.jaillet@wanadoo.fr>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 11/17/2024 12:51:43
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 189220 [Nov 17 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.1.7
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 41 0.3.41
- 623e98d5198769c015c72f45fabbb9f77bdb702b
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info:
-	127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.151.247
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 11/17/2024 12:54:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 11/17/2024 10:50:00 AM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On 11/16/24 12:08 AM, Christophe JAILLET wrote:
-
+On Fri, Nov 15, 2024 at 10:08:55PM +0100, Christophe JAILLET wrote:
 > 'struct pci_device_id' is not modified in these drivers.
 > 
 > Constifying this structure moves some data to a read-only section, so
@@ -94,11 +62,64 @@ On 11/16/24 12:08 AM, Christophe JAILLET wrote:
 >    4725	    974	      4	   5703	   1647	drivers/ata/ata_generic.o
 > 
 > Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> ---
+> Compile tested-only.
+> ---
+> ---
+>  drivers/ata/ata_generic.c  | 2 +-
+>  drivers/ata/pata_atp867x.c | 2 +-
+>  drivers/ata/pata_piccolo.c | 2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+> index 2f57ec00ab82..e70b6c089cf1 100644
+> --- a/drivers/ata/ata_generic.c
+> +++ b/drivers/ata/ata_generic.c
+> @@ -209,7 +209,7 @@ static int ata_generic_init_one(struct pci_dev *dev, const struct pci_device_id
+>  	return ata_pci_bmdma_init_one(dev, ppi, &generic_sht, (void *)id, 0);
+>  }
+>  
+> -static struct pci_device_id ata_generic[] = {
+> +static const struct pci_device_id ata_generic[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_PCTECH, PCI_DEVICE_ID_PCTECH_SAMURAI_IDE), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_HOLTEK, PCI_DEVICE_ID_HOLTEK_6565), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8673F), },
+> diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
+> index aaef5924f636..308f86f9e2f0 100644
+> --- a/drivers/ata/pata_atp867x.c
+> +++ b/drivers/ata/pata_atp867x.c
+> @@ -525,7 +525,7 @@ static int atp867x_reinit_one(struct pci_dev *pdev)
+>  }
+>  #endif
+>  
+> -static struct pci_device_id atp867x_pci_tbl[] = {
+> +static const struct pci_device_id atp867x_pci_tbl[] = {
+>  	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867A),	0 },
+>  	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867B),	0 },
+>  	{ },
+> diff --git a/drivers/ata/pata_piccolo.c b/drivers/ata/pata_piccolo.c
+> index ced906bf56be..beb53bd990be 100644
+> --- a/drivers/ata/pata_piccolo.c
+> +++ b/drivers/ata/pata_piccolo.c
+> @@ -97,7 +97,7 @@ static int ata_tosh_init_one(struct pci_dev *dev, const struct pci_device_id *id
+>  	return ata_pci_bmdma_init_one(dev, ppi, &tosh_sht, NULL, 0);
+>  }
+>  
+> -static struct pci_device_id ata_tosh[] = {
+> +static const struct pci_device_id ata_tosh[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_3),  },
+> -- 
+> 2.47.0
+> 
 
-[...]
-   No longer an "official" PATA reviewer, but FWIW:
+Looks good to me:
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+However, since we are in the middle of the merge window, expect to wait
+until 6.13-rc1 is out until this is picked up.
 
-MBR, Sergey
 
+Kind regards,
+Niklas
