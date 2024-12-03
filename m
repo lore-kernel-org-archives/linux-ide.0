@@ -1,87 +1,70 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DE3207A27;
-	Mon,  2 Dec 2024 11:19:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21157A32;
+	Tue,  3 Dec 2024 04:16:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733138393; cv=none; b=igy/DOVjTkHxBqkHe7RQjznuhdH8ngXQpJIg5AERmfNfhsdWsx0hFLMCsPoLzXpnWUR1cHlv7J1fk9NH6LPyK3ufap+pkBov0hmwZhT5XjkT7zAGN7Ni2b74MkAT3MyFbxVhgrDNzmxu/MBT2EXNo3AZDdO4BV7bOE/pQByzk3Y=
+	t=1733199419; cv=none; b=UnFX0JUnsO2kaXdJwmuLiMiQ0GR3+a4Iam7Lo7XAjNQCvDWS2rm0WdAgh5VmjnOc+a17moCPiWY3B9l7kDcoCmCUrNevnX0iLdRFuZ6W2vGMLoFTd+/QVtbrBSFS1L0mwAVNxwLx0lYn3hZaZkmg6SItg7ekQxmiVgG8qNnMF38=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733138393; c=relaxed/simple;
-	bh=Uc2zRevH+Kbf5f8VX30G7BEfhLIb4tv53u+IgAXh0HE=;
-	h=MIME-Version:Message-ID:From:To:Cc:Subject:Content-Type:
-	 In-Reply-To:References:Date; b=AWdB0J0tiFegmTZ23FGYQFsNESXDJDEbx+u2oFnITcmwguuRLRJu6B1+NGIr8I91PNCwNFdrRnoGo902r02GhMg14sNJb1/TIDroOosdlJBUbirXYnsAhgSMf4kirtjN1p5pjzs7P97GUMAhKzdrfPkOLTc8UdvedlSI4z0xmoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=public-files.de; spf=pass smtp.mailfrom=public-files.de; dkim=pass (2048-bit key) header.d=public-files.de header.i=frank-w@public-files.de header.b=Wec/KeoX; arc=none smtp.client-ip=212.227.15.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=public-files.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=public-files.de
+	s=arc-20240116; t=1733199419; c=relaxed/simple;
+	bh=IQKKHg9p6hfrWUJuYK3ByRKReOUJg8oApYZ2F6MbCGg=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=lGrK9V7VzvzmZ8mupyrKT8yTI1WeIDtc4MjU14QEJ9CSHtgYv98ZVw4kAoFV36Kj8oVbDa9Mn6O47OdtuR5p9gZePHdyg0Hkz1+5TxqS64mFZa9Z4hzuHGdo1RerTxGyrV/HWWPcDLJ0wzRDGAaSuM9+TujkGd8Q1fYK+oa90gM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VqGJIwHq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=public-files.de header.i=frank-w@public-files.de header.b="Wec/KeoX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=public-files.de;
-	s=s31663417; t=1733138371; x=1733743171; i=frank-w@public-files.de;
-	bh=Uc2zRevH+Kbf5f8VX30G7BEfhLIb4tv53u+IgAXh0HE=;
-	h=X-UI-Sender-Class:MIME-Version:Message-ID:From:To:Cc:Subject:
-	 Content-Type:In-Reply-To:References:Date:cc:
-	 content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=Wec/KeoXhkciOJBV6eBagwb9ZRB8LrAUfI5G/Pg0WgjGiwciB/OiLRGJySznAJ23
-	 9s+esQ/3WuJ1S6XDMqetDB9SkdNbEQ5LDiFNgUbc2HMG+leP5KOWTMCg+Gu3zL//w
-	 BehYLhgyYfWN+Sr19qD1iwYH1D68XGVuukOFXtUcpZ20og2pY4tFFo+e9C3QI3Kcl
-	 +BNMrYsiaNSR5t7fZ5YBpgGaXwk4Z22x8tt4z6Sd4N+vF6vk/KLoWKpHA+koOJTxX
-	 LQ65YipH2ebnjI8h522oAl+clyGRCstdqpDM10lQpRTEaQkZGPcFKmfFdygXtnDCn
-	 al8nwjkJXfTaNVTi8Q==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from [217.61.149.104] ([217.61.149.104]) by msvc-mesg-gmx005 (via
- HTTP); Mon, 2 Dec 2024 12:19:31 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VqGJIwHq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66103C4CECF;
+	Tue,  3 Dec 2024 04:16:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733199418;
+	bh=IQKKHg9p6hfrWUJuYK3ByRKReOUJg8oApYZ2F6MbCGg=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=VqGJIwHqUzMiB0aR5XfxEQprG0ML6BmHHGOQpoy2DqSJe6zhXV4yVbTS0giEnqxWz
+	 oaKtq99Qkm9TW0VFZ0jMbtLKGz/ACYXJGEqUCdFX1ErLtluNx3W6y0KJrWZ8zVreZZ
+	 6ZDQ38CMTELnC6ONaFf8tL5tUq8jQdFFSYmuPoqcRvFRXunO33K5VUYdPPXY4dpaP/
+	 VIJl7AxK86HXtK0aw1BuRGivRDdQ2BNBq7zYME1MhU8i/k8cPFQAP9y+4Wl0jMV4PQ
+	 GA0taRqwb4wTuHt+COCwG1Sub806zlBZ5kl8l8hzO1PaXb6uPNKFtrErP1erVQfwK9
+	 8JNsQzDx2uH/w==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>, 
+ Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, 
+ linux-ide@vger.kernel.org
+In-Reply-To: <8bddfee7f6f0f90eeb6da7156e30ab3bd553deb1.1731704917.git.christophe.jaillet@wanadoo.fr>
+References: <8bddfee7f6f0f90eeb6da7156e30ab3bd553deb1.1731704917.git.christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH] ata: Constify struct pci_device_id
+Message-Id: <173319941712.503679.15596945650956791315.b4-ty@kernel.org>
+Date: Tue, 03 Dec 2024 05:16:57 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <trinity-796b046d-1857-413e-bb82-78e700d6b5ac-1733138371404@msvc-mesg-gmx005>
-From: Frank Wunderlich <frank-w@public-files.de>
-To: robh@kernel.org, linux@fw-web.de
-Cc: dlemoal@kernel.org, cassel@kernel.org, krzk+dt@kernel.org,
- conor+dt@kernel.org, andrew@lunn.ch, gregory.clement@bootlin.com,
- sebastian.hesselbarth@gmail.com, linux@armlinux.org.uk,
- hdegoede@redhat.com, axboe@kernel.dk, linux-ide@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Subject: Aw: Re: [PATCH v1 1/3] arm64: dts: marvell: Fix anyOf conditional
- failed
-Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <20241111203611.GB1887580-robh@kernel.org>
-Importance: normal
-References: <20241109094623.37518-1-linux@fw-web.de>
- <20241109094623.37518-2-linux@fw-web.de>
- <20241111203611.GB1887580-robh@kernel.org>
-Sensitivity: Normal
-Date: Mon, 2 Dec 2024 12:19:31 +0100
-X-Priority: 3
-X-UI-CLIENT-META-MAIL-DROP: W10=
-X-Provags-ID: V03:K1:WmbuKwIPUaMaoZ+9pCvV9RhiMoPE8aSF6dGD7Y3Nc/IQ/9StBY9DKphILNMLZlJqknJ9E
- 22lbCPY5SsDehMLGZNaTmqa/nNFgGyTW0cKhlE0F1fRPE4GRukXuZsv14PbI4M4fW79O7ZeWfCJz
- tTbCH2I+WuMTY1eD+lrVwb7pAj32hbJr+UkN2be1L4nNJa0NZY9VZXCo8yZeGp19+t765eQQNbF0
- K1SQuxf1K4c8x/zgRx96LBFQiVUW7S9KpTINmN0VJfuRnEaoTskk2hZMQklgiVrZRmMZ8zKxXMPM
- ko=
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:m9D9NzYozQs=;85UGk8rqymSyuI3OwojybuLO3GM
- UzBsf5kQqXGnWY+/ZM75mW9LXJe5ChShlEBkEXQsFwAntHp27dd9bKrIlWhbLptifFX2f4xoW
- qAPKogLJiykB3Vjqyrd6OeORAwsK/X4sdHB5unZHYzSnqpEpFi1S1Y1z8aN+GjEcVNr4LVSVV
- t5wXNEGbNyIYMHfXodIANnQGJl3EF/s5n+9wPxQ8dHOJCfEUryCDYAcfQoYkGgmkO1SI9rDXL
- hUhS4ob9LdfrGw5FLbxSZtUd867HIxyzzzjn6fyO0osxQNs4iV+5+luJWMyJ4OSke0+4PsHS2
- 6rdVzB7n/YLGumzcc+k1vTz+scIQhHHmExn0TXYl7mhPgOlP4QlKkUgmrK7S+HQesWQ8u3SzN
- /oZ2YcKqVmZp5mFg24ibj1YX36vuhbH/Pgi7aJ7jmfaW1UInmBpF7LEJ+UOkydWeBxfH9lpqM
- 7xuRRvl0VQynUWz2qpa2ty1r3Z3d7BhOpFSPBNYwz/A0iYv+yyzJvtItW7uwk61OPTyu6ibL9
- w4YulsxGea4tbIA9090GQwzq9FOQ5fQSiYwMTCp2sK+U0yi8Y9IArhl2BYbuvLGQy41bgQYwQ
- foS/VpaVXSMi2kFF7OJigs9huyBjSvcmj0l8Win71FfRAEazzdyxxl6R+fQwfSyvyIF6JJWEe
- 1Et7eIiFcSMyvI3hE+YDzMu3orgMYKz2S5ETjf9FLsY00pxECZlcggTioBL25EIA2DGZbgkmn
- QkkZh5Cfo8Ax/GC0arE3y5fIWNe9N2sRxPqwH97q2S73GOTua+SN1FKXVrz3cHRTvhIVZMILe
- 92ZrENpAxtCW7RKeIV/Mxl0KVSC/ziBDhZo1Hf0qt0MB6WzySA9fJzLDs+5EUi0sRQ5ylEYNk
- WbeyohRrlcALr+IdHlP7adqAIKQ7Z2zJNQqA=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-Hi,
+On Fri, 15 Nov 2024 22:08:55 +0100, Christophe JAILLET wrote:
+> 'struct pci_device_id' is not modified in these drivers.
+> 
+> Constifying this structure moves some data to a read-only section, so
+> increase overall security.
+> 
+> On a x86_64, with allmodconfig, as an example:
+> Before:
+> ======
+>    text	   data	    bss	    dec	    hex	filename
+>    4245	   1454	      4	   5703	   1647	drivers/ata/ata_generic.o
+> 
+> [...]
 
-just a gentle ping to have it finally merged
+Applied to libata/linux.git (for-6.14), thanks!
 
-regards Frank
+[1/1] ata: Constify struct pci_device_id
+      https://git.kernel.org/libata/linux/c/9986ce65
+
+Kind regards,
+Niklas
+
