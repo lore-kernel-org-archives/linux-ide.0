@@ -1,119 +1,119 @@
 Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556F517838C;
-	Wed, 11 Dec 2024 23:52:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ED1C1F0E3F;
+	Wed, 11 Dec 2024 23:53:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733961177; cv=none; b=nV36JTX32OzmOxSsGV4IHYPcVtI9q24syHpg89sbjWEfJfUDUP43e1rUMQvwVIH1KisedAR0sB2UmQaYZSFLTEh4zIipDmVNShHUg7vYz2N3A0kbl8hA8m1oPmq8Kst0wiy2MhrjcO5QzebNS8N7NkMdZpaZ6UYaz1f1TDT5XdU=
+	t=1733961212; cv=none; b=BYDuMtK8SpeaK20MgUoVF7kuDVZPA0ZiE7UrqGPCrQNcYjtWe9kb/hXOS0bSoLe2JpKDryG54NNdy9cZ2Nyu6MvSIzZtvGCyTcFm1NYXSE70u+88XXknFPgR2qGx6DY6fs9UM/Gx1gm9v8SrOHIkl0LDQCSjQAO2H/6P2Wdtopc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733961177; c=relaxed/simple;
-	bh=0yPjHf75CG5zl6NpzWY82XFujlgLSfDkSbAxBdG7O+I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cnq7KNLxjUQfXGAFVxEJf/qUCwxgN2wFpRQbb9Byxip+HVh/oV7U8VUiRPkoU4Gw0nrFVNzlqh7/b+vaDmh/FsdwE9n/FJfxwYjtngZeD3iPQ8IBdk+OwcG51Waottj2JiPqyNK/wj1kE3rDLzPvK6endFmf/bO+KtbguR9s4yc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=PvU0U8y4; arc=none smtp.client-ip=46.235.229.95
+	s=arc-20240116; t=1733961212; c=relaxed/simple;
+	bh=Z0qFz66WY89Gie8Jf7Vxb27a5pOyS61O6jv2c3z8Kwo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JvAPOTIOEiei7dSYWNxuamsOq7CtEETgFZ9jPA5b+HDY+7SueFJZX3DUmJf7uJIRtTZMZRXAUcVQNbXnYO2+Kk/5XuYACOinrVoRoEv2e9rxcYk+9LftwJ+/pfDHzDUbufoYEoHhiaR1qmUnkiF9Nn0eHN/E6E4j7JelYwpz2Xg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=BtFb0JiA; arc=none smtp.client-ip=46.235.229.95
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="PvU0U8y4"
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="BtFb0JiA"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=2MaGbw3QJR7d3eGdOVkIgDzRI4xX9G/8qOQoMDK2+8o=; b=PvU0U8y4vQ5lG9CR
-	bNqZUtJrJbPoCFE5b5hJcQ9HKA7SJkyWzq+EwH2fKaPGtcBlRNh2tAnVSUchzI7bcYvpE8bEStD2Z
-	DnfcwIOS8jLmoN94UGh5Jaq2eHnqfxRTPwyXWw07WGqb9mOn+b+ZkaGGhI2dGNU8DGLWfRtZQj3jU
-	9rJ8LfaYKu1F+nCAUy0/bAqbfacI3MzTI0Z5f+JK2iqYsKh9qYArlmRLErMPmSaF8O1TsxJmikZTd
-	nIg3U2Ur18/txj/OWEWjyDJE8vZueiTt6rlYW3aQlCFRLrCRwSLoREQ8KWi1Mgy7Y3sF34YTBHgDd
-	W2Ksc0JXvNOXCWC2/g==;
-Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
-	by mx.treblig.org with esmtp (Exim 4.96)
-	(envelope-from <linux@treblig.org>)
-	id 1tLWVf-004tSB-0S;
-	Wed, 11 Dec 2024 23:52:51 +0000
-From: linux@treblig.org
-To: linus.walleij@linaro.org,
-	dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: p.zabel@pengutronix.de,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH] ata: sata_gemini: Remove remaining reset glue
-Date: Wed, 11 Dec 2024 23:52:50 +0000
-Message-ID: <20241211235250.136985-1-linux@treblig.org>
-X-Mailer: git-send-email 2.47.1
+	; s=bytemarkmx; h=Content-Type:MIME-Version:Message-ID:Subject:From:Date:From
+	:Subject; bh=qMiEpycpET3Y3oNa+qzI9tLw4Jim77ikPqU3nrk3vKs=; b=BtFb0JiAU1ItkLVi
+	PJ+Y/ubCSr1WD3leYshfATnSNQe5c79YXeumayX94Hg9e91bPr9G6IQY9XHmeX5w/NXk1ilk9s0Yz
+	pJrYD675UwjUZF3KdlnwKsZWXAd7Ku5sZZi98gwfqhqKuAqRcH2vSy3V/eOfKVt+KrfpuCSkVHZhH
+	ssGpzUYKfmZNiYjL7u/jPls6kKVwuXof9cDvbvq2f7yafTheuNEm347ZIvDlJPjxYpoGwanMkXfwz
+	/qhxVSamKyLsd/aSwmjLwXBCN6JLMspSrufXhlSXr7MBhzENYE7hUN0JuYAybPmagcHCy1p4KVS0g
+	7CHnpPlizw4w7H36Bw==;
+Received: from dg by mx.treblig.org with local (Exim 4.96)
+	(envelope-from <dg@treblig.org>)
+	id 1tLWWF-004tTE-33;
+	Wed, 11 Dec 2024 23:53:27 +0000
+Date: Wed, 11 Dec 2024 23:53:27 +0000
+From: "Dr. David Alan Gilbert" <linux@treblig.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>, cassel@kernel.org,
+	p.zabel@pengutronix.de, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ata: sata_gemini: Remove unused
+ gemini_sata_reset_bridge()
+Message-ID: <Z1ol91qRiLu4vZES@gallifrey>
+References: <20241211011201.261935-1-linux@treblig.org>
+ <CACRpkdaarPM3vx6vAVhdSv+KHDZq6MTDo0JpQYGj1gJnaE7OrQ@mail.gmail.com>
+ <Z1oI6cAAhGrcIVw9@gallifrey>
+ <d74c3d02-e4e2-4f78-bf30-3940f50af39b@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <d74c3d02-e4e2-4f78-bf30-3940f50af39b@kernel.org>
+X-Chocolate: 70 percent or better cocoa solids preferably
+X-Operating-System: Linux/6.1.0-21-amd64 (x86_64)
+X-Uptime: 23:53:01 up 217 days, 11:07,  1 user,  load average: 0.00, 0.02,
+ 0.00
+User-Agent: Mutt/2.2.12 (2023-09-09)
 
-From: "Dr. David Alan Gilbert" <linux@treblig.org>
+* Damien Le Moal (dlemoal@kernel.org) wrote:
+> On 12/12/24 06:49, Dr. David Alan Gilbert wrote:
+> > * Linus Walleij (linus.walleij@linaro.org) wrote:
+> >> On Wed, Dec 11, 2024 at 2:12 AM <linux@treblig.org> wrote:
+> >>
+> >>> From: "Dr. David Alan Gilbert" <linux@treblig.org>
+> >>>
+> >>> gemini_sata_reset_bridge() was added in 2017 by the initial
+> >>> commit be4e456ed3a5 ("ata: Add driver for Faraday Technology FTIDE010")
+> >>> but has never been used.
+> >>>
+> >>> Remove it.
+> >>>
+> >>> Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
+> >>
+> >> Right it was never used because the corresponding reset in
+> >> the low-level PATA driver didn't work so I patched it out before
+> >> submitting.
+> > 
+> > Ah right.
+> > 
+> >> But should you not also remove sata0_reset and
+> >> sata1_reset from struct sata_gemini and the code fetching
+> >> the two reset lines? And even #include <linux/reset.h>?
+> > 
+> > Oh I see, I was just looking for entirely unreferenced functions
+> > but that takes a little more following to notice.
+> > 
+> > I'm happy to do that; are you OK with it as a follow up patch or
+> > do you want a v2? (And can you test it, I don't have the hardware).
+> 
+> I already applied your previous patch. But I can replace it. So either an
+> incremental patch or a v2 is fine with me. Thanks.
 
-Now that gemini_sata_reset_bridge() is gone, we can remove
-the sata0/1_reset members and the code that creates them.
+Follow up patch posted as
 
-Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
----
+Subject: [PATCH] ata: sata_gemini: Remove remaining reset glue
+Date: Wed, 11 Dec 2024 23:52:50 +0000
+Message-ID: <20241211235250.136985-1-linux@treblig.org>
 
-Note: Applies after my
-  ata: sata_gemini: Remove unused gemini_sata_reset_bridge()
+Thanks,
 
- drivers/ata/sata_gemini.c | 20 --------------------
- 1 file changed, 20 deletions(-)
+Dave
 
-diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
-index 821ca31effe7..530ee26b3012 100644
---- a/drivers/ata/sata_gemini.c
-+++ b/drivers/ata/sata_gemini.c
-@@ -11,7 +11,6 @@
- #include <linux/mfd/syscon.h>
- #include <linux/regmap.h>
- #include <linux/delay.h>
--#include <linux/reset.h>
- #include <linux/of.h>
- #include <linux/clk.h>
- #include <linux/io.h>
-@@ -27,8 +26,6 @@
-  * @muxmode: the current muxing mode
-  * @ide_pins: if the device is using the plain IDE interface pins
-  * @sata_bridge: if the device enables the SATA bridge
-- * @sata0_reset: SATA0 reset handler
-- * @sata1_reset: SATA1 reset handler
-  * @sata0_pclk: SATA0 PCLK handler
-  * @sata1_pclk: SATA1 PCLK handler
-  */
-@@ -38,8 +35,6 @@ struct sata_gemini {
- 	enum gemini_muxmode muxmode;
- 	bool ide_pins;
- 	bool sata_bridge;
--	struct reset_control *sata0_reset;
--	struct reset_control *sata1_reset;
- 	struct clk *sata0_pclk;
- 	struct clk *sata1_pclk;
- };
-@@ -253,21 +248,6 @@ static int gemini_sata_bridge_init(struct sata_gemini *sg)
- 		return ret;
- 	}
- 
--	sg->sata0_reset = devm_reset_control_get_exclusive(dev, "sata0");
--	if (IS_ERR(sg->sata0_reset)) {
--		dev_err(dev, "no SATA0 reset controller\n");
--		clk_disable_unprepare(sg->sata1_pclk);
--		clk_disable_unprepare(sg->sata0_pclk);
--		return PTR_ERR(sg->sata0_reset);
--	}
--	sg->sata1_reset = devm_reset_control_get_exclusive(dev, "sata1");
--	if (IS_ERR(sg->sata1_reset)) {
--		dev_err(dev, "no SATA1 reset controller\n");
--		clk_disable_unprepare(sg->sata1_pclk);
--		clk_disable_unprepare(sg->sata0_pclk);
--		return PTR_ERR(sg->sata1_reset);
--	}
--
- 	sata_id = readl(sg->base + GEMINI_SATA_ID);
- 	sata_phy_id = readl(sg->base + GEMINI_SATA_PHY_ID);
- 	sg->sata_bridge = true;
+> > 
+
+> > Dave
+> > 
+> >> Yours,
+> >> Linus Walleij
+> 
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
 -- 
-2.47.1
-
+ -----Open up your eyes, open up your mind, open up your code -------   
+/ Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
+\        dave @ treblig.org |                               | In Hex /
+ \ _________________________|_____ http://www.treblig.org   |_______/
