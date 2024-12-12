@@ -1,165 +1,167 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0D61223338;
-	Thu, 12 Dec 2024 18:35:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04CE2190497;
+	Thu, 12 Dec 2024 19:21:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734028546; cv=none; b=QnSEx6kWD5ihHwIdZ5BEh5YnOqwAXk0hUKs68fVNTBvrie60Y21oLt4kyv/33VL8e2Z9RSL2C6RktqZEqJ8SYyvjWbZsbrcAkw1kQl4tKQNX6ksaEKesB9uANIEPjw14uP0ZHqD2JfNP/UvsKZ25F6oS697JAPklax39jMn68cY=
+	t=1734031281; cv=none; b=osKKm/yWkEPc046zIdpq0lONItGpnMnzZKaB+Ywtv0Iny44bMyBfsGW5+UNDNVhPtCrHQKlFxLvttkYb9ibMcnKLUDel8rtXvkCDpY0GUUDpJFYdhvI8uEbU586aJoSGaaYmHMcotbCurTpZa8w79HWwhDst8vPxZE8IS4Y5uGs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734028546; c=relaxed/simple;
-	bh=D1rEZ/UXPFQswkREdMZvu289mgrFj152BUDKLiScvJQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=YspqC2/Gl7mePYOexlR75PUcnaOLreIXFqAlEtachPp/wwjh4cDsF/A7rRpSl3PW3UUpjWADPgNtBXeZYwsD7xQ6CBtRC7uENyWPiyYQd1ZRU0xiVUtU9+eqZ55sJvr7EfNL9TtHbnWOUCa2jVAz1osThukIB6+XsBet5JBQQHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.102] (213.87.158.53) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Thu, 12 Dec
- 2024 21:20:23 +0300
-Message-ID: <edf7216a-15f8-474b-95ec-84451192cd28@omp.ru>
-Date: Thu, 12 Dec 2024 21:20:19 +0300
+	s=arc-20240116; t=1734031281; c=relaxed/simple;
+	bh=7jTnse7IuWHCGd/Dl0nDYQ1TbdJrSYaJ37r4en1LiKY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=M4YyqtDyIWXs8tL1VAecfGBffcDLcj0iaIUZqhWhGEFi63P1L7r01+IVF6TYqnLmhbcrRyMcX6pm6QWwKTQmfspq4kl+ubadv5WkijYM07rPd7Tq58klB8YPC5BI+XPrFB4QFvYg97USmCO4tgB5XxNKdDPgeLaOFFHYMGwqPOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jsm8J74C; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jsm8J74C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43DA5C4CECE;
+	Thu, 12 Dec 2024 19:21:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734031280;
+	bh=7jTnse7IuWHCGd/Dl0nDYQ1TbdJrSYaJ37r4en1LiKY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Jsm8J74CeCOSQX2TAidV+m7FZS6ULNXQzhXeWkuv5iEzrUHcg8znyVLdxbxRPru+9
+	 VTNtp1UpRC4YYL3KINlGq6Rm3mDmwWUjLlcvFtcaDdm/sMMc8jL3Lt6IP5xBBVa4uN
+	 g6rp1AYKrZau2/lQVHaCgwMigVCU6RnvH5h7xgx9CXno8P90z+4zZDJzkW2VTv9vLB
+	 2v8zIQ6uOpGnT4DsGys0y1UkWGeCS95G+7B8sB3FnS30uNrBNXakIEsYRc31wuk1wU
+	 pMewcBUam+M54kZf6oMYeSKDOO0eQTk9gVUDIBiga7Z+z4SFYtDLeKSArBCBnotXnd
+	 YNml6TBS6OcqA==
+Date: Thu, 12 Dec 2024 13:21:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Philipp Stanner <pstanner@redhat.com>
+Cc: amien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+	Basavaraj Natikar <basavaraj.natikar@amd.com>,
+	Jiri Kosina <jikos@kernel.org>,
+	Benjamin Tissoires <bentiss@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alex Dubov <oakad@yahoo.com>,
+	Sudarsana Kalluru <skalluru@marvell.com>,
+	Manish Chopra <manishc@marvell.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
+	Igor Mitsyanko <imitsyanko@quantenna.com>,
+	Sergey Matyukevich <geomatsi@gmail.com>,
+	Kalle Valo <kvalo@kernel.org>, Sanjay R Mehta <sanju.mehta@amd.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Chen Ni <nichen@iscas.ac.cn>, Ricky Wu <ricky_wu@realtek.com>,
+	Al Viro <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Mostafa Saleh <smostafa@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Yi Liu <yi.l.liu@intel.com>, Kunwu Chan <chentao@kylinos.cn>,
+	Dan Carpenter <dan.carpenter@linaro.org>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Eric Auger <eric.auger@redhat.com>, Ye Bin <yebin10@huawei.com>,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v3 00/11] Remove implicit devres from pci_intx()
+Message-ID: <20241212192118.GA3359591@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 2/3] ata: Replace deprecated PCI functions
-To: Philipp Stanner <pstanner@redhat.com>, Damien Le Moal
-	<dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Mikael Pettersson
-	<mikpelinux@gmail.com>
-CC: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20241204171033.86804-2-pstanner@redhat.com>
- <20241204171033.86804-4-pstanner@redhat.com>
-Content-Language: en-US
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <20241204171033.86804-4-pstanner@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 12/12/2024 18:03:12
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 189803 [Dec 12 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.1.7
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 47 0.3.47
- 57010b355d009055a5b6c34e0385c69b21a4e07f
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info:
-	d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.158.53
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 12/12/2024 18:07:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 12/12/2024 3:08:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241209130632.132074-2-pstanner@redhat.com>
 
-On 12/4/24 8:10 PM, Philipp Stanner wrote:
-
-> The ata subsystem uses the deprecated PCI devres functions
-> pcim_iomap_table() and pcim_request_regions().
+On Mon, Dec 09, 2024 at 02:06:22PM +0100, Philipp Stanner wrote:
+> @Driver-Maintainers: Your driver might be touched by patch "Remove
+> devres from pci_intx()". You might want to take a look.
 > 
-> These functions internally already use their successors, notably
-> pcim_request_region(), so they are quite trivial to replace.
+> Changes in v3:
+>   - Add Thomas' RB.
 > 
-> Replace all calls to pcim_request_regions() with ones to
-> pcim_request_region().
+> Changes in v2:
+>   - Drop pci_intx() deprecation patch.
+>   - ata: Add RB from Sergey and Niklas.
+>   - wifi: Add AB by Kalle.
+>   - Drop INTx deprecation patch
+>   - Drop ALSA / hda_intel patch because pci_intx() was removed from
+>     there in the meantime.
 > 
-> Remove all calls to pcim_iomap_table().
+> Changes since the RFC [1]:
+>   - Add a patch deprecating pci{m}_intx(). (Heiner, Andy, Me)
+>   - Add Acked-by's already given.
+>   - Export pcim_intx() as a GPL function. (Alex)
+>   - Drop patch for rts5280, since this driver will be removed quite
+>     soon. (Philipp Hortmann, Greg)
+>   - Use early-return in pci_intx_unmanaged() and pci_intx(). (Andy)
 > 
-> The last remaining user, libata-sff.c, is very complicated to port and
-> left for future work.
+> Hi all,
 > 
-> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
-[...]
+> this series removes a problematic feature from pci_intx(). That function
+> sometimes implicitly uses devres for automatic cleanup. We should get
+> rid of this implicit behavior.
+> 
+> To do so, a pci_intx() version that is always-managed, and one that is
+> never-managed are provided. Then, all pci_intx() users are ported to the
+> version they need. Afterwards, pci_intx() can be cleaned up and the
+> users of the never-managed version be ported back to pci_intx().
+> 
+> This way we'd get this PCI API consistent again.
+> 
+> Patch "Remove devres from pci_intx()" obviously reverts the previous
+> patches that made drivers use pci_intx_unmanaged(). But this way it's
+> easier to review and approve. It also makes sure that each checked out
+> commit should provide correct behavior, not just the entire series as a
+> whole.
+> 
+> Merge plan for this is to enter through the PCI tree.
+> 
+> [1] https://lore.kernel.org/all/20241009083519.10088-1-pstanner@redhat.com/
 
-> diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-> index abe64b5f83cf..1f74666a0f37 100644
-> --- a/drivers/ata/pata_sil680.c
-> +++ b/drivers/ata/pata_sil680.c
-> @@ -360,15 +360,17 @@ static int sil680_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  	/* Try to acquire MMIO resources and fallback to PIO if
->  	 * that fails
->  	 */
-> -	rc = pcim_iomap_regions(pdev, 1 << SIL680_MMIO_BAR, DRV_NAME);
-> -	if (rc)
-> +	rc = 0;
+Applied the ones with maintainer acks to pci/devres for v6.14, thanks!
 
-   Doesn't seem necessary...
+I'll poke the ones that haven't been acked yet.
 
-> +	mmio_base = pcim_iomap_region(pdev, SIL680_MMIO_BAR, DRV_NAME);
-> +	if (IS_ERR(mmio_base)) {
-> +		rc = PTR_ERR(mmio_base);
->  		goto use_ioports;
-> +	}
->  
->  	/* Allocate host and set it up */
->  	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 2);
->  	if (!host)
->  		return -ENOMEM;
-> -	host->iomap = pcim_iomap_table(pdev);
->  
->  	/* Setup DMA masks */
->  	rc = dma_set_mask_and_coherent(&pdev->dev, ATA_DMA_MASK);
-[...]
-> diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-> index a482741eb181..f4644ba5f095 100644
-> --- a/drivers/ata/sata_sx4.c
-> +++ b/drivers/ata/sata_sx4.c
-> @@ -1390,6 +1390,7 @@ static int pdc_sata_init_one(struct pci_dev *pdev,
->  	struct ata_host *host;
->  	struct pdc_host_priv *hpriv;
->  	int i, rc;
-> +	void __iomem *io_tmp;
-
-   I'd suggest a better name, like iomem here...
-
-[...]
-> diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-> index 57cbf2cef618..73b78834fa3f 100644
-> --- a/drivers/ata/sata_via.c
-> +++ b/drivers/ata/sata_via.c
-[...]
-> @@ -494,13 +497,17 @@ static int vt6421_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
->  		return -ENOMEM;
->  	}
->  
-> -	rc = pcim_iomap_regions(pdev, 0x3f, DRV_NAME);
-> -	if (rc) {
-> -		dev_err(&pdev->dev, "failed to request/iomap PCI BARs (errno=%d)\n",
-> -			rc);
-> -		return rc;
-> +	/* Request and ioremap _all_ PCI BARs. */
-> +	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-> +		iomem = pcim_iomap_region(pdev, i, DRV_NAME);
-> +		if (IS_ERR(iomem)) {
-> +			rc = PTR_ERR(iomem);
-> +			dev_err(&pdev->dev, "failed to request/iomap PCI BARs (errno=%d)\n",
-> +				rc);
-
-   You have a limit of 100 columns now. :-)
-
-[...]
-
-MBR, Sergey
-
+> Philipp Stanner (11):
+>   PCI: Prepare removing devres from pci_intx()
+>   drivers/xen: Use never-managed version of pci_intx()
+>   net/ethernet: Use never-managed version of pci_intx()
+>   net/ntb: Use never-managed version of pci_intx()
+>   misc: Use never-managed version of pci_intx()
+>   vfio/pci: Use never-managed version of pci_intx()
+>   PCI: MSI: Use never-managed version of pci_intx()
+>   ata: Use always-managed version of pci_intx()
+>   wifi: qtnfmac: use always-managed version of pcim_intx()
+>   HID: amd_sfh: Use always-managed version of pcim_intx()
+>   Remove devres from pci_intx()
+> 
+>  drivers/ata/ahci.c                            |  2 +-
+>  drivers/ata/ata_piix.c                        |  2 +-
+>  drivers/ata/pata_rdc.c                        |  2 +-
+>  drivers/ata/sata_sil24.c                      |  2 +-
+>  drivers/ata/sata_sis.c                        |  2 +-
+>  drivers/ata/sata_uli.c                        |  2 +-
+>  drivers/ata/sata_vsc.c                        |  2 +-
+>  drivers/hid/amd-sfh-hid/amd_sfh_pcie.c        |  4 ++--
+>  drivers/hid/amd-sfh-hid/sfh1_1/amd_sfh_init.c |  2 +-
+>  .../wireless/quantenna/qtnfmac/pcie/pcie.c    |  2 +-
+>  drivers/pci/devres.c                          | 24 +++----------------
+>  drivers/pci/pci.c                             | 16 +++----------
+>  include/linux/pci.h                           |  1 +
+>  13 files changed, 18 insertions(+), 45 deletions(-)
+> 
+> -- 
+> 2.47.1
+> 
