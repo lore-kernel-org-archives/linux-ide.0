@@ -1,70 +1,25 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E45FF215764
-	for <linux-ide@vger.kernel.org>; Thu, 12 Dec 2024 14:58:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0D61223338;
+	Thu, 12 Dec 2024 18:35:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734015519; cv=none; b=kkQf6qeFFRmBRZuEVIefs+srGVl4jEDhP0c4dd5RpQC5YCljG7ZddOzPogGyOdoKVl4W+aX5TLlUUq9+r1tQJ1aateoK6v9mWcznN/FiB/9jgd+5UtG5Yn2mZIEaRmPxQ2B8c4YfMdQTNX9UYorgQakY8Sk4QacGk1H4eg4+a+M=
+	t=1734028546; cv=none; b=QnSEx6kWD5ihHwIdZ5BEh5YnOqwAXk0hUKs68fVNTBvrie60Y21oLt4kyv/33VL8e2Z9RSL2C6RktqZEqJ8SYyvjWbZsbrcAkw1kQl4tKQNX6ksaEKesB9uANIEPjw14uP0ZHqD2JfNP/UvsKZ25F6oS697JAPklax39jMn68cY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734015519; c=relaxed/simple;
-	bh=G6Z2o7H+YRsuJn5EHuxMgQuZNMoz/Zu4aqlYRNiWXyI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p2gQeSo2zdgkDma49GCuCoqaPlDN7C5sLeFb6OaBvecrq4stPSJ4qIsTYHmUtaEoncbs0cZ7pnyn1F20FoDVQdyEH76FC2rMXBmXc36ltCy6gdtSOohyHrvlH+oelThi0ITJcqm4XkYtkkdiLDm1Fs3wNENzgw7jgQ2ORuBHXs4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NCU86hKb; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NCU86hKb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1734015516;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mp7PByfrT26c6XlUU6lXZIxvrN1DU5qMvcLQpbxnk5A=;
-	b=NCU86hKbwe3AOg4hCUdO/22HXAgmwbQsZs4gz1/5hyJriMz9qlTixaARgCmfn1JYHaKViw
-	4/oh/RroccWITLY5ky7FBMo6q3smmL2cGcJOC88TXCp87zcPU6ns/ou5frsOA5YMa6nzAj
-	9GQspY0BtiQruevDz2k0OKYunDrpk4k=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-463-oFkgjGejO4Wg8vF4shbzXw-1; Thu, 12 Dec 2024 09:58:35 -0500
-X-MC-Unique: oFkgjGejO4Wg8vF4shbzXw-1
-X-Mimecast-MFC-AGG-ID: oFkgjGejO4Wg8vF4shbzXw
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4359eb032c9so5690125e9.2
-        for <linux-ide@vger.kernel.org>; Thu, 12 Dec 2024 06:58:35 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734015514; x=1734620314;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mp7PByfrT26c6XlUU6lXZIxvrN1DU5qMvcLQpbxnk5A=;
-        b=sp5YgN5Ju2dZHBu2gEISzPbSYNduNnAQ5e2Rx4t0fOPndkrqyekDl2vofv50AtphG1
-         AA6g8KmVV/0CRkAhlx540X324McYdwsyEyEi4k2Gc4Pl3pwKVucTFBZ9rriI2INIqutT
-         oVB7qkRJds/j+GzFYFSSRUlKrzrUDi9+xAYoG9/HNBqRmZt3AsRe8NaTVtFocYfy6mZu
-         BTS1z3Cj0teTaGyOlMTpl0UaUp5pYU3UqFvTJWnmE+gGweElh1gRJqPyAkLXsK/6NVCg
-         cgB6dLwEoCg7LSl295gTn/tWa/YTqAPJjpURYXr4oQz9NT6f+Jv5a1n7fo4GumnFSLx3
-         O+bQ==
-X-Gm-Message-State: AOJu0YxWu7rK986eqBqGRbHsNzm1pk7ddBAMWkWa3TmJw8rRlMcabD0f
-	6JGkg7TCUcKfFDAy3K+UzwAub7kzIGd+ao1SbdtsXF2op4tl94Ut1HzIbIaXPwC6HlAzSNhKTqU
-	L0CW1/tyDZhjPR4GIMqqUCFZ+CvO4t5xJ0JfaGDWgYezrMNvw5q7n/UVSxQ==
-X-Gm-Gg: ASbGncvFbzhkAAAQiUMQgWHv/ImkJw/4WSMjPbY0ahUEYGuxvf06hmCct7BY2z9QWCL
-	O3rdBf8sng0KGKXBYex6CAXlGCzYgGFfDUBAsbgIKoD7ItMOnxOFEBaWjjTmmJwjvxjtoJXJnv2
-	MZsPX0qLDkmHvV7LOF39UOz6fS8kSzC6YVxZFyZaxu6iheoeoV6j7c9H9q2B3i7bw52w/2n49Tn
-	6iUdR5aEnOm70A1SNHb7vU/Xl9yMombLaTx8nQStY0dOK64emwIMXUzum6235x4pxqE/MeoBLXt
-	DfvTsbw=
-X-Received: by 2002:a05:600c:1e89:b0:435:21a1:b109 with SMTP id 5b1f17b1804b1-436228239d4mr34776085e9.2.1734015514530;
-        Thu, 12 Dec 2024 06:58:34 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHoQPXURHNGvrny3f7vl2oVT9jWXY7D4FX6dkSlxmx2R9PGBk/+viTtA90lBPMFXjybTLaFQQ==
-X-Received: by 2002:a05:600c:1e89:b0:435:21a1:b109 with SMTP id 5b1f17b1804b1-436228239d4mr34775655e9.2.1734015514130;
-        Thu, 12 Dec 2024 06:58:34 -0800 (PST)
-Received: from [192.168.88.24] (146-241-48-67.dyn.eolo.it. [146.241.48.67])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4362559edc3sm19213025e9.22.2024.12.12.06.58.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Dec 2024 06:58:33 -0800 (PST)
-Message-ID: <a6d7a4ee-929e-4bee-80bf-a7b4f4f89f4a@redhat.com>
-Date: Thu, 12 Dec 2024 15:58:30 +0100
+	s=arc-20240116; t=1734028546; c=relaxed/simple;
+	bh=D1rEZ/UXPFQswkREdMZvu289mgrFj152BUDKLiScvJQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=YspqC2/Gl7mePYOexlR75PUcnaOLreIXFqAlEtachPp/wwjh4cDsF/A7rRpSl3PW3UUpjWADPgNtBXeZYwsD7xQ6CBtRC7uENyWPiyYQd1ZRU0xiVUtU9+eqZ55sJvr7EfNL9TtHbnWOUCa2jVAz1osThukIB6+XsBet5JBQQHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
+Received: from [192.168.2.102] (213.87.158.53) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Thu, 12 Dec
+ 2024 21:20:23 +0300
+Message-ID: <edf7216a-15f8-474b-95ec-84451192cd28@omp.ru>
+Date: Thu, 12 Dec 2024 21:20:19 +0300
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -72,84 +27,139 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 11/11] Remove devres from pci_intx()
-To: Philipp Stanner <pstanner@redhat.com>, amien Le Moal
- <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Basavaraj Natikar <basavaraj.natikar@amd.com>, Jiri Kosina
- <jikos@kernel.org>, Benjamin Tissoires <bentiss@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alex Dubov
- <oakad@yahoo.com>, Sudarsana Kalluru <skalluru@marvell.com>,
- Manish Chopra <manishc@marvell.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Rasesh Mody <rmody@marvell.com>,
- GR-Linux-NIC-Dev@marvell.com, Igor Mitsyanko <imitsyanko@quantenna.com>,
- Sergey Matyukevich <geomatsi@gmail.com>, Kalle Valo <kvalo@kernel.org>,
- Sanjay R Mehta <sanju.mehta@amd.com>,
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Jon Mason <jdmason@kudzu.us>,
- Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Alex Williamson <alex.williamson@redhat.com>, Juergen Gross
- <jgross@suse.com>, Stefano Stabellini <sstabellini@kernel.org>,
- Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
- Mario Limonciello <mario.limonciello@amd.com>, Chen Ni <nichen@iscas.ac.cn>,
- Ricky Wu <ricky_wu@realtek.com>, Al Viro <viro@zeniv.linux.org.uk>,
- Breno Leitao <leitao@debian.org>, Thomas Gleixner <tglx@linutronix.de>,
- Kevin Tian <kevin.tian@intel.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Mostafa Saleh <smostafa@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Yi Liu <yi.l.liu@intel.com>, Kunwu Chan <chentao@kylinos.cn>,
- Dan Carpenter <dan.carpenter@linaro.org>,
- "Dr. David Alan Gilbert" <linux@treblig.org>,
- Ankit Agrawal <ankita@nvidia.com>,
- Reinette Chatre <reinette.chatre@intel.com>,
- Eric Auger <eric.auger@redhat.com>, Ye Bin <yebin10@huawei.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-input@vger.kernel.org, netdev@vger.kernel.org,
- linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
- linux-pci@vger.kernel.org, kvm@vger.kernel.org,
- xen-devel@lists.xenproject.org
-References: <20241209130632.132074-2-pstanner@redhat.com>
- <20241209130632.132074-13-pstanner@redhat.com>
+Subject: Re: [RFC PATCH 2/3] ata: Replace deprecated PCI functions
+To: Philipp Stanner <pstanner@redhat.com>, Damien Le Moal
+	<dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Mikael Pettersson
+	<mikpelinux@gmail.com>
+CC: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20241204171033.86804-2-pstanner@redhat.com>
+ <20241204171033.86804-4-pstanner@redhat.com>
 Content-Language: en-US
-From: Paolo Abeni <pabeni@redhat.com>
-In-Reply-To: <20241209130632.132074-13-pstanner@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+In-Reply-To: <20241204171033.86804-4-pstanner@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 12/12/2024 18:03:12
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 189803 [Dec 12 2024]
+X-KSE-AntiSpam-Info: Version: 6.1.1.7
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 47 0.3.47
+ 57010b355d009055a5b6c34e0385c69b21a4e07f
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info:
+	d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.158.53
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 12/12/2024 18:07:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 12/12/2024 3:08:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On 12/9/24 14:06, Philipp Stanner wrote:
-> pci_intx() is a hybrid function which can sometimes be managed through
-> devres. This hybrid nature is undesirable.
+On 12/4/24 8:10 PM, Philipp Stanner wrote:
+
+> The ata subsystem uses the deprecated PCI devres functions
+> pcim_iomap_table() and pcim_request_regions().
 > 
-> Since all users of pci_intx() have by now been ported either to
-> always-managed pcim_intx() or never-managed pci_intx_unmanaged(), the
-> devres functionality can be removed from pci_intx().
+> These functions internally already use their successors, notably
+> pcim_request_region(), so they are quite trivial to replace.
 > 
-> Consequently, pci_intx_unmanaged() is now redundant, because pci_intx()
-> itself is now unmanaged.
+> Replace all calls to pcim_request_regions() with ones to
+> pcim_request_region().
 > 
-> Remove the devres functionality from pci_intx(). Have all users of
-> pci_intx_unmanaged() call pci_intx(). Remove pci_intx_unmanaged().
+> Remove all calls to pcim_iomap_table().
+> 
+> The last remaining user, libata-sff.c, is very complicated to port and
+> left for future work.
 > 
 > Signed-off-by: Philipp Stanner <pstanner@redhat.com>
-> ---
->  drivers/misc/cardreader/rtsx_pcr.c            |  2 +-
->  drivers/misc/tifm_7xx1.c                      |  6 +--
->  .../net/ethernet/broadcom/bnx2x/bnx2x_main.c  |  2 +-
->  drivers/net/ethernet/brocade/bna/bnad.c       |  2 +-
->  drivers/ntb/hw/amd/ntb_hw_amd.c               |  4 +-
->  drivers/ntb/hw/intel/ntb_hw_gen1.c            |  2 +-
->  drivers/pci/devres.c                          |  4 +-
->  drivers/pci/msi/api.c                         |  2 +-
->  drivers/pci/msi/msi.c                         |  2 +-
->  drivers/pci/pci.c                             | 43 +------------------
->  drivers/vfio/pci/vfio_pci_core.c              |  2 +-
->  drivers/vfio/pci/vfio_pci_intrs.c             | 10 ++---
->  drivers/xen/xen-pciback/conf_space_header.c   |  2 +-
->  include/linux/pci.h                           |  1 -
->  14 files changed, 22 insertions(+), 62 deletions(-)
+[...]
 
-For the net bits:
+> diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
+> index abe64b5f83cf..1f74666a0f37 100644
+> --- a/drivers/ata/pata_sil680.c
+> +++ b/drivers/ata/pata_sil680.c
+> @@ -360,15 +360,17 @@ static int sil680_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	/* Try to acquire MMIO resources and fallback to PIO if
+>  	 * that fails
+>  	 */
+> -	rc = pcim_iomap_regions(pdev, 1 << SIL680_MMIO_BAR, DRV_NAME);
+> -	if (rc)
+> +	rc = 0;
 
-Acked-by: Paolo Abeni <pabeni@redhat.com>
+   Doesn't seem necessary...
+
+> +	mmio_base = pcim_iomap_region(pdev, SIL680_MMIO_BAR, DRV_NAME);
+> +	if (IS_ERR(mmio_base)) {
+> +		rc = PTR_ERR(mmio_base);
+>  		goto use_ioports;
+> +	}
+>  
+>  	/* Allocate host and set it up */
+>  	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 2);
+>  	if (!host)
+>  		return -ENOMEM;
+> -	host->iomap = pcim_iomap_table(pdev);
+>  
+>  	/* Setup DMA masks */
+>  	rc = dma_set_mask_and_coherent(&pdev->dev, ATA_DMA_MASK);
+[...]
+> diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+> index a482741eb181..f4644ba5f095 100644
+> --- a/drivers/ata/sata_sx4.c
+> +++ b/drivers/ata/sata_sx4.c
+> @@ -1390,6 +1390,7 @@ static int pdc_sata_init_one(struct pci_dev *pdev,
+>  	struct ata_host *host;
+>  	struct pdc_host_priv *hpriv;
+>  	int i, rc;
+> +	void __iomem *io_tmp;
+
+   I'd suggest a better name, like iomem here...
+
+[...]
+> diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+> index 57cbf2cef618..73b78834fa3f 100644
+> --- a/drivers/ata/sata_via.c
+> +++ b/drivers/ata/sata_via.c
+[...]
+> @@ -494,13 +497,17 @@ static int vt6421_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
+>  		return -ENOMEM;
+>  	}
+>  
+> -	rc = pcim_iomap_regions(pdev, 0x3f, DRV_NAME);
+> -	if (rc) {
+> -		dev_err(&pdev->dev, "failed to request/iomap PCI BARs (errno=%d)\n",
+> -			rc);
+> -		return rc;
+> +	/* Request and ioremap _all_ PCI BARs. */
+> +	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
+> +		iomem = pcim_iomap_region(pdev, i, DRV_NAME);
+> +		if (IS_ERR(iomem)) {
+> +			rc = PTR_ERR(iomem);
+> +			dev_err(&pdev->dev, "failed to request/iomap PCI BARs (errno=%d)\n",
+> +				rc);
+
+   You have a limit of 100 columns now. :-)
+
+[...]
+
+MBR, Sergey
 
