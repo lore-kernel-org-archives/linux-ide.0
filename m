@@ -1,117 +1,168 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AEF3187FFA;
-	Fri, 13 Dec 2024 17:53:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68671EB9E2;
+	Fri, 13 Dec 2024 19:00:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734112431; cv=none; b=Y5Uplpsd5HFc7QAKP0H6ZLhlhukl7L8K5m8IvH/fpmotA4wyoLjoxx2BmyMGfRe2hh4lrNu3xiAvtpu2PpO8bw6XVNZegVHmqFdN0ndh5kJsKtWEvbFi1pCwBz99pbeg88yI4Vav2eafIADm10pXdgNaC8ThQ1V9cjCd61BEDZc=
+	t=1734116430; cv=none; b=ZX6VygxdeuBuikbBH/vcpvEcELNTd6fJiJIP1SQUGvq08ythvQEI1p3igQA03v/C7QnIjoQgL7xIw4IDlF+yHy+W5WaaAIZpGVysMrpQ1egxrbgwJ2WtrTDPSM1KxEnFIfqL0RUsVyxe3eRyvPwlJsBdAt3WBYNIbm+Hz1hJAnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734112431; c=relaxed/simple;
-	bh=giLsrBe+eXIr2Z5RCc4V156ArPFV4LhVw7wYhIzIoXE=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=TjxITHd02ehDSerFxudBlFZyRpdunAWlFjdwEpTml/F3ia7cY54S+XaZBEMNQArNH9g/91aQh+x/zgF2CC+HvFbYHuCSM546jDCbcmwUWegQ2wiKaR03J3dZoh8r0fBaOxGQxgCUfq0gjYoOoF9ETeTC8uZnzLx3jXWTxUvScTQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dsGwzCps; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734116430; c=relaxed/simple;
+	bh=4cQrfh6BfHc3IlT0NVwr6zi0Zv3UEuEKb0NBjH4L2/o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GBJU6T4EZvXYpgzUl2xXd4kcifa19KJ71XN5xvZ8Wj55wRT9jAVU2tVsAx3iD21T2hq/EzNAnUiWit9RHqfRYhzjIuULundpBeptUsqN+SJJiSVElX0EwcODsCL8v2F3MUNxY3u/3DCMqnkbRvRXPr8v1lMMBviw+XKuPS7LwNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=aTdyCVo0; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dsGwzCps"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6830CC4CED0;
-	Fri, 13 Dec 2024 17:53:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734112430;
-	bh=giLsrBe+eXIr2Z5RCc4V156ArPFV4LhVw7wYhIzIoXE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=dsGwzCpsHyKSEp5dYNZqIU7VIPCf1+1BvfLnsNExHvF+KgHEKWxdDya2OH4Yb1KdO
-	 xjyNZsn9LGsL+5ubm9YwLy6PfO1o9HHK4GH9HnfKOzJfFxn/wgTn1u4o1aUgnAXEWn
-	 GkW8WT5ub+1C8izqxGJm68p92qbUmH0Zz6j12LSWYDuKvCO0PKAmAIFG8J70k4DM58
-	 BkmbpSUnFf6MODuN2bFpAw11s14p/2yDMhpzWn6yJuuKNDwnCnEugjbstu3jKrQ4hZ
-	 YZx0beo5hpke+CycdWaTs127pteqlLsHIM7BixvuD11GKP+6nU5Tvb5YUerVZXNZPP
-	 DkNTiHRBWPZvw==
-Date: Fri, 13 Dec 2024 11:53:49 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kalle Valo <kvalo@kernel.org>
-Cc: Philipp Stanner <pstanner@redhat.com>,
-	Igor Mitsyanko <imitsyanko@quantenna.com>,
-	amien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Basavaraj Natikar <basavaraj.natikar@amd.com>,
-	Jiri Kosina <jikos@kernel.org>,
-	Benjamin Tissoires <bentiss@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Sergey Matyukevich <geomatsi@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alex Dubov <oakad@yahoo.com>,
-	Sudarsana Kalluru <skalluru@marvell.com>,
-	Manish Chopra <manishc@marvell.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
-	Sanjay R Mehta <sanju.mehta@amd.com>,
-	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	Chen Ni <nichen@iscas.ac.cn>, Ricky Wu <ricky_wu@realtek.com>,
-	Al Viro <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Mostafa Saleh <smostafa@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Yi Liu <yi.l.liu@intel.com>, Kunwu Chan <chentao@kylinos.cn>,
-	Dan Carpenter <dan.carpenter@linaro.org>,
-	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Eric Auger <eric.auger@redhat.com>, Ye Bin <yebin10@huawei.com>,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	xen-devel@lists.xenproject.org,
-	Igor Mitsyanko <i.mitsyanko@gmail.com>
-Subject: Re: [PATCH v3 09/11] wifi: qtnfmac: use always-managed version of
- pcim_intx()
-Message-ID: <20241213175349.GA3421319@bhelgaas>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aTdyCVo0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=Q2Hh7i1IvMPkDPyJ+H+GPqol4Inldj3eRd/RH+IyPWA=; b=aTdyCVo0A04ii9Be59koxPyCGw
+	E2Tc3gu9An0oYSw9mHUF4BGt68XuQnuY7+qEv5mkl8S/1Mb8OjHTdPRLU0Y8nSm9EmCuNg7Z3wqqy
+	Gg5gNAXSG5wpcILgrKOSICOswOFwoAOw2xu5W3peK6/AB0NW9WDuFXCZ7pkBtkOFbvrxQ/H/Wso/7
+	vup/1RzSjj5IdPAXwNmGeAuD9eAGVay0ADicmlvi1bgfEe78EBpB3K0vpdptd3ZJgBtpkK/k30Da6
+	mWavV6+5CbolAjztRsfwtkpu703L7ZYCER9Q3dAaS2BVWWPNc2kEPctCfSAxVGrJ7DNTtle0nUDG7
+	bbwW1yNA==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tMAtg-0000000F6TE-2gCj;
+	Fri, 13 Dec 2024 19:00:20 +0000
+Date: Fri, 13 Dec 2024 19:00:20 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Michal Hocko <mhocko@suse.com>
+Cc: lsf-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-block@vger.kernel.org, linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org, bpf@vger.kernel.org
+Subject: Re: LSF/MM/BPF: 2025: Call for Proposals
+Message-ID: <Z1yERChJxMKlZ5nZ@casper.infradead.org>
+References: <Z1wQcKKw14iei0Va@tiehlicka>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <87cyhvoox9.fsf@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <Z1wQcKKw14iei0Va@tiehlicka>
 
-[+cc personal address for Igor]
+On Fri, Dec 13, 2024 at 11:46:08AM +0100, Michal Hocko wrote:
+> The annual Linux Storage, Filesystem, Memory Management, and BPF
+> (LSF/MM/BPF) Summit for 2025 will be held March 24–26, 2025
+> at the Delta hotel Montreal
 
-On Fri, Dec 13, 2024 at 12:30:42PM +0200, Kalle Valo wrote:
-> Bjorn Helgaas <helgaas@kernel.org> writes:
-> 
-> > [cc->to: Igor]
-> >
-> > On Mon, Dec 09, 2024 at 02:06:31PM +0100, Philipp Stanner wrote:
-> >> pci_intx() is a hybrid function which can sometimes be managed through
-> >> devres. To remove this hybrid nature from pci_intx(), it is necessary to
-> >> port users to either an always-managed or a never-managed version.
-> >> 
-> >> qtnfmac enables its PCI-Device with pcim_enable_device(). Thus, it needs
-> >> the always-managed version.
-> >> 
-> >> Replace pci_intx() with pcim_intx().
-> >> 
-> >> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
-> >> Acked-by: Kalle Valo <kvalo@kernel.org>
-> >
-> > Hoping for an ack from Igor, too.
-> 
-> Igor hasn't been around for a while so I'm not expecting see an ack from
-> him, I think the whole qtnfmac driver should be removed in the future.
-> Feel free to take the patch as is.
+I've written an opinionated guide to Montreal.
+Patches accepted, latest version can be found at
+https://www.infradead.org/~willy/linux/lsfmm2025.txt
 
-Thanks, Kalle, will do.
+
+Montreal
+========
+
+Montreal is the second-largest French-speaking city in the world.
+Despite that, you can generally manage without speaking any French;
+they are accustomed to tourists.
+
+Transport
+=========
+
+Montreal primarily uses the metro; it is an entirely underground system.
+Entrances are indicated with a blue downward pointing arrow.  The Delta
+hotel is between McGill and Place-des-Arts metro stops on the green line.
+Train announcements are only in French but signage is bilingual.
+
+Tickets for the STM (https://www.stm.info/en) are valid on both busses
+& metro (but not local rail which is a different system that you won't
+need to care about anyway).  Travel to and from the airport is a special
+$11 fare which includes 24 hours of travel.  You can use a credit card
+to buy fares from a big orange machine; while you can pay on the bus,
+everybody will look askance at you for slowing them down.  You'll get
+a credit-card sized piece of card with an embedded antenna; you can
+break it by folding it, and it is not recyclable.  While you could buy
+a plastic OPUS card, this will not be a wise investment decision.
+
+From the airport, you'll want to take the 747 bus to Lionel-Groulx, go
+down into the Metro and catch a green line train towards Honore-Beaugrand,
+getting off at McGill.  For getting back to the airport, you will again
+need to buy an $11 ticket for the 747 bus.  If you're travelling, say,
+Thursday evening, you might want to buy your special $11 ticket on
+Thursday morning, use it to travel around the city and eventually catch
+the 747 in time to catch your plane.
+
+I would not recommend driving in Montreal.  It is confusing and expensive.
+I'm going to take the train from Ottawa, but taking the train from New
+York is a 11+ hour ride.  I'm told it's very pretty!  There are also
+coaches (Flixbus / Greyhound / etc) but I have no experience with those.
+
+You can rent a bicycle by the minute: https://bixi.com/en/
+Scooters are probably not available to rent during winter.
+
+Beer
+====
+
+The closest brewer to the conference is Benelux.  They don't open until
+mid-afternoon, but the Provigo grocery store across the street sells
+their beer if they're not open.  It's not generally legal to drink on
+the street; take the beer back to the hotel before opening it.
+
+Other worthwhile breweries include Dieu de Ciel, 4 Origines, Saint Bock,
+Brewsky and McAuslan (aka St Ambroise).  Don't be afraid to use the
+metro to visit them.  There are many pubs on Crescent and de la Montagne
+streets; most will serve local beer.  Cans of beer are readily available
+at corner shops (referred to as "dep", short for Depanneur).
+
+Molson is headquartered in Montreal.  It is not usually considered
+local beer.
+
+Food
+====
+
+Montreal prides itself on food.  Classic dishes include poutine, smoked
+meat and tourtiere.  As a major city, there is plenty of international
+food.  Montreal and New York have different styles of bagels from each
+other and much ink has been spilled on the subject of which is superior;
+try St Viateur or Fairmont for a fair example of Montreal bagels.
+
+There is also fierce competition as to whether Quebec, Ontario or
+Vermont produces the best maple syrup.  You should probably find a
+Cabane a Sucre / Sugar Shack to form an opinion of your own, eg
+https://www.parcjeandrapeau.com/en/urban-sugar-shack-spring-restaurant-sainte-helene-bistro-terrace-montreal/
+
+Outside
+=======
+
+We're going to be there in March.  It could be -30C or +20C.  Montreal
+has an underground city (RESO) which has shops and restaurants, as
+well as being a sheltered route between office towers and the metro.
+There's an entrance at Union street, just two blocks from the hotel.
+https://www.mtl.org/en/experience/guide-underground-city-shopping
+(yes, that is a chunk of the Berlin wall in the picture)
+
+If the weather is clement, Mont Royal is a popular destination, but it
+can be icy and not much fun at this time of year.  The Lachine canal may
+be a better bet, or you can walk or cycle on the Formula 1 circuit on
+Ile Notre Dame.  It's not the Nurburgring; while you can drive on it,
+the speed limit is 30kph.  A more unusual route would be the Samuel
+De Champlain bridge Multiuse Path which is some of the best tarmac in
+the city (but ends on an unsurfaced path that connects to the Formula
+1 circuit).
+
+The local sport is hockey.  The Habs are not having a good year, so you
+may be able to buy tickets to a game.  The Colorado Avalanche are in town
+on Saturday 22nd; otherwise you should be able to watch a game in a pub.
+Women's hockey is gaining in popularity, and the Montreal Victoire are
+playing Toronto at Place Bell at noon on Sunday 23rd.
+
+St Catherine, St Laurent & St Denis are the major shopping streets.
+There are markets at Atwater and Jean Talon.  The Vieux Port area
+is full of tourist tat (but maybe you want a sweatshirt with Montreal
+written on it).
+
+The Biodome and Biosphere are both worth a visit.  There's also a
+planetarium, the Musee des Beaux Arts and the botanic gardens.  I like
+the Archaeology museum.
