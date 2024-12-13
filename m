@@ -1,85 +1,102 @@
-Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E3C8802
-	for <linux-ide@vger.kernel.org>; Fri, 13 Dec 2024 00:16:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCD8679F5;
+	Fri, 13 Dec 2024 05:26:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734049006; cv=none; b=bsV4vxiDvrF1xsMnz4LXOcMkDyGXqN7JZcgl4XwJXRUfhWXz6Z6QrgxhHsEMzSZSx375n9fDjR4uFDw+NDNrOcZqKYu3/KYPMiYMGzo8Ij0y1wk4vSe/Nq38d2boJ5omBz//DbgDb7buQ+LIUSiLvUWqdp9ATu4qF8TjKwbLOy4=
+	t=1734067563; cv=none; b=tDUI9nfiQaKi+grH21AcKQ1JxeNRuftcT95DkRAhAHZuRJgq7g+OAd60Lg7+CVqOhBvU9Yds9wVyQue0AoXcF1ECLvRjksRbvCAHkIdzKPx7KN2Gx8Mly4I5fHcQGtwAESs2yjMgopCBC0fLVmw1pjH3d2PVheMBBvecCGudjdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734049006; c=relaxed/simple;
-	bh=f/AfbZ/Lcv4MV6u2NordctibWy0sKFCNN77jSaCoPD8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=k4f3fPIxP0HtERIRprzQmqejZP/c6kfQDGDbfsfgJJxMoVmfWnWfYh/lOKdB9j98Ouo0uD7GzgC2OgezyL0L6DdVECR0c4nsQLOZX+sFW4LzI7sf1MzGDDla01wBNh6eB4oC1kpFTySQY+0QYTrJiMlblrazKjrH+W9yYYn4d60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Zvqpn9IH; arc=none smtp.client-ip=209.85.208.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1734067563; c=relaxed/simple;
+	bh=M2xdmdLNhUnONPFOKg4DD+NknFYDEaK+x9KyPHrv24s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HJye4tLFOdtdtJRylVIdQ4swmLY/OK3kSO2urkQcPjcal6j87Mjdp1IVM0b8DA19An3kk4HkmEGFZXWi+UbPJYzPohvPHb1X+GJdzWpf7taYDwOFxTQGhGtV7lHtIvK4tx8JeRqKY+0YW6hmfm5UX2ki3Gh5OTj16nt1TS6RxF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bw4/mjm1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Zvqpn9IH"
-Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3022c61557cso11187681fa.0
-        for <linux-ide@vger.kernel.org>; Thu, 12 Dec 2024 16:16:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1734049002; x=1734653802; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=f/AfbZ/Lcv4MV6u2NordctibWy0sKFCNN77jSaCoPD8=;
-        b=Zvqpn9IH4+yjPyG4VwYwYfb9hNgN+OEn/u9/wOFMGvsn/4c2xC8QJ3okSBf4aJr8RW
-         xN0WEPL9et9KXnde18fLOuissXQKe2andnUUyZOsxwPAPEcjHhUbtRzh8zuTtLi8f09d
-         yfpGYbJd+16eKtkc9SSzFWwfDRdmokIBm7zZ6eo+KOgjMamB03IX6FUFr0uQictiZfu7
-         iDawbIT2gGfa4bzchSLV+uYEK4p6pUzmmB4napD6QaYsGKviHWpgy9jAk7HUBJngzj/0
-         ++Mvs9xwxbsv8WNCV/D+sKzdO3dT6uDHhp3X3UmzwjgzqRHraKci4KmlZ4K4vA18QriM
-         nDPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734049002; x=1734653802;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=f/AfbZ/Lcv4MV6u2NordctibWy0sKFCNN77jSaCoPD8=;
-        b=sKDdO/0b8nqe96dK+GNbi+CIS3xEAQPdI1vTgN/VA96b6PIMbjrZb+12V+8eWDrn37
-         1nWLbyD9/+1SwcBXMcyXFe8aLebv7WLPmejIfjNOESUa8INO7He5megoDknPD86LzUjs
-         YYCe+BHAlsmErHl4S8maj1OBD2TaO+5sMcwqw90CJxh+t5csq+Y+nem9FSPmNLBtgS9T
-         MTx9S22qfmbsxi7zLMjHtue9dree8Edg6KSK1ODRZgtHQ9CnWtsIUjK74678o0HnLiuT
-         P44s2yNEUQqVaovQaUTrVGi8OEMgZel9vZxsKz9CNx+JO831PHBnDbgzGIv8/BHCumr/
-         TAig==
-X-Forwarded-Encrypted: i=1; AJvYcCU8wPcYfybgKObs8bQz+ANdSwWwvva6bAJSwMWaJIvfjFkQRl1XhKf4nyMkA5sX1MQRpmcUlyYKoJU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx/qsy1SUv+mPjkdRqDzKe0p21Ov/NPkFgTESAai2wcy08SjuTF
-	ET6PQlp9BGVujBD9e/yaC8XLosCXuLLyU/TW48V+aGr96lXJQM9lAeQjEO3MGlz3zi32POOQTDP
-	l0UyzxZfrYs3av+LhQF+Dm375JKkc3EDyYrwdZzxSybEbUNHx
-X-Gm-Gg: ASbGncs+aUWOBfEc55t6Q8v6oQv7o6PrFKndD4Ip5Hybd8ede+PIDNJrcZ+jacSjjxl
-	QSkPOmPJ2DSS3JTO1S3mJVTQAn/WKPdvrxc8E
-X-Google-Smtp-Source: AGHT+IHi5gVwXNphSa9p28n7Muex507AwVByLNdIpXjj9BE+fLY6ChX+4Tt3eZWYhZJFsSxV2AGCweYvOxT65izvamI=
-X-Received: by 2002:a05:6512:3b89:b0:53e:24fa:ce2 with SMTP id
- 2adb3069b0e04-5409059508fmr88078e87.38.1734049002474; Thu, 12 Dec 2024
- 16:16:42 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bw4/mjm1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D513C4CED1;
+	Fri, 13 Dec 2024 05:25:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734067562;
+	bh=M2xdmdLNhUnONPFOKg4DD+NknFYDEaK+x9KyPHrv24s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bw4/mjm10HI4gIYEq6PcUyF1AyHtdTx8xY1u9mQ/MqJN77zbADAxHBaxyRlLd3fvm
+	 K+xp87WmOhOZL0i+Bq0ipg5X8v20dbpQflvkGqWjrmRLY/0GuREkoyHJNVYE+cNf5x
+	 z8LCuZGHvDXUpEOFv59Bb7IqvPJLfr+Ey53P+W4LJrWqp6nhL8os12GgjvLuqPfWM7
+	 tQzQgeo6YclbvdVoVzle3X83Llu3G9oxPWspWAnjZkdc3+GZOJaUxSQ04u5mGgaPm3
+	 thWesm1LM0XsGyHp4VpoNWDNgdZGRIRa8iRReDoOdNpvWyxV8vC93Zm54QQh6yd+QZ
+	 BUiwJG/w6t0xg==
+Date: Fri, 13 Dec 2024 06:25:47 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Philipp Stanner <pstanner@redhat.com>,
+	amien Le Moal <dlemoal@kernel.org>,
+	Basavaraj Natikar <basavaraj.natikar@amd.com>,
+	Jiri Kosina <jikos@kernel.org>,
+	Benjamin Tissoires <bentiss@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alex Dubov <oakad@yahoo.com>,
+	Sudarsana Kalluru <skalluru@marvell.com>,
+	Manish Chopra <manishc@marvell.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
+	Igor Mitsyanko <imitsyanko@quantenna.com>,
+	Sergey Matyukevich <geomatsi@gmail.com>,
+	Kalle Valo <kvalo@kernel.org>, Sanjay R Mehta <sanju.mehta@amd.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Chen Ni <nichen@iscas.ac.cn>, Ricky Wu <ricky_wu@realtek.com>,
+	Al Viro <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Mostafa Saleh <smostafa@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Yi Liu <yi.l.liu@intel.com>, Kunwu Chan <chentao@kylinos.cn>,
+	Dan Carpenter <dan.carpenter@linaro.org>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Eric Auger <eric.auger@redhat.com>, Ye Bin <yebin10@huawei.com>,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v3 00/11] Remove implicit devres from pci_intx()
+Message-ID: <Z1vFWyHkBD4d5xnG@ryzen>
+References: <20241209130632.132074-2-pstanner@redhat.com>
+ <20241212192118.GA3359591@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241211235250.136985-1-linux@treblig.org>
-In-Reply-To: <20241211235250.136985-1-linux@treblig.org>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Fri, 13 Dec 2024 01:16:31 +0100
-Message-ID: <CACRpkdaAfRjF6rDB5u+-g3c53Cby0FO93z_iGuxNxXF-mMywGg@mail.gmail.com>
-Subject: Re: [PATCH] ata: sata_gemini: Remove remaining reset glue
-To: linux@treblig.org
-Cc: dlemoal@kernel.org, cassel@kernel.org, p.zabel@pengutronix.de, 
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241212192118.GA3359591@bhelgaas>
 
-On Thu, Dec 12, 2024 at 12:52=E2=80=AFAM <linux@treblig.org> wrote:
+On Thu, Dec 12, 2024 at 01:21:18PM -0600, Bjorn Helgaas wrote:
+> On Mon, Dec 09, 2024 at 02:06:22PM +0100, Philipp Stanner wrote:
+> 
+> Applied the ones with maintainer acks to pci/devres for v6.14, thanks!
 
-> From: "Dr. David Alan Gilbert" <linux@treblig.org>
->
-> Now that gemini_sata_reset_bridge() is gone, we can remove
-> the sata0/1_reset members and the code that creates them.
->
-> Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
+I don't see this on:
+https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Did you perhaps forget to push?
 
-Yours,
-Linus Walleij
+
+Kind regards,
+Niklas
