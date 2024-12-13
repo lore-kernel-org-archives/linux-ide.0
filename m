@@ -1,102 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from arara2.ipen.br (arara2.ipen.br [200.136.52.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCD8679F5;
-	Fri, 13 Dec 2024 05:26:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7E2618A931
+	for <linux-ide@vger.kernel.org>; Fri, 13 Dec 2024 06:43:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=200.136.52.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734067563; cv=none; b=tDUI9nfiQaKi+grH21AcKQ1JxeNRuftcT95DkRAhAHZuRJgq7g+OAd60Lg7+CVqOhBvU9Yds9wVyQue0AoXcF1ECLvRjksRbvCAHkIdzKPx7KN2Gx8Mly4I5fHcQGtwAESs2yjMgopCBC0fLVmw1pjH3d2PVheMBBvecCGudjdw=
+	t=1734072240; cv=none; b=Hmx7cEZcLGxUmQourAaCdUdKt6oH4kcocU4J54KzpBjl9X3Sz/IXT0NQTxQlQ0zAYciKMfwpq+V0uGQYByo3QBTP2Dol8JQ4CzMQXokDJBeqi135uzzd0a0jHN9opGvRmNDd85jkr2Cbtp2NJfh3yGBYMb4Z6liHakaye9jAFJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734067563; c=relaxed/simple;
-	bh=M2xdmdLNhUnONPFOKg4DD+NknFYDEaK+x9KyPHrv24s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HJye4tLFOdtdtJRylVIdQ4swmLY/OK3kSO2urkQcPjcal6j87Mjdp1IVM0b8DA19An3kk4HkmEGFZXWi+UbPJYzPohvPHb1X+GJdzWpf7taYDwOFxTQGhGtV7lHtIvK4tx8JeRqKY+0YW6hmfm5UX2ki3Gh5OTj16nt1TS6RxF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bw4/mjm1; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bw4/mjm1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D513C4CED1;
-	Fri, 13 Dec 2024 05:25:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734067562;
-	bh=M2xdmdLNhUnONPFOKg4DD+NknFYDEaK+x9KyPHrv24s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=bw4/mjm10HI4gIYEq6PcUyF1AyHtdTx8xY1u9mQ/MqJN77zbADAxHBaxyRlLd3fvm
-	 K+xp87WmOhOZL0i+Bq0ipg5X8v20dbpQflvkGqWjrmRLY/0GuREkoyHJNVYE+cNf5x
-	 z8LCuZGHvDXUpEOFv59Bb7IqvPJLfr+Ey53P+W4LJrWqp6nhL8os12GgjvLuqPfWM7
-	 tQzQgeo6YclbvdVoVzle3X83Llu3G9oxPWspWAnjZkdc3+GZOJaUxSQ04u5mGgaPm3
-	 thWesm1LM0XsGyHp4VpoNWDNgdZGRIRa8iRReDoOdNpvWyxV8vC93Zm54QQh6yd+QZ
-	 BUiwJG/w6t0xg==
-Date: Fri, 13 Dec 2024 06:25:47 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Philipp Stanner <pstanner@redhat.com>,
-	amien Le Moal <dlemoal@kernel.org>,
-	Basavaraj Natikar <basavaraj.natikar@amd.com>,
-	Jiri Kosina <jikos@kernel.org>,
-	Benjamin Tissoires <bentiss@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alex Dubov <oakad@yahoo.com>,
-	Sudarsana Kalluru <skalluru@marvell.com>,
-	Manish Chopra <manishc@marvell.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
-	Igor Mitsyanko <imitsyanko@quantenna.com>,
-	Sergey Matyukevich <geomatsi@gmail.com>,
-	Kalle Valo <kvalo@kernel.org>, Sanjay R Mehta <sanju.mehta@amd.com>,
-	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	Chen Ni <nichen@iscas.ac.cn>, Ricky Wu <ricky_wu@realtek.com>,
-	Al Viro <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Mostafa Saleh <smostafa@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Yi Liu <yi.l.liu@intel.com>, Kunwu Chan <chentao@kylinos.cn>,
-	Dan Carpenter <dan.carpenter@linaro.org>,
-	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Eric Auger <eric.auger@redhat.com>, Ye Bin <yebin10@huawei.com>,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-	xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v3 00/11] Remove implicit devres from pci_intx()
-Message-ID: <Z1vFWyHkBD4d5xnG@ryzen>
-References: <20241209130632.132074-2-pstanner@redhat.com>
- <20241212192118.GA3359591@bhelgaas>
+	s=arc-20240116; t=1734072240; c=relaxed/simple;
+	bh=Cgr97JBiSX1QIcd2ZZZsKVChGTY1ZlWJ/4AhaVFA7Wc=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=d2tUSl/voKSiGYoC07jsff9heE4dWFOqz/UN/bz/Kduwb5J0xDGurxfrXFsG6tBAeL0ZPLmE+CA5CTuTPRQGt4594vrHFXINl1Lsg2J7ehf4nkeD5GJPev9t5Jkv9y5tdBYJ3o2lgGFF/FssyDfDJEYsbrX7XKhT+gaxCEHP1gM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ipen.br; spf=pass smtp.mailfrom=ipen.br; arc=none smtp.client-ip=200.136.52.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ipen.br
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ipen.br
+X-ASG-Debug-ID: 1734072212-055fc729eb148c220006-WJxGKN
+Received: from arara.ipen.br (webmail.ipen.br [10.0.10.11]) by arara2.ipen.br with ESMTP id spVf4GpdqBUbUQSb for <linux-ide@vger.kernel.org>; Fri, 13 Dec 2024 03:43:54 -0300 (BRT)
+X-Barracuda-Envelope-From: TCWM179518@ipen.br
+X-Barracuda-RBL-Trusted-Forwarder: 10.0.10.11
+Received: from ipen.br (unknown [102.129.145.191])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by arara.ipen.br (Postfix) with ESMTPSA id E6C59FBE630
+	for <linux-ide@vger.kernel.org>; Fri, 13 Dec 2024 01:25:42 -0300 (-03)
+Reply-To: t.mazowieckie@mazowieckie.org
+X-Barracuda-Effective-Source-IP: UNKNOWN[102.129.145.191]
+X-Barracuda-Apparent-Source-IP: 102.129.145.191
+X-Barracuda-RBL-IP: 102.129.145.191
+From: <TCWM179518@ipen.br>
+To: linux-ide@vger.kernel.org
+Subject:  I urge you to understand my viewpoint accurately.
+Date: 13 Dec 2024 12:25:42 +0800
+X-ASG-Orig-Subj: I urge you to understand my viewpoint accurately.
+Message-ID: <20241213122542.64861018E3A970A1@ipen.br>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241212192118.GA3359591@bhelgaas>
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-Barracuda-Connect: webmail.ipen.br[10.0.10.11]
+X-Barracuda-Start-Time: 1734072234
+X-Barracuda-URL: https://10.40.40.18:443/cgi-mod/mark.cgi
+X-Barracuda-Scan-Msg-Size: 512
+X-Virus-Scanned: by bsmtpd at ipen.br
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-BRTS-Evidence: 34fbb5788938ad5710ad28835fd12206-499-txt
+X-Barracuda-Spam-Score: 0.00
+X-Barracuda-Spam-Status: No, SCORE=0.00 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=1000.0 tests=NO_REAL_NAME
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.45577
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
+	0.00 NO_REAL_NAME           From: does not include a real name
 
-On Thu, Dec 12, 2024 at 01:21:18PM -0600, Bjorn Helgaas wrote:
-> On Mon, Dec 09, 2024 at 02:06:22PM +0100, Philipp Stanner wrote:
-> 
-> Applied the ones with maintainer acks to pci/devres for v6.14, thanks!
+I am Tomasz Chmielewski, a Portfolio Manager and Chartered=20
+Financial Analyst affiliated with Iwoca Poland Sp. Z OO in=20
+Poland. I have the privilege of working with distinguished=20
+investors who are eager to support your company's current=20
+initiatives, thereby broadening their investment portfolios. If=20
+this proposal aligns with your interests, I invite you to=20
+respond, and I will gladly share more information to assist you.
 
-I don't see this on:
-https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/
-
-Did you perhaps forget to push?
-
-
-Kind regards,
-Niklas
+=20
+Yours sincerely,=20
+Tomasz Chmielewski Warsaw, Mazowieckie,
+=20
+Poland.
