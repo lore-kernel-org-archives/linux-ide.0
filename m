@@ -1,63 +1,62 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B45628F1
-	for <linux-ide@vger.kernel.org>; Sat, 14 Dec 2024 17:06:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA4233FD4;
+	Mon, 16 Dec 2024 13:38:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734195968; cv=none; b=ptfYC0MJDK0m97zG1mm3yKelkZh87YB6goUrSRw/wGi2nlxMLSVr10FVgpSMzwiszbnU+S0CHPpOHOF7TAtAp3r8uFfP8cy7YbP58G09xIC3aHOo/RKWvOHm9J2EWxFBxWzPTMey5G+sIbbJanqw3M6YDaDi9nKaeYTmBa+OODs=
+	t=1734356333; cv=none; b=bQDRxnlXO508puGYYEwIqSdA5x2RtqIxMZF2Ps93jVs73frMEclzurPCNYAVMaLtpH3ARZA8/bjTvZrEu2wjkMf82E792Y/awo/RM1k72HkDF/Z8B475iKCJyxFC1UJRPr6thD5jKIyuB47MBNGRJII20gmVlBXNQuLN5PcuOR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734195968; c=relaxed/simple;
-	bh=h8fAqpYEZBzbx+A9Q1v68iXYg12CjOR7ctpGh9KTP7s=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=eX6it6KMs3jd8BcGrjLgQKosedTLGyOGXb1+JDtQvcMkrYP6foFnqitTiA5vQcWYK8p9JkkRPlF0kxR4EN1d77tF+K/YoS9rkMQ4l0JvbppM06uZIe5PnH1Wsi+BA+F95SmB9TMDFi3dcScUDSrcGphIYP7HBiurlJU8e44Rbtc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MPuENtm7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734356333; c=relaxed/simple;
+	bh=+ytGs5iNlpVolKV9HLJ4iLnwUuCFjtQvY6n+F0WZyh8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Z5Uvrp+nr0tc51+KAMzUHJm0ti8wCmp5BxDDi49VO/pDIElypIAd/OX6JmHYAVmVOHXQi30Y5NrJVM7wZ5FovAH1cu8Qomh57fcDBOl2w2thH6CvsFWTjBD8Qz+5zh/DMhMTgLeOEszNBNKiiaDgiGBfAvAku8NrZLVdl4aeon8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MURnKrVk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MPuENtm7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4ABFC4CED1;
-	Sat, 14 Dec 2024 17:06:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MURnKrVk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F41EC4CED0;
+	Mon, 16 Dec 2024 13:38:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734195965;
-	bh=h8fAqpYEZBzbx+A9Q1v68iXYg12CjOR7ctpGh9KTP7s=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=MPuENtm7ZPyMGMaFq/udO2dNvwIPciQL74O+CcDTpkIOUU6TNTLEuMuocfMEZBFwL
-	 9l3/Y7ixjkf6mTDApIfPODVdN4sawigZpNbjNWHCy7Rhyc76Qz1ocrOS2SKfiv+4A7
-	 l8jkqP0qFaFH+7Qbl0yRgexOU8s8UB3DoHVWdKnR81EVf7oihRONJ+YEpLQou2YqFP
-	 vzF1Q4hLemDqdde50zJN9RUylXd4XZUJAvqsUt4jR2QU1pDsnDYnOS20o0Ob/VBAE1
-	 imijN5QcdWKxAjmqKKKak6MvizcBmtWDsDn2b3jsuHiijRyMjF8PMM8uLXFxEUorpF
-	 y5vxKrTeRwY0g==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id ADF10380A959;
-	Sat, 14 Dec 2024 17:06:23 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 6.13-rc3
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20241214053748.162468-1-dlemoal@kernel.org>
-References: <20241214053748.162468-1-dlemoal@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20241214053748.162468-1-dlemoal@kernel.org>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.13-rc3
-X-PR-Tracked-Commit-Id: 676fe1f6f74db988191dab5df3bf256908177072
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 5d97859e17750073052a45d127cdaec446843838
-Message-Id: <173419598240.3359607.11723047048406420162.pr-tracker-bot@kernel.org>
-Date: Sat, 14 Dec 2024 17:06:22 +0000
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
+	s=k20201202; t=1734356332;
+	bh=+ytGs5iNlpVolKV9HLJ4iLnwUuCFjtQvY6n+F0WZyh8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=MURnKrVkgBxMjnHNzFW/0BLFt25beanVPLx9/sEsfZZQIFSMbJb0shloc8DWENC/e
+	 mIS9Q/40O/M5oErsuYqzQTqQvtb2xCzG+l69e/5E6uJJcdRk9Y+i5pJ3DF18RRey47
+	 ZnuLzyt2TQktf5d5rDn+O7m/uW/r8teohcqOGKaNzukXeJScREary2GzFxbeUbPrq+
+	 0L+WdPS7c81VnMDYeHD94DgGcvIQE/cnvCUXe7ltzKJ9Itz0cScyJb+Z28fn+UIQ5u
+	 6Wg4gZOF9QZe+rfftinQlkvv6bGSbHSAIdxI0L89Zc+qEysWeYaPcXsMZH8gtwhQav
+	 avdd/JePdZRbw==
+Message-ID: <80fe376e-a057-4973-ac67-abe92c694bd2@kernel.org>
+Date: Mon, 16 Dec 2024 05:38:51 -0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: sata_gemini: Remove remaining reset glue
+To: linux@treblig.org, linus.walleij@linaro.org, cassel@kernel.org
+Cc: p.zabel@pengutronix.de, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20241211235250.136985-1-linux@treblig.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20241211235250.136985-1-linux@treblig.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The pull request you sent on Sat, 14 Dec 2024 14:37:48 +0900:
+On 2024/12/11 15:52, linux@treblig.org wrote:
+> From: "Dr. David Alan Gilbert" <linux@treblig.org>
+> 
+> Now that gemini_sata_reset_bridge() is gone, we can remove
+> the sata0/1_reset members and the code that creates them.
+> 
+> Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.13-rc3
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/5d97859e17750073052a45d127cdaec446843838
-
-Thank you!
+Applied to fo-6.14. Thanks !
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Damien Le Moal
+Western Digital Research
