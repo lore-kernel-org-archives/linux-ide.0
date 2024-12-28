@@ -1,87 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 440CE17625C
-	for <linux-ide@vger.kernel.org>; Wed, 18 Dec 2024 09:04:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F10FD79F2;
+	Sat, 28 Dec 2024 23:32:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734512645; cv=none; b=pVLKHgXxooQsQ6ePC2/tp2rFAVGskGwVO9oJRnkQku3DTnIFu0agyvlc3R94p8Zh6yb/Egjhg831UtFextwukcVkAkTP2bIhjLNDYIEBZF+rEjVIYMC+NlXnoNr1OOLG+IhN13Eha5OHkd4R8lO/7oBYtusj4y8YXt1TZHFpw3s=
+	t=1735428777; cv=none; b=IcJZu9ceirzmPDUfyFJ9JGUYxUUqRSkM4weOXIj+YVtmuOh0/iBKz8jhsQEvjnXldEHjnctjSFZEWtB3Yrg14xvEJYJxCpt8qHFpYU/TANUl2QUGPixHwqwcTLnv7rDMgfbelADNAv41FVg3Yllf1tJfOUoG4HasntMgVsBWz8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734512645; c=relaxed/simple;
-	bh=A21/Wi3Y0CStNCCJ1vUXHGXr2MUHMfIP5KM2tpw8eFw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m0NBoOoxTQgEAWkispRVECj7BTcSEdCejrFXHt/0UMNm9BuzCl0wenvKL2ic0jbSAP+HdfkXrIl+yF6t7hci35aJa+tAz6Q+05+pKKmgjxrftrntdaml1gsWMDVRlpTrSNeTW8sHdabwKf/49gpe2y7aA53kbEFuMnkmCt9Lykk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=psnQ3QqQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1735428777; c=relaxed/simple;
+	bh=giHUQnI8ap63UVqjMPzoWtpyquzmfVZTDzUG6P1RK5Q=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Ad+q39d6w3h6oK041Y55jefRIvXK3etAdOnfh9gaKOj5DihEnUcXRJ+R3RIBLbQahTPU8B5UxpcYyl+RrE5K/5RsNu5eZKkiB++xY2RK9yP0N7VDuqBfMW/563wUkqq5+Ojmo3SFhsu/dKNn1dIKnqIoqCRzqvMt78ntgPB67gA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CM508kJj; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="psnQ3QqQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91839C4CECE;
-	Wed, 18 Dec 2024 09:04:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734512644;
-	bh=A21/Wi3Y0CStNCCJ1vUXHGXr2MUHMfIP5KM2tpw8eFw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=psnQ3QqQT0MO2nagUw9Vf+IS53IktM7Mc5II3L2SeuJmFgTsxiLBchZaJGNscfIAU
-	 KcnDJTOJDeF9Tj1nfdGUIssbqYGvMzWdXK09PWiINSCCXg3a+94+b7YWmW6V5KYymh
-	 FCLfpAFBR42L8H/Ptf6nUKV+pDshvcT8LZt9Wbd70mvo/gsBRvO3tQ+eBTLtci/wHr
-	 Onje6m9oXdwyGKJYrXdfdtVlkv+vmsIsgFGvGeW3UhPPet4wS8MLF+CWnool1Wzkwz
-	 NVRUT6XMPSiIVHNTNg0PJUtFPhJv401u6GLO4JW0oM8GKuR60vUHGsCS7g3rm9eU9e
-	 pilFQsZi9A3YQ==
-Date: Wed, 18 Dec 2024 10:04:00 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Joe Hattori <joe@pf.is.s.u-tokyo.ac.jp>, linux-ide@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] ata: sata_highbank: fix OF node reference leak in
- highbank_initialize_phys()
-Message-ID: <Z2KQAPY0B0i6JJS_@ryzen>
-References: <20241205103014.1625375-1-joe@pf.is.s.u-tokyo.ac.jp>
- <5d847931-218a-4bdb-b225-a5fb4a09c096@kernel.org>
- <66ceb32b-a719-420b-a79c-35b509580edd@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CM508kJj"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-38789e5b6a7so4239971f8f.1;
+        Sat, 28 Dec 2024 15:32:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1735428774; x=1736033574; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=yp6YLaS3wbdHHh56yyPBMz3HOcQbYn0L1NBzbosE89U=;
+        b=CM508kJjNjXIsAXSgtZ6AO+zM4k6oahUSTYUUgOGZO4+VMUhkLv2JgvLE3LN8jDss3
+         WtG0sE/OEWmOCMa21VvwQ7XhPAUUX8CsjlV2Pqw9TrPyhybcN8WXundE2R8rsFkJriZ4
+         pEmW56RnSqg0/0qm0upljdx77ynB5piNOcuLvrengMDLJUUh5UZs8qZhmzciIWRfuViY
+         TLv8ImOqb+/kSduJq5pXVC2XG0G6QVBI21IRC5CzeeHDRqcw3TSLz4K0QkiAiPEo3hI2
+         vbRvHRf++LIlEKDZkafqOac6Lc6Re1dhsv/2TtVjAbWtBY7LicGQp5sN0xCLyK0zmRnF
+         FXdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1735428774; x=1736033574;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=yp6YLaS3wbdHHh56yyPBMz3HOcQbYn0L1NBzbosE89U=;
+        b=oNJAh2cNTsjW9E5+HanRgyasOmsD/HzKWz0RvK2GtStxjQb23sif19R1RoyPN5Dc0C
+         Llll45nu4Vc1VLZjpK/Ej+vX7bG6wOyr/VjVUU5nyokPrT7JjbsONIm1OtDXDsGtVRVD
+         t9rKQyIGLf0fjMBxaDNIIvxaoA5pbzqO+2UIJidPxH9xLPxgInFfhPh4vrxmnl9F/+Lh
+         KR9O+bcXDbEbVrvvhmCccm3+iea51TlBMmIaYs7EveoAyeOYdCl/7AI5ObiakWvge8Wt
+         Y0lLY9jIqIizNARUWm9jARA/W98T/2SVw1pAVLW1s08H0mb5zDbH+FsrDj9k+QG3WFkE
+         ryYA==
+X-Forwarded-Encrypted: i=1; AJvYcCU7TEil1wXEHBbOmGgCjYEz7uGQfE8KO4wMgKAAFlOwqHfxQ+FU3hJSlmruoTEoGjatpsyEIIaECAs=@vger.kernel.org, AJvYcCUuedyLS/caQwNO0bZpR3Sd689ATTqe67cp8KG4pvPoFL/65namBqGZ32QxRQT3h+XiciGo8B9+ZQys4MFM@vger.kernel.org, AJvYcCVTz7muUy2XRKVvdsfigWWrbbCGUVNkgTZ4DCp+PNTKUOoO9hcvdjw9y3nX11qm7u59VaSfO2SZkdZN@vger.kernel.org, AJvYcCWZ1egePwwQJRL/jqWqFANVXKb9PFKQmZLjZ02L8KGticaoILdIepXupHfrHwAkD1hWhOAT1JG8CcTA@vger.kernel.org, AJvYcCWZw5rY01j9IQa9CGwFYBOAT452xMZWgkpV3BBTFLhvwgjvOwFQC/FWQcGdrmd24mZRHMz32v5V@vger.kernel.org, AJvYcCWiFbfGMCfPRGqR0k2RzHp0psc/Y3Z9u1d3qN70dsBKWtAiVNM+Nw+N/5/XGZwBb1EigodQOsS96ePL@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKc5QgUnCbzCNz/kB9156uF8l0yJmsDzHzCOqQkYfZZ1Rr3rQw
+	rOOnb42KkGmhBXgUrgGxdt+wI4Aab4AirkcsLIqZu/gl3o+jKaTl
+X-Gm-Gg: ASbGncvdkSnKjPrmtcidmoI3y3Y0E240Nk472hd/79i9QTiylxtS3+AJBJlxVBINMMJ
+	g1SRe0hLi1YxTpnswc7axoU+1n3L1LrxzW89o5jVivGmNnlcUOKBhlAq8/JA7mFC0kreqSGvnm0
+	8I6pGanxqoWGP3a0WXSbZo8gVMBq64wKeL5RJDIqG/DCKbJZ+ftNCybgiSts+14Y3GfZqL4LNu4
+	9cy9MBoe7iqdJMQCePHLV6SUp8IIb2TV9UdbNxFBpWg6Hz0vEx15JxzAg==
+X-Google-Smtp-Source: AGHT+IH9Pxly1KkOAngXtmnCTp49btuhnhudeYM8IucjVtpMMTrprdVjqVAvd4Ltow0b92P3+UAzuA==
+X-Received: by 2002:adf:ab0a:0:b0:38a:50fa:d582 with SMTP id ffacd0b85a97d-38a50faf3cemr1893012f8f.59.1735428774217;
+        Sat, 28 Dec 2024 15:32:54 -0800 (PST)
+Received: from localhost ([2a01:e0a:d9a:4c20:d6da:7147:f20e:31de])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38a1c8474c2sm25616331f8f.55.2024.12.28.15.32.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 28 Dec 2024 15:32:53 -0800 (PST)
+From: Raphael Gallais-Pou <rgallaispou@gmail.com>
+Subject: [PATCH 0/6] Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
+Date: Sun, 29 Dec 2024 00:32:39 +0100
+Message-Id: <20241229-update_pm_macro-v1-0-c7d4c4856336@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <66ceb32b-a719-420b-a79c-35b509580edd@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAJeKcGcC/x3MQQqAIBBA0avIrBPKFKSrRIjpVLPQRCuC6O5Jy
+ 7f4/4GCmbDAwB7IeFGhPVZ0DQO32bgiJ18NohWyE0LzM3l7oEnBBOvyzlEqrWa0i+97qFXKuND
+ 9H8fpfT9Zpv3sYQAAAA==
+X-Change-ID: 20241228-update_pm_macro-e4585beafd33
+To: Patrice Chotard <patrice.chotard@foss.st.com>, 
+ Thinh Nguyen <Thinh.Nguyen@synopsys.com>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Adrian Hunter <adrian.hunter@intel.com>, 
+ Ulf Hansson <ulf.hansson@linaro.org>, 
+ Miquel Raynal <miquel.raynal@bootlin.com>, 
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+ Alexandre Torgue <alexandre.torgue@foss.st.com>, 
+ Jose Abreu <joabreu@synopsys.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Maxime Coquelin <mcoquelin.stm32@gmail.com>, 
+ Mark Brown <broonie@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-usb@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, 
+ linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org, 
+ netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, 
+ linux-spi@vger.kernel.org
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1358; i=rgallaispou@gmail.com;
+ h=from:subject:message-id; bh=giHUQnI8ap63UVqjMPzoWtpyquzmfVZTDzUG6P1RK5Q=;
+ b=owEBbQKS/ZANAwAIAechimjUEsK1AcsmYgBncIqaIFUIX99U52dYXyKTHv3kUYpiB1NgWDXmQ
+ fbeWDg8/+6JAjMEAAEIAB0WIQQgmXv2E+fvbV/9ui/nIYpo1BLCtQUCZ3CKmgAKCRDnIYpo1BLC
+ tcMtEACBJ0gPdEh3A9kQDku4xnQ3prDDj0BroWFCemcZ3uDele37akkQ207mrAPUnUAf9Zjo6nc
+ lFC566Wdx1jXko5eOVPaPJ/edqebt3W2r4sk2Y3mZcT6m2+MeO43BR2XfjjNXzSxDSYp6zSh0QM
+ R0urFraGthT4o2d/WeZBebYnfPMfCemp8aA5KA3NDlRTDs0AdY8BNKiLKl2eaRuZno4DUuK2ibI
+ zw8rWXkJHld/dOAL+sm+Z4L5PnkRFnUCDk/IXDiJuHWiYlKzwX7G2FP1s1r/fAIFg4rtm2x8wCo
+ guwnv5TNvItP1xk1dOqmdxOqboQdx7O6Zxg6aE0iz/LFB0oU/cV0tTZJQaI1mg9LSJQqjF9tFiD
+ ws0ugN8G4DLBVUJotARGmqBcWIyIzHZpP1u0UBpnM58l87bG1qK+9CLt2EnCUELhVgdz+QOqtfm
+ mU6LioIYAoEFxMPlYDjFTK++GHJ28PO9vOfanD8WFpAIHbUrJJyWXXyI28hKfcBLOXPuxN5kmny
+ YUc+xSr1t+hM1ger7KHjGW4dpzEpAOtWwYvYzk+WgMOn1vYeBqWC6x8LaEeN/qOGS+4ajhwrqj1
+ c3PTO7zspLoPoHi7uMoGHkGtePff2MI9uzzYdWnKAQW3+iftKa3RtY8hFgxDar0iu0ldblZHZnB
+ sISlnpXRGIpbxKw==
+X-Developer-Key: i=rgallaispou@gmail.com; a=openpgp;
+ fpr=20997BF613E7EF6D5FFDBA2FE7218A68D412C2B5
 
-On Tue, Dec 17, 2024 at 12:15:35PM +0100, Krzysztof Kozlowski wrote:
-> On 09/12/2024 01:14, Damien Le Moal wrote:
-> > On 12/5/24 19:30, Joe Hattori wrote:
-> >> The OF node reference obtained by of_parse_phandle_with_args() is not
-> >> released on early return. Add a of_node_put() call before returning.
-> >>
-> >> Fixes: 8996b89d6bc9 ("ata: add platform driver for Calxeda AHCI controller")
-> >> Signed-off-by: Joe Hattori <joe@pf.is.s.u-tokyo.ac.jp>
-> > 
-> > Applied to for-6.13-fixes. Thanks !
-> Considering that:
-> 1. Few other fixes reported by this static analysis were bogus and never
-> tested,
-> 2. Missing of_node_put is entirely harmless, absolutely 0 effect, no
-> leak of anything, nothing to worry, no-op code currently,
-> 3. But a mistakenly added incorrect of_node_put is a use-after-free bug,
-> 4. This was in the kernel for long time, like 12 years (!!!),
-> 
-> then I really do not understand how it could be a 6.13-current-rc-fixes
-> material.
-> 
-> That's just wrong and possibly causing more harm. Really, please stop
-> sending trivial static analyzer fixes for 12 year old bug to current RC.
-> 
-> This was brought several times, last quote:
-> 
-> "I'm definitely not reverting a patch from almost a decade ago as a
-> regression.
-> If it took that long to find, it can't be that critical of a regression.
-> So yes, let's treat it as a regular bug."
+Prevent the use of macros, and rely instead on kernel configuration for
+power management.
 
-For reference:
-https://lore.kernel.org/lkml/CAHk-=wgFuoHpMk_Z_R3qMXVDgq0N1592+bABkyGjwwSL4zBtHA@mail.gmail.com/
+This series makes the same change over six different drivers:
+usb-st-dwc3, sdhci-st, st-spi-fsm, ahci_st, sti-dwmac, spi-st.
 
+Signed-off-by: Raphael Gallais-Pou <rgallaispou@gmail.com>
+---
+Raphael Gallais-Pou (6):
+      usb: dwc3: st: Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
+      mmc: sdhci-st: Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
+      mtd: st_spi_fsm: Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
+      ahci: st: Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
+      net: stmmac: sti: Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
+      spi: st: Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
 
-Kind regards,
-Niklas
+ drivers/ata/ahci_st.c                           | 6 ++----
+ drivers/mmc/host/sdhci-st.c                     | 6 ++----
+ drivers/mtd/devices/st_spi_fsm.c                | 6 ++----
+ drivers/net/ethernet/stmicro/stmmac/dwmac-sti.c | 8 +++-----
+ drivers/spi/spi-st-ssc4.c                       | 6 +-----
+ drivers/usb/dwc3/dwc3-st.c                      | 6 ++----
+ 6 files changed, 12 insertions(+), 26 deletions(-)
+---
+base-commit: 8155b4ef3466f0e289e8fcc9e6e62f3f4dceeac2
+change-id: 20241228-update_pm_macro-e4585beafd33
+
+Best regards,
+-- 
+Raphael Gallais-Pou <rgallaispou@gmail.com>
+
