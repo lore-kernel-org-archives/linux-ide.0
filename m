@@ -1,83 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40A563597F;
-	Mon,  6 Jan 2025 05:28:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2584184F;
+	Mon,  6 Jan 2025 07:35:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736141313; cv=none; b=tc00JXpd7qSJltJoSDG+D06iSv2Ig+oll9CBhkr/p7kG+QzEy9QC8x6id+D5sGgeihqO5BvAG1E9lcaR3Y/6EqmLOy4XVPzl9yGTmrzHhkn6HLf30LP7+3OacaagBUFi9fyC6ikgzBMoSf/s1dMUrLjSnk1BaF2crcDIdiIEa/M=
+	t=1736148926; cv=none; b=FrlnXIhK8byCGeJdVk4BY8GShJXZuAgB958SaE8/kcSKtI0szUxUW5s9fD0fZJclBc8IB3CxupVlNlbT3DCFQANUuJmKVCfism0jBMnBMvUx1xwH+9SAg7q1vb016zLnpNrsbdP/vM9+aYCdKH1uL+7SvHlcDmP+ePL/hSFsRgI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736141313; c=relaxed/simple;
-	bh=eJd0j87GxJEGPqpx6KAvPu4hSFQVX6p54ubiUO+07fQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p01kJQYbnbOsAe0254HJO27mqDcHdHKswkgpUPL4qtEDZgOFxKQKXqFkFAgH9XwInPLqW39HmjOaFnXYl+2B2kK/haqIVO/ZkSXDfK3Aa1FpJr4Uuo7KrhJTFU0TdguMDGplnpu/WK054hP+EGBOl46HGp56k4SjSOhreSzPxRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uM+byKPF; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uM+byKPF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C90CC4CED2;
-	Mon,  6 Jan 2025 05:28:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736141312;
-	bh=eJd0j87GxJEGPqpx6KAvPu4hSFQVX6p54ubiUO+07fQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=uM+byKPFoWYO2dn+BEOENi5RzZurQ3uYYLyC4pzl9DKXMd7M2HZJKG2tIFmYlHwVa
-	 P3DHMZTcrAaVqe5ZZB/PLCSed2qdoDqgHlOxmEZ3YINwM45qJ8nd4mgvkKr6zPK9+e
-	 voyva+il4bh75IOffcRru8EJE1Eugflq2Px0DlGAl4RLSnpDU47Wyc6XEgYt7SgePB
-	 fPvOTn57Z6gO3vlF18pVrQy8ONSBcR9NcU83heStRJJx/fVtMITxiGMDmw21FXimnx
-	 wFcQcY043htODYRNfSxfIU7S4Na3lF32LAAHzG5XSRUb+mi3qdAQhdNtLBiEy/7JzX
-	 3IuWKzOPyrfog==
-Message-ID: <d17e611d-8590-4085-b995-0cf3ca071746@kernel.org>
-Date: Mon, 6 Jan 2025 14:27:47 +0900
+	s=arc-20240116; t=1736148926; c=relaxed/simple;
+	bh=qbko2Z+H6pgF7QgMKcN3IFdAcCTv0LQGjnrM1OmzeeE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gx93kTzyxVTSpXD8YQeXOlG14cWY6J9m/yp1WLSsMCT+jgqxSRDOWqQz2AWUHL8S2u5tk+LMm7zbRQZ/N7NYCjEBIL/X8J93dn+KxGThWExQTbqxPwGO69zHtqbSNVLnEkL6cXkHQA1jLr7zoZ7WgKmKhCNwvHhpYzNN0JF/uAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 75F6E68BFE; Mon,  6 Jan 2025 08:35:20 +0100 (CET)
+Date: Mon, 6 Jan 2025 08:35:20 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 4/4] block: simplify tag allocation policy selection
+Message-ID: <20250106073520.GA17229@lst.de>
+References: <20250103074237.460751-1-hch@lst.de> <20250103074237.460751-5-hch@lst.de> <d7cbbe46-ecd1-4bdc-8fe9-7df499ba9e6f@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: libahci_platform: support non-consecutive port
- numbers
-To: Josua Mayer <josua@solid-run.com>, Niklas Cassel <cassel@kernel.org>,
- Hans de Goede <hdegoede@redhat.com>
-Cc: Jon Nettleton <jon@solid-run.com>,
- Mikhail Anikin <mikhail.anikin@solid-run.com>,
- Yazan Shhady <yazan.shhady@solid-run.com>,
- Rabeeh Khoury <rabeeh@solid-run.com>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20250101-ahci-nonconsecutive-ports-v2-1-38a48f357321@solid-run.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250101-ahci-nonconsecutive-ports-v2-1-38a48f357321@solid-run.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d7cbbe46-ecd1-4bdc-8fe9-7df499ba9e6f@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 1/1/25 9:13 PM, Josua Mayer wrote:
-> So far ahci_platform relied on number of child nodes in firmware to
-> allocate arrays and expected port numbers to start from 0 without holes.
-> This number of ports is then set in private structure for use when
-> configuring phys and regulators.
-> 
-> Some platforms may not use every port of an ahci controller.
-> E.g. SolidRUN CN9130 Clearfog uses only port 1 but not port 0, leading
-> to the following errors during boot:
-> [    1.719476] ahci f2540000.sata: invalid port number 1
-> [    1.724562] ahci f2540000.sata: No port enabled
-> 
-> Update all accessesors of ahci_host_priv phys and target_pwrs arrays to
-> support holes. Access is gated by hpriv->mask_port_map which has a bit
-> set for each enabled port.
-> 
-> Update ahci_platform_get_resources to ignore holes in the port numbers
-> and enable ports defined in firmware by their reg property only.
-> 
-> When firmware does not define children it is assumed that there is
-> exactly one port, using index 0.
-> 
-> Signed-off-by: Josua Mayer <josua@solid-run.com>
+On Fri, Jan 03, 2025 at 09:33:31AM +0000, John Garry wrote:
+>> -	BUILD_BUG_ON(ARRAY_SIZE(alloc_policy_name) != BLK_TAG_ALLOC_MAX);
+>> +	BUILD_BUG_ON(ARRAY_SIZE(hctx_flag_name) != ilog2(BLK_MQ_F_MAX));
+>>   -	seq_puts(m, "alloc_policy=");
+>
+> Maybe it's nice to preserve this formatting, but I know that debugfs is not 
+> a stable ABI...
 
-Applied to for-6.14. Thanks !
+It's not a stable API indeed, and I'd rather not keep extra code for
+debugging.
 
--- 
-Damien Le Moal
-Western Digital Research
+>> index 72c03cbdaff4..d51eeba4da3c 100644
+>> --- a/drivers/ata/sata_sil24.c
+>> +++ b/drivers/ata/sata_sil24.c
+>> @@ -378,7 +378,7 @@ static const struct scsi_host_template sil24_sht = {
+>>   	.can_queue		= SIL24_MAX_CMDS,
+>>   	.sg_tablesize		= SIL24_MAX_SGE,
+>>   	.dma_boundary		= ATA_DMA_BOUNDARY,
+>> -	.tag_alloc_policy	= BLK_TAG_ALLOC_FIFO,
+>> +	.tag_alloc_policy	= SCSI_TAG_ALLOC_FIFO,
+>
+> do we actually need to set tag_alloc_policy to the default 
+> (SCSI_TAG_ALLOC_FIFO)?
+
+libata uses weird inheritance where __ATA_BASE_SHT sets default fields
+that can then later be override, so this is indeed needed to set the
+field back to the original default after the previous assignment changed
+it.  (Did I mentioned I hate this style of programming? :))
+
+> Could we just have
+>
+> struct scsi_host_template {
+> 	...
+> 	int tag_alloc_policy_rr:1
+>
+> instead of this enum?
+
+This should probably work.  I tried to reduce the churn a bit, but
+due to the change of the enum value names that didn't actually work.
+
+>
+> Or does that cause issues for the ATA SHT and descendants where it 
+> overrides members? I didn't think that it would.
+
+It'll still work fine.  It will be even less obvious, so the case
+mentioned above by you will probably have to grow a comment explaining
+it to preempt the cleanup brigade from removing it.
+
