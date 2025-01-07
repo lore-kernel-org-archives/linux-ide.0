@@ -1,122 +1,171 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A45628691;
-	Tue,  7 Jan 2025 00:31:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82A9113B58D
+	for <linux-ide@vger.kernel.org>; Tue,  7 Jan 2025 10:24:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736209870; cv=none; b=L/+sPmhUCX1hsTMX384OQBc/y6LMHIlHcBqODGcMTQ8IocufQjWhs4elYaNW6A0QGz3W7Y3nTWeloKk0ecvTAznJrgA5wr3focoaUU483LE3Zd9Jz4vF1AYeWB0lmAYSQvQn50er+ZchRflkU3i8dZs9Sus/1SU+jEvj3WQsrks=
+	t=1736245496; cv=none; b=irMBQHIMVTI03BzqE/mEt0CDMwMF5K9HszumP7Q5YJYn7ZhcEX+ZzNCYvuR0Ye+/yK5r72/sZTwJ49UxgtUxl/cZ3rA88emAWJuRmWENaSQXkAYV3poD3r0PAR7FhfpKmfOG9seennGEFsfLi/suNgKz3XR2AjzOrvFQcFMCc6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736209870; c=relaxed/simple;
-	bh=SHfW5fyQnsmaHFVn7BkPlpsP4nzQ8xdy+QhdGX+cakw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oGXZ+BTy658WrqRPjA1/Lpvv8F873AvG5YtwzNptrsM9cAjVUE9dBXM+fZIMPnBF4oN6RL8gctf5V4z01w3r4RFUfTLgARDEsuziGFj/etsy6FfAKvJL+BIQPdkWK4ScY28bpKf6vLMU1BkSgnicPxmDp37bBfD/1byFmrTB8XY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IA2d4256; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1736245496; c=relaxed/simple;
+	bh=0xRBoxJdN0lYVZzD4Qb98f14OfIiv1xEe+bM1oSsRDI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=K4Rq+7k9eFM8mi9e6fESXWovpzQmA+tqQeOMSLZ0ZvP+g35Zu8jN6ZG8MS4suN0hTcvAKJXcns3NH/fBk0Bl3JOpp8S8FK7XDAUCG/nlfDntIsBLXGW7IbuniMsQ6bQ7ZYEthtN8sSEHSQJL1dAFUZjWZ4RIP1fN+UKBw/hsq5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HeMlEOw7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IA2d4256"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-385e0e224cbso7446964f8f.2;
-        Mon, 06 Jan 2025 16:31:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1736209866; x=1736814666; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=13VUHaFiuc4bXuLa2863YA1rYhMMosunQcKMEn7ZyfQ=;
-        b=IA2d4256Q0C5c4t6vKeIT9I9qu5t5L+LTkqtfKX1W7z9/Akl247tflxb2FE3e1Ech/
-         dkgIYonDN/UU+hdAItMuoUturYvaFf9SZhN1jr/uVAMRGX4covbbNcdvWq4UGq5//9Xa
-         Hjje2X4LXf0hNktDf+5f/5jK1GQzMqlfm43Zy7aWjAivwgdwXwv4K8wmnIPO7B+S3qxt
-         +EFbHfBpNJv4F0FBm9z8+qpJeW6Od7ZXNfEVrybqN9Oux+SV2CQEccVC4LMTuMt5hy5L
-         vnyewjKwceUattdjYRDFxPkMP0aciYRawoesXTE+vo+jeqtVy1JwADD0Df7sxKJaya/J
-         PrOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736209866; x=1736814666;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=13VUHaFiuc4bXuLa2863YA1rYhMMosunQcKMEn7ZyfQ=;
-        b=V6OcDIvFR35l2oaGRf86+jDZayIGX8ZUXOjsCGlAtpLHH6tqqQwNvS8jmMfcjAt/x6
-         2tXsMxX0R6WAKsSEr6XB78EgcgtdG4drQssNtw8+I/PRmWHt6F0Mer8rfZagvysYy06B
-         0jn82Y/WYb+HP8WoASncRD1ewlL4gMFWnvF07bsQ0u5Cyb1ABWkRNv3zwLeih014CCNQ
-         KagKVVIq1tr3xlRHomO333yaWNAD72/1/u0kMyKRR5v2YWYlIMp0wVtUaNhKxMzvEzOC
-         KkFNBrT1u7a2Adeb+ertUNGUmYTVy8xWnkUrgsL9rFU7eoMzPkroSHfAy3JSAQwtbUUG
-         FGZQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU2cJNvSyX8VrA6LKxH8mtVD0Fg/uyW3ECzFgEMW24XZUN9XRDWpfAKQ8m5PsoAUlatywRpzdLRuQI=@vger.kernel.org, AJvYcCUXPbKrQ69wBE+N+sbbn4r9NRlr907CNQxoxZJGNHBaOO2qUu3HRPh/UEuxNjr7CWZWw2oHEIYm@vger.kernel.org, AJvYcCUXuHks+LHijPNesFPLJ8SIl4xk5YW4QOW++C0EkdTP5E5DYU4KP0zZFDwH69fa7g9krsxlIDHzTnXE@vger.kernel.org, AJvYcCW5RD5jHtIBqLVJ0lcQhRYvLov5CINNHnZvQD+HpSeUN7y0suyI+6l+tq9i/a9C74otPjQl4+lDTNJk@vger.kernel.org, AJvYcCWYYLsIaLXwKQ385NJKdRxcQRu4cRNcLdGUjkhY2oMd5AWGvDI098LzCEYOR+HlJ3TPIHArJ1TKs+tkbjXX@vger.kernel.org, AJvYcCWcdkTqyWkR3IH89b8LRfFwC6vWtQB91CTTMuV3A6YvD2sLROMSbumsWEOYYlxa6X3wrDQ1iLccEV1Q@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmkBNr8SaNA2NTl/jw+Da9rrcbk/zYI///NXSr+fVj4d42p7HP
-	hWze6BBinOLUK2IZjwwBdT1ajPvQmsw28QVM0S0pgpZgx2ZAbFnE
-X-Gm-Gg: ASbGncsn6HkZU/Uxwr/8ldpy9KN0P8htE0uQ7Kbqo7B1RQQwFIQLC4QdxeDRyThSZRM
-	/YAav/Auo584jNaVNaFI8BqVEqpigu186nddZ1ruX7qKLDdt2imxy6r/5eZe5zhr4JNuiXGs2t6
-	fJHWU5wbGJkQ/Q4NWVSpghzK2i7hvbYVdEQRQkk/EKxQP+PHmYru54Vs2IG5ATEstHkN0JZRzQK
-	Y+aCnK/8YV0eUvHqvmdL5YojDoY5/akDDt7AQG6lyntgQEtK27lqyLIPFq534RQ9iozzOViYXoK
-	WxMFNoMZZe5lKz5qODzkQZbedQ==
-X-Google-Smtp-Source: AGHT+IEjONcU9x6JlzHrNOCRfapdijI2K0K3jjBIXQvsC6vlMArfJXHA/sc0RSHKNgKkvauw85ENXQ==
-X-Received: by 2002:a5d:6da1:0:b0:386:4a0c:fe17 with SMTP id ffacd0b85a97d-38a2220039fmr49166964f8f.27.1736209865801;
-        Mon, 06 Jan 2025 16:31:05 -0800 (PST)
-Received: from ?IPV6:2001:861:3385:e20:6384:4cf:52c5:3194? ([2001:861:3385:e20:6384:4cf:52c5:3194])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38a1c8471dcsm49320901f8f.48.2025.01.06.16.31.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 06 Jan 2025 16:31:05 -0800 (PST)
-Message-ID: <810af0b9-aa21-4f11-9708-92c870615cc8@gmail.com>
-Date: Tue, 7 Jan 2025 01:31:02 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HeMlEOw7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59E9CC4CED6;
+	Tue,  7 Jan 2025 10:24:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736245496;
+	bh=0xRBoxJdN0lYVZzD4Qb98f14OfIiv1xEe+bM1oSsRDI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=HeMlEOw7vn8lPGvhYLi82SHCfeaJ5QEA53SMKGBj4mTartTDfIrDc+IWL6kc6NPNH
+	 X38ktDU7ceALQo/uFpGDmjOnATM1v3DWsrM8nU28uQGSU7WR7YfYLnjsQzCV5T9jIh
+	 HobVq5LW2T80Kbqb/EBKlqX/da0RTPsnMVuFmjEwiMcdF/P06LyOVgE6h+RucN5EhB
+	 gjtFYhZaCf6dGbAXvP/xcsd93hpmJT1OZrObCnAhZsk3nWLRXDttZIt5H2LtXDJNN7
+	 +S/a/Ky4Dgg7L//CMsO6Ofh9rqKnXPOrvkeWudwH5/Hf++RB9itHhkAqXeT0b1icLf
+	 43VuHbgt0ZYEQ==
+Date: Tue, 7 Jan 2025 11:24:52 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ahci: Introduce ahci_ignore_port() helper
+Message-ID: <Z30A9OL8RInlg_Tn@ryzen>
+References: <20250106052701.47246-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/6] Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
-To: Mark Brown <broonie@kernel.org>
-Cc: Patrice Chotard <patrice.chotard@foss.st.com>,
- Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson
- <ulf.hansson@linaro.org>, Miquel Raynal <miquel.raynal@bootlin.com>,
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Alexandre Torgue <alexandre.torgue@foss.st.com>,
- Jose Abreu <joabreu@synopsys.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Maxime Coquelin <mcoquelin.stm32@gmail.com>,
- linux-arm-kernel@lists.infradead.org, linux-usb@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
- linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
- netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
- linux-spi@vger.kernel.org
-References: <20241229-update_pm_macro-v1-0-c7d4c4856336@gmail.com>
- <eec9caa0-0029-4774-842e-af1d1290ad97@sirena.org.uk>
-Content-Language: en-US, fr
-From: =?UTF-8?Q?Rapha=C3=ABl_Gallais-Pou?= <rgallaispou@gmail.com>
-In-Reply-To: <eec9caa0-0029-4774-842e-af1d1290ad97@sirena.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250106052701.47246-1-dlemoal@kernel.org>
 
-
-
-Le 06/01/2025 à 14:08, Mark Brown a écrit :
-> On Sun, Dec 29, 2024 at 12:32:39AM +0100, Raphael Gallais-Pou wrote:
->> Prevent the use of macros, and rely instead on kernel configuration for
->> power management.
->>
->> This series makes the same change over six different drivers:
->> usb-st-dwc3, sdhci-st, st-spi-fsm, ahci_st, sti-dwmac, spi-st.
+On Mon, Jan 06, 2025 at 02:27:01PM +0900, Damien Le Moal wrote:
+> libahci and AHCI drivers may ignore some ports if the port is invalid
+> (its ID does not correspond to a valid physical port) or if the user
+> explicitly requested the port to be ignored with the mask_port_map
+> ahci module parameter. Such port that shall be ignored can be identified
+> by checking that the bit corresponding to the port ID is not set in the
+> mask_port_map field of struct ahci_host_priv. E.g. code such as:
+> "if (!(hpriv->mask_port_map & (1 << portid)))".
 > 
-> Is there any actual interaction between these changes?  In general you
-> shouldn't combine patches for multiple subsystems into a single series
-> unless there's some dependency or other interaction since it just
-> complicates management of the patches.
+> Replace all direct use of the mask_port_map field to detect such port
+> with the new helper inline function ahci_ignore_port() to make the code
+> more readable/easier to understand.
+> 
+> The comment describing the mask_port_map field of struct ahci_host_priv
+> is also updated to be more accurate.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>  drivers/ata/ahci.h             | 13 ++++++++++++-
+>  drivers/ata/ahci_brcm.c        |  2 +-
+>  drivers/ata/ahci_ceva.c        |  4 ++--
+>  drivers/ata/libahci_platform.c |  6 +++---
+>  4 files changed, 18 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 8f40f75ba08c..aea30df50c58 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -328,7 +328,7 @@ struct ahci_port_priv {
+>  struct ahci_host_priv {
+>  	/* Input fields */
+>  	unsigned int		flags;		/* AHCI_HFLAG_* */
+> -	u32			mask_port_map;	/* mask out particular bits */
+> +	u32			mask_port_map;	/* Mask of valid ports */
+>  
+>  	void __iomem *		mmio;		/* bus-independent mem map */
+>  	u32			cap;		/* cap to use */
+> @@ -379,6 +379,17 @@ struct ahci_host_priv {
+>  						  int port);
+>  };
+>  
+> +/*
+> + * Return true if a port should be ignored because it is excluded from
+> + * the host port map.
+> + */
+> +static inline bool ahci_ignore_port(struct ahci_host_priv *hpriv,
+> +				    unsigned int portid)
+> +{
+> +	return portid >= hpriv->nports ||
+> +		!(hpriv->mask_port_map & (1 << portid));
+> +}
+> +
+>  extern int ahci_ignore_sss;
+>  
+>  extern const struct attribute_group *ahci_shost_groups[];
+> diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+> index 24c471b485ab..29be74fedcf0 100644
+> --- a/drivers/ata/ahci_brcm.c
+> +++ b/drivers/ata/ahci_brcm.c
+> @@ -288,7 +288,7 @@ static unsigned int brcm_ahci_read_id(struct ata_device *dev,
+>  
+>  	/* Re-initialize and calibrate the PHY */
+>  	for (i = 0; i < hpriv->nports; i++) {
+> -		if (!(hpriv->mask_port_map & (1 << i)))
+> +		if (ahci_ignore_port(hpriv, i))
+>  			continue;
+>  
+>  		rc = phy_init(hpriv->phys[i]);
+> diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+> index f2e20ed11ec7..2d6a08c23d6a 100644
+> --- a/drivers/ata/ahci_ceva.c
+> +++ b/drivers/ata/ahci_ceva.c
+> @@ -206,7 +206,7 @@ static int ceva_ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
+>  		goto disable_clks;
+>  
+>  	for (i = 0; i < hpriv->nports; i++) {
+> -		if (!(hpriv->mask_port_map & (1 << i)))
+> +		if (ahci_ignore_port(hpriv, i))
+>  			continue;
+>  
+>  		rc = phy_init(hpriv->phys[i]);
+> @@ -218,7 +218,7 @@ static int ceva_ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
+>  	ahci_platform_deassert_rsts(hpriv);
+>  
+>  	for (i = 0; i < hpriv->nports; i++) {
+> -		if (!(hpriv->mask_port_map & (1 << i)))
+> +		if (ahci_ignore_port(hpriv, i))
+>  			continue;
+>  
+>  		rc = phy_power_on(hpriv->phys[i]);
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index b68777841f7a..53b2c7719dc5 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -49,7 +49,7 @@ int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
+>  	int rc, i;
+>  
+>  	for (i = 0; i < hpriv->nports; i++) {
+> -		if (!(hpriv->mask_port_map & (1 << i)))
+> +		if (ahci_ignore_port(hpriv, i))
+>  			continue;
+>  
+>  		rc = phy_init(hpriv->phys[i]);
+> @@ -73,7 +73,7 @@ int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
+>  
+>  disable_phys:
+>  	while (--i >= 0) {
+> -		if (!(hpriv->mask_port_map & (1 << i)))
+> +		if (ahci_ignore_port(hpriv, i))
+>  			continue;
+>  
+>  		phy_power_off(hpriv->phys[i]);
+> @@ -94,7 +94,7 @@ void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
+>  	int i;
+>  
+>  	for (i = 0; i < hpriv->nports; i++) {
+> -		if (!(hpriv->mask_port_map & (1 << i)))
+> +		if (ahci_ignore_port(hpriv, i))
+>  			continue;
+>  
+>  		phy_power_off(hpriv->phys[i]);
+> -- 
+> 2.47.1
+> 
 
-Hi,
-
-No, there isn't apart from the fact that those are stm32 drivers. As 
-Miquel also stated a few days ago, is was wrong for me to sent all of 
-this in a whole serie. I will just resend them separately as a v2, 
-taking into account Miquel's review[1] and the kernel robot.
-
-Regards,
-Raphaël
-
-
-[1] https://lore.kernel.org/lkml/877c7ha77n.fsf@bootlin.com/
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
