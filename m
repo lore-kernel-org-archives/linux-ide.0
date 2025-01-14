@@ -1,172 +1,163 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC15215059
-	for <linux-ide@vger.kernel.org>; Tue, 14 Jan 2025 18:04:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26C861FBCA6
+	for <linux-ide@vger.kernel.org>; Tue, 14 Jan 2025 18:30:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736877875; cv=none; b=KewEX9U0BRJSW83GHlQyhNeL4PkBMxXVnfkWb9pF4w0tcX42BSYa6et+QGOLe3wAZMeFiEN9AMhLR/Pc0WE3EtW/05nMcqoVcORG8x3PTrTK5WDREREIizr66QvSoY6a6Mi9j6ECzpkiquoMnV9hq5lvTxqT8mGy1tTOHBz9YlY=
+	t=1736879408; cv=none; b=smjkIOV0flMVNeuSwDQOaZBFM1Id9/aaSDV4f5oqa8kK8uQD1gblAMYs1x4RyxH20ZmE8xZ7bGYbgYZ9bqr64jukRKxh2rzTFUpo/rW3vy0bm7c0gIFXLY8PjtiQPbYlCIQEHftzyLEV1xT6Xw7ZIrFIkWVJpKAdGVlP9uho58c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736877875; c=relaxed/simple;
-	bh=/76MFp8+ELc76b9WkGApPac7KL4n08mhVwBhhtcc6TA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=I/vjYA///QdL+vNM8jsui9NMqP7RMAJA3qjJe9w33jcp/0gVgOexuirIZxi0Rp/xhBGTYRj1a9DQill/W6iwVk0VKpMhsv2OQBjwXaMKyfwF18yNE53qopcgfyscjroXXdsZ9YJyrgnKs68EZo/1Ww9Oso8+h22TqlM2SmSVme8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ok7DtQ05; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1736879408; c=relaxed/simple;
+	bh=whlKAUqHTjHNeBRrU/4cu9r+dtq512gjYmyTllNSWdQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=d1NaptLKQ3Oxmb1sWLTEjwx0SlJ8fqcXboW0+rf+SgHw8mRUoJQS3i7L5Ljk68UTtRzmEqAPdOzC30lyPNhh2/RaGG+6VfFX54EYru42l441JASvFW2HBxyNjgVOhaN9i37YxhgfjsZkAcnI4mAPb9YbdcErjo++R2y4DMMlUkQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XmHiD2nB; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ok7DtQ05"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XmHiD2nB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1736877872;
+	s=mimecast20190719; t=1736879404;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=SkSv8dzzOzHq5nzalhOvIVJZ0jUdhm2v/a+p0Jga0iw=;
-	b=Ok7DtQ05FpAzZCC8lAo6ZKLataP3k/h2DXSKl5A8mWQJxRKWcUyKmeIzKdQIYEwf7dZW/y
-	N4wIs6FdrykTtaphlDuys46OPdFIM6eHNuaEQnpx4NDecxtOYevLXkhp/k9Whcw6qy/qhH
-	eUFI7xZhyfNQaW/eeJW+AjtTDM0fx7s=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-571-tTYkk7DaPtuC7ByoTjRvuA-1; Tue, 14 Jan 2025 13:04:31 -0500
-X-MC-Unique: tTYkk7DaPtuC7ByoTjRvuA-1
-X-Mimecast-MFC-AGG-ID: tTYkk7DaPtuC7ByoTjRvuA
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-aab954d1116so619671366b.3
-        for <linux-ide@vger.kernel.org>; Tue, 14 Jan 2025 10:04:31 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736877869; x=1737482669;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SkSv8dzzOzHq5nzalhOvIVJZ0jUdhm2v/a+p0Jga0iw=;
-        b=xITjijBfd2c0oP5wJb61kadUMU2nLk2nWJ0zJHmhn5VqHmNTj8NvjI8wv+WRjPLmyE
-         ao33uO3dD4/SkPH0VNWNms7vXDrY6Omt6RHQ8QrTJAQyvCSatnEactCx1qKKypszAps3
-         A9Tnk5TShpNUUdPDDc5VgHIQqGBPmckg5Bcjw4WzbX4rFb0eP4K41DkNeOwN3lnNFF89
-         YtaJa7vSd7OnfbzVyszUAtLZxANkrTZy2fV+l5BLYENsmBpS6JDYyafnAIH4K41xNYJB
-         luo4Gmtx/NmPTyADLzs0FzVTgU7YDNOJWLiGViEwCntxNupP2mRFbSVqmVZkl0G4M1Ab
-         R35A==
-X-Forwarded-Encrypted: i=1; AJvYcCXJkiuJzCnpMvQ4uj8oXRmSGcPOvzIlflqalUV44GQrNuquYmUxtpN3Gp181cwE+TTz4DzmrcYDmr8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yze0PMTErVjwTMYQxK1BeJbmY601vzNOts2snDsYBXEU6yH52Eh
-	0Ja84ZdntZ/8DP4ja+kjGLsp03lvA6tvE+YYKjvNYPRsnHOXzE1mW4mIbWskiR7WRNT7Av4s+tX
-	68zj9YASC91JksobsySj5MqKistVn33OYWsBDHAzh6cebJFpo/n/t7b1oQ0Y+79QsLg==
-X-Gm-Gg: ASbGncsRGwjt5mIqYPN226jvj6ln63BBcZYIniJQT+sdn0LqQtgmEvs/eaqhCu8cIE8
-	5DavqIpux+zNLmss/i8c+X0q62w/RlmP57rRehnRHo7Ild48SudrnMstua+wGLEgZ35j8ifIW/J
-	CrOXsROiXCCPWdeTJgPPoudadHr11MSYKddAPKeyvizSzrFtZ832VBoAXTcypvUYWYTPSiAPX6/
-	v4yey4xIscCodfu18eevzMKIZdXSK0S8QIcDl5B3mPnR4wgOBRJDHEP1RJ4ShGwTGMyfgFqrBHK
-	2BrsFNgeazKf
-X-Received: by 2002:a17:907:daa:b0:aa6:9ee3:e51f with SMTP id a640c23a62f3a-ab2abc6f09fmr2900378866b.41.1736877869481;
-        Tue, 14 Jan 2025 10:04:29 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGYVUSskjoQsDAe0lp0zquG8nvqbhZGtYQfG9CsfrwZCpLY/siZFipAEq4heCdU8HTptziTbA==
-X-Received: by 2002:a17:907:daa:b0:aa6:9ee3:e51f with SMTP id a640c23a62f3a-ab2abc6f09fmr2900371466b.41.1736877868743;
-        Tue, 14 Jan 2025 10:04:28 -0800 (PST)
-Received: from [192.168.0.111] (78-80-81-245.customers.tmcz.cz. [78.80.81.245])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab2c90d5c9asm653859766b.45.2025.01.14.10.04.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Jan 2025 10:04:28 -0800 (PST)
-Message-ID: <8e48dd5f-16c8-483e-87fc-c53100c2b02b@redhat.com>
-Date: Tue, 14 Jan 2025 19:04:27 +0100
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=gK0plPin2RxhhztabRQdzIpqQ2ZS97wHUb0vR9SYhgc=;
+	b=XmHiD2nBPSjn6tKi2gAS1GyWWgm9jP4YvjjGoS85m92t3Pi1+6/M+uvanGzGElmAswjnNA
+	UJfRLLRtu+LGG1R9pXLmd6shcmEtjcq/eX/OTXIMcNemAdM4GEdY/a2bhC6P+S6XQMJcq+
+	4pr4RFL8GxKEo4C3yM4gLGU8XlqXWXs=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-332-lHs1yXv5NU2i8gpEXLbXvw-1; Tue,
+ 14 Jan 2025 13:30:00 -0500
+X-MC-Unique: lHs1yXv5NU2i8gpEXLbXvw-1
+X-Mimecast-MFC-AGG-ID: lHs1yXv5NU2i8gpEXLbXvw
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 75D931956050;
+	Tue, 14 Jan 2025 18:29:59 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.45.224.54])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 2178119560A3;
+	Tue, 14 Jan 2025 18:29:57 +0000 (UTC)
+From: Tomas Henzl <thenzl@redhat.com>
+To: linux-ide@vger.kernel.org
+Cc: dlemoal@kernel.org,
+	Niklas.Cassel@wdc.com
+Subject: [PATCH V3] ata: ahci: simplify init function
+Date: Tue, 14 Jan 2025 19:29:56 +0100
+Message-ID: <20250114182956.40923-1-thenzl@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2] simplify init function
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc: Niklas.Cassel@wdc.com
-References: <20250113163401.35969-1-thenzl@redhat.com>
- <2826e5d0-e4d9-4aaf-aab6-4d36a9f2e73d@kernel.org>
-Content-Language: en-US
-From: Tomas Henzl <thenzl@redhat.com>
-In-Reply-To: <2826e5d0-e4d9-4aaf-aab6-4d36a9f2e73d@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 1/14/25 2:03 AM, Damien Le Moal wrote:
-> On 1/14/25 01:34, Tomas Henzl wrote:
->> by removing few lines. No functional change.
-> 
-> Looks OK to me, but:
-> 
-> The patch title should be: "ata: ahci: simplify init function"
-> 
-> And the commit message should also describe why it is OK to change
-> ahci_init_irq() to be a void function. Can you send a V3 with that addressed
-> please ?
-sure
-> 
->>
->> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
->> ---
->> V2: ahci_init_irq is now a void function
->>
->>  drivers/ata/ahci.c | 23 ++++++++++++-----------
->>  1 file changed, 12 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index 8d27c567be1c..3ea2f3adf354 100644
->> --- a/drivers/ata/ahci.c
->> +++ b/drivers/ata/ahci.c
->> @@ -1665,13 +1665,15 @@ static int ahci_get_irq_vector(struct ata_host *host, int port)
->>  	return pci_irq_vector(to_pci_dev(host->dev), port);
->>  }
->>  
->> -static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
->> +static void ahci_init_irq(struct pci_dev *pdev, unsigned int n_ports,
->>  			struct ahci_host_priv *hpriv)
->>  {
->>  	int nvec;
->>  
->> -	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
->> -		return -ENODEV;
->> +	if (hpriv->flags & AHCI_HFLAG_NO_MSI) {
->> +		pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_INTX);
->> +		return;
->> +	}
->>  
->>  	/*
->>  	 * If number of MSIs is less than number of ports then Sharing Last
->> @@ -1685,7 +1687,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
->>  			if (!(readl(hpriv->mmio + HOST_CTL) & HOST_MRSM)) {
->>  				hpriv->get_irq_vector = ahci_get_irq_vector;
->>  				hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
->> -				return nvec;
->> +				return;
->>  			}
->>  
->>  			/*
->> @@ -1700,12 +1702,13 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
->>  
->>  	/*
->>  	 * If the host is not capable of supporting per-port vectors, fall
->> -	 * back to single MSI before finally attempting single MSI-X.
->> +	 * back to single MSI before finally attempting single MSI-X or
->> +	 * a legacy INTx.
->>  	 */
->>  	nvec = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
->>  	if (nvec == 1)
->> -		return nvec;
->> -	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
->> +		return;
->> +	pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX | PCI_IRQ_INTX);
->>  }
->>  
->>  static void ahci_mark_external_port(struct ata_port *ap)
->> @@ -1985,10 +1988,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>  	}
->>  	host->private_data = hpriv;
->>  
->> -	if (ahci_init_msi(pdev, n_ports, hpriv) < 0) {
->> -		/* legacy intx interrupts */
->> -		pci_intx(pdev, 1);
->> -	}
->> +	ahci_init_irq(pdev, n_ports, hpriv);
->> +
->>  	hpriv->irq = pci_irq_vector(pdev, 0);
->>  
->>  	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
-> 
-> 
+by removing few lines. No functional change.
+
+The main part of this change is done by adding a PCI_IRQ_INTX flag into
+an already existing pci_alloc_irq_vectors invocation.
+In the current implementation of the pci_alloc_irq_vectors is the sequence of calls
+msi-x -> msi -> legacy irq and whatever there succeeds stops the
+call chain. That makes it impossible to merge all instances into as a single call
+to pci_alloc_irq_vectors since the order of calls there is:
+multiple msi-x
+a single msi
+a single msi-x
+a legacy irq.
+but the two last steps can be merged into one which are the msi-x and legacy
+irq option. With this change we remove a pci(m)_intx call.
+When PCI_IRQ_INTX flag is set the pci_alloc_irq_vectors succeeds in almost
+all cases - that makes it possible to convert ahci_init_irq(msi) into a void function.
+The exception is when dev->irq is zero then the pci_alloc_irq_vectors
+may return with an error code also pci_intx isn't called from  pci_alloc_irq_vectors
+and thus certain pci calls aren't performed.
+That's just a negligible issue as later in ahci_init_one the (zero)
+value of dev->irq is via pci_irq_vector assigned to hpriv->irq.
+That value is then later tested in ahci_host_activate->ata_host_activate where
+it is welcomed with a WARN_ON message and fails with setting up irq and
+then the probe function (ahci_init_one) fails. The special zero value's
+meaning is that polling mode is being be set up which isn't the case.
+
+
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+V2: ahci_init_irq is now a void function
+V3: a) added an explanation of why we may convert ahci_init_irq into
+	a void function
+    b) fixed the subject line
+    c) added an explanation of why calling pci_alloc_irq_vectors instead
+	of pci_intx is safe
+    d) rebased to latest code state (pci_intx->pcim_intx)
+
+ drivers/ata/ahci.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 8d27c567be1c..3ea2f3adf354 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1665,13 +1665,15 @@ static int ahci_get_irq_vector(struct ata_host *host, int port)
+ 	return pci_irq_vector(to_pci_dev(host->dev), port);
+ }
+ 
+-static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
++static void ahci_init_irq(struct pci_dev *pdev, unsigned int n_ports,
+ 			struct ahci_host_priv *hpriv)
+ {
+ 	int nvec;
+ 
+-	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+-		return -ENODEV;
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI) {
++		pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_INTX);
++		return;
++	}
+ 
+ 	/*
+ 	 * If number of MSIs is less than number of ports then Sharing Last
+@@ -1685,7 +1687,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 			if (!(readl(hpriv->mmio + HOST_CTL) & HOST_MRSM)) {
+ 				hpriv->get_irq_vector = ahci_get_irq_vector;
+ 				hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-				return nvec;
++				return;
+ 			}
+ 
+ 			/*
+@@ -1700,12 +1702,13 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 
+ 	/*
+ 	 * If the host is not capable of supporting per-port vectors, fall
+-	 * back to single MSI before finally attempting single MSI-X.
++	 * back to single MSI before finally attempting single MSI-X or
++	 * a legacy INTx.
+ 	 */
+ 	nvec = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
+ 	if (nvec == 1)
+-		return nvec;
+-	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
++		return;
++	pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX | PCI_IRQ_INTX);
+ }
+ 
+ static void ahci_mark_external_port(struct ata_port *ap)
+@@ -1985,10 +1988,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	}
+ 	host->private_data = hpriv;
+ 
+-	if (ahci_init_msi(pdev, n_ports, hpriv) < 0) {
+-		/* legacy intx interrupts */
+-		pcim_intx(pdev, 1);
+-	}
++	ahci_init_irq(pdev, n_ports, hpriv);
++
+ 	hpriv->irq = pci_irq_vector(pdev, 0);
+ 
+ 	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
+-- 
+2.47.1
 
