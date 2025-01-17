@@ -1,116 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B73AF20B20
-	for <linux-ide@vger.kernel.org>; Fri, 17 Jan 2025 14:26:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6277118784A
+	for <linux-ide@vger.kernel.org>; Fri, 17 Jan 2025 14:59:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737124008; cv=none; b=ffXB0w2OTNm0IwzVytWARUPZnAQ3x+LX/gT+smyhAfChfIBiZW6QuFPjHajm5nFxgIzPSAcPiXay+DFGKxHN0L/dXlwsmZRO/J83nPP+Z58nGwGbN9UouWoitaSFvCl3+kuPpccZfPER3tm2ef7apZhji6OZ4/WCFyplf61IGD4=
+	t=1737125995; cv=none; b=qMXKG1GwmKxapRC1Dfq2DZKdPkdf4ZNEO32Q/bxr7qxHkfnOMdX/XxoF2XtNmb4cZYtCk3lzgOE5lbG5nQJzBhtzWp/aJWje+uQtukaX2AoLpEMZ1UXbDAafQewBCpqPqKwdYCyytYYrupb/DuYvwjQVjFTwZKLAri9jXZnlDkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737124008; c=relaxed/simple;
-	bh=F/hgAFGSqkaHOJ+v6R5RZ9VxbNfrlJ2GszhU9BoZ/Fo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LtwAX4vUh67muH5hP1YkNB0ZBHjNNbhF4JNGXAw78XxGnjvx9gR3g3mPQ6GGo0NQrr27RoKJU4iA/BI0nbeLtr1LF+xbb4c7PkmlmitebnRy9Hz19QHOAJsCTh0AMLK5J1InSfNrCUXyjKlNwX7qpg1UF58kJEf/vVn6L6OQ3BA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ec8AMQt1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1737125995; c=relaxed/simple;
+	bh=FYIdVyLJ1VEZanD40elISQhj8UBKvnUmQ14RDqI3Rcg=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=NscKcXuxu7onCaCOzWfX/gDxAvNrtSLg3XbDoIev4PSvt9fzF592VkA4RT33qn66ZbJd0yQ7AGmiADf48DsAbudsP6vPmq00jYKg5jkg0ohuSxtyIOJWXXSKbDqeDohpeTo/XWRErd3jz83FH1p0QIiDxNx910xiU18xh339/Eo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=dA3skjkt; arc=none smtp.client-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ec8AMQt1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74507C4CEDD;
-	Fri, 17 Jan 2025 14:26:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737124008;
-	bh=F/hgAFGSqkaHOJ+v6R5RZ9VxbNfrlJ2GszhU9BoZ/Fo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ec8AMQt1cRJXqhYtuUkQEXcWU8XmX3tqpdNq3IQ4K4IriUsTVuIcMqSxqETEdxd7/
-	 qy3y6amvgBBs/TBTUaV2kIb/L5OVngGZDipZmckhEVJlXr751mxrhEzRp4WBRDrJEU
-	 iR0jN/ISAMg5dX9zXPfr4nwSgQonVVINz/86x6zWNUonVdrdHIWuwpG1eKeKRIkWj8
-	 LXzlHO243A/6OzmxkyYuq+CszXQ6LsVG5xBTlwrzHO0nwA31JcPTpzPpdKQ6ivasUq
-	 LCB2OWd7r5HN4V1ueIqjZUpVPI0GaHV7M4Q58cTuKLZ0TS4FXdtvv+FRcaTFUdGbZS
-	 WlXPFYs0J2/+g==
-Date: Fri, 17 Jan 2025 15:26:44 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: reveliofuzzing <reveliofuzzing@gmail.com>
-Cc: damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org
-Subject: Re: out-of-bounds write in the function ata_pio_sector
-Message-ID: <Z4popNqD1GZriXh3@ryzen>
-References: <CA+-ZZ_jTgxh3bS7m+KX07_EWckSnW3N2adX3KV63y4g7M4CZ2A@mail.gmail.com>
- <Z3ZtFDgs61oDMMB9@ryzen>
- <CA+-ZZ_jrKVws_mQ8MyqRJGSktgVt9wbB7xWrmBvGzCeFhvT0-w@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="dA3skjkt"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-436249df846so14701615e9.3
+        for <linux-ide@vger.kernel.org>; Fri, 17 Jan 2025 06:59:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1737125992; x=1737730792; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=XoY2CmYqDhwCjr+LTaQT1CEx+jVsjk82eanBRDuR1qg=;
+        b=dA3skjktSnO+ewKKOne+ZBopa1eS5wgGVcJKpt9Cb3xR+luFftABtf2wPU+VpwaHee
+         IeUkxlNYzimWj202H6HiFJo4D0sgEw2Q/5YLCtprzNAgh5ucIROD7jtGNJ0XXY9IV5FK
+         fgzDaBqg/ueKh4za5lgOHOs30D/MRLWViJQvDemnYuEBT6KZk3MG3kq7tMxaVnDTSi6k
+         IQueHPh/rrdus/yQ+YmMhQbvl8jORP477NL0DrGDMIMf67OS/hHQqHDCa5EoiFjvntrp
+         zKHyYS2OopY3HBtKcjTVbCHPfy1mSuhSdM85iUdiBDPxxDWLx03p0TQZM2lsIPRR9ZNe
+         gcWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737125992; x=1737730792;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XoY2CmYqDhwCjr+LTaQT1CEx+jVsjk82eanBRDuR1qg=;
+        b=Urp9siOAe+mT0di3SC+ex+ulYpKOxPrxjhMhpim4AWcVKnU6mvRfm+PimtG5rMph+D
+         vs+aJfOjj6ywXJS4BWJfhH3c7J7bl/4Zl5hj8tieOegaemwmu6u5kmpU4Ig5tTj98rCF
+         3WUJ5Ik+O6/UU0q8CpTV2fXcvA/QsPRihLbAe0TpRJb08pfWh4eCshdfv4QE4BOEEWyf
+         c2685K0IRflrA8tcipJtbBaq2G6BcXZiPRlE7IMWqp7DRaRDWZraOmLkYyFCmf6DEiqF
+         CW08KOXM9F0+7+2QYsKcDiqJyeNqSfGN3dTH031bVw1v1Mht9Qty6SkYrKk8ZcX4mVxb
+         2cKg==
+X-Forwarded-Encrypted: i=1; AJvYcCUDEy+wCcyfWyCe0G8ttNouoLbUCYPP3VIvHGcjGPOCnNPaL6YzznlErHWHRScC/k9HrXeCdEsqMn8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxHvjTy0y8VlPMo4ccGTnzJDBImazTnr92aoFIDZXzFoir1vLX/
+	FagjaMlhWm9IkMan66KupwV2VoSV91RgEiHsebjO14rWBbHXWZfbCOUk1ShWBio=
+X-Gm-Gg: ASbGncvhx0ubPm3g9SU60Q21MwKXtSs8it8eQI4YqBnj7EuJp24hQi2/HGgXGC/uign
+	qfHFbJSPJ1G2D1PNOm8AjqCMVzFiuNumkirywlMNVNw3xtyzjuYga2c1fa+8SWp8o9vltNTpe2N
+	+K0CamGFP5xFKUE+i07vZf84ZofWGDsxS0M14FDXokXznWgfDSqWfJnsszkQ3fRoU3+HdE2VrF2
+	OCQGKBgLANaoWhv7ju+LdVgUT2t2FJSwf/QqSbQ2qU325DPVnI45/qLhzhtVwBAHQFH1A==
+X-Google-Smtp-Source: AGHT+IEeRJ9cpKeNPyOpv6YqDFfsJM6JExhw0J3WkruNYdK28qTCi2QUozVixRXMXz9wRrk9NPLQtg==
+X-Received: by 2002:a5d:6c6f:0:b0:38a:9ed4:9fff with SMTP id ffacd0b85a97d-38bf57c070bmr3026621f8f.51.1737125991738;
+        Fri, 17 Jan 2025 06:59:51 -0800 (PST)
+Received: from localhost (109-81-84-225.rct.o2.cz. [109.81.84.225])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38bf3275556sm2751940f8f.72.2025.01.17.06.59.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jan 2025 06:59:51 -0800 (PST)
+Date: Fri, 17 Jan 2025 15:59:50 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: lsf-pc@lists.linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+	bpf@vger.kernel.org
+Subject: REMINDER - LSF/MM/BPF: 2025: Call for Proposals
+Message-ID: <Z4pwZkf3px21OVJm@tiehlicka>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+-ZZ_jrKVws_mQ8MyqRJGSktgVt9wbB7xWrmBvGzCeFhvT0-w@mail.gmail.com>
 
-Hello reveliofuzzing,
+Hi,
+this is a friendly reminder for LSF/MM/BPF Call for proposals - you can
+find the original announcement here: https://lore.kernel.org/all/Z1wQcKKw14iei0Va@tiehlicka/T/#u.
 
-On Thu, Jan 02, 2025 at 11:23:49AM -0500, reveliofuzzing wrote:
-> On Thu, Jan 2, 2025 at 5:40 AM Niklas Cassel <cassel@kernel.org> wrote:
-> > On Wed, Jan 01, 2025 at 09:17:02PM -0500, reveliofuzzing wrote:
-> > > Hi there,
-> > >
-> > > We found an out-of-bounds write in the function ata_pio_sector, which can cause
-> > > the kernel to crash. We would like to report it for your reference.
-> > >
-> > > ## Problem in ata_pio_sector
-> > > ata_pio_sector uses the following code to decide which page to use for the I/O:
-> > > page = sg_page(qc->cursg);
-> > > offset = qc->cursg->offset + qc->cursg_ofs;
-> > >
-> > > /* get the current page and offset */
-> > > page = nth_page(page, (offset >> PAGE_SHIFT));
-> > > offset %= PAGE_SIZE;
-> > > but we found that `offset` could be as high as 0x5000---qc->cursg_ofs==0x5000,
-> > > qc->cursg->offset == 0x0, making `page` point to a higher-position page that
-> > > belongs to other threads.
-> > >
-> > > ## Example crash
-> > > This out-of-bound write can cause the kernel to crash at arbitrary places,
-> > > depending on when the corrupted page is accessed by the other thread.
-> > >
-> > > We found this problem can happen in Linux kernel 6.1~6.12. Here is one crash in
-> > > Linux kernel 6.1:
-> >
-> > Thank you for reporting!
-> >
-> > I assume that you haven't tested kernels earlier than 6.1?
-> Unfortunately, we haven't tested older kernels.
-> 
-> >
-> > (Looking at the driver, there was no major change between 6.0 and 6.1,
-> > so this bug has probably been there for a long time.)
-> >
-> >
-> > Could you please share your reproducer and your kernel config as well?
-> 
-> Below we report our setup for linux kernel 6.12:
-> 
-> - General steps to reproduce the bug
-> 1. Launch the VM
-> 2. Copy the reproducer (compiled binary) into the VM
-> 3. Run it with the root user
-> 4. Wait for the bug to happen (generally takes less than 3 minutes)
+Please also note you need to fill out the following Google form to
+request attendance and suggest any topics for discussion:
 
-I managed to reproduce the bug using your bzImage and syz-executor binary.
+          https://forms.gle/xXvQicSFeFKjayxB9
 
-However, the .config you provided does not match the bzImage.
-E.g. the e1000/e1000e driver is not built-in in your .config,
-so I get no networking, while it is enabled in your bzImage.
-This makes me worried that you have other changes in your .config.
-If you still have the exact config for this bzImage, could you please add
-it as an attachment?
+The deadline to do that is Feb 1st!
 
-I've been using the syz-executor binary that you attached, since the C code
-pasted below does not compile, it seems like it has some unintended newlines.
-Perhaps you could add it as an attachment instead?
+Please also note that we have decided that there will _not_ be virtual
+attendance option this year. Nor we will be streaming sessions. We are
+sorry if this is causing any inconvenience but we have concluded that
+we will use our constrained budget more efficiently this way.
 
-Also, you only talk about 6.12 kernel. Out of curiosity, have you managed to
-reproduce this bug on v6.13-rc kernels? Have you tried?
-
-
-Kind regards,
-Niklas
+[1] https://lore.kernel.org/all/Z1wQcKKw14iei0Va@tiehlicka/T/#u
+-- 
+Michal Hocko
+SUSE Labs
