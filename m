@@ -1,122 +1,159 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36CC31B4F02
-	for <linux-ide@vger.kernel.org>; Mon, 20 Jan 2025 15:08:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5571EBFEF
+	for <linux-ide@vger.kernel.org>; Mon, 20 Jan 2025 16:47:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737385713; cv=none; b=dEMJXscsc6yZgq5fbDoiKf5pEH4Z9hCWWiXnwdzafhQ0x4ler8Zpf/hVFg33v1prMmk+foTpiWgPh+prZb5jmoIqElvdsrzIFcOJCr3IknCDXzSaJUhTacEfGGV4AGXDhOib9F/nQEzfg5MA6A7Q7y5zmxgPuoirh4no5hvsUSA=
+	t=1737391666; cv=none; b=OHTiNtxVHUvTp/4VqxEWFfIJs7vnV1GCppOWbF2ooqlBy112W8tpR7hOmcF0gvbKlogEXXZcrbnjYw1k2eRE+T/uwI8U+EcbYIoFiqiLSGoD1YrprWANy8eCLPw/8gFYpeGhj81+C1rQv0PJAhc2G6lUXcaXHZLQjuuID9sfhw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737385713; c=relaxed/simple;
-	bh=uHh3fAiNaMRX6jhLGe/z9gvDInzLl+QzA8pzx31Ml20=;
-	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:References:
-	 From:Cc:In-Reply-To; b=jo/dlO7uX88vHBFz9koV0Nh3kJA+A4GYUSU1uDQntzhmNkGnz+hNgvSKQ5fQcDWKj9Cxr9laCBQ6T3tavUaxAONGJqisUf0bC5u6PeqG9O7x7W1iN1xCODaMPC/1nIgAqJ0c6Ho0js1mtdwWNf4c8RyUMt2bb9VKTXs21otwwkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=YuTTurEp; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
+	s=arc-20240116; t=1737391666; c=relaxed/simple;
+	bh=mlciOgUmX6lk6RFYA2l4cI1V9mfLjH4+arGySEC34Mk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UR+5i/2yV12384Ju+uto9DmWFiX8OlKEu80IYkmvD5TBXKCplFdQxNL7jIbNXEE82iR7nl1aTf32+dB+Gwi455L8437ed/qOYzg8oe5wUU8AZorKVhxqjwAaYau83sSJlLE6xfcVRHlKhxXPnfIzQZj3BjUjVvwZxxv1UMguC0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ns7jMm2f; arc=none smtp.client-ip=209.85.219.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="YuTTurEp"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Cc:From:References:To:
-	Subject:Reply-To:MIME-Version:Date:Message-ID:Content-Type:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=iREdaoKsqudnnoWIzw52B6h0J8wS4bxYa8QYukOay8A=; b=YuTTurEp7+56flaQy/Glyzl7Xy
-	EStukpNP7XhUTnNuIAicBPk/CZpbI5WPU4WHwYNgSArJwK7JnBetRg0KNMn67G0Nbghb6N1klVm5c
-	slDAKrLM2gOXuXn+vXx34gtdlOTPt8E4exijfZRvMt01JBkjuEw+nzNW7WkvtvgDclH30GsoYroCu
-	LYEtIcbGv1uLdx7/8UIPIx2yIWIuudB5Gk+YW+yHrHT45esutclb75jGTFOgUYSP+GFjNW5RuVr0e
-	dWG9I9/LWjIC5sA62HsFvwSsr/Zo185rH9dfOhv8r/xNax8noXFB0zERZd6YdaGzPqtsUcj25fc9v
-	wiskHGqw==;
-Received: from authenticated user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
-	(Exim 4.94.2)
-	(envelope-from <daniel@debian.org>)
-	id 1tZtO3-0061sG-65; Mon, 20 Jan 2025 15:08:23 +0000
-Content-Type: multipart/mixed; boundary="------------FbMl9upNZd0YqtwtWxFQzw4T"
-Message-ID: <ac64a484-022c-42a0-95bc-1520333b1536@debian.org>
-Date: Mon, 20 Jan 2025 16:08:16 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ns7jMm2f"
+Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-6dcdf23b4edso42660026d6.0
+        for <linux-ide@vger.kernel.org>; Mon, 20 Jan 2025 08:47:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1737391663; x=1737996463; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wLAJcZQ3CCQYzY1g01gGZet/96yxfikaefwx7SLoijI=;
+        b=Ns7jMm2f73Y018OysNGVs197UrwXhPdncgkMjdsGZ2UOl+mOGv9T7lntSqsjNdtkaQ
+         lhtIc/NZZRXqUn95jdDjhxkGxabf3PK1yUEkDFmRYEhRJlGRgDLbjvAp80cRNUdRD0fc
+         FjU4nhVm16gq8ZewhxwXoeldkXF60tQnyVoZLbo6mPcPY89ZQ9PWSIXhZN6rMsu1cPP9
+         PuaXHk8xnc4a55KB+2TdXbmyNR0HOPlF1iqbKpvkvLlij/NaUfIwgb2WCsNXVWGiWsBc
+         JjDj2RPrtEObYWXjufYTkdNNZ/q+rYkI9Gmy25caH/x0np2EeDT5rM2a9gAgykmBR50/
+         lKGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737391663; x=1737996463;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wLAJcZQ3CCQYzY1g01gGZet/96yxfikaefwx7SLoijI=;
+        b=u3PQw1oWMuftqaV4QgD1DkkMnrQqtjfAWraCC3O8ZM1p5OvzSplIja98bPfRc9uAbQ
+         2RBy/IZSG02MPwDLvhXpZiUDX4f6rcJ30c5R426ExiLSNIwiMe5LMiLp/dPOt6hn39yX
+         3J8cTUeMAjIfLbdSRBWd/adVkOueeqbLC1x+p70oSct6b7CyzRSlwigL3cvbaVGBLw6G
+         EqzH6/gXS0x5x7TZEXXX0yknobs6j3MtTJxVfzOmB4x7vV7f0bEQQDv6FJfGSKhJQUUY
+         MnHX7Jv/9/pAfd2XIvCGq1GL4EQ0LcfDbLFjrlC52kt7JQlCaPbUUVJ499QoobI+cYh+
+         vx3w==
+X-Forwarded-Encrypted: i=1; AJvYcCWZUHAVoGO3Ae2gahZUDRii3SY9Mv9o3+KjQ8KWGefdZ8kmFcf/8mKC3nJiYd2dFl+sAUjQ9Gt/Rs8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzJKm8LDQhK1Mr+EJUTzQRXxOx6HQY3IJgP+/gMdWdRjbEeyQAT
+	r1AIPPEwdf2bUGxc38w/BngbAnGX2MtGMABt8fPIQX//Qahvd+EUcBmFkBGLU6Uj3Xy6SZRNRFv
+	E4USwScigp4PuEZUeOMPu8ojudfwaZscf
+X-Gm-Gg: ASbGncv0pKjSrVY+9ZfSwTpv2XC4X8XzKKayvmZDWxdr83aSWtdyxz9jJBt6fyZ7t+y
+	1BeOsS1WSIfrwrtXvPeSof3Gr2l4COXK7oqoTXE97wrniwoYZkx7JsA==
+X-Google-Smtp-Source: AGHT+IHzt6SQk+wuEGROdf11SHco2Bp2DVmdOQgKbgL3st5A3fuyA6WkoAm6+HGWlWWvcMMONN7m1h2NptTEntdTfrs=
+X-Received: by 2002:a05:6214:d87:b0:6d3:f6bd:ca04 with SMTP id
+ 6a1803df08f44-6e1b2230b55mr191613676d6.40.1737391663336; Mon, 20 Jan 2025
+ 08:47:43 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Reply-To: daniel@debian.org
-Subject: Re: [PATCH] Disabling link power-management on Samsung SSD 870 QVO
- drives to make them work.
+References: <CA+-ZZ_jTgxh3bS7m+KX07_EWckSnW3N2adX3KV63y4g7M4CZ2A@mail.gmail.com>
+ <Z3ZtFDgs61oDMMB9@ryzen> <CA+-ZZ_jrKVws_mQ8MyqRJGSktgVt9wbB7xWrmBvGzCeFhvT0-w@mail.gmail.com>
+ <Z4popNqD1GZriXh3@ryzen> <CA+-ZZ_gtsDShKeZSupbrwCLtpCvW=p1=citKVXRrSDi3LoZ_9Q@mail.gmail.com>
+ <Z45VmuS-j0bEMf89@ryzen>
+In-Reply-To: <Z45VmuS-j0bEMf89@ryzen>
+From: reveliofuzzing <reveliofuzzing@gmail.com>
+Date: Mon, 20 Jan 2025 11:47:32 -0500
+X-Gm-Features: AbW1kvYEtdDFWl-rfDYL4bk8fwQhAGXCF5Y0SIQ1pUexLbhtcX5fnOgiwiUxmL8
+Message-ID: <CA+-ZZ_i6FKRMG8Fi=PfGpcnVDo=hp3J0Bz+tw6Y9+raMovP3Mw@mail.gmail.com>
+Subject: Re: out-of-bounds write in the function ata_pio_sector
 To: Niklas Cassel <cassel@kernel.org>
-References: <a421afd8-d841-4d3c-bfe9-9dee707bb319@debian.org>
- <Z45NEMKVAsxKvafa@ryzen>
-Content-Language: en-US
-From: Daniel Baumann <daniel@debian.org>
-Cc: linux-ide@vger.kernel.org
-In-Reply-To: <Z45NEMKVAsxKvafa@ryzen>
-X-Debian-User: daniel
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This is a multi-part message in MIME format.
---------------FbMl9upNZd0YqtwtWxFQzw4T
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+On Mon, Jan 20, 2025 at 8:54=E2=80=AFAM Niklas Cassel <cassel@kernel.org> w=
+rote:
+>
+> On Fri, Jan 17, 2025 at 11:42:45AM -0500, reveliofuzzing wrote:
+> > >
+> > > However, the .config you provided does not match the bzImage.
+> > > E.g. the e1000/e1000e driver is not built-in in your .config,
+> > > so I get no networking, while it is enabled in your bzImage.
+> > > This makes me worried that you have other changes in your .config.
+> > > If you still have the exact config for this bzImage, could you please=
+ add
+> > > it as an attachment?
+> > Hi, we double-checked it but found the config shared above is the one w=
+e used.
+> > CONFIG_E1000XXX is enabled in this config.
+>
+> You are right.
+>
+> For some reason it got compiled as a module when I did "make olddefconfig=
+",
+> with your config as base. Sorry about the confusion!
+>
+>
+> >
+> > >
+> > > I've been using the syz-executor binary that you attached, since the =
+C code
+> > > pasted below does not compile, it seems like it has some unintended n=
+ewlines.
+> > > Perhaps you could add it as an attachment instead?
+> > Here is the C program:
+> > https://drive.google.com/file/d/1Uvhqrn-ntEYQT2PBiQjp0xaor-32WYHO/view?=
+usp=3Dsharing
+> > Please let us know if you still can't compile it. We can take a look
+> > at how Syzkaller
+> > generates this C program and compiles it into the syz-executor binary.
+>
+> Still does not compile for me.
+>
+> It still appears to have some uninteded newlines.
+>
+> You probably copy pasted it from an editor instead of uploading it/sendin=
+g
+> it directly.
+>
+>
+> One example is:
+> line380:                if (write(1, "executing program\n", sizeof("execu=
+ting
+> line381:        program\n") - 1)) {}
+>
+> Strings in C are not allowed to span multiple lines without a backslash
+> immediately before the newline, or by using string concatenation.
+Hi, we have updated the c program here:
+https://drive.google.com/file/d/1Uvhqrn-ntEYQT2PBiQjp0xaor-32WYHO/view?usp=
+=3Dsharing
 
-Hi Niklas,
+This was the command used for compiling it:
+gcc -o /tmp/syz-executor -DGOOS_linux=3D1 -DGOARCH_amd64=3D1
+-DHOSTGOOS_linux=3D1 -x c - -m64 -O2 -pthread -Wall -Werror -Wparentheses
+-Wunused-const-variable -Wframe-larger-than=3D16384 -Wno-stringop-overflow
+-Wno-array-bounds -Wno-format-overflow -Wno-unused-but-set-variable
+-Wno-unused-command-line-argument -static-pie < ./reproducer.c
 
-On 1/20/25 14:18, Niklas Cassel wrote:
->> I've added a new case for 870 QVO specifically as regular 870 don't have
->> the issue.
-> 
-> This should have been in the commit message.
-
-thanks for the pointer, I have now adjusted the commit message.
-
-> Out of curiosity, did you test on regular 870, so you know they are not
-> broken as well?
-
-we don't have many of non-QVO variants, but so far none of them has
-needed it. I've added that to the commit message as well.
-
-> You probably also want to add:
-> Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
-> Cc: stable@vger.kernel.org
-
-added, thanks!
-
-Updated patch attached.
-
-Regards,
-Daniel
---------------FbMl9upNZd0YqtwtWxFQzw4T
-Content-Type: text/x-patch; charset=UTF-8;
- name="0001-ata-libata-core-Add-ATA_QUIRK_NOLPM-for-Samsung-SSD-.patch"
-Content-Disposition: attachment;
- filename*0="0001-ata-libata-core-Add-ATA_QUIRK_NOLPM-for-Samsung-SSD-.pa";
- filename*1="tch"
-Content-Transfer-Encoding: base64
-
-RnJvbSBmMmI0NGJhZjYwZDExODgyNjk2YTk5NDQ1YmYyMTdkNmVlNDA5OTAzIE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBEYW5pZWwgQmF1bWFubiA8ZGFuaWVsQGRlYmlhbi5v
-cmc+CkRhdGU6IFNhdCwgMTggSmFuIDIwMjUgMDY6MzY6NDMgKzAxMDAKU3ViamVjdDogW1BB
-VENIXSBhdGE6IGxpYmF0YS1jb3JlOiBBZGQgQVRBX1FVSVJLX05PTFBNIGZvciBTYW1zdW5n
-IFNTRCA4NzAgUVZPCiBkcml2ZXMKCkRpc2FibGluZyBsaW5rIHBvd2VyIG1hbmFnZW1lbnQg
-b24gU2Ftc3VuZyBTU0QgODcwIFFWTyBkcml2ZXMKdG8gbWFrZSB0aGVtIHdvcmsgYWdhaW4g
-YWZ0ZXIgdGhlIHN3aXRjaCBvZiB0aGUgZGVmYXVsdCBMUE0KcG9saWN5IHRvIGxvdy4KClRl
-c3Rpbmcgc28gZmFyIGhhcyBzaG93biB0aGF0IHJlZ3VsYXIgU2Ftc3VuZyBTU0QgODcwCih0
-aGUgbm9uIFFWTyB2YXJpYW50cykgZG8gbm90IG5lZWQgaXQgYW5kIHdvcmsgZmluZSB3aXRo
-CnRoZSBkZWZhdWx0IExQTSBwb2xpY3kuCgpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZwpG
-aXhlczogNzYyN2EwZWRlZjU0ICgiYXRhOiBhaGNpOiBEcm9wIGxvdyBwb3dlciBwb2xpY3kg
-Ym9hcmQgdHlwZSIpClNpZ25lZC1vZmYtYnk6IERhbmllbCBCYXVtYW5uIDxkYW5pZWxAZGVi
-aWFuLm9yZz4KLS0tCiBkcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jIHwgNCArKysrCiAxIGZp
-bGUgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEv
-bGliYXRhLWNvcmUuYyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMKaW5kZXggYzA4NWRk
-ODFlYmU3Li42M2VjMmYyMTg0MzEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL2xpYmF0YS1j
-b3JlLmMKKysrIGIvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYwpAQCAtNDE0Myw2ICs0MTQz
-LDEwIEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgYXRhX2Rldl9xdWlya3NfZW50cnkgX19hdGFf
-ZGV2X3F1aXJrc1tdID0gewogCXsgIlNhbXN1bmcgU1NEIDg2MCoiLAkJTlVMTCwJQVRBX1FV
-SVJLX05PX05DUV9UUklNIHwKIAkJCQkJCUFUQV9RVUlSS19aRVJPX0FGVEVSX1RSSU0gfAog
-CQkJCQkJQVRBX1FVSVJLX05PX05DUV9PTl9BVEkgfSwKKwl7ICJTYW1zdW5nIFNTRCA4NzAg
-UVZPKiIsCU5VTEwsCUFUQV9RVUlSS19OT19OQ1FfVFJJTSB8CisJCQkJCQlBVEFfUVVJUktf
-WkVST19BRlRFUl9UUklNIHwKKwkJCQkJCUFUQV9RVUlSS19OT19OQ1FfT05fQVRJIHwKKwkJ
-CQkJCUFUQV9RVUlSS19OT0xQTSB9LAogCXsgIlNhbXN1bmcgU1NEIDg3MCoiLAkJTlVMTCwJ
-QVRBX1FVSVJLX05PX05DUV9UUklNIHwKIAkJCQkJCUFUQV9RVUlSS19aRVJPX0FGVEVSX1RS
-SU0gfAogCQkJCQkJQVRBX1FVSVJLX05PX05DUV9PTl9BVEkgfSwKLS0gCjIuNDUuMgoK
-
---------------FbMl9upNZd0YqtwtWxFQzw4T--
+>
+>
+> >
+> > >
+> > > Also, you only talk about 6.12 kernel. Out of curiosity, have you man=
+aged to
+> > > reproduce this bug on v6.13-rc kernels? Have you tried?
+> > We haven't tried it yet, but we can do that in the next few days. Will =
+keep you
+> > posted.
+>
+> I got an off-list email that mentioned that you could reproduce on 6.13-r=
+c7,
+> thank you!
+>
+> Hopefully I will have some time to try to debug this sometime this week.
+>
+>
+> Kind regards,
+> Niklas
