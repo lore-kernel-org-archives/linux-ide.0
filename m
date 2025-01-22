@@ -1,159 +1,188 @@
-Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5571EBFEF
-	for <linux-ide@vger.kernel.org>; Mon, 20 Jan 2025 16:47:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3E50211712
+	for <linux-ide@vger.kernel.org>; Wed, 22 Jan 2025 14:59:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737391666; cv=none; b=OHTiNtxVHUvTp/4VqxEWFfIJs7vnV1GCppOWbF2ooqlBy112W8tpR7hOmcF0gvbKlogEXXZcrbnjYw1k2eRE+T/uwI8U+EcbYIoFiqiLSGoD1YrprWANy8eCLPw/8gFYpeGhj81+C1rQv0PJAhc2G6lUXcaXHZLQjuuID9sfhw8=
+	t=1737557958; cv=none; b=QFBkzxuy9eH1ukvlrdXJNbeUbEkUwTfVQENtqeh4OwIsiZgBgYPsfULOpA0z4/Z/+sgcaj917jVXyVUNyAVq/fvQN6Fvhuse+KLz0bdOCLmDz5jUCSrN/zM/kkL+8DtT0Zp/cgPZhcn9SJ6dLgi8DkB8e9Ly0neovDpFWPL/DC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737391666; c=relaxed/simple;
-	bh=mlciOgUmX6lk6RFYA2l4cI1V9mfLjH4+arGySEC34Mk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UR+5i/2yV12384Ju+uto9DmWFiX8OlKEu80IYkmvD5TBXKCplFdQxNL7jIbNXEE82iR7nl1aTf32+dB+Gwi455L8437ed/qOYzg8oe5wUU8AZorKVhxqjwAaYau83sSJlLE6xfcVRHlKhxXPnfIzQZj3BjUjVvwZxxv1UMguC0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ns7jMm2f; arc=none smtp.client-ip=209.85.219.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1737557958; c=relaxed/simple;
+	bh=lJWRKWh+53BHw2fCEN7ze+KYRV16EZ87/o9mwCUhhhY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tf8boayJIeSBJQnUnvboC6tHAiitBR9/mxmbtpGgaUC1jzaFe4OhksO56c1HIlzjL18mExXr1+yJfsRss96tIG6jTv2jmA6TzZ6wFdHngg0wPKaA+rVj/+9m4Phxz5DGSmCpRzRIQJ5QNXTR1MfAXOV6vcbMxFsRYZXhn5AQuaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zmdo6ubf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ns7jMm2f"
-Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-6dcdf23b4edso42660026d6.0
-        for <linux-ide@vger.kernel.org>; Mon, 20 Jan 2025 08:47:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737391663; x=1737996463; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wLAJcZQ3CCQYzY1g01gGZet/96yxfikaefwx7SLoijI=;
-        b=Ns7jMm2f73Y018OysNGVs197UrwXhPdncgkMjdsGZ2UOl+mOGv9T7lntSqsjNdtkaQ
-         lhtIc/NZZRXqUn95jdDjhxkGxabf3PK1yUEkDFmRYEhRJlGRgDLbjvAp80cRNUdRD0fc
-         FjU4nhVm16gq8ZewhxwXoeldkXF60tQnyVoZLbo6mPcPY89ZQ9PWSIXhZN6rMsu1cPP9
-         PuaXHk8xnc4a55KB+2TdXbmyNR0HOPlF1iqbKpvkvLlij/NaUfIwgb2WCsNXVWGiWsBc
-         JjDj2RPrtEObYWXjufYTkdNNZ/q+rYkI9Gmy25caH/x0np2EeDT5rM2a9gAgykmBR50/
-         lKGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737391663; x=1737996463;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wLAJcZQ3CCQYzY1g01gGZet/96yxfikaefwx7SLoijI=;
-        b=u3PQw1oWMuftqaV4QgD1DkkMnrQqtjfAWraCC3O8ZM1p5OvzSplIja98bPfRc9uAbQ
-         2RBy/IZSG02MPwDLvhXpZiUDX4f6rcJ30c5R426ExiLSNIwiMe5LMiLp/dPOt6hn39yX
-         3J8cTUeMAjIfLbdSRBWd/adVkOueeqbLC1x+p70oSct6b7CyzRSlwigL3cvbaVGBLw6G
-         EqzH6/gXS0x5x7TZEXXX0yknobs6j3MtTJxVfzOmB4x7vV7f0bEQQDv6FJfGSKhJQUUY
-         MnHX7Jv/9/pAfd2XIvCGq1GL4EQ0LcfDbLFjrlC52kt7JQlCaPbUUVJ499QoobI+cYh+
-         vx3w==
-X-Forwarded-Encrypted: i=1; AJvYcCWZUHAVoGO3Ae2gahZUDRii3SY9Mv9o3+KjQ8KWGefdZ8kmFcf/8mKC3nJiYd2dFl+sAUjQ9Gt/Rs8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzJKm8LDQhK1Mr+EJUTzQRXxOx6HQY3IJgP+/gMdWdRjbEeyQAT
-	r1AIPPEwdf2bUGxc38w/BngbAnGX2MtGMABt8fPIQX//Qahvd+EUcBmFkBGLU6Uj3Xy6SZRNRFv
-	E4USwScigp4PuEZUeOMPu8ojudfwaZscf
-X-Gm-Gg: ASbGncv0pKjSrVY+9ZfSwTpv2XC4X8XzKKayvmZDWxdr83aSWtdyxz9jJBt6fyZ7t+y
-	1BeOsS1WSIfrwrtXvPeSof3Gr2l4COXK7oqoTXE97wrniwoYZkx7JsA==
-X-Google-Smtp-Source: AGHT+IHzt6SQk+wuEGROdf11SHco2Bp2DVmdOQgKbgL3st5A3fuyA6WkoAm6+HGWlWWvcMMONN7m1h2NptTEntdTfrs=
-X-Received: by 2002:a05:6214:d87:b0:6d3:f6bd:ca04 with SMTP id
- 6a1803df08f44-6e1b2230b55mr191613676d6.40.1737391663336; Mon, 20 Jan 2025
- 08:47:43 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zmdo6ubf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AEABC4CED2;
+	Wed, 22 Jan 2025 14:59:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737557958;
+	bh=lJWRKWh+53BHw2fCEN7ze+KYRV16EZ87/o9mwCUhhhY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Zmdo6ubfezEGz2S/zr3lKklh/X68H0bXgv/e1iALSN/u+upvinhFeqd2jPQCiE43a
+	 Y7SmJBkBJyv5V0OaN4uhx4l4m0zInFjTmJ8ZDwA4BJaCv5yuq4JtbbIdVJYhnLAqLU
+	 hIlyhuZEk8tiqb9UFKDtWuJQISQnWVR6KcHdO10GXCffVHytPEGLMatf6cD9vqZ4pR
+	 hFpYEMw6RW6eRJx6Em6qLQWerfX/4pIxcd+fiR8N2Q3vHTeRvLSo22M7kT2txWHaDd
+	 P3SDvTUnl2dNQ/8u7A4+ds3j4C/3C+lcbGOxOe+WMSwML1IGClwq1KcyK2/soV5cZz
+	 sR7oMz2/DqXTA==
+Date: Wed, 22 Jan 2025 15:59:13 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	reveliofuzzing <reveliofuzzing@gmail.com>
+Subject: Re: out-of-bounds write in the function ata_pio_sector
+Message-ID: <Z5EHwRtTL1Oy6T8_@ryzen>
+References: <CA+-ZZ_jTgxh3bS7m+KX07_EWckSnW3N2adX3KV63y4g7M4CZ2A@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+-ZZ_jTgxh3bS7m+KX07_EWckSnW3N2adX3KV63y4g7M4CZ2A@mail.gmail.com>
- <Z3ZtFDgs61oDMMB9@ryzen> <CA+-ZZ_jrKVws_mQ8MyqRJGSktgVt9wbB7xWrmBvGzCeFhvT0-w@mail.gmail.com>
- <Z4popNqD1GZriXh3@ryzen> <CA+-ZZ_gtsDShKeZSupbrwCLtpCvW=p1=citKVXRrSDi3LoZ_9Q@mail.gmail.com>
- <Z45VmuS-j0bEMf89@ryzen>
-In-Reply-To: <Z45VmuS-j0bEMf89@ryzen>
-From: reveliofuzzing <reveliofuzzing@gmail.com>
-Date: Mon, 20 Jan 2025 11:47:32 -0500
-X-Gm-Features: AbW1kvYEtdDFWl-rfDYL4bk8fwQhAGXCF5Y0SIQ1pUexLbhtcX5fnOgiwiUxmL8
-Message-ID: <CA+-ZZ_i6FKRMG8Fi=PfGpcnVDo=hp3J0Bz+tw6Y9+raMovP3Mw@mail.gmail.com>
-Subject: Re: out-of-bounds write in the function ata_pio_sector
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+-ZZ_jTgxh3bS7m+KX07_EWckSnW3N2adX3KV63y4g7M4CZ2A@mail.gmail.com>
 
-On Mon, Jan 20, 2025 at 8:54=E2=80=AFAM Niklas Cassel <cassel@kernel.org> w=
-rote:
->
-> On Fri, Jan 17, 2025 at 11:42:45AM -0500, reveliofuzzing wrote:
-> > >
-> > > However, the .config you provided does not match the bzImage.
-> > > E.g. the e1000/e1000e driver is not built-in in your .config,
-> > > so I get no networking, while it is enabled in your bzImage.
-> > > This makes me worried that you have other changes in your .config.
-> > > If you still have the exact config for this bzImage, could you please=
- add
-> > > it as an attachment?
-> > Hi, we double-checked it but found the config shared above is the one w=
-e used.
-> > CONFIG_E1000XXX is enabled in this config.
->
-> You are right.
->
-> For some reason it got compiled as a module when I did "make olddefconfig=
-",
-> with your config as base. Sorry about the confusion!
->
->
-> >
-> > >
-> > > I've been using the syz-executor binary that you attached, since the =
-C code
-> > > pasted below does not compile, it seems like it has some unintended n=
-ewlines.
-> > > Perhaps you could add it as an attachment instead?
-> > Here is the C program:
-> > https://drive.google.com/file/d/1Uvhqrn-ntEYQT2PBiQjp0xaor-32WYHO/view?=
-usp=3Dsharing
-> > Please let us know if you still can't compile it. We can take a look
-> > at how Syzkaller
-> > generates this C program and compiles it into the syz-executor binary.
->
-> Still does not compile for me.
->
-> It still appears to have some uninteded newlines.
->
-> You probably copy pasted it from an editor instead of uploading it/sendin=
-g
-> it directly.
->
->
-> One example is:
-> line380:                if (write(1, "executing program\n", sizeof("execu=
-ting
-> line381:        program\n") - 1)) {}
->
-> Strings in C are not allowed to span multiple lines without a backslash
-> immediately before the newline, or by using string concatenation.
-Hi, we have updated the c program here:
-https://drive.google.com/file/d/1Uvhqrn-ntEYQT2PBiQjp0xaor-32WYHO/view?usp=
-=3Dsharing
+Hello Jens, Christoph, Martin,
 
-This was the command used for compiling it:
-gcc -o /tmp/syz-executor -DGOOS_linux=3D1 -DGOARCH_amd64=3D1
--DHOSTGOOS_linux=3D1 -x c - -m64 -O2 -pthread -Wall -Werror -Wparentheses
--Wunused-const-variable -Wframe-larger-than=3D16384 -Wno-stringop-overflow
--Wno-array-bounds -Wno-format-overflow -Wno-unused-but-set-variable
--Wno-unused-command-line-argument -static-pie < ./reproducer.c
+On Wed, Jan 01, 2025 at 09:17:02PM -0500, reveliofuzzing wrote:
+> Hi there,
+>
+> We found an out-of-bounds write in the function ata_pio_sector, which can cause
+> the kernel to crash. We would like to report it for your reference.
+>
+> ## Problem in ata_pio_sector
+> ata_pio_sector uses the following code to decide which page to use for the I/O:
+> page = sg_page(qc->cursg);
+> offset = qc->cursg->offset + qc->cursg_ofs;
+>
+> /* get the current page and offset */
+> page = nth_page(page, (offset >> PAGE_SHIFT));
+> offset %= PAGE_SIZE;
+> but we found that `offset` could be as high as 0x5000---qc->cursg_ofs==0x5000,
+> qc->cursg->offset == 0x0, making `page` point to a higher-position page that
+> belongs to other threads.
 
->
->
-> >
-> > >
-> > > Also, you only talk about 6.12 kernel. Out of curiosity, have you man=
-aged to
-> > > reproduce this bug on v6.13-rc kernels? Have you tried?
-> > We haven't tried it yet, but we can do that in the next few days. Will =
-keep you
-> > posted.
->
-> I got an off-list email that mentioned that you could reproduce on 6.13-r=
-c7,
-> thank you!
->
-> Hopefully I will have some time to try to debug this sometime this week.
->
->
-> Kind regards,
-> Niklas
+I've managed to reproduce this on v6.13 using reveliofuzzing syzkaller
+reproducer (which issues SCSI_IOCTL_SEND_COMMAND to the /dev/sg devices).
+
+The problem is that the final if-statement in function ata_pio_sector()
+(which lives in drivers/ata/libata-sff.c) looks like this:
+
+	if (qc->cursg_ofs == qc->cursg->length) {
+		qc->cursg = sg_next(qc->cursg);
+		if (!qc->cursg)
+			ap->hsm_task_state = HSM_ST_LAST;
+		qc->cursg_ofs = 0;
+	}
+
+When the memory corruption occurs, it is because this if-statement never
+evaluated to true, so ata_pio_sector() just continued writing to more and
+more pages, overwriting pages owned by other tasks.
+
+
+Here is some trace_printks that I added that shows the problem:
+
+     kworker/1:3-116     [001] d.h1.   121.445073: ata_pio_sector: 1/3 qc: ffff888008928130 cursg_ofs: 0x0 cursg->offset: 0x0 offset: 0x0 offset_mod: 0x0 sect_size: 0x200
+     kworker/1:3-116     [001] d.h1.   121.445079: ata_pio_sector: 2/3 orig_page: ffffea0000263180 page: ffffea0000263180 page_diff: 0x0 nbytes: 0xd42 curbytes: 0x0
+     kworker/1:3-116     [001] d.h1.   121.445098: ata_pio_sector: 3/3 qc->cursg_ofs: 0x200 qc->cursg->length: 0xd42 equal ? 0 n_elem: 1 orig_n_elem: 1
+     kworker/1:3-116     [001] d.h1.   121.445164: ata_pio_sector: 1/3 qc: ffff888008928130 cursg_ofs: 0x200 cursg->offset: 0x0 offset: 0x200 offset_mod: 0x200 sect_size: 0x200
+     kworker/1:3-116     [001] d.h1.   121.445168: ata_pio_sector: 2/3 orig_page: ffffea0000263180 page: ffffea0000263180 page_diff: 0x0 nbytes: 0xd42 curbytes: 0x200
+     kworker/1:3-116     [001] d.h1.   121.445185: ata_pio_sector: 3/3 qc->cursg_ofs: 0x400 qc->cursg->length: 0xd42 equal ? 0 n_elem: 1 orig_n_elem: 1
+     kworker/1:3-116     [001] d.h1.   123.492925: ata_pio_sector: 1/3 qc: ffff888008928130 cursg_ofs: 0x400 cursg->offset: 0x0 offset: 0x400 offset_mod: 0x400 sect_size: 0x200
+     kworker/1:3-116     [001] d.h1.   123.492929: ata_pio_sector: 2/3 orig_page: ffffea0000263180 page: ffffea0000263180 page_diff: 0x0 nbytes: 0xd42 curbytes: 0x400
+     kworker/1:3-116     [001] d.h1.   123.492943: ata_pio_sector: 3/3 qc->cursg_ofs: 0x600 qc->cursg->length: 0xd42 equal ? 0 n_elem: 1 orig_n_elem: 1
+     kworker/1:3-116     [001] d.h1.   123.492990: ata_pio_sector: 1/3 qc: ffff888008928130 cursg_ofs: 0x600 cursg->offset: 0x0 offset: 0x600 offset_mod: 0x600 sect_size: 0x200
+     kworker/1:3-116     [001] d.h1.   123.492993: ata_pio_sector: 2/3 orig_page: ffffea0000263180 page: ffffea0000263180 page_diff: 0x0 nbytes: 0xd42 curbytes: 0x600
+     kworker/1:3-116     [001] d.h1.   123.493005: ata_pio_sector: 3/3 qc->cursg_ofs: 0x800 qc->cursg->length: 0xd42 equal ? 0 n_elem: 1 orig_n_elem: 1
+
+We can see that qc->cursg_ofs gets incremented by qc->sect_size (0x200),
+but since qc->cursg_ofs is never equal to qc->cursg->length (0xd42),
+it doesn't stop, and ends up writing way more than qc->cursg->length.
+
+
+
+If I compare the function:
+/* Transfer qc->sect_size bytes of data from/to the ATA device. */
+ata_pio_sector()
+
+with function:
+/* __atapi_pio_bytes - Transfer data from/to the ATAPI device. */
+__atapi_pio_bytes()
+
+
+I can see that __atapi_pio_bytes() actually has this code:
+/* don't overrun current sg */
+count = min(sg->length - qc->cursg_ofs, bytes);
+
+
+which I guess makes sense, since the function has _bytes_ in the name.
+ata_pio_sector() has _sector_ in the name, so it makes sense that it
+would have to transfer one or more sectors (even if there currently
+doesn't seem to be anything that guarantees this...).
+
+
+So, should I add a similar:
+count = min(sg->length - qc->cursg_ofs, bytes);
+to ata_pio_sector(), or should I add code to
+ata_pio_sector() that simply rejects a qc->nbytes that is not a multiple
+of qc->sect_size ?
+
+
+
+I was kind of expecting some upper layer, SCSI or block, to have rejected
+an operation that is not a multiple of the sector size.
+
+Is that a silly assumption?
+
+
+Looking at drivers/scsi/scsi_ioctl.c:sg_scsi_ioctl() I can see that it
+rejects:
+if (in_len > PAGE_SIZE || out_len > PAGE_SIZE)
+
+
+If I dump the request in gdb, it seems that:
+cmd_flags is: REQ_OP_DRV_IN
+__data_len is: 0xd42
+
+(gdb) p /x *((struct request *) ((void*)qc->scsicmd - sizeof(struct request)))
+$21 = {q = 0xffff888008d50000, mq_ctx = 0xffff88806d242980, mq_hctx = 0xffff88800781e000, 
+  cmd_flags = 0x22, rq_flags = 0x18, tag = 0x0, internal_tag = 0x1, timeout = 0xea60, 
+  __data_len = 0xd42, __sector = 0xffffffffffffffff, bio = 0xffff8880088fc700, 
+  biotail = 0xffff8880088fc700, {queuelist = {next = 0xffff8880088f12c8, 
+      prev = 0xffff8880088f12c8}, rq_next = 0xffff8880088f12c8}, part = 0x0, 
+  alloc_time_ns = 0x0, start_time_ns = 0xa837cc389, io_start_time_ns = 0x0, 
+  stats_sectors = 0x0, nr_phys_segments = 0x1, nr_integrity_segments = 0x0, state = 0x1, 
+  ref = {counter = 0x1}, deadline = 0xfffd2516, {hash = {next = 0x0, pprev = 0x0}, 
+    ipi_list = {next = 0x0}}, {rb_node = {__rb_parent_color = 0xffff8880088f1320, 
+      rb_right = 0x0, rb_left = 0x0}, special_vec = {bv_page = 0xffff8880088f1320, 
+      bv_len = 0x0, bv_offset = 0x0}}, elv = {icq = 0x0, priv = {0xffff88800781f860, 
+      0x0}}, flush = {seq = 0x7, saved_end_io = 0x0}, fifo_time = 0xfffc2f88, 
+  end_io = 0xffffffff81f55550, end_io_data = 0xffff88800de2fb80}
+
+p /x qc->scsicmd->cmnd[0]
+$25 = 0x85
+include/scsi/scsi_proto.h:#define       ATA_16                0x85      /* 16-byte pass-thru */
+
+
+which must have meant that:
+in_len == 0, out_len = 0xd42 (3394).
+
+The page size on this system is 4k (4096), so I suppose that out_len is not
+greater than PAGE_SIZE.
+
+So I guess that SCSI layer does not reject a request that is not a multiple of
+the sector size.
+
+So what is the best solution here?
+
+Should we add such a check in SCSI? libata? or should each (libata) driver
+themselves reject such a thing?
+
+Advice is welcome :)
+
+
+Kind regards,
+Niklas
