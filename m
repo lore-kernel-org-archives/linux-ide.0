@@ -1,38 +1,40 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80430157A67
-	for <linux-ide@vger.kernel.org>; Thu, 23 Jan 2025 05:08:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA6520F96E
+	for <linux-ide@vger.kernel.org>; Thu, 23 Jan 2025 13:37:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737608886; cv=none; b=XpocFyGJUIiSFT2vvdr/8f7gN2rWLDHCt1faqAnCIezdRUJrl46G1WRw8Bq+9vJxE7UkeEAlGOicHXPzqnHRNEfrbnIdaNiYtzgtWvX1hMtRzg8Bd3eHX8yi4gXkudAy/HR5S1fxPHRiKJkRnePgYtWtY9+6cFF9Ib7OPkfwAT4=
+	t=1737639434; cv=none; b=bbLTXJkFbOXjZrJqgf9Ton6CskHABJ63b1IwO2aHdo85BfBV6XH43XaR0+1GJk+bKDLo6FZfLtLbNaevbIVrK0Cb6qT2dudyVwLHrRoHC/rUHsMrOC/XPEefqnZbmIVoEjPs8X7/AwNfyDB0hH7q2RilYS6MAbENi+0rsNapL+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737608886; c=relaxed/simple;
-	bh=c0CncUAm5s4ZCdU5x/d2eVrv8aBK2Ufx9wLCadvqNdE=;
+	s=arc-20240116; t=1737639434; c=relaxed/simple;
+	bh=lFWg8YzA6y2OUNWs5UsaSS++qfOiG7TOW2tnEvAI9as=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lPEid0p7X7F49sFpBhsDeahETf4mwnCmoc9PAZX6NCDDvVVrdHLsvhk9yTrH76/iKwxneLBYaFTNC8nnfcWU75BSj+pSPciqbJwKHGPNNh4n/qSTaM5Jx3+GRl0kHXb5x9+EKIqko5q1+LXUTqoUX6BKq28/kYU9jv0G+lcJf6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=eOlci8+m; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
+	 In-Reply-To:Content-Type; b=upWzG+RZvpfiWnETZPP1gw5g0TuD0O0GbSUeIgP5kycfZE7vM1wyd4VuWySj7sAAL5d6vdJl9BS4AVVnR4Uh//SKjd7049nX9xqDZN3E5c0zttxM3c6rm5fp9rMBBP8qXP0OiFtdgU8BRmi01MlSmACD6w6PjVdZc1koltSovm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=YLFMzjVS; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="eOlci8+m"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:Content-Transfer-Encoding:Content-Type
-	:In-Reply-To:From:References:Cc:To:Subject:Reply-To:MIME-Version:Date:
-	Message-ID:Content-ID:Content-Description;
-	bh=c0CncUAm5s4ZCdU5x/d2eVrv8aBK2Ufx9wLCadvqNdE=; b=eOlci8+mMPOQmo9GK/4Y2YJSbV
-	/79TiWKgDgNOxR1KNFy0stKXuyZAtaIC0F3aQYRm3WBBjWbwVY8aGiUutI5osjYKZhFbtZ2fPEpE1
-	Jx1DJG6Z+JtbGG7I43L/yahph631eSpkuvDH8taZtokBE2BI5XtxDX9a/9zrDh+AiA/MsAQI/jSZM
-	Qn7R+mdRdediBAy55CamqYfQps/DA6r5TtKnXvsIfW7SK+KYaMOuVhispF1WdYE4KHYhJUDQZBK1Q
-	U/9jOGPG5FokDkCvNM/5+7rmn+X3HVckMl+CydpkS/nLDLv580rdxVZyJ1PYbU0ipm8sfcKHtNB1y
-	cY2Rkrsg==;
-Received: from authenticated user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
-	(Exim 4.94.2)
-	(envelope-from <daniel@debian.org>)
-	id 1tapRb-008EFv-Cd; Thu, 23 Jan 2025 05:07:55 +0000
-Message-ID: <46364367-a4b9-40b0-ba67-fbe54b37fc5c@debian.org>
-Date: Thu, 23 Jan 2025 06:07:54 +0100
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="YLFMzjVS"
+Received: from wolf.philpem.me.uk (148.163.187.81.in-addr.arpa [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id 6BC9CBD09B;
+	Thu, 23 Jan 2025 13:19:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1737638369;
+	bh=lFWg8YzA6y2OUNWs5UsaSS++qfOiG7TOW2tnEvAI9as=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=YLFMzjVShh62+AuD36ay7TW+RdOBsn8HtLd6gW/jyKBMSEcCYXCnmLXm/49A59JFc
+	 M7bBK55B2+ww+zqsOyNvY5IcD+1iOyjCq+5krPFtrKCV3asIzjm3AeUS5ZO1SH303A
+	 d9VwnYxhTHKxAs7xUJovsgImXofP2a581QKslw58=
+Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id A70CC2C009F;
+	Thu, 23 Jan 2025 13:19:28 +0000 (GMT)
+Message-ID: <4f1b5cef-8d7c-44c7-85ce-7a2bb890719f@philpem.me.uk>
+Date: Thu, 23 Jan 2025 13:19:28 +0000
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -40,26 +42,59 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Reply-To: daniel@debian.org
-Subject: Re: [PATCH] Disabling link power-management on Samsung SSD 870 QVO
- drives to make them work.
-To: Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: Zip 100 ATAPI not working, "qc timeout" and "failed to clear UNIT
+ ATTENTION"
+To: Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org
-References: <a421afd8-d841-4d3c-bfe9-9dee707bb319@debian.org>
- <Z45NEMKVAsxKvafa@ryzen> <ac64a484-022c-42a0-95bc-1520333b1536@debian.org>
- <14ead38d-9a43-4b14-ac7f-7b0410b9cdfb@kernel.org>
-Content-Language: en-US
-From: Daniel Baumann <daniel@debian.org>
-In-Reply-To: <14ead38d-9a43-4b14-ac7f-7b0410b9cdfb@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+References: <c6722ee8-5e21-4169-af59-cbbae9edc02f@philpem.me.uk>
+ <Z36GMwr49ihd2nAG@ryzen> <e1985151-c206-4be1-91c1-92eac16f6236@philpem.me.uk>
+ <Z3-_dt0m_2UrtKon@ryzen> <e1b79ece-b4b2-42e5-b259-290820324b5e@philpem.me.uk>
+ <Z4pdD1Z2mJnF7N3O@ryzen>
+Content-Language: en-GB
+From: Philip Pemberton <lists@philpem.me.uk>
+In-Reply-To: <Z4pdD1Z2mJnF7N3O@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Debian-User: daniel
 
-On 1/23/25 05:21, Damien Le Moal wrote:
-> For reference for future patches:
+Hi Niklas,
 
-sorry, I wasn't aware.
-I'll make sure of it for next time, thank you for the help.
+On 17/01/2025 13:37, Niklas Cassel wrote:
+> Unfortunately, so far I do not think that we have enough information to
+> do much about this issue.
+> 
+> We know that the "SATA-to-PATA adatper + Zip drive" combo worked on some
+> other PC (that might have used another SATA HBA) with an ancient kernel.
+> 
+> I think my first recommendation would be to try to build an ancient kernel
+> on your current PC, and see if the same "SATA-to-PATA adatper + Zip drive"
+> combo then works. If it does work, then I think the best bet is to use
+> PCI passthrough and do an git bisection (which can be automated).
+> 
+> Or, do the opposite, see if the latest kernel with other PC still handles
+> the Zip drive properly, if it doesn't, then perhaps the best thing is to
+> to the bisection on this other PC.
 
-Regards,
-Daniel
+I've just got the other PC up and running, running a network boot of 
+Debian to make it easy to swap and change kernels and initrd's.
+
+I've tested the following kernels and found them to work --
+
+Debian Buster - 4.19.0-27-686-pae - no issues accessing the Zip drive.
+Debian Buster - 5.10.0-0-686 - likewise.
+Debian Bookworm - 6.1.0-30-686-pae
+
+I checked and found (via "udevadm info -an /dev/sdX | grep DRIVER") that 
+it was using the ata_piix driver.
+By the same route (udevadm), the workstation is using the "ahci" driver.
+
+I'm not sure what that really says, other than the PIIX driver isn't 
+affected.
+
+I'll dig out another machine which uses the "ahci" driver (and ideally 
+the same chipset) and report back with my findings.
+
+Thanks,
+-- 
+Phil.
+philpem@philpem.me.uk
+https://www.philpem.me.uk/
