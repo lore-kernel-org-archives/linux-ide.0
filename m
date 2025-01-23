@@ -1,33 +1,38 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEAAC70817
-	for <linux-ide@vger.kernel.org>; Thu, 23 Jan 2025 04:21:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80430157A67
+	for <linux-ide@vger.kernel.org>; Thu, 23 Jan 2025 05:08:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737606070; cv=none; b=HyvttzC4osDoJ5lkB9Kz7P8biO3vWymJOwFKOYDuVOvpGNfZkjWLMB2qgxcqNlYRoILyY1M/vYsK5UkW0g4g31IOT/7NzyL/O8Pmz7mnaKNO+OW5KAUKN4b5NbNgeTam7rusGYguFWP7wMPdxPUmlE9Orew5+HqZDlyUikmuvAo=
+	t=1737608886; cv=none; b=XpocFyGJUIiSFT2vvdr/8f7gN2rWLDHCt1faqAnCIezdRUJrl46G1WRw8Bq+9vJxE7UkeEAlGOicHXPzqnHRNEfrbnIdaNiYtzgtWvX1hMtRzg8Bd3eHX8yi4gXkudAy/HR5S1fxPHRiKJkRnePgYtWtY9+6cFF9Ib7OPkfwAT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737606070; c=relaxed/simple;
-	bh=383mpZ7Anm3kYH2ghmKP8yod34sKn51dfM2yzatZFyo=;
+	s=arc-20240116; t=1737608886; c=relaxed/simple;
+	bh=c0CncUAm5s4ZCdU5x/d2eVrv8aBK2Ufx9wLCadvqNdE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U97Ir3+Mri0xXpAjnyV5KBwbR5RS0cIf3w2evLrxu8cXpdAndoSU0PyvTCBP9BA39PbDAvBLszLNz7SBIIuXCF7VExwVAt+WMsChPeAKcVLc0HzRMRE/KjYh4P/H8/AmQvJU31+KBO4Qwo9G65SbQ+6EiTJ6JxwGrVBsMZ+NUdI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NfDHYqYh; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=lPEid0p7X7F49sFpBhsDeahETf4mwnCmoc9PAZX6NCDDvVVrdHLsvhk9yTrH76/iKwxneLBYaFTNC8nnfcWU75BSj+pSPciqbJwKHGPNNh4n/qSTaM5Jx3+GRl0kHXb5x9+EKIqko5q1+LXUTqoUX6BKq28/kYU9jv0G+lcJf6E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=eOlci8+m; arc=none smtp.client-ip=82.195.75.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NfDHYqYh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66E63C4CED3;
-	Thu, 23 Jan 2025 04:21:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737606069;
-	bh=383mpZ7Anm3kYH2ghmKP8yod34sKn51dfM2yzatZFyo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=NfDHYqYhqnhRiXboaulRNB61GlGxlwCBiHi/aI1+Ry+wikIE/y5n7XvvfWzGA1udI
-	 Yrdu5QSS1xt8U2Mm2WLN/tIrVoEoUDyTQzI1UQRiq6TRbjZXBLqE6A3pRH5JPD5UNK
-	 OPPUe6slUVeLe7wIc6MT34TSuOMvKqGvIqYMG8VK5lCvMPqHVfkU67+DccaqJPM4ny
-	 qV3/s18VAa+fe+wYZEd43w3XU7M0aP5JHp7gTvEropcOIR39uocYBnlWdmxycTcx5V
-	 jxcFdpLpV+wL3V5BfRKzVSDRURr+aA8FHbzGd9DQUB7nvAvnEp08swMH90O9SwINP6
-	 QG+bpdLaplqRg==
-Message-ID: <14ead38d-9a43-4b14-ac7f-7b0410b9cdfb@kernel.org>
-Date: Thu, 23 Jan 2025 13:21:06 +0900
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="eOlci8+m"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+	s=smtpauto.stravinsky; h=X-Debian-User:Content-Transfer-Encoding:Content-Type
+	:In-Reply-To:From:References:Cc:To:Subject:Reply-To:MIME-Version:Date:
+	Message-ID:Content-ID:Content-Description;
+	bh=c0CncUAm5s4ZCdU5x/d2eVrv8aBK2Ufx9wLCadvqNdE=; b=eOlci8+mMPOQmo9GK/4Y2YJSbV
+	/79TiWKgDgNOxR1KNFy0stKXuyZAtaIC0F3aQYRm3WBBjWbwVY8aGiUutI5osjYKZhFbtZ2fPEpE1
+	Jx1DJG6Z+JtbGG7I43L/yahph631eSpkuvDH8taZtokBE2BI5XtxDX9a/9zrDh+AiA/MsAQI/jSZM
+	Qn7R+mdRdediBAy55CamqYfQps/DA6r5TtKnXvsIfW7SK+KYaMOuVhispF1WdYE4KHYhJUDQZBK1Q
+	U/9jOGPG5FokDkCvNM/5+7rmn+X3HVckMl+CydpkS/nLDLv580rdxVZyJ1PYbU0ipm8sfcKHtNB1y
+	cY2Rkrsg==;
+Received: from authenticated user
+	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
+	(Exim 4.94.2)
+	(envelope-from <daniel@debian.org>)
+	id 1tapRb-008EFv-Cd; Thu, 23 Jan 2025 05:07:55 +0000
+Message-ID: <46364367-a4b9-40b0-ba67-fbe54b37fc5c@debian.org>
+Date: Thu, 23 Jan 2025 06:07:54 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,52 +40,26 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
+Reply-To: daniel@debian.org
 Subject: Re: [PATCH] Disabling link power-management on Samsung SSD 870 QVO
  drives to make them work.
-To: daniel@debian.org, Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org
 References: <a421afd8-d841-4d3c-bfe9-9dee707bb319@debian.org>
  <Z45NEMKVAsxKvafa@ryzen> <ac64a484-022c-42a0-95bc-1520333b1536@debian.org>
-From: Damien Le Moal <dlemoal@kernel.org>
+ <14ead38d-9a43-4b14-ac7f-7b0410b9cdfb@kernel.org>
 Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <ac64a484-022c-42a0-95bc-1520333b1536@debian.org>
+From: Daniel Baumann <daniel@debian.org>
+In-Reply-To: <14ead38d-9a43-4b14-ac7f-7b0410b9cdfb@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Debian-User: daniel
 
-On 1/21/25 12:08 AM, Daniel Baumann wrote:
-> Hi Niklas,
-> 
-> On 1/20/25 14:18, Niklas Cassel wrote:
->>> I've added a new case for 870 QVO specifically as regular 870 don't have
->>> the issue.
->>
->> This should have been in the commit message.
-> 
-> thanks for the pointer, I have now adjusted the commit message.
-> 
->> Out of curiosity, did you test on regular 870, so you know they are not
->> broken as well?
-> 
-> we don't have many of non-QVO variants, but so far none of them has
-> needed it. I've added that to the commit message as well.
-> 
->> You probably also want to add:
->> Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
->> Cc: stable@vger.kernel.org
-> 
-> added, thanks!
-> 
-> Updated patch attached.
+On 1/23/25 05:21, Damien Le Moal wrote:
+> For reference for future patches:
 
-For reference for future patches: please use "git send-email" to send patches.
-Also please make sure to version the patches (git format-patch -vX ...) and add
-changelog notes after the "---" at the end of the commit message and before the
-first line of the patch content (in your case, the line
-"drivers/ata/libata-core.c | 4 ++++")
+sorry, I wasn't aware.
+I'll make sure of it for next time, thank you for the help.
 
-Thank you.
-
--- 
-Damien Le Moal
-Western Digital Research
+Regards,
+Daniel
