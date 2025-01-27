@@ -1,151 +1,179 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CDE0202C3E;
-	Mon, 27 Jan 2025 12:46:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCDFA1FF7B4;
+	Mon, 27 Jan 2025 13:25:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737982014; cv=none; b=dOikbIKr7Yi9vQ3k2BsH1BIiy4PS9pYV23NQlWwQPVy/K/ZTuC4XVlIFfaj/5j2Wq/eyZe431xFEMqJeisHnyYNlUMfO93mrV7bovgY4+4lzs1APpO8NNrrGp3vuyH5fyAr5vwCQ0Yo/FQDyf0xD6BsgmNRXYOiBzTqRMUXJ22o=
+	t=1737984332; cv=none; b=odp24p0j+3utK+dhrDZp54Fqr5Vng5pVzNhMZP+6uWvNhaM5NdV3jnReXtHuLUHJ9+p6rObv2tN+KeceJ6ciDNuxculzSKgTCu3dOcTJhiFY4oV+ZkCrZ4Fo+Q3u7JVQz7ZaYMsyzG5qXlOrxlbJbWiuFkVQ7s7emVdSVz3ikUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737982014; c=relaxed/simple;
-	bh=edhtWkME7JcFuoloymgagg+bCTbdLj8qaR8IOWv4eug=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=rDM/a8ypPWW/0ur3MuhLZr+w5f3WIBnbcMcXZD7xpQziZKjHzMR/0dwfWE9sY96XA/BKRMFTDY4A6AOvHPrm/16I49HzJIsBgDDOcDebEBfPIlUJHYwFKfqCNHYI3Ck7bIHLr08+fjTrzDv5tlEOzGmTFb/WbHm2IEP3qQ+rPdA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=euVtx8ol; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1737984332; c=relaxed/simple;
+	bh=RjFj+btLOrA1I0c/0XDEPot6dd9rNyckywxmgkJzq3o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aEfhAR3RlQYiSsb42lAOvxkw+nUntoz6q6DHAY0pQYX9yAkuDsIcFi/ef/RPnfCGfMo6aaLv5F7HtRLQF2WK23ejmtY2BNY7EEaLm0JP2UncX78LDNu5Z20MP1wE0lxRljio5NohTrvoN6ZN1daJdMi5M+IsFEMnMgznBw9oovI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QSGUOvEZ; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="euVtx8ol"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-43675b1155bso50445775e9.2;
-        Mon, 27 Jan 2025 04:46:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737982011; x=1738586811; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=HoAOp3woacgQpHd2g/asCHp5UTA4pERK/Ity2Wb8N/Q=;
-        b=euVtx8olYY1uv+i2/v6mK56YVqWdmuVtUsTJFzDoTKfi9VKP+jwHgpgoxVgL0EEYsM
-         MZaQhEd8sQ9Rj0usaXTZ8b8NE5z+6SUodGv0+qp4zocp051B1zPgt9s3b554IdVx762P
-         7IMoKgAws/LSKNzXw9lkh1eppCvVR2T+Grvdcx+cVIL7WlyheRbQ+QHaFDRR0BjOaX6I
-         EZuyTWBaKL+Wg7n/EqL5QSmYuv5k1aFKKCknE/gjM9OWq8CWBdVPCXhDSg1XTnuIs1TA
-         z7uMbpNDXstab87at7mair0UmhA7jZY1Rr31Hv5EXePjxBOQWdwBtyeEUmizrscqnvWM
-         NEcw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737982011; x=1738586811;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=HoAOp3woacgQpHd2g/asCHp5UTA4pERK/Ity2Wb8N/Q=;
-        b=c8fa+Shxwd6LZDbi91bT+ahjzvzcvbuYiHvk5hUcyMrmByMriEX/+XB4Js/afqRPPB
-         clHVLpEZfZvtGHhoJn7xR+dU5iLTr3vkwMVfLlMoCF4oX58PZu3dMQ/GHmrwYhYjHDn0
-         XFo69bDWjpH6dlHYR3eO6WiKLN/8uJY6aw/0mXvBANqtK86AbOzfSqEK6jsPc5b/4tF5
-         vmIFSd5A39i5YjjFLXMMRlrU/m/uTxp4bYiPbZwjHSLByWqxPw4kNae7Ok9rAvpUk6Qy
-         fhLgbTfvn4Vwbg3zxxA4Ul7RVvHMindifEVEr40EAD3+31D45zz8ZDQ3zIkrijO2QPek
-         VuhA==
-X-Forwarded-Encrypted: i=1; AJvYcCU+t6ytmfU+niy+JxBY71cFTU6eO7DuTwiw2zXXSz2VWa+exyUMDOUYn66qY4RzC4TNoh1stwn3BaC2ZG8tKCghIPI=@vger.kernel.org, AJvYcCUaU/JGuH+PUFKp4KeGGVKm93VXs5KzWUQ+3eEC51ggP4/BmAb0rLA6fAN23eYXhLBM+uDKHi9mw1V3m+A=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBAz/2PJJFfz0vhvk+fmUBNslzYMRC/ox4uVtKo1TQ/rg+qUwF
-	oZsM/F/pP/aCthKfVeL2s/9tw5cCWahSUs7rU/v6cfNxwzzVTG/K
-X-Gm-Gg: ASbGncvC+26ZVrIgRIYoTfP02lQa0vAueYxqtkhx9FkThff6v5Kzq1vgyWju5Gq+nPc
-	Fsf91MSvLo6DhCFEyz5/SK3EIWI/EQzlPfcm7mvswlIkLDdhfH0YgN3zWc3TQcOBqr+JvTCdLzP
-	fHXAUwf4Me1KRirnmo7dfjQ/NjmUD/kYDQZquGJWtqAztmv7zb2nwNwiVfA+ZpqvnmoFDH+bj/0
-	6oTv+bOUHd50XoRPc3PHGIWqwXfKY7bhwcdqS95yuhCiTiOhsuE+WiyIMMF3T3lpmSXItCvZ/EA
-	sLn/
-X-Google-Smtp-Source: AGHT+IHMBWcLxxWH/HrE9gnP2KJ4oU9wi9iDb4LPI99X2Tz841Sv8gPf5kRGSvwJqq3n4yWawHMSmQ==
-X-Received: by 2002:adf:ea91:0:b0:38a:88b8:99af with SMTP id ffacd0b85a97d-38bf566b88amr27909330f8f.22.1737982010830;
-        Mon, 27 Jan 2025 04:46:50 -0800 (PST)
-Received: from localhost ([2001:861:3385:e20:6384:4cf:52c5:3194])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38c2a1761ffsm10811380f8f.7.2025.01.27.04.46.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jan 2025 04:46:50 -0800 (PST)
-From: Raphael Gallais-Pou <rgallaispou@gmail.com>
-Date: Mon, 27 Jan 2025 13:46:09 +0100
-Subject: [PATCH RFC 14/14] ahci: sata_rcar: Switch from CONFIG_PM_SLEEP
- guards to pm_sleep_ptr()
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QSGUOvEZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1737984330; x=1769520330;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=RjFj+btLOrA1I0c/0XDEPot6dd9rNyckywxmgkJzq3o=;
+  b=QSGUOvEZzlCLg52m+Lkyf/+kcHVE68FvAFk33+V3UhwIx/K/THbEuyid
+   qJ438VnvterjDhGelKR5fP6BxrrxRkqifOI54cau6t1t8osjTRna9hBxM
+   No2vFYIs3XvcsO1WP4e5Biv+WmJTB68gdx3/u0mrAfgwMTVAD015W4iZ3
+   /IS6Kq3c9DS8MxtJuSPO9pAimIX5JPT9iSW8d4LmXW3YyQJxw6TCZ90TZ
+   /GjxSPzYFVZHfh4LDTMcdRhtiKIjHF1pelA8u+BGatnQUd04z2t7ouweY
+   lN5ljcLdmzwZ6ey8werqdArXQ+hfBfCOql1cBQHnUxfs2OPHqKl0LQjSz
+   w==;
+X-CSE-ConnectionGUID: WXPLNx9wSDWvyiA2ZoPUwA==
+X-CSE-MsgGUID: Ov3TekHxTxuVTp8Y/oIV5g==
+X-IronPort-AV: E=McAfee;i="6700,10204,11328"; a="42105354"
+X-IronPort-AV: E=Sophos;i="6.13,238,1732608000"; 
+   d="scan'208";a="42105354"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2025 05:25:22 -0800
+X-CSE-ConnectionGUID: oOw//HyuRH2sXbDiVD3/cA==
+X-CSE-MsgGUID: F7vXYkyrSx2N1gt4t3xT9A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
+   d="scan'208";a="131730368"
+Received: from smile.fi.intel.com ([10.237.72.58])
+  by fmviesa002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2025 05:25:02 -0800
+Received: from andy by smile.fi.intel.com with local (Exim 4.98)
+	(envelope-from <andriy.shevchenko@intel.com>)
+	id 1tcP6l-00000005jpm-3fIe;
+	Mon, 27 Jan 2025 15:24:55 +0200
+Date: Mon, 27 Jan 2025 15:24:55 +0200
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	Damien Le Moal <dlemoal@kernel.org>, Jiri Kosina <jikos@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Corey Minyard <minyard@acm.org>, Peter Huewe <peterhuewe@gmx.de>,
+	Jarkko Sakkinen <jarkko@kernel.org>,
+	Tero Kristo <kristo@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
+	Ian Abbott <abbotti@mev.co.uk>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	John Allen <john.allen@amd.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Vinod Koul <vkoul@kernel.org>, Ard Biesheuvel <ardb@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Moritz Fischer <mdf@kernel.org>, Liviu Dudau <liviu.dudau@arm.com>,
+	Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+	Andi Shyti <andi.shyti@kernel.org>,
+	Michael Hennerich <michael.hennerich@analog.com>,
+	Peter Rosin <peda@axentia.se>, Lars-Peter Clausen <lars@metafoo.de>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Markuss Broks <markuss.broks@gmail.com>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Lee Jones <lee@kernel.org>, Jakub Kicinski <kuba@kernel.org>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Iyappan Subramanian <iyappan@os.amperecomputing.com>,
+	Yisen Zhuang <yisen.zhuang@huawei.com>,
+	Stanislaw Gruszka <stf_xl@wp.pl>, Kalle Valo <kvalo@kernel.org>,
+	Sebastian Reichel <sre@kernel.org>,
+	Tony Lindgren <tony@atomide.com>, Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Vaibhav Hiremath <hvaibhav.linux@gmail.com>,
+	Alex Elder <elder@kernel.org>, Jiri Slaby <jirislaby@kernel.org>,
+	Jacky Huang <ychuang3@nuvoton.com>, Helge Deller <deller@gmx.de>,
+	Christoph Hellwig <hch@lst.de>, Robin Murphy <robin.murphy@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kees Cook <keescook@chromium.org>,
+	Trond Myklebust <trond.myklebust@hammerspace.com>,
+	Anna Schumaker <anna@kernel.org>,
+	Masahiro Yamada <masahiroy@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Takashi Iwai <tiwai@suse.com>, linuxppc-dev@lists.ozlabs.org,
+	linux-ide@vger.kernel.org, openipmi-developer@lists.sourceforge.net,
+	linux-integrity@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-clk@vger.kernel.org, linux-pm@vger.kernel.org,
+	linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org,
+	linux-efi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-fpga@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-input@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+	linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+	linux-leds@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-rtc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-spi@vger.kernel.org, linux-amlogic@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, greybus-dev@lists.linaro.org,
+	linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	iommu@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
+	kasan-dev@googlegroups.com, linux-hardening@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-kbuild@vger.kernel.org,
+	alsa-devel@alsa-project.org, linux-sound@vger.kernel.org
+Subject: Re: [PATCH 00/34] address all -Wunused-const warnings
+Message-ID: <Z5eJJ199QwL0HVJT@smile.fi.intel.com>
+References: <20240403080702.3509288-1-arnd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250127-pm_ata-v1-14-f8f50c821a2a@gmail.com>
-References: <20250127-pm_ata-v1-0-f8f50c821a2a@gmail.com>
-In-Reply-To: <20250127-pm_ata-v1-0-f8f50c821a2a@gmail.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
- Pengutronix Kernel Team <kernel@pengutronix.de>, 
- Fabio Estevam <festevam@gmail.com>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Hans de Goede <hdegoede@redhat.com>, 
- Patrice Chotard <patrice.chotard@foss.st.com>, Chen-Yu Tsai <wens@csie.org>, 
- Jernej Skrabec <jernej.skrabec@gmail.com>, 
- Samuel Holland <samuel@sholland.org>, Viresh Kumar <vireshk@kernel.org>, 
- Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
- imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
- linux-mediatek@lists.infradead.org, linux-sunxi@lists.linux.dev, 
- linux-renesas-soc@vger.kernel.org
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1353; i=rgallaispou@gmail.com;
- h=from:subject:message-id; bh=edhtWkME7JcFuoloymgagg+bCTbdLj8qaR8IOWv4eug=;
- b=owEBbQKS/ZANAwAIAechimjUEsK1AcsmYgBnl4AsTwch8wZKpCY6BlHXr882TR4ert8jNSnQ+
- OFz7uYVB+aJAjMEAAEIAB0WIQQgmXv2E+fvbV/9ui/nIYpo1BLCtQUCZ5eALAAKCRDnIYpo1BLC
- tdgXD/0R8DjMyNkTEOSEqNC8cK+UW/cs7ATY/dY56SPbehRA04bCvDyn0vB/5FxpJAoPlPCPRLR
- j5sG07A1fk+by7VohKEpDY25Y/FkgUnLB/x9N8GY+Xgbu0iJX/ZMUYik4PAZ8Y1u3SCXHuKoaug
- 5N3sePlGeyyfOO1cfFahLHJCdpj4MkutMilDNOWthqBVb0G80muTn5+P7c6GIjlO4zWCmx/f0Ll
- Z2NreP3O6wPWEk04L+uvBX5CrWewgBzct3cBa6qQpwQaVZTsxWNCfePC/kcNWReNMSlID0lU7ah
- tYRc2Yr4dNCk1VZknaoKbvwHdVcoHu+cDD5hR15kXnHTlVwRb4+qmFavc2BJn5u7PyMkpI8pnMi
- UbPuV464EgJtVIWfitIWfc6nl5a/CzAsCAjxy4mCzQJ7V2LN0Ho6hNIvmcxmcaZN+r3ie0wY8qb
- o70dYTWrD1ly4Qqp6NjVaeJCqggwo65mZL2fsxEhEOBNt6bxe1K1YPab1qxwdb//noO4O6nG+Dt
- mpO/PmO0Z+S+3rcVdasfL9C0Wih46GMwv04m4pcRXFlAXM8JszH1FKnW7tn5ZKE9IbpCzzQSzMC
- zVSU7LzYibqOPwYbKCawuINy32MTTOUEdxvD431BU3xR4tALDoe0DBSGBE4QodaaX3XUrvWMqBV
- 362NzhZEwhVJ2Lg==
-X-Developer-Key: i=rgallaispou@gmail.com; a=openpgp;
- fpr=20997BF613E7EF6D5FFDBA2FE7218A68D412C2B5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240403080702.3509288-1-arnd@kernel.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-Letting the compiler remove these functions when the kernel is built
-without CONFIG_PM_SLEEP support is simpler and less error prone than the
-use of #ifdef based kernel configuration guards.
+On Wed, Apr 03, 2024 at 10:06:18AM +0200, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Compilers traditionally warn for unused 'static' variables, but not
+> if they are constant. The reason here is a custom for C++ programmers
+> to define named constants as 'static const' variables in header files
+> instead of using macros or enums.
+> 
+> In W=1 builds, we get warnings only static const variables in C
+> files, but not in headers, which is a good compromise, but this still
+> produces warning output in at least 30 files. These warnings are
+> almost all harmless, but also trivial to fix, and there is no
+> good reason to warn only about the non-const variables being unused.
+> 
+> I've gone through all the files that I found using randconfig and
+> allmodconfig builds and created patches to avoid these warnings,
+> with the goal of retaining a clean build once the option is enabled
+> by default.
+> 
+> Unfortunately, there is one fairly large patch ("drivers: remove
+> incorrect of_match_ptr/ACPI_PTR annotations") that touches
+> 34 individual drivers that all need the same one-line change.
+> If necessary, I can split it up by driver or by subsystem,
+> but at least for reviewing I would keep it as one piece for
+> the moment.
+> 
+> Please merge the individual patches through subsystem trees.
+> I expect that some of these will have to go through multiple
+> revisions before they are picked up, so anything that gets
+> applied early saves me from resending.
 
-Signed-off-by: Raphael Gallais-Pou <rgallaispou@gmail.com>
----
- drivers/ata/sata_rcar.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+Arnd, can you refresh this one? It seems some misses still...
+I have got 3+ 0-day reports against one of the mux drivers.
 
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 22820a02d7408033d698a98373e1e8e7ef47f908..4c5f5938c12efc7c8594df4092915011e83f910d 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -927,7 +927,6 @@ static void sata_rcar_remove(struct platform_device *pdev)
- 	pm_runtime_disable(&pdev->dev);
- }
- 
--#ifdef CONFIG_PM_SLEEP
- static int sata_rcar_suspend(struct device *dev)
- {
- 	struct ata_host *host = dev_get_drvdata(dev);
-@@ -1005,7 +1004,6 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
- 	.poweroff	= sata_rcar_suspend,
- 	.restore	= sata_rcar_restore,
- };
--#endif
- 
- static struct platform_driver sata_rcar_driver = {
- 	.probe		= sata_rcar_probe,
-@@ -1013,9 +1011,7 @@ static struct platform_driver sata_rcar_driver = {
- 	.driver = {
- 		.name		= DRV_NAME,
- 		.of_match_table	= sata_rcar_match,
--#ifdef CONFIG_PM_SLEEP
--		.pm		= &sata_rcar_pm_ops,
--#endif
-+		.pm		= pm_sleep_ptr(&sata_rcar_pm_ops),
- 	},
- };
- 
+https://lore.kernel.org/all/?q=adg792a.c
 
 -- 
-2.48.0
+With Best Regards,
+Andy Shevchenko
+
 
