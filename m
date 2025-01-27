@@ -1,240 +1,85 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91D02282EE;
-	Mon, 27 Jan 2025 05:09:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C7DD18D
+	for <linux-ide@vger.kernel.org>; Mon, 27 Jan 2025 07:38:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737954543; cv=none; b=dg0meGMIPcPobJdikZjSfxBC+lsZnqt38pDga2AkWnKSLed8XmvkYDpa2UUomAFrE1SzEM7SYwguCUZcC0jpXLja5NlCX+OKEO2/iW964zj6rJClbdJhaA9cULXf5G5jRm20VqA0rqN3EGnwiZ0B0n1R4b7oJKR8rHUx3/2/E1M=
+	t=1737963534; cv=none; b=LnxuT6PnNaOl0zOdvUyHN8W1TXj5aBDfYj5/rgASmB+91Qd4DceXes3QzSvqQcm0geQCSjMJHpfeE1VwBFtU9vVqTgCC+66TGW3KtCustX+RvAfdHHa+AxgWeSk0gfupHhiGqXdh8/DED3lLwUDR/HgD78pKZxFRzAm0o3LYcKM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737954543; c=relaxed/simple;
-	bh=SRnaJ7NOhy1yqtMSuRpVYvCRnbZCyG9ICmKcrEhZu1c=;
+	s=arc-20240116; t=1737963534; c=relaxed/simple;
+	bh=YJj4XtuTN4xv1O+B63betIizIoCmrS29mILg/pH19q4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X8H8YSQ9Cf4EauD0WoVJvNy0eW6ZMCUZFi5/CXrDHQ+4oaG4sHSxL2uP/nCw+37WSmdjKiC3OpPPdYGSsdnLuZLqyeXL1pXhiUlPIJYq82BLhcX04UldmRmOycSV1Yp+lr/Gz8rMdSVo/GnJmxXzsRidEZAT+mvH7kQbVvJMGEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dCXssLii; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iju1Kt4vBwxd9ayARRDJIkAoc9stjhOyR++YOEMhrUpiXGo2G4VbFikLj+QLH5cllMn0IGYwvB+16bfmSem6jzNpxHprSIl2fzFsNeCwRDFdZlBGYy0q9wcd0jIXFBsbmf47qg88zY0A2XrYeZHeeP6pHds/EH9/kThyaTjQ5eQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KOyCjJB9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dCXssLii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1EBCC4CED2;
-	Mon, 27 Jan 2025 05:09:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KOyCjJB9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E02CC4CED2;
+	Mon, 27 Jan 2025 07:38:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737954543;
-	bh=SRnaJ7NOhy1yqtMSuRpVYvCRnbZCyG9ICmKcrEhZu1c=;
+	s=k20201202; t=1737963534;
+	bh=YJj4XtuTN4xv1O+B63betIizIoCmrS29mILg/pH19q4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dCXssLii/zSRuNLuQUKKGyPENsQBo8Sn5CnYY3O3FxYVAjvruFGyZ57EqKUguv/ra
-	 S1h9azhs45cKCSaEPcpsFRa1xKUdQaiOE1O3mn5BZdEeVFQfTlDF7bD3TDraPrBc+3
-	 nPr1oEW2dfuaWfsgk5bejmSntOo7SnDsTmo+1COoCYTPp06T7kKbcFbJdDA8zzvyNe
-	 x/H0vNeh34Ov9EMHHnfnz+3OUzplGfUJFvMSQcKI5nvKJbwxbMBt6ha/ffzx8jCdb9
-	 hCqZ+eanBhx2pBGe+B8aQ+DqKIv74Gk+cWfnDnM6BJFAzTM3tPgAH3xzHh4Ww7eGxN
-	 yKnd77AdR7MFA==
-Date: Sun, 26 Jan 2025 23:09:01 -0600
-From: Rob Herring <robh@kernel.org>
-To: =?iso-8859-1?Q?J=2E_Neusch=E4fer?= <j.ne@posteo.net>
-Cc: devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Scott Wood <oss@buserror.net>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
-	Vinod Koul <vkoul@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?iso-8859-1?Q?J=2E_Neusch=E4fer?= <j.neuschaefer@gmx.net>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH 8/9] dt-bindings: spi: Convert Freescale SPI bindings to
- YAML
-Message-ID: <20250127050901.GB3127337-robh@kernel.org>
-References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
- <20250126-ppcyaml-v1-8-50649f51c3dd@posteo.net>
+	b=KOyCjJB9KeBXppCFXv1Jgq/qVFUjfZVhZCct9/obVuD5GER3iwRk01AWu/617bS9W
+	 Cu6aI4FsDqU+Lo69pb/nzTzEAlFlxtkd4yJu7FoAJxSM5FLUR3w/To4LpSlaJ+h3oA
+	 OWGu2AJZT2ZGi4uqmArLqAMiLciCzCdOghvpX0Lgog2/utN0zU/bUeQOTI32ipcKFZ
+	 A4rzGCKilmkF0gfE81WLCTfvQoo0YYc0Rsa2ceuLyarVXs0vnNcx9AECVAuRICe+KL
+	 GZ26yoUWaXRdHNsVR/AXTgVGSyT6VUetXrNxRTADeg4Rcj3WQDS8mu9XwfRcdhZqJb
+	 FLqCR7N3Rv0RQ==
+Date: Mon, 27 Jan 2025 08:38:49 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	reveliofuzzing <reveliofuzzing@gmail.com>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: libata-sff: Ensure that we cannot write outside the
+ allocated buffer
+Message-ID: <Z5c4CZnLNxlasYpe@ryzen>
+References: <20250124141118.3722754-2-cassel@kernel.org>
+ <4dee6487-4b9a-408c-aa7c-834802781887@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250126-ppcyaml-v1-8-50649f51c3dd@posteo.net>
+In-Reply-To: <4dee6487-4b9a-408c-aa7c-834802781887@kernel.org>
 
-On Sun, Jan 26, 2025 at 07:59:03PM +0100, J. Neuschäfer wrote:
-> fsl-spi.txt contains the bindings for the fsl,spi and fsl,espi
-> contollers. Convert them to YAML.
+On Sat, Jan 25, 2025 at 08:12:38AM +0900, Damien Le Moal wrote:
+> On 1/24/25 23:11, Niklas Cassel wrote:
+> > reveliofuzzing reported that a SCSI_IOCTL_SEND_COMMAND ioctl with out_len
+> > set to 0xd42, SCSI command set to ATA_16 PASS-THROUGH, ATA command set to
+> > ATA_NOP, and protocol set to ATA_PROT_PIO, can cause ata_pio_sector() to
+> > write outside the allocated buffer, overwriting random memory.
+> > 
+> > While a ATA device is supposed to abort a ATA_NOP command, there does seem
+> > to be a bug either in libata-sff or QEMU, where either this status is not
+> > set, or the status is cleared before read by ata_sff_hsm_move().
+> > Anyway, that is most likely a separate bug.
+> > 
+> > Looking at __atapi_pio_bytes(), it already has a safety check to ensure
+> > that __atapi_pio_bytes() cannot write outside the allocated buffer.
+> > 
+> > Add a similar check to ata_pio_sector(), such that also ata_pio_sector()
+> > cannot write outside the allocated buffer.
+> > 
+> > Reported-by: reveliofuzzing <reveliofuzzing@gmail.com>
+> > Closes: https://lore.kernel.org/linux-ide/CA+-ZZ_jTgxh3bS7m+KX07_EWckSnW3N2adX3KV63y4g7M4CZ2A@mail.gmail.com/
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 > 
-> Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> ---
->  .../devicetree/bindings/spi/fsl,espi.yaml          | 56 +++++++++++++++++
->  Documentation/devicetree/bindings/spi/fsl,spi.yaml | 71 ++++++++++++++++++++++
->  Documentation/devicetree/bindings/spi/fsl-spi.txt  | 62 -------------------
->  3 files changed, 127 insertions(+), 62 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/spi/fsl,espi.yaml b/Documentation/devicetree/bindings/spi/fsl,espi.yaml
-> new file mode 100644
-> index 0000000000000000000000000000000000000000..350275760210c5763af0c7b1e1522ccbfb97eec7
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/spi/fsl,espi.yaml
-> @@ -0,0 +1,56 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/spi/fsl,espi.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Freescale eSPI (Enhanced Serial Peripheral Interface) controller
-> +
-> +maintainers:
-> +  - J. Neuschäfer <j.ne@posteo.net>
-> +
-> +properties:
-> +  compatible:
-> +    const: fsl,mpc8536-espi
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  interrupts: true
+> Looks good to me. But doesn't this need Fixes + Cc-stable tags ?
 
-How many?
+ata_pio_sector() has been able to write more data than what fits in the
+buffer since the commit that imported linux into git:
+1da177e4c3f4 ("Linux-2.6.12-rc2")
 
-> +
-> +  fsl,espi-num-chipselects:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: The number of the chipselect signals.
+although ata_pio_sector() then lived in: drivers/scsi/libata-core.c
 
-Constraints?
+Do you want me to use this as the Fixes tag?
 
-> +
-> +  fsl,csbef:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: Chip select assertion time in bits before frame starts
 
-Constraints?
-
-> +
-> +  fsl,csaft:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: Chip select negation time in bits after frame ends
-
-Constraints?
-
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +  - fsl,espi-num-chipselects
-> +
-> +allOf:
-> +  - $ref: spi-controller.yaml#
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    spi@110000 {
-> +        #address-cells = <1>;
-> +        #size-cells = <0>;
-> +        compatible = "fsl,mpc8536-espi";
-> +        reg = <0x110000 0x1000>;
-> +        interrupts = <53 0x2>;
-> +        interrupt-parent = <&mpic>;
-> +        fsl,espi-num-chipselects = <4>;
-> +        fsl,csbef = <1>;
-> +        fsl,csaft = <1>;
-> +    };
-> diff --git a/Documentation/devicetree/bindings/spi/fsl,spi.yaml b/Documentation/devicetree/bindings/spi/fsl,spi.yaml
-> new file mode 100644
-> index 0000000000000000000000000000000000000000..8efa971b5954a93665cb624345774f2966bb5648
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/spi/fsl,spi.yaml
-> @@ -0,0 +1,71 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/spi/fsl,spi.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Freescale SPI (Serial Peripheral Interface) controller
-> +
-> +maintainers:
-> +  - J. Neuschäfer <j.ne@posteo.net>
-> +
-> +properties:
-> +  compatible:
-> +    enum:
-> +      - fsl,spi
-> +      - aeroflexgaisler,spictrl
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  cell-index:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      QE SPI subblock index.
-> +      0: QE subblock SPI1
-> +      1: QE subblock SPI2
-> +
-> +  mode:
-> +    description: SPI operation mode
-> +    enum:
-> +      - cpu
-> +      - cpu-qe
-> +
-> +  interrupts: true
-> +
-> +  clock-frequency:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-
-Don't need a type.
-
-> +    description: input clock frequency to non FSL_SOC cores
-> +
-> +  cs-gpios: true
-> +
-> +  fsl,spisel_boot:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description:
-> +      For the MPC8306 and MPC8309, specifies that the SPISEL_BOOT signal is used
-> +      as chip select for a slave device. Use reg = <number of gpios> in the
-> +      corresponding child node, i.e. 0 if the cs-gpios property is not present.
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - mode
-> +  - interrupts
-> +
-> +allOf:
-> +  - $ref: spi-controller.yaml#
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    spi@4c0 {
-> +        cell-index = <0>;
-> +        compatible = "fsl,spi";
-> +        reg = <0x4c0 0x40>;
-> +        interrupts = <82 0>;
-> +        interrupt-parent = <&intc>;
-> +        mode = "cpu";
-> +        cs-gpios = <&gpio 18 1          // device reg=<0>
-> +                    &gpio 19 1>;        // device reg=<1>
-> +    };
+Kind regards,
+Niklas
