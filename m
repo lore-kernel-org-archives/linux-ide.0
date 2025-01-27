@@ -1,195 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60FF238389;
-	Sun, 26 Jan 2025 23:23:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A99B163
+	for <linux-ide@vger.kernel.org>; Mon, 27 Jan 2025 00:03:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737933781; cv=none; b=W+nfHsLPna9uboQ8I6ddb+0lzF+T2hBI+vwLyAIGO/tDiu4KO1uqPLKINW2TKoUF93PhrYXRSdcfE5Jc58oExadNwEGbr7R4P0bgsZ03IN8CXvGrG67txE3F4U3L0z8v/ADAmoNu+HTJiHIWJ61tkvDOcnOzEX3nGxBMHtsTkoU=
+	t=1737936201; cv=none; b=fwoBgAOufW6YR2MbjhRBDlYM5bMBDf3vrjxlnnB7NuQlWZmxRnDcooWxK9RFRY7OUhZs4krsmb9AXrkGq2D3alFaGOuC72boUL1h9cV4tiYMo33awETd+ba8iQoaz0FiPwaMBWj6Ml4dDqxahSDgt1hRCPDurmd07KORs8UAIuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737933781; c=relaxed/simple;
-	bh=Da9tXyLwkD2V/78EX2AhOGNwi0AShsbcsReVhEPDEw8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jXnHgUHzqrgOQpHduAKPVC6B+PVLjB3trEv6GiBSzWm2Nbvk+PU4xgRhfgpqHtVmEpDVWgCLyKafZlkvv1aUFQ4S3rx33/nTz+y6cfUgqX9ielBEf+CkoymjCyVnlzmwRBIrZKG77SWRVSmIDKuR+3naMBd89h8aXsa1q5DlUyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lj+Vkk+v; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1737936201; c=relaxed/simple;
+	bh=jr5BR/JxyK3aiA7uq8mbWF0exdw/4LOEcC1u9yL5xQ8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qi/bSG06WoRQicc1CUYFYvYbja7JFtSYhNfxOsQTiNzHbk4VXMmNhnqwGwhcABg7VPN2+CKTJgZ09gSZb0CpmZC1DpvpfaS+6ZAFe2Y4dV0aKGRRPN1uOzyZ9Tw9ytmxGTxg7y6OxFbk+zuhYzPwXQNDXBw09ZR0WpdYlu4qNjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AftnQPKO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lj+Vkk+v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57D0BC4CED3;
-	Sun, 26 Jan 2025 23:22:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AftnQPKO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AA06C4CED3;
+	Mon, 27 Jan 2025 00:03:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737933780;
-	bh=Da9tXyLwkD2V/78EX2AhOGNwi0AShsbcsReVhEPDEw8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lj+Vkk+vGxtjTS6EwdKU1jCUNvNvHFlIxXGAUR41Ztm2bT9SCao1tnEn7EC7CLGtd
-	 w+jtJmbIIuCJ5FL+fSDbLf5mLVDCrj9H5WBC9CrqjTCE60bbYBpyJb0zb/G31MLLJB
-	 AVohD5ONtpThjzmrIAFkrzdu/Jk0Iu+hNd0m3Dijszk8bBrPT/6dNrMy2+lwzTeHYc
-	 OTaKo6NqvTWN9JBqnWIi00M602F730+lnrwNgO6i9tNbQGruumcaMfEi5pFhdEgezb
-	 BnL8NHlzXJ9ohaIZxzMzDzk23J9GUNqrrKcbvQVI6FBqMLPEYJy5pNxg8NnNrbe9m6
-	 oBhAqEEod6YOA==
-Message-ID: <a9df1ae6-8779-4dc0-8f03-eda939c0e533@kernel.org>
-Date: Mon, 27 Jan 2025 08:22:55 +0900
+	s=k20201202; t=1737936200;
+	bh=jr5BR/JxyK3aiA7uq8mbWF0exdw/4LOEcC1u9yL5xQ8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=AftnQPKOBEIzKArnByVWX5sSzH7VBcuJEouX2Fizknfg9AvPg5RYiyWcvReCXY3h2
+	 ce98bRPDI+ICPISnjXfgmLf9c69QPknU4+X6q0/RNZxFA3/ZM7GrhrqRfBWWY7bFYJ
+	 xE8uaNaNCgofGSLhdQc1eExI9hmkXU5idug1ZeFK6pVyDKy1JaLzVjRc/WkGT8mAQr
+	 uZzAT8M5IMWkFkhYsl+e5qG0ckAH1V2E2ReQYQhlrJgfk3EWSQAIoNT7jnsLCNCpBN
+	 fNmrqnqPIhky9rEdl/GvIYFU/uNAVCCvxvyoFXvL0a4+TQUqZ97VTvu/Dq7KQnvCQW
+	 ey9qjxh/Mlgmg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata changes for 6.14-rc1
+Date: Mon, 27 Jan 2025 09:02:38 +0900
+Message-ID: <20250127000238.1682504-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/9] dt-bindings: ata: Convert fsl,pq-sata binding to YAML
-To: j.ne@posteo.net, devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Scott Wood <oss@buserror.net>, Madhavan Srinivasan <maddy@linux.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
- Christophe Leroy <christophe.leroy@csgroup.eu>,
- Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Herbert Xu <herbert@gondor.apana.org.au>,
- "David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
- Vinod Koul <vkoul@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?J=2E_Neusch=C3=A4fer?=
- <j.neuschaefer@gmx.net>, Wim Van Sebroeck <wim@linux-watchdog.org>,
- Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
- Miquel Raynal <miquel.raynal@bootlin.com>,
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
- linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-watchdog@vger.kernel.org,
- linux-spi@vger.kernel.org, linux-mtd@lists.infradead.org
-References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
- <20250126-ppcyaml-v1-2-50649f51c3dd@posteo.net>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250126-ppcyaml-v1-2-50649f51c3dd@posteo.net>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 1/27/25 03:58, J. Neuschäfer via B4 Relay wrote:
-> From: "J. Neuschäfer" <j.ne@posteo.net>
-> 
-> Convert the Freescale PowerQUICC SATA controller binding from text form
-> to YAML. The list of compatible strings reflects current usage.
-> 
-> Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> ---
->  .../devicetree/bindings/ata/fsl,pq-sata.yaml       | 59 ++++++++++++++++++++++
->  Documentation/devicetree/bindings/ata/fsl-sata.txt | 28 ----------
->  2 files changed, 59 insertions(+), 28 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/fsl,pq-sata.yaml b/Documentation/devicetree/bindings/ata/fsl,pq-sata.yaml
-> new file mode 100644
-> index 0000000000000000000000000000000000000000..6af31ffbcad5e9cc83118a0bd8eaf45351a2823f
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/fsl,pq-sata.yaml
-> @@ -0,0 +1,59 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/fsl,pq-sata.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Freescale 8xxx/3.0 Gb/s SATA nodes
-> +
-> +maintainers:
-> +  - J. Neuschäfer <j.ne@posteo.net>
-> +
-> +description: |
-> +  SATA nodes are defined to describe on-chip Serial ATA controllers.
-> +  Each SATA port should have its own node.
+Linus,
 
-Very unclear. The SATA nodes define ports or controllers ? Normally, a single
-controller can have multiple ports, so the distinction is important.
+The following changes since commit 40384c840ea1944d7c5a392e8975ed088ecf0b37:
 
-> +
-> +properties:
-> +  compatible:
-> +    oneOf:
-> +      - items:
-> +          - enum:
-> +              - fsl,mpc8377-sata
-> +              - fsl,mpc8536-sata
-> +              - fsl,mpc8315-sata
-> +              - fsl,mpc8379-sata
-> +          - const: fsl,pq-sata
-> +      - const: fsl,pq-sata-v2
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  cell-index:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [1, 2, 3, 4]
-> +    description: |
-> +      1 for controller @ 0x18000
-> +      2 for controller @ 0x19000
-> +      3 for controller @ 0x1a000
-> +      4 for controller @ 0x1b000
+  Linux 6.13-rc1 (2024-12-01 14:28:56 -0800)
 
-Are you sure these are different controllers ? Are they not different ports of
-the same controller ? Given that the previous text description define this as
-"controller index", I suspect these are the port offsets and you SATA nodes
-define ports, and not controllers.
+are available in the Git repository at:
 
-> +
-> +required:
-> +  - compatible
-> +  - interrupts
-> +  - cell-index
-> +
-> +additionalProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/irq.h>
-> +    sata@18000 {
-> +        compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
-> +        reg = <0x18000 0x1000>;
-> +        cell-index = <1>;
-> +        interrupts = <44 IRQ_TYPE_LEVEL_LOW>;
-> +        interrupt-parent = <&ipic>;
-> +    };
-> diff --git a/Documentation/devicetree/bindings/ata/fsl-sata.txt b/Documentation/devicetree/bindings/ata/fsl-sata.txt
-> deleted file mode 100644
-> index fd63bb3becc9363c520a8fd06629fdc52c4d4299..0000000000000000000000000000000000000000
-> --- a/Documentation/devicetree/bindings/ata/fsl-sata.txt
-> +++ /dev/null
-> @@ -1,28 +0,0 @@
-> -* Freescale 8xxx/3.0 Gb/s SATA nodes
-> -
-> -SATA nodes are defined to describe on-chip Serial ATA controllers.
-> -Each SATA port should have its own node.
-> -
-> -Required properties:
-> -- compatible        : compatible list, contains 2 entries, first is
-> -		 "fsl,CHIP-sata", where CHIP is the processor
-> -		 (mpc8315, mpc8379, etc.) and the second is
-> -		 "fsl,pq-sata"
-> -- interrupts        : <interrupt mapping for SATA IRQ>
-> -- cell-index        : controller index.
-> -                          1 for controller @ 0x18000
-> -                          2 for controller @ 0x19000
-> -                          3 for controller @ 0x1a000
-> -                          4 for controller @ 0x1b000
-> -
-> -Optional properties:
-> -- reg               : <registers mapping>
-> -
-> -Example:
-> -	sata@18000 {
-> -		compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
-> -		reg = <0x18000 0x1000>;
-> -		cell-index = <1>;
-> -		interrupts = <2c 8>;
-> -		interrupt-parent = < &ipic >;
-> -	};
-> 
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-rc1
 
+for you to fetch changes up to f2809aa4f591d98e4c560a23d7eaca804a8afc54:
 
--- 
-Damien Le Moal
-Western Digital Research
+  ahci: st: Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr() (2025-01-15 15:21:27 +0100)
+
+----------------------------------------------------------------
+ata changes for 6.14
+
+ - Constify struct pci_device_id (Christophe).
+ - Remove unused code in the sata_gemini driver (David).
+ - Improve libahci_platform to allow supporting non consecutive port
+   numbers as specified in device trees (Josua).
+ - Cleanup ahci driver code handling of port numbers with the new helper
+   ahci_ignore_port() (me).
+ - Use pm_sleep_ptr() to remove CONFIG_PM_SLEEP ifdefs in the ahci_st
+   driver (Raphael). More of these changes will be included in the next
+   cycle.
+
+----------------------------------------------------------------
+Christophe JAILLET (1):
+      ata: Constify struct pci_device_id
+
+Damien Le Moal (1):
+      ahci: Introduce ahci_ignore_port() helper
+
+Dr. David Alan Gilbert (2):
+      ata: sata_gemini: Remove unused gemini_sata_reset_bridge()
+      ata: sata_gemini: Remove remaining reset glue
+
+Josua Mayer (1):
+      ata: libahci_platform: support non-consecutive port numbers
+
+Raphael Gallais-Pou (1):
+      ahci: st: Switch from CONFIG_PM_SLEEP guards to pm_sleep_ptr()
+
+ drivers/ata/ahci.h             | 13 ++++++++++++-
+ drivers/ata/ahci_brcm.c        |  3 +++
+ drivers/ata/ahci_ceva.c        |  6 ++++++
+ drivers/ata/ahci_st.c          |  6 ++----
+ drivers/ata/ata_generic.c      |  2 +-
+ drivers/ata/libahci_platform.c | 40 ++++++++++++++++++++++++++++++++++------
+ drivers/ata/pata_atp867x.c     |  2 +-
+ drivers/ata/pata_piccolo.c     |  2 +-
+ drivers/ata/sata_gemini.c      | 32 --------------------------------
+ drivers/ata/sata_gemini.h      |  1 -
+ 10 files changed, 60 insertions(+), 47 deletions(-)
