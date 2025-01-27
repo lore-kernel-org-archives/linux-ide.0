@@ -1,66 +1,66 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C1541FF601;
-	Mon, 27 Jan 2025 12:46:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9561FF7BB;
+	Mon, 27 Jan 2025 12:46:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737982005; cv=none; b=qcKaCYJmp0XaSKybQ6/hmCWl5ekdzvwCjaIDmNo2NcsiVeCUuQDPOqecjFVcprniPx3kJuOHYLxuNQWorkaAKf7MKUG+OfizwH7l9cTKN24KzfkcH0eGk7JU4gjN5ipxkklxSadBHjS3G/sabVytiG3cRRd7EVGRCDRQJUAJvus=
+	t=1737982006; cv=none; b=K92UzvPgz8NX8F832YLqUKo97N3G0UJRRptKBtUAxrQ0SrhxZkyN/LJNHxw/ZZeZHGbwH5iEoITbwj6AsIonR/MiZigerep4B2N7qJ/uWhqYChnJOPvPvWexLh3Lb8QPDCpnEvhTIPIq/jgB+H9j6l4BPTxAq57rZdiPEh/RcHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737982005; c=relaxed/simple;
-	bh=MLMI+xe4jCIVViG+z4qmFWASYnmXjrbqAPj9rw3IXr4=;
+	s=arc-20240116; t=1737982006; c=relaxed/simple;
+	bh=uk7o4XEuCDy+1MRV3EDgkqSFL3eYMvAL/KrkBwR1yb8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=PisbDuD7+juJLC08UpvZ+HpkLX7KxT/xy6VZjelfbLgxQljEHQzPoIGoVpRo4KpHXVY2q3wuUdl/aAbHYqOX7T5qh7UvxRR6j5Z2nZWNjYsz1nbCiNenVU3GJGxTWbOIJXK6zFQQ4TYuDxNExR4wRXVmXg2vebQkTllfojcPqH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ed31XF8g; arc=none smtp.client-ip=209.85.128.52
+	 In-Reply-To:To:Cc; b=AJjf3wUy2uqErGVWDyvvGOXpSY0N4jMwCiZ9tZvyloVXUdhhr3JoilgHeQPZPXMvC82Tu6awk5E/xis8HLHUMCCAc2sDcj6X/Pkf6MY7Os12+O5HgY1EYqIb8inf+VWe9vMc8IJ4KxwGHPt2wx1ADOCqno8psIe0SClln9/MF5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=je0cDuZZ; arc=none smtp.client-ip=209.85.128.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ed31XF8g"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-437a92d7b96so45292575e9.2;
-        Mon, 27 Jan 2025 04:46:43 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="je0cDuZZ"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-43618283d48so30768195e9.1;
+        Mon, 27 Jan 2025 04:46:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737982002; x=1738586802; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1737982003; x=1738586803; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=cVfs7u/bC6+4J/CfEnlWiXT6DaEn0LhRfzsd996fsQY=;
-        b=ed31XF8gtqZjYDbOQHGx+1XP2EKQpzO1bxuKPDbFzHAJBE5MI7Nmb3dlH236NzDCFU
-         LUZCtxCbSQmzFKT3+YKE1ZAihOyWDqDbnM2/NMp/lJpWj0JAue4jBB4epoBzQKdzVeZb
-         2Ke8iTDHhgossrJSEiQBAGZfVeSrKEZTrlSF15YICJiD5U3QNzovU6x85f5e7mOZvP3m
-         PCfrE8uZmtP6jKStqhZE+xZA3KMhmf3ZjPDmLZVi8gpQNg0+rVS2xoXm2cnY4pUsJkJX
-         fY3aIwVWUAX33VHbUtqb8gam9mNE4aLN4CtqLIxJH03A54jvwb6S1DIUp5qKiTgaroCH
-         n4eg==
+        bh=sjKGQCjlxoKyHC3MWupm0EMlVBTxZVB63YoUYqEoKt0=;
+        b=je0cDuZZTjTm/KV3AH3zz8tJK8kHg4eVOZ5DtCio6kAR7O5WN2gDapUiCVtXEzO9Fp
+         aBYHCpjUvNUoPjeBAF0h4Uc7OgZy6U3GKiC0ffrq2hyGpaWp9YiPGQ0twQlA388vWeX2
+         C1TrxZTpgbr2hnnLz1wQLqcO4LbN/+EOKZe/TDTfEeTs6OUv3LEGAv1eBXXuA4rsdfJc
+         K1LATBOpjzr1DHZy8KXvCLMwLMpvj3/xmEEkX2YRtTT0r8Arc84XDks6PpyUF1FC3UtO
+         0JlidD99I1t0HeB28YuFkW+lKyduO44QoX9DTVN5NhToQaP6LIm3d6SX4NkwMttUQDOu
+         YuXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737982002; x=1738586802;
+        d=1e100.net; s=20230601; t=1737982003; x=1738586803;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=cVfs7u/bC6+4J/CfEnlWiXT6DaEn0LhRfzsd996fsQY=;
-        b=mGFxQx/gP+UVL1dYMJLSLoAhmUvRIa++v46+5nU6AQTmtR2e69uVQXxssjucM2A+JF
-         e8lfAy7Eo3J54v9+p1MIj05gcpV/SkAqe+v9JxafA//4MmDzrCDyhmEodINv8K8gOBFi
-         xrcE9wg93/R4kckcAfgYP0+vy8RPV7eloxLxMPnr20Jf6Qi8UZOBwCKIdgE3o0gppOXA
-         xtVaS55KYmcjwh606IxQpBjVy9Yvi/zy8cV+XLagWnD93O+nBdfhgtVAN3XzYPmpZhT+
-         vDYuwdgNclIPuQDcGNQ7ij90mwnnRM4oGw0rE9zbV8iA9Y88WMBOKYiN8clEJqG7DnOR
-         HXhw==
-X-Forwarded-Encrypted: i=1; AJvYcCWDm+0e0hiprgGQkrud4JRoXGD601ywXCKynQORTFnzNcyxLgRXSOGtxWYD6JfJBtiK03vLVqJLLJLJPxA=@vger.kernel.org, AJvYcCXV2RTt106Anw4p0z11ZvlAwRk5/W7O79JkSCdy6V/7oUe2BJqLGyyFHQzEFjjn3CjDM2ELgQE2tVs8cJC962S+1DA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YznLnsLV1g+jzEmTzYp+HkmFUYQ56yiKdvVCmIe8XN0hr+r4jB0
-	wpzjdJ5ocUdvsOyIomrxPsapOo1LfBSRDIPCf1p82/EGpdS46Hqg
-X-Gm-Gg: ASbGncuWIOysUTGGeVtot9u5crB3wu/4uAH6vwJQZLZhMZpgwYMYLxR/MoRJYXWdJnn
-	5fl54ZhXsvTlc9Hjr5zykAWrkyfT4uVHgSuu6FmVmkOpxuj6EIMt6Fpl+8OOnegzcREvZVJmqao
-	KSS5+v3SFBEy2cCAcM0/0xNpuERjb1DXDigSAV7uSu/f17CeYhF3Ip4TQFrPC9iMKTSESzH/V3r
-	/JQoHsUMeN3gsB3WwnM04NkorqFPlljbObTM9DumGZ7oIYgmjH0l4mhFZWFH/9J0PRuQDptiJjG
-	gz5F
-X-Google-Smtp-Source: AGHT+IHO/ZR9VI0DRMcofIQwLzf01DYV/sQAqDzIwYKFLnZG8rtRUybzRdSJJBgxpXuRFsHSUi3z3A==
-X-Received: by 2002:a05:600c:c87:b0:434:ff30:a159 with SMTP id 5b1f17b1804b1-438912d54b1mr408036395e9.0.1737982001587;
-        Mon, 27 Jan 2025 04:46:41 -0800 (PST)
+        bh=sjKGQCjlxoKyHC3MWupm0EMlVBTxZVB63YoUYqEoKt0=;
+        b=AA72RRiSsiBUCM9LECYJE6f6FDcQgaS0Ww+aRAfxm6htFQIugsWtFqGgUd7yM+pHNY
+         FYfm1xgNC2yKTTrwq/gx5+xC2jHnLVFMCy+cR2lSxpNaFF9uNYeXJ/7x0b0XQoqYFEuz
+         TM0n111pA44WRRuUnIHttVdXuxwltApf/CdYvxSn+6bekvjZj3kRhdZkN72BemTOpmaS
+         XStIuXx0UYjCl+xGFylzD6fNvItn1G+nRvJsvi0x3jiqtTttLklUcfLE9bjFEPZ+lowp
+         qyf9+uD4ccSEAjp5wVHoJSE3vqQbDnKUQ1d6R3zCEQUNQbCorDLR0GOGPozuR1P0+/j+
+         zzSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVzozax703xjsMo4eUKxbZrfpNc6QSh5Pq6CKtb0E/3EddhmyqCgl97wZiAPbqZwHGoAE8ns0uNvM55ZII=@vger.kernel.org, AJvYcCXmTImqt/CTjknLoQ6fU8BYb23YISMYYPDAstDZ472reyf2psH3I5febXfhx92MfBEyfPYm8GvOR9x5zSn7IXSMVTM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YypW2OKWUqvfhOnLrLGbzx9bvHlC6CyvBs6PePhOR0K0YMAgiv4
+	BOUud9xI1girVYX8AK6+qFaKoA816AX+K3RHp22OJspwUzjJVnKV
+X-Gm-Gg: ASbGncuqN0BnoyqEj58jga8ZuRvFzGnMEZd2ZAVfUQVsLB0NPR5Lf7WE7SwzNeO1G8j
+	VuuA5UncxDatBjv/hRRT8dmGfb6jM1lPYzUqL7gamT3L8nst38+bZlZYi7ZJJn+a14qfMrk3fw2
+	45bGUiTsEbFWwNagZkMK19CFQbNBMT1HazWnQkfeVSNIFxGsEinTB3Yy3g3YjWnQYNl48FhG57r
+	nMjfa6pjxv1JYQJ9V4GiWYWxNqePIoGckXPxISqA5xZdisYIVz0B6eZxg46qg5zA7jH94fIf3N/
+	cEWu
+X-Google-Smtp-Source: AGHT+IGprEO5pdaTEpJfI5A74FsQo9nZOJ84uFe/gZrOTEtv5xh0dMQj1A1tPsGDBpxW+UvsnKe8cQ==
+X-Received: by 2002:a05:600c:1c84:b0:436:1b08:4c78 with SMTP id 5b1f17b1804b1-4389144fd70mr439685205e9.31.1737982003114;
+        Mon, 27 Jan 2025 04:46:43 -0800 (PST)
 Received: from localhost ([2001:861:3385:e20:6384:4cf:52c5:3194])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-438bd508257sm129236735e9.23.2025.01.27.04.46.41
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-438bd47f367sm130542655e9.7.2025.01.27.04.46.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jan 2025 04:46:41 -0800 (PST)
+        Mon, 27 Jan 2025 04:46:42 -0800 (PST)
 From: Raphael Gallais-Pou <rgallaispou@gmail.com>
-Date: Mon, 27 Jan 2025 13:45:59 +0100
-Subject: [PATCH RFC 04/14] ahci: dm816: Switch from CONFIG_PM_SLEEP guards
- to pm_sleep_ptr()
+Date: Mon, 27 Jan 2025 13:46:01 +0100
+Subject: [PATCH RFC 06/14] ahci: mtk: Switch from CONFIG_PM_SLEEP guards to
+ pm_sleep_ptr()
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -69,7 +69,7 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250127-pm_ata-v1-4-f8f50c821a2a@gmail.com>
+Message-Id: <20250127-pm_ata-v1-6-f8f50c821a2a@gmail.com>
 References: <20250127-pm_ata-v1-0-f8f50c821a2a@gmail.com>
 In-Reply-To: <20250127-pm_ata-v1-0-f8f50c821a2a@gmail.com>
 To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
@@ -88,20 +88,20 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-mediatek@lists.infradead.org, linux-sunxi@lists.linux.dev, 
  linux-renesas-soc@vger.kernel.org
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1307; i=rgallaispou@gmail.com;
- h=from:subject:message-id; bh=MLMI+xe4jCIVViG+z4qmFWASYnmXjrbqAPj9rw3IXr4=;
- b=owEBbQKS/ZANAwAIAechimjUEsK1AcsmYgBnl4ArKDkEFE9Y3A5/bmNOJMKuAZd/TGXo/Hnk0
- /0p5XyElHiJAjMEAAEIAB0WIQQgmXv2E+fvbV/9ui/nIYpo1BLCtQUCZ5eAKwAKCRDnIYpo1BLC
- tURaEACTN9XCdcNODbQBu+CcA358dwkWhwqcBpvBKiMOZuk7+bUram3CM+KscfMs2J4gd6MtfN/
- mJ32c1MQWHifQWvKWmdGr0ooGdtSGWohsgTrfVhi9KB8eGk6x0bHW7Oa6nMO/+bH1XBpsB0NGt8
- lXIhrHV9Aro7NvZiAp6oOB3ttVN38qKt9pdnA5zp/rNFfrnOZcYhx//s8ZOiR21PnNyOVag8OmA
- OTqWHR3pWFfC2fzT5NUG00T6TKnBaQhXEXczoDingtphAfQmOMG+y1za+ZrtTM1Ahb7gNuf47Ja
- 3Fm6oikO5kNJqf7VkX4HSIYGpMhV8E0eadZxxZnnfo5NnGwwwlWDmYx/H6XTI4+Tp2uxJip3Ul+
- zosr9bo6XJW2rslEkJwDfPeeM9AIvuGfRgiQPuX6O0tiZeWFKEiDrHCpXfY5EC2vu7irMCitW2M
- JBW/vef5FWcx0wvsnOQ7Qi7ZyPtx6LXjxikC7Y2LS+TaLuoDlLWV+4mJrtniq2Gd0iFHqRsaaKK
- RPUxZjtg8KwWy0iUFXZGrQu6+Lc0VEmI1hmkEBZndGhBBo7Rh0sWQ/tlkvBFPkG+jU3/scbaqmZ
- gs/H79R23Gep2Ovribf5X2LTQYpPgNuxj/tbNOCOKw+TxFhMGgxXHZhZ1o6J+D9DVTps9jbb3ty
- 0tD1wvT4bx+yMwg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1242; i=rgallaispou@gmail.com;
+ h=from:subject:message-id; bh=uk7o4XEuCDy+1MRV3EDgkqSFL3eYMvAL/KrkBwR1yb8=;
+ b=owEBbQKS/ZANAwAIAechimjUEsK1AcsmYgBnl4ArP/dXj2VF2FWcstEGtxvysjudHRVgQcMUd
+ svatcZOwv+JAjMEAAEIAB0WIQQgmXv2E+fvbV/9ui/nIYpo1BLCtQUCZ5eAKwAKCRDnIYpo1BLC
+ tZl1EACcS6SONQyqCW76vwJqLeVZij81JJC6Lc6vlKZCqpF4aZfAWFaEhJwoQq2lvvaUkhxVbdn
+ tI7F6zVdj6qTx/f+C8UiuT/NXdG2SAOS+vNLfh0lESSQq5FpO6z7T9iuAZa0QYI6qvoX6E39MHT
+ 1hoEBquSExHROVnPh9jmPhMC9YCbZ3lLDh67T+Q+xxvLw7OSbRqZ1JYlxJHQhBXhj4YPle8ZhH7
+ Hlzjaishlt+hW8zL1qz6E4ERE/kXUFe5NGXeMTbCHVPfQcM7EktMEsJdLikHP3JSWz23Apabe8+
+ 3/Toun6cZcuUJxBFaAUrKSqGJhN6ujljWR6PTCIJMdR3IQ55grzKXm8Ydvu5vb0ifeOc/sN5JRV
+ LooLjdM9domNcQM2schcY9SveR8a+DUDNbgZQYDEiUtzm1y5ZZu5Yi78yfFFvnRFfio8LOkVkd3
+ G1OfRNEeXzIKVj6dL95ruGiZ5C1xwqkSxgVlhFW3TxilnrbMb1M0jkO3sUpLa7WEWy4YDclUr93
+ tRAJ/feyNqI/3Yg7YwiG/RTxiL1PM4dDzWa02BTU/BebkeK9ECvVK/a+W4Apgsb8UfKOTQU+5jj
+ nuBWGDhFl5Rr0H1L/nXncvlVYG2RQZFmzn8IwfcHbBca4T36PelFvgNiALqkjPJi3s4PkzzqfOY
+ +XkNBgmtI5tEOXQ==
 X-Developer-Key: i=rgallaispou@gmail.com; a=openpgp;
  fpr=20997BF613E7EF6D5FFDBA2FE7218A68D412C2B5
 
@@ -111,35 +111,34 @@ use of #ifdef based kernel configuration guards.
 
 Signed-off-by: Raphael Gallais-Pou <rgallaispou@gmail.com>
 ---
- drivers/ata/ahci_dm816.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/ahci_mtk.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/ahci_dm816.c b/drivers/ata/ahci_dm816.c
-index b08547b877a1f77ba220e925de321ed034147d7b..cb30a55945b8bdb1efefab192575864220215d08 100644
---- a/drivers/ata/ahci_dm816.c
-+++ b/drivers/ata/ahci_dm816.c
-@@ -170,9 +170,9 @@ static int ahci_dm816_probe(struct platform_device *pdev)
- 	return rc;
+diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
+index 7295b9066ae213a72a8c180a66ecfac8c2f46ff9..4afcf5e90e3b660f17b2eb0b1e3df446bef470da 100644
+--- a/drivers/ata/ahci_mtk.c
++++ b/drivers/ata/ahci_mtk.c
+@@ -163,8 +163,9 @@ static int mtk_ahci_probe(struct platform_device *pdev)
+ 	return err;
  }
  
--static SIMPLE_DEV_PM_OPS(ahci_dm816_pm_ops,
--			 ahci_platform_suspend,
+-static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
 -			 ahci_platform_resume);
-+static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dm816_pm_ops,
++static DEFINE_SIMPLE_DEV_PM_OPS(ahci_pm_ops,
 +				ahci_platform_suspend,
 +				ahci_platform_resume);
  
- static const struct of_device_id ahci_dm816_of_match[] = {
- 	{ .compatible = "ti,dm816-ahci", },
-@@ -186,7 +186,7 @@ static struct platform_driver ahci_dm816_driver = {
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "mediatek,mtk-ahci", },
+@@ -178,7 +179,7 @@ static struct platform_driver mtk_ahci_driver = {
  	.driver = {
- 		.name = AHCI_DM816_DRV_NAME,
- 		.of_match_table = ahci_dm816_of_match,
--		.pm = &ahci_dm816_pm_ops,
-+		.pm = pm_sleep_ptr(&ahci_dm816_pm_ops),
+ 		.name = DRV_NAME,
+ 		.of_match_table = ahci_of_match,
+-		.pm = &ahci_pm_ops,
++		.pm = pm_sleep_ptr(&ahci_pm_ops),
  	},
  };
- module_platform_driver(ahci_dm816_driver);
+ module_platform_driver(mtk_ahci_driver);
 
 -- 
 2.48.0
