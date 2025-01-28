@@ -1,133 +1,153 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAE3C1A00F2
-	for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2025 12:55:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.98
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id F2A411B040E;
+	Tue, 28 Jan 2025 18:21:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738068962; cv=none; b=M6yq49mk3fcKnTEH158StDYfflnWmlviomGzLYVl+k18vqlrxOJ9CQSAsrwo8rb6LjT1vM0c62dYaR6UTtcicRLKXbyRkIbQYYMZYecb8YjzUJFv6GSGTPtrqVPOj5Oew0emyuIXAH/Upe3ywQaPuiCPnxg3neM4NI4evzofcVc=
+	t=1738088519; cv=none; b=fjXo6ARyHRjpEv5+fwPpoIil7BgOxxmnmi0LnvisazEsrfGTosFyYc69ksQjA5y7V0hCKLNw9n7v1r16ngAb/5vX+1RagV6l+FO0HS3aBw4bWN2TWpLaxtJpiEWwiQf7OGTnWO8aLRvw6LYcXkJUB2U5gUdxfphQKMzTzlDup5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738068962; c=relaxed/simple;
-	bh=e7AJPUW21yQXHz2l9fw+WCyTwJG8VhWl4g1ph7ank6Q=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=GKFQ8JDyl+6q8BoLdsVv5jP3Os/Z1kpvchNR6VSviJcl69zqcwmmy3hOSRxoXOqoqwu1tpgSqF7X5PSJgCVM50B87atYV319u80e9BRWH4Q6EKN1f67Vm15+lFsYht9IhKoJMnRZZvh8mijJji7pen99HahwHpzpK5ph3BZlAXA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kuehnke.de; spf=pass smtp.mailfrom=kuehnke.de; dkim=pass (2048-bit key) header.d=kuehnke.de header.i=@kuehnke.de header.b=W0RI6SDQ; arc=none smtp.client-ip=188.68.63.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kuehnke.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kuehnke.de
+	s=arc-20240116; t=1738088519; c=relaxed/simple;
+	bh=sHSV1VeTK4GqSPaEADJvEkDZCJZ38hJL0yKDoC4Uqao=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=ONYJFT5ZwSxKjIxoakPd2yH0nFIxQW3+nAnM+XCto6/hjkt+8C9GT12r/2BI89dik1hb8Hny0dQSEO++h0V/oGWpz5rNQSd15V2KqDoKVdo50XdnNqrwQqCFFzMBNNU94RCh04HIPD1mqZU8aOgz3Fy8kR+YeGGDPHdj+a3Js/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=rbsRgRXs; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kuehnke.de header.i=@kuehnke.de header.b="W0RI6SDQ"
-Received: from mors-relay-2501.netcup.net (localhost [127.0.0.1])
-	by mors-relay-2501.netcup.net (Postfix) with ESMTPS id 4Yj4nN0g0Mz671y
-	for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2025 13:47:36 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kuehnke.de; s=key2;
-	t=1738068456; bh=e7AJPUW21yQXHz2l9fw+WCyTwJG8VhWl4g1ph7ank6Q=;
-	h=Date:Subject:From:To:References:In-Reply-To:From;
-	b=W0RI6SDQXqMsHE3ASZAe0BWCKGatCjowkw+K2kSRb3ayxOMP8T8uGYLObmow8E6/j
-	 C7XBb8p07c9rgQIYhTHb1f1/Q1r8oX7V4s+Wdyj/8VawsWw2/3CSSpbga2YdiifxzL
-	 u93/FUr3Nf46c4R1QumKwrjKfeQVUcxyz0T1SoPdMlJnM7YqAuKwfyHaZjfx70FZrx
-	 2zY13/sMMBmorxjAjiXH18wEr6VRYzrE1gjDQVaKeGAJm84GgjowDTInhql/VcvuXL
-	 5Ej64yqFzeUXhybOZ4GslqfIwpt4q5yRkvswP0914mxT77529iYT0gHPI7aYG8cLC7
-	 fF/Kh+kEiRaVg==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay-2501.netcup.net (Postfix) with ESMTPS id 4Yj4nM73R2z4xl8
-	for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2025 13:47:35 +0100 (CET)
-Received: from mx2f74.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4Yj4nM5K9Tz8scM
-	for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2025 13:47:35 +0100 (CET)
-Received: from [192.168.3.2] (p4feab3aa.dip0.t-ipconnect.de [79.234.179.170])
-	by mx2f74.netcup.net (Postfix) with ESMTPSA id 32F9420C1F
-	for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2025 13:47:31 +0100 (CET)
-Authentication-Results: mx2f74;
-        spf=pass (sender IP is 79.234.179.170) smtp.mailfrom=christian@kuehnke.de smtp.helo=[192.168.3.2]
-Received-SPF: pass (mx2f74: connection is authenticated)
-Message-ID: <f437dee3-4236-4146-bd91-abb6f611874f@kuehnke.de>
-Date: Tue, 28 Jan 2025 13:47:25 +0100
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="rbsRgRXs"
+Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 5C2E02037175;
+	Tue, 28 Jan 2025 10:21:57 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 5C2E02037175
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1738088517;
+	bh=DWnZxqt2SesB4Fck6kqsaU204yIBxTyh+Yo+gWHnxew=;
+	h=From:Subject:Date:To:Cc:From;
+	b=rbsRgRXsDhgQ49qwzz8O9F+b3CIaPu+u/u5bFNXstLiqFfaEZgC1iIU54pEJ4SCC9
+	 qXRUrwxGkFwK11MEhKH4r7I0e/4uhHl3G7yCK3E3A4G+YwxkrF4Z/N40iZHmQckLfV
+	 +mfJ829accGVQ64/iuqsqnpCIMIptrmhiAA8pmnE=
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Subject: [PATCH 00/16] Converge on using secs_to_jiffies() part two
+Date: Tue, 28 Jan 2025 18:21:45 +0000
+Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Problems while retrieving SMART information via C602 SAS
- controller since 6.6.51
-From: =?UTF-8?Q?Christian_K=C3=BChnke?= <christian@kuehnke.de>
-To: linux-ide@vger.kernel.org
-References: <1c79066a-9349-4f65-9ef2-dba4cf12361a@kuehnke.de>
-In-Reply-To: <1c79066a-9349-4f65-9ef2-dba4cf12361a@kuehnke.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: <173806845146.29772.17524731626035717460@mx2f74.netcup.net>
-X-Rspamd-Queue-Id: 32F9420C1F
-X-Rspamd-Server: rspamd-worker-8404
-X-NC-CID: aYyF0kamrgnaBIKaDLCitorht09KGDF14ZvgLHZZ5XEHlRI0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIADogmWcC/x2NMQrDMAwAvxI0VxAbE0O/UjoYV2qUwQ6SSQshf
+ 6/oeDfcnWCkQgb36QSlQ0x6cwi3Cepa2ptQXs4Q55hCDBlrbwepe6NqODpuwuwF3IsOHJ+OnNI
+ ccikLLxm8syuxfP+Px/O6fgSSOflzAAAA
+X-Change-ID: 20241217-converge-secs-to-jiffies-part-two-f44017aa6f67
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
+ Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
+ James Smart <james.smart@broadcom.com>, 
+ Dick Kennedy <dick.kennedy@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
+ Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+ "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+ Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
+ Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
+ Sascha Hauer <s.hauer@pengutronix.de>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Fabio Estevam <festevam@gmail.com>, 
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+ Hans de Goede <hdegoede@redhat.com>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
+ Selvin Xavier <selvin.xavier@broadcom.com>, 
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>
+Cc: cocci@inria.fr, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+ ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ linux-spi@vger.kernel.org, imx@lists.linux.dev, 
+ linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+ ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, 
+ Easwar Hariharan <eahariha@linux.microsoft.com>
+X-Mailer: b4 0.14.2
 
-I think, I found the root cause.
+This is the second series (part 1*) that converts users of msecs_to_jiffies() that
+either use the multiply pattern of either of:
+- msecs_to_jiffies(N*1000) or
+- msecs_to_jiffies(N*MSEC_PER_SEC)
 
-Kernel 6.12.11 and Kernel 6.13 do _not_ exhibit the problem and to my 
-untrained eye, the affected layer has been reworked quite a bit in these 
-versions.
+where N is a constant or an expression, to avoid the multiplication.
 
-After reviewing the mailing list archives and the kernel commit logs I 
-suspect the following patch is missing from the kernel 6.6 stable 
-series. It was developed by Igor together with the patches to 
-libata-sata, but it did not make it into the 6.6 stable branch of 
-offical kernel.
+The conversion is made with Coccinelle with the secs_to_jiffies() script
+in scripts/coccinelle/misc. Attention is paid to what the best change
+can be rather than restricting to what the tool provides.
 
-After applying this to 6.6.74, that version also works like a charm 
-(without backing out the libata-sata patch).
+Andrew has kindly agreed to take the series through mm.git modulo the
+patches maintainers want to pick through their own trees.
 
- From 18676c6aab0863618eb35443e7b8615eea3535a9 Mon Sep 17 00:00:00 2001
-From: Igor Pylypiv <ipylypiv@google.com>
-Date: Tue, 2 Jul 2024 02:47:34 +0000
-Subject: ata: libata-core: Set ATA_QCFLAG_RTF_FILLED in fill_result_tf()
+This series is based on next-20250128
 
-ATA_QCFLAG_RTF_FILLED is not specific to ahci and can be used generally
-to check if qc->result_tf contains valid data.
+Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Link: https://lore.kernel.org/r/20240702024735.1152293-7-ipylypiv@google.com
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
+* https://lore.kernel.org/all/20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com/
+
 ---
-  drivers/ata/libata-core.c | 8 ++++++++
-  1 file changed, 8 insertions(+)
+Easwar Hariharan (16):
+      coccinelle: misc: secs_to_jiffies: Patch expressions too
+      scsi: lpfc: convert timeouts to secs_to_jiffies()
+      accel/habanalabs: convert timeouts to secs_to_jiffies()
+      ALSA: ac97: convert timeouts to secs_to_jiffies()
+      btrfs: convert timeouts to secs_to_jiffies()
+      rbd: convert timeouts to secs_to_jiffies()
+      libceph: convert timeouts to secs_to_jiffies()
+      libata: zpodd: convert timeouts to secs_to_jiffies()
+      xfs: convert timeouts to secs_to_jiffies()
+      power: supply: da9030: convert timeouts to secs_to_jiffies()
+      nvme: convert timeouts to secs_to_jiffies()
+      spi: spi-fsl-lpspi: convert timeouts to secs_to_jiffies()
+      spi: spi-imx: convert timeouts to secs_to_jiffies()
+      platform/x86/amd/pmf: convert timeouts to secs_to_jiffies()
+      platform/x86: thinkpad_acpi: convert timeouts to secs_to_jiffies()
+      RDMA/bnxt_re: convert timeouts to secs_to_jiffies()
 
-(limited to 'drivers/ata/libata-core.c')
+ .../accel/habanalabs/common/command_submission.c   |  2 +-
+ drivers/accel/habanalabs/common/debugfs.c          |  2 +-
+ drivers/accel/habanalabs/common/device.c           |  2 +-
+ drivers/accel/habanalabs/common/habanalabs_drv.c   |  2 +-
+ drivers/ata/libata-zpodd.c                         |  3 +--
+ drivers/block/rbd.c                                |  6 +++---
+ drivers/infiniband/hw/bnxt_re/qplib_rcfw.c         |  2 +-
+ drivers/nvme/host/core.c                           |  6 ++----
+ drivers/platform/x86/amd/pmf/acpi.c                |  3 ++-
+ drivers/platform/x86/thinkpad_acpi.c               |  2 +-
+ drivers/power/supply/da9030_battery.c              |  3 +--
+ drivers/scsi/lpfc/lpfc_init.c                      |  4 ++--
+ drivers/scsi/lpfc/lpfc_scsi.c                      | 12 +++++------
+ drivers/scsi/lpfc/lpfc_sli.c                       | 24 ++++++++--------------
+ drivers/scsi/lpfc/lpfc_vport.c                     |  2 +-
+ drivers/spi/spi-fsl-lpspi.c                        |  2 +-
+ drivers/spi/spi-imx.c                              |  2 +-
+ fs/btrfs/disk-io.c                                 |  6 +++---
+ fs/xfs/xfs_icache.c                                |  2 +-
+ fs/xfs/xfs_sysfs.c                                 |  7 +++----
+ net/ceph/ceph_common.c                             | 10 ++++-----
+ net/ceph/osd_client.c                              |  3 +--
+ scripts/coccinelle/misc/secs_to_jiffies.cocci      | 22 ++++++++++++++------
+ sound/pci/ac97/ac97_codec.c                        |  3 +--
+ 24 files changed, 63 insertions(+), 69 deletions(-)
+---
+base-commit: 9a87ce288fe30f268b3a598422fe76af9bb2c2d2
+change-id: 20241217-converge-secs-to-jiffies-part-two-f44017aa6f67
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4f35aab81a0a38..45e3acb466c32a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4794,8 +4794,16 @@ static void fill_result_tf(struct ata_queued_cmd *qc)
-  {
-  	struct ata_port *ap = qc->ap;
-  
-+	/*
-+	 * rtf may already be filled (e.g. for successful NCQ commands).
-+	 * If that is the case, we have nothing to do.
-+	 */
-+	if (qc->flags & ATA_QCFLAG_RTF_FILLED)
-+		return;
-+
-  	qc->result_tf.flags = qc->tf.flags;
-  	ap->ops->qc_fill_rtf(qc);
-+	qc->flags |= ATA_QCFLAG_RTF_FILLED;
-  }
-  
-  static void ata_verify_xfer(struct ata_queued_cmd *qc)
+Best regards,
 -- 
-cgit 1.2.3-korg
+Easwar Hariharan <eahariha@linux.microsoft.com>
 
-Am 28.01.2025 um 12:14 schrieb Christian Kühnke:
-> Hi all,
->
-> i recently noticed that on my oldish Fujitsu Primergy Server with a 
-> C602 SAS controller and SATA disks, I would get strange SMART results 
-> from smartctl:
->
