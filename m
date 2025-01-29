@@ -1,106 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCEDA19B59C
-	for <linux-ide@vger.kernel.org>; Wed, 29 Jan 2025 09:57:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97445186615;
+	Wed, 29 Jan 2025 11:28:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738144652; cv=none; b=AdJsf4l59iW3nVrrwIxQGW8M1hfmBeQyi4q3YYQ684xjiLTfs18FxDyd5MoTKHs7yUsNf/jAXObFJQ5+rzNeG+b4N8j7NmQWSgrAkaLDsWBDd+HRikjklyOjEXq04BINQpLR0tsmuk8ApWbp9r5vlmO8hvQfI86Uko1YmzF4ldE=
+	t=1738150112; cv=none; b=Y0h8wZHDL1MCuyUiWLwgHFoTKxBFPsUDEdGTSqXlWZlwyqC97o/uikFqiYb9xMyH+kOx5WZeEaNNtEIuEUa7gqMzpXrEjk89txBrNc+U9pzDNgVp6hELKbpflC9Svkx9ezk8vgB6SZ11ypBPNNYy1EivMZjKGTCymYT9nuHU+9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738144652; c=relaxed/simple;
-	bh=4abC71XSuDoif4FkCCMB2M6wZuevlhNOKqARU7Jo+ms=;
+	s=arc-20240116; t=1738150112; c=relaxed/simple;
+	bh=0afCP9tpAob285d2+c3DFTpCZwuw1x7xRMd+0cAY7dw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gqJ/noaDLCcqB7vLiF/PMmc9i/B7NSHQzsyfxZM7UUZOCVGsjCbX3fuaU5I8N76lcZDX3rvA/SIdvSi4lRNQvHNsrqOaVMSZIBBtqeLwW6mPk4QgnbnSm2id4UR28++iNQqyFZTbiySoVGUy/KtsXHGKKuVqQy45LuN/YNoJfp0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AJ61vyDs; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vd37aQo1UBdgorPaJmGwbIXFCr+7xJN9f2H2AzK/EDG5Fyw0ljARzmuKjFBCoH33NIxYgRk3Yvek5+IdQEuTgwBk+gORbR6zQf6Mm5ezOhqTNaG+V7j+yYNXsIrFS6U7D4OPU0VgMzp9kX8N9gRV7OOpcmf/nNz3/wPEIGCt1bc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=keXqYgpB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AJ61vyDs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD5F7C4CED3;
-	Wed, 29 Jan 2025 09:57:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="keXqYgpB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4990C4CED3;
+	Wed, 29 Jan 2025 11:28:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738144651;
-	bh=4abC71XSuDoif4FkCCMB2M6wZuevlhNOKqARU7Jo+ms=;
+	s=k20201202; t=1738150112;
+	bh=0afCP9tpAob285d2+c3DFTpCZwuw1x7xRMd+0cAY7dw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AJ61vyDsFTdLUb1Ne5yO5rHQUMNM6UdCmBXfzgRKWtIEe6m8q9loWc1hy4umGF2GJ
-	 yFVDPEWzMg1XNR7+IlQC8LsBVQjabJ+0NS+Gj82TtCNMLXcqCKnYzj+QjxW0+cNFFa
-	 TjD1vpiBQYeN1Tmg0E/58prNBsEONYDbDXOGKoxLcvjuOTwmYYxoNyVPiwqO5Ykpo4
-	 d9Ix3INX3cgA64mDTx4fYy9yB2s3iwqDqFTm7//9OMyHfQklA+JR69ANC4M92nQ7gG
-	 n52+xOWxtaojYBz517klSXSsaijdZWmZSCiq/swCqJtZESZYSTi+yWDp/is3yth6eX
-	 nT2E64rvAAjww==
-Date: Wed, 29 Jan 2025 10:57:26 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	reveliofuzzing <reveliofuzzing@gmail.com>
-Subject: Re: out-of-bounds write in the function ata_pio_sector
-Message-ID: <Z5n7hl0JX1kqsFa4@ryzen>
-References: <CA+-ZZ_jTgxh3bS7m+KX07_EWckSnW3N2adX3KV63y4g7M4CZ2A@mail.gmail.com>
- <Z5EHwRtTL1Oy6T8_@ryzen>
- <yq1wmees4lw.fsf@ca-mkp.ca.oracle.com>
+	b=keXqYgpBqSxQiFVgp6ssrhizY4Du1eWNsvvQf4/NWW+oCjoyMXSVpfZ5Bn1PdB/ED
+	 9wv1wBuRchQxQ0CuW4u8FMVzwJ8rB0L5vRFiLUUNtPD9wj9Bn+/Va+Q9Z6mxgIymwQ
+	 JLqQeOEbqULVQhG02Pj+7zzB2MlkL8R3oKJEeNxyMF67Vwg78zTFJsO4OZ7KbIbgaP
+	 YP9spZdl67qiwH0u1r8P2FYAPgdnGwinuVWEYrFRtCSPzqRNfIEkTTNBeG18dRI+F6
+	 TAaVqoYmML/+XRYt7G2+YbCO7gYobpmwRSUYyDEsvRA3IA3F3pdig8YUD/h8psjWYU
+	 PeniPeunBQVTw==
+Date: Wed, 29 Jan 2025 11:28:19 +0000
+From: Mark Brown <broonie@kernel.org>
+To: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Yaron Avizrat <yaron.avizrat@intel.com>,
+	Oded Gabbay <ogabbay@kernel.org>,
+	Julia Lawall <Julia.Lawall@inria.fr>,
+	Nicolas Palix <nicolas.palix@imag.fr>,
+	James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+	David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
+	Dongsheng Yang <dongsheng.yang@easystack.cn>,
+	Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	Frank Li <Frank.Li@nxp.com>, Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Selvin Xavier <selvin.xavier@broadcom.com>,
+	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	cocci@inria.fr, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-spi@vger.kernel.org, imx@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	platform-driver-x86@vger.kernel.org,
+	ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH 12/16] spi: spi-fsl-lpspi: convert timeouts to
+ secs_to_jiffies()
+Message-ID: <61d507a3-ca37-4eb9-b2cd-100298ffeeb6@sirena.org.uk>
+References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
+ <20250128-converge-secs-to-jiffies-part-two-v1-12-9a6ecf0b2308@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="wxS6hvAU6Vp1PxGO"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <yq1wmees4lw.fsf@ca-mkp.ca.oracle.com>
-
-Hello Martin,
-
-On Tue, Jan 28, 2025 at 10:09:35PM -0500, Martin K. Petersen wrote:
-> 
-> Niklas,
-> 
-> Sorry about the delay, was out for a few days.
-> 
-> > I was kind of expecting some upper layer, SCSI or block, to have rejected
-> > an operation that is not a multiple of the sector size.
-> >
-> > Is that a silly assumption?
-> 
-> Not all SCSI commands operate on logical blocks. Plus even if they do
-> the actual data transfer could still be larger than one block due to PI
-> or long writes.
-> 
-> That's all a bit theoretical in the context of the archaic
-> sg_scsi_ioctl() call since that only takes a single page and has little
-> practical use. But in general we can't assume that everything is a
-> multiple of 512 bytes.
-
-Thank you.
-
-I basically came to the same conclusion.
-(We can't assume that everything is a multiple of 512 bytes.)
+In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-12-9a6ecf0b2308@linux.microsoft.com>
+X-Cookie: The world is not octal despite DEC.
 
 
-Looking at ACS-6, Table A.2 — Command codes (sorted by command code)
-and looking at all commands that are of type:
-PIO Data-In and PIO Data-Out.
+--wxS6hvAU6Vp1PxGO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Most commands use the COUNT field to mean a unit in either sectors or log
-page count (which is also a multiple of sectors), but some commands, e.g.
-TRUSTED RECEIVE 5Ch and TRUSTED SEND 5Eh, it means TRANSFER LENGTH, which
-is security protocol specific.
+On Tue, Jan 28, 2025 at 06:21:57PM +0000, Easwar Hariharan wrote:
+> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+> secs_to_jiffies().  As the value here is a multiple of 1000, use
+> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
 
-Looking at TCG (SIIS), TRANSFER LENGTH is a multiple of sectors.
-I don't know about other security protocols (if any).
+Acked-by: Mark Brown <broonie@kernel.org>
 
+--wxS6hvAU6Vp1PxGO
+Content-Type: application/pgp-signature; name="signature.asc"
 
-It is probably quite safe to make the assumption that the COUNT field in
-ACS will always be a multiple of sectors for PIO Data-In and PIO Data-Out
-commands, so we probably could add a check in generic libata code
-somewhere... but by adding such a check in generic libata code, for it to
-be simple, it would probably need to apply to more than just PIO Data-In
-and PIO Data-Out commands, and I'm not sure if we can make such an
-assumption.
+-----BEGIN PGP SIGNATURE-----
 
-Thus, I'm happy with the fix:
-https://lore.kernel.org/linux-ide/20250127154303.15567-2-cassel@kernel.org/
-for now.
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmeaENIACgkQJNaLcl1U
+h9Dwlwf/b75reI0uh7UpxNuw1Dgg2fl7hJn3m8DCJwfdhTb1pyNP6o2VB7PJ1FPR
+zu8lccVGi/iZRranIOtvGjKtg5SrDhrF9CChAbwxk2f26lvF27Srdn7mHycwzkEm
+h579H3K/1ri3X0oWXziH3KBnzKNBR3TB6h7Rp5na27mnWR9gKqZncog+7Qvr1aP1
+3ufuZYWQ3RTFLp/IcPgBRYYjA/Ev1i7qKuqRS8qugS1d1vtZ7Js396WlV3r1KtgJ
+qKDie5bMyU16q7C+SJERETYIrFvtYKXn3bERyeN2wpSjyOtEYM2awuQ3XRDFvz05
+lMz/vFonoSs3p3TPlosZHyaOSE/Vdg==
+=JJPM
+-----END PGP SIGNATURE-----
 
-
-Kind regards,
-Niklas
+--wxS6hvAU6Vp1PxGO--
