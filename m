@@ -1,85 +1,131 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783AA7FD;
-	Wed, 29 Jan 2025 05:21:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD3D218A6DF
+	for <linux-ide@vger.kernel.org>; Wed, 29 Jan 2025 06:23:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738128079; cv=none; b=lf3yaGbRDIUsZvz2XocGVUOn4a2Fwbl6R3NkEt3yEg4guQcZH9n8F2TOGjtcoBBpYwYbQvNfk+FQz8ohTRORLoYC0hKwe2xATP+d3elEb9EsFTC0ULxWke5XaQNpDkaCX6IIbNlfeD9QtlyW62NQHChyOLe/qkfFxiP0yYm+Emw=
+	t=1738131797; cv=none; b=kHeDfcqY35JnaVUKz4khhgsigJ6jA5sR+SHnpFkDiC27alL7WBH3yIiO5jHbVC3EC4e/hsbXjB5bnihWbrkAquzVOan6/5+4rotvamNoi6+tV2h8/kDfPHWPY7bN3gW/t4kE3INhxWSBo69Ioo4Eiv/JZVe957+cJUueaOku9sY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738128079; c=relaxed/simple;
-	bh=ACIYfpK3sqEuBM7DUH4EwFypm+EtJKmU+sY1LGf0wCE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XzB4l3Qk9HKsHNTDnEabH71WT0KdWAQ+PCgJ/uXger4eAKk3qhlSyD+LbvbiJNgLkniIBL1pYTuF0OpaDvzoT6i9u2Xs3IDEkfpQdis5tT1eWN1vRwIIULuEm435OumKfsWOWJ0mJ1a+B3lm9YysXXibuYC2G4525ICWBGjaKSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 77CD368BEB; Wed, 29 Jan 2025 06:21:08 +0100 (CET)
-Date: Wed, 29 Jan 2025 06:21:08 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Yaron Avizrat <yaron.avizrat@intel.com>,
-	Oded Gabbay <ogabbay@kernel.org>,
-	Julia Lawall <Julia.Lawall@inria.fr>,
-	Nicolas Palix <nicolas.palix@imag.fr>,
-	James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
-	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-	David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
-	Dongsheng Yang <dongsheng.yang@easystack.cn>,
-	Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Selvin Xavier <selvin.xavier@broadcom.com>,
-	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	cocci@inria.fr, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-spi@vger.kernel.org, imx@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org,
-	platform-driver-x86@vger.kernel.org,
-	ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH 09/16] xfs: convert timeouts to secs_to_jiffies()
-Message-ID: <20250129052108.GB28513@lst.de>
-References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com> <20250128-converge-secs-to-jiffies-part-two-v1-9-9a6ecf0b2308@linux.microsoft.com>
+	s=arc-20240116; t=1738131797; c=relaxed/simple;
+	bh=BhxQMqcZedzjU2qtDipBBeXzDaNAedoASA3n2cnUgag=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ijh6eFCw5JPjmIidlSQdRVdOBhADR6qAMUnhkeC9qPYO+JOR3VgxSv9nLBBbHVScZQJmsadP/ZmsUemlZGvfEVRUWlDRNPXQh76aMqZKLtibS8JG0PsR1a5Ec0NbEzI2cYXAUcPzX7GAnCsVJcz3EXn5Rjhr8cIGT7D2Atu2tHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SU0NmwSz; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SU0NmwSz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88311C4CED3;
+	Wed, 29 Jan 2025 06:23:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738131796;
+	bh=BhxQMqcZedzjU2qtDipBBeXzDaNAedoASA3n2cnUgag=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=SU0NmwSzsBII0A0+Btzzrv4MVtcM7NA2eAdWOpHBHYDMR8cXuxSzv1aJ+AnDp/yJD
+	 qURFf10QMNG8dgF7ztHwjktmOe+klJ0453fG63MERe8CUbNPdSJIklXocQhnBm37rz
+	 5ybrC5oAoIupe+8gx9DTs0D/4tMf+9jNLhr+IAZMZvG++OaGIBbn/hLOtcuEsCTgtx
+	 VVrrNSLJlRO7vfgAdh6YF251wM4qL4844ib1Qw90PjGmphJM0cixzTSgGG7LhXf1rJ
+	 ag7BS6GVZSwD/gqL2aQM6rKAfLBasEnIRRE44/L958xJ0e8wbNWfPcjhjCtLQ9ueLe
+	 vxHBHmKcDxXJQ==
+Message-ID: <59b84a1d-2d76-4460-bfac-1c45c420124a@kernel.org>
+Date: Wed, 29 Jan 2025 15:22:14 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-9-9a6ecf0b2308@linux.microsoft.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: Problems while retrieving SMART information via C602 SAS
+ controller since 6.6.51
+To: =?UTF-8?Q?Christian_K=C3=BChnke?= <christian@kuehnke.de>,
+ linux-ide@vger.kernel.org
+References: <1c79066a-9349-4f65-9ef2-dba4cf12361a@kuehnke.de>
+ <f437dee3-4236-4146-bd91-abb6f611874f@kuehnke.de>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <f437dee3-4236-4146-bd91-abb6f611874f@kuehnke.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jan 28, 2025 at 06:21:54PM +0000, Easwar Hariharan wrote:
->  		else
-> -			cfg->retry_timeout = msecs_to_jiffies(
-> -					init[i].retry_timeout * MSEC_PER_SEC);
-> +			cfg->retry_timeout = secs_to_jiffies(init[i].retry_timeout);
+On 1/28/25 9:47 PM, Christian Kühnke wrote:
+> I think, I found the root cause.
 
-This messes up the formatting by introducing an overly long line.
+Please CC the maintainers if you want your email to not be lost in the noise of
+the lists...
 
-Otherwise the change looks fine.
+scripts/get_maintainers.pl drivers/ata
+
+> 
+> Kernel 6.12.11 and Kernel 6.13 do _not_ exhibit the problem and to my untrained
+> eye, the affected layer has been reworked quite a bit in these versions.
+> 
+> After reviewing the mailing list archives and the kernel commit logs I suspect
+> the following patch is missing from the kernel 6.6 stable series. It was
+> developed by Igor together with the patches to libata-sata, but it did not make
+> it into the 6.6 stable branch of offical kernel.
+> 
+> After applying this to 6.6.74, that version also works like a charm (without
+> backing out the libata-sata patch).
+> 
+> From 18676c6aab0863618eb35443e7b8615eea3535a9 Mon Sep 17 00:00:00 2001
+> From: Igor Pylypiv <ipylypiv@google.com>
+> Date: Tue, 2 Jul 2024 02:47:34 +0000
+> Subject: ata: libata-core: Set ATA_QCFLAG_RTF_FILLED in fill_result_tf()
+> 
+> ATA_QCFLAG_RTF_FILLED is not specific to ahci and can be used generally
+> to check if qc->result_tf contains valid data.
+> 
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> Link: https://lore.kernel.org/r/20240702024735.1152293-7-ipylypiv@google.com
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+
+So this needs to be sent to stable.
+
+Please see: Documentation/process/stable-kernel-rules.rst
+
+To get this patch added to 6.6, you fall into option (2):
+
+Option 2
+********
+
+If the patch already has been merged to mainline, send an email to
+stable@vger.kernel.org containing the subject of the patch, the commit ID,
+why you think it should be applied, and what kernel versions you wish it to
+be applied to.
+
+> ---
+>  drivers/ata/libata-core.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> (limited to 'drivers/ata/libata-core.c')
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 4f35aab81a0a38..45e3acb466c32a 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4794,8 +4794,16 @@ static void fill_result_tf(struct ata_queued_cmd *qc)
+>  {
+>      struct ata_port *ap = qc->ap;
+>  
+> +    /*
+> +     * rtf may already be filled (e.g. for successful NCQ commands).
+> +     * If that is the case, we have nothing to do.
+> +     */
+> +    if (qc->flags & ATA_QCFLAG_RTF_FILLED)
+> +        return;
+> +
+>      qc->result_tf.flags = qc->tf.flags;
+>      ap->ops->qc_fill_rtf(qc);
+> +    qc->flags |= ATA_QCFLAG_RTF_FILLED;
+>  }
+>  
+>  static void ata_verify_xfer(struct ata_queued_cmd *qc)
+
+
+-- 
+Damien Le Moal
+Western Digital Research
