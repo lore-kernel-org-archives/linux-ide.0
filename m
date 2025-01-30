@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1622E1E412A;
-	Thu, 30 Jan 2025 13:35:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D4E51E6DCF;
+	Thu, 30 Jan 2025 13:35:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738244157; cv=none; b=W5RKqOBAomwNRKYjE+XeSH2rMgb9ZMqzQag0rrHSJh3p63jC0Q5Ov9obLzwR5hf6yNfMQ9vy3XcC4eBctz+E4PspIi/dlqr6BA0eZdmcinZeqJCpjjGdQMzOXCADiMcQXnJSg99EhKdJOkIHEndEujOEBg+MXl2SiCSFxWS2j0M=
+	t=1738244159; cv=none; b=dqGyG5+E6H4vJ2h/OJW3gHNUhIZFG/rT5Je5WpKhcfNT05bQ//L/Br/IcldkQBMakjruNILDZEJgdnz2/vXDcpkW7OezqUD/1dLG17l8h/yuEQ96Gr77IU/9Db5Z1jk65h6q0VYOQ7VaQrgVfkMtsoWQz580VFuvYK4LUhvq1Lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738244157; c=relaxed/simple;
-	bh=cL2E+t/CcYk1T5Bhu8QX1czZrAgFpnqPAzBaypnsy0g=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aBf+PN4llfWmKq3ST0kEBrreanXX9zhsqx0DaMsTWbdbS3mDj7LXBg8AS6dhZdcHQIqFEv5LrmxmAtSBvokkw71byAOhnKmW1UwNIfm3LWrb/EDBwH04yIQwVYE8Q8YCvd/ZafSdfCm47k8nczH/kh1JncEEg/XR3BGCvnjVITQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gYuY8XeO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738244159; c=relaxed/simple;
+	bh=wDMRkZ7Yz8lbsU5n1VinBrBQB358seh0rXR3CQwkTTk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=bi/5w+7eVe77IQtV3BfbW9Q63wTzLGfWtofK9MWBERv3I+UO2kN16yZj+JMi+/2EmX4pelvc8OOqxucPjt176rSaoqLNwg9t777VlYppsH9swfCZ6bZ0OjgnHI6JNlUXKEnlU8wW4xiTLJKxKQGfiiYxs6+5MmBy+JcVdOc4BkQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kOsYbTCR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gYuY8XeO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBA59C4CED2;
-	Thu, 30 Jan 2025 13:35:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kOsYbTCR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 545BBC4CEE0;
+	Thu, 30 Jan 2025 13:35:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738244156;
-	bh=cL2E+t/CcYk1T5Bhu8QX1czZrAgFpnqPAzBaypnsy0g=;
-	h=From:To:Cc:Subject:Date:From;
-	b=gYuY8XeOrx0d6Au5wfX7OLXTwnZpK97VxBJZcDPanFJj5Spu9aD1VUqKHW2ueA4Q0
-	 aZ7JEUhFzB1/xGpmVjZJWkcV/0s+78gFyQmgF4iyQyQ81DZXMQVpOqs9rRZj9+skH/
-	 XyqoFAmz8vv2bvaKls/WfoiIA1MSy8m2f10n9pDrREf33fbBeFAEtUCoDZ8Mfb3ArM
-	 MFB+3zI2QEE0BmVBy40oypcBCC+rCSBg5Uw2QIpzk6vPG5NIKcxQ8AjxJUV3d80npt
-	 5frhVSjzokTQ6p0UuhdVWy1QVlUEWyTkbc4FDPPmq6l6m8FAx3weip283e9JsXxYbI
-	 755DfXMQpyztQ==
+	s=k20201202; t=1738244158;
+	bh=wDMRkZ7Yz8lbsU5n1VinBrBQB358seh0rXR3CQwkTTk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=kOsYbTCRT/XKT1OiPS1ah6wBg5RR/ulAFAty8SRRt9Rs+123qn+nDv9h6AjvAEpte
+	 GJTW88mJ1eORhE/auQMHqh5zHUA9vnyH4dA7+I8M0Rof6ACzH1TzPZpQvKAY4VmbsY
+	 5Wwp7qeCkdZGRJc4bbyUaquFgplsmlqcYiMojgUY3El/l9qfW8XNsfvroMgUJGqyH/
+	 wJypu9MTCsXcDTJyFLgrHMlPatoDePcD2wWFA0tgV6Owa7VfTjv1s/opVz4HmW9eAE
+	 sK0floRcyQTK0aGkx3WIm3KlktpSdLxurwMlmq03QvaATwoXaL79v0GoZJDOBx3bsK
+	 Myg3htBot01HQ==
 From: Niklas Cassel <cassel@kernel.org>
 To: Jonathan Corbet <corbet@lwn.net>,
 	Damien Le Moal <dlemoal@kernel.org>,
@@ -32,76 +33,149 @@ To: Jonathan Corbet <corbet@lwn.net>,
 Cc: Christian Heusel <christian@heusel.eu>,
 	linux-doc@vger.kernel.org,
 	linux-ide@vger.kernel.org
-Subject: [PATCH 0/1] Add 'external' to the libata.force kernel parameter
-Date: Thu, 30 Jan 2025 14:35:45 +0100
-Message-ID: <20250130133544.219297-3-cassel@kernel.org>
+Subject: [PATCH 1/1] ata: libata-core: Add 'external' to the libata.force kernel parameter
+Date: Thu, 30 Jan 2025 14:35:46 +0100
+Message-ID: <20250130133544.219297-4-cassel@kernel.org>
 X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250130133544.219297-3-cassel@kernel.org>
+References: <20250130133544.219297-3-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2232; i=cassel@kernel.org; h=from:subject; bh=cL2E+t/CcYk1T5Bhu8QX1czZrAgFpnqPAzBaypnsy0g=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJnNxiwfbtfmcE+5WF0ZFPGhx8rDx7eekn+1Kawbzt+f RAL1Ynw6ChlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBEYqoZ/udan5H+cWdGnstS 2dl7jS52bf/45Mvqnu71+b9Dyvp2v/3MyPBdtUxmroOgYZnGfH2u01uUZ05rvW0RFHTqzbQ9Uyb q83IDAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4279; i=cassel@kernel.org; h=from:subject; bh=wDMRkZ7Yz8lbsU5n1VinBrBQB358seh0rXR3CQwkTTk=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJnN5iY+K3Mt5povZvv9Zbps/zVE5+rzP48vUCoO97x2 aGjC2oud5SyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAi/18z/Gaf5MNq933i+X2z 5xyr9/z5V+1Zlvl2u1rmqOvv736urVvKyPDl7CYFrxMcumtuLvFK5Tt+Si0tQUnk9OITNRrpt/g emfIDAA==
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-Hello there,
+Commit ae1f3db006b7 ("ata: ahci: do not enable LPM on external ports")
+changed so that LPM is not enabled on external ports (hotplug-capable or
+eSATA ports).
 
+This is because hotplug and LPM are mutually exclusive, see 7.3.1 Hot Plug
+Removal Detection and Power Management Interaction in AHCI 1.3.1.
 
-This patch replaces an earlier patch proposal, which added an
-'external_port_map' kernel module parameter to the ahci driver:
-https://lore.kernel.org/linux-ide/20250116143630.1935474-4-cassel@kernel.org/
+This does require that firmware has set the appropate bits (HPCP or ESP)
+in PxCMD (which is a per port register in the AHCI controller).
 
+If the firmware has failed to mark a port as hotplug-capable or eSATA in
+PxCMD, then there is currently not much a user can do.
 
-This patch instead adds support for 'external' to the existing libata.force
-kernel parameter.
+If LPM is enabled on the port, hotplug insertions and removals will not be
+detected on that port.
 
+In order to allow a user to fix up broken firmware, add 'external' to the
+libata.force kernel parameter.
 
-Normally we do not enable LPM on ports that are marked as external by
-firmware. However, as always, firmware can have bugs and can have forgotten
-to mark a port as external.
+libata.force can be specified either on the kernel command line, or as a
+kernel module parameter.
 
-One workaround for such buggy firmware would be to modify the
-'mobile_lpm_policy' kernel module parameter, however, that will affect the
-LPM policy for all ports.
+For more information, see Documentation/admin-guide/kernel-parameters.txt.
 
-This patch allows a user to mark one or more ports as hotplug capable (in
-case firmware has failed to do so). This way, you will still get LPM (power
-saving) on the ports that are not marked as external.
-
-
-One example where this can be used, is for buggy devices such as the
-"HL-DT-ST BD-RE BU40N" Blu-Ray player, which does not reply to a regular
-COMRESET (the controller sees nothing as connected), instead it will send
-a hotplug event when, and only when the user presses the tray open button.
-
-Not replying to a COMRESET is not spec compliant. If a port does not
-detect any device on a port, and LPM is enabled on that port, and the
-port is not marked as hotplug capable, then there should be no way that
-a device can be hotplugged later, so libata powers off the port/PHY to
-save power.
-
-Adding 'external' to libata.force gives users a way to handles such non
-spec compliant devices in a more fine grained way (rather than using the
-big 'mobile_lpm_policy' hammer).
-
-There does also exist a per port link_power_management_policy sysfs
-attribute, however, for many people, using libata.force (which can be
-either on the kernel command line, or as a kernel module parameter)
-is more convenient compared to writing udev rules.
-
-
-Kind regards,
-Niklas
-
-Niklas Cassel (1):
-  ata: libata-core: Add 'external' to the libata.force kernel parameter
-
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
  .../admin-guide/kernel-parameters.txt         |  2 +
  drivers/ata/libata-core.c                     | 38 +++++++++++++++++++
  2 files changed, 40 insertions(+)
 
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 3872bc6ec49d..d9c55dcbf4a2 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3036,6 +3036,8 @@
+ 			* max_sec_lba48: Set or clear transfer size limit to
+ 			  65535 sectors.
+ 
++			* external: Mark port as external (hotplug-capable).
++
+ 			* [no]lpm: Enable or disable link power management.
+ 
+ 			* [no]setxfer: Indicate if transfer speed mode setting
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c085dd81ebe7..52b78d22c831 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -88,6 +88,7 @@ struct ata_force_param {
+ 	unsigned int	xfer_mask;
+ 	unsigned int	quirk_on;
+ 	unsigned int	quirk_off;
++	unsigned int	pflags_on;
+ 	u16		lflags_on;
+ 	u16		lflags_off;
+ };
+@@ -331,6 +332,35 @@ void ata_force_cbl(struct ata_port *ap)
+ 	}
+ }
+ 
++/**
++ *	ata_force_pflags - force port flags according to libata.force
++ *	@ap: ATA port of interest
++ *
++ *	Force port flags according to libata.force and whine about it.
++ *
++ *	LOCKING:
++ *	EH context.
++ */
++static void ata_force_pflags(struct ata_port *ap)
++{
++	int i;
++
++	for (i = ata_force_tbl_size - 1; i >= 0; i--) {
++		const struct ata_force_ent *fe = &ata_force_tbl[i];
++
++		if (fe->port != -1 && fe->port != ap->print_id)
++			continue;
++
++		/* let pflags stack */
++		if (fe->param.pflags_on) {
++			ap->pflags |= fe->param.pflags_on;
++			ata_port_notice(ap,
++					"FORCE: port flag 0x%x forced -> 0x%x\n",
++					fe->param.pflags_on, ap->pflags);
++		}
++	}
++}
++
+ /**
+  *	ata_force_link_limits - force link limits according to libata.force
+  *	@link: ATA link of interest
+@@ -486,6 +516,7 @@ static void ata_force_quirks(struct ata_device *dev)
+ 	}
+ }
+ #else
++static inline void ata_force_pflags(struct ata_port *ap) { }
+ static inline void ata_force_link_limits(struct ata_link *link) { }
+ static inline void ata_force_xfermask(struct ata_device *dev) { }
+ static inline void ata_force_quirks(struct ata_device *dev) { }
+@@ -5452,6 +5483,8 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ #endif
+ 	ata_sff_port_init(ap);
+ 
++	ata_force_pflags(ap);
++
+ 	return ap;
+ }
+ EXPORT_SYMBOL_GPL(ata_port_alloc);
+@@ -6264,6 +6297,9 @@ EXPORT_SYMBOL_GPL(ata_platform_remove_one);
+ 	{ "no" #name,	.lflags_on	= (flags) },	\
+ 	{ #name,	.lflags_off	= (flags) }
+ 
++#define force_pflag_on(name, flags)			\
++	{ #name,	.pflags_on	= (flags) }
++
+ #define force_quirk_on(name, flag)			\
+ 	{ #name,	.quirk_on	= (flag) }
+ 
+@@ -6323,6 +6359,8 @@ static const struct ata_force_param force_tbl[] __initconst = {
+ 	force_lflag_on(rstonce,		ATA_LFLAG_RST_ONCE),
+ 	force_lflag_onoff(dbdelay,	ATA_LFLAG_NO_DEBOUNCE_DELAY),
+ 
++	force_pflag_on(external,	ATA_PFLAG_EXTERNAL),
++
+ 	force_quirk_onoff(ncq,		ATA_QUIRK_NONCQ),
+ 	force_quirk_onoff(ncqtrim,	ATA_QUIRK_NO_NCQ_TRIM),
+ 	force_quirk_onoff(ncqati,	ATA_QUIRK_NO_NCQ_ON_ATI),
 -- 
 2.48.1
 
