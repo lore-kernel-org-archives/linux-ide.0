@@ -1,142 +1,63 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 687881C6889
-	for <linux-ide@vger.kernel.org>; Fri, 31 Jan 2025 14:03:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D95281F3D37
+	for <linux-ide@vger.kernel.org>; Fri, 31 Jan 2025 20:25:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738332196; cv=none; b=qx3UJvQUaKHZNhIkPrXd+anIJ8nCFqJNuXDV/Ac+ld3qCsgVl3k3Z6WMDnuxhQpwNgXBULvrNPn9rOcirIB+gXTDcIupLWp17zmdlGd7I7A978raqMjCTVdLDIfqSXvu0CASdT2Z/XmnrZXFlszwy3fUaCowCi/N0DrtQr3ElPg=
+	t=1738355145; cv=none; b=a5QsX9F8K+mkPrOdjcADL1XvmBuZicPgbzdjw1W8N4y0haAxFI9X2mSx3e3bP69Ut5qRkQFuIiFqTSHkb/T+Qh5x1mvMbJzmsAZGkHbbSQ3bqcXb4AjwQiaVaqvxEoJLnOt3BaVWLmElsaVM2Bl1peGQ5WrzZ9SqnVWfYbeA9TI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738332196; c=relaxed/simple;
-	bh=k6iepJ3khtCHe4wAP+Co9RM2WKV6wPbtel3+iGpB+ZM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iH6T3L915C3OWm6EEaiQ8JvXHMgzqsor5gHflYjNb+1+qmWGpz2aq25+8RVWKGdUZSKYawHTwLGvaovsU8qNvAmf7MUDlhxyB3rIh59NVeDXCWhyPWwhBrAddnAhKGNU99IW/yZjPziaX/rrssRJtBko84kwmdXyGNC+9DwKN70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=rtUqgxeJ; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	s=arc-20240116; t=1738355145; c=relaxed/simple;
+	bh=bNcOLz5c0tejivXYZlz/Eh1rQFpB8J/xFgea8YBwNUE=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=JPKEhmUkUfwkdvcCVWlZ1vF6fZRh+YTWUuZYnQB5pUU9+X+uuEblJPEjpX10rcVyEe5wLwfj4dkhDMzMqcTTNIYFYewdymWskWqEJkFiDzF6+AOtsP0FsH+AQBpFlfmsqnr0olq3KRQ78ozMu3hF0BWZOcTt8n1YuE8Ee8ae2hg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jtOG9Yxv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="rtUqgxeJ"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id C8C75240103
-	for <linux-ide@vger.kernel.org>; Fri, 31 Jan 2025 15:03:11 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1738332191; bh=k6iepJ3khtCHe4wAP+Co9RM2WKV6wPbtel3+iGpB+ZM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:From;
-	b=rtUqgxeJqyjfeci389WwyVR3ezEklT/hG71YuMEM/th4+OQ59ErBQRc/+lh1XpvEE
-	 ARpoFnYEIaLOsT8bfAf2MGITZGJJJnBqvY+i1tSSxHXmLoebinLWZIrjXBgSAUj3du
-	 UPFDJr+mS6r4SeVtaBKT7Y3I7HRaKADOT88LsZoSnGmZ9QZNYhd9ZLxg5GejJbaMj2
-	 rObowSmd9hkyrWs/4LhJj3LxbDSkWXNkeF/oty1/5J9X2CTACIl7pLuuGb1/Ql1nML
-	 eDRmowT95Q+BGvmfr9bEhksCP3PjPZk/SuM2qbQd2uouOpsET6v60CmGEvE/PVyKLh
-	 VqP7g55lON8xA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4YkyK53T11z6v08;
-	Fri, 31 Jan 2025 15:03:05 +0100 (CET)
-Date: Fri, 31 Jan 2025 14:03:05 +0000
-From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-To: Rob Herring <robh@kernel.org>
-Cc: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>,
-	devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Scott Wood <oss@buserror.net>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
-	Vinod Koul <vkoul@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH 5/9] dt-bindings: dma: Convert fsl,elo*-dma bindings to
- YAML
-Message-ID: <Z5zYGdZU-IXwIuR6@probook>
-References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
- <20250126-ppcyaml-v1-5-50649f51c3dd@posteo.net>
- <20250127044735.GD3106458-robh@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jtOG9Yxv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA997C4CED1;
+	Fri, 31 Jan 2025 20:25:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738355145;
+	bh=bNcOLz5c0tejivXYZlz/Eh1rQFpB8J/xFgea8YBwNUE=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=jtOG9YxvIQvvfcy9y3Gd43KW/iVDyvIExYFI8DhR8IfkrXPC5PqQfi1OBcWLtYRG6
+	 IGxWQ0wApdAXSWuHstfg3dnLZflaaI8VsuPCd823oeZhEVpKymx9RbkpWVGDmmwT+C
+	 DnGn1z0pdY7WUcV3yq2SGSnZ/NF2NcqCrrTFJKRM6xdX0/jhsog3CKnLOyPLufSBYj
+	 ULJl2870BD5uecBn5QvplUGF+G+K/UGxLX9KmaZ0rnb89UNNSm32ILYgDpc+FkIzBg
+	 SwROM7LcmuCeb3XBJ0VTVADjXGyKEvcFcFs6jNstHK0dr0+RvAmCEj86BdRCVFcWHc
+	 SLCXTTiRC/F9g==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 70AF0380AA7D;
+	Fri, 31 Jan 2025 20:26:13 +0000 (UTC)
+Subject: Re: [GIT PULL] ata changes for 6.14-rc1-part2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20250131110036.389139-1-cassel@kernel.org>
+References: <20250131110036.389139-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20250131110036.389139-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-rc1-part2
+X-PR-Tracked-Commit-Id: 6e74e53b34b6dec5a50e1404e2680852ec6768d2
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 95d7e8226106e3445b0d877015f4192c47d23637
+Message-Id: <173835517201.1719808.11923869479790614392.pr-tracker-bot@kernel.org>
+Date: Fri, 31 Jan 2025 20:26:12 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250127044735.GD3106458-robh@kernel.org>
 
-On Sun, Jan 26, 2025 at 10:47:35PM -0600, Rob Herring wrote:
-> On Sun, Jan 26, 2025 at 07:59:00PM +0100, J. Neuschäfer wrote:
-> > The devicetree bindings for Freescale DMA engines have so far existed as
-> > a text file. This patch converts them to YAML, and specifies all the
-> > compatible strings currently in use in arch/powerpc/boot/dts.
-> > 
-> > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> > ---
-> >  .../devicetree/bindings/dma/fsl,elo-dma.yaml       | 129 +++++++++++++
-> >  .../devicetree/bindings/dma/fsl,elo3-dma.yaml      | 105 +++++++++++
-> >  .../devicetree/bindings/dma/fsl,eloplus-dma.yaml   | 120 ++++++++++++
-> >  .../devicetree/bindings/powerpc/fsl/dma.txt        | 204 ---------------------
-> >  4 files changed, 354 insertions(+), 204 deletions(-)
-[...]
-> > +patternProperties:
-> > +  "^dma-channel@.*$":
-> > +    type: object
-> 
->        additionalProperties: false
+The pull request you sent on Fri, 31 Jan 2025 12:00:36 +0100:
 
-I'll add it.
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-rc1-part2
 
-> (The tools should have highlighted this)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/95d7e8226106e3445b0d877015f4192c47d23637
 
-With dtschema 2024.11 installed, "make dt_binding_check
-DT_SCHEMA_FILES=fsl,elo-dma.yaml" does not highlight this.
+Thank you!
 
-> > +
-> > +    properties:
-> > +      compatible:
-> > +        items:
-> > +          - enum:
-> > +              - fsl,mpc8315-dma-channel
-> > +              - fsl,mpc8323-dma-channel
-> > +              - fsl,mpc8347-dma-channel
-> > +              - fsl,mpc8349-dma-channel
-> > +              - fsl,mpc8360-dma-channel
-> > +              - fsl,mpc8377-dma-channel
-> > +              - fsl,mpc8378-dma-channel
-> > +              - fsl,mpc8379-dma-channel
-> > +          - const: fsl,elo-dma-channel
-> > +
-> > +      reg:
-> > +        maxItems: 1
-> > +
-> > +      cell-index:
-> > +        description: DMA channel index starts at 0.
-> > +
-> > +      interrupts: true
-> 
-> You have to define how many interrupts and what they are.
-
-Will do.
-
-(and the same for the other two files)
-
-
-Best regards,
-J. Neuschäfer
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
