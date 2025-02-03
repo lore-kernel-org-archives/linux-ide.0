@@ -1,68 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6274202F96;
-	Mon,  3 Feb 2025 12:12:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EECF212B15
+	for <linux-ide@vger.kernel.org>; Mon,  3 Feb 2025 14:26:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738584738; cv=none; b=ow1z+RvQFTfYApOVtk+H75Eh4dZdncMuOoYYXdoYrCyq5ZKs54wXQVSDypnudnRa8J+2HI3uw1CipfRHeXwKnIBoEGuLte5WY2zW6kwPUnxv7pHhLdemtqET1OzVbHO/x1CcFshj8W3HafgWgrvEn3nfdY8VmGyOeLBc3BZgQss=
+	t=1738592797; cv=none; b=fY6qHrP8hP5UUVYXnsa8qwSKtAgN28F8jjw2CTHDE9LrXnykPs2Izox9IUBsyt2paNBwBLdDGBBl8NFoL+jKyZ2Uh2kwvSyqL5UHUxlTF7ykH+g0xwZaI8Ma8w4Me+jM6Lr5W8u4E9xiJzD7/qjJBcrI46IvCyASoOoeRKOgI8s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738584738; c=relaxed/simple;
-	bh=d2GaN60of87m3ShwMqoxdC02HZxqg5gZFUb7HCm/wQo=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Yo8nbSmgnOaoKLf1f5ehucBrX/UDXMLti7+8Yw5NLR3fnxp0GPnVRgUTGSMvfjdJmF/h84VFwX1/kAlXcbVJpNEMxyuAkji9Spmd+rcXXXVMyQ6YFcAPcK8NVFn+SJEl5xm1aM2lZOguBt9QnU9h+W9wu/y7FkDMQGm7agqDxGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mfiX/HIW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738592797; c=relaxed/simple;
+	bh=Tj7tRy4kZnsxFzQuBtc04+Ahrz10XdqH0zrjX5oVM6o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bRHnRfRi751IoFETna6CrmTjzQUHv8HpBiweuYPr2xUc+6TU6s9o/GKeZ4WmjaZbENgn/XaHFGNAeuZYQ1NgLfhMt9lBkUOsUyrNqx9u1vkm/TfF9tRixWFrduGuEzgL83YBuSQOqNHYdELaGfEg/8zKn/rFKxdwIds4n1dez+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=AhHsSeis; arc=none smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mfiX/HIW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4AC8C4CED2;
-	Mon,  3 Feb 2025 12:12:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738584738;
-	bh=d2GaN60of87m3ShwMqoxdC02HZxqg5gZFUb7HCm/wQo=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=mfiX/HIWLrmS+W3rsWsA5etOhmlLnahyryHTiQH6vj9tnvVAshESwS/RLtiL/vqZv
-	 cDuG3VkvVjtQQ26k1BpYkoHPufFH24klFCMhsv8PuSfRuuN8wMVicB1P+Br28j5js3
-	 o+1vPvUCpUrBkAr68MAK1L1ZvhNxEu3/nSUffA54aUcviJ+qmGZnNYbMHe8EvpjiAb
-	 /hLiHpY1JSv9chFz279ky3+DkixZK16C8IDkA8X+drSV9crFQglDKwqhCHLgiPV2gM
-	 J8rxYoYC+NM7X7RWGiDn5giUD+2kcf8JhDMfZwxf1dVMY3Zg4el0mpo8gtbo0HnuwG
-	 xgIVegTixNQwg==
-From: Niklas Cassel <cassel@kernel.org>
-To: Jonathan Corbet <corbet@lwn.net>, Damien Le Moal <dlemoal@kernel.org>, 
- Niklas Cassel <cassel@kernel.org>
-Cc: Christian Heusel <christian@heusel.eu>, linux-doc@vger.kernel.org, 
- linux-ide@vger.kernel.org
-In-Reply-To: <20250130133544.219297-3-cassel@kernel.org>
-References: <20250130133544.219297-3-cassel@kernel.org>
-Subject: Re: [PATCH 0/1] Add 'external' to the libata.force kernel
- parameter
-Message-Id: <173858473657.30534.17812766236080089156.b4-ty@kernel.org>
-Date: Mon, 03 Feb 2025 13:12:16 +0100
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="AhHsSeis"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-ab34a170526so705023066b.0
+        for <linux-ide@vger.kernel.org>; Mon, 03 Feb 2025 06:26:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1738592793; x=1739197593; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=wApwa+Vg7pEhvhJZMOtchLW1Qtniq1LAppbarYJzbvQ=;
+        b=AhHsSeisaNRxfF5kpEuWH/NuGkEEpv1vnTj7ov8dvc4SOqrwanUdq0cerpIrAIY5KO
+         e0xLN3NncTQKdHp+2y51NgGmv9ulwc6s6YlQvvC8sEwYzXjrmDPfW1P5sJZJVDo2DO7a
+         6Lu7iex/hWVl/LNtRHc9nk1a6ySPHTG1l0ZTCGB9wcC1cOHKHvB92C8kPHmpY1ukj9la
+         tpeIMaAJAJis7ibRRLXp8njUjDeCMVKXbSKJVW26O/Tr+nSQrg8bmJLV9r5TKEVm9HkD
+         0sdyYVw94J5FrQwbw/TXiWME1NugDiPTG57lSyJ2gwt/zJu1Q3tSraQUpYQTCABsq4U6
+         osOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738592793; x=1739197593;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wApwa+Vg7pEhvhJZMOtchLW1Qtniq1LAppbarYJzbvQ=;
+        b=F4e7caX+fRa81EQ/mNUNHa2UlmgSKnHGxBNjEWnU4hiXAkyDsGTfivvfvnw0Ql2XoV
+         +/V+zOSJng3YoRrr0x9PSLud4kjhNK+tLiInA0BimW1n6tztYqO3Qsfi1QPOkKU9lB5y
+         Yo6pQ67AmrgUtRNzAEIOixKRL75nc2mTOFsezAIZJ/dGzhroUjeDbcdGp5GxHfdBFsOp
+         QGoUB6if3YtbW58S+ERfJTPOoWQUck1HcidCo3K4zUwQusQXXh6VrEDxy75JYmJCWXKV
+         i5jnal/xc4/VcA756T4RPuhpANM4ufaMbYsM/1lVk/bkU8V0LNSSVJ7e3aafgIGO0d0p
+         dOuw==
+X-Forwarded-Encrypted: i=1; AJvYcCVt6PFG21TUiL87Bu2PmAn3F9yIh5WKUEiHgOLguPNCpoNTiuA3xWox6qZK8tvclSxCg3h1W9mLq6s=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzgv1SO6TjDCGsP7cKGi26gNdwMTQZd+l2SS9HMP+qpN1OhaD1X
+	Or1eEGuTFImO9UhDUp2SrBx6bpv9wzcMztl8yYurBTJWbOoRAODCUzqhBZF/12Y=
+X-Gm-Gg: ASbGnctZBvelKY7G3CCqHOz22Hp/NogWZXU9MoxWQDsxrMWiZpKiNiXUMEQXCqc9/pf
+	A+3uMS11TGfYGFJaSGnbt4YRqq0SAqZn5A+mQNG0fBk0Zqv5Y3qsaQVB1gLNK0PMaciwEa/yO3t
+	IZ6cKUWQ6cSfj5ELl2eD3NH212PaRe1bDhIAjE5aVOUIkw8IglbewChUWY1A13hVV+qRCrq4Mc4
+	/RfGLEoRyj0TwAy08QevBIc/v4L2O/cFFW+5/eyZUa8d8+ZIHX/Hsla3W8RIuuzn1nVoYUEfCI6
+	wM8rMQ==
+X-Google-Smtp-Source: AGHT+IEMvqFtWMQcGcbew8g5CbtS87OK4kOUrbaUT5fxc6WJnZS+Qe69TNruF9V9SFX0gjEEIeYYSg==
+X-Received: by 2002:a17:907:6eab:b0:ab2:ea29:a2 with SMTP id a640c23a62f3a-ab6cfe11e85mr2509321666b.48.1738592793317;
+        Mon, 03 Feb 2025 06:26:33 -0800 (PST)
+Received: from localhost ([193.86.92.181])
+        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-ab706ce9a53sm509134266b.72.2025.02.03.06.26.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Feb 2025 06:26:33 -0800 (PST)
+Date: Mon, 3 Feb 2025 15:26:32 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: lsf-pc@lists.linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+	bpf@vger.kernel.org
+Subject: Re: REMINDER - LSF/MM/BPF: 2025: Call for Proposals
+Message-ID: <Z6DSGOsqjw1ahIYi@tiehlicka>
+References: <Z4pwZkf3px21OVJm@tiehlicka>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z4pwZkf3px21OVJm@tiehlicka>
 
-On Thu, 30 Jan 2025 14:35:45 +0100, Niklas Cassel wrote:
-> This patch replaces an earlier patch proposal, which added an
-> 'external_port_map' kernel module parameter to the ahci driver:
-> https://lore.kernel.org/linux-ide/20250116143630.1935474-4-cassel@kernel.org/
+On Fri 17-01-25 15:59:51, Michal Hocko wrote:
+> Hi,
+> this is a friendly reminder for LSF/MM/BPF Call for proposals - you can
+> find the original announcement here: https://lore.kernel.org/all/Z1wQcKKw14iei0Va@tiehlicka/T/#u.
 > 
+> Please also note you need to fill out the following Google form to
+> request attendance and suggest any topics for discussion:
 > 
-> This patch instead adds support for 'external' to the existing libata.force
-> kernel parameter.
+>           https://forms.gle/xXvQicSFeFKjayxB9
 > 
-> [...]
+> The deadline to do that is Feb 1st!
 
-Applied to libata/linux.git (for-6.15), thanks!
+The deadline has passed but if you forgot or this slipped through then
+no worries you can still apply but please do so ASAP. We are going
+through all applications these days and will try to send invitations
+ASAP so that people can start planning their travel.
 
-[1/1] ata: libata-core: Add 'external' to the libata.force kernel parameter
-      https://git.kernel.org/libata/linux/c/deca4232
+Let me also remind that all the topics that are to be scheduled should
+be posted to the mailing list (CCing track specific and lsf-pc mailing
+lists). 
 
-Kind regards,
-Niklas
+Let us know if you have any questions!
 
+Thanks!
+-- 
+Michal Hocko
+SUSE Labs
