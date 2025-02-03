@@ -1,86 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCC5A200118;
-	Mon,  3 Feb 2025 10:21:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6274202F96;
+	Mon,  3 Feb 2025 12:12:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738578088; cv=none; b=cKZlMXocog21Vcw/+eM0sfK0IQop6BhIq7bOOvPSi2mcukFuR4Q+0dWudjIsMZQ4m1ZjYtmz5HBWfeSZccwVjMm9MKRvA4VbfkUXYbYw2za+zXnpPDlauaE9ylzk8CtgJhg6OnZFdY9Kx14gRi+Duvu4YTg6a0nZpYXAVD1PQ/w=
+	t=1738584738; cv=none; b=ow1z+RvQFTfYApOVtk+H75Eh4dZdncMuOoYYXdoYrCyq5ZKs54wXQVSDypnudnRa8J+2HI3uw1CipfRHeXwKnIBoEGuLte5WY2zW6kwPUnxv7pHhLdemtqET1OzVbHO/x1CcFshj8W3HafgWgrvEn3nfdY8VmGyOeLBc3BZgQss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738578088; c=relaxed/simple;
-	bh=3nFSoXSK35WH5TxsQqsFvjdhDUgnorrr3kBfTg4G0t4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G8Bl3s/saVvm7xGy11+KsEh0uNohvBFx/VXKe8lU4jaUHq9EYQY9BPfcuYkZonrjwmt+N4DM9L3++sAoKoypz2zjJXut+lrkHms515A9MHSfO7+H2NgflT5ae1FLAyOV38OZ0y6nZIWXneZwNwhbkW67zzz9io/DXNpTC3Zy7Yk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O6M1bi9A; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738584738; c=relaxed/simple;
+	bh=d2GaN60of87m3ShwMqoxdC02HZxqg5gZFUb7HCm/wQo=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Yo8nbSmgnOaoKLf1f5ehucBrX/UDXMLti7+8Yw5NLR3fnxp0GPnVRgUTGSMvfjdJmF/h84VFwX1/kAlXcbVJpNEMxyuAkji9Spmd+rcXXXVMyQ6YFcAPcK8NVFn+SJEl5xm1aM2lZOguBt9QnU9h+W9wu/y7FkDMQGm7agqDxGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mfiX/HIW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O6M1bi9A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8C6AC4CED2;
-	Mon,  3 Feb 2025 10:21:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mfiX/HIW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4AC8C4CED2;
+	Mon,  3 Feb 2025 12:12:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738578088;
-	bh=3nFSoXSK35WH5TxsQqsFvjdhDUgnorrr3kBfTg4G0t4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=O6M1bi9AGzwEMUdCUYPJ0GFSvkSYf39U5PH0Y7nkOVRkRtplXDRFcLoukVzdqeXTq
-	 wdGNob7Ocv2JXSR2N15pOVmm8XyDgjyE5hwn/7x0EwBSl/tahooOFbyYiXWiBURzJB
-	 550kSvhHYweqvBkHTAfCk0XqosQwYuMp0bqHF/LdMzDlvv5Mw0oeNAGQmhOnw+ATRQ
-	 ZB7gNJ6iL/U4LT0659lzVNHnMVpA6Ob9itnf7QolN4WRwuDOpUHKJh91Xm0jpYSAPP
-	 MJCjSrCKo3ipxmkxMTzUc4vtMaEY55QugorpThSX5lbmfX7PHgq0xEGj1wCoL2mBzQ
-	 IRToz9zDcpywQ==
-Message-ID: <1a31140b-21fc-4e1f-b79e-72ae79f60cf3@kernel.org>
-Date: Mon, 3 Feb 2025 19:20:23 +0900
+	s=k20201202; t=1738584738;
+	bh=d2GaN60of87m3ShwMqoxdC02HZxqg5gZFUb7HCm/wQo=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=mfiX/HIWLrmS+W3rsWsA5etOhmlLnahyryHTiQH6vj9tnvVAshESwS/RLtiL/vqZv
+	 cDuG3VkvVjtQQ26k1BpYkoHPufFH24klFCMhsv8PuSfRuuN8wMVicB1P+Br28j5js3
+	 o+1vPvUCpUrBkAr68MAK1L1ZvhNxEu3/nSUffA54aUcviJ+qmGZnNYbMHe8EvpjiAb
+	 /hLiHpY1JSv9chFz279ky3+DkixZK16C8IDkA8X+drSV9crFQglDKwqhCHLgiPV2gM
+	 J8rxYoYC+NM7X7RWGiDn5giUD+2kcf8JhDMfZwxf1dVMY3Zg4el0mpo8gtbo0HnuwG
+	 xgIVegTixNQwg==
+From: Niklas Cassel <cassel@kernel.org>
+To: Jonathan Corbet <corbet@lwn.net>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>
+Cc: Christian Heusel <christian@heusel.eu>, linux-doc@vger.kernel.org, 
+ linux-ide@vger.kernel.org
+In-Reply-To: <20250130133544.219297-3-cassel@kernel.org>
+References: <20250130133544.219297-3-cassel@kernel.org>
+Subject: Re: [PATCH 0/1] Add 'external' to the libata.force kernel
+ parameter
+Message-Id: <173858473657.30534.17812766236080089156.b4-ty@kernel.org>
+Date: Mon, 03 Feb 2025 13:12:16 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] ata: libata-core: Add 'external' to the libata.force
- kernel parameter
-To: Niklas Cassel <cassel@kernel.org>, Jonathan Corbet <corbet@lwn.net>
-Cc: Christian Heusel <christian@heusel.eu>, linux-doc@vger.kernel.org,
- linux-ide@vger.kernel.org
-References: <20250130133544.219297-3-cassel@kernel.org>
- <20250130133544.219297-4-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250130133544.219297-4-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-On 1/30/25 10:35 PM, Niklas Cassel wrote:
-> Commit ae1f3db006b7 ("ata: ahci: do not enable LPM on external ports")
-> changed so that LPM is not enabled on external ports (hotplug-capable or
-> eSATA ports).
+On Thu, 30 Jan 2025 14:35:45 +0100, Niklas Cassel wrote:
+> This patch replaces an earlier patch proposal, which added an
+> 'external_port_map' kernel module parameter to the ahci driver:
+> https://lore.kernel.org/linux-ide/20250116143630.1935474-4-cassel@kernel.org/
 > 
-> This is because hotplug and LPM are mutually exclusive, see 7.3.1 Hot Plug
-> Removal Detection and Power Management Interaction in AHCI 1.3.1.
 > 
-> This does require that firmware has set the appropate bits (HPCP or ESP)
-> in PxCMD (which is a per port register in the AHCI controller).
+> This patch instead adds support for 'external' to the existing libata.force
+> kernel parameter.
 > 
-> If the firmware has failed to mark a port as hotplug-capable or eSATA in
-> PxCMD, then there is currently not much a user can do.
-> 
-> If LPM is enabled on the port, hotplug insertions and removals will not be
-> detected on that port.
-> 
-> In order to allow a user to fix up broken firmware, add 'external' to the
-> libata.force kernel parameter.
-> 
-> libata.force can be specified either on the kernel command line, or as a
-> kernel module parameter.
-> 
-> For more information, see Documentation/admin-guide/kernel-parameters.txt.
-> 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> [...]
 
-Looks good to me.
+Applied to libata/linux.git (for-6.15), thanks!
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+[1/1] ata: libata-core: Add 'external' to the libata.force kernel parameter
+      https://git.kernel.org/libata/linux/c/deca4232
 
+Kind regards,
+Niklas
 
--- 
-Damien Le Moal
-Western Digital Research
