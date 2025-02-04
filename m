@@ -1,123 +1,115 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A21A52163A9
-	for <linux-ide@vger.kernel.org>; Tue,  4 Feb 2025 18:19:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E44219A67;
+	Tue,  4 Feb 2025 19:43:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738693162; cv=none; b=PqWNc1FVISCZyuEmP82ijTrRC1qNP+FQe491INgR5XUM1ZGc28/OATrkk4OCg8sKRtX3Auj86x0zCAeRrDxhn4eHkJFaJUd99ydcTNLHgAh7hIpKScQtaFTGugiGP04fgMSKLXWozd3mtPXU/HihF68ZT7gQP3vSJgV/A5+Y0tE=
+	t=1738698204; cv=none; b=ew3s54lLhof+djjCpGnw7AAfCDhJRldvq9h741684tV6yVvB0R4fha960OWfhwU8fdNBzLf1Shd3OoHcN0e4LSjsOTaXDqA6p3HRz3hZo2kzZqxc3LpSlHPYGfr9L6d5bU1lDbttEGDkwwugrfVQpKlJAXSQiV+R+AoDEdr6CAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738693162; c=relaxed/simple;
-	bh=TCqqBaH/6DxhhY4LxUIZxLWTUzfo7FZ0g9lCT/VEHVQ=;
+	s=arc-20240116; t=1738698204; c=relaxed/simple;
+	bh=OxLFZkpOuKi4mROW2vapDOhHxudyF5mRfONiow0CF+0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jJUPHEYum/Pl6pbH3JpZ/+5rlUhBrCLSkHHQzsXg+/0TRK0d2fkhEHsw5KYxLbxS3lhaTbbWuDwEm4OLAZUnhFc3oMGklh8I93AVq+lcdJYl3GxdorGVZgwTxAiSb40ZuVVAYSovGPL2xeTOeiWHzV7hXRZH/tCzD/Bagr1iFYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=QLuSB3Cp; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	 Content-Type:Content-Disposition:In-Reply-To; b=Rm/9IWGPvubEyCxNk4s7G2Pg9Z+OQwcnROxDhzCIxLtosakLf0ppHKS371I+DzZdmr17cBz+P6tEfwm10egu4K1JiT5kWZZrBCvYRIC17rxSEd5P3ir2dWq8JeOykuEjuQ3fB/ib+dbU1ONDIwB/HAm5nDlDfV9Ke+FbrGjby3g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qGHOEtxq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="QLuSB3Cp"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 396BC240104
-	for <linux-ide@vger.kernel.org>; Tue,  4 Feb 2025 19:19:12 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1738693152; bh=TCqqBaH/6DxhhY4LxUIZxLWTUzfo7FZ0g9lCT/VEHVQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:From;
-	b=QLuSB3Cp5wmxvy0AcnxYAbea4vAVqLHQ2qWlm36gLR16yyS9Z6v9YRiCvyp4j4gn5
-	 LgZDTviocjTkkrBZfKjqIX7HKrKmbEgZd5usiMBwfyowuAzH7n9ya5rw+1WcRG1Oim
-	 61l/YRbLQ/MuqjUeCkWoQ1kkGDN+vaSKCCpYDwnidKomCYAjqhFy+gkv+aXN4VknA6
-	 SHTFc7qSWaWjKRuglfENNnh6zyhAw0zuaTMO+sMLjEjkDm5sMj/UWLXt8eIducymRH
-	 jcDEMinpzWrqCDL2LTwSNhNU1eiDWLfNxb9bwY4wxFJwO7H3iV26supD7Xr4Uco5Zq
-	 7tomMw0Ep2Izg==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4YnWpc4lyZz6tw4;
-	Tue,  4 Feb 2025 19:19:03 +0100 (CET)
-Date: Tue,  4 Feb 2025 18:19:03 +0000
-From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-To: Rob Herring <robh@kernel.org>
-Cc: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>,
-	devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Scott Wood <oss@buserror.net>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qGHOEtxq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAF8BC4CEDF;
+	Tue,  4 Feb 2025 19:43:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738698203;
+	bh=OxLFZkpOuKi4mROW2vapDOhHxudyF5mRfONiow0CF+0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qGHOEtxqdAQU8YotL4e98GbgQmk7mPn18e+HS3j6b5SYDPEmtFhS1t1QJRGhr0vEP
+	 Ik7PncdOwgFyb3/fMybjSURGqxAr63XYXOXlJthV9hmGNtgFCcpN9yVVYVr+LwiZJ1
+	 E8DeD4JjJ0r2M2VLQ2B1l6Vgrz+hTzfQ1+ic/HBGx8EjWv0p4XUEgjSzDZ6cveWIuZ
+	 BSM7Hs2bAuiMjCblqFJ2aucIrDsydT+E8apE2TJkXZj8EuHj4YysrGa74LHFLsMu4U
+	 ImMuWIrnVNsAZEw7OYi3Ra/tuz3ZoF95u5u7w1WetNCQ+uol2+2oe5F0EWIK7FNNq7
+	 BxSbEwYdTnnSA==
+Date: Tue, 4 Feb 2025 19:43:14 +0000
+From: Conor Dooley <conor@kernel.org>
+To: Michal Simek <michal.simek@amd.com>
+Cc: linux-kernel@vger.kernel.org, monstr@monstr.eu, michal.simek@xilinx.com,
+	git@xilinx.com, Anand Ashok Dumbre <anand.ashok.dumbre@xilinx.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
 	Conor Dooley <conor+dt@kernel.org>,
 	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
-	Vinod Koul <vkoul@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH 5/9] dt-bindings: dma: Convert fsl,elo*-dma bindings to
- YAML
-Message-ID: <Z6JaFxfwC0tAB4uQ@probook>
-References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
- <20250126-ppcyaml-v1-5-50649f51c3dd@posteo.net>
- <20250127044735.GD3106458-robh@kernel.org>
- <Z5zYGdZU-IXwIuR6@probook>
- <CAL_JsqJAX1QbXvG16NV2g6DGece6KiG_V-uyKQQLA618Oq9miw@mail.gmail.com>
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Harini Katakam <harini.katakam@amd.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Lars-Peter Clausen <lars@metafoo.de>,
+	Mark Brown <broonie@kernel.org>,
+	Michael Tretter <m.tretter@pengutronix.de>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Mubin Sayyed <mubin.sayyed@amd.com>,
+	Nicolas Ferre <nicolas.ferre@microchip.com>,
+	Niklas Cassel <cassel@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Rob Herring <robh@kernel.org>,
+	Shyam Pandey <radhey.shyam.pandey@amd.com>,
+	Stephen Boyd <sboyd@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>,
+	"open list:DMA GENERIC OFFLOAD ENGINE SUBSYSTEM" <dmaengine@vger.kernel.org>,
+	"moderated list:ARM/ZYNQ ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>,
+	"open list:COMMON CLK FRAMEWORK" <linux-clk@vger.kernel.org>,
+	"open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>,
+	"open list:XILINX AMS DRIVER" <linux-iio@vger.kernel.org>,
+	"open list:SPI SUBSYSTEM" <linux-spi@vger.kernel.org>,
+	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Subject: Re: [PATCH 0/2] arm64: zynqmp: Move firmware constants from binding
+ to platform
+Message-ID: <20250204-onto-gliding-465a003ae66a@spud>
+References: <cover.1738600745.git.michal.simek@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="myTze9WqxmEx6DIV"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAL_JsqJAX1QbXvG16NV2g6DGece6KiG_V-uyKQQLA618Oq9miw@mail.gmail.com>
-
-On Fri, Jan 31, 2025 at 04:16:07PM -0600, Rob Herring wrote:
-> On Fri, Jan 31, 2025 at 8:03 AM J. Neuschäfer <j.ne@posteo.net> wrote:
-> >
-> > On Sun, Jan 26, 2025 at 10:47:35PM -0600, Rob Herring wrote:
-> > > On Sun, Jan 26, 2025 at 07:59:00PM +0100, J. Neuschäfer wrote:
-> > > > The devicetree bindings for Freescale DMA engines have so far existed as
-> > > > a text file. This patch converts them to YAML, and specifies all the
-> > > > compatible strings currently in use in arch/powerpc/boot/dts.
-> > > >
-> > > > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> > > > ---
-> > > >  .../devicetree/bindings/dma/fsl,elo-dma.yaml       | 129 +++++++++++++
-> > > >  .../devicetree/bindings/dma/fsl,elo3-dma.yaml      | 105 +++++++++++
-> > > >  .../devicetree/bindings/dma/fsl,eloplus-dma.yaml   | 120 ++++++++++++
-> > > >  .../devicetree/bindings/powerpc/fsl/dma.txt        | 204 ---------------------
-> > > >  4 files changed, 354 insertions(+), 204 deletions(-)
-> > [...]
-> > > > +patternProperties:
-> > > > +  "^dma-channel@.*$":
-> > > > +    type: object
-> > >
-> > >        additionalProperties: false
-> >
-> > I'll add it.
-> >
-> > > (The tools should have highlighted this)
-> >
-> > With dtschema 2024.11 installed, "make dt_binding_check
-> > DT_SCHEMA_FILES=fsl,elo-dma.yaml" does not highlight this.
-> 
-> Actually, it's the top-level 'addtionalProperties: true' that disables
-> the check here. That should be false as well.
-
-Noted. This did indeed help me find more errors.
+In-Reply-To: <cover.1738600745.git.michal.simek@amd.com>
 
 
-Best regards,
-J. Neuschäfer
+--myTze9WqxmEx6DIV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, Feb 03, 2025 at 05:39:09PM +0100, Michal Simek wrote:
+> Hi,
+>=20
+> Based on discussion done long time ago
+> https://lore.kernel.org/all/5353872c-56a3-98f9-7f22-ec1f6c2ccdc8@linaro.o=
+rg/
+> it is better to deprecate firmware contants which are not used in any code
+> and it's only purpose is to use macros in dt files.
+>=20
+> There is no reason to be the part of dt bindings but it should be kept
+> there with adding deprecated warning.
+>=20
+> I want to see if this is the right way to go. If yes, I will also do the
+> same changes in other headers which contain only constans which are not
+> used in any code.
+
+Ye, I think this is a good approach to take.
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+
+--myTze9WqxmEx6DIV
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZ6Jt0gAKCRB4tDGHoIJi
+0iwjAQDHM3pyWDtIVQUJpum7sJq5YpFWOQPxf+3QWxHiauCquQEA83V6o0+XcqG0
+ckSZUheRIaEO1eK0Y6KNH88lItDmUAE=
+=SMqC
+-----END PGP SIGNATURE-----
+
+--myTze9WqxmEx6DIV--
