@@ -1,173 +1,170 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8534155756
-	for <linux-ide@vger.kernel.org>; Wed,  5 Feb 2025 14:29:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50D017083A;
+	Wed,  5 Feb 2025 18:03:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738765766; cv=none; b=paVgUoWj3qp58GiRmreW/Usn9xKdyCutUirs/rI+TSEYe5NUe9jHAyExA1XsyGXZEU2GkYCMEVSLREWKjUuqf1IR79q3Qtob2aqzHAad6pIJhseRFEhtnWbAZMo/9VhlsjmI1swMy2hIbP61QkwtFM3K/rMdBOKJ55TPpuc09Wg=
+	t=1738778633; cv=none; b=PvAzlbbA3fBYWjpHbcfUtqyaXaB0+4FcP4PZKtaImnhPPA8MKjYaZwyzKvzWSd1ybK+BlsQ7i3B+VTLcit+3LsbN0mC2TqjTsBPGnz7+3/BKVUf5G7V9N7zB0kC23MV6WTUQwT9It3lEr62ddYPoeUG9/YdzLpKSr9QBq0Spt8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738765766; c=relaxed/simple;
-	bh=e42SIVOUhhbdor72mrNuSIArnji9rVNQMG+KjSfReLQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ULF6FWxsNYXEGpdGU5tOfco4a0fcaLkXaQnLNt/WX5qufDt4VwJqvwcDgaN18EqQRHy0up3xiLcFz0YyrmZkasUvEAy6/710ZdQ2GdWErNKy2Pz2Es2Gi5zCAgp698j8Fvq7dYqu/aRnSh7AwBrIbuiozjjkumB8AgtgbgGvRPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=PACWVV/B; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	s=arc-20240116; t=1738778633; c=relaxed/simple;
+	bh=04qJ44E+WKTfOObDH1SURly/YlWo6PracBKyAh9xp2o=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Nj9YFwqu4YT+3TIV4aTQIvG4nL8N6E7nmypnZNyutLC3FFgx64lnS10rVvUE0nSCFEioEiIKWmlslPWnb4UuNoayXPUjoGo899ClcTwheWO8hnQ1GXyG2/33ipgnH03qDYH5SEhYDewGQrYO5V9qBFjku1mqD91UmDXmsuFi5pE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZlmUcaTj; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="PACWVV/B"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 40AD7240104
-	for <linux-ide@vger.kernel.org>; Wed,  5 Feb 2025 15:29:21 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1738765761; bh=e42SIVOUhhbdor72mrNuSIArnji9rVNQMG+KjSfReLQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:From;
-	b=PACWVV/B2zEXa/3zM3iFyWGMCvq1ep2tJrc4lnPcQd3vMa6GfKW9yWUGJflhWkzB6
-	 mdwFgQnP74Q/JsCwaMpTD/CjCuigxBwGIzzFxwKWVOeHk4MaYvlikd7rp62zTC36An
-	 Agq7QhuBJJS77HdFXurVKxgAqrp2UMVQuGlfqmMXwEUvTE2X+Q7vjO9yeuFfneWNi4
-	 UzFkZdRD0ItU6gs7hUevNamTNwgpLFYRa/IWNqQMQfGMroi2NGU2e/DlG3TmQlVncm
-	 PLI6VUrrsbH50E1C83K8fRG84DpnJGcwKJONJ/5Rq2M0DazTqmw5sg53lAryZJ//tS
-	 +5vr8gbAqJFJA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4Yp2fz0fXhz9rxQ;
-	Wed,  5 Feb 2025 15:29:14 +0100 (CET)
-Date: Wed,  5 Feb 2025 14:29:14 +0000
-From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-To: Rob Herring <robh@kernel.org>
-Cc: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>,
-	devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Scott Wood <oss@buserror.net>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
-	Vinod Koul <vkoul@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH 8/9] dt-bindings: spi: Convert Freescale SPI bindings to
- YAML
-Message-ID: <Z6N1uqg4Dji4Pt3X@probook>
-References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
- <20250126-ppcyaml-v1-8-50649f51c3dd@posteo.net>
- <20250127050901.GB3127337-robh@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZlmUcaTj"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-43618283dedso466705e9.3;
+        Wed, 05 Feb 2025 10:03:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738778629; x=1739383429; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=cqnA75NtgKIwe5IrDIJEaQ7EQltoDIFrSNIy4uQJbKw=;
+        b=ZlmUcaTjfjwiC1wPstds+lg7pUuWzaxDclrguzr+ToVL5hZwWLqjMlCyS6NGib33Lo
+         /qvBQ2ysPXpnaxUjmd6GWa0rq9vk5nim11eDPH9XbR1T/wIt3IXcDJAvIoQLsvrZO0/0
+         m9HAoqEGf9gFBoYM3XrN2q215Djf4bHD1g4DNv6dklngqlxwK0E/pBYtLldgOzpvJlJm
+         hVPQDxarteeM7e4JXrIzXsf5j5LCWwuKWzSReaFVyd8d7K+ovj3UqxD5utEk/onoWBl8
+         rGnuZf2rDHPUtjjEhLBdFPE92ThmjuKC9XAo7ouiDGUrjc7TexMPSHhWdXjp2c/f+pS8
+         mK/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738778629; x=1739383429;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=cqnA75NtgKIwe5IrDIJEaQ7EQltoDIFrSNIy4uQJbKw=;
+        b=Qp/y64FmJkP78nd2sEZ3Mko0cAbuGpGuFEYRtxgh+LGhXECiHjk/PMEPSlwYomAj9d
+         2EVWGiHAJPEmA5SIg6sAB4MANCwS5Ny/PcAUeoh3cTeJPrUVz8+Yq5sCbIYN0fNHA0n8
+         ItwZlA9nAxaUo2cbWthy1czIaWm7+yejQ2/P1e5MntQ6QkH4MRoj8zpp6vsUO2zQ8ykW
+         s32rt5mLze1eWkI7BGtPN4vsunXuHHz8GUtD+yPuHzIhBoSKgW1Hf2YQcsZ8C8S80p6V
+         88eyRf8zLMUsWzPzQdrlmAQi9kEirET5te6cG6I+kP54nh/RBxen7EPDBfPjvwCUvfyW
+         4X1A==
+X-Forwarded-Encrypted: i=1; AJvYcCUnbraW4HUDzGH0u7ZslXstqCAwocgOrZxIDCoXI7eDTNzxZo9DeKnKPgm02spnOCTmkd0XTVkP6Cc=@vger.kernel.org, AJvYcCUx4j6Jv5NeZmes9KsnIV8cOo4ijoWIEwM1YJUPmdzizLiM6rXCil5cdZaABbhxpQAEBNLDZoIEBjy6eFh3@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx22ZDofCSvMkdyCxq7ej/yDGff0d8Zzx/7omxaOKQG9oaZ+vb/
+	Q6csay7GgALOaQENTn55A1FI7pT/UDgrcGCq91Y9oDSu0fX6Hn68
+X-Gm-Gg: ASbGncvqsBcJ138ciOrXDmC0lxdRS1Cs7Ihqpc2dRpn3T5bc+mKjxJGaWpPcumM3aec
+	BxxBcVta+BsaQcQUf7jGXYP6RAddOnGMvac7vpvp5eV6uAqg91DkLE9+1ihIHqkSVy2OrquxHtD
+	6uW+Y2UvwZnetRsFamaOlM+jb3/nArbcx0KS0aqS9mA7FlX0gqLWfuqe7dZ7G5dJ7p4fC9pA65B
+	WQ0os9abJ9UUBWnieEmkTp4TrnvEh9Qqstn005K6oDWF18XfHB8aJ8uQAHxpeb0yfpk+RE0tyMB
+	Gh8Ab6tuxOhx/V5b3m1GLbiXEIBYhBoDcrcH/qNMwJdLUsEDznj4/DATWBlgWw==
+X-Google-Smtp-Source: AGHT+IEheNsRSHUWuzlNyK8boLS7j93RQIefLWBb0ea9mzvCgFE9iYJOQySEEeBH1tlzjsI+PVnmpQ==
+X-Received: by 2002:a05:600c:4754:b0:435:1a2:2633 with SMTP id 5b1f17b1804b1-4390d43da3fmr34821435e9.15.1738778629000;
+        Wed, 05 Feb 2025 10:03:49 -0800 (PST)
+Received: from ?IPv6:2a02:168:6806:0:2ca8:ba92:a6ab:f4bf? ([2a02:168:6806:0:2ca8:ba92:a6ab:f4bf])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4390daf4438sm29337625e9.25.2025.02.05.10.03.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Feb 2025 10:03:48 -0800 (PST)
+Message-ID: <bcfa145c3227b13e7b9d8bb3b0f92c678464cfdc.camel@gmail.com>
+Subject: Re: [PATCH v2] ata: libahci_platform: support non-consecutive port
+ numbers
+From: Klaus Kudielka <klaus.kudielka@gmail.com>
+To: Josua Mayer <josua@solid-run.com>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>, Hans de Goede <hdegoede@redhat.com>
+Cc: Jon Nettleton <jon@solid-run.com>, Mikhail Anikin	
+ <mikhail.anikin@solid-run.com>, Yazan Shhady <yazan.shhady@solid-run.com>, 
+ Rabeeh Khoury <rabeeh@solid-run.com>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Date: Wed, 05 Feb 2025 19:03:47 +0100
+In-Reply-To: <20250101-ahci-nonconsecutive-ports-v2-1-38a48f357321@solid-run.com>
+References: 
+	<20250101-ahci-nonconsecutive-ports-v2-1-38a48f357321@solid-run.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.54.3-2 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250127050901.GB3127337-robh@kernel.org>
 
-On Sun, Jan 26, 2025 at 11:09:01PM -0600, Rob Herring wrote:
-> On Sun, Jan 26, 2025 at 07:59:03PM +0100, J. Neuschäfer wrote:
-> > fsl-spi.txt contains the bindings for the fsl,spi and fsl,espi
-> > contollers. Convert them to YAML.
-> > 
-> > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> > ---
-> >  .../devicetree/bindings/spi/fsl,espi.yaml          | 56 +++++++++++++++++
-> >  Documentation/devicetree/bindings/spi/fsl,spi.yaml | 71 ++++++++++++++++++++++
-> >  Documentation/devicetree/bindings/spi/fsl-spi.txt  | 62 -------------------
-> >  3 files changed, 127 insertions(+), 62 deletions(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/spi/fsl,espi.yaml b/Documentation/devicetree/bindings/spi/fsl,espi.yaml
-> > new file mode 100644
-> > index 0000000000000000000000000000000000000000..350275760210c5763af0c7b1e1522ccbfb97eec7
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/spi/fsl,espi.yaml
-> > @@ -0,0 +1,56 @@
-> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > +%YAML 1.2
-> > +---
-> > +$id: http://devicetree.org/schemas/spi/fsl,espi.yaml#
-> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > +
-> > +title: Freescale eSPI (Enhanced Serial Peripheral Interface) controller
-> > +
-> > +maintainers:
-> > +  - J. Neuschäfer <j.ne@posteo.net>
-> > +
-> > +properties:
-> > +  compatible:
-> > +    const: fsl,mpc8536-espi
-> > +
-> > +  reg:
-> > +    maxItems: 1
-> > +
-> > +  interrupts: true
-> 
-> How many?
-> 
-> > +
-> > +  fsl,espi-num-chipselects:
-> > +    $ref: /schemas/types.yaml#/definitions/uint32
-> > +    description: The number of the chipselect signals.
-> 
-> Constraints?
-> 
-> > +
-> > +  fsl,csbef:
-> > +    $ref: /schemas/types.yaml#/definitions/uint32
-> > +    description: Chip select assertion time in bits before frame starts
-> 
-> Constraints?
-> 
-> > +
-> > +  fsl,csaft:
-> > +    $ref: /schemas/types.yaml#/definitions/uint32
-> > +    description: Chip select negation time in bits after frame ends
-> 
-> Constraints?
+On Wed, 2025-01-01 at 13:13 +0100, Josua Mayer wrote:
+> So far ahci_platform relied on number of child nodes in firmware to
+> allocate arrays and expected port numbers to start from 0 without holes.
+> This number of ports is then set in private structure for use when
+> configuring phys and regulators.
+>=20
+> Some platforms may not use every port of an ahci controller.
+> E.g. SolidRUN CN9130 Clearfog uses only port 1 but not port 0, leading
+> to the following errors during boot:
+> [=C2=A0=C2=A0=C2=A0 1.719476] ahci f2540000.sata: invalid port number 1
+> [=C2=A0=C2=A0=C2=A0 1.724562] ahci f2540000.sata: No port enabled
+>=20
+> Update all accessesors of ahci_host_priv phys and target_pwrs arrays to
+> support holes. Access is gated by hpriv->mask_port_map which has a bit
+> set for each enabled port.
+>=20
+> Update ahci_platform_get_resources to ignore holes in the port numbers
+> and enable ports defined in firmware by their reg property only.
+>=20
+> When firmware does not define children it is assumed that there is
+> exactly one port, using index 0.
+>=20
 
-I'll add appropriate constraints to all of these.
-
-
-> > diff --git a/Documentation/devicetree/bindings/spi/fsl,spi.yaml b/Documentation/devicetree/bindings/spi/fsl,spi.yaml
 [...]
-> > +  clock-frequency:
-> > +    $ref: /schemas/types.yaml#/definitions/uint32
-> 
-> Don't need a type.
 
-Will remove
+> @@ -625,6 +651,8 @@ struct ahci_host_priv *ahci_platform_get_resources(st=
+ruct platform_device *pdev,
+> =C2=A0		 * If no sub-node was found, keep this for device tree
+> =C2=A0		 * compatibility
+> =C2=A0		 */
+> +		hpriv->mask_port_map |=3D BIT(0);
+> +
+> =C2=A0		rc =3D ahci_platform_get_phy(hpriv, 0, dev, dev->of_node);
+> =C2=A0		if (rc)
+> =C2=A0			goto err_out;
+>=20
 
-> 
-> > +    description: input clock frequency to non FSL_SOC cores
-> > +
-> > +  cs-gpios: true
-> > +
-> > +  fsl,spisel_boot:
-> > +    $ref: /schemas/types.yaml#/definitions/flag
+This very last hunk (when firmware does not define children...) causes some=
+ change in behaviour on my Turris Omnia
+(Armada 385):
 
-I do wonder, what's the difference between
-$ref: /schemas/types.yaml#/definitions/flag and type: boolean?
+6.13.0 bootlog
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Feb 05 18:30:45 xxxx kernel: ahci-mvebu f10a8000.sata: AHCI vers 0001.0000,=
+ 32 command slots, 6 Gbps, platform mode
+Feb 05 18:30:45 xxxx kernel: ahci-mvebu f10a8000.sata: 2/2 ports implemente=
+d (port mask 0x3)
+Feb 05 18:30:45 xxxx kernel: ahci-mvebu f10a8000.sata: flags: 64bit ncq snt=
+f led only pmp fbs pio slum part sxs=20
+Feb 05 18:30:45 xxxx kernel: scsi host0: ahci-mvebu
+Feb 05 18:30:45 xxxx kernel: scsi host1: ahci-mvebu
+Feb 05 18:30:45 xxxx kernel: ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0=
+xf10a9fff] port 0x100 irq 40 lpm-pol 0
+Feb 05 18:30:45 xxxx kernel: ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0=
+xf10a9fff] port 0x180 irq 40 lpm-pol 0
+
+Previously, both detected ports were automatically used, and no warning was=
+ emitted.
+(hpriv->mask_port_map was 0x0)
 
 
+6.14.0-rc1 bootlog
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-Thanks for your review.
+Feb 05 18:36:40 xxxx kernel: ahci-mvebu f10a8000.sata: masking port_map 0x3=
+ -> 0x1
+Feb 05 18:36:40 xxxx kernel: ahci-mvebu f10a8000.sata: AHCI vers 0001.0000,=
+ 32 command slots, 6 Gbps, platform mode
+Feb 05 18:36:40 xxxx kernel: ahci-mvebu f10a8000.sata: 1/2 ports implemente=
+d (port mask 0x1)
+Feb 05 18:36:40 xxxx kernel: ahci-mvebu f10a8000.sata: flags: 64bit ncq snt=
+f led only pmp fbs pio slum part sxs=20
+Feb 05 18:36:40 xxxx kernel: scsi host0: ahci-mvebu
+Feb 05 18:36:40 xxxx kernel: scsi host1: ahci-mvebu
+Feb 05 18:36:40 xxxx kernel: ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0=
+xf10a9fff] port 0x100 irq 40 lpm-pol 0
+Feb 05 18:36:40 xxxx kernel: ata2: DUMMY
 
-Best regards,
-J. Neuschäfer
+Now, hpriv->mask_port_map is forced to 0x1, resulting in a kernel warning, =
+and no more ata2 available.
+In my particular case it is not a big deal, since nothing is connected to t=
+he 2nd port, and I can live with this obscure warning.
+
+But that might not be the case for everybody?
+
+Regards, Klaus
