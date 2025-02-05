@@ -1,105 +1,83 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6CAD21CFFA
-	for <linux-ide@vger.kernel.org>; Tue,  4 Feb 2025 23:34:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A85525A647
+	for <linux-ide@vger.kernel.org>; Wed,  5 Feb 2025 08:38:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738712075; cv=none; b=Rb+3vrRspRFBIMfBLrNne2r0jahW/dvVHsDYr5FQsndK4y7iyNoch4FrG0lcH43QdxygUujVF8l418ah03ANxSg4J4VMoIu1oDXaKImHrYOwfBmo4te3/SMp5z/BaQvQUfipl5uhMK9YbiQFK51bfn6fH8Vqd2SyCppQ9g7mlIo=
+	t=1738744683; cv=none; b=YiGoj1cNz61Iks5QkBRDLdWkx48i5pphuTmXK+C+eJwP/Uj4ejr/RQ0fpuYQizvHdqTN7i3N4/qjO0YjjThMv1nMf8QfiGfcxWKNlWX8jFrvZHMqPzZkmhBuAlCGVitWeJUazhMW4rW8iINt5eg1hRJ/w/fAQhFST5JuwoloaAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738712075; c=relaxed/simple;
-	bh=ZyVExCqzB2iyA3bGQRpDduhuvKS4WRQAEUDFtlqCUyc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iQOB5Vr4CVknYwsEOBv6DLt/3r61SjJbBTxErSTj54aGlPw6eiMwcUzu5ezhouOtwyZaDhZ2G1UPKq09YktcLtf5+4dqzqzluxNSCIt48P8xYGLgahxGMzumP41PpKM/hmslGv2c/unoE8i+QDjCVmep6NXjbtc6sw2F355f2UA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=DBuTUrKv; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="DBuTUrKv"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 4FC0E240106
-	for <linux-ide@vger.kernel.org>; Wed,  5 Feb 2025 00:34:31 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1738712071; bh=ZyVExCqzB2iyA3bGQRpDduhuvKS4WRQAEUDFtlqCUyc=;
+	s=arc-20240116; t=1738744683; c=relaxed/simple;
+	bh=hCGuwW355QD53Uc4QowtwNlkSZ5A/3EH3Ao7KvYKCrs=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:From;
-	b=DBuTUrKvwBPCFb3wwTF27nUmKACldPAcQK56BYzilnfVJPf906YaloXYiMrBH0c8c
-	 vIuQx+YGYTxutPEplefcxq8yPY37zyFAgpbLU6vWf/V/09gaXv9jpMdG1O9VTiAqZf
-	 y3RU6mPPwJm03hw0li/MOC9HLNHPTIthKkPNCuvplIYQqPzLkejWIoUDMNA6fb0GEz
-	 MXx7QT9XTpACA6ETCFVSYuQe4WroRMb+BIlsBRIPjO+EN0pliE531twvejZqcI+Nlt
-	 GgJWtXw4wqJWoCOpmvC72HFB+3ku/yRvl2HD/J/3mKxYeJYNYBMkjmgGhoKwtjXWMV
-	 Fi8SRj0C0Cjow==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4YnfpX3DL2z6tyt;
-	Wed,  5 Feb 2025 00:34:28 +0100 (CET)
-Date: Tue,  4 Feb 2025 23:34:28 +0000
-From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-To: Frank Li <Frank.li@nxp.com>
-Cc: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>,
-	devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Scott Wood <oss@buserror.net>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
-	Vinod Koul <vkoul@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH 6/9] dt-bindings: pci: Add fsl,mpc83xx-pcie bindings
-Message-ID: <Z6KkBEaGTkSyWiE_@probook>
-References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
- <20250126-ppcyaml-v1-6-50649f51c3dd@posteo.net>
- <Z5qx3jAFE81Ni2cJ@lizhi-Precision-Tower-5810>
+	 Content-Disposition; b=r0oqucjD5ydEMUBGGhmQKK/k4jH4v3t3aiOzN85KDZh0GoooPXrbLJXU8c3AnbU+NDmNx3MbJvpjp36ClnjvxavPPNAJXdT3U5nPh0iavGP9YxzXoUd6Dzl+sd5zQsAZxJDnbri9KBkhAY9Toe2qV9IsPYuTKg+ieRNsvDaGBTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E3WfTwap; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E3WfTwap"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5901C4CED1;
+	Wed,  5 Feb 2025 08:38:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738744682;
+	bh=hCGuwW355QD53Uc4QowtwNlkSZ5A/3EH3Ao7KvYKCrs=;
+	h=Date:From:To:Cc:Subject:From;
+	b=E3WfTwapppVe9Ekob6F5r2UtcUJKXa187NqXkvTbQUQ6t2HOm9dOCK2z8A4pkZgZH
+	 MQxg5BFhv0VbvzHhtjoKAeKs8S3OvRau7gxwEusREKa3Jk3rmqkztcgv2vLRcooJAV
+	 0FW2yXyH7/Y+JSE+V1egH5B8yzN+1AWfiwS9IrNhKUkgBBlCMzvHS4owTft5fp7Sx1
+	 dAluUd3SATAw3CNdrO/NYY93Dujz3z2n67DkJuFAu5FjZcjXOIDihyWO5Qf38qRQUL
+	 w9WfyGtrdaofH4iDOa/PwB9HODLWChQEY5o9t02NVPg5nio9U1aLgjfqhOQ3q0n8tn
+	 2vNJkJiwU1kwQ==
+Date: Wed, 5 Feb 2025 09:37:59 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Dieter Mummenschanz <dmummenschanz@web.de>,
+	Daniel Baumann <daniel@debian.org>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+Subject: Samsung SSD 870 QVO LPM issues
+Message-ID: <Z6MjZ1Nniwn_uldf@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <Z5qx3jAFE81Ni2cJ@lizhi-Precision-Tower-5810>
 
-On Wed, Jan 29, 2025 at 05:55:26PM -0500, Frank Li wrote:
-> On Sun, Jan 26, 2025 at 07:59:01PM +0100, J. Neuschäfer wrote:
-> > Supplement Documentation/devicetree/bindings/pci/fsl,pci.txt with a more
-> > formal binding in YAML format.
-> >
-> > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> > ---
-> >  .../devicetree/bindings/pci/fsl,mpc8xxx-pci.yaml   | 83 ++++++++++++++++++++++
-> >  1 file changed, 83 insertions(+)
-[...]
-> > +examples:
-> > +  - |
-> > +    #include <dt-bindings/interrupt-controller/irq.h>
-> > +
-> > +    pci1: pcie@e0009000 {
-> 
-> needn't label here
+Hello Daniel, Dieter,
 
-Will change.
+Dieter recently submitted an issue on bugzilla that v6.14-rc1
+breaks entering lower power packages states:
+https://bugzilla.kernel.org/show_bug.cgi?id=219747
+
+Most likely, the problem is caused by Daniel's recent commit:
+cc77e2ce187d ("ata: libata-core: Add ATA_QUIRK_NOLPM for Samsung SSD 870
+QVO drives")
+
+Dieter is using 'Samsung SSD 870 QVO 8TB', rev 'SVQ02B6Q'.
+
+No longer being able to enter lower package states, suggests that
+LPM was previously working for Dieter's Samsung SSD 870 QVO drives.
+
+Daniel claimed that enabling LPM for his Samsung SSD 870 QVO drive,
+caused them to stop working.
 
 
-Thanks,
-J. Neuschäfer
+Could it be that you guys are running different firmware versions on
+your Samsung SSD 870 QVO drives, and that Samsung has managed to fix
+their LPM issues in more recent firmware updates?
+
+It seems like Dieter is using firmware 'SVQ02B6Q'
+which also seems to be the latest when looking at:
+https://semiconductor.samsung.com/consumer-storage/support/tools/
+
+Daniel, could you please tell us which firmware version you are using?
+
+We might have to adjust the QUIRK to only apply for the firmware version
+that you are using.
+
+It could also be interesting to see if you could update the firmware on
+your drive, and revert the quirk, and see if LPM is working for you with
+the latest firmware version.
+
+
+Kind regards,
+Niklas
