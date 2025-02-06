@@ -1,33 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2D5214286;
-	Thu,  6 Feb 2025 01:35:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF7E1225A2F;
+	Thu,  6 Feb 2025 12:44:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738805759; cv=none; b=HV+Y7cZ6xUnZ2e6F+Ht0bX1HiVZXJabolbG57oFWmIK8OX/7dNoyNseYVApt/uzFGBa7IxmaMJRtKr4njSTnuSU2kvCUNkMtgqBhwnoYA7njx4GDwsIIbHTzY9IdfGQhrH5MlqqYa1ijfVjg5d8KWxyxZBdtgok7tguxgsFZO3s=
+	t=1738845859; cv=none; b=W2Y//yIangQBYQRfby74cCqxkRH/ef4JGLlASZwMh/K2/8lkh3UBj8Y+1rQILjs11tB1Ty21TUqwOcJ7SEVgU1j/DRXHB4SfOA9g+4AqGfSCZN9flY2AZexRc36LxTvR782aHINVvoYq7LSWjqBFT+HVhFxe1I/t8MdA665ggm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738805759; c=relaxed/simple;
-	bh=Q4HZdbCcFW4AQEovlCAaAVzNXUQINEtWCnz78X28Sx4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KMO+gKnEcdKDg7oXZNyA05COXYXdEFGzydVKgN0ydBwi6nszuY5V3c5JOVDYv5gOe+2V1CvDkT2z7MI4W3YW5668NG83PVTDb+b+p8aLDnZjT9cMjn5nSCaQXsigcg1Jwi9AiwhjnmB9iXS2jdd4Wh3/BxYgj7kSUorSqiOhV+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lxVZoZov; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738845859; c=relaxed/simple;
+	bh=W6jZDK8jApWktPMHm3xVv1mSc6QAOfCwzZr+TF7SbOA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=LoPhmjiIdWT+zxQItuauyBkqsohzItqA9aTPKaRmEHO4AGIOcsJkSRS4MAQHlffSRabyWBc1XwTB91zaezBdGwa22h+ldsshR5r3eytY6ffqU5r9MS8CAaYlqIkX5DgzQoGSnUb0td6crZg9nzfA02ftyQZdYT60VKMYIN2F0Wc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=RlYu1OA8; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lxVZoZov"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DF07C4CEDD;
-	Thu,  6 Feb 2025 01:35:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738805758;
-	bh=Q4HZdbCcFW4AQEovlCAaAVzNXUQINEtWCnz78X28Sx4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lxVZoZovRsjVLxMvu190nbANVY20g3GPuLMXGaOqRLlnJpS+r+lHkQZOtUEwh7dPn
-	 tP3HFnwrYcULRk5cgcy5/EkyJLtcPTeWJk3HR45f1FgANhyo2WBpuD8JVq28pBo8Yk
-	 grdyB0eqQ4okADAe/GMCTFVamhmOYSq4Mxagl2dZ7bMptv52of1uRl21FDW4RBJ+yT
-	 j8YULjoCqlm7QLQgwpuIsDOovIhTdT7OsMyRGoQeLD9IS0TbjBJDaY8u5raFP2ygNm
-	 311iY6SFyL7LdKsrQ4I1rbfn1W+9lA5dDtaqRC6LqAUuE0YaivP9PmgRfAj3tUYcov
-	 a85wubjW9NZ1w==
-Message-ID: <fa54a148-6016-429b-b494-490041564e51@kernel.org>
-Date: Thu, 6 Feb 2025 10:34:53 +0900
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="RlYu1OA8"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 516AGVtk015699;
+	Thu, 6 Feb 2025 12:43:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	L+VuwwPUX96t/cvLAig0W9CrSmNSvF+GAw2WUICZpBM=; b=RlYu1OA8BRoZs37J
+	AlZng96pHzMmd5b/WS3mArhheJxQZkg6wK1Uu8SnYgsX7gZ4zD3Nwywdi2TrgQ/C
+	GyfiRQP7RNKoMpqdyOOGScg/0hvqvCllrhy6E0Y7u2sk1pY0wjXE+zTmvDcI1DZn
+	xnDdgS1E83WqXxVI/EZFbrOPZsAOr997ybn+R+beI6/3xzH4GKU4/HzFL9ogcebC
+	k3y7x/vCJsXs3cD0ZwTmJx1BeyIdu3GBrW8H5JuVZMpGT6jrS1itMQOOSlmtiCNR
+	7dQFerqlN+/t/eYGocVaXBAve+8g0Cfsne1qzTX/EHp5UMvpO+I8rLQL4g/Bqa+G
+	gk1Zbw==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44mu6f0b3a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 06 Feb 2025 12:43:06 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 516Ch5Z4004850
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 6 Feb 2025 12:43:05 GMT
+Received: from [10.216.49.103] (10.80.80.8) by nasanex01c.na.qualcomm.com
+ (10.45.79.139) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 6 Feb 2025
+ 04:42:52 -0800
+Message-ID: <689302c6-8fba-4fd1-a4b7-557cb2f8fa4d@quicinc.com>
+Date: Thu, 6 Feb 2025 18:12:47 +0530
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,115 +50,101 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: libahci_platform: support non-consecutive port
- numbers
-To: Klaus Kudielka <klaus.kudielka@gmail.com>,
- Josua Mayer <josua@solid-run.com>, Niklas Cassel <cassel@kernel.org>,
- Hans de Goede <hdegoede@redhat.com>
-Cc: Jon Nettleton <jon@solid-run.com>,
- Mikhail Anikin <mikhail.anikin@solid-run.com>,
- Yazan Shhady <yazan.shhady@solid-run.com>,
- Rabeeh Khoury <rabeeh@solid-run.com>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20250101-ahci-nonconsecutive-ports-v2-1-38a48f357321@solid-run.com>
- <bcfa145c3227b13e7b9d8bb3b0f92c678464cfdc.camel@gmail.com>
-From: Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH 6/9] dt-bindings: pci: Add fsl,mpc83xx-pcie bindings
+To: =?UTF-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>,
+        Frank Li
+	<Frank.li@nxp.com>
+CC: <devicetree@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+        Scott Wood
+	<oss@buserror.net>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael
+ Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Naveen N Rao
+	<naveen@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski
+	<krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Damien Le Moal
+	<dlemoal@kernel.org>,
+        Niklas Cassel <cassel@kernel.org>,
+        Herbert Xu
+	<herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>, Lee
+ Jones <lee@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Lorenzo Pieralisi
+	<lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+	<kw@linux.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?J=2E_Neusch=C3=A4fer?=
+	<j.neuschaefer@gmx.net>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter
+ Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
+        Miquel Raynal
+	<miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh
+ Raghavendra <vigneshr@ti.com>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-crypto@vger.kernel.org>,
+        <dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-watchdog@vger.kernel.org>, <linux-spi@vger.kernel.org>,
+        <linux-mtd@lists.infradead.org>
+References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
+ <20250126-ppcyaml-v1-6-50649f51c3dd@posteo.net>
+ <Z5qx3jAFE81Ni2cJ@lizhi-Precision-Tower-5810> <Z6KkBEaGTkSyWiE_@probook>
 Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <bcfa145c3227b13e7b9d8bb3b0f92c678464cfdc.camel@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+From: Mukesh Kumar Savaliya <quic_msavaliy@quicinc.com>
+In-Reply-To: <Z6KkBEaGTkSyWiE_@probook>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: TE8H3f9cFLjJrvrDo3x9nlVxTSkbm7Tn
+X-Proofpoint-ORIG-GUID: TE8H3f9cFLjJrvrDo3x9nlVxTSkbm7Tn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-06_03,2025-02-05_03,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1011
+ priorityscore=1501 phishscore=0 suspectscore=0 bulkscore=0
+ lowpriorityscore=0 spamscore=0 mlxlogscore=657 adultscore=0
+ impostorscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2501170000 definitions=main-2502060105
 
-On 2/6/25 3:03 AM, Klaus Kudielka wrote:
-> On Wed, 2025-01-01 at 13:13 +0100, Josua Mayer wrote:
->> So far ahci_platform relied on number of child nodes in firmware to
->> allocate arrays and expected port numbers to start from 0 without holes.
->> This number of ports is then set in private structure for use when
->> configuring phys and regulators.
->>
->> Some platforms may not use every port of an ahci controller.
->> E.g. SolidRUN CN9130 Clearfog uses only port 1 but not port 0, leading
->> to the following errors during boot:
->> [    1.719476] ahci f2540000.sata: invalid port number 1
->> [    1.724562] ahci f2540000.sata: No port enabled
->>
->> Update all accessesors of ahci_host_priv phys and target_pwrs arrays to
->> support holes. Access is gated by hpriv->mask_port_map which has a bit
->> set for each enabled port.
->>
->> Update ahci_platform_get_resources to ignore holes in the port numbers
->> and enable ports defined in firmware by their reg property only.
->>
->> When firmware does not define children it is assumed that there is
->> exactly one port, using index 0.
->>
-> 
+
+
+On 2/5/2025 5:04 AM, J. Neuschäfer wrote:
+> On Wed, Jan 29, 2025 at 05:55:26PM -0500, Frank Li wrote:
+>> On Sun, Jan 26, 2025 at 07:59:01PM +0100, J. Neuschäfer wrote:
+>>> Supplement Documentation/devicetree/bindings/pci/fsl,pci.txt with a more
+>>> formal binding in YAML format.
+>>>
+neat: subject: since binding is already mentioned in the prefix of the 
+subject, no need to add bindings word again.
+>>> Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
+>>> ---
+>>>   .../devicetree/bindings/pci/fsl,mpc8xxx-pci.yaml   | 83 ++++++++++++++++++++++
+>>>   1 file changed, 83 insertions(+)
 > [...]
-> 
->> @@ -625,6 +651,8 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->>  		 * If no sub-node was found, keep this for device tree
->>  		 * compatibility
->>  		 */
->> +		hpriv->mask_port_map |= BIT(0);
->> +
->>  		rc = ahci_platform_get_phy(hpriv, 0, dev, dev->of_node);
->>  		if (rc)
->>  			goto err_out;
+>>> +examples:
+>>> +  - |
+>>> +    #include <dt-bindings/interrupt-controller/irq.h>
+>>> +
+>>> +    pci1: pcie@e0009000 {
 >>
+>> needn't label here
 > 
-> This very last hunk (when firmware does not define children...) causes some change in behaviour on my Turris Omnia
-> (Armada 385):
-> 
-> 6.13.0 bootlog
-> ==============
-> 
-> Feb 05 18:30:45 xxxx kernel: ahci-mvebu f10a8000.sata: AHCI vers 0001.0000, 32 command slots, 6 Gbps, platform mode
-> Feb 05 18:30:45 xxxx kernel: ahci-mvebu f10a8000.sata: 2/2 ports implemented (port mask 0x3)
-> Feb 05 18:30:45 xxxx kernel: ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only pmp fbs pio slum part sxs 
-> Feb 05 18:30:45 xxxx kernel: scsi host0: ahci-mvebu
-> Feb 05 18:30:45 xxxx kernel: scsi host1: ahci-mvebu
-> Feb 05 18:30:45 xxxx kernel: ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff] port 0x100 irq 40 lpm-pol 0
-> Feb 05 18:30:45 xxxx kernel: ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff] port 0x180 irq 40 lpm-pol 0
-> 
-> Previously, both detected ports were automatically used, and no warning was emitted.
-> (hpriv->mask_port_map was 0x0)
+> Will change.
 > 
 > 
-> 6.14.0-rc1 bootlog
-> ==================
+> Thanks,
+> J. Neuschäfer
 > 
-> Feb 05 18:36:40 xxxx kernel: ahci-mvebu f10a8000.sata: masking port_map 0x3 -> 0x1
-> Feb 05 18:36:40 xxxx kernel: ahci-mvebu f10a8000.sata: AHCI vers 0001.0000, 32 command slots, 6 Gbps, platform mode
-> Feb 05 18:36:40 xxxx kernel: ahci-mvebu f10a8000.sata: 1/2 ports implemented (port mask 0x1)
-> Feb 05 18:36:40 xxxx kernel: ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only pmp fbs pio slum part sxs 
-> Feb 05 18:36:40 xxxx kernel: scsi host0: ahci-mvebu
-> Feb 05 18:36:40 xxxx kernel: scsi host1: ahci-mvebu
-> Feb 05 18:36:40 xxxx kernel: ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff] port 0x100 irq 40 lpm-pol 0
-> Feb 05 18:36:40 xxxx kernel: ata2: DUMMY
-> 
-> Now, hpriv->mask_port_map is forced to 0x1, resulting in a kernel warning, and no more ata2 available.
-> In my particular case it is not a big deal, since nothing is connected to the 2nd port, and I can live with this obscure warning.
-> 
-> But that might not be the case for everybody?
 
-Can you try this to see if it restores the probe for the second port:
-
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 53b2c7719dc5..91d44302eac9 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -651,8 +651,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct
-platform_device *pdev,
-                 * If no sub-node was found, keep this for device tree
-                 * compatibility
-                 */
--               hpriv->mask_port_map |= BIT(0);
--
-                rc = ahci_platform_get_phy(hpriv, 0, dev, dev->of_node);
-                if (rc)
-                        goto err_out;
-
-
--- 
-Damien Le Moal
-Western Digital Research
