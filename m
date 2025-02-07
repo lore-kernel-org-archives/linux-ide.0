@@ -1,109 +1,149 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DB1823C8CB;
-	Fri,  7 Feb 2025 19:45:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C53323C8C3;
+	Fri,  7 Feb 2025 21:30:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738957520; cv=none; b=OtLCkBToSYpY/w8prgmg90cJFu9r+kgp9S3rDoO3lEPr++GRq+oJqzpmH75kS5n9H7Ce4EuIBjUq5LhPfDcoNArvdgvVTVeuRNE+hpKhLEw19WOlqiTs5D/ZG7mv05vxa6O3k1aPs+8tg9kMH3uWDk2H9lb2SlxSKMyxeBmt2k8=
+	t=1738963835; cv=none; b=Mjr7r8lQgCIYdsV0xkLiLNItAXN9K7LU9vY+HrMpTAl0OZJZ4tnCrxBEP4mWZKHuTipLIkicY9b2+zRgvsLn5/zWvQIsgD7YBsIpZbbPhEpl7hlkVDNScTmphvBnIGaVD3huCMJ7UFNhIXfPzE/2zlCAa2mWwI0++rkiigaHZkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738957520; c=relaxed/simple;
-	bh=mQMp2Q4K9qMcm2adb9zu4siRw7YphIPITTmEykH+ZIs=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=eD2pHHrEE9gatxJX0R1/6lLV0R3twzqGgfaklhevwvvtdQYNQIerzpAcsJZPQ2QBjrPII5Yr79khlx97hkPyZJAif3dSD7734Ag4HsgqkdDcw/v3r1qpTPBHrUnR2WQYV+WrvwDdH70czwNtECvA6BHl1QDi0VMIi9JM03FGQpQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JQsftHSk; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1738963835; c=relaxed/simple;
+	bh=94ujvz3tk5ekjf2MZlbHHWzbwwWLaHAsa3ywPEveVtA=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=YkvhxOXaAU6j8g+5jLZPey9XhwD9OXuydAfiM70GFOQqxNpc5ahGvxlLi4KPS5m5b5W1lBCoejvHpjibSPPYc+XhikEaED6ZFJ36Tv3eIvKH1i5mxgM2iSBY+7cU2SFIxZpZMB0ma+eboT+ty+z2GPzwb66Hb0CytfkJLe3jsnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cfve54Sx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JQsftHSk"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-38dd0dc2226so339232f8f.2;
-        Fri, 07 Feb 2025 11:45:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738957517; x=1739562317; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=/3TFXYa/aO92AWFEhX81Q70LQNPuijI5G6HSoxTBVD8=;
-        b=JQsftHSko3f8vqPK2clwP368jyer8/1T2nzIJA7o/MYW1LDYcP2NxyF4Q2EB22ncAb
-         NLHg8zwO3Mg+kBx4oI+5Dp8H3V/sjM35O0U6qVRKfG9E6O0aE8XSatGdPB5hjn9Hm6dn
-         6UPE8xyGnYMe6z/Lq2xOd3+myfZ1JegmXsNXJ+24kB97uB9EB16rLp1WHFZlMgEY1JIE
-         0QsAVM0K/1ZgoC1lxcqSS67+JJ0eqPAVwSFZVOWpVD0ks3+6qkPdcRWkQLv0sb/Zohvp
-         +GcEowEuuCk/PJ1G8ueiGHHTpcrPRea6ziQu8rDyn5CPLAv0qt9EbK3CJdIHaUwgnWYo
-         oqDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738957517; x=1739562317;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/3TFXYa/aO92AWFEhX81Q70LQNPuijI5G6HSoxTBVD8=;
-        b=eBXdzZYDtBld9SERe2WZs/uhVg+7VGGDb9dhOYCvpfm0g3Y9IXB51thAc0oHZCDY2O
-         izVmsH4yEG8B+a/s24SYqL1BUP97pyd7intAxnpxBtodIGjkEzpmONlMRXdOVCQMBWKw
-         BBvjmBhjM+3BGQCFPwIByAPghf2ccOytgT361pq1mt4HNzozAt6hkNuym9VW80+y1AhW
-         CNWqnn8O03ju4NF7lI6mepa1t2tykVLsgiUzjtV/FJRdYuXrBONwyRgvbjhet/GwCKsc
-         FD9EXCceZUKv9a80wqdrmK62wgrVdRAFDO6aHZBhw4T4PPd90GLhaWP1MZP1qU3FM3Nz
-         8LXw==
-X-Forwarded-Encrypted: i=1; AJvYcCUrVJ29rC5P+6gq7wgvDDZy7gT+4sfDVhTpOYNuI6zt4cznrLC3RBYjIX/CSpHhFixbaHmKi+9Rto0=@vger.kernel.org, AJvYcCVZTEkIKS0RM7USBfAgXAmvtVBtAtdnD9GiC7mPVgeidctiK52GFD/XgtlwQUrbX0r2kvFTI1lJTrm5xOo2@vger.kernel.org
-X-Gm-Message-State: AOJu0YyyXhndPHe+qofRzoH28OdJULroO8CBZEtgjCodQOV+lQT4PFGf
-	1Ro7AkJaaoAUQOcQPSI59zXeNlhcevOFq2UJsRTKOekX3T74nex99WAXUScV
-X-Gm-Gg: ASbGnctfImDK1FHF1fE09u88eFXYsIyTxIedG6YJ0QH16vg9/aeTyJbIFH+0QDpjVVS
-	oMhlNTz/yMjg0c/gkOO4pfVHBlcii7+GQG2bIuU7EUPxjoi5fc0TPwKgGehWq8jxbXe5+266Ocp
-	NlGXSreO5bG/t18ya/PcovZ2+ixzYPGtmSfZ61WDQSk532XwFUFIXTgGJNapkquJcT0syeQIGhe
-	7MxDNoVZYzyyH7o2FwWwNX1YGWkhJNwQNstLjNjNU6V2GDYUi9VyzDI8PGYJF/Iuubjcp60zZUw
-	Bzugro50BVViddo+fLi/gfxjX2AJ+iKELMgxe5Gk80L6xQ/FqiGlmSgb5ek21g==
-X-Google-Smtp-Source: AGHT+IHfVO3TmcFE6wwThceqlTu7GIBKI3hiMo4CU69DJ4VtkgliD/l6s9beMA7RTDnWO94SX6B5rg==
-X-Received: by 2002:a5d:64ad:0:b0:38d:c5c7:4f07 with SMTP id ffacd0b85a97d-38dc8dd07bemr4034237f8f.16.1738957516438;
-        Fri, 07 Feb 2025 11:45:16 -0800 (PST)
-Received: from ?IPv6:2a02:168:6806:0:865e:8fbc:80e7:2e03? ([2a02:168:6806:0:865e:8fbc:80e7:2e03])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4391dfd7d7asm63183025e9.36.2025.02.07.11.45.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Feb 2025 11:45:15 -0800 (PST)
-Message-ID: <cb8175c2755557dd6532ee71d1064241a1412ce2.camel@gmail.com>
-Subject: Re: [PATCH v2] ata: libahci_platform: support non-consecutive port
- numbers
-From: Klaus Kudielka <klaus.kudielka@gmail.com>
-To: Josua Mayer <josua@solid-run.com>, Damien Le Moal <dlemoal@kernel.org>, 
- Niklas Cassel <cassel@kernel.org>, Hans de Goede <hdegoede@redhat.com>
-Cc: Jon Nettleton <jon@solid-run.com>, Mikhail Anikin	
- <mikhail.anikin@solid-run.com>, Yazan Shhady <yazan.shhady@solid-run.com>, 
- Rabeeh Khoury <rabeeh@solid-run.com>, "linux-ide@vger.kernel.org"
- <linux-ide@vger.kernel.org>,  "linux-kernel@vger.kernel.org"	
- <linux-kernel@vger.kernel.org>
-Date: Fri, 07 Feb 2025 20:45:15 +0100
-In-Reply-To: <08981396-59d9-4be6-91c7-83421706931a@solid-run.com>
-References: 
-	<20250101-ahci-nonconsecutive-ports-v2-1-38a48f357321@solid-run.com>
-	 <bcfa145c3227b13e7b9d8bb3b0f92c678464cfdc.camel@gmail.com>
-	 <fa54a148-6016-429b-b494-490041564e51@kernel.org>
-	 <016bbf83fec9a0a7c7697462ce0970b94572f50c.camel@gmail.com>
-	 <08981396-59d9-4be6-91c7-83421706931a@solid-run.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.54.3-2 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfve54Sx"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0CBADC4CED1;
+	Fri,  7 Feb 2025 21:30:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738963835;
+	bh=94ujvz3tk5ekjf2MZlbHHWzbwwWLaHAsa3ywPEveVtA=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=cfve54Sxfr9QBL7efbkka4gqbqtmLqDIX7fxuTzqbSgJRFcfeed3+Xr+9fKlcgoO0
+	 7SkednyYe2a+mlwJXN/glHoULVuuNp1baglH2iIOGjL+wNZ+jRBjylOQx6u0p5+ZBl
+	 dMyKW521/HplkdQ4imXzl6l6fSsYfVhNa5B42O6un/jk4TqpNh8LMY+JP6I5TeqJtI
+	 D+hMbghbT5SMbxIjdMfsO1nwhUBYR53hrYmqyIhj7ciuV4+FQgVOboC0ytQwYr68hX
+	 G4Sie13QcWfrJYErG7fN0GLjtfB3Vq/d//lMLHG1rsxBb8gSVPyyrXdt0fxq4WzU4A
+	 L30mdjjFq+xFQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE5C6C02194;
+	Fri,  7 Feb 2025 21:30:34 +0000 (UTC)
+From: =?utf-8?q?J=2E_Neusch=C3=A4fer_via_B4_Relay?= <devnull+j.ne.posteo.net@kernel.org>
+Subject: [PATCH v2 00/12] YAML conversion of several Freescale/PowerPC DT
+ bindings
+Date: Fri, 07 Feb 2025 22:30:17 +0100
+Message-Id: <20250207-ppcyaml-v2-0-8137b0c42526@posteo.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAGp7pmcC/2XMQQ7CIBCF4as0sxYDVEh11XuYLuowWBItBAixa
+ bi72K3L/+Xl2yFRdJTg1u0Qqbjk/NpCnjrAZV6fxJxpDZJLxYXULATc5veL6YEjmuHRW5TQ3iG
+ SdZ9Duk+tF5eyj9sBF/Fb/40iGGeK68vVKoG9MWPwKZM/r5RhqrV+AeTPTISfAAAA
+X-Change-ID: 20250126-ppcyaml-680ccd8b3fc2
+To: devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+ Krzysztof Kozlowski <krzk@kernel.org>
+Cc: imx@lists.linux.dev, Scott Wood <oss@buserror.net>, 
+ Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ Christophe Leroy <christophe.leroy@csgroup.eu>, 
+ Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, 
+ "David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>, 
+ Vinod Koul <vkoul@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>, 
+ Wim Van Sebroeck <wim@linux-watchdog.org>, 
+ Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>, 
+ Miquel Raynal <miquel.raynal@bootlin.com>, 
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
+ linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-watchdog@vger.kernel.org, 
+ linux-spi@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1738963832; l=3147;
+ i=j.ne@posteo.net; s=20240329; h=from:subject:message-id;
+ bh=94ujvz3tk5ekjf2MZlbHHWzbwwWLaHAsa3ywPEveVtA=;
+ b=9ApSQvdR7H4b5oYJC3cFy1ErDfu4w+UKbTU0bUdy14D+XfqSBEdTRk2y9o2+fy4Ll7XwAb/Ap
+ 0ovzTOSCrwXC+++bUZmGcEPJeGRovxiY/IKS/grKdK9HL/fa7Yy7Bo+
+X-Developer-Key: i=j.ne@posteo.net; a=ed25519;
+ pk=NIe0bK42wNaX/C4bi6ezm7NJK0IQE+8MKBm7igFMIS4=
+X-Endpoint-Received: by B4 Relay for j.ne@posteo.net/20240329 with
+ auth_id=156
+X-Original-From: =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
+Reply-To: j.ne@posteo.net
 
-On Fri, 2025-02-07 at 11:22 +0000, Josua Mayer wrote:
->=20
-> Can you confirm the physical number of sata ports on your board?
->=20
+This is a spin-off of the series titled
+"powerpc: MPC83xx cleanup and LANCOM NWAPP2 board".
 
-The second port indeed seems not wired on Turris Omnia.
-If the "masking port_map 0x3 -> 0x1" kernel warning had not suddenly appear=
-ed, I would not have noticed this at all.
+During the development of that series, it became clear that many
+devicetree bindings for Freescale MPC8xxx platforms are still in the old
+plain-text format, or don't exist at all, and in any case don't mention
+all valid compatible strings.
 
-> I would be curious whether in another board that has two ports physically=
-,
-> whether both of them were functional before my patch.
+Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
+---
+Changes in v2:
+- rebased on v6.14-rc1
+- various style cleanups, both in YAML and in DTS examples
+- minor improvements to the commit messages
+- Link to v1: https://lore.kernel.org/r/20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net
 
-I don't have such a board, but to me it seems the existing code was made ex=
-actly for that case.
+---
+J. Neuschäfer (12):
+      dt-bindings: powerpc: Add Freescale/NXP MPC83xx SoCs
+      dt-bindings: ata: Convert fsl,pq-sata to YAML
+      dt-bindings: crypto: Convert fsl,sec-2.0 to YAML
+      dt-bindings: mfd: Convert fsl,mcu-mpc8349emitx to YAML
+      dt-bindings: dma: Convert fsl,elo*-dma to YAML
+      dt-bindings: pci: Convert fsl,mpc83xx-pcie to YAML
+      dt-bindings: watchdog: Convert mpc8xxx-wdt to YAML
+      dt-bindings: spi: Convert Freescale SPI bindings to YAML
+      dt-bindings: memory-controllers: Convert fsl,elbc to YAML
+      dt-bindings: memory-controllers: Add fsl,elbc-gpcm-uio
+      dt-bindings: nand: Add fsl,elbc-fcm-nand
+      dt-bindings: mtd: raw-nand-chip: Relax node name pattern
 
-For reference, my board later reports
-  ata2: SATA link down (SStatus 0 SControl 300)
-  ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+ .../devicetree/bindings/ata/fsl,pq-sata.yaml       |  59 ++++++
+ Documentation/devicetree/bindings/ata/fsl-sata.txt |  28 ---
+ .../devicetree/bindings/crypto/fsl,sec2.0.yaml     | 142 ++++++++++++++
+ .../devicetree/bindings/crypto/fsl-sec2.txt        |  65 -------
+ .../devicetree/bindings/dma/fsl,elo-dma.yaml       | 140 ++++++++++++++
+ .../devicetree/bindings/dma/fsl,elo3-dma.yaml      | 123 +++++++++++++
+ .../devicetree/bindings/dma/fsl,eloplus-dma.yaml   | 134 ++++++++++++++
+ .../memory-controllers/fsl,elbc-gpcm-uio.yaml      |  59 ++++++
+ .../bindings/memory-controllers/fsl,elbc.yaml      | 146 +++++++++++++++
+ .../bindings/mfd/fsl,mcu-mpc8349emitx.yaml         |  53 ++++++
+ .../devicetree/bindings/mtd/fsl,elbc-fcm-nand.yaml |  68 +++++++
+ .../devicetree/bindings/mtd/raw-nand-chip.yaml     |   2 +-
+ .../devicetree/bindings/pci/fsl,mpc8xxx-pci.yaml   | 115 ++++++++++++
+ Documentation/devicetree/bindings/pci/fsl,pci.txt  |  27 ---
+ .../devicetree/bindings/powerpc/fsl/dma.txt        | 204 ---------------------
+ .../bindings/powerpc/fsl/fsl,mpc83xx.yaml          |  67 +++++++
+ .../devicetree/bindings/powerpc/fsl/lbc.txt        |  43 -----
+ .../bindings/powerpc/fsl/mcu-mpc8349emitx.txt      |  17 --
+ .../devicetree/bindings/spi/fsl,espi.yaml          |  64 +++++++
+ Documentation/devicetree/bindings/spi/fsl,spi.yaml |  73 ++++++++
+ Documentation/devicetree/bindings/spi/fsl-spi.txt  |  62 -------
+ .../devicetree/bindings/watchdog/mpc8xxx-wdt.txt   |  25 ---
+ .../devicetree/bindings/watchdog/mpc8xxx-wdt.yaml  |  64 +++++++
+ 23 files changed, 1308 insertions(+), 472 deletions(-)
+---
+base-commit: 2014c95afecee3e76ca4a56956a936e23283f05b
+change-id: 20250126-ppcyaml-680ccd8b3fc2
 
-Best regards, Klaus
+Best regards,
+-- 
+J. Neuschäfer <j.ne@posteo.net>
+
+
