@@ -1,87 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D114D194091;
-	Fri,  7 Feb 2025 23:17:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFD0E19F422
+	for <linux-ide@vger.kernel.org>; Fri,  7 Feb 2025 23:30:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738970263; cv=none; b=e5QwQAyOd5bBw4V70OLNi0vcuII+BAmzryuOD/qdTl2e8WUOIflrAlXGhmCAbKzB825tNlyTZlVKqh0r/Q/vud4EFSiw9UOGOxXc+fmAi/tD969G8l2GzZ+O5HiDnYn8HQc1MKc0jPVq39Dc4rArsaxm6rfMzGRxUIRtkTWE4SY=
+	t=1738971021; cv=none; b=Z93f+ZrRY0kADSaFAMwIRemlvbaqUyeQoqIYlQL3E/vNF5yD7PCuDIrFGmgZULSMwzB5NgF+sjsTFrhlJ1GJPPVtC0PJb7GPM4iEmW7hLRd7Z9FuOEvsanI0/lorkXstVN4bJ9pIRdo1stUd5jPvM1M9VkLSapts0Uwc8u/66Xs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738970263; c=relaxed/simple;
-	bh=uBu6t4ty0hQZKKSCZBRKb4E9WpdD1GpGMPNfBVQXDVg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BKfghTE94I+QN6B0lBCgPsiW92/aEQ1umLsQqSLBGlSr80CdZ4yOMq2TOT7f/7KpJr62f2zQoXLJGHrQpXkJTxLvjNu+3BMGUcV1SbzofLtNcpaX+Mo4Y7kaJghdhhaMhQi3I024PuPfGTx2iI1BLl2XiIcafm6fG9HHGY2O+jk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nvPoqqau; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738971021; c=relaxed/simple;
+	bh=jQbAtwSLSmO2A+d8x0tdgw1d/2oEgcM7W7xVAgXEPCA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=e5BehtC9YhzglGMhZPCFdUlIpF5MALMJIju2haVQ7t6mESrjAzcojv0A67edmcyyyjyhUK+uyhMm4W4QPhd5yQbyMMdiponvCIw/+Gee2gDr+lTKnQiiErrANZPCCAuSH3ZB/HAc21qUw02ClRVk7U86w2pbg1ZZI9ondfsl4BQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fty2d1/J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nvPoqqau"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0028C4CEE2;
-	Fri,  7 Feb 2025 23:17:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fty2d1/J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B572EC4CED1;
+	Fri,  7 Feb 2025 23:30:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738970260;
-	bh=uBu6t4ty0hQZKKSCZBRKb4E9WpdD1GpGMPNfBVQXDVg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=nvPoqqaucbZ+Zi7dcFcDf19MmSlaU676cQ27+TNgNPph5SnE0OcWAbUo6mtU6XA70
-	 CRj64dcDZGAl20MNFWj5ElGlRslwwc5/82rTjSJ/eeDkPagVEXOvKsD37lz5OmauQ/
-	 BljW5xyk6RVr97YBC4nN3jG9BDk7HPMnGeR5w/afedLrOmISQIhvJXZa2NMYrUgnwM
-	 +ems6aj8tw36WCnlJU03Wieogvtqo9kWaQrsmW8KgpgFP0XAmUNUufDSjHc1B4z7ZF
-	 HP5wB6OAf2XEnk0gkYoiiGTKTKW1VOfe52a2OyomRnFgIxjFCNSp7ViFtzhQ4/rN4C
-	 MKlSVzR3S6BAg==
-Message-ID: <8de72c76-6fea-4f8a-b818-72c8de07a78c@kernel.org>
-Date: Sat, 8 Feb 2025 08:17:34 +0900
+	s=k20201202; t=1738971020;
+	bh=jQbAtwSLSmO2A+d8x0tdgw1d/2oEgcM7W7xVAgXEPCA=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Fty2d1/J0zvqyxZ/Pl2vCB4oMkhs+XJaP6463WkmPMwJ8OJl8WXnCoJITgzpX6oDv
+	 zF4PaWEy8ujwZfy9O3YEQjzUwCDwVVLZZZCBVFMNDu44NalnerpohUoBOOKna2RpWy
+	 EHpnhTw04PwAkuAq4impwTJa2sqGpoS6HVIsrI/NWOuogfaAXC04RaMPwcM+dMj1to
+	 EaKX6ss0dfXOSbwWwr2Tf05dnSEREptL0tcdzuP2UVelAO1W7YgpIYNTKRrgPqJWhQ
+	 QsYdhgDAq098zFlNECAlSk6SHr79BxDPvVFVcPLRFUj5nG+eSCV5dYQMnqXoaS5AMj
+	 xdqArw/c1OBwQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Klaus Kudielka <klaus.kudielka@gmail.com>,
+	Josua Mayer <josua@solid-run.com>
+Subject: [PATCH v2] ata: libahci_platform: Do not set mask_port_map when not needed
+Date: Sat,  8 Feb 2025 08:29:15 +0900
+Message-ID: <20250207232915.1439174-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 02/12] dt-bindings: ata: Convert fsl,pq-sata to YAML
-To: j.ne@posteo.net, devicetree@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, Krzysztof Kozlowski <krzk@kernel.org>
-Cc: imx@lists.linux.dev, Scott Wood <oss@buserror.net>,
- Madhavan Srinivasan <maddy@linux.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
- Christophe Leroy <christophe.leroy@csgroup.eu>,
- Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Herbert Xu <herbert@gondor.apana.org.au>,
- "David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
- Vinod Koul <vkoul@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?J=2E_Neusch=C3=A4fer?=
- <j.neuschaefer@gmx.net>, Wim Van Sebroeck <wim@linux-watchdog.org>,
- Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
- Miquel Raynal <miquel.raynal@bootlin.com>,
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
- linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-watchdog@vger.kernel.org,
- linux-spi@vger.kernel.org, linux-mtd@lists.infradead.org
-References: <20250207-ppcyaml-v2-0-8137b0c42526@posteo.net>
- <20250207-ppcyaml-v2-2-8137b0c42526@posteo.net>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250207-ppcyaml-v2-2-8137b0c42526@posteo.net>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 2/8/25 06:30, J. Neuschäfer via B4 Relay wrote:
-> From: "J. Neuschäfer" <j.ne@posteo.net>
-> 
-> Convert the Freescale PowerQUICC SATA controller binding from text form
-> to YAML. The list of compatible strings reflects current usage.
-> 
-> To clarify the description, I changed it to mention "each SATA
-> controller" instead of each port.
-> 
-> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
-> Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
+Commit 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive
+port numbers") modified ahci_platform_get_resources() to allow
+identifying the ports of a controller that are defined as child nodes of
+the controller node in order to support non-consecutive port numbers (as
+defined by the platform device tree).
 
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
+However, this commit also erroneously sets bit 0 of
+hpriv->mask_port_map when the platform devices tree does not define port
+child nodes, to match the fact that the temporary default number of
+ports used in that case is 1 (which is also consistent with the fact
+that only index 0 of hpriv->phys[] is initialized with the call to
+ahci_platform_get_phy(). But doing so causes ahci_platform_init_host()
+to initialize and probe only the first port, even if this function
+determines that the controller has in fact multiple ports using the
+capability register of the controller (through a call to
+ahci_nr_ports()). This can be seen with the ahci_mvebu driver (Armada
+385 SoC) with the second port declared as "dummy":
 
+ahci-mvebu f10a8000.sata: masking port_map 0x3 -> 0x1
+ahci-mvebu f10a8000.sata: AHCI vers 0001.0000, 32 command slots, 6 Gbps, platform mode
+ahci-mvebu f10a8000.sata: 1/2 ports implemented (port mask 0x1)
+ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only pmp fbs pio slum part sxs
+scsi host0: ahci-mvebu
+scsi host1: ahci-mvebu
+ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff] port 0x100 irq 40 lpm-pol 0
+ata2: DUMMY
+
+Fix this issue by removing setting bit 0 of hpriv->mask_port_map when
+the platform device tree does not define port child nodes.
+
+Reported-by: Klaus Kudielka <klaus.kudielka@gmail.com>
+Fixes: 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive port numbers")
+Tested-by: Klaus Kudielka <klaus.kudielka@gmail.com>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+Changes from v1:
+ - Improved commit message (fixed typos, added example and removed
+   cc-stable tag).
+
+ drivers/ata/libahci_platform.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 53b2c7719dc5..91d44302eac9 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -651,8 +651,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		 * If no sub-node was found, keep this for device tree
+ 		 * compatibility
+ 		 */
+-		hpriv->mask_port_map |= BIT(0);
+-
+ 		rc = ahci_platform_get_phy(hpriv, 0, dev, dev->of_node);
+ 		if (rc)
+ 			goto err_out;
 -- 
-Damien Le Moal
-Western Digital Research
+2.48.1
+
