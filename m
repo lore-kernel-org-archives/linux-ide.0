@@ -1,102 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFD0E19F422
-	for <linux-ide@vger.kernel.org>; Fri,  7 Feb 2025 23:30:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819AB1D90C5;
+	Fri,  7 Feb 2025 23:44:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738971021; cv=none; b=Z93f+ZrRY0kADSaFAMwIRemlvbaqUyeQoqIYlQL3E/vNF5yD7PCuDIrFGmgZULSMwzB5NgF+sjsTFrhlJ1GJPPVtC0PJb7GPM4iEmW7hLRd7Z9FuOEvsanI0/lorkXstVN4bJ9pIRdo1stUd5jPvM1M9VkLSapts0Uwc8u/66Xs=
+	t=1738971899; cv=none; b=psAjnaS8c9LSd/PMTikhIyLN1t2rPrdeNiqAPD+MJrP7UP9fJOOlk9qjyQWa+2uMurhgmaYlvXUxmixBxiWGdKODFBJes5S3affzuSRzWJMQgF949OdGHomH+s0/TJ6LfhARDFcmn169Scnw267S+jVbK9XYTwA0qPUxID40Nh4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738971021; c=relaxed/simple;
-	bh=jQbAtwSLSmO2A+d8x0tdgw1d/2oEgcM7W7xVAgXEPCA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=e5BehtC9YhzglGMhZPCFdUlIpF5MALMJIju2haVQ7t6mESrjAzcojv0A67edmcyyyjyhUK+uyhMm4W4QPhd5yQbyMMdiponvCIw/+Gee2gDr+lTKnQiiErrANZPCCAuSH3ZB/HAc21qUw02ClRVk7U86w2pbg1ZZI9ondfsl4BQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fty2d1/J; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738971899; c=relaxed/simple;
+	bh=0OcYIgMuhOEeKZ02PL/wKdLJvCr/x2GC0bB/FCHa3js=;
+	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
+	 Message-Id:Subject; b=Q51Tm/BbbGJDF8bfy8IxVtHzCWywLPm0f8o1D1q2EYMItRrBk8V/Pe1ihxPlL52rzducqKNwNd2W4x2CiX1fd6ng5EMUYY+/66uNabJiojZJVDOUrcFYi0Y1/YvIWC6daE+97Hbn5wnHLf3hTNpQ5IQZhrG4jL1deqLhgJUqH9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FcFD7E6x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fty2d1/J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B572EC4CED1;
-	Fri,  7 Feb 2025 23:30:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FcFD7E6x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7666C4CED1;
+	Fri,  7 Feb 2025 23:44:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738971020;
-	bh=jQbAtwSLSmO2A+d8x0tdgw1d/2oEgcM7W7xVAgXEPCA=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Fty2d1/J0zvqyxZ/Pl2vCB4oMkhs+XJaP6463WkmPMwJ8OJl8WXnCoJITgzpX6oDv
-	 zF4PaWEy8ujwZfy9O3YEQjzUwCDwVVLZZZCBVFMNDu44NalnerpohUoBOOKna2RpWy
-	 EHpnhTw04PwAkuAq4impwTJa2sqGpoS6HVIsrI/NWOuogfaAXC04RaMPwcM+dMj1to
-	 EaKX6ss0dfXOSbwWwr2Tf05dnSEREptL0tcdzuP2UVelAO1W7YgpIYNTKRrgPqJWhQ
-	 QsYdhgDAq098zFlNECAlSk6SHr79BxDPvVFVcPLRFUj5nG+eSCV5dYQMnqXoaS5AMj
-	 xdqArw/c1OBwQ==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Klaus Kudielka <klaus.kudielka@gmail.com>,
-	Josua Mayer <josua@solid-run.com>
-Subject: [PATCH v2] ata: libahci_platform: Do not set mask_port_map when not needed
-Date: Sat,  8 Feb 2025 08:29:15 +0900
-Message-ID: <20250207232915.1439174-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.48.1
+	s=k20201202; t=1738971899;
+	bh=0OcYIgMuhOEeKZ02PL/wKdLJvCr/x2GC0bB/FCHa3js=;
+	h=Date:From:Cc:To:In-Reply-To:References:Subject:From;
+	b=FcFD7E6x/lq9R9GSbnFWQ84X6jA3wHn8MV9k9BwUEU5Jy3GduQqYEh0TAxZg84hd6
+	 U/1mtO4DOlNDyWNaUYLvCvf330mxj9hdZo3Ap9AdXSFLJzN989NVrfwM7hrblNq5Vg
+	 rBgXMw5MXP4WKs2vld+G4/TK0CCvjuFMv45Pt2rv7LGomPO/wwwhXgaUbVlAhiwJ0k
+	 FKpaEdfJWr8j/V+qutaVdWXkjF/AlONGhMFLYgFT7+ApRz3JHy5WCCZbmTdYAil683
+	 nEtQYHSdNFhl0ynU/NrzOmE9kS6c2Mv3qEwGLvCA6rIlaSL+WsaycsHH/XLRHNOch/
+	 7FrFsFlmciVrg==
+Date: Fri, 07 Feb 2025 17:44:57 -0600
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Richard Weinberger <richard@nod.at>, linux-pci@vger.kernel.org, 
+ Nicholas Piggin <npiggin@gmail.com>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ Christophe Leroy <christophe.leroy@csgroup.eu>, 
+ Mark Brown <broonie@kernel.org>, Vignesh Raghavendra <vigneshr@ti.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, linux-crypto@vger.kernel.org, 
+ imx@lists.linux.dev, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ linuxppc-dev@lists.ozlabs.org, linux-spi@vger.kernel.org, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ linux-kernel@vger.kernel.org, Miquel Raynal <miquel.raynal@bootlin.com>, 
+ =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>, 
+ Vinod Koul <vkoul@kernel.org>, Michael Ellerman <mpe@ellerman.id.au>, 
+ Krzysztof Kozlowski <krzk@kernel.org>, 
+ Wim Van Sebroeck <wim@linux-watchdog.org>, 
+ Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Naveen N Rao <naveen@kernel.org>, 
+ Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Damien Le Moal <dlemoal@kernel.org>, devicetree@vger.kernel.org, 
+ dmaengine@vger.kernel.org, Scott Wood <oss@buserror.net>, 
+ Guenter Roeck <linux@roeck-us.net>, "David S. Miller" <davem@davemloft.net>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Conor Dooley <conor+dt@kernel.org>, 
+ linux-watchdog@vger.kernel.org, Lee Jones <lee@kernel.org>, 
+ linux-mtd@lists.infradead.org
+To: =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
+In-Reply-To: <20250207-ppcyaml-v2-6-8137b0c42526@posteo.net>
+References: <20250207-ppcyaml-v2-0-8137b0c42526@posteo.net>
+ <20250207-ppcyaml-v2-6-8137b0c42526@posteo.net>
+Message-Id: <173897189562.2630598.5483742714479681257.robh@kernel.org>
+Subject: Re: [PATCH v2 06/12] dt-bindings: pci: Convert fsl,mpc83xx-pcie to
+ YAML
 
-Commit 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive
-port numbers") modified ahci_platform_get_resources() to allow
-identifying the ports of a controller that are defined as child nodes of
-the controller node in order to support non-consecutive port numbers (as
-defined by the platform device tree).
 
-However, this commit also erroneously sets bit 0 of
-hpriv->mask_port_map when the platform devices tree does not define port
-child nodes, to match the fact that the temporary default number of
-ports used in that case is 1 (which is also consistent with the fact
-that only index 0 of hpriv->phys[] is initialized with the call to
-ahci_platform_get_phy(). But doing so causes ahci_platform_init_host()
-to initialize and probe only the first port, even if this function
-determines that the controller has in fact multiple ports using the
-capability register of the controller (through a call to
-ahci_nr_ports()). This can be seen with the ahci_mvebu driver (Armada
-385 SoC) with the second port declared as "dummy":
+On Fri, 07 Feb 2025 22:30:23 +0100, J. Neuschäfer wrote:
+> Formalise the binding for the PCI controllers in the Freescale MPC8xxx
+> chip family. Information about PCI-X-specific properties was taken from
+> fsl,pci.txt. The examples were taken from mpc8315erdb.dts and
+> xpedite5200_xmon.dts.
+> 
+> Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
+> ---
+> 
+> V2:
+> - merge fsl,pci.txt into fsl,mpc8xxx-pci.yaml
+> - regroup compatible strings, list single-item values in one enum
+> - trim subject line (remove "binding")
+> - fix property order to comply with dts coding style
+> ---
+>  .../devicetree/bindings/pci/fsl,mpc8xxx-pci.yaml   | 115 +++++++++++++++++++++
+>  Documentation/devicetree/bindings/pci/fsl,pci.txt  |  27 -----
+>  2 files changed, 115 insertions(+), 27 deletions(-)
+> 
 
-ahci-mvebu f10a8000.sata: masking port_map 0x3 -> 0x1
-ahci-mvebu f10a8000.sata: AHCI vers 0001.0000, 32 command slots, 6 Gbps, platform mode
-ahci-mvebu f10a8000.sata: 1/2 ports implemented (port mask 0x1)
-ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only pmp fbs pio slum part sxs
-scsi host0: ahci-mvebu
-scsi host1: ahci-mvebu
-ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff] port 0x100 irq 40 lpm-pol 0
-ata2: DUMMY
+My bot found errors running 'make dt_binding_check' on your patch:
 
-Fix this issue by removing setting bit 0 of hpriv->mask_port_map when
-the platform device tree does not define port child nodes.
+yamllint warnings/errors:
 
-Reported-by: Klaus Kudielka <klaus.kudielka@gmail.com>
-Fixes: 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive port numbers")
-Tested-by: Klaus Kudielka <klaus.kudielka@gmail.com>
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
-Changes from v1:
- - Improved commit message (fixed typos, added example and removed
-   cc-stable tag).
+dtschema/dtc warnings/errors:
 
- drivers/ata/libahci_platform.c | 2 --
- 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 53b2c7719dc5..91d44302eac9 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -651,8 +651,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 		 * If no sub-node was found, keep this for device tree
- 		 * compatibility
- 		 */
--		hpriv->mask_port_map |= BIT(0);
--
- 		rc = ahci_platform_get_phy(hpriv, 0, dev, dev->of_node);
- 		if (rc)
- 			goto err_out;
--- 
-2.48.1
+doc reference errors (make refcheckdocs):
+Warning: Documentation/devicetree/bindings/pci/fsl,mpc8xxx-pci.yaml references a file that doesn't exist: Documentation/devicetree/bindings/pci/fsl,pci.txt
+Documentation/devicetree/bindings/pci/fsl,mpc8xxx-pci.yaml: Documentation/devicetree/bindings/pci/fsl,pci.txt
+
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20250207-ppcyaml-v2-6-8137b0c42526@posteo.net
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
