@@ -1,127 +1,85 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 040482417E2
-	for <linux-ide@vger.kernel.org>; Thu,  6 Feb 2025 22:59:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27C451A4F2D
+	for <linux-ide@vger.kernel.org>; Fri,  7 Feb 2025 07:49:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738882795; cv=none; b=VeAiymSVFf2Bu5G+PCjnam1rRbJS5YLTd7qC7W/ALqIibPnufxNXJZtGxkLvL1jCi7D0Y2psWvtzx8x2xAO3FjHw3pI59w/x4nph0oRmL6/oArxhUUl4ObxR4DmhRmNEEs6QsH+Yv9+7yDbSAVkITN9GPFWSlZr3nFBGJkMy6RQ=
+	t=1738914556; cv=none; b=nyg2IqJ35x8l9vPTl1vqJetovJC3ogd3mnc/2jHdBcVOLQk5yDm5FV6vV1JWh8G9QVVXTDOH/u5SEOhVESFusEe+rh9M4tZSE7uM9OnmKEMyWLb39XEi+ORCGPj1fdNtqmw8nNLPzV9V4j6a++CzXqJtyQ6h1tpAKhEZzYlQ8R0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738882795; c=relaxed/simple;
-	bh=8wEjDCTuOvcktBrfjhLQ0lipXUb5sf39X+VV2LrhSa8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ivYPr1l7Zd5iBlQi5ljD/gROYIbaBvWb9ySnWPoe7pYqv79xklLbj9gW1IguVpiqRaFWazJ4DP/Z4JPUzZecVVrVjHwBw025Yp4IzQNtdDefDWpl3N50X05v3qvWSZjWCVa/fMWPz+BfoKLlNK7WntjeETDifb6wttiCSPWNbdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=f5fZ5dxc; arc=none smtp.client-ip=185.67.36.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	s=arc-20240116; t=1738914556; c=relaxed/simple;
+	bh=KD7cASzqjX6eRZYFGKBXXN9vOLOJISmFet4AJCmVNWI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sBAu0EG0X17sE+Xj1Kniwxny7mhn6sKmhpT1NwzKafBbJEhGAKt6HuP1Jbx9RQA/emKhQfI6cKFYiT3/mNjzw/zdTHsJTne2fSoKS8rQvpXYSwF5CMavQ29jVklM3x4pBgIoYpplMvXwbRqDC4vDAww7b/mS6oleCa6UynbRyOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DXQ+m7d0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="f5fZ5dxc"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 5F89924002A
-	for <linux-ide@vger.kernel.org>; Thu,  6 Feb 2025 23:59:52 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1738882792; bh=8wEjDCTuOvcktBrfjhLQ0lipXUb5sf39X+VV2LrhSa8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:From;
-	b=f5fZ5dxc+yiDR/WQT0Po4+rbJRF/txKc1K68b+9pnLBawItBAJwI2Z+S2x4Y1a6dX
-	 3o9+6n8Ac6zOKWwBStCcVuzT4EfA0PH63bkmdao7A9yMOyDhJLdUvKZn+fvhstXL9L
-	 0eQBvnQV4jdarLr3kJ2yWQtio5/V7D4cf2HNmkQN4XUTDviSnDQU7R+xCWplMukXe9
-	 +/rP6AcoIJq9HCiegXVNIG3oaULtkuSzrOyxk3NmiwBryyj79VZfhfrWtcJpkaWkFz
-	 qbpUtlZoAlUOyOFhP/QKs6fx1h+aRBctKN8niJcY4kyyQox7dY+X47sFoQ99SfrYy8
-	 UeOGQqYnODnjQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4Ypsxb3GYrz9rxD;
-	Thu,  6 Feb 2025 23:59:47 +0100 (CET)
-Date: Thu,  6 Feb 2025 22:59:43 +0000
-From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-To: Frank Li <Frank.li@nxp.com>
-Cc: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>,
-	devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Scott Wood <oss@buserror.net>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
-	Vinod Koul <vkoul@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH RFC 9/9] dt-bindings: nand: Convert fsl,elbc bindings to
- YAML
-Message-ID: <Z6U-38ONJ0F3ILCo@probook>
-References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
- <20250126-ppcyaml-v1-9-50649f51c3dd@posteo.net>
- <Z5qzMH1t7jIr39Ce@lizhi-Precision-Tower-5810>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DXQ+m7d0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1161DC4CED1;
+	Fri,  7 Feb 2025 07:49:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738914555;
+	bh=KD7cASzqjX6eRZYFGKBXXN9vOLOJISmFet4AJCmVNWI=;
+	h=From:To:Cc:Subject:Date:From;
+	b=DXQ+m7d0zXOy8IZ2lz+SyHOXbO/yDun93PFAtnUopBkXA2y2+tqMd202ygjzobV/p
+	 JC13vT1+8x6CO0WXDC6CzvsZ2Dc5tHjiqloehftq2t/WGoCd7x9VuKeDg9quUzIbTs
+	 tM6o4Do1c6oTFBCZjTfi4qWAwPOSk1Et8+fKA55RnJOKNzkYsMM/3lEjL2nbgt6oiV
+	 2QHMbfXodV5smE33fkW+z3tM0E+pj5LPR9bRzuq3bhax7G8ifbiGsrMYPVxSjj4iKt
+	 /sSAQKtIAH3iH2cHL5lOPfnJRarfsT8OEz3ouoTAOesRxXsp254ZFbwvcyrJhGSaLH
+	 yD1TO8zkGtqoA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Klaus Kudielka <klaus.kudielka@gmail.com>,
+	Josua Mayer <josua@solid-run.com>
+Subject: [PATCH] ata: libahci_platform: Do not set mask_port_map when not needed
+Date: Fri,  7 Feb 2025 16:48:10 +0900
+Message-ID: <20250207074810.1433154-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Z5qzMH1t7jIr39Ce@lizhi-Precision-Tower-5810>
 
-On Wed, Jan 29, 2025 at 06:01:04PM -0500, Frank Li wrote:
-> On Sun, Jan 26, 2025 at 07:59:04PM +0100, J. Neuschäfer wrote:
-> > Convert the Freescale localbus controller bindings from text form to
-> > YAML. The list of compatible strings reflects current usage.
-> >
-> > Changes compared to the txt version:
-> >  - removed the board-control (fsl,mpc8272ads-bcsr) node because it only
-> >    appears in this example and nowhere else
-> >  - added a new example with NAND flash
-> >
-> > Remaining issues:
-> >  - The localbus is not really a simple-bus: Unit addresses are not simply
-> >    addresses on a memory bus. Instead, they have a format: The first cell
-> >    is a chip select number, the remaining one or two cells are bus
-> >    addresses.
-> >
-> > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> > ---
-> >  .../devicetree/bindings/mtd/fsl,elbc-fcm-nand.yaml |  61 +++++++++
-> >  .../bindings/powerpc/fsl/fsl,elbc-gpcm-uio.yaml    |  55 ++++++++
-> >  .../devicetree/bindings/powerpc/fsl/fsl,elbc.yaml  | 150 +++++++++++++++++++++
-> >  .../devicetree/bindings/powerpc/fsl/lbc.txt        |  43 ------
-> >  4 files changed, 266 insertions(+), 43 deletions(-)
-> >
-> > diff --git a/Documentation/devicetree/bindings/mtd/fsl,elbc-fcm-nand.yaml b/Documentation/devicetree/bindings/mtd/fsl,elbc-fcm-nand.yaml
-[...]
-> > +  "#address-cells": true
-> 
-> should limit to a number set like
-> 
-> 	- const: 2
+Commit 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive
+port numbers") modified ahci_platform_get_resources() to allow
+identifying the ports of a controller that are defined as child nodes of
+the controller node in order to support non-consecutive port numbers (as
+defined by the platform device tree).
 
-Will do
+However, this commit also erroneously sets bits 0 of
+hpriv->mask_port_map when the platform devices tree does not define port
+child nodes, to match the fact that the temporary default number of
+ports used in that case is 1. Doing so causes ahci_platform_init_host()
+to initialize and probe only the first port, even if the controller has
+multiple ports (that are not defined through the platform DT).
 
-> > +
-> > +  "#size-cells": true
-> 
-> the same as #address-cells.
+Fix this by removing setting bit 0 of hpriv->mask_port_map when the
+platform devices tree does not define port child nodes.
 
-Will do
+Reported-by: Klaus Kudielka <klaus.kudielka@gmail.com>
+Fixes: 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive port numbers")
+Cc: stable@vger.kernel.org
+Tested-by: Klaus Kudielka <klaus.kudielka@gmail.com>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libahci_platform.c | 2 --
+ 1 file changed, 2 deletions(-)
 
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 53b2c7719dc5..91d44302eac9 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -651,8 +651,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		 * If no sub-node was found, keep this for device tree
+ 		 * compatibility
+ 		 */
+-		hpriv->mask_port_map |= BIT(0);
+-
+ 		rc = ahci_platform_get_phy(hpriv, 0, dev, dev->of_node);
+ 		if (rc)
+ 			goto err_out;
+-- 
+2.48.1
 
-Thanks,
-J. Neuschäfer
