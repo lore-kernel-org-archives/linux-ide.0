@@ -1,77 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7578E1DE896
-	for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2025 10:55:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B391EF1D
+	for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2025 11:08:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739184941; cv=none; b=pIU23tlQm7P5tA1H+XdokQk5F31g0HuAUQTkVEjJ3aI44AaKkxIH1qA1Z4oe3u4pRjHQpY5lwjW1+h+OTE6HUZjofoKgQf7wcAyGpqoKPWf6GFoUtEFxZ3M1rOLsO4+SF6pCY4J/GUYQH2wJHv4RWi0e8lp4z+3Rp38X0Q5Jl3k=
+	t=1739185728; cv=none; b=XEZGp0KS9nRLkGbp5oct1aeR1KuKIyYW7btiGFfjpmYrIVX3Q93s6e6eS7oAmjbnJeZNjUwUqN68Nhizy6QZHXG/bH/7HyRrJTPWnYM7MZXK/iB7wPGXCzza7G45byDfcxQSSHVH40L2YksvvYr7NJ/3ReDaHV1seq/lu7gw8PY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739184941; c=relaxed/simple;
-	bh=i3DTD4sctXaiZmr4uckXSsxm+pRZkt9g8Kb+PeTUCag=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=cxNEVh3vbrqdfsypuBDnv4APIAipSGQj25uaYGX6zoYPDYjwtYN+k8jn8trX4YAVL+b5rfJCOazhpDb7D+P/Rmt/X239DQUJlzN5TtRWQdKVhgw7RLbNj/3mEPjoyjlhmBQhP+eqeO15KGzI4J0jAAZPcZauE9eXonkNRkwOeKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fNBczPlT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1739185728; c=relaxed/simple;
+	bh=dJVSIqN5cbTfbAIehKi9Ddy5SbqzAym5EqtV5iD+2qE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GoIiGyWSOFB2E7r3r1IXerxCnTfekaYQoDDMQkglh3KAr2L1W+jgL70DeXodr0dWEtjr56zeJlsyq2Lk3hwQNiFyeuYBOYxAf3anx5+57BhfbxQEvpbJRMphaWEN7EQObfJQuwnJSISgf6fFTjYWdDNxUau08OedAT+y27nHroY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dGgOhavu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fNBczPlT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C632C4CEE6;
-	Mon, 10 Feb 2025 10:55:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dGgOhavu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C376C4CED1;
+	Mon, 10 Feb 2025 11:08:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739184940;
-	bh=i3DTD4sctXaiZmr4uckXSsxm+pRZkt9g8Kb+PeTUCag=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=fNBczPlTyErarIdNMFGmEB8Rd5+wsm2GUR5tvQzt7OXjOIz9AQYREd9KPxkB6/fiY
-	 taA7f/symXRT2kbt3CuYlYkMLBmbkrgELu0zMKB+jTkzi93wzSlgVPYoUcrz3RChvC
-	 i8RdYpq8EOUgQtRmePu0IvDPqZR7a2rCEaYz+jQVmK0dl6awhfh23SKRDMELFpMVUq
-	 H/kG2jj1bZPPb7D0f0f7zzQN+Q31v9j85Y17OOoOOrW17ZtcYS29wIGj6MYiCKNsZx
-	 Mjjknc1RII1jAx8em38FG6i0fpK5+UeFWnJEh7sZ6Ovq2ZOXbUWn/C8C7M6/R9zrtq
-	 J251VqodWBKIA==
+	s=k20201202; t=1739185727;
+	bh=dJVSIqN5cbTfbAIehKi9Ddy5SbqzAym5EqtV5iD+2qE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dGgOhavu8/KXn9RYptoG7ujWRUwwLOklXxJc32XRIgIkwsAHCsP1mzRhnqzAqTaGu
+	 FKiZEXqNP2YMudBp5ugXVrxaMMJVTDQx7Gd1foF4ja9JaFxm1RiSiQVsJYssbx2LuA
+	 jC2qX/+GYnYVPWMKeDy9Mm6Y5TcXtzuJXNDoJUbcF5hVDOEvMgCeQ+uYOFWWf/el65
+	 dNNqtV4ZNcSrMGA1m8LLVkIUdNUQI/R2DPwwlGLYl466jpXoIIC2gigGRE+67ITAYZ
+	 PiSu18dgJNep7wLGCzdlgccpRAc5yU/zONw+sQ5wloQ4qaYDPbWS/u3NmSh+jNOIvx
+	 c/5a9Mw6oxkOw==
+Date: Mon, 10 Feb 2025 12:08:44 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
-Cc: Klaus Kudielka <klaus.kudielka@gmail.com>, 
- Josua Mayer <josua@solid-run.com>
-In-Reply-To: <20250207232915.1439174-1-dlemoal@kernel.org>
-References: <20250207232915.1439174-1-dlemoal@kernel.org>
-Subject: Re: [PATCH v2] ata: libahci_platform: Do not set mask_port_map
- when not needed
-Message-Id: <173918493985.2578640.12685608031355933376.b4-ty@kernel.org>
-Date: Mon, 10 Feb 2025 11:55:39 +0100
+To: Daniel Baumann <daniel@debian.org>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Dieter Mummenschanz <dmummenschanz@web.de>
+Subject: Re: Samsung SSD 870 QVO LPM issues
+Message-ID: <Z6nePJ38aL92agTW@ryzen>
+References: <Z6MjZ1Nniwn_uldf@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z6MjZ1Nniwn_uldf@ryzen>
 
-On Sat, 08 Feb 2025 08:29:15 +0900, Damien Le Moal wrote:
-> Commit 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive
-> port numbers") modified ahci_platform_get_resources() to allow
-> identifying the ports of a controller that are defined as child nodes of
-> the controller node in order to support non-consecutive port numbers (as
-> defined by the platform device tree).
+On Wed, Feb 05, 2025 at 09:37:59AM +0100, Niklas Cassel wrote:
+> Hello Daniel, Dieter,
 > 
-> However, this commit also erroneously sets bit 0 of
-> hpriv->mask_port_map when the platform devices tree does not define port
-> child nodes, to match the fact that the temporary default number of
-> ports used in that case is 1 (which is also consistent with the fact
-> that only index 0 of hpriv->phys[] is initialized with the call to
-> ahci_platform_get_phy(). But doing so causes ahci_platform_init_host()
-> to initialize and probe only the first port, even if this function
-> determines that the controller has in fact multiple ports using the
-> capability register of the controller (through a call to
-> ahci_nr_ports()). This can be seen with the ahci_mvebu driver (Armada
-> 385 SoC) with the second port declared as "dummy":
+> Dieter recently submitted an issue on bugzilla that v6.14-rc1
+> breaks entering lower power packages states:
+> https://bugzilla.kernel.org/show_bug.cgi?id=219747
 > 
-> [...]
+> Most likely, the problem is caused by Daniel's recent commit:
+> cc77e2ce187d ("ata: libata-core: Add ATA_QUIRK_NOLPM for Samsung SSD 870
+> QVO drives")
+> 
+> Dieter is using 'Samsung SSD 870 QVO 8TB', rev 'SVQ02B6Q'.
+> 
+> No longer being able to enter lower package states, suggests that
+> LPM was previously working for Dieter's Samsung SSD 870 QVO drives.
+> 
+> Daniel claimed that enabling LPM for his Samsung SSD 870 QVO drive,
+> caused them to stop working.
+> 
+> 
+> Could it be that you guys are running different firmware versions on
+> your Samsung SSD 870 QVO drives, and that Samsung has managed to fix
+> their LPM issues in more recent firmware updates?
+> 
+> It seems like Dieter is using firmware 'SVQ02B6Q'
+> which also seems to be the latest when looking at:
+> https://semiconductor.samsung.com/consumer-storage/support/tools/
+> 
+> Daniel, could you please tell us which firmware version you are using?
+> 
+> We might have to adjust the QUIRK to only apply for the firmware version
+> that you are using.
+> 
+> It could also be interesting to see if you could update the firmware on
+> your drive, and revert the quirk, and see if LPM is working for you with
+> the latest firmware version.
 
-Applied to libata/linux.git (for-6.14), thanks!
+Hello Daniel,
 
-[1/1] ata: libahci_platform: Do not set mask_port_map when not needed
-      https://git.kernel.org/libata/linux/c/2c202e6c
+Could you please provide which firmware version you are using.
+
+If not, I do not see any other option but to revert your patch.
+
 
 Kind regards,
 Niklas
-
