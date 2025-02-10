@@ -1,103 +1,77 @@
-Received: from mslow3.mail.gandi.net (mslow3.mail.gandi.net [217.70.178.249])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D688D1E4A9;
-	Mon, 10 Feb 2025 08:45:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.178.249
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7578E1DE896
+	for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2025 10:55:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739177133; cv=none; b=WOSzAmx+FdNbRKt8aJs0afrTV92+8PpLO0p8fdnsZX9fKbG1yDqRpwGTzxVop1+tkfd05oCXi97GhBZ2PlrAm6rB0RNFJv/eWAU0Dz1ZT0nue0wJVYSCID8+U20mr7skaFUcpNpuCAut5gqzamqJ+qBHtYOBmMNOqD7qa5WhUX4=
+	t=1739184941; cv=none; b=pIU23tlQm7P5tA1H+XdokQk5F31g0HuAUQTkVEjJ3aI44AaKkxIH1qA1Z4oe3u4pRjHQpY5lwjW1+h+OTE6HUZjofoKgQf7wcAyGpqoKPWf6GFoUtEFxZ3M1rOLsO4+SF6pCY4J/GUYQH2wJHv4RWi0e8lp4z+3Rp38X0Q5Jl3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739177133; c=relaxed/simple;
-	bh=8e9TvzMvnN655dD9mW3ziQ4pedVgVTCtFygXZeQGWbI=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=KyxgRLA/Ci3epCkfPiSGZZ3uXWW52YyNBuEfnc4EqMpXVobiGuEXG9r+99AVQV8RfEiCWqv9SkE3filo8TaDep31yyI9TBqHIWkb3ryNdvPDQlotWHJ0ordISoiYT1hX5hWztS3Mc41vKOmV+k1Hbj6AwKx5sBEshAjEgB2Ac5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=ZY02NguF; arc=none smtp.client-ip=217.70.178.249
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1739184941; c=relaxed/simple;
+	bh=i3DTD4sctXaiZmr4uckXSsxm+pRZkt9g8Kb+PeTUCag=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=cxNEVh3vbrqdfsypuBDnv4APIAipSGQj25uaYGX6zoYPDYjwtYN+k8jn8trX4YAVL+b5rfJCOazhpDb7D+P/Rmt/X239DQUJlzN5TtRWQdKVhgw7RLbNj/3mEPjoyjlhmBQhP+eqeO15KGzI4J0jAAZPcZauE9eXonkNRkwOeKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fNBczPlT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="ZY02NguF"
-Received: from relay7-d.mail.gandi.net (relay7-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::227])
-	by mslow3.mail.gandi.net (Postfix) with ESMTP id 55A93582BA6;
-	Mon, 10 Feb 2025 08:27:35 +0000 (UTC)
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 6E7EC441F0;
-	Mon, 10 Feb 2025 08:27:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1739176047;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8e9TvzMvnN655dD9mW3ziQ4pedVgVTCtFygXZeQGWbI=;
-	b=ZY02NguFvp2D4ou3No/QCzpfSTJ/vEq/6qT+XJ/nvm4ksYAK39lFMb0mQgDBqM0QIBRl1F
-	8lQkkIF/mc8rfl0l4flqx4G6JMtztvl8iq4f4mpGpYsw9F+0rmgop6/sp/OOfQsixdP9Hn
-	F5EBu6cuuY9MfhzpBOyfm3OiCFVmX2cf9gRlizM56NuNZNK60icbcTT+3/d+T/Unba6ad9
-	nIAJD/b54HfwpeWm89ATdYeoXB7ZO5w+IHsHy0eoz3L543OybW2v5YkqjOB1Y1pInLZonw
-	gvl82hS9MNgYZaE0ZItYKARh4AqYqBh+HH0IcpFf14eU4/gDM4YqjQJ7ekjhow==
-From: Miquel Raynal <miquel.raynal@bootlin.com>
-To: J. =?utf-8?Q?Neusch=C3=A4fer?= via B4 Relay
- <devnull+j.ne.posteo.net@kernel.org>
-Cc: devicetree@vger.kernel.org,  linuxppc-dev@lists.ozlabs.org,  Krzysztof
- Kozlowski <krzk@kernel.org>,  j.ne@posteo.net,  imx@lists.linux.dev,
-  Scott Wood <oss@buserror.net>,  Madhavan Srinivasan
- <maddy@linux.ibm.com>,  Michael Ellerman <mpe@ellerman.id.au>,  Nicholas
- Piggin <npiggin@gmail.com>,  Christophe Leroy
- <christophe.leroy@csgroup.eu>,  Naveen N Rao <naveen@kernel.org>,  Rob
- Herring <robh@kernel.org>,  Krzysztof Kozlowski <krzk+dt@kernel.org>,
-  Conor Dooley <conor+dt@kernel.org>,  Damien Le Moal <dlemoal@kernel.org>,
-  Niklas Cassel <cassel@kernel.org>,  Herbert Xu
- <herbert@gondor.apana.org.au>,  "David S. Miller" <davem@davemloft.net>,
-  Lee Jones <lee@kernel.org>,  Vinod Koul <vkoul@kernel.org>,  Lorenzo
- Pieralisi <lpieralisi@kernel.org>,  Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
- <kw@linux.com>,
-  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,  Bjorn Helgaas
- <bhelgaas@google.com>,  J. =?utf-8?Q?Neusch=C3=A4fer?=
- <j.neuschaefer@gmx.net>,  Wim Van
- Sebroeck <wim@linux-watchdog.org>,  Guenter Roeck <linux@roeck-us.net>,
-  Mark Brown <broonie@kernel.org>,  Richard Weinberger <richard@nod.at>,
-  Vignesh Raghavendra <vigneshr@ti.com>,  linux-kernel@vger.kernel.org,
-  linux-ide@vger.kernel.org,  linux-crypto@vger.kernel.org,
-  dmaengine@vger.kernel.org,  linux-pci@vger.kernel.org,
-  linux-watchdog@vger.kernel.org,  linux-spi@vger.kernel.org,
-  linux-mtd@lists.infradead.org
-Subject: Re: [PATCH v2 12/12] dt-bindings: mtd: raw-nand-chip: Relax node
- name pattern
-In-Reply-To: <20250207-ppcyaml-v2-12-8137b0c42526@posteo.net> ("J.
- =?utf-8?Q?Neusch=C3=A4fer?=
-	via B4 Relay"'s message of "Fri, 07 Feb 2025 22:30:29 +0100")
-References: <20250207-ppcyaml-v2-0-8137b0c42526@posteo.net>
-	<20250207-ppcyaml-v2-12-8137b0c42526@posteo.net>
-User-Agent: mu4e 1.12.7; emacs 29.4
-Date: Mon, 10 Feb 2025 09:27:22 +0100
-Message-ID: <87o6zaurv9.fsf@bootlin.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fNBczPlT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C632C4CEE6;
+	Mon, 10 Feb 2025 10:55:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739184940;
+	bh=i3DTD4sctXaiZmr4uckXSsxm+pRZkt9g8Kb+PeTUCag=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=fNBczPlTyErarIdNMFGmEB8Rd5+wsm2GUR5tvQzt7OXjOIz9AQYREd9KPxkB6/fiY
+	 taA7f/symXRT2kbt3CuYlYkMLBmbkrgELu0zMKB+jTkzi93wzSlgVPYoUcrz3RChvC
+	 i8RdYpq8EOUgQtRmePu0IvDPqZR7a2rCEaYz+jQVmK0dl6awhfh23SKRDMELFpMVUq
+	 H/kG2jj1bZPPb7D0f0f7zzQN+Q31v9j85Y17OOoOOrW17ZtcYS29wIGj6MYiCKNsZx
+	 Mjjknc1RII1jAx8em38FG6i0fpK5+UeFWnJEh7sZ6Ovq2ZOXbUWn/C8C7M6/R9zrtq
+	 J251VqodWBKIA==
+From: Niklas Cassel <cassel@kernel.org>
+To: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+Cc: Klaus Kudielka <klaus.kudielka@gmail.com>, 
+ Josua Mayer <josua@solid-run.com>
+In-Reply-To: <20250207232915.1439174-1-dlemoal@kernel.org>
+References: <20250207232915.1439174-1-dlemoal@kernel.org>
+Subject: Re: [PATCH v2] ata: libahci_platform: Do not set mask_port_map
+ when not needed
+Message-Id: <173918493985.2578640.12685608031355933376.b4-ty@kernel.org>
+Date: Mon, 10 Feb 2025 11:55:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-GND-State: clean
-X-GND-Score: -100
-X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdefjeehkecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefujghffgffkfggtgfgsehtqhertddtreejnecuhfhrohhmpefoihhquhgvlhcutfgrhihnrghluceomhhiqhhuvghlrdhrrgihnhgrlhessghoohhtlhhinhdrtghomheqnecuggftrfgrthhtvghrnhepffeghfejtdefieeguddukedujeektdeihfelleeuieeuveehkedvleduheeivdefnecukfhppeelvddrudekgedrleekrdekgeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeelvddrudekgedrleekrdekgedphhgvlhhopehlohgtrghlhhhoshhtpdhmrghilhhfrhhomhepmhhiqhhuvghlrdhrrgihnhgrlhessghoohhtlhhinhdrtghomhdpnhgspghrtghpthhtohepfeelpdhrtghpthhtohepuggvvhhnuhhllhdojhdrnhgvrdhpohhsthgvohdrnhgvtheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepuggvvhhitggvthhrvggvsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugihpphgtqdguvghvsehlihhsthhsrdhoiihlrggsshdrohhrghdprhgtphhtthhopehkrhiikheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepjhdrnhgvsehpohhst
- hgvohdrnhgvthdprhgtphhtthhopehimhigsehlihhsthhsrdhlihhnuhigrdguvghvpdhrtghpthhtohepohhsshessghushgvrhhrohhrrdhnvghtpdhrtghpthhtohepmhgrugguhieslhhinhhugidrihgsmhdrtghomh
-X-GND-Sasl: miquel.raynal@bootlin.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-Hello,
+On Sat, 08 Feb 2025 08:29:15 +0900, Damien Le Moal wrote:
+> Commit 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive
+> port numbers") modified ahci_platform_get_resources() to allow
+> identifying the ports of a controller that are defined as child nodes of
+> the controller node in order to support non-consecutive port numbers (as
+> defined by the platform device tree).
+> 
+> However, this commit also erroneously sets bit 0 of
+> hpriv->mask_port_map when the platform devices tree does not define port
+> child nodes, to match the fact that the temporary default number of
+> ports used in that case is 1 (which is also consistent with the fact
+> that only index 0 of hpriv->phys[] is initialized with the call to
+> ahci_platform_get_phy(). But doing so causes ahci_platform_init_host()
+> to initialize and probe only the first port, even if this function
+> determines that the controller has in fact multiple ports using the
+> capability register of the controller (through a call to
+> ahci_nr_ports()). This can be seen with the ahci_mvebu driver (Armada
+> 385 SoC) with the second port declared as "dummy":
+> 
+> [...]
 
-On 07/02/2025 at 22:30:29 +01, J. Neusch=C3=A4fer via B4 Relay <devnull+j.n=
-e.posteo.net@kernel.org> wrote:
+Applied to libata/linux.git (for-6.14), thanks!
 
-> From: "J. Neusch=C3=A4fer" <j.ne@posteo.net>
->
-> In some scenarios, such as under the Freescale eLBC bus, there are raw
-> NAND chips with a unit address that has a comma in it (cs,offset).
-> Relax the $nodename pattern in raw-nand-chip.yaml to allow such unit
-> addresses.
+[1/1] ata: libahci_platform: Do not set mask_port_map when not needed
+      https://git.kernel.org/libata/linux/c/2c202e6c
 
-This is super specific to this controller, I'd rather avoid that in the
-main (shared) files. I believe you can force another node name in the
-controller's binding instead?
+Kind regards,
+Niklas
 
-Thanks,
-Miqu=C3=A8l
