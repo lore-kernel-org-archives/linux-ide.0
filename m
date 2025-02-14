@@ -1,49 +1,49 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE9E2130A54
-	for <linux-ide@vger.kernel.org>; Fri, 14 Feb 2025 02:10:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D31125A627
+	for <linux-ide@vger.kernel.org>; Fri, 14 Feb 2025 12:35:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739499048; cv=none; b=qsfEY1ZDorR+otjV/2ze8FSNCEZozSVl4VeM7mdArDZZQlFoE9M51GTAHHF6sCKWso5kFoQeDmQiAuSBwiC4VsEVOY7VQPA3oltIyK6LqhUph2TBIX+Yj7q3MHWsnYoBjrl6GZTY8sHi/dJ1PZfRKsdgVSKclS9H/eJ30mLsFnM=
+	t=1739536554; cv=none; b=cMqN10AhPiWVUtZ6yIs/B9I6AcWQNVNPxiaDPwITYw0ZcFl0aJtAUEM2pVOdAvVOD+0jFHrY9Idoy52tVkPWJIEI5erCmLWZZgGZ81kNaZUKb9ejpX1rfx9l12wswXJ8Cwbc9uQeR/jpLZdWfMxBnZqQ3x+ZIXvGcCVBdVl4WQE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739499048; c=relaxed/simple;
-	bh=WhJmekLyQeapuWa9J6WUco9/aFXXshTQJPKudksd1Lo=;
+	s=arc-20240116; t=1739536554; c=relaxed/simple;
+	bh=DhdTMX1B/VBmrfjg4gCD28dH1z0ZeJtuCVVqdYJtLzw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=o8hnIFMp6x34Q2XRg7aNY/LmDpni2Mz2eamiC7rJ9wlYEaQTGKqb/RUud2DQ5L1s4sqyCFuhPBvWqgp8KbrKJhiQorNrUCMO0WOL7uNcGFCNfh3OD6uEzea+u8aH06XXudagsxDEO0gQOi0d6n1F3ANQwz2f/xEk5RLsChVUZA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=Nm3LODJX; arc=none smtp.client-ip=185.67.36.65
+	 Content-Type:Content-Disposition:In-Reply-To; b=JWqZfd5OhDjYeNjY1749mjAC71j+Lz0Xve8vibamNAJZOFv5cbOWyiAro8vlItiOUwI5yY5EbPwD2Mp1/YM7nIrAdG/45mT5NN/FcVZgdiSzWz/bgSSdRk2E00EAMHhmbmaCdLh7hMpmuNW3m23uKCUU/TRfl7ObLo205xwgbWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=D5Xod9Nn; arc=none smtp.client-ip=185.67.36.66
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="Nm3LODJX"
+	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="D5Xod9Nn"
 Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 9D29324002B
-	for <linux-ide@vger.kernel.org>; Fri, 14 Feb 2025 03:04:08 +0100 (CET)
+	by mout02.posteo.de (Postfix) with ESMTPS id B1220240101
+	for <linux-ide@vger.kernel.org>; Fri, 14 Feb 2025 13:35:49 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1739498648; bh=WhJmekLyQeapuWa9J6WUco9/aFXXshTQJPKudksd1Lo=;
+	t=1739536549; bh=DhdTMX1B/VBmrfjg4gCD28dH1z0ZeJtuCVVqdYJtLzw=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
 	 Content-Disposition:Content-Transfer-Encoding:From;
-	b=Nm3LODJXhqQCCv69Zz1N9FqongFoJT3V0NUa6zSUc6NA8FVuLeDXb1gY6jUNVQHk0
-	 za741AL0WLueAGlA/BFA+QKYt3CF9TzSKV5uIWL7ZRmYG65M75ziCewHvxV5bFjNvF
-	 iazMruPIDK5iKbKAZ/b3L7MbUm8urNpdqjf+7oZ+ilPu+gH9g8Qi0ILU6wPJ9jr/f2
-	 88Oy6Dd1u/V7CrpE27zO9e3Rst0yJX5xnoQo7GnAyMla0eUpw+1+/KNjIMvlu9JPTk
-	 Vkmt2BtBE48By8yPb8A9xA3GJCSUKi5lFDCACraCv2ZCkP4OvojLM4EmP/9XViOo53
-	 4Xmtf91bi8dMw==
+	b=D5Xod9Nnl1WE6g1L7y5neIscsjHlzP9MY5Mw6Agu8uZD51CniEAu5nc1a/M7uOuay
+	 FnPzKuG+5DhX1AR2By4JLt2+6SePYX9dxTPP26BbYZz5yslylfLJ5HeYXeZKigJTD8
+	 wXckP4BTVk0rpmFwPrtSM3F5JmFkYBbJwcZ9ILZoY9XREALy+R8PMLWVfRJJIqegGR
+	 ip0tDQNNZvhC+Ac7P9yckRRncsRnZpwesWfImxAkK3WxgCwLbe+EOgHyElpxRWrYjw
+	 JI/8foXkGFM8JegiqDKfVrOw0juWrGF0P67jAcRLWyShcX0FBJqPObf2fUnzLcM0WW
+	 OMX71QAVAqbKw==
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4YvFhy67kgz9rxF;
-	Fri, 14 Feb 2025 03:04:02 +0100 (CET)
-Date: Fri, 14 Feb 2025 02:04:02 +0000
+	by submission (posteo.de) with ESMTPSA id 4YvWjq1cxCz9rxG;
+	Fri, 14 Feb 2025 13:35:41 +0100 (CET)
+Date: Fri, 14 Feb 2025 12:35:41 +0000
 From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-To: Rob Herring <robh@kernel.org>
-Cc: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>,
-	devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+To: Frank Li <Frank.li@nxp.com>
+Cc: j.ne@posteo.net, devicetree@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
 	Krzysztof Kozlowski <krzk@kernel.org>, imx@lists.linux.dev,
 	Scott Wood <oss@buserror.net>,
 	Madhavan Srinivasan <maddy@linux.ibm.com>,
 	Michael Ellerman <mpe@ellerman.id.au>,
 	Nicholas Piggin <npiggin@gmail.com>,
 	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>,
+	Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>,
 	Damien Le Moal <dlemoal@kernel.org>,
@@ -65,11 +65,11 @@ Cc: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>,
 	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
 	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH v2 03/12] dt-bindings: crypto: Convert fsl,sec-2.0 to YAML
-Message-ID: <Z66kksKzsknmOy5Q@probook>
+Subject: Re: [PATCH v2 05/12] dt-bindings: dma: Convert fsl,elo*-dma to YAML
+Message-ID: <Z684nUnDX4Sb98rQ@probook>
 References: <20250207-ppcyaml-v2-0-8137b0c42526@posteo.net>
- <20250207-ppcyaml-v2-3-8137b0c42526@posteo.net>
- <20250212193314.GA4134845-robh@kernel.org>
+ <20250207-ppcyaml-v2-5-8137b0c42526@posteo.net>
+ <Z6pV4eauZj75+911@lizhi-Precision-Tower-5810>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -79,64 +79,164 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250212193314.GA4134845-robh@kernel.org>
+In-Reply-To: <Z6pV4eauZj75+911@lizhi-Precision-Tower-5810>
 
-On Wed, Feb 12, 2025 at 01:33:14PM -0600, Rob Herring wrote:
-> On Fri, Feb 07, 2025 at 10:30:20PM +0100, J. Neuschäfer wrote:
-> > Convert the Freescale security engine (crypto accelerator) binding from
-> > text form to YAML. The list of compatible strings reflects what was
-> > previously described in prose; not all combinations occur in existing
-> > devicetrees.
-> > 
+On Mon, Feb 10, 2025 at 02:39:13PM -0500, Frank Li wrote:
+> On Fri, Feb 07, 2025 at 10:30:22PM +0100, J. Neuschäfer via B4 Relay wrote:
+> > From: "J. Neuschäfer" <j.ne@posteo.net>
+> >
+> > The devicetree bindings for Freescale DMA engines have so far existed as
+> > a text file. This patch converts them to YAML, and specifies all the
+> > compatible strings currently in use in arch/powerpc/boot/dts.
+> >
 > > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
 > > ---
-> > 
+> >
 > > V2:
-> > - several improvements suggested by Rob Herring:
-> >   - remove unnecessary multiline markers
-> >   - constrain fsl,num-channels to enum: [1,4]
-> >   - constrain fsl,channel-fifo-len to plausible limits
-> >   - constrain fsl,exec-units-mask to maximum=0xfff
-> > - trim subject line (remove "binding")
+> > - remove unnecessary multiline markers
+> > - fix additionalProperties to always be false
+> > - add description/maxItems to interrupts
+> > - add missing #address-cells/#size-cells properties
+> > - convert "Note on DMA channel compatible properties" to YAML by listing
+> >   fsl,ssi-dma-channel as a valid compatible value
+> > - fix property ordering in examples: compatible and reg come first
+> > - add missing newlines in examples
+> > - trim subject line (remove "bindings")
 > > ---
-> >  .../devicetree/bindings/crypto/fsl,sec2.0.yaml     | 142 +++++++++++++++++++++
-> >  .../devicetree/bindings/crypto/fsl-sec2.txt        |  65 ----------
-> >  2 files changed, 142 insertions(+), 65 deletions(-)
+> >  .../devicetree/bindings/dma/fsl,elo-dma.yaml       | 140 ++++++++++++++
+> >  .../devicetree/bindings/dma/fsl,elo3-dma.yaml      | 123 +++++++++++++
+> >  .../devicetree/bindings/dma/fsl,eloplus-dma.yaml   | 134 ++++++++++++++
+> >  .../devicetree/bindings/powerpc/fsl/dma.txt        | 204 ---------------------
+> >  4 files changed, 397 insertions(+), 204 deletions(-)
 [...]
-> > +title: Freescale SoC SEC Security Engines versions 1.x-2.x-3.x
-> > +
-> > +maintainers:
-> > +  - J. Neuschäfer <j.ne@posteo.net.
+> > +  reg:
+> > +    maxItems: 1
+> > +    description:
+> > +      DMA General Status Register, i.e. DGSR which contains status for
+> > +      all the 4 DMA channels.
 > 
-> missing >
+> needn't maxItems
+> items:
+>   - description: DMA ...
 
-Good catch, will fix.
+Good point, I'll do that.
 
-
-> > +  fsl,descriptor-types-mask:
+> 
+> > +
+> > +  cell-index:
 > > +    $ref: /schemas/types.yaml#/definitions/uint32
-> > +    description: |
-> > +      The bitmask representing what descriptors are available. Descriptor type
-> > +      information should be encoded following the SEC's Descriptor Header Dword
-> > +      DESC_TYPE field documentation, i.e. as follows:
+> > +    description: Controller index. 0 for controller @ 0x8100.
 > > +
-> > +        bit 0  = set if SEC supports the aesu_ctr_nonsnoop desc. type
-> > +        bit 1  = set if SEC supports the ipsec_esp descriptor type
-> > +        bit 2  = set if SEC supports the common_nonsnoop desc. type
-> > +        bit 3  = set if SEC supports the 802.11i AES ccmp desc. type
-> > +        bit 4  = set if SEC supports the hmac_snoop_no_afeu desc. type
-> > +        bit 5  = set if SEC supports the srtp descriptor type
-> > +        bit 6  = set if SEC supports the non_hmac_snoop_no_afeu desc.type
-> > +        bit 7  = set if SEC supports the pkeu_assemble descriptor type
-> > +        bit 8  = set if SEC supports the aesu_key_expand_output desc.type
-> > +        bit 9  = set if SEC supports the pkeu_ptmul descriptor type
-> > +        bit 10 = set if SEC supports the common_nonsnoop_afeu desc. type
-> > +        bit 11 = set if SEC supports the pkeu_ptadd_dbl descriptor type
+> > +  ranges: true
+> > +
+> > +  "#address-cells":
+> > +    const: 1
+> > +
+> > +  "#size-cells":
+> > +    const: 1
+> > +
+> > +  interrupts:
+> > +    maxItems: 1
+> > +    description: Controller interrupt.
 > 
-> Why 3 variations of 'descriptor type'?
+> Needn't description because no any additional informaiton.
 
-The reasons have been lost in time, I suppose. I'll normalize the spelling.
+True.
+
+> 
+> > +
+> > +required:
+> > +  - compatible
+> > +  - reg
+[...]
+> > +additionalProperties: false
+> 
+> Need ref to dma-common.yaml?
+
+Sounds good, but I'm not sure what to do about the #dma-cells property,
+which is required by dma-common.yaml.
+
+There aren't many examples of DMA channels being explicitly declared in
+device trees. One example that I could find is the the xilinx_dma.txt
+binding:
 
 
-Thanks,
+	axi_vdma_0: axivdma@40030000 {
+		compatible = "xlnx,axi-vdma-1.00.a";
+		#dma_cells = <1>;
+		reg = < 0x40030000 0x10000 >;
+		dma-ranges = <0x00000000 0x00000000 0x40000000>;
+		xlnx,num-fstores = <0x8>;
+		xlnx,flush-fsync = <0x1>;
+		xlnx,addrwidth = <0x20>;
+		clocks = <&clk 0>, <&clk 1>, <&clk 2>, <&clk 3>, <&clk 4>;
+		clock-names = "s_axi_lite_aclk", "m_axi_mm2s_aclk", "m_axi_s2mm_aclk",
+			      "m_axis_mm2s_aclk", "s_axis_s2mm_aclk";
+		dma-channel@40030000 {
+			compatible = "xlnx,axi-vdma-mm2s-channel";
+			interrupts = < 0 54 4 >;
+			xlnx,datawidth = <0x40>;
+		};
+		dma-channel@40030030 {
+			compatible = "xlnx,axi-vdma-s2mm-channel";
+			interrupts = < 0 53 4 >;
+			xlnx,datawidth = <0x40>;
+		};
+	};
+
+	...
+
+	vdmatest_0: vdmatest@0 {
+		compatible ="xlnx,axi-vdma-test-1.00.a";
+		dmas = <&axi_vdma_0 0
+			&axi_vdma_0 1>;
+		dma-names = "vdma0", "vdma1";
+	};
+
+It has #dma_cells (I'm sure #dma-cells was intended) on the controller.
+
+
+Another example is in arch/powerpc/boot/dts/fsl/p1022si-post.dtsi:
+
+	dma@c300 {
+		dma00: dma-channel@0 {
+			compatible = "fsl,ssi-dma-channel";
+		};
+		dma01: dma-channel@80 {
+			compatible = "fsl,ssi-dma-channel";
+		};
+	};
+
+	...
+
+	ssi@15000 {
+		compatible = "fsl,mpc8610-ssi";
+		cell-index = <0>;
+		reg = <0x15000 0x100>;
+		interrupts = <75 2 0 0>;
+		fsl,playback-dma = <&dma00>;
+		fsl,capture-dma = <&dma01>;
+		fsl,fifo-depth = <15>;
+	};
+
+
+There, the DMA channels are used directly and without additional
+information (i.e. #dma-cells = <0>, althought it isn't specified).
+
+
+> > +        dma-channel@0 {
+> > +            compatible = "fsl,mpc8349-dma-channel", "fsl,elo-dma-channel";
+> > +            reg = <0 0x80>;
+> > +            cell-index = <0>;
+> > +            interrupt-parent = <&ipic>;
+> > +            interrupts = <71 8>;
+> 
+> '8',  use predefine MACRO for irq type.
+
+Good catch, will do
+
+> 
+> Frank
+
+Thanks for your review!
 J. Neuschäfer
