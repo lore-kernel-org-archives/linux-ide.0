@@ -1,49 +1,48 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D31125A627
-	for <linux-ide@vger.kernel.org>; Fri, 14 Feb 2025 12:35:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C9642EAE4
+	for <linux-ide@vger.kernel.org>; Sun, 16 Feb 2025 16:00:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739536554; cv=none; b=cMqN10AhPiWVUtZ6yIs/B9I6AcWQNVNPxiaDPwITYw0ZcFl0aJtAUEM2pVOdAvVOD+0jFHrY9Idoy52tVkPWJIEI5erCmLWZZgGZ81kNaZUKb9ejpX1rfx9l12wswXJ8Cwbc9uQeR/jpLZdWfMxBnZqQ3x+ZIXvGcCVBdVl4WQE=
+	t=1739721609; cv=none; b=iS5C6YyXLnhlz4phUbdQw/pX/tQ+OxpBaZUcjstTHa/T7T4jzTSvj3SARJhoFBqZn11q2VmrmdUqFiPb7EQmaitx/RqFsquQKiwlCk7LdXuPl4b6VN7nfEXx4ZXjN6JxJ8Vc+yYt8ep5Mn6z4AnK834isjZXBsWGoihuikvmS8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739536554; c=relaxed/simple;
-	bh=DhdTMX1B/VBmrfjg4gCD28dH1z0ZeJtuCVVqdYJtLzw=;
+	s=arc-20240116; t=1739721609; c=relaxed/simple;
+	bh=EF26j1suwLuBzziUeMgwWp0X8x4RpIgeD8Jxuuo4ULs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JWqZfd5OhDjYeNjY1749mjAC71j+Lz0Xve8vibamNAJZOFv5cbOWyiAro8vlItiOUwI5yY5EbPwD2Mp1/YM7nIrAdG/45mT5NN/FcVZgdiSzWz/bgSSdRk2E00EAMHhmbmaCdLh7hMpmuNW3m23uKCUU/TRfl7ObLo205xwgbWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=D5Xod9Nn; arc=none smtp.client-ip=185.67.36.66
+	 Content-Type:Content-Disposition:In-Reply-To; b=M0MY9H8RT8oq8Egg3Qq2aK+WU/RNpZ+NT6KzQOR2892NESriFPH8uaugwZrJcaQpO8rwPcGGlB3URuzgxN6ZNkeNt1DjXUCBUVEuK6p7jXIY7mQzIGMoJxB8o3Y6Tw/ZlVNE3X7WADvb+j/truVVRSqEcflSk4QwZ7iU8mO94Qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=pTgJM2RV; arc=none smtp.client-ip=185.67.36.65
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="D5Xod9Nn"
+	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="pTgJM2RV"
 Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id B1220240101
-	for <linux-ide@vger.kernel.org>; Fri, 14 Feb 2025 13:35:49 +0100 (CET)
+	by mout01.posteo.de (Postfix) with ESMTPS id 58C82240032
+	for <linux-ide@vger.kernel.org>; Sun, 16 Feb 2025 17:00:04 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1739536549; bh=DhdTMX1B/VBmrfjg4gCD28dH1z0ZeJtuCVVqdYJtLzw=;
+	t=1739721604; bh=EF26j1suwLuBzziUeMgwWp0X8x4RpIgeD8Jxuuo4ULs=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
 	 Content-Disposition:Content-Transfer-Encoding:From;
-	b=D5Xod9Nnl1WE6g1L7y5neIscsjHlzP9MY5Mw6Agu8uZD51CniEAu5nc1a/M7uOuay
-	 FnPzKuG+5DhX1AR2By4JLt2+6SePYX9dxTPP26BbYZz5yslylfLJ5HeYXeZKigJTD8
-	 wXckP4BTVk0rpmFwPrtSM3F5JmFkYBbJwcZ9ILZoY9XREALy+R8PMLWVfRJJIqegGR
-	 ip0tDQNNZvhC+Ac7P9yckRRncsRnZpwesWfImxAkK3WxgCwLbe+EOgHyElpxRWrYjw
-	 JI/8foXkGFM8JegiqDKfVrOw0juWrGF0P67jAcRLWyShcX0FBJqPObf2fUnzLcM0WW
-	 OMX71QAVAqbKw==
+	b=pTgJM2RVrLprfYbMXybmlG4KLOjVo9E5qpqmA+ccmW85RElh5VpLIRz1jG+WN+S/n
+	 /1a+/Z7pYIDe5dnKfrSx017pXnXOnaK0Z4oSx9JPbq5XY211pMBp1oBmcel4YGxq52
+	 F3RFdjVJ+IRnPS7aXKXN0RW4qOCHxnRfvy1KzqoSH8ARmyd2EiaZD4HdzFGgnbeGt1
+	 EF0887xrzs+xoKfuvZWrJfWF4lUIF/f4kWYDcBTen21LugjWTYJ/6EFcuL+Jof8s8x
+	 Rz6Ymj2KIeS3xT0Ke1YT8gFrFa0zSQbesigmbblCfD+ohW23aPetTyHEH8BbIFFnzO
+	 aesaOV6qAm6Dw==
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4YvWjq1cxCz9rxG;
-	Fri, 14 Feb 2025 13:35:41 +0100 (CET)
-Date: Fri, 14 Feb 2025 12:35:41 +0000
+	by submission (posteo.de) with ESMTPSA id 4Ywr8V6Vlfz9rxW;
+	Sun, 16 Feb 2025 16:59:54 +0100 (CET)
+Date: Sun, 16 Feb 2025 15:59:54 +0000
 From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-To: Frank Li <Frank.li@nxp.com>
-Cc: j.ne@posteo.net, devicetree@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
+To: Rob Herring <robh@kernel.org>
+Cc: Crystal Wood <oss@buserror.net>, j.ne@posteo.net,
+	devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
 	Krzysztof Kozlowski <krzk@kernel.org>, imx@lists.linux.dev,
-	Scott Wood <oss@buserror.net>,
 	Madhavan Srinivasan <maddy@linux.ibm.com>,
 	Michael Ellerman <mpe@ellerman.id.au>,
 	Nicholas Piggin <npiggin@gmail.com>,
 	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>,
+	Naveen N Rao <naveen@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>,
 	Damien Le Moal <dlemoal@kernel.org>,
@@ -64,12 +63,15 @@ Cc: j.ne@posteo.net, devicetree@vger.kernel.org,
 	linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
 	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH v2 05/12] dt-bindings: dma: Convert fsl,elo*-dma to YAML
-Message-ID: <Z684nUnDX4Sb98rQ@probook>
+	linux-mtd@lists.infradead.org, Li Yang <leoyang.li@nxp.com>,
+	John Ogness <john.ogness@linutronix.de>
+Subject: Re: [PATCH v2 09/12] dt-bindings: memory-controllers: Convert
+ fsl,elbc to YAML
+Message-ID: <Z7ILej_AJYot_wKP@probook>
 References: <20250207-ppcyaml-v2-0-8137b0c42526@posteo.net>
- <20250207-ppcyaml-v2-5-8137b0c42526@posteo.net>
- <Z6pV4eauZj75+911@lizhi-Precision-Tower-5810>
+ <20250207-ppcyaml-v2-9-8137b0c42526@posteo.net>
+ <Z6kQpuQf5m-bXTyt@buserror.net>
+ <20250210215324.GA1040564-robh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -79,164 +81,67 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Z6pV4eauZj75+911@lizhi-Precision-Tower-5810>
+In-Reply-To: <20250210215324.GA1040564-robh@kernel.org>
 
-On Mon, Feb 10, 2025 at 02:39:13PM -0500, Frank Li wrote:
-> On Fri, Feb 07, 2025 at 10:30:22PM +0100, J. Neuschäfer via B4 Relay wrote:
-> > From: "J. Neuschäfer" <j.ne@posteo.net>
-> >
-> > The devicetree bindings for Freescale DMA engines have so far existed as
-> > a text file. This patch converts them to YAML, and specifies all the
-> > compatible strings currently in use in arch/powerpc/boot/dts.
-> >
-> > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> > ---
-> >
-> > V2:
-> > - remove unnecessary multiline markers
-> > - fix additionalProperties to always be false
-> > - add description/maxItems to interrupts
-> > - add missing #address-cells/#size-cells properties
-> > - convert "Note on DMA channel compatible properties" to YAML by listing
-> >   fsl,ssi-dma-channel as a valid compatible value
-> > - fix property ordering in examples: compatible and reg come first
-> > - add missing newlines in examples
-> > - trim subject line (remove "bindings")
-> > ---
-> >  .../devicetree/bindings/dma/fsl,elo-dma.yaml       | 140 ++++++++++++++
-> >  .../devicetree/bindings/dma/fsl,elo3-dma.yaml      | 123 +++++++++++++
-> >  .../devicetree/bindings/dma/fsl,eloplus-dma.yaml   | 134 ++++++++++++++
-> >  .../devicetree/bindings/powerpc/fsl/dma.txt        | 204 ---------------------
-> >  4 files changed, 397 insertions(+), 204 deletions(-)
+On Mon, Feb 10, 2025 at 03:53:24PM -0600, Rob Herring wrote:
+> On Sun, Feb 09, 2025 at 02:31:34PM -0600, Crystal Wood wrote:
+> > On Fri, Feb 07, 2025 at 10:30:26PM +0100, J. Neuschäfer via B4 Relay wrote:
+> > > From: "J. Neuschäfer" <j.ne@posteo.net>
+> > > 
+> > > Convert the Freescale localbus controller bindings from text form to
+> > > YAML. The updated list of compatible strings reflects current usage
+> > > in arch/powerpc/boot/dts/, except that many existing device trees
+> > > erroneously specify "simple-bus" in addition to fsl,*elbc.
+> > > 
+> > > Changes compared to the txt version:
+> > >  - removed the board-control (fsl,mpc8272ads-bcsr) node because it only
+> > >    appears in this example and nowhere else
+> > >  - added a new example with NAND flash
+> > >  - updated list of compatible strings
+> > > 
+> > > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
+> > > ---
+> > > 
+> > > V2:
+> > > - fix order of properties in examples, according to dts coding style
+> > > - move to Documentation/devicetree/bindings/memory-controllers
+> > > - clarify the commit message a tiny bit
+> > > - remove unnecessary multiline markers (|)
+> > > - define address format in patternProperties
+> > > - trim subject line (remove "binding")
+> > > - remove use of "simple-bus", because it's technically incorrect
+> > 
+> > While I admit I haven't been following recent developments in this area,
+> > as someone who was involved when "simple-bus" was created (and was on the
+> > ePAPR committee that standardized it) I'm surprised to hear simple-bus
+> > being called "erroneous" or "technically incorrect" here.
+> 
+> Erroneous because the binding did not say "simple-bus" was used. Not 
+> uncommon with the old .txt bindings.
+> 
+> Generally, if a bus has control registers or resources like clocks, then 
+> we tend not to call them 'simple-bus'. And '"specific-bus", 
+> "simple-bus"' gives some problems around what driver if any do you 
+> bind to. 
 [...]
-> > +  reg:
-> > +    maxItems: 1
-> > +    description:
-> > +      DMA General Status Register, i.e. DGSR which contains status for
-> > +      all the 4 DMA channels.
+> > You'd probably need something like commit 3e25f800afb82bd9e5f8 ("memory:
+> > fsl_ifc: populate child devices without relying on simple-bus") and the 
+> > subsequent fix in dd8adc713b1656 ("memory: fsl_ifc: populate child
+> > nodes of buses and mfd devices")...
+> > 
+> > I'm curious what the reasoning was for removing simple-bus from IFC.  It
+> > seems that the schema verification also played a role in that:
+> > https://www.spinics.net/lists/devicetree/msg220418.html
 > 
-> needn't maxItems
-> items:
->   - description: DMA ...
+> If a kernel change is needed to support changed .dts files, then we 
+> shouldn't be doing that here (being mature platforms). That would mean 
+> new DTB will not work with existing kernels.
 
-Good point, I'll do that.
-
-> 
-> > +
-> > +  cell-index:
-> > +    $ref: /schemas/types.yaml#/definitions/uint32
-> > +    description: Controller index. 0 for controller @ 0x8100.
-> > +
-> > +  ranges: true
-> > +
-> > +  "#address-cells":
-> > +    const: 1
-> > +
-> > +  "#size-cells":
-> > +    const: 1
-> > +
-> > +  interrupts:
-> > +    maxItems: 1
-> > +    description: Controller interrupt.
-> 
-> Needn't description because no any additional informaiton.
-
-True.
-
-> 
-> > +
-> > +required:
-> > +  - compatible
-> > +  - reg
-[...]
-> > +additionalProperties: false
-> 
-> Need ref to dma-common.yaml?
-
-Sounds good, but I'm not sure what to do about the #dma-cells property,
-which is required by dma-common.yaml.
-
-There aren't many examples of DMA channels being explicitly declared in
-device trees. One example that I could find is the the xilinx_dma.txt
-binding:
+Alright, I'll keep simple-bus in the eLBC binding for historical
+compatibility.
 
 
-	axi_vdma_0: axivdma@40030000 {
-		compatible = "xlnx,axi-vdma-1.00.a";
-		#dma_cells = <1>;
-		reg = < 0x40030000 0x10000 >;
-		dma-ranges = <0x00000000 0x00000000 0x40000000>;
-		xlnx,num-fstores = <0x8>;
-		xlnx,flush-fsync = <0x1>;
-		xlnx,addrwidth = <0x20>;
-		clocks = <&clk 0>, <&clk 1>, <&clk 2>, <&clk 3>, <&clk 4>;
-		clock-names = "s_axi_lite_aclk", "m_axi_mm2s_aclk", "m_axi_s2mm_aclk",
-			      "m_axis_mm2s_aclk", "s_axis_s2mm_aclk";
-		dma-channel@40030000 {
-			compatible = "xlnx,axi-vdma-mm2s-channel";
-			interrupts = < 0 54 4 >;
-			xlnx,datawidth = <0x40>;
-		};
-		dma-channel@40030030 {
-			compatible = "xlnx,axi-vdma-s2mm-channel";
-			interrupts = < 0 53 4 >;
-			xlnx,datawidth = <0x40>;
-		};
-	};
-
-	...
-
-	vdmatest_0: vdmatest@0 {
-		compatible ="xlnx,axi-vdma-test-1.00.a";
-		dmas = <&axi_vdma_0 0
-			&axi_vdma_0 1>;
-		dma-names = "vdma0", "vdma1";
-	};
-
-It has #dma_cells (I'm sure #dma-cells was intended) on the controller.
+Thank you both for your discussion.
 
 
-Another example is in arch/powerpc/boot/dts/fsl/p1022si-post.dtsi:
-
-	dma@c300 {
-		dma00: dma-channel@0 {
-			compatible = "fsl,ssi-dma-channel";
-		};
-		dma01: dma-channel@80 {
-			compatible = "fsl,ssi-dma-channel";
-		};
-	};
-
-	...
-
-	ssi@15000 {
-		compatible = "fsl,mpc8610-ssi";
-		cell-index = <0>;
-		reg = <0x15000 0x100>;
-		interrupts = <75 2 0 0>;
-		fsl,playback-dma = <&dma00>;
-		fsl,capture-dma = <&dma01>;
-		fsl,fifo-depth = <15>;
-	};
-
-
-There, the DMA channels are used directly and without additional
-information (i.e. #dma-cells = <0>, althought it isn't specified).
-
-
-> > +        dma-channel@0 {
-> > +            compatible = "fsl,mpc8349-dma-channel", "fsl,elo-dma-channel";
-> > +            reg = <0 0x80>;
-> > +            cell-index = <0>;
-> > +            interrupt-parent = <&ipic>;
-> > +            interrupts = <71 8>;
-> 
-> '8',  use predefine MACRO for irq type.
-
-Good catch, will do
-
-> 
-> Frank
-
-Thanks for your review!
 J. Neuschäfer
