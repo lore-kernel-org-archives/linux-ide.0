@@ -1,219 +1,130 @@
-Received: from smtpbgsg1.qq.com (smtpbgsg1.qq.com [54.254.200.92])
+Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B36134C70;
-	Mon, 17 Feb 2025 07:02:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79BF921519C;
+	Mon, 17 Feb 2025 09:31:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739775772; cv=none; b=ujlGtydeIR6G6rLTTkGAo9ruGLJfVkEqCdYCLMQJX/JrBKNKOZMhP4fYIggRMzlrYpkKuVDSCyYHhJmqQ1W0C4YqlRrA9EhcwlwPS3J1WoZLCBe/KcWNhEzLy4YJy/v8O78GQUy0f5rBAWHiQ3deLEIGvAp/m9hOY+H+jhppFFo=
+	t=1739784677; cv=none; b=ulOktqqRNfoXDIsk2NBqhnfPAOBrnjIH1BcyyW7IcRRSX+LFfWtVj4mIwt8WUxL2X3KIftuWNO+Xx3ylICEzuueG2qIkB8tGvj0B2Xi0+yXKCq3y3QAAxjwj4YCUaHShJzR7n21qBtvIVvqsBrk1V1/i0CR2Jjfg3cbppCqXqcw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739775772; c=relaxed/simple;
-	bh=CnMACyq8fVyIC6o/qW1rsSrblNpgU9XLuyA5xGMStqo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XtM0aiPF9juWN1JqxoEBPh73aFJ7g4eh62KvQrVdhOTbOvIdlSheG2n6LT2OInOLeFD3cgpCNpyBEBgmfkZ2b8viGUF5/2NbOoMRSw7I8wrpY/57rwadAIWhcFl6uoLsgi0cJVwCaruTlmLliGtUUD9x6lTXZyOkQXMb2oUCqYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=qPK+yJh3; arc=none smtp.client-ip=54.254.200.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1739784677; c=relaxed/simple;
+	bh=BF3BWMnRAgV+XVc7QLQRap/ja+b/weSZ+YkZOb083OM=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=FppWIrHncgthL/3PAW17LeknnXOPLzh+HVIqoKzujxJs+Vft7irobBNoGbojA8Mk0psF/vWiF/Jhb9+rbku5knZ9XCmA8FuxdUNGyaerS75h/Kd3IB3AZnnxgK/Hy1utkQobRzd+aZDJJBFJlZglMcETZmy7mFfel2hXRSsJSqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=fK/H46QJ; arc=none smtp.client-ip=217.70.183.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="qPK+yJh3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1739775724;
-	bh=tEaf1fdlKHQ41IMwoFr6kAyWu7BQC3uaiiT0Z+Tp1vk=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=qPK+yJh3VI328ujJERmfE0AbHl0xq7idc6Cu/wtEllCf+vaueYRadZsV/agWa4on4
-	 PmsR/hK3LQsjw9s5zOn/8js02rsCa9ppghL16ar2Lg5mw7fy6m1enVuVlQ7slPQOs2
-	 dTGS52qt1hGJ8GQk5A+oWbr5KwHq2CcFDHa6SBBY=
-X-QQ-mid: bizesmtpip3t1739775691t5lavpw
-X-QQ-Originating-IP: TBtoORpur2h6g4UaoSd3UoAbLMVGet+CdXOJtAvKbqw=
-Received: from localhost.localdomain ( [localhost])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Mon, 17 Feb 2025 15:01:29 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 6567153048782771633
-From: WangYuli <wangyuli@uniontech.com>
-To: cassel@kernel.org
-Cc: chenhuacai@kernel.org,
-	chenhuacai@loongson.cn,
-	dlemoal@kernel.org,
-	jiaxun.yang@flygoat.com,
-	kernel@xen0n.name,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	WangYuli <wangyuli@uniontech.com>,
-	Jie Fan <fanjie@uniontech.com>,
-	Erpeng Xu <xuerpeng@uniontech.com>
-Subject: Re: Re: [PATCH] ahci: Marvell controllers prefer DMA for ATAPI
-Date: Mon, 17 Feb 2025 15:01:20 +0800
-Message-ID: <36B40EDC960C005C+20250217070120.666907-1-wangyuli@uniontech.com>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <Zt6l6DVeDGzb5W7N@ryzen.lan>
-References: <Zt6l6DVeDGzb5W7N@ryzen.lan>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="fK/H46QJ"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 6D2C04328A;
+	Mon, 17 Feb 2025 09:31:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1739784672;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gzSgtFsogf3LvL+ai4nE5Lt4B+3+Fu9VUwcYPOuEIZQ=;
+	b=fK/H46QJFMLPMcRVkjjcBvXz3suQapWq9E5PCchE4muxik4Ug0FIztPKlE1SGb5DuDwz5a
+	Uoo/64V/Eik/EAM40u63rxPdOzMTUc5FKFGxbkaMwRtBN5QXugz6xEKYFf59C2CPI3qGmh
+	u2dWyZ6LCPd2sA0i6Nm2l6QZWCbNwHDiaPP9GOa9zcetatAYq2HNqRYOpUPYEdK/9SEZcv
+	QBSU/EiTcIELPURB8EgJ9MV8wakky8b0GJorTq/QHU9O5rUi5u4wERdnNw3OTb4gL4kLQh
+	1ripd4J1y7IWjqrj7Anhj4dIEqUdf7WF3Tl1AosWjOQZfn//HL8/QDLv01yDpA==
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+To: J. =?utf-8?Q?Neusch=C3=A4fer?= <j.ne@posteo.net>
+Cc: J. =?utf-8?Q?Neusch=C3=A4fer?= via B4 Relay
+ <devnull+j.ne.posteo.net@kernel.org>,
+  devicetree@vger.kernel.org,  linuxppc-dev@lists.ozlabs.org,  Krzysztof
+ Kozlowski <krzk@kernel.org>,  imx@lists.linux.dev,  Scott Wood
+ <oss@buserror.net>,  Madhavan Srinivasan <maddy@linux.ibm.com>,  Michael
+ Ellerman <mpe@ellerman.id.au>,  Nicholas Piggin <npiggin@gmail.com>,
+  Christophe Leroy <christophe.leroy@csgroup.eu>,  Naveen N Rao
+ <naveen@kernel.org>,  Rob Herring <robh@kernel.org>,  Krzysztof Kozlowski
+ <krzk+dt@kernel.org>,  Conor Dooley <conor+dt@kernel.org>,  Damien Le Moal
+ <dlemoal@kernel.org>,  Niklas Cassel <cassel@kernel.org>,  Herbert Xu
+ <herbert@gondor.apana.org.au>,  "David S. Miller" <davem@davemloft.net>,
+  Lee Jones <lee@kernel.org>,  Vinod Koul <vkoul@kernel.org>,  Lorenzo
+ Pieralisi <lpieralisi@kernel.org>,  Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
+ <kw@linux.com>,
+  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,  Bjorn Helgaas
+ <bhelgaas@google.com>,  J. =?utf-8?Q?Neusch=C3=A4fer?=
+ <j.neuschaefer@gmx.net>,  Wim Van
+ Sebroeck <wim@linux-watchdog.org>,  Guenter Roeck <linux@roeck-us.net>,
+  Mark Brown <broonie@kernel.org>,  Richard Weinberger <richard@nod.at>,
+  Vignesh Raghavendra <vigneshr@ti.com>,  linux-kernel@vger.kernel.org,
+  linux-ide@vger.kernel.org,  linux-crypto@vger.kernel.org,
+  dmaengine@vger.kernel.org,  linux-pci@vger.kernel.org,
+  linux-watchdog@vger.kernel.org,  linux-spi@vger.kernel.org,
+  linux-mtd@lists.infradead.org
+Subject: Re: [PATCH v2 12/12] dt-bindings: mtd: raw-nand-chip: Relax node
+ name pattern
+In-Reply-To: <Z7Iqir-qaZDt6tsx@probook> ("J. =?utf-8?Q?Neusch=C3=A4fer=22'?=
+ =?utf-8?Q?s?= message of "Sun, 16
+	Feb 2025 18:12:26 +0000")
+References: <20250207-ppcyaml-v2-0-8137b0c42526@posteo.net>
+	<20250207-ppcyaml-v2-12-8137b0c42526@posteo.net>
+	<87o6zaurv9.fsf@bootlin.com> <Z7Iqir-qaZDt6tsx@probook>
+User-Agent: mu4e 1.12.7; emacs 29.4
+Date: Mon, 17 Feb 2025 10:31:08 +0100
+Message-ID: <87tt8svrxf.fsf@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtpip:uniontech.com:qybglogicsvrgz:qybglogicsvrgz8a-1
-X-QQ-XMAILINFO: Ob+TdET2B71e5ulmgkXCW/ALvBh1Qk50Fw2/F7D0yEfDpn7hXosZRLzi
-	aWC5Ga/PoseFquZrV/AeJTJYlnZPJNDae1z6DRTewKSkQYWz8FxxMU0bnGjp3atFGVqsi5g
-	tJF7LjZ1ncLl40hE3JJk7O6mW2mreplYRCSshyHo5o3C7Pe6qJZwFzB9wfZS09hDNOwsxqk
-	iL6tvLgEe5eamt6bahbeFobaVo0qx4UVM1g0VGjRFB//nwoAIgoap7oetkDLBvk+NAy5erF
-	h/DGW2iD7nduCe2PF5nT7hQN+AWc0pgOrAhqYb+/sJhHeiwZdkzINbcRl0/Dt03GahqnuyZ
-	N80S5+zwgWoOsYxEXOsqNCgg1hmYnRuEVtJOv9GXZ4aQSmJTDyavaBLANITyBi0d9YOK3sx
-	rypBHIFoF2DYPYQBfL4omu6bEeyXYclAFhMWx3WxhSZUFE2OC0W9RX7NKWgKs88kVv9tIVa
-	sDWhYDull3GaoREvOtddWkitpLwG4/z25FhB62n+EKczOSVoJlinIzh6i9AkKM3656CCa7w
-	eOGd9k5nbUOvBlJQ9adq+10VzU63CbznGhOPXpuTV4zxnAy2t5CSYJBjrMx2Y37Rpcl3LkN
-	MP+owCu/aJ1QWfcusixGVNQfzlxyq5WAcwDtc+epJyrFaF/z7nC9OturBTLnArGRE+C4FTo
-	aIcHEjmqzN8y3ACUN4Gj1h0E8mn2D5CsLnAnmXcNiVpxYcaP+uiWpj6bK/MYdZ6IEsB5bkU
-	5NVp/kH5nC8pH9/tUfnDDsDssGBt36bWOdTbNguPeJ+GiFnXL43JKYGLzw9Y5v578arZGZA
-	iS9yT7qGOBOSG+7CIaHmAeai/7cKS7rIxQqjZ/NhyiPKQGyNrBMoJd8ND/In1UJFLDSCIGz
-	ENJ8tK1+8M/Kt7hgZ8u0Q+3/YqFUVytcwQsiuogPRnuiR9I4PRc9d34+b6sXysQef19oMfr
-	vLz3z9ZQdvPNC6iMTxeHWbENPEityy79z0i8TWGZMi9gkMA==
-X-QQ-XMRINFO: OWPUhxQsoeAVDbp3OJHYyFg=
-X-QQ-RECHKSPAM: 0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-GND-State: clean
+X-GND-Score: -100
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdehkedtgecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefujghffgffkfggtgfgsehtqhertddtreejnecuhfhrohhmpefoihhquhgvlhcutfgrhihnrghluceomhhiqhhuvghlrdhrrgihnhgrlhessghoohhtlhhinhdrtghomheqnecuggftrfgrthhtvghrnheptdevhffgtdfhhefggeeftdeiffduiedtgffftddutdehteejhfevieelveegveetnecuffhomhgrihhnpeguvghvihgtvghtrhgvvgdrohhrghenucfkphepledtrdekledrudeifedruddvjeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeeltddrkeelrdduieefrdduvdejpdhhvghloheplhhotggrlhhhohhsthdpmhgrihhlfhhrohhmpehmihhquhgvlhdrrhgrhihnrghlsegsohhothhlihhnrdgtohhmpdhnsggprhgtphhtthhopeefledprhgtphhtthhopehjrdhnvgesphhoshhtvghordhnvghtpdhrtghpthhtohepuggvvhhnuhhllhdojhdrnhgvrdhpohhsthgvohdrnhgvtheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepuggvvhhitggvthhrvggvsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugihpphgtqdguvghvsehlihhsthhsrdhoi
+ ihlrggsshdrohhrghdprhgtphhtthhopehkrhiikheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepihhmgieslhhishhtshdrlhhinhhugidruggvvhdprhgtphhtthhopehoshhssegsuhhsvghrrhhorhdrnhgvthdprhgtphhtthhopehmrgguugihsehlihhnuhigrdhisghmrdgtohhm
+X-GND-Sasl: miquel.raynal@bootlin.com
 
-Reported-by: WangYuli <wangyuli@uniontech.com>
+Hello,
 
-Hi all,
+>> > In some scenarios, such as under the Freescale eLBC bus, there are raw
+>> > NAND chips with a unit address that has a comma in it (cs,offset).
+>> > Relax the $nodename pattern in raw-nand-chip.yaml to allow such unit
+>> > addresses.
+>>=20
+>> This is super specific to this controller, I'd rather avoid that in the
+>> main (shared) files. I believe you can force another node name in the
+>> controller's binding instead?
+>
+> It's a bit tricky. AFAICS, when I declare a node name pattern in my
+> specific binding in addition to the generic binding, the result is that
+> both of them apply, so I can't relax stricter requirements:
+>
+> # raw-nand-chip.yaml
+> properties:
+>   $nodename:
+>     pattern: "^nand@[a-f0-9]$"
+>
+> # fsl,elbc-fcm-nand.yaml
+> properties:
+>   $nodename:
+>     pattern: "^nand@[a-f0-9](,[0-9a-f]*)?$"
 
-During testing, we observed that reading CDs on an INSPUR CE3000F desktop
-computer (with a Phytium FT2000/4 processor [1]) running deepin 23 [2]
-distribution is very slow, taking over a minute.
+Well, I guess this is creating a second possible node name.
 
-Further testing revealed that mounting the device from the command line is
-fast.
-  e.g., executing "time mount /dev/sr0 /mnt" returns a value of only 0.898s.
+> # dtc
+> /.../fsl,elbc-fcm-nand.example.dtb:
+> nand@1,0: $nodename:0: 'nand@1,0' does not match '^nand@[a-f0-9]$'
+>         from schema $id:
+> 	http://devicetree.org/schemas/mtd/fsl,elbc-fcm-nand.yaml#
 
-However, deepin's dde-file-manager reads more than just mounting when opening
-the optical drive; it also reads disc information (such as capacity, etc.).
+What about fixing the DT instead?
 
-After using udisksctl to first mount and then unmount the disc to reset its
-state, and then using the cd_sessions tool to read disc information, we used
-strace to monitor system calls, testing commands are as follows:
-  udisksctl mount -b /dev/sr0
-  udisksctl unmount -b /dev/sr0
-  strace -Ttt cd_sessions /dev/sr0
-and found that openat was blocked for 42 seconds, and at this point, the
-process had entered kernel space.
+> (I changed the second pattern to nand-fail@... and dtc warned about it
+>  mismatching too.)
+>
+> Perhaps I'm missing a DT-schema trick to override a value/pattern.
+>
+> Alternatively (pending discussion on patch 11/12), I might end up not
+> referencing raw-nand-chip.yaml.
 
-[1]. https://www.phytium.com.cn/homepage/production/6/
-[2]. https://cdimage.deepin.com/releases/23/arm64/deepin-desktop-community-23-arm64.iso
-
-
-TEST REPORT:
-
-For this patch, before its introduction, with original system-integrated optical
-drives capable of recognizing discs, the total execution time for cd_sessions was
-92.4 seconds, including 31.6 seconds for openat and 60.6 seconds for ioctl.
-
-With LITE-ON optical drives, under the same condition of disc recognition, the
-total execution time for cd_sessions was 108.2 seconds, with openat taking 45.4
-seconds and ioctl taking 62.9 seconds.
-
-With RITEK optical drives, also when discs were recognizable, the total
-cd_sessions execution time was 98.2 seconds, with openat at 36.7 seconds and ioctl
-at 60.8 seconds.
-
-After the patch was introduced, the time to read disc information (using cd_sessions)
-with all optical drives was reduced to less than 0.5 seconds.
-
-I've tried different pairings of optical drives and SATA controllers, and the test
-results were consistent across the board. The Marvell 88SE9215 controller consistently
-emerges as the source of the problem, no matter the optical drive tested.
-
-Devices lists are as follow:
-
-
-CD-ROM DRIVER LIST:
-  1. original system-integrated optical drive
-           *-cdrom
-                description: DVD writer
-                product: DVD A  DH16AFSH
-                vendor: ATAPI
-                physical id: 0
-                bus info: scsi@2:0.0.0
-                logical name: /dev/cdrom
-                logical name: /dev/sr0
-                version: DC2M
-                capabilities: removable audio cd-r cd-rw dvd dvd-r
-                configuration: ansiversion=5 status=ready
-              *-medium
-                   physical id: 0
-                   logical name: /dev/cdrom
-  2. a LITE-ON optical drive
-           *-cdrom
-                description: DVD writer
-                product: DVD-RW DH16AFSH
-                vendor: PLDS
-                physical id: 0
-                bus info: scsi@2:0.0.0
-                logical name: /dev/cdrom
-                logical name: /dev/sr0
-                version: DL3M
-                capabilities: removable audio cd-r cd-rw dvd dvd-r
-                configuration: ansiversion=5 status=nodisc
-  3. a RITEK optical drive
-           *-cdrom
-                description: DVD writer
-                product: DH-16AFSH SUPDRV
-                vendor: RIDATA
-                physical id: 0
-                bus info: scsi@2:0.0.0
-                logical name: /dev/cdrom
-                logical name: /dev/sr0
-                version: NWDN
-                capabilities: removable audio cd-r cd-rw dvd dvd-r
-                configuration: ansiversion=5 status=nodisc
-
-
-SATA Controllers LIST:
-  1. INSPUR CE3000F
-        *-sata
-             description: SATA controller
-             product: 88SE9215 PCIe 2.0 x1 4-port SATA 6 Gb/s Controller
-             vendor: Marvell Technology Group Ltd.
-             physical id: 0
-             bus info: pci@0000:03:00.0
-             logical name: scsi2
-             logical name: scsi3
-             version: 11
-             width: 32 bits
-             clock: 33MHz
-             capabilities: sata pm msi pciexpress ahci_1.0 bus_master cap_list rom emulated
-             configuration: driver=ahci latency=0
-             resources: irq:43 ioport:2020(size=8) ioport:2030(size=4) ioport:2028(size=8) ioport:2034(size=4) ioport:2000(size=32) memory:58140000-581407ff memory:58100000-5813ffff
-  2. Maxsun MS-WS W680 D4
-             Hardware Class: storage
-             Model: "Intel SATA controller"
-             Vendor: pci 0x8086 "Intel Corporation"
-             Device: pci 0x7ae2 
-             Revision: 0x11
-             Driver: "ahci"
-             Driver Modules: "ahci"
-             Memory Range: 0x82100000-0x82101fff (rw,non-prefetchable)
-             Memory Range: 0x82102800-0x821028ff (rw,non-prefetchable)
-             Memory Range: 0x82102000-0x821027ff (rw,non-prefetchable)
-             IRQ: 166 (no events)
-             Module Alias: "pci:v00008086d00007AE2sv00000000sd00000000bc01sc06i01"
-             Driver Info #0:
-               Driver Status: ahci is active
-               Driver Activation Cmd: "modprobe ahci"
-             Config Status: cfg=new, avail=yes, need=no, active=unknown
-
-
-Tested-by: Jie Fan <fanjie@uniontech.com>
-Tested-by: Erpeng Xu <xuerpeng@uniontech.com>
-Tested-by: WangYuli <wangyuli@uniontech.com>
-
-Currently, due to the limited hardware I have access to, I'm unsure if this is a Marvell
-88SE9215's specific issue or a general Marvell SATA controller problem.
-
-So, I think it's reasonable to add a quirk to handle this for the Marvell 88SE9215 now.
+Ok.
 
 Thanks,
---
-WangYuli
+Miqu=C3=A8l
