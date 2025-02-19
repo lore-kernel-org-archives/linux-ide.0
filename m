@@ -1,100 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B38E61F3B83
-	for <linux-ide@vger.kernel.org>; Wed, 19 Feb 2025 16:02:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16ADE1B85E2
+	for <linux-ide@vger.kernel.org>; Wed, 19 Feb 2025 20:04:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739980963; cv=none; b=IkmabAr4SLEwLEiQAjHZsd6aUhnRj5mJ09OgeDfQEhocEi3qcSNAhJo5HMMvH8afPKsgQ91QFGvoje0PH12kDG7zMu+QJRo/C/vicRkVW8gnv0rILld9DiwXdHLlYQ3+4OC1vI7gy+IJ0dHOmObitRPWfo+5qqQn1SAQwOl41QA=
+	t=1739995501; cv=none; b=M1tvsafnTcqyM6gnxkHdioFdLHEflCSAlyV0C6BGrjAr7HasxPyKWRhvFRHqMch/nBphkY7UdICs2yHotaY4WQpwJ5PElIv58v/IXNKUkTSlRB1I+shJIdxzt/B65QPwzphz8x2rFvtUIPwRcbNjr4Bf6oOaF8RvVZatSpEkSJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739980963; c=relaxed/simple;
-	bh=vlE4Nw7eAEepD9hngLR2Npb/JR82EkB/iBby3uxMtPk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bYVYBQYaZ1xC/EuBp1TZFm/2Tv0Fgyl8SPpK4SIz+nmBwTtj4QaZ4qD45T6js+GXVqQ+MEm2UFx9cgRRAGp2kFg5Jm1PVlXW2C/TP6G7593BC8XadQUbROYRVVRgfy/uoYvJoQK/o8dj7rDQCG/fdmo92E+55bJPOL/T2ftMdD4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ipBpYeCJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1739995501; c=relaxed/simple;
+	bh=b31DO/mYbw9l//or2Ubel/0Q8kbd1gUXMbO2ml5QC+w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=H3TUBG+cL2D1m1QQo6i9N0dKHU29KmVPW2vH4p9WmP9gq0EVi1fPrGwraIgwCT2DRF7g36jKiMRVoqxOIMYb6ndnkRi7igXi2zRhKhLFmmX0eJR1zE3L7sOEvbevwduoYUX0PCs5fPMTDHS82rNFeeoW9r+CsdeES6+PBOjIvpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=NHAhbng5; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ipBpYeCJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 773E2C4CED1;
-	Wed, 19 Feb 2025 16:02:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739980962;
-	bh=vlE4Nw7eAEepD9hngLR2Npb/JR82EkB/iBby3uxMtPk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ipBpYeCJygyn5BDrll3aaycSdXs7dMdM1Y6rQkgUDs2xbera6ZbceHjiN+zltPyXw
-	 YGdIoV9b1ZGEZ46B/HVaEgAe93wvOk3aBrDmAjUAqafNr5Y5aSNK/PaYX/9uPoSPls
-	 /3CHiRcTLzu/u0vjrqyGKTUBwfUaTTukYNUlUKblTRSJ/jerKbkjPV/2ftakSEalJ4
-	 9pWE5rUPNFYMpsE0+qZbCdQs6zSBO01HOsUCbaf+36mQ1GXO2njSNJnDGFB8LMtHlI
-	 RshJOWf5nqkLHGwiQWe2I+E/8BTKSkJgFhIDQejNW4n70u+IN6V72W6IpVkBVYCmmr
-	 cd9XlYpT/FaEg==
-Date: Wed, 19 Feb 2025 17:02:38 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Philip Pemberton <lists@philpem.me.uk>
-Cc: linux-ide@vger.kernel.org
-Subject: Re: Zip 100 ATAPI not working, "qc timeout" and "failed to clear
- UNIT ATTENTION"
-Message-ID: <Z7YAnqGsrWSzBirf@ryzen>
-References: <c6722ee8-5e21-4169-af59-cbbae9edc02f@philpem.me.uk>
- <Z36GMwr49ihd2nAG@ryzen>
- <e1985151-c206-4be1-91c1-92eac16f6236@philpem.me.uk>
- <Z3-_dt0m_2UrtKon@ryzen>
- <e1b79ece-b4b2-42e5-b259-290820324b5e@philpem.me.uk>
- <Z4pdD1Z2mJnF7N3O@ryzen>
- <2bb1510c-c42f-468b-a8cb-70603bee846b@philpem.me.uk>
- <Z5NlVjIMp6Wo8dQd@ryzen>
- <9253b1b9-0f92-45ab-8b8a-44064ffa9cd9@philpem.me.uk>
- <Z7X9aPpgBjNln9CJ@ryzen>
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="NHAhbng5"
+Received: from wolf.philpem.me.uk (148.163.187.81.in-addr.arpa [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id 37146BD45F;
+	Wed, 19 Feb 2025 20:04:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1739995491;
+	bh=b31DO/mYbw9l//or2Ubel/0Q8kbd1gUXMbO2ml5QC+w=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=NHAhbng5vXW/TkXjqp0jyyf78/y8RpqzCITRtcIQjuXoT3VSr8oEqRTDQR/c8n33R
+	 pmT27cakb8vKRCyBOIOMgohSMDAFIpWKBvk1m11qjqcZLwFdk1ZYPW94sQrRNmaGlo
+	 922f/TOrmta9yTNsXAt2wEn9m5aZYSj3/zeqrCF4=
+Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id CC8F45FCD9;
+	Wed, 19 Feb 2025 20:04:50 +0000 (GMT)
+Message-ID: <27dbfb0f-2dfb-4f4a-bc5c-bb53a9f1eef5@philpem.me.uk>
+Date: Wed, 19 Feb 2025 20:04:50 +0000
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z7X9aPpgBjNln9CJ@ryzen>
+User-Agent: Mozilla Thunderbird
+Subject: Re: Zip 100 ATAPI not working, "qc timeout" and "failed to clear UNIT
+ ATTENTION"
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+References: <c6722ee8-5e21-4169-af59-cbbae9edc02f@philpem.me.uk>
+ <Z36GMwr49ihd2nAG@ryzen> <e1985151-c206-4be1-91c1-92eac16f6236@philpem.me.uk>
+ <Z3-_dt0m_2UrtKon@ryzen> <e1b79ece-b4b2-42e5-b259-290820324b5e@philpem.me.uk>
+ <Z4pdD1Z2mJnF7N3O@ryzen> <2bb1510c-c42f-468b-a8cb-70603bee846b@philpem.me.uk>
+ <Z5NlVjIMp6Wo8dQd@ryzen> <9253b1b9-0f92-45ab-8b8a-44064ffa9cd9@philpem.me.uk>
+ <Z7X9aPpgBjNln9CJ@ryzen> <Z7YAnqGsrWSzBirf@ryzen>
+Content-Language: en-GB
+From: Philip Pemberton <lists@philpem.me.uk>
+In-Reply-To: <Z7YAnqGsrWSzBirf@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 19, 2025 at 04:48:56PM +0100, Niklas Cassel wrote:
-> 
-> Perhaps your could try with something like:
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 3b303d4ae37a..bc2a317c97da 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -1543,7 +1543,7 @@ unsigned int atapi_eh_request_sense(struct ata_device *dev,
->         tf.command = ATA_CMD_PACKET;
->  
->         /* is it pointless to prefer PIO for "safety reasons"? */
-> -       if (ap->flags & ATA_FLAG_PIO_DMA) {
-> +       if (0) {
->                 tf.protocol = ATAPI_PROT_DMA;
->                 tf.feature |= ATAPI_PKT_DMA;
->         } else {
-> 
-> To see if NOT using DMA for PIO cmds makes any difference.
+Hi Niklas,
 
-Or the big hammer:
+On 19/02/2025 16:02, Niklas Cassel wrote:
+> On Wed, Feb 19, 2025 at 04:48:56PM +0100, Niklas Cassel wrote:
+>>
+>> Perhaps your could try with something like:
+>>
+(snip)
+>> +       if (0) {
+>>                  tf.protocol = ATAPI_PROT_DMA;
+>>                  tf.feature |= ATAPI_PKT_DMA;
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 8e895ae45c86..920462101775 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -249,7 +249,7 @@ enum {
- 
-        /* ap->flags bits */
- 
--       AHCI_FLAG_COMMON                = ATA_FLAG_SATA | ATA_FLAG_PIO_DMA |
-+       AHCI_FLAG_COMMON                = ATA_FLAG_SATA |
-                                          ATA_FLAG_ACPI_SATA | ATA_FLAG_AN,
- 
-        ICH_MAP                         = 0x90, /* ICH MAP register */
+I tried the "little hammer". It works!
 
+[    4.274698] ata4.00: ATAPI: IOMEGA  ZIP 100       ATAPI, 12.A, max 
+PIO3, CDB intr
+[    4.274825] ata4.00: applying bridge limits
+[    4.274880] ata4.00: direction 3 dmadir 0
+[    4.275166] ata4.00: direction 2 dmadir 0
+[    4.281768] ata4.00: configured for PIO3
+[    4.281874] ata4.00: About to do TEST UNIT READY
+(snip cdb)
+[    4.282715] ata4.00: direction 3 dmadir 0
+[    4.283285] ata4.00: TEST UNIT READY err_mask=1 sense_key=6
+(snip cdb)
+[    4.284181] ata4.00: direction 2 dmadir 0
+[    4.285265] ata4.00: REQUEST SENSE err_mask=0 sense_key=6
+[    4.285319] ata4.00: About to do TEST UNIT READY
+(snip cdb)
+[    4.286214] ata4.00: direction 3 dmadir 0
+[    4.286841] ata4.00: TEST UNIT READY err_mask=1 sense_key=2
+[    4.291043] scsi 3:0:0:0: Direct-Access     IOMEGA   ZIP 100 
+12.A PQ: 0 ANSI: 5
+(snip cdb)
+[    4.329969] ata4.00: direction 2 dmadir 0
 
+And smartctl can talk to it:
 
+root@localhost:~# smartctl -i /dev/sdb
+smartctl 7.3 2022-02-28 r5338 [i686-linux-6.10.11] (local build)
+Copyright (C) 2002-22, Bruce Allen, Christian Franke, www.smartmontools.org
 
-Just make sure to not use this on any system other than the machine that
-you are debugging on.
+=== START OF INFORMATION SECTION ===
+Vendor:               IOMEGA
+Product:              ZIP 100
+Revision:             12.A
+Compliance:           SPC-3
+Device type:          disk
+Local Time is:        Wed Feb 19 19:47:42 2025 UTC
+SMART support is:     Unavailable - device lacks SMART capability.
 
+I've been able to get a good read of a disk with ddrescue:
 
-Kind regards,
-Niklas
+GNU ddrescue 1.27
+Press Ctrl-C to interrupt
+      ipos:  100597 kB, non-trimmed:        0 B,  current rate:    720 kB/s
+      opos:  100597 kB, non-scraped:        0 B,  average rate:   1070 kB/s
+non-tried:        0 B,  bad-sector:        0 B,    error rate:       0 B/s
+   rescued:  100663 kB,   bad areas:        0,        run time:      1m 33s
+pct rescued:  100.00%, read errors:        0,  remaining time:         n/a
+                               time since last successful read:         n/a
+Copying non-tried blocks... Pass 1 (forwards)
+Finished
+
+I'm pretty chuffed with the data rate, 1MB/sec is far more than the 
+externals manage.
+
+I guess the question now is, how to fix this properly?
+
+Thanks,
+-- 
+Phil.
+philpem@philpem.me.uk
+https://www.philpem.me.uk/
