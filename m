@@ -1,134 +1,106 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16ADE1B85E2
-	for <linux-ide@vger.kernel.org>; Wed, 19 Feb 2025 20:04:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9B5E24E4AD;
+	Wed, 19 Feb 2025 20:52:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739995501; cv=none; b=M1tvsafnTcqyM6gnxkHdioFdLHEflCSAlyV0C6BGrjAr7HasxPyKWRhvFRHqMch/nBphkY7UdICs2yHotaY4WQpwJ5PElIv58v/IXNKUkTSlRB1I+shJIdxzt/B65QPwzphz8x2rFvtUIPwRcbNjr4Bf6oOaF8RvVZatSpEkSJs=
+	t=1739998353; cv=none; b=uWd/fDBK+8rwWHdUGvpX0fkQ0BJ2oB9s+9hobvnS3UFE3AqmEGyXex380vwGo0T1x5V6OXH3l6ErYl5Qw0pbFXGRIuQGTN69cTYIFMCcp3mcWxnMWduRGpFSsz5+D1nNlYA+/sVzHU96dV2yvsi7HIrMJu+8yQhtz/oVnLHGJOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739995501; c=relaxed/simple;
-	bh=b31DO/mYbw9l//or2Ubel/0Q8kbd1gUXMbO2ml5QC+w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=H3TUBG+cL2D1m1QQo6i9N0dKHU29KmVPW2vH4p9WmP9gq0EVi1fPrGwraIgwCT2DRF7g36jKiMRVoqxOIMYb6ndnkRi7igXi2zRhKhLFmmX0eJR1zE3L7sOEvbevwduoYUX0PCs5fPMTDHS82rNFeeoW9r+CsdeES6+PBOjIvpY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=NHAhbng5; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1739998353; c=relaxed/simple;
+	bh=Zal7sSH7vt6HSev5mTuNXbbPNHeWf9B6HOqVIxwVQzY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=PzOiJCtCE2msO/14rACYCwpvJmPQVH79yOplCkNEVmZerfhCgTj2MMrg1a31VYVxQLZhxW02DfXOvnvdDefwvVP0BXvtePbz4vnQwkE3w2gqK4k5eiTHTVmD02dV4cPWytQzrcZKuD5c+VgNo8ngwF0Idewqr9H395xuP2S9l48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DkQKTmt+; arc=none smtp.client-ip=209.85.218.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="NHAhbng5"
-Received: from wolf.philpem.me.uk (148.163.187.81.in-addr.arpa [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 37146BD45F;
-	Wed, 19 Feb 2025 20:04:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1739995491;
-	bh=b31DO/mYbw9l//or2Ubel/0Q8kbd1gUXMbO2ml5QC+w=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=NHAhbng5vXW/TkXjqp0jyyf78/y8RpqzCITRtcIQjuXoT3VSr8oEqRTDQR/c8n33R
-	 pmT27cakb8vKRCyBOIOMgohSMDAFIpWKBvk1m11qjqcZLwFdk1ZYPW94sQrRNmaGlo
-	 922f/TOrmta9yTNsXAt2wEn9m5aZYSj3/zeqrCF4=
-Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id CC8F45FCD9;
-	Wed, 19 Feb 2025 20:04:50 +0000 (GMT)
-Message-ID: <27dbfb0f-2dfb-4f4a-bc5c-bb53a9f1eef5@philpem.me.uk>
-Date: Wed, 19 Feb 2025 20:04:50 +0000
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DkQKTmt+"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-abb8d63b447so39640666b.0;
+        Wed, 19 Feb 2025 12:52:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739998350; x=1740603150; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=lg+lU+01D/1Z6849m8b/2G2o41VVf2CedXajMd7Qp7E=;
+        b=DkQKTmt+6sYviuP7H/LHQaS8Uh1D/JZ+2EGY9KYah7BcTfvpbk1cmThIkw+obF2HnY
+         dASmDoC4tUYP3lRKFR9FqsRpL5eKeSO67g00gqgM0tBx51ga/+rwzqxRqExLdvRNE5lk
+         jL0kyTG9j8gdpCcq1xI+vEA3VTzQ82OKvyLGIHWVeMOUlp5e9ytqCmclHUz0ySvIkY1B
+         xGGXmY/utng+u95k0SzRzPk9ceGCBzU7CYNvRYqaGwhmZD2aChG5HCNVQk76eYGBncHD
+         NZL9JgOmafQRyZ1+aI9rSMFnijDpPNjWpu0qT/ObgDE7xvLbCPplXre8bz8XIsfuZpaO
+         DIBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739998350; x=1740603150;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lg+lU+01D/1Z6849m8b/2G2o41VVf2CedXajMd7Qp7E=;
+        b=IxkXJTn2zckFC4GfbDTn93B+EG4v4BxZeJGDilUNjBJIjmBUco3lQn3PR1NsXZqVnR
+         KyDiUUTQV5ajnkzQT4cJ/cdU2VnuMz4L2imT1YlDUBMMfRt+DEvOAZ1M9+NbqSX5e9ZH
+         3MehFnsuak48mXF1UVldj0VlKGRwnibjPfUzkJlHkT7KtejmykQAv3c16U2Ozfyr4Qva
+         KCoih+vv62ZXtsbnfVnthbmGoXfAySSz3p9Ix8NjjcGVp+6Wi2Je++TNVS+2vZilHMHh
+         cncYnakv+f8aLHFG5sUnzZFM+Wj/n3Uw+Gl2MYT+8le8G8c5IolsdFGhJrBokZomnuXY
+         1UqA==
+X-Forwarded-Encrypted: i=1; AJvYcCUD4y4R5x7ienrO1Pek57rQqCuIo2DWF0aoDJsLkhGOJNQ+3eZjgY1SFNT9295dJxU9z5bmADDgBss=@vger.kernel.org, AJvYcCUvhTX4nHDjZOA58yCJ9LOhKoMi9Mv4ux6CigfqMHTtJ19FoA0jRIFedUPsmQIOadSy6nSwb/TOBqlhsO1u@vger.kernel.org
+X-Gm-Message-State: AOJu0YyWe+VnkzbuUVLX+9rZFuSDhEAhDDSiybUW4+VsKRANSo2l7fG2
+	jPo3bOmHOhtt2DvAXaXx3UKKPFR/XZvFkpvI04X9EK+j5aEqm8+V
+X-Gm-Gg: ASbGncuUQ48889N//V1BaOgB7ArU17DnEYHDm1ctk2SySKOEK/EfhooAlu04T512WxW
+	FTIe/GTGl2Mys78lxVz8u3LMkcbGOzJE+21+2M6arXt+/JkwJ3Nvun4Eu/ZXVCt/RMALwMZ15XY
+	cUYLdVaBIxVCwVKyIdZfTdnhmSVfBfnyijP3Ob3o2k8WtALN7qKI/a2aWsdzgSyYFCscxNSOIel
+	BvOauypwci1S8QKWEFFQdRXPQOlqdDVMFgyugsBML1VDieEhjz9Y5qSxv+9XoLwUGbUg3Muu5QT
+	o58b+HHbSZsXOpn8f8cOOk57b2KC
+X-Google-Smtp-Source: AGHT+IEJAuDneTYPi7pDmukYt4eTnxekVD0T17lKdbpd2O+SLwgtI3XBzWh35Hdgcrlj4/eV9BvvFg==
+X-Received: by 2002:a17:907:7da2:b0:ab7:c284:7245 with SMTP id a640c23a62f3a-abbcccfa40emr539542166b.18.1739998349910;
+        Wed, 19 Feb 2025 12:52:29 -0800 (PST)
+Received: from localhost.localdomain ([165.51.10.64])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-abbbeff2a4dsm377990966b.103.2025.02.19.12.52.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Feb 2025 12:52:28 -0800 (PST)
+From: Salah Triki <salah.triki@gmail.com>
+To: dlemoal@kernel.org,
+	cassel@kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Salah Triki <salah.triki@gmail.com>
+Subject: [PATCH] ata: Use str_up_down() helper in vt6420_prereset()
+Date: Wed, 19 Feb 2025 21:35:55 +0100
+Message-Id: <20250219203554.42727-1-salah.triki@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Zip 100 ATAPI not working, "qc timeout" and "failed to clear UNIT
- ATTENTION"
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-References: <c6722ee8-5e21-4169-af59-cbbae9edc02f@philpem.me.uk>
- <Z36GMwr49ihd2nAG@ryzen> <e1985151-c206-4be1-91c1-92eac16f6236@philpem.me.uk>
- <Z3-_dt0m_2UrtKon@ryzen> <e1b79ece-b4b2-42e5-b259-290820324b5e@philpem.me.uk>
- <Z4pdD1Z2mJnF7N3O@ryzen> <2bb1510c-c42f-468b-a8cb-70603bee846b@philpem.me.uk>
- <Z5NlVjIMp6Wo8dQd@ryzen> <9253b1b9-0f92-45ab-8b8a-44064ffa9cd9@philpem.me.uk>
- <Z7X9aPpgBjNln9CJ@ryzen> <Z7YAnqGsrWSzBirf@ryzen>
-Content-Language: en-GB
-From: Philip Pemberton <lists@philpem.me.uk>
-In-Reply-To: <Z7YAnqGsrWSzBirf@ryzen>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi Niklas,
+Remove hard-coded strings by using the str_up_down() helper function.
 
-On 19/02/2025 16:02, Niklas Cassel wrote:
-> On Wed, Feb 19, 2025 at 04:48:56PM +0100, Niklas Cassel wrote:
->>
->> Perhaps your could try with something like:
->>
-(snip)
->> +       if (0) {
->>                  tf.protocol = ATAPI_PROT_DMA;
->>                  tf.feature |= ATAPI_PKT_DMA;
+Signed-off-by: Salah Triki <salah.triki@gmail.com>
+---
+ drivers/ata/sata_via.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I tried the "little hammer". It works!
-
-[    4.274698] ata4.00: ATAPI: IOMEGA  ZIP 100       ATAPI, 12.A, max 
-PIO3, CDB intr
-[    4.274825] ata4.00: applying bridge limits
-[    4.274880] ata4.00: direction 3 dmadir 0
-[    4.275166] ata4.00: direction 2 dmadir 0
-[    4.281768] ata4.00: configured for PIO3
-[    4.281874] ata4.00: About to do TEST UNIT READY
-(snip cdb)
-[    4.282715] ata4.00: direction 3 dmadir 0
-[    4.283285] ata4.00: TEST UNIT READY err_mask=1 sense_key=6
-(snip cdb)
-[    4.284181] ata4.00: direction 2 dmadir 0
-[    4.285265] ata4.00: REQUEST SENSE err_mask=0 sense_key=6
-[    4.285319] ata4.00: About to do TEST UNIT READY
-(snip cdb)
-[    4.286214] ata4.00: direction 3 dmadir 0
-[    4.286841] ata4.00: TEST UNIT READY err_mask=1 sense_key=2
-[    4.291043] scsi 3:0:0:0: Direct-Access     IOMEGA   ZIP 100 
-12.A PQ: 0 ANSI: 5
-(snip cdb)
-[    4.329969] ata4.00: direction 2 dmadir 0
-
-And smartctl can talk to it:
-
-root@localhost:~# smartctl -i /dev/sdb
-smartctl 7.3 2022-02-28 r5338 [i686-linux-6.10.11] (local build)
-Copyright (C) 2002-22, Bruce Allen, Christian Franke, www.smartmontools.org
-
-=== START OF INFORMATION SECTION ===
-Vendor:               IOMEGA
-Product:              ZIP 100
-Revision:             12.A
-Compliance:           SPC-3
-Device type:          disk
-Local Time is:        Wed Feb 19 19:47:42 2025 UTC
-SMART support is:     Unavailable - device lacks SMART capability.
-
-I've been able to get a good read of a disk with ddrescue:
-
-GNU ddrescue 1.27
-Press Ctrl-C to interrupt
-      ipos:  100597 kB, non-trimmed:        0 B,  current rate:    720 kB/s
-      opos:  100597 kB, non-scraped:        0 B,  average rate:   1070 kB/s
-non-tried:        0 B,  bad-sector:        0 B,    error rate:       0 B/s
-   rescued:  100663 kB,   bad areas:        0,        run time:      1m 33s
-pct rescued:  100.00%, read errors:        0,  remaining time:         n/a
-                               time since last successful read:         n/a
-Copying non-tried blocks... Pass 1 (forwards)
-Finished
-
-I'm pretty chuffed with the data rate, 1MB/sec is far more than the 
-externals manage.
-
-I guess the question now is, how to fix this properly?
-
-Thanks,
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 57cbf2cef618..4ecd8f33b082 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -25,6 +25,7 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
++#include <linux/string_choices.h>
+ 
+ #define DRV_NAME	"sata_via"
+ #define DRV_VERSION	"2.6"
+@@ -359,7 +360,7 @@ static int vt6420_prereset(struct ata_link *link, unsigned long deadline)
+ 
+ 	ata_port_info(ap,
+ 		      "SATA link %s 1.5 Gbps (SStatus %X SControl %X)\n",
+-		      online ? "up" : "down", sstatus, scontrol);
++		      str_up_down(online), sstatus, scontrol);
+ 
+ 	/* SStatus is read one more time */
+ 	svia_scr_read(link, SCR_STATUS, &sstatus);
 -- 
-Phil.
-philpem@philpem.me.uk
-https://www.philpem.me.uk/
+2.34.1
+
