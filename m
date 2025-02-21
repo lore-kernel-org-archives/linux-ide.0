@@ -1,90 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F40B91BEF8A
-	for <linux-ide@vger.kernel.org>; Fri, 21 Feb 2025 01:54:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302751BEF8A
+	for <linux-ide@vger.kernel.org>; Fri, 21 Feb 2025 01:57:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740102868; cv=none; b=DdYm9l1K4a1ORGMlJDd/SYdGy647nrlZP9gkCrppXSw+JXiwPcE+m/PNTKDekVwS7zN2jiv0zYKkGUwwBbKG6teZFJFOMhIxJWSgVellCiQAULkPo5BPpU4qLbH27P+jVZzO4FV//CE05MMd/jeeWqgZagjDJ7JPIkRGIgOhLcw=
+	t=1740103041; cv=none; b=T1iOQOHKJd8k676qwT8BwcwCGZXDfMsl4E9HB3VhhYbrCuor949Zu1J6FJNaHHKZOSKjGeNpaWTX3EtCxP6uErR6Nrx6U1CJDn04cJQEuNI6qSVNN07FDXq2BovLtMJ8gf8q2OJIaTSRRexp8PZrdrFmhx0FKqKweCkf/ICHYFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740102868; c=relaxed/simple;
-	bh=fufAntR8nLPFeqgMuXx46QWPVLjoi5MaKAju54ZEPB4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=H72A46jj1oUJEER08Q93guG60lebwSwkuNZcJukeLBCYTCRJM0RusTIlk91VGG1+zsba2aj7LLBy3RZ/P/0vRsh5hoSWjxQBIyBIps54VDM+lR2ZYgLCjg8cWL1nlFTOw8Ng5UHNplSCjpH4aBUqXj4zC0uHpBGa0NGXnwo/I80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y+FrJBvg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740103041; c=relaxed/simple;
+	bh=FSCqF5fddUJ/CY4Fmlso4HgVPzCQfjGTqtXy95zK0d4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jJN6Y6Wern+bme7CdII08UGJakqOeOSR/ZRNrCRAQKglBQ4Cs7kipdxzTcP3NA9PtWKxXr+H83YLlgwR28I0Nb/iH/Gw+avOJDhnhwWcF+7YnXPP4+QLG4E7Tp8OjdiHesgiRpulElbrUaJXv4rO1mzYW82w+GjIC22gAwdfU9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L30lkKOh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y+FrJBvg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DC47C4CED1;
-	Fri, 21 Feb 2025 01:54:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L30lkKOh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5106C4CED1;
+	Fri, 21 Feb 2025 01:57:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740102867;
-	bh=fufAntR8nLPFeqgMuXx46QWPVLjoi5MaKAju54ZEPB4=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Y+FrJBvg7pvSgHdK6BoIFEgikJyIHL5a2kzG6uYF658SELB5cbcFdYbPwUCimt+ss
-	 b1f+Bc/q2YcRyENygI7ah/l021d4UYBurS7m0Rdlgm4XLh7uxLIoW+M5qlCIUbYY2W
-	 gCUv2ViUuyeov48cAlP5LnPBBcgNtY0s6TSlT5EZXBUeDPSTj/ikYFsI9mAuW5nbLr
-	 8nP5YK6ZeuREoMpx2DfMnKLIdIrVJr++y3RRYdJi8uGwUpd/x1fUXox7TYov31BqE1
-	 4XCpDR86jF+J6ssDlJ6k3AUeHCA9BNxE05T/ZG6+4fz4oA5Oozm9xg2SDnwpnEkryU
-	 mdLoclGJ2Ep9Q==
+	s=k20201202; t=1740103040;
+	bh=FSCqF5fddUJ/CY4Fmlso4HgVPzCQfjGTqtXy95zK0d4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=L30lkKOh+5Q9nspdHZxFpxp9lSjfeO8ZYyU9kh5SjU0CtkY2oADDgCFMoWIWZEcs5
+	 CrMXSMdURseORLzTbHaJV4DJmSZWNdJfYDMyOQ2urOP4fOImR0npCTud7caxlyT2uE
+	 SYgiy4VG1qX7cfenofNt2UzSTDDfzfblJhi86PfVDLmqy0GPcoL+KnB7NjD3Gh3oce
+	 BgGr5bfnPS0uiwyAVNzhxb0r2t1h/OnavJnmxdPVLwNaLNnSj3QN9M//C6dUquWVv7
+	 ncC7iGOh+x1p03f72GvPcbpDztTrKZeEey4OPE3HxYhPwqDUjStWmhRThYiqvo6ES5
+	 X06ovcVzc2Z5A==
+Date: Fri, 21 Feb 2025 02:57:17 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Philip Pemberton <lists@philpem.me.uk>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: libata-eh: Do not use ATAPI DMA for a device limited to PIO mode
-Date: Fri, 21 Feb 2025 02:54:23 +0100
-Message-ID: <20250221015422.20687-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.48.1
+To: Philip Pemberton <lists@philpem.me.uk>
+Cc: linux-ide@vger.kernel.org
+Subject: Re: Zip 100 ATAPI not working, "qc timeout" and "failed to clear
+ UNIT ATTENTION"
+Message-ID: <Z7fdfX6GD6D98UPp@ryzen>
+References: <e1985151-c206-4be1-91c1-92eac16f6236@philpem.me.uk>
+ <Z3-_dt0m_2UrtKon@ryzen>
+ <e1b79ece-b4b2-42e5-b259-290820324b5e@philpem.me.uk>
+ <Z4pdD1Z2mJnF7N3O@ryzen>
+ <2bb1510c-c42f-468b-a8cb-70603bee846b@philpem.me.uk>
+ <Z5NlVjIMp6Wo8dQd@ryzen>
+ <9253b1b9-0f92-45ab-8b8a-44064ffa9cd9@philpem.me.uk>
+ <Z7X9aPpgBjNln9CJ@ryzen>
+ <Z7YAnqGsrWSzBirf@ryzen>
+ <27dbfb0f-2dfb-4f4a-bc5c-bb53a9f1eef5@philpem.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1721; i=cassel@kernel.org; h=from:subject; bh=fufAntR8nLPFeqgMuXx46QWPVLjoi5MaKAju54ZEPB4=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNK33zn3JG6+wHv3r6/snAIzVi99se/j6WeiC90yvGI0C nldZjHu6ShlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBEuiwZ/sembl6/aeORCbxT FnX8rZZZ+le9zOtu1w/7swGhrcH7H3kwMnw03Nz55pPRzDMTpivO5D5wZq9CsVJJS8gTDU72RJ8 D1lwA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <27dbfb0f-2dfb-4f4a-bc5c-bb53a9f1eef5@philpem.me.uk>
 
-atapi_eh_request_sense() currently uses ATAPI DMA if the SATA controller
-has ATA_FLAG_PIO_DMA (PIO cmds via DMA) set.
+Hello Philip,
 
-However, ATA_FLAG_PIO_DMA is a flag that can be set by a low-level driver
-on a port at initialization time, before any devices are scanned.
+On Wed, Feb 19, 2025 at 08:04:50PM +0000, Philip Pemberton wrote:
+> 
+> I've been able to get a good read of a disk with ddrescue:
+> 
+> GNU ddrescue 1.27
+> Press Ctrl-C to interrupt
+>      ipos:  100597 kB, non-trimmed:        0 B,  current rate:    720 kB/s
+>      opos:  100597 kB, non-scraped:        0 B,  average rate:   1070 kB/s
+> non-tried:        0 B,  bad-sector:        0 B,    error rate:       0 B/s
+>   rescued:  100663 kB,   bad areas:        0,        run time:      1m 33s
+> pct rescued:  100.00%, read errors:        0,  remaining time:         n/a
+>                               time since last successful read:         n/a
+> Copying non-tried blocks... Pass 1 (forwards)
+> Finished
+> 
+> I'm pretty chuffed with the data rate, 1MB/sec is far more than the
+> externals manage.
+> 
+> I guess the question now is, how to fix this properly?
 
-If a controller detects a connected device that only supports PIO, we set
-the flag ATA_DFLAG_PIO.
+Please try this patch:
+https://lore.kernel.org/linux-ide/20250221015422.20687-2-cassel@kernel.org/T/#u
 
-Modify atapi_eh_request_sense() to not use ATAPI DMA if the connected
-device only supports PIO.
+and see if it fixes your problem.
 
-Reported-by: Philip Pemberton <lists@philpem.me.uk>
-Closes: https://lore.kernel.org/linux-ide/c6722ee8-5e21-4169-af59-cbbae9edc02f@philpem.me.uk/
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-eh.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+Please also make sure to check that you can still write and read back what
+you wrote to the device (with the read data matching the written data).
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 3b303d4ae37a..16cd676eae1f 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1542,8 +1542,15 @@ unsigned int atapi_eh_request_sense(struct ata_device *dev,
- 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf.command = ATA_CMD_PACKET;
- 
--	/* is it pointless to prefer PIO for "safety reasons"? */
--	if (ap->flags & ATA_FLAG_PIO_DMA) {
-+	/*
-+	 * Do not use DMA if the connected device only supports PIO, even if the
-+	 * port prefers PIO commands via DMA.
-+	 *
-+	 * Ideally, we should call atapi_check_dma() to check if it is safe for
-+	 * the LLD to use DMA for REQUEST_SENSE, but we don't have a qc.
-+	 * Since we can't check the command, perhaps we should only use pio?
-+	 */
-+	if ((ap->flags & ATA_FLAG_PIO_DMA) && !(dev->flags & ATA_DFLAG_PIO)) {
- 		tf.protocol = ATAPI_PROT_DMA;
- 		tf.feature |= ATAPI_PKT_DMA;
- 	} else {
--- 
-2.48.1
 
+Kind regards,
+Niklas
