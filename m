@@ -1,63 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ACC61D514C
-	for <linux-ide@vger.kernel.org>; Fri, 21 Feb 2025 02:12:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5F51367
+	for <linux-ide@vger.kernel.org>; Fri, 21 Feb 2025 02:41:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740103967; cv=none; b=I4ZUlkbGEYl0zqpYDqVHC5JvG+xfJpJUF00y9xOMlkNVnb+qUCzLWFhwC8NB4Is19VQNwqoH3uYu+tCrzuS9V6H60pyA2tVTzl38KVfu4+6i2ljqB6N+oCg2xPn3s4g8aqAdn6KMsFxqVDOIso+fOb9BTH++3mWQEWV6SxJLjUI=
+	t=1740105674; cv=none; b=QQZScpp17IrfLI06W7bPeGpiTvH1H4qxc7f8+7WQStu8bhui/1OqjdzBGMLI+2JfeMq1cKVHmxG2oezEEMI5fqyvfaEnMbv+wiuFslM2DT+3ND9DJaKPqsAv43wBJ4ToeYtp+xLZxAOOX0YLTfmbpwtZtbYFJJ1CNj4nU/jr+eI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740103967; c=relaxed/simple;
-	bh=dFQPbWH8x/i+tv9Z0NuJ13dJHc7mA/pn4TqH6yVGf88=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=KkRUf1AX4WpUgIioAMyW4LPAt8m3KEQo+lEuZ6hy260eeVGLsw1VxGH4hGlD5BI1+UMav76sQTVo7x+15ZRJGhGDrKF/e9ObpnWVCPDWUhFYDKmRcpbaFKebpaaCWChKH4Ccc23pYLLBWEIyxnJKos7zIDE/LsrfRXWSkRpJLZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UxJoFmGG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740105674; c=relaxed/simple;
+	bh=bS96Kx03+1VodOEGuq3Xb6I2xub4tXykptaCMrE7MkQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cGja57ImwrCR1z0mXA9jcbnZ0lZOEOmpLj5o49Zmtlva4d/12Iisq2LvcZqsfSr+Kq1ioU80izfIM6ONb0APMfhNkZvhQko/r7/mjCNOJRUD6C45hp3BL8fF+8zanwICBAwEUndKlwcUt7iirCvCsr1LGvwfH+D7qDXXuprEB1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r0C4FVfE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UxJoFmGG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0914C4CED1;
-	Fri, 21 Feb 2025 02:12:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r0C4FVfE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3155BC4CED1;
+	Fri, 21 Feb 2025 02:41:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740103966;
-	bh=dFQPbWH8x/i+tv9Z0NuJ13dJHc7mA/pn4TqH6yVGf88=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=UxJoFmGGgeV/NdV2v+3iGISGimDqsr0uGklOfrL/N0dt6GNw/PRnXe2iw37mv5jJR
-	 /YhqUOYgrLGg9IN6wdl1OTTyC9jSZQboxZ47ftB/Kb9WWQWII3+I/4P/UUiW4BtrT6
-	 HlyxghRGX3brNkqK2VzMv5NHiTpmCfqw7NLahLeASM6pXl83WlOu+xyqFphz1pfT8c
-	 qIIFHaa6/0QJXio/Vd/6kR+4q5sy40TCA8A4pZNuajd+rwCizu3NGIkS08EE1Ml5tb
-	 7dsbqkhF1vY2e1yZJGcPayWcRAxmAWuglehKd0kM/mJnGinE3zVhgcOuO5CUfXElFB
-	 qs/3qguZGKCFA==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id AE03B3806641;
-	Fri, 21 Feb 2025 02:13:18 +0000 (UTC)
-Subject: Re: [GIT PULL] ata changes for 6.14-rc4
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20250220122455.56387-1-cassel@kernel.org>
-References: <20250220122455.56387-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20250220122455.56387-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-rc4
-X-PR-Tracked-Commit-Id: 2c202e6c4f4dd19d2e8c1dfac9df05170aa3934f
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 74ee48a2b4afa152b2d7f741677f6ada3c11be51
-Message-Id: <174010399724.1552538.13092743076537524851.pr-tracker-bot@kernel.org>
-Date: Fri, 21 Feb 2025 02:13:17 +0000
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+	s=k20201202; t=1740105674;
+	bh=bS96Kx03+1VodOEGuq3Xb6I2xub4tXykptaCMrE7MkQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=r0C4FVfEdvw52YnmS6XGKWbfzsxMR4pjrdh46ibNuekMkwoQROSSvBz8o3fUj+Z5o
+	 RXvGfihjFc9onhq05aVNNkq+1xki2ku5BB9rSZg3U0G7GTtkQXd703mxUknp6lgDiT
+	 VhKL6f/ZRJKWHxmqvUZlYlDphLC55wE3pxe7W8BpsJ8Qo9ju+gKG1xD10/Vs3+7nNy
+	 VZzxQFmts0anmr3cpiOcz+og4j+Nl7bRbCVBcUn89f6BzpmHHvJUSPaFO7K2vSeJxO
+	 yUnxHUkYOLryP2bX7mcYRh4VIlahvrcJRgxBW78qyBLE6TLqsetU6jWOEjQtvweO8y
+	 XmAJPRMPN0iDg==
+Message-ID: <2604c41f-8f93-44fe-96db-f965071e5296@kernel.org>
+Date: Fri, 21 Feb 2025 11:41:13 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata-eh: Do not use ATAPI DMA for a device limited
+ to PIO mode
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Philip Pemberton <lists@philpem.me.uk>, linux-ide@vger.kernel.org
+References: <20250221015422.20687-2-cassel@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20250221015422.20687-2-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The pull request you sent on Thu, 20 Feb 2025 13:24:55 +0100:
+On 2/21/25 10:54, Niklas Cassel wrote:
+> atapi_eh_request_sense() currently uses ATAPI DMA if the SATA controller
+> has ATA_FLAG_PIO_DMA (PIO cmds via DMA) set.
+> 
+> However, ATA_FLAG_PIO_DMA is a flag that can be set by a low-level driver
+> on a port at initialization time, before any devices are scanned.
+> 
+> If a controller detects a connected device that only supports PIO, we set
+> the flag ATA_DFLAG_PIO.
+> 
+> Modify atapi_eh_request_sense() to not use ATAPI DMA if the connected
+> device only supports PIO.
+> 
+> Reported-by: Philip Pemberton <lists@philpem.me.uk>
+> Closes: https://lore.kernel.org/linux-ide/c6722ee8-5e21-4169-af59-cbbae9edc02f@philpem.me.uk/
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-rc4
+Looks good.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/74ee48a2b4afa152b2d7f741677f6ada3c11be51
-
-Thank you!
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Damien Le Moal
+Western Digital Research
