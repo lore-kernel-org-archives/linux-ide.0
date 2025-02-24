@@ -1,67 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FC852505AF
-	for <linux-ide@vger.kernel.org>; Fri, 21 Feb 2025 17:29:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 244B22571AD
+	for <linux-ide@vger.kernel.org>; Mon, 24 Feb 2025 12:23:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740158944; cv=none; b=Lt9s71CeBJ2Jjta2WX7Z+7qPMzjeokaGAMBsWcib3knPO7GcHMIOPjTO0qBEodXuWhhadMxzdsP0K/1Iq0ueJFg6lXEXpHjH/3WevZjyEA/qLVnXui4BP6GxA0PSwQJT3OG8ofJP1EjXgxY62Z4zxtIXHkZSmG8jib2tw9YJZd0=
+	t=1740399832; cv=none; b=M2FaFzrjuAjG9DugMmYYKsrqKxCug3MEAPyxeqFhoW5fRtP/5jXg0pnl2UJUJEutJyTLiguXTXgjw8aIwB3OXmYxZhpyOfj7arlYXTTF3NSj/M+FDKNsRQ/YcTGxU822FZSNBn+fnvnAY3QgZylR01Ykj9e4/ZnOIyGQRSO6u6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740158944; c=relaxed/simple;
-	bh=yi3wb13HmQmIXR2/sTCbi9aesTOXAUJPugO5TugGif0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=OpuV5LqhZOgeOqvkjDzoOiHaCJv9kTaICqqPsQbWpxS6m7Irzk1GzcEbuC8FTnLP0LsR0frAzcPAjkGzsaeM+f6iYcKvozyHOSfS2cVTXfq086J12ACgfLtLh+5Kw1eSR7QEA/M32gvgOCzBi4+S1zSYbq5SWI+w2GnyrhuWCBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mD0fnAXZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740399832; c=relaxed/simple;
+	bh=eP8RIU5Joxzdafywy9Zg3OvqgsMaeqLprVbqabGmmSo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DFR+N3/AGVxYzdQIi+LQVxYAHj87t2gPILl5+l3W3wOQsqADtmh07ip78Nw8/8Q2li2DdZsDAMqaNjjpSfaRmTKS67NXwI3rn2dOz0LjZquubmmAkN8aISG2CqHeSJdESXTsaopibOiXmjonK1vPvOeaVL47U9UVVpK0bac/XfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UGOhvw99; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mD0fnAXZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08921C4CED6;
-	Fri, 21 Feb 2025 17:29:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UGOhvw99"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88CF1C4CEE6;
+	Mon, 24 Feb 2025 12:23:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740158943;
-	bh=yi3wb13HmQmIXR2/sTCbi9aesTOXAUJPugO5TugGif0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=mD0fnAXZTbUepLECVeht6ryTCFKYHvrAMfIcgVSjX4RRqTCV63owP/8vZZpiRa1gS
-	 Sob3pWl/NlS8MbT98CY7/emlnDAwVE5PQw7f0yUFOL1ppgneN3/EMmM5zlpe9y7TMs
-	 1X+E4SfR4S4/tTfNKAHmDmhYmBmqrMLTHTLfRCNuLsGAaNNKAEbP/f8g46wNj2FFsG
-	 8CM1dmiORdqjKVUZ+9Cs194bB060hD8o3Q4hXjWhxiZafM93ZAeiYkJ3MVP8bxQg5I
-	 6aP/qTPN0D+W0gig4LA8Tqe6ShvHGX2n28BUQ65jGs24Jg8xDSP4dhGUvP0bWGtTHH
-	 ccitAHphaSKNg==
+	s=k20201202; t=1740399831;
+	bh=eP8RIU5Joxzdafywy9Zg3OvqgsMaeqLprVbqabGmmSo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UGOhvw99RVJC9sx0QilI5RX37pqFyHQmw+XGflPpDjiiU1igkCJNshcauaM23vnKN
+	 zWERCJOeqIsbP7ZyULBp5WTpmBPzo2QaPet0XPYv0zCmkROGPJQNd8Gxr0nWTIqdIl
+	 ZHo0qC6qZamxjc/QHDORDy+yryoEIXVmKL/96Pmwj/ynT3IJHkWtI3X6wMaeAqP9FO
+	 I/3kS6RKUylGNwo044u2ObEyrtRsLzL9drEeLDOBbrrh+EddHJpI0ByWeeX542vJ1g
+	 ZRKhCvYZyYO0TyOOQppBHcOC7uXpqRaJPhs3wCtTUnQSJxglvjPZvKJ1N9e4QDiDBN
+	 jTqApA3pxqGBQ==
+Date: Mon, 24 Feb 2025 13:23:48 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: Philip Pemberton <lists@philpem.me.uk>, linux-ide@vger.kernel.org
-In-Reply-To: <20250221015422.20687-2-cassel@kernel.org>
-References: <20250221015422.20687-2-cassel@kernel.org>
-Subject: Re: [PATCH] ata: libata-eh: Do not use ATAPI DMA for a device
- limited to PIO mode
-Message-Id: <174015894276.25606.12774433973024830684.b4-ty@kernel.org>
-Date: Fri, 21 Feb 2025 18:29:02 +0100
+To: Daniel Baumann <daniel@debian.org>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Dieter Mummenschanz <dmummenschanz@web.de>
+Subject: Re: Samsung SSD 870 QVO LPM issues
+Message-ID: <Z7xk1LbiYFAAsb9p@ryzen>
+References: <Z6MjZ1Nniwn_uldf@ryzen>
+ <Z6nePJ38aL92agTW@ryzen>
+ <bca345e0-391c-432a-a294-5da36bfcede0@debian.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bca345e0-391c-432a-a294-5da36bfcede0@debian.org>
 
-On Fri, 21 Feb 2025 02:54:23 +0100, Niklas Cassel wrote:
-> atapi_eh_request_sense() currently uses ATAPI DMA if the SATA controller
-> has ATA_FLAG_PIO_DMA (PIO cmds via DMA) set.
+On Mon, Feb 10, 2025 at 06:00:07PM +0100, Daniel Baumann wrote:
+> Hi,
 > 
-> However, ATA_FLAG_PIO_DMA is a flag that can be set by a low-level driver
-> on a port at initialization time, before any devices are scanned.
-> 
-> If a controller detects a connected device that only supports PIO, we set
-> the flag ATA_DFLAG_PIO.
-> 
+> On 2/10/25 12:08, Niklas Cassel wrote:
+> >> Dieter is using 'Samsung SSD 870 QVO 8TB', rev 'SVQ02B6Q'.
 > [...]
+> >> Daniel claimed that enabling LPM for his Samsung SSD 870 QVO drive,
+> >> caused them to stop working.
+> 
+> We have different firmware versions and all of them don't work for me
+> with enabled LPM, however I don't know the versions offhand.
+> 
+> I'll check and report back on Wednesday morning (not in office tomorrow,
+> sorry).
 
-Applied to libata/linux.git (for-6.15), thanks!
+Hello Daniel,
 
-[1/1] ata: libata-eh: Do not use ATAPI DMA for a device limited to PIO mode
-      https://git.kernel.org/libata/linux/c/91ec84f8
+Any update on this?
+
+Would be nice to have it fixed before 6.14 is officially released.
+
 
 Kind regards,
 Niklas
-
