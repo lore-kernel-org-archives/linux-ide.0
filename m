@@ -1,115 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAF3926A085
-	for <linux-ide@vger.kernel.org>; Tue, 25 Feb 2025 14:16:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16F91126C18
+	for <linux-ide@vger.kernel.org>; Tue, 25 Feb 2025 14:24:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740492987; cv=none; b=PwsExuaVjknFW3BdTO3P+AdK/f3Uq2XPsoJqkLK8WHd5av23L3tMKI7rwlRXr1pS2KF+SHT6HyQafozJr7uQbLbvtzYCLblAxV/5Rvqn7LguoqynzkyqqmFTN0hj+2sRr7cMXiHRlexmTmNPm5S8s92xRYrac1+JQZh0WDzl5H0=
+	t=1740493466; cv=none; b=RbkLpZyQpKJqgh4V0vOtH1sem2HYZggsfJIquHzeWSPId9DXsXerQTHTejd7kc9A3AtgSvo0f6kvFuUMuZ6HqY1BhmY7MHLmXY4mFE+6GzjHwt+UKcw1Dp2K0ETkILT2QFaSGQYCZmbRpbtjhbVwufjUaFyGHuh9wTfzSEEdReU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740492987; c=relaxed/simple;
-	bh=HrGbsl5W5PUDKGMa0tYFOJRQBEWNT2jHYgQ9GRrk3hM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=q6ez1rLuX7en61wgWAWq8ikMJbwJWcdHDTg3HGvx3FxFgngfXUSoH0ZLLiCRcCQFKW5EtmrcpUZvu2Z2lEY5nKQr9tQNkxOzyd3h2TSkl+HVXiLweS7AOIHvraBKvGN8lwud+wCDDoC6d69mH6pT4tHY+vYu/uQrvJP+Ijwtiuo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnzQ1ivV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740493466; c=relaxed/simple;
+	bh=yMpQIDf7jQLdoKX5Dh3Qz24PYCI5Lsg2Zsi/L8pNA5c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DbUUz8t0dfBmbYkNwX3SGkM0tiG6FE8VFegk7636QMhlKYTsAekjlcEeXJyrGZ65H/pSdulZD9m5u+//+Q2DCfZrotypaC21afzYdaoK63A+9XNujLj49eOXHKwAemR0ttdfDnr6MNcv32ZzGLZ0YwysciWuiqlhEVL5XeBhFT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gvU8ReCw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnzQ1ivV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 837BAC4CEDD;
-	Tue, 25 Feb 2025 14:16:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gvU8ReCw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 459B2C4CEDD;
+	Tue, 25 Feb 2025 14:24:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740492987;
-	bh=HrGbsl5W5PUDKGMa0tYFOJRQBEWNT2jHYgQ9GRrk3hM=;
-	h=From:To:Cc:Subject:Date:From;
-	b=RnzQ1ivVZjahg/hxrAcKdm9mxLOrZnvZ6ie2nP+mGCgHXUjpLgPZsJTTpTpyId/QV
-	 UxeHwsLaWCJXBH2+LOASB1qXprK8kmady+Rgk+9s8huF269JqyC/1UV9FJD/X4h6zK
-	 EHt7RXZrawTMvl71oHYwnB1gH57cfP9eqADjPc4IvLtlBnIQbKc1ggNMe6VK5/iuj8
-	 VrzZII+8Y2AvpPDnbtB3ndorFjjKII0RaZQR066JN2xsOiSlEU6KTLRGvU2cGybQ+3
-	 LFqqZyO46i31gj6EAlz9zc8FVRBfwBhCpC80O2yhV6ZcWmLC5Z1mZf3i7I/PrURmnM
-	 Fe/4mj8R2iQow==
+	s=k20201202; t=1740493465;
+	bh=yMpQIDf7jQLdoKX5Dh3Qz24PYCI5Lsg2Zsi/L8pNA5c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=gvU8ReCwPtNUYQIOM41fKWWw/3mwvzW5AtZkgGL3Axa2hMKSSHmjDdq1vrdHkQAfU
+	 Am88WF9kO2pvxCA/yo262CsCIEOI1PDGUVtSGCO27P34HU14Ph1O7mCqgFquW1pjlP
+	 haJK09yLmZAv87/qQ7R48/Tag6QlMlkPCHtRoiRtM6mHWGJ/5uIxGV5wNagOp5w/RD
+	 ypLAVWICcybtQWxg9a0AqyqO2kSnq5tH853AA5F43eZ2nJAdzB4J0ANBr42lpbtnCY
+	 NpmQwUNOjLTm+fwqC8WVI79aUlVFdjvazgdRq8wIvTuY8pKeuwMpATW+EDelPcFQX2
+	 XAPj5m/GJHjjg==
+Date: Tue, 25 Feb 2025 15:24:21 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Hans de Goede <hdegoede@redhat.com>,
+To: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	Klaus Kudielka <klaus.kudielka@gmail.com>,
 	Josua Mayer <josua@solid-run.com>
-Cc: Klaus Kudielka <klaus.kudielka@gmail.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: ahci: Make ahci_ignore_port() handle empty mask_port_map
-Date: Tue, 25 Feb 2025 15:16:12 +0100
-Message-ID: <20250225141612.942170-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.48.1
+Subject: Re: [PATCH v2] ata: libahci_platform: Do not set mask_port_map when
+ not needed
+Message-ID: <Z73SlTkfI2sKPXab@ryzen>
+References: <20250207232915.1439174-1-dlemoal@kernel.org>
+ <CGME20250225093429eucas1p2ea23b1831e33fcae6e58a7c6ba574232@eucas1p2.samsung.com>
+ <10b31dd0-d0bb-4f76-9305-2195c3e17670@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2663; i=cassel@kernel.org; h=from:subject; bh=HrGbsl5W5PUDKGMa0tYFOJRQBEWNT2jHYgQ9GRrk3hM=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNL3XljjuHi3Qrg8H3v7vb7Gm8fSU507F3732CZ7U07or Fjxw/eWHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjI5WZGhts3psZKWHb6tDzO exl/ZtNac7/Cc2ey1AWiz7WdVDITs2D4ycj7eOoBhrns6vKFBzKabn5/2fDrmgv7oc9nn2ZGL+o 6wgkA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <10b31dd0-d0bb-4f76-9305-2195c3e17670@samsung.com>
 
-Commit 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive port
-numbers") added a skip to ahci_platform_enable_phys() for ports that are
-not in mask_port_map.
+Hello Marek,
 
-The code in ahci_platform_get_resources(), will currently set mask_port_map
-for each child "port" node it finds in the device tree.
+On Tue, Feb 25, 2025 at 10:34:27AM +0100, Marek Szyprowski wrote:
+> with the $subject patch reverted:
+> 
+> [    0.938268] libata version 3.00 loaded.
+> [    2.283918] ahci-dwc 122f0000.sata: supply ahci not found, using 
+> dummy regulator
+> [    2.290714] ahci-dwc 122f0000.sata: supply phy not found, using dummy 
+> regulator
+> [    2.298064] ahci-dwc 122f0000.sata: supply target not found, using 
+> dummy regulator
+> [    2.312275] ahci-dwc 122f0000.sata: forcing port_map 0x0 -> 0x1
+> [    2.316847] ahci-dwc 122f0000.sata: masking port_map 0x1 -> 0x1
+> [    2.322791] ahci-dwc 122f0000.sata: AHCI vers 0001.0300, 32 command 
+> slots, 6 Gbps, platform mode
+> [    2.331464] ahci-dwc 122f0000.sata: 1/1 ports implemented (port mask 
+> 0x1)
+> [    2.338258] ahci-dwc 122f0000.sata: flags: ncq sntf pm led clo only 
+> pmp pio slum part ccc apst
+> [    2.359896] ata1: SATA max UDMA/133 mmio [mem 0x122f0000-0x122f01fe] 
+> port 0x100 irq 101 lpm-pol 0
+> [    2.687374] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    2.744673] ata1.00: HPA detected: current 117229295, native 117231408
+> [    2.757119] ata1.00: ATA-8: Corsair CSSD-F60GB2, 1.1, max UDMA/133
+> [    2.772062] ata1.00: 117229295 sectors, multi 1: LBA48 NCQ (depth 32)
+> [    2.834520] ata1.00: configured for UDMA/133
 
-However, device trees that do not have any child "port" nodes will not have
-mask_port_map set, and for non-device tree platforms mask_port_map will
-only exist as a quirk for specific PCI device + vendor IDs, or as a kernel
-module parameter, but will not be set by default.
+Could you please test this patch:
+https://lore.kernel.org/linux-ide/20250225141612.942170-2-cassel@kernel.org/T/#u
+and see if it helps.
 
-Therefore, the common thing is that mask_port_map is only set if you do not
-want to use all ports (as defined by Offset 0Ch: PI – Ports Implemented
-register), but instead only want to use the ports in mask_port_map. If
-mask_port_map is not set, all ports are available.
 
-Thus, ahci_ignore_port() must be able to handle an empty mask_port_map.
-
-Reported-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Closes: https://lore.kernel.org/linux-ide/10b31dd0-d0bb-4f76-9305-2195c3e17670@samsung.com/
-Co-developed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Fixes: 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive port numbers")
-Fixes: 2c202e6c4f4d ("ata: libahci_platform: Do not set mask_port_map when not needed")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/ahci.h    | 8 ++++++--
- drivers/ata/libahci.c | 1 +
- 2 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index aea30df50c58..b2e0ef4efbdc 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -386,8 +386,12 @@ struct ahci_host_priv {
- static inline bool ahci_ignore_port(struct ahci_host_priv *hpriv,
- 				    unsigned int portid)
- {
--	return portid >= hpriv->nports ||
--		!(hpriv->mask_port_map & (1 << portid));
-+	if (portid >= hpriv->nports)
-+		return true;
-+	/* mask_port_map not set means that all ports are available */
-+	if (!hpriv->mask_port_map)
-+		return false;
-+	return !(hpriv->mask_port_map & (1 << portid));
- }
- 
- extern int ahci_ignore_sss;
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index fdfa7b266218..e7ace4b10f15 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -541,6 +541,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		hpriv->saved_port_map = port_map;
- 	}
- 
-+	/* mask_port_map not set means that all ports are available */
- 	if (hpriv->mask_port_map) {
- 		dev_warn(dev, "masking port_map 0x%lx -> 0x%lx\n",
- 			port_map,
--- 
-2.48.1
-
+Kind regards,
+Niklas
