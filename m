@@ -1,175 +1,115 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF02F38DE0
-	for <linux-ide@vger.kernel.org>; Tue, 25 Feb 2025 12:54:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAF3926A085
+	for <linux-ide@vger.kernel.org>; Tue, 25 Feb 2025 14:16:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740488077; cv=none; b=IN31AlPRG4yVwJIkgD+qLLu8tv9F9OrgY+TA/eKnKsODzAy7ujvIqtnn1/zkueIMBOoogY7Fa3jHsIo6rF3Fg0n44V9s6BDGBEL5RE6LGJKzGOxA4E0DVW2MwVbG8wsZudcfKDnaiE+1beo3WiBIkzfrQPSWRj8odOBuZdftg9g=
+	t=1740492987; cv=none; b=PwsExuaVjknFW3BdTO3P+AdK/f3Uq2XPsoJqkLK8WHd5av23L3tMKI7rwlRXr1pS2KF+SHT6HyQafozJr7uQbLbvtzYCLblAxV/5Rvqn7LguoqynzkyqqmFTN0hj+2sRr7cMXiHRlexmTmNPm5S8s92xRYrac1+JQZh0WDzl5H0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740488077; c=relaxed/simple;
-	bh=W8LIqF7kkH6cCLj3gN0Tz1ix7jTva4xQTCeEx72fA+w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=czr7i4QQgbLLMK1HYhtXXDjKt6Gs/++7dP/wr3Is4CZMajoOg6M2nd1v2nl/EtzO4FyeAS2mEWHmbKyWyW3S7LAcMsfmGoGijde6v7YWmaSI3aM94jkcRoNnTsGHr8KtPz44sYHJI2pl2Bet1yNM9m5zQPmAwtt/+9rRG4EKTvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=mjILcAIk; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	s=arc-20240116; t=1740492987; c=relaxed/simple;
+	bh=HrGbsl5W5PUDKGMa0tYFOJRQBEWNT2jHYgQ9GRrk3hM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=q6ez1rLuX7en61wgWAWq8ikMJbwJWcdHDTg3HGvx3FxFgngfXUSoH0ZLLiCRcCQFKW5EtmrcpUZvu2Z2lEY5nKQr9tQNkxOzyd3h2TSkl+HVXiLweS7AOIHvraBKvGN8lwud+wCDDoC6d69mH6pT4tHY+vYu/uQrvJP+Ijwtiuo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnzQ1ivV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="mjILcAIk"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 6EDB4240106
-	for <linux-ide@vger.kernel.org>; Tue, 25 Feb 2025 13:54:33 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1740488073; bh=W8LIqF7kkH6cCLj3gN0Tz1ix7jTva4xQTCeEx72fA+w=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:From;
-	b=mjILcAIkXqzqNKdVJx8aNZciCsFDMgWk1hSEOtkfGbO6HFVdhu5Vy04vupoKrYvbv
-	 c6on3zliqSDojlPicjEIhjGdw22NRnh01nANE/3jRMwtf45rqgaGqjBEPbDvvOZQgg
-	 s4Jb6KbceFTD97AcdgGFKHeQkXDlrBbwG3iChrbmjhflZJIT8e5l8aV2shsyZ4sXKo
-	 6ofVmK+sYqzNywRiys2+yrDszLO59sxgwWTEXz+wqj0Y8Kj8BPrm6dHb8ttxz+aByz
-	 WtF5CLyU4itMYTueMHGswR3Km+h6T3R2kOXkZBOleO2kFLusG00NHpXaxrg6YwUFTp
-	 3ou6TTWtB7XpA==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4Z2HcG3WCTz9rxG;
-	Tue, 25 Feb 2025 13:54:21 +0100 (CET)
-Date: Tue, 25 Feb 2025 12:54:21 +0000
-From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-To: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-Cc: Frank Li <Frank.li@nxp.com>, devicetree@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	Krzysztof Kozlowski <krzk@kernel.org>, imx@lists.linux.dev,
-	Scott Wood <oss@buserror.net>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnzQ1ivV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 837BAC4CEDD;
+	Tue, 25 Feb 2025 14:16:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740492987;
+	bh=HrGbsl5W5PUDKGMa0tYFOJRQBEWNT2jHYgQ9GRrk3hM=;
+	h=From:To:Cc:Subject:Date:From;
+	b=RnzQ1ivVZjahg/hxrAcKdm9mxLOrZnvZ6ie2nP+mGCgHXUjpLgPZsJTTpTpyId/QV
+	 UxeHwsLaWCJXBH2+LOASB1qXprK8kmady+Rgk+9s8huF269JqyC/1UV9FJD/X4h6zK
+	 EHt7RXZrawTMvl71oHYwnB1gH57cfP9eqADjPc4IvLtlBnIQbKc1ggNMe6VK5/iuj8
+	 VrzZII+8Y2AvpPDnbtB3ndorFjjKII0RaZQR066JN2xsOiSlEU6KTLRGvU2cGybQ+3
+	 LFqqZyO46i31gj6EAlz9zc8FVRBfwBhCpC80O2yhV6ZcWmLC5Z1mZf3i7I/PrURmnM
+	 Fe/4mj8R2iQow==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>,
-	Vinod Koul <vkoul@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-mtd@lists.infradead.org
-Subject: Re: [PATCH v2 05/12] dt-bindings: dma: Convert fsl,elo*-dma to YAML
-Message-ID: <Z729fRBNLAxdYD22@probook>
-References: <20250207-ppcyaml-v2-0-8137b0c42526@posteo.net>
- <20250207-ppcyaml-v2-5-8137b0c42526@posteo.net>
- <Z6pV4eauZj75+911@lizhi-Precision-Tower-5810>
- <Z684nUnDX4Sb98rQ@probook>
+	Hans de Goede <hdegoede@redhat.com>,
+	Josua Mayer <josua@solid-run.com>
+Cc: Klaus Kudielka <klaus.kudielka@gmail.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	linux-ide@vger.kernel.org
+Subject: [PATCH] ata: ahci: Make ahci_ignore_port() handle empty mask_port_map
+Date: Tue, 25 Feb 2025 15:16:12 +0100
+Message-ID: <20250225141612.942170-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2663; i=cassel@kernel.org; h=from:subject; bh=HrGbsl5W5PUDKGMa0tYFOJRQBEWNT2jHYgQ9GRrk3hM=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNL3XljjuHi3Qrg8H3v7vb7Gm8fSU507F3732CZ7U07or Fjxw/eWHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjI5WZGhts3psZKWHb6tDzO exl/ZtNac7/Cc2ey1AWiz7WdVDITs2D4ycj7eOoBhrns6vKFBzKabn5/2fDrmgv7oc9nn2ZGL+o 6wgkA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Z684nUnDX4Sb98rQ@probook>
 
-On Fri, Feb 14, 2025 at 12:35:41PM +0000, J. Neuschäfer wrote:
-> On Mon, Feb 10, 2025 at 02:39:13PM -0500, Frank Li wrote:
-> > On Fri, Feb 07, 2025 at 10:30:22PM +0100, J. Neuschäfer via B4 Relay wrote:
-> > > From: "J. Neuschäfer" <j.ne@posteo.net>
-> > >
-> > > The devicetree bindings for Freescale DMA engines have so far existed as
-> > > a text file. This patch converts them to YAML, and specifies all the
-> > > compatible strings currently in use in arch/powerpc/boot/dts.
-> > >
-> > > Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
-> > > ---
-[...]
-> > Need ref to dma-common.yaml?
-> 
-> Sounds good, but I'm not sure what to do about the #dma-cells property,
-> which is required by dma-common.yaml.
-> 
-> There aren't many examples of DMA channels being explicitly declared in
-> device trees. One example that I could find is the the xilinx_dma.txt
-> binding:
-> 
-> 
-> 	axi_vdma_0: axivdma@40030000 {
-> 		compatible = "xlnx,axi-vdma-1.00.a";
-> 		#dma_cells = <1>;
-> 		reg = < 0x40030000 0x10000 >;
-> 		dma-ranges = <0x00000000 0x00000000 0x40000000>;
-> 		xlnx,num-fstores = <0x8>;
-> 		xlnx,flush-fsync = <0x1>;
-> 		xlnx,addrwidth = <0x20>;
-> 		clocks = <&clk 0>, <&clk 1>, <&clk 2>, <&clk 3>, <&clk 4>;
-> 		clock-names = "s_axi_lite_aclk", "m_axi_mm2s_aclk", "m_axi_s2mm_aclk",
-> 			      "m_axis_mm2s_aclk", "s_axis_s2mm_aclk";
-> 		dma-channel@40030000 {
-> 			compatible = "xlnx,axi-vdma-mm2s-channel";
-> 			interrupts = < 0 54 4 >;
-> 			xlnx,datawidth = <0x40>;
-> 		};
-> 		dma-channel@40030030 {
-> 			compatible = "xlnx,axi-vdma-s2mm-channel";
-> 			interrupts = < 0 53 4 >;
-> 			xlnx,datawidth = <0x40>;
-> 		};
-> 	};
-> 
-> 	...
-> 
-> 	vdmatest_0: vdmatest@0 {
-> 		compatible ="xlnx,axi-vdma-test-1.00.a";
-> 		dmas = <&axi_vdma_0 0
-> 			&axi_vdma_0 1>;
-> 		dma-names = "vdma0", "vdma1";
-> 	};
-> 
-> It has #dma_cells (I'm sure #dma-cells was intended) on the controller.
-> 
-> 
-> Another example is in arch/powerpc/boot/dts/fsl/p1022si-post.dtsi:
-> 
-> 	dma@c300 {
-> 		dma00: dma-channel@0 {
-> 			compatible = "fsl,ssi-dma-channel";
-> 		};
-> 		dma01: dma-channel@80 {
-> 			compatible = "fsl,ssi-dma-channel";
-> 		};
-> 	};
-> 
-> 	...
-> 
-> 	ssi@15000 {
-> 		compatible = "fsl,mpc8610-ssi";
-> 		cell-index = <0>;
-> 		reg = <0x15000 0x100>;
-> 		interrupts = <75 2 0 0>;
-> 		fsl,playback-dma = <&dma00>;
-> 		fsl,capture-dma = <&dma01>;
-> 		fsl,fifo-depth = <15>;
-> 	};
-> 
-> 
-> There, the DMA channels are used directly and without additional
-> information (i.e. #dma-cells = <0>, althought it isn't specified).
+Commit 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive port
+numbers") added a skip to ahci_platform_enable_phys() for ports that are
+not in mask_port_map.
 
-I had another look at dma-common.yaml and it explicitly requires
-#dma-cells to have a value of at least 1, so this second idea won't
-work.
+The code in ahci_platform_get_resources(), will currently set mask_port_map
+for each child "port" node it finds in the device tree.
 
+However, device trees that do not have any child "port" nodes will not have
+mask_port_map set, and for non-device tree platforms mask_port_map will
+only exist as a quirk for specific PCI device + vendor IDs, or as a kernel
+module parameter, but will not be set by default.
 
-Best regards,
-J. Neuschäfer
+Therefore, the common thing is that mask_port_map is only set if you do not
+want to use all ports (as defined by Offset 0Ch: PI – Ports Implemented
+register), but instead only want to use the ports in mask_port_map. If
+mask_port_map is not set, all ports are available.
+
+Thus, ahci_ignore_port() must be able to handle an empty mask_port_map.
+
+Reported-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Closes: https://lore.kernel.org/linux-ide/10b31dd0-d0bb-4f76-9305-2195c3e17670@samsung.com/
+Co-developed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Fixes: 8c87215dd3a2 ("ata: libahci_platform: support non-consecutive port numbers")
+Fixes: 2c202e6c4f4d ("ata: libahci_platform: Do not set mask_port_map when not needed")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/ahci.h    | 8 ++++++--
+ drivers/ata/libahci.c | 1 +
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index aea30df50c58..b2e0ef4efbdc 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -386,8 +386,12 @@ struct ahci_host_priv {
+ static inline bool ahci_ignore_port(struct ahci_host_priv *hpriv,
+ 				    unsigned int portid)
+ {
+-	return portid >= hpriv->nports ||
+-		!(hpriv->mask_port_map & (1 << portid));
++	if (portid >= hpriv->nports)
++		return true;
++	/* mask_port_map not set means that all ports are available */
++	if (!hpriv->mask_port_map)
++		return false;
++	return !(hpriv->mask_port_map & (1 << portid));
+ }
+ 
+ extern int ahci_ignore_sss;
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index fdfa7b266218..e7ace4b10f15 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -541,6 +541,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 		hpriv->saved_port_map = port_map;
+ 	}
+ 
++	/* mask_port_map not set means that all ports are available */
+ 	if (hpriv->mask_port_map) {
+ 		dev_warn(dev, "masking port_map 0x%lx -> 0x%lx\n",
+ 			port_map,
+-- 
+2.48.1
+
