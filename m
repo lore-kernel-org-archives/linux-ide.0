@@ -1,63 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f177.google.com (mail-lj1-f177.google.com [209.85.208.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BD391519BE
-	for <linux-ide@vger.kernel.org>; Sat,  1 Mar 2025 18:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57870A944
+	for <linux-ide@vger.kernel.org>; Sun,  2 Mar 2025 10:34:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740854209; cv=none; b=pO+XZ6MrACQh4FvFNtwCy49DehGqupvIoEsG668OxLUkLFnuk17zDHVSv0fFwOF++AJiiFXzmHWKLXGZVqOKqpdvScmjvzQjnz8FjHyD+2j6AUp5SOaVJTLcE1N82oQhHMhWhgeIkqO01wkw1B9heifI9S96aEOyRqMcYhSuE4w=
+	t=1740911661; cv=none; b=CStOnv/G6XzxPVyKKqFaG4KQI2GxyFHAd/Pp6ntJ/6odmndxxlXdLe1c8lOhgF/p5gXCsKrqIvSkWjHjznqWi0aZrAimvearUEOELFjuFXswWWzdnSMPtQrIYJhtpbCqxJiWWD+SZrr1sJ2De1sLw/poBsqidU38fLvggpzvHUk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740854209; c=relaxed/simple;
-	bh=jv1tVcCpQnXiCYQRBVyGvoNVb6WubafDSyM8hgrm8Bw=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=DLTz/gtAJdfZ58YJCyNASq4ADFWgwPQvoIityMkeKmk2h1O27nJaRxIi+w+19dC1HqSrmpHfvSeHbTQRs/bNgpjgQktZRQr1X5/WvcENAv/WIBAY11eQTueoqfdhVsAxmHvWdIv4MyHio/3DVUw4GED59geYC3IR2l/UVucnIqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XuDdr3/z; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740911661; c=relaxed/simple;
+	bh=g7cB+tTOATBtoVGm8uNuGlMZmLo04nRflBDpvxhBTac=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ZTjPsjlGm3USeQ86Y7UoHN85rDBEjvBs9uyaruD6AHBWsj+IXRatdpQ56xHjsdv6N/sDoZXBOe2UrL1njzUjVu+g1POx0QcCZKTrqubWsOH4vkqjE6pqbGMqdghaMyGnaoiONdyg8XvRwTcmXo4H2iRroBAwEWL0o80uWKORcSI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IVYqKzGD; arc=none smtp.client-ip=209.85.208.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XuDdr3/z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 594FDC4CEDD;
-	Sat,  1 Mar 2025 18:36:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740854209;
-	bh=jv1tVcCpQnXiCYQRBVyGvoNVb6WubafDSyM8hgrm8Bw=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=XuDdr3/zUjXqGvNLJaK1A5c3oOMT9s0nWqm98v2eS9XQERWGaZM4GyMjJBOE4EPXJ
-	 LkpyutE6nOPQB8kBRF1Svm+Y1sUuO7mSoqCZIPz7uygfLspJ2ZhdAYSLiOnCXhk2oR
-	 ta6vCEUnPyo+6UsL0UJ5CfvIk8jEB2SwXscUvV5COVvlSkWHhGQf9EWO3skjKVRPcr
-	 1v2TX5Sh+rOF6e0kty7NsmLiiZ6Ob1TLN/XLL91nAxFYydrGLI+ZZJ4MrIQ3aNrkHl
-	 RWeEoP2ELwj1xF8SwvFFFx8pXiIQlrf0wxSSwQH5//TbFYPIm0++xd9CA15W3TaOmI
-	 4Wt8leZN2biwg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EAF75380AACF;
-	Sat,  1 Mar 2025 18:37:22 +0000 (UTC)
-Subject: Re: [GIT PULL] ata changes for 6.14-rc5
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20250301094839.260353-1-cassel@kernel.org>
-References: <20250301094839.260353-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20250301094839.260353-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-rc5
-X-PR-Tracked-Commit-Id: a2f925a2f62254119cdaa360cfc9c0424bccd531
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: df87d843c6eb4dad31b7bf63614549dd3521fe71
-Message-Id: <174085424155.2484297.12186649767993997215.pr-tracker-bot@kernel.org>
-Date: Sat, 01 Mar 2025 18:37:21 +0000
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IVYqKzGD"
+Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-30918c29da2so34929291fa.0
+        for <linux-ide@vger.kernel.org>; Sun, 02 Mar 2025 02:34:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1740911657; x=1741516457; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=g7cB+tTOATBtoVGm8uNuGlMZmLo04nRflBDpvxhBTac=;
+        b=IVYqKzGD6ZU/aYY3E/F3booHW+UlmQsMkvH8nSUcEBgpodIg5fkDZN5nqNIhD8WDOl
+         6vMwgQh78GPo3gGnju//oa1dx+y8/LJ5kaxvHuw28I1XUiEXYd3W/ocZGCwulwvdx7B5
+         MOgxeRu8KEshXocGqnMxCwvskw5kGl2YfF921IEiRpxwzqYOUYusPBCMiRxljVWX8T3U
+         ldAE7gg133tIQnfpG6u1TRgUpfbJNUNy3s4nkdv7HDbSYIZrBEXVKQTXN9vwvSxqwJmj
+         0HYnvkhZBOMCVgqhcZlKiE5cANdV4L7i51b6FQhOCF0ouErm9rO6eDlkyAH3h6b/Qzg/
+         50Ug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740911657; x=1741516457;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=g7cB+tTOATBtoVGm8uNuGlMZmLo04nRflBDpvxhBTac=;
+        b=mddyvxphBg+MONVSgU9OYvfvH3cF2Zh3LmMSq7KhmNgCvWUGLuozu8PUQNDwHY7xSH
+         6mZ+n4bgD/Fc0V6GSIPbqxm0Jl1j94Z2Tugb5/g7BPNtBoGHpcJ7IBJowMo4BZY1yiVp
+         kwKrXpFwiMAv439HrjZUuFZ0ecVpCQzZHWOzLcP4NTSDNuBcwkFH2n9ZSP1Wz4DHKn86
+         sq+t9ARbvU9o2AuPdXRngYg4kcIHrQvWRfmIfnrlDsUL9UbG3yXtfAH4JRzIvPOsgZaz
+         XeXVgmhRS9+GyvWnh8Dyx89V9afInWUy7wlDOuwr0wxn9r4aL9Revw8cT8FMzAr7w7w7
+         u0QA==
+X-Forwarded-Encrypted: i=1; AJvYcCU4PqN42dTJJMEEWqJTZmAF4mur6sFep5rvxe7uqG9lOp6jSuBpk0XGrvPdvB8TXa/YCLmm31pnM30=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyARFpmE0OujDlE+enN1IA3jTNrneRME2dEiP0Unz23FAnFODrX
+	RGwdZYQvHOjdBx//lf8t2AWd2vkcYtJQGe/R+7r3Y45sePdhXU8m7iYgRFSAUT10Q0z9ZfODTTP
+	xBZrBpESjIAMJ/zdhBxUk/loRHDfhYBDBJdc=
+X-Gm-Gg: ASbGnct2d3FJoxAsWhAdJBoLaJtCvf0FkE5ZB02/DIgVFtTlfMILmRGhEDOdUcIwnrk
+	kgZ6tHADuCG7NgbR5WWmbwX6mnxmQDhR2FsGoG/jJ8RggoEKFwj/v/iIyJc7HMijK8fM754WomX
+	L4Mon/MaYP8wACP2Pbn+2pXmRgO0Q=
+X-Google-Smtp-Source: AGHT+IEUFFmbVREWgPvMKymOeen6kI6Dios/rQilTs+lATRSKIsgxzct3MigNkpPYrRO5s4s7hnZTxHoJEUN0IZhcGs=
+X-Received: by 2002:a2e:9652:0:b0:308:f580:729e with SMTP id
+ 38308e7fff4ca-30b932f0817mr35230271fa.27.1740911657157; Sun, 02 Mar 2025
+ 02:34:17 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <CALc40c8rRV-mYyXj=a_+j92WKKmdib6Dbw+11i_Y9OYXWBCmwg@mail.gmail.com>
+ <Zdz3f4KgAaPKp7m_@fedora> <CALc40c9+ZFnimQ_KP7YpCGgP=iQBeDSS-xPAwwiraeX42yK30g@mail.gmail.com>
+ <ZgxT3QqHJ6rq9nqq@ryzen>
+In-Reply-To: <ZgxT3QqHJ6rq9nqq@ryzen>
+From: Ruben Van Boxem <vanboxem.ruben@gmail.com>
+Date: Sun, 2 Mar 2025 11:34:05 +0100
+X-Gm-Features: AQ5f1JoOA8nhhWeXDW626hEp9pQF_H9YhjQ4iIvrLygtTfvcRk9VmUkTr7X_mrw
+Message-ID: <CALc40c9wC25P9nOTu6ZbVjMwC6RhG5+N4R+7wr5UxWhcU4rBUA@mail.gmail.com>
+Subject: Re: ahci module throws "Internal error: synchronous external abort:
+ 0000000096000210 [#1] SMP"
+To: Niklas Cassel <cassel@kernel.org>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-The pull request you sent on Sat,  1 Mar 2025 10:48:39 +0100:
+Hi Niklas and others,
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-rc5
+Op di 2 apr 2024 om 20:52 schreef Niklas Cassel <cassel@kernel.org>:
+>
+> If you still have issues with a recent kernel, I guess you could try the
+> patch that you linked to, but you could also try:
+> https://lore.kernel.org/linux-pci/20240330035043.1546087-1-dlemoal@kernel.org/
+>
+>
+> Kind regards,
+> Niklas
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/df87d843c6eb4dad31b7bf63614549dd3521fe71
+I have recently upgraded my kernel to version 6.6.73 and everything
+seems to work as it should again (booting as well as my NanoPi M4 PCIe
+SATA hat).
+I'm unsure if any directly relevant patches were merged, or if I'm
+just lucky and my specific case now works by chance.
 
-Thank you!
+Thanks for the help, it seems to have sorted itself out eventually (or
+someone really sorted it out this time, who knows)
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Ruben
