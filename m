@@ -1,50 +1,53 @@
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.24])
+Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E38B6AD39;
-	Sun,  2 Mar 2025 16:21:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E62B3597E;
+	Sun,  2 Mar 2025 19:28:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740932468; cv=none; b=KgbEStVayZ0qro/B6zxLjVEI0XBLdGuQ6sn430JRXlQ/oOnfO1JAEXt4YUbtis6I/IZEosSoWNgD7XmaC9csIXWBSphd2A+tFhg2xl/8IROiqJ6IKZGYfDVTN2PpwzjznMhtI1v6WYXyYutX2VbXjoFXq61+TEd6s8+PK4M/2mQ=
+	t=1740943741; cv=none; b=Qnc4YfrrvMRZyrDMB6YqK1uRGpUKqlPOf/AfBq9SoGrbG2YO8Q8ekDyl7KGx70UQmj2a52YpzSYkYDJ5aT9/vrx6boSIlRxe6wcJRmGZoCegcr4wtNnlqZEgy2Z59wRbOj26CuTXhfZ0SpTkWVqoqxBDpepG6NzyGwT0LFgbxE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740932468; c=relaxed/simple;
-	bh=XeFvcYO1xW0RYoDygaY65NVeElg+tDGA2A5xaMtjw1g=;
+	s=arc-20240116; t=1740943741; c=relaxed/simple;
+	bh=o79N5Awt3V5gZlY4O7Vz3tTzMEESQb1ok1NmG4v1UVI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I5sZha+YbV+cYEHfg30Cm5MvBgZB6vnfkLnLB0qBlUJtzHb5ucSb1MO+IHY5kvgsLBdQ8GtoNsvNQsnwfcpGmCXT9E3I3CoNDuFSl2Ha+UXbOKPQDu9B4/mGnGBhVmDDMv6XPn0NrNE81qQz69obtGvt7wbpaSB7/Ryofn4qw3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=heusel.eu; spf=pass smtp.mailfrom=heusel.eu; dkim=pass (2048-bit key) header.d=heusel.eu header.i=christian@heusel.eu header.b=xeawaxqr; arc=none smtp.client-ip=212.227.17.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=heusel.eu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=heusel.eu
+	 Content-Type:Content-Disposition:In-Reply-To; b=VgrKTnB3nuUrjOxuS+UuOAGg6AI7FActknZBiz4vaTPndGFtFerJOy2cV7pyFz+kx4AXo5e+2HCB55Oy01pTMPHIPbOF4tS4SInimA2QoaSOuf9EkNQxb6G04r9ZKR9NdNYN/Ch6GGXqW/gLifnksDJaZyBriC3lYQ+ZaTRkxns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=rf6c+1nl; arc=none smtp.client-ip=82.195.75.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=heusel.eu header.i=christian@heusel.eu header.b="xeawaxqr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=heusel.eu;
-	s=s1-ionos; t=1740932451; x=1741537251; i=christian@heusel.eu;
-	bh=wxjlczYOeQ0Rz29XrBvQbZzg4RqcGxTX6uX/8F3WtWU=;
-	h=X-UI-Sender-Class:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:In-Reply-To:cc:
-	 content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=xeawaxqrLxrXQpOMkEv1/G8CJmSkkICX3BNiWfOknqzcq08wXfee0kUR0NjEzXB6
-	 KNfIMAcPOwVvFsXbtgBZGm0TNFj37XzwuCnbFAFQXEixTzAbCv7JGYbHNyyXk11p+
-	 k0woMuihukObMyRwDymDXXL/ssxWQ30jvlCNWAwfN+YCymyej1i/1U8UfadRsC0Ld
-	 AIGk3P+imMf973pTKU6J8o16QEmof/VWY3LjR6r7WAVuKVyYqSA/OFG20OTSa9C7S
-	 6MIU7y8PP7tjklH5FLpmRdVMA4F0mPCHSfp60zLyBSxQ7pQ3/GKHCiW7HJrj0QhV8
-	 NXvI0sE9DqEU7fQK7g==
-X-UI-Sender-Class: 55c96926-9e95-11ee-ae09-1f7a4046a0f6
-Received: from localhost ([141.70.80.5]) by mrelayeu.kundenserver.de (mreue106
- [212.227.15.183]) with ESMTPSA (Nemesis) id 1M3UEW-1tpKHw3JBa-007gKk; Sun, 02
- Mar 2025 17:20:50 +0100
-Date: Sun, 2 Mar 2025 17:20:48 +0100
-From: Christian Heusel <christian@heusel.eu>
-To: Salvatore Bonaccorso <carnil@debian.org>
-Cc: Mario Limonciello <mario.limonciello@amd.com>, 
-	Niklas Cassel <cassel@kernel.org>, Christoph Hellwig <hch@infradead.org>, 
-	Mika Westerberg <mika.westerberg@linux.intel.com>, Damien Le Moal <dlemoal@kernel.org>, 
-	Jian-Hong Pan <jhp@endlessos.org>, Eric Degenetais <eric.4.debian@grabatoulnz.fr>, 
-	regressions@lists.linux.dev, linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
-	linux-ide@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="rf6c+1nl"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Transfer-Encoding:
+	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Reply-To:Content-ID:Content-Description;
+	bh=a8hjUpRMJeEgoLFm8QSk6Wp5JPgQATrXtWJpep9pL9M=; b=rf6c+1nlfIOO9K0d0NOWtS1iPY
+	ZEP5/+997LwwZghgT6DniDikjGrqQ7DBoTLxkT0GEDc4EuFgvnM58K2/rqMHqYiKnR0ydJKWBniIZ
+	3JR7gOkjcms97lE7bGvvB3zXj/AhY0XRfSiUCxhQjJBCXySLpLKyE0lh6VqSZ3yUlgPmhp+/WZ8ip
+	gZVkgLRmOgS2dG5IqyMK/Fwp89u3P9C5+JQ0cBAJf88Dza+ncq0sbJbvrmixw8ZH49i/zsTlDoGsw
+	UBO9D54AhCGg/EctSfd1fwfilA1Ar/gizbme1HKSIn+1tqOIlbmspqcsJUdAvmRS0wTJjQS1yszm0
+	1nWtDthQ==;
+Received: from authenticated user
+	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <carnil@debian.org>)
+	id 1toozM-002ULU-Pt; Sun, 02 Mar 2025 19:28:37 +0000
+Received: by eldamar.lan (Postfix, from userid 1000)
+	id 9C711BE2DE0; Sun, 02 Mar 2025 20:28:35 +0100 (CET)
+Date: Sun, 2 Mar 2025 20:28:35 +0100
+From: Salvatore Bonaccorso <carnil@debian.org>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Niklas Cassel <cassel@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Jian-Hong Pan <jhp@endlessos.org>,
+	Eric Degenetais <eric.4.debian@grabatoulnz.fr>,
+	regressions@lists.linux.dev, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, linux-ide@vger.kernel.org,
+	Daniel Baumann <daniel@debian.org>
 Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
  board type") on reboot (but not cold boot)
-Message-ID: <17cd263d-c659-4cf6-b73d-61233bbe1951@heusel.eu>
+Message-ID: <Z8SxY0Lb7o3iAtDN@eldamar.lan>
 References: <Z8SBZMBjvVXA7OAK@eldamar.lan>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -52,91 +55,62 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="nygsacke7dq24rl7"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 In-Reply-To: <Z8SBZMBjvVXA7OAK@eldamar.lan>
-X-Provags-ID: V03:K1:0TtLKfLPGP8HsvgRDdBnMD25bi1sxQt93OUz7fdNdrGuGCLOxSt
- UfxvfPyFbK/2a6519HI/kjJ25qXwE25K3JSlx6fFXTib+Ph63qf2v9lNKnPoAHcB8BKO6zQ
- uz8kMYBRZRUppDkBTqmRfFpeFQBbuXc4L3/Tt0GDHoqH+Atnx4IVQ3lpLahsKQIMbjczfH3
- 7M6xvSIoK2O5p0XT1bFtg==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:on5VDJ4shog=;Uf05YSP+qw7CwpBjnwHGUTFU84j
- ZNckiZmzM3IQgy/XcKpkxOWeWDWXw61JpuNG5XxW55BJucU2Zt0XPIAwwroKYsyyK7VUIGymA
- KAl/nQxp+6UtwYHi4NglI6R2a6PvjZy3qGvs1K+0gzylftKlUA4CODDbCYcETLCl/rUJCnv4W
- c5ShRHuOP5MtqL1805Q3feWVpTuAHEBH6cEJsZLXvDuuDZcbGvIIC8HHf1QbKacglMmvRmOyI
- wgqOowRAL2tOFaYv9Tv5N0xwtEsmckUS03KlbhpjQEm+r3RDHYnv0DmOC0NK3pspxCqs2hNdl
- f73sZ2QzxBP6eDQ6sbiBCqA0JYhdW0C9lgvzW7zTlEVZJlEkAiiAg53+QbBT+ehrWCNRwn7kZ
- LLXKMAnZ+kYB03+AH4nP+JBSP+Q1FdWyB0eaU2Q6ORNLFAfN255QYoPoN713ZktI3ewgJH2o0
- BdWqUexI0tJE85d4XqmcdJeovGuUhZGLGsFO1XDfJCFIIp1GasLiw09y/vHGM77CcPC8vJy00
- oS9RQSTnpMtivPFizuPkCtVsuLyu/RJPRArRFhuv1Bm30W5vyEkjLMPy2oyhf97shjpVu5HsU
- rGiUwg1BaJXyeUYx4mfwYKCHb9tEziQTeFjdw5oxOrSbTOAyZEqPh4qIsQOGS23xr7Q9XPj8f
- nWnYaGZj4kc2vqOSGQgToLOwYkr4uaNWzkhyLo4L0CMIjbIDtigRqYU4R7MzHuvR2v0olZspZ
- zLzVGXevqFdbQG/7YRd4uRnNEnQDVjo+pSgBqgqdog+9ZrmKm6UmwbR8nuyLM8HZ7lDmgzc9j
- f2SzOJ1YHb73tvpmvUgfYTwAET+ReyARLC2uDdZ+k36ybqzVsMYSwFCwL6jA27+niJWo4WVmx
- 5/n4ZAQM21d17OBqVLdGoPbZt6EWUWs+ZZch8ho4B0vScW3+ebsoDxK9ZLEZGpi3Y7UfloW9V
- NYZSMTkE7j9BRdSyC7/8tv2yYLUMbWNvtQaiqiX8oeNc2n6twuHN4USk8wtlCxl6cZDUnQlbK
- BSSTbMtKVvJk0V/kcDG8VfDJ5xrTFq58qMIjJEFJhAkiv+WorqsJOPCD0RmxE3PL/1bnM+Ysy
- 3tlsEKSuoOP99+NFK2om+LJQTWVsxXgC0EqklgnskrQiPCON3FHkcPoDIwSlgOAvPFi8CwHT8
- AswfzW1r9olXt4bYf/t4qQz6weWNLDfNgmw2oR1dMV/WG/rgao64Yngo74FE9EbU3kJh7gTqs
- +pVEIIjgKnVpCP2WupcOnPYAG0FVvZ6uxDqIGcMg+e37kcol0sJXvbZkS5gmLI4JYIE8+nGJh
- m7DBBrPWnO71PvBBGak8qndaIkSENgRp1pNCdPCAhDO+zmePWPt9dx+qg9KdHYry6HSGOwy/i
- 5CM8nVEH/KZATQ1g==
+X-Debian-User: carnil
 
-
---nygsacke7dq24rl7
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
- board type") on reboot (but not cold boot)
-MIME-Version: 1.0
-
-On 25/03/02 05:03PM, Salvatore Bonaccorso wrote:
+On Sun, Mar 02, 2025 at 05:03:48PM +0100, Salvatore Bonaccorso wrote:
 > Hi Mario et al,
-
-Hey Salvatore,
-
-> Eric Degenetais reported in Debian (cf. https://bugs.debian.org/1091696) =
-for
-> his report, that after 7627a0edef54 ("ata: ahci: Drop low power policy  b=
-oard
+> 
+> Eric Degenetais reported in Debian (cf. https://bugs.debian.org/1091696) for
+> his report, that after 7627a0edef54 ("ata: ahci: Drop low power policy  board
 > type") rebooting the system fails (but system boots fine if cold booted).
->=20
+> 
 > His report mentions that the SSD is not seen on warm reboots anymore.
->=20
-> Does this ring some bell which might be caused by the above bisected[1] c=
-ommit?
-
-just FYI that we have recently bisected an issue to the same commit:
-https://lore.kernel.org/all/e2be6f70-dff6-4b79-bd49-70ec7e27fc1c@heusel.eu/
-
+> 
+> Does this ring some bell which might be caused by the above bisected[1] commit?
+> 
+> #regzbot introduced: 7627a0edef54
+> #regzbot link: https://bugs.debian.org/1091696
+> 
 > What information to you could be helpful to identify the problem?
 
-The other thread also has some debugging steps that could be interesting
-for this problem aswell!
+Additional information from the reporter: The SSD is:
 
-Cheers,
-Chris
+$ sudo smartctl -i /dev/disk/by-id/ata-Samsung_SSD_870_QVO_2TB_S5RPNF0T419459E
+smartctl 7.4 2023-08-01 r5530 [x86_64-linux-6.12.12-amd64] (local build)
+Copyright (C) 2002-23, Bruce Allen, Christian Franke, www.smartmontools.org
 
---nygsacke7dq24rl7
-Content-Type: application/pgp-signature; name="signature.asc"
+=== START OF INFORMATION SECTION ===
+Model Family:     Samsung based SSDs
+Device Model:     Samsung SSD 870 QVO 2TB
+Serial Number:    S5RPNF0T419459E
+LU WWN Device Id: 5 002538 f4243493c
+Firmware Version: SVQ02B6Q
+User Capacity:    2 000 398 934 016 bytes [2,00 TB]
+Sector Size:      512 bytes logical/physical
+Rotation Rate:    Solid State Device
+Form Factor:      2.5 inches
+TRIM Command:     Available, deterministic, zeroed
+Device is:        In smartctl database 7.3/5528
+ATA Version is:   ACS-4 T13/BSR INCITS 529 revision 5
+SATA Version is:  SATA 3.3, 6.0 Gb/s (current: 6.0 Gb/s)
+Local Time is:    Sun Mar  2 18:46:44 2025 CET
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
 
------BEGIN PGP SIGNATURE-----
+So this might be the same issue aimed to be addressed by cc77e2ce187d
+("ata: libata-core: Add ATA_QUIRK_NOLPM for Samsung SSD 870 QVO
+drives"), but which got reverted with a2f925a2f622 ("Revert "ata:
+libata-core: Add ATA_QUIRK_NOLPM for Samsung SSD 870 QVO drives"") as
+it introduces other problems.
 
-iQIzBAABCAAdFiEEb3ea3iR6a4oPcswTwEfU8yi1JYUFAmfEhWAACgkQwEfU8yi1
-JYUJkg//U53jsCXbUJR7e4TgedGCsg1qdL/P3/J//zCliiZXYQh9FiaJH/VzLdUd
-XFaes0H1FT2iym6nTiXg3ez+ewYRDhdyj+fY8vfnNOtO39W5eURoS/uvW2DU88h2
-/+F+yHsSvTzuyKgO4jUozX4ydpQD3YChE4GzOGtkLEKp3452bSYFH/uOA7rTyo0j
-iwVrnoS4FaQnWngXzBxUt8a9wLXFNBd0sd24gVNjQYwIJnUfwY9cD0mGhKr2Q5qj
-BkkjQ8ype3YOmWJjvHK2hMicCLKyYqUnKDcJ2/5vnRTVJlBixSh/h+9BjXwF6k55
-se8JZY4JqhYnmYw/dlbFPmvSNbQB/LoMHmDSYtc4byuxorkgL9miWFQ1w5B4zGkK
-htLTcEj4J+Kq7TYKY0FSjJfjqnmu0y59BGkpZBiCjvPLIX44eppx8WdZBPaFMSlq
-Ac0kqCaSI224QuVyLxNVReVJStPSaiWpy5zQedkSl6j7/32uCIQEa4CWD0B2b0Ff
-quK1+sk/rJdIEv6dcW50Z4X4p6Siev7fkklp2ZT7NQRnyHTrFBxgOlkGXBmE7B+n
-pMhHvpIsM9gC5RQG0m8mvFdqPV9OMt/f4PaI8Kmbu9fTXzgKyxCjl711CxfZAW9V
-rI+XQHAsVSQxkc/3Ra+m0zi6NuWG0Mc1Dd9xU0jVb/vtEzeYM48=
-=5XFo
------END PGP SIGNATURE-----
+So I'm adding as well Daniel Baumann into the loop as this seems
+related.
 
---nygsacke7dq24rl7--
+FTR, thanks Christian Heusel for the other comments an input!
+
+Regards,
+Salvatore
