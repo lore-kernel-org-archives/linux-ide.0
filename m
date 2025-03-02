@@ -1,108 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [217.70.183.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15DFF14900B;
-	Sun,  2 Mar 2025 19:32:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17EA2E630;
+	Sun,  2 Mar 2025 20:32:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740943965; cv=none; b=I+2urcueAGr89ypuUOiNCBDjOWIFeaEdOld2dky9wpPF5LNckEZBSepG+2faM7MEi28K3saRaMxv9W2cp+Y8nplqz2mz/ciDFSmFvvonMZasRSu2qm0bLt4H3uum/9lYNvAAto0PsNGpQq3JSSkAYhtraldU/veHB7vV0JfDy5I=
+	t=1740947545; cv=none; b=qx7UTUQWR4BxSY6h+jZ5ApnMXADvL/TFWzGNSId9agObjX3MCTh+IVhmyOj3B8yj+EXBKj2y5jdxogqaqoHa4QKfJLVndzNvsLoamlhDF5o9fwG6V0jRHn0VB1Z0d3dvCwvs65S9tuGW0gIr1EJ6mrpjsAoyqdlKMI5AfzF+NRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740943965; c=relaxed/simple;
-	bh=QlIv7JyW0eVcenFCtSuwq+4GrTmOSf00iooKtosEn1M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d+rg4LSWupchjd15xfAISkzl5NimO4BvOWi21WJux1zZZU/I5k/GonscM8D7ygyA4rBjOeUWzq4recZoEj+uW9ih+Un45WsJi6T81cngP7UP0WT+kG2EJo0+gvemCmu2OBnQH1w9oT1ZPQaLNDCUSsf/MsD4nI8ZqIqmCS47cbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vDy8TDLt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740947545; c=relaxed/simple;
+	bh=WgBZ0EUGu5LbJPsp1TumVU8UKT0UY2GPhCUt6jzcPDU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nRoQnWyyJGsWcHCBmmjEf85Y9Mvhg4sPg9/tVBjnw+wM4Rz2LYXPi2ArNQW8OvdcO5oaphsEYO5Yg466s9YkGzYTDCCHTNV38l6IGTtZVBZGTDwvQPh2k/UWNq9uSk1dLFeRpgM3cVBkboinjb64un4/iIbtUxtXaIqgv4LNKMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grabatoulnz.fr; spf=pass smtp.mailfrom=grabatoulnz.fr; dkim=pass (2048-bit key) header.d=grabatoulnz.fr header.i=@grabatoulnz.fr header.b=FgGwZzQc; arc=none smtp.client-ip=217.70.183.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grabatoulnz.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=grabatoulnz.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vDy8TDLt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11AABC4CED6;
-	Sun,  2 Mar 2025 19:32:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740943963;
-	bh=QlIv7JyW0eVcenFCtSuwq+4GrTmOSf00iooKtosEn1M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=vDy8TDLtzjR52hOi6FAoPZV05pCKyVrlc40SA4PkypCGd5Z/QuLnVFVkc6Wcxgc0W
-	 qY5aiqd8Uw6IbNw34L8dZfSskaJXJ9miK3L+n/UCi4D6Eb56usbtZZ4frHiAEnvNwG
-	 YlwyTDQU9qKaeQR+Eo+ZpWRVwRhH8u7gtpZcYGyHJODED7INnPD5wdpeiuBthqKAUo
-	 EwTuWIl2lRLwRLqRgoDTwZOkMFoUtoWBH94yI9B4eUEv5pSPbXc7s/Fx0yEU1DtOM4
-	 Y5IyGGalABEulpGrJJOGXnacnY16WqHWco3NG7MEp/Xeb2CJquJvnIeqY2MtfJmPHR
-	 53X8dZ1qnlvrQ==
-Date: Sun, 2 Mar 2025 20:32:38 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Salvatore Bonaccorso <carnil@debian.org>
-Cc: Mario Limonciello <mario.limonciello@amd.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Jian-Hong Pan <jhp@endlessos.org>,
-	Eric Degenetais <eric.4.debian@grabatoulnz.fr>,
-	regressions@lists.linux.dev, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, linux-ide@vger.kernel.org,
-	Dieter Mummenschanz <dmummenschanz@web.de>
-Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
- board type") on reboot (but not cold boot)
-Message-ID: <Z8SyVnXZ4IPZtgGN@ryzen>
-References: <Z8SBZMBjvVXA7OAK@eldamar.lan>
+	dkim=pass (2048-bit key) header.d=grabatoulnz.fr header.i=@grabatoulnz.fr header.b="FgGwZzQc"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 138A241B5F;
+	Sun,  2 Mar 2025 20:32:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=grabatoulnz.fr;
+	s=gm1; t=1740947534;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RAj8Bui5A168/ZUm/f+SKzndhklrmdcxeEf7EOra8qo=;
+	b=FgGwZzQcglmWcu3KKXkfNsjGm1BMs/HLhWKY/8Ux92yeRoTWW05x8qRsFJJgoe66gfLuYp
+	IvFQ4FHKnyljez78QaIQG1RpsLNsEwQdoKGtI1Ig9+cW9WHk5aqRp03lASAdbZqVkxPvX3
+	UZl4zW1LtBBd3VOkwHgLjF5L+3uX05ExwIwIsgZI7uDtiOXW1muVX+Q8SYwlGuZ4R4xIza
+	V4IieWfbUSOP2am63hBgoWRje4SA1fhyfIMHFcKsBtpt7uAVF0Q/wUNdRdsJSk/6BUIb1V
+	SBXEcE5SQ1j3zh6Xdx97+iVzuq/xHNjjLDgzZp7v4/XNTDc2UjeDjKkq/F2nzA==
+Message-ID: <8763ed79-991a-4a19-abb6-599c47a35514@grabatoulnz.fr>
+Date: Sun, 2 Mar 2025 21:32:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z8SBZMBjvVXA7OAK@eldamar.lan>
+User-Agent: Mozilla Thunderbird
+Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
+ board type") on reboot (but not cold boot)
+To: Niklas Cassel <cassel@kernel.org>,
+ Salvatore Bonaccorso <carnil@debian.org>
+Cc: Mario Limonciello <mario.limonciello@amd.com>,
+ Christoph Hellwig <hch@infradead.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Jian-Hong Pan <jhp@endlessos.org>,
+ regressions@lists.linux.dev, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org, linux-ide@vger.kernel.org,
+ Dieter Mummenschanz <dmummenschanz@web.de>
+References: <Z8SBZMBjvVXA7OAK@eldamar.lan> <Z8SyVnXZ4IPZtgGN@ryzen>
+Content-Language: en-US
+From: Eric <eric.4.debian@grabatoulnz.fr>
+In-Reply-To: <Z8SyVnXZ4IPZtgGN@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-GND-State: clean
+X-GND-Score: -100
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdeljedukecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkfffgggfuffvvehfhfgjtgfgsehtkeertddtvdejnecuhfhrohhmpefgrhhitgcuoegvrhhitgdrgedruggvsghirghnsehgrhgrsggrthhouhhlnhiirdhfrheqnecuggftrfgrthhtvghrnhephfdtieeulefgudeuffeiueejgfetgfehueejgeekteeiheefffelkedujeekteegnecuffhomhgrihhnpeguvggsihgrnhdrohhrghdpkhgvrhhnvghlrdhorhhgnecukfhppedvrgdtudemtggstdegmeelgedumegsuddttdemgedvudeimeejvghffhemfhgvvdehmeelhegrudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpedvrgdtudemtggstdegmeelgedumegsuddttdemgedvudeimeejvghffhemfhgvvdehmeelhegruddphhgvlhhopeglkffrggeimedvrgdtudemtggstdegmeelgedumegsuddttdemgedvudeimeejvghffhemfhgvvdehmeelhegrudgnpdhmrghilhhfrhhomhepvghrihgtrdegrdguvggsihgrnhesghhrrggsrghtohhulhhniidrfhhrpdhnsggprhgtphhtthhopeduvddprhgtphhtthhopegtrghsshgvlheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheptggrrhhni
+ hhlseguvggsihgrnhdrohhrghdprhgtphhtthhopehmrghrihhordhlihhmohhntghivghllhhosegrmhgurdgtohhmpdhrtghpthhtohephhgthhesihhnfhhrrgguvggrugdrohhrghdprhgtphhtthhopehmihhkrgdrfigvshhtvghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtohepughlvghmohgrlheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepjhhhphesvghnughlvghsshhoshdrohhrghdprhgtphhtthhopehrvghgrhgvshhsihhonhhssehlihhsthhsrdhlihhnuhigrdguvghv
+X-GND-Sasl: eric.degenetais@grabatoulnz.fr
 
-On Sun, Mar 02, 2025 at 05:03:48PM +0100, Salvatore Bonaccorso wrote:
-> Hi Mario et al,
-> 
-> Eric Degenetais reported in Debian (cf. https://bugs.debian.org/1091696) for
-> his report, that after 7627a0edef54 ("ata: ahci: Drop low power policy  board
-> type") rebooting the system fails (but system boots fine if cold booted).
-> 
-> His report mentions that the SSD is not seen on warm reboots anymore.
-> 
-> Does this ring some bell which might be caused by the above bisected[1] commit?
-> 
-> #regzbot introduced: 7627a0edef54
-> #regzbot link: https://bugs.debian.org/1091696
-> 
-> What information to you could be helpful to identify the problem?
+Hi Niklas,
 
-The model and fw version of the SSD.
+Le 02/03/2025 à 20:32, Niklas Cassel a écrit :
+> On Sun, Mar 02, 2025 at 05:03:48PM +0100, Salvatore Bonaccorso wrote:
+>> Hi Mario et al,
+>>
+>> Eric Degenetais reported in Debian (cf. https://bugs.debian.org/1091696) for
+>> his report, that after 7627a0edef54 ("ata: ahci: Drop low power policy  board
+>> type") rebooting the system fails (but system boots fine if cold booted).
+>>
+>>
+For what it's worth, before getting these replies I tested the 
+ahci.mobile_lpm_policy=1 kernel parameter, which did work around the 
+problem.
+> The model and fw version of the SSD.
+>
+> Anyway, I found it in the bug report:
+> Device Model:     Samsung SSD 870 QVO 2TB
+> Firmware Version: SVQ02B6Q
+>
+> The firmware for this SSD is not great, and has caused us a lot of pain
+> recently:
+> https://web.git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/ata?id=cc77e2ce187d26cc66af3577bf896d7410eb25ab
+> https://lore.kernel.org/linux-ide/Z7xk1LbiYFAAsb9p@ryzen/T/#m831645f6cf2e6b528a8d531fa9b9f929dbf3d602
+> https://web.git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/ata?id=a2f925a2f62254119cdaa360cfc9c0424bccd531
+>
+>
+> Basically, older firmware versions for this SSD have broken LPM, but from
+> user reports, the latest firmware version (which Eric is using) is
+> apparently working:
+> https://bugzilla.kernel.org/show_bug.cgi?id=219747
+> https://lore.kernel.org/stable/93c10d38-718c-459d-84a5-4d87680b4da7@debian.org/
+>
+>
+> Eric is using the latest SSD fimware version. So from other peoples reports,
+> I would expect things to work for him as well.
+>
+> However, no one has reported that their UEFI does not detect their SSD.
+> This seems to be either SSD firmware bug or UEFI bug.
+>
+> I would expect your UEFI to send a COMRESET even during a reboot, and a
+> according to AHCI spec a COMRESET shall take the decide out of sleep states.
+>
+> Considering that no one else seems to have any problem when using the latest
+> firmware version for this SSD, this seems to be a problem specific to Eric.
+> So... UEFI bug?
+>
+> Have you tried updating your BIOS?
 
-Anyway, I found it in the bug report:
-Device Model:     Samsung SSD 870 QVO 2TB
-Firmware Version: SVQ02B6Q
+I had not tried to update my bios (bit shy on this due to a problem long 
+ago with a power failure during bios update which left me with an 
+unbootable machine).
 
-The firmware for this SSD is not great, and has caused us a lot of pain
-recently:
-https://web.git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/ata?id=cc77e2ce187d26cc66af3577bf896d7410eb25ab
-https://lore.kernel.org/linux-ide/Z7xk1LbiYFAAsb9p@ryzen/T/#m831645f6cf2e6b528a8d531fa9b9f929dbf3d602
-https://web.git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/ata?id=a2f925a2f62254119cdaa360cfc9c0424bccd531
+However, as far as I see, there is no newer version of it :
 
+My mobo model is :
 
-Basically, older firmware versions for this SSD have broken LPM, but from
-user reports, the latest firmware version (which Eric is using) is
-apparently working:
-https://bugzilla.kernel.org/show_bug.cgi?id=219747
-https://lore.kernel.org/stable/93c10d38-718c-459d-84a5-4d87680b4da7@debian.org/
+sudo dmidecode -t 2
 
+# dmidecode 3.4
+Getting SMBIOS data from sysfs.
+SMBIOS 2.7 present.
 
-Eric is using the latest SSD fimware version. So from other peoples reports,
-I would expect things to work for him as well.
-
-However, no one has reported that their UEFI does not detect their SSD.
-This seems to be either SSD firmware bug or UEFI bug.
-
-I would expect your UEFI to send a COMRESET even during a reboot, and a
-according to AHCI spec a COMRESET shall take the decide out of sleep states.
-
-Considering that no one else seems to have any problem when using the latest
-firmware version for this SSD, this seems to be a problem specific to Eric.
-So... UEFI bug?
-
-Have you tried updating your BIOS?
+Handle 0x0002, DMI type 2, 15 bytes
+Base Board Information
+     Manufacturer: ASUSTeK COMPUTER INC.
+     Product Name: M5A99X EVO R2.0
+     Version: Rev 1.xx
 
 
-Kind regards,
-Niklas
+ From asus's website I get that the latest bios version for this model 
+is version
+
+M5A99X EVO R2.0 BIOS 2501
+Version 2501
+3.06 MB
+2014/05/14
+
+And I appear to already use it :
+
+sudo dmidecode -s bios-version
+2501
+
+>
+>
+> Kind regards,
+> Niklas
+
+kind regards,
+
+Eric
+
