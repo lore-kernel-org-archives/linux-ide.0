@@ -1,114 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from relay7-d.mail.gandi.net (relay7-d.mail.gandi.net [217.70.183.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF941156237;
-	Mon,  3 Mar 2025 06:25:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FF15214A8A;
+	Mon,  3 Mar 2025 18:04:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740983146; cv=none; b=SLiIvptqHSm3hXoYV50rZzpWKtRRwVDFhlG2bfS2nZ2UvdwijRhJeqaThKO8npcmPQHt6MK0hzjc/HOdHGFdPAGzYYvuB6rAogGLkxov8sgG9AgSVLyc+mR6JTteJX1+W7ng/Wee8dtbM9Q6og7t2JTfBz4XkA2eDlngJzziCBM=
+	t=1741025065; cv=none; b=WmMSjGFmMvEMJmdxTuTRhgMecCHBKibH2DDExauNHIexAjv95haNbYJdDZ5jY/0554g3KbR4YU2TlLT7lc+YHWl02VbMKPdNAN6XbcigZrmurJBEJsjMwNXcpd9OkViRfotXvCvhMN6EZRVq1mbQSiKQ+xBQoHYMCkVhnCP4XOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740983146; c=relaxed/simple;
-	bh=HMeE8a/cFpKumunodQGwNDLfpxZBYTWa5hdf+CBH/Zs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B8+MkYL2rnL0x07LrzY38zWz55O/HhNtETTIfkFyHstsU0a+EUG80w/LoneIHsupwa5w1lCjaDTBQXldUzKBrBaFfyRyyzvBWCFrNlfzKLOxTwswHKTYiWSaG74Twz76xBwWy815dxMF8P/90511t/PvmHimhxzjFv+OrAfXlPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hGaCYVb9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1741025065; c=relaxed/simple;
+	bh=zoa9d1W2hAHMj2Xu5aH+Voz4qYbR0KEfYZx6lQa6UrU=;
+	h=Message-ID:Date:MIME-Version:Subject:References:To:From:
+	 In-Reply-To:Content-Type; b=ueyWY5qtnZLfnLF6OdprHcvQ+hzd1rYNBVftSHbQ//C1Ei0BPxy1hlvVd4cx2p7Pi20wyIGGnCo/s5M7G2P9mjUMbFQ6FArd5tKN1QCT/qfPj9xk81OZsmLWzB2p6orJcYPZIzYdiprC8qOyhTk1JxBudKHXTTszha7+gatDAks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grabatoulnz.fr; spf=pass smtp.mailfrom=grabatoulnz.fr; dkim=pass (2048-bit key) header.d=grabatoulnz.fr header.i=@grabatoulnz.fr header.b=PVwnOS3E; arc=none smtp.client-ip=217.70.183.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grabatoulnz.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=grabatoulnz.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hGaCYVb9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34EA7C4CED6;
-	Mon,  3 Mar 2025 06:25:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740983146;
-	bh=HMeE8a/cFpKumunodQGwNDLfpxZBYTWa5hdf+CBH/Zs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hGaCYVb9L+CPSLTB4qoOwxd1LUahB9PwctBQpNpdZrYdindae/YenfwrnfDrvp44D
-	 iQ2AcKMtUiBGFtExwop7ksjpBriBpMBqkTko2Cdt5oZOqOoJgYMzKfoeoJ+jdRhCaH
-	 A5MF2u5Kep738Pm4bXtazbm2zB6B0XsFDG9v+OUPklHdD5cvjtNLJb0lbKB34NxDkd
-	 pd/aqxVRD+aZVWdYUycqCOcnyxT+t7/FtgXRbF7pDdY0Lbb++ijVyOchQAnGPb3Xzc
-	 KJPs82efUZWgc82+GiJd63TEvPFCFRN1IGPMR8kMIWLMyXCm6foxQAgsVfZmfzqND7
-	 VBz/g7DswMDYw==
-Date: Mon, 3 Mar 2025 07:25:40 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Eric <eric.4.debian@grabatoulnz.fr>
-Cc: Salvatore Bonaccorso <carnil@debian.org>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Jian-Hong Pan <jhp@endlessos.org>, regressions@lists.linux.dev,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Dieter Mummenschanz <dmummenschanz@web.de>
-Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
- board type") on reboot (but not cold boot)
-Message-ID: <Z8VLZERz0FpvpchM@x1-carbon>
-References: <Z8SBZMBjvVXA7OAK@eldamar.lan>
- <Z8SyVnXZ4IPZtgGN@ryzen>
- <8763ed79-991a-4a19-abb6-599c47a35514@grabatoulnz.fr>
+	dkim=pass (2048-bit key) header.d=grabatoulnz.fr header.i=@grabatoulnz.fr header.b="PVwnOS3E"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 2A48D4425F;
+	Mon,  3 Mar 2025 18:04:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=grabatoulnz.fr;
+	s=gm1; t=1741025061;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=h29U88rKE0F9ZULoLkFLslgs12yl8Pik059fbjfoXBI=;
+	b=PVwnOS3E/h/TsZWB6T6zmH/EOBZ4fW6bNWQf57rTUuMGrNIRAt12dKlgI5CRyIudHj4Y1c
+	FEQg1pIxnPZiSyQUND2hgTKAw5uFGpFKDTabEYXLyAGFnqRPGGyT3/zeH9jCqy6M2xIZV2
+	lVAn9s1eqP4XfW3hUowx8Tv2JHqv2cHf+BUmc3S+unohm/0qC0+uO4szrFUTabUGFwABtu
+	/efHftawX7fP4iv/NQYK7mgUtnVTwHYURajwkNw8q5AXxt+Rz333bU33h2U7CHMYgI1XAV
+	GVj2sJ/JWC9MqU2mgfu4dj8Zjlz0bsLm/SauqffL2VItrQ37CAQVSdKgnTp/jA==
+Message-ID: <88b4e029-1513-41f7-be39-4f31d360be8a@grabatoulnz.fr>
+Date: Mon, 3 Mar 2025 19:04:13 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
+ board type") on reboot (but not cold boot)
+Content-Language: en-US
+References: <8b1cbfd4-6877-48ef-b17d-fc10402efbf7@grabatoulnz.fr>
+To: regressions@lists.linux.dev, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org, linux-ide@vger.kernel.org
+From: Eric <eric.4.debian@grabatoulnz.fr>
+In-Reply-To: <8b1cbfd4-6877-48ef-b17d-fc10402efbf7@grabatoulnz.fr>
+X-Forwarded-Message-Id: <8b1cbfd4-6877-48ef-b17d-fc10402efbf7@grabatoulnz.fr>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <8763ed79-991a-4a19-abb6-599c47a35514@grabatoulnz.fr>
+X-GND-State: clean
+X-GND-Score: 0
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdelleejlecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucenucfjughrpefkffggfgfufhfvhfgjtgfgsehtkeertddtvdejnecuhfhrohhmpefgrhhitgcuoegvrhhitgdrgedruggvsghirghnsehgrhgrsggrthhouhhlnhiirdhfrheqnecuggftrfgrthhtvghrnhepleefudeltdffhefghedvueelieduueduteejgedvgeekieelkeevledtheejfedvnecuffhomhgrihhnpeguvggsihgrnhdrohhrghenucfkphepvdgrtddumegtsgdtgeemleegudemsgdutddtmeegvdduieemjegvfhhfmehfvgdvheemleehrgdunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvdgrtddumegtsgdtgeemleegudemsgdutddtmeegvdduieemjegvfhhfmehfvgdvheemleehrgdupdhhvghloheplgfkrfggieemvdgrtddumegtsgdtgeemleegudemsgdutddtmeegvdduieemjegvfhhfmehfvgdvheemleehrgdungdpmhgrihhlfhhrohhmpegvrhhitgdrgedruggvsghirghnsehgrhgrsggrthhouhhlnhiirdhfrhdpnhgspghrtghpthhtohepgedprhgtphhtthhopehrvghgrhgvshhsihhonhhssehlihhsthhsrdhlihhnuhigrdguvghvpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhor
+ hhgpdhrtghpthhtohepshhtrggslhgvsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqihguvgesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-GND-Sasl: eric.degenetais@grabatoulnz.fr
 
-On Sun, Mar 02, 2025 at 09:32:07PM +0100, Eric wrote:
-> Hi Niklas,
-> 
-> Le 02/03/2025 à 20:32, Niklas Cassel a écrit :
-> > On Sun, Mar 02, 2025 at 05:03:48PM +0100, Salvatore Bonaccorso wrote:
-> > > Hi Mario et al,
-> > > 
-> > > Eric Degenetais reported in Debian (cf. https://bugs.debian.org/1091696) for
-> > > his report, that after 7627a0edef54 ("ata: ahci: Drop low power policy  board
-> > > type") rebooting the system fails (but system boots fine if cold booted).
-> > > 
-> > > 
-> For what it's worth, before getting these replies I tested the
-> ahci.mobile_lpm_policy=1 kernel parameter, which did work around the
-> problem.
-
-I'm glad that you have a workaround to make your system usable.
+re-sent to lists because my client mistaklenly sent as HTML (now fixed, 
+AFAIK). Sorry for the inconvenience.
 
 
-> > 
-> > Eric is using the latest SSD fimware version. So from other peoples reports,
-> > I would expect things to work for him as well.
-> > 
-> > However, no one has reported that their UEFI does not detect their SSD.
-> > This seems to be either SSD firmware bug or UEFI bug.
-> > 
-> > I would expect your UEFI to send a COMRESET even during a reboot, and a
-> > according to AHCI spec a COMRESET shall take the decide out of sleep states.
-> > 
-> > Considering that no one else seems to have any problem when using the latest
-> > firmware version for this SSD, this seems to be a problem specific to Eric.
-> > So... UEFI bug?
-> > 
-> > Have you tried updating your BIOS?
-> 
-> I had not tried to update my bios (bit shy on this due to a problem long ago
-> with a power failure during bios update which left me with an unbootable
-> machine).
-> 
-> However, as far as I see, there is no newer version of it.
+Hi Niklas
 
-Ok.
+Le 03/03/2025 à 07:25, Niklas Cassel a écrit :
+> So far, this just sounds like a bug where UEFI cannot detect your SSD.
+Bit it is detected during cold boot, though.
+> UEFI problems should be reported to your BIOS vendor.
+I'll try to see what can be done, however I am not sure how responsive 
+they will be for this board...
+> It would be interesting to see if _Linux_ can detect your SSD, after a
+> reboot, without UEFI involvement.
+>
+> If you kexec into the same kernel as you are currently running:
+> https://manpages.debian.org/testing/kexec-tools/kexec.8.en.html
+>
+> Do you see your SSD in the kexec'd kernel?
 
-So far, this just sounds like a bug where UEFI cannot detect your SSD.
-UEFI problems should be reported to your BIOS vendor.
+Sorry, I've tried that using several methods (systemctl kexec / kexec 
+--load + kexec -e / kexec --load + shutdown --reboot now) and it failed 
+each time. I *don't* think it is related to this bug, however, because 
+each time the process got stuck just after displaying "kexec_core: 
+Starting new kernel".
 
-It would be interesting to see if _Linux_ can detect your SSD, after a
-reboot, without UEFI involvement.
+No further output, the machine is completely unreponsive, even to the 
+power button (I had to force power down by pressing the button until the 
+system switches off).
 
-If you kexec into the same kernel as you are currently running:
-https://manpages.debian.org/testing/kexec-tools/kexec.8.en.html
+> Kind regards,
+> Niklas
 
-Do you see your SSD in the kexec'd kernel?
+kind regards,
 
+Eric
 
-Kind regards,
-Niklas
