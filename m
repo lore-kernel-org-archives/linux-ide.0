@@ -1,44 +1,57 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A7E524EF8E;
-	Tue, 11 Mar 2025 10:45:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07348254B0D;
+	Tue, 11 Mar 2025 14:14:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741689944; cv=none; b=fTg9xx0YmeVsl5uo+StE/9eXWdyAuu6IF4G8gtTwuedoBQ8e/PV3oMUJ/AEo3mBVj+OyOyGfCQUvzqVliOPjAUqYDPi0vIqRK+cHWH03ywo7sz6L0zoRcmCT1BvvUOmjJMmvJyJ7d4l4GgudvoAS7kq8ieSDKjhTlvSr+S21j88=
+	t=1741702479; cv=none; b=FPhDz7LLThh+dyZpjjHqhew7NyJLdFIbIG6RFQckwktyqysW2VuNtYFuGZiMa6Fy7aw1XuTxT+XbGEMMLMlFh58G+Jqiq9qwHc655WvkjY91NnWFoiotnsbcbXniBkbMHtlPlLLKB1Gu1mlKSwvDjijTvP30TM1cPvD6VTrq8fA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741689944; c=relaxed/simple;
-	bh=fD3r6z7e6HcfQgOi10wve1Oi9uKtT2jOA0L0pllcXKQ=;
+	s=arc-20240116; t=1741702479; c=relaxed/simple;
+	bh=yeuRqhNPxhQWRMw+OTMnVBLhf+GKJ3O5IeEzkxZ0+Xg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bkDpaMiWDhCIWkS/oNMAk2dfAUhqobafBIIqLTpa0VC0Qary63J4bggiReZRR23+u3dlTeWvfunYYg+3b77lcOd9nEEyzk8y9JMZ/NK7/kNNqxCsdxnZewnKm1YLS3ER1FChnAkd74E78NWDzdU9/xO306rZfYVQE5n61tyzej8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O8YxJCI4; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=m74fw51nMBjkQP0BQWFzzIZe+wd+U7wCrsr3qKka9F8/C0N8EeG3JalcI9IxYjVeszqY92lAvy9LLNIO5sLVAcrYTcTu4tQv5svJ6ZQzmcFGL29bnKsSAis6gov8jmQoqw7GVeufKK2OvH7V/Oro2Z8ncjO6ijAJ5UgD4TYuN3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hG0oXFG6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O8YxJCI4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78603C4CEE9;
-	Tue, 11 Mar 2025 10:45:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hG0oXFG6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C50BC4CEE9;
+	Tue, 11 Mar 2025 14:14:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741689943;
-	bh=fD3r6z7e6HcfQgOi10wve1Oi9uKtT2jOA0L0pllcXKQ=;
+	s=k20201202; t=1741702478;
+	bh=yeuRqhNPxhQWRMw+OTMnVBLhf+GKJ3O5IeEzkxZ0+Xg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=O8YxJCI42PaqFVX9Q9s1084n/qJWyZBTw3N+2jpU7rgzhecH6fKpmoHqhgK99vYLr
-	 MV7cqTxOvR57m+9wAQtv+TZ+HX5w61bRYrMIrELi9FQ5136avq1Zwxw/snCwuVa5Mr
-	 d/zW+9YDNBqnvVaF+r+ff2n4/G8SJwRgMKzxzy0laZUd4Xh8I0nMfIrmew4412lovZ
-	 jqjEPNKxhflAIVvgIcgaV5uEYX2km8esC1KmDpUNiCy6apJ1D/DyHZjE3J99NO6Vdg
-	 uUBV0qzweOE1MDcIggZvp76FKd5Z8lZch2FUJCrrtxrIajyE3f+yM3PhIri3KsPyNm
-	 s+Ie2c2dx/tFQ==
-Date: Tue, 11 Mar 2025 11:45:38 +0100
+	b=hG0oXFG6SC8sDIeE5/XxN1PPtT4J5WkqDYCfDK2Fxpycjk3PWYAn6NOXRQrl0qz+E
+	 UgYNxORvvwIhTnNyrBAo3uvi6V//t5SILKN6JvE4mwH/0/KdpvsGRu+g60DRIqrq8X
+	 mJTnJAMsDmgr49FDdgiYiHBmtNp7YPR8dJUU2VW6TggIRk8OA3HPawnqZMEtHTvN49
+	 5ueTMQEt4Dxn+5kVp5mlvGhGvSASFvrDzpjdVsGwEneAQnOT0kiHBJbn8wwAQ85JsK
+	 gzuyHrc4R9Th4qG2eOEvdnnD+cLhWLJ12l7Sd2fAeNADMII4X6hCWqe+/E6o7KMESz
+	 d7yqvzyNNSP3w==
+Date: Tue, 11 Mar 2025 15:14:32 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Huacai Chen <chenhuacai@loongson.cn>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	Huacai Chen <chenhuacai@kernel.org>,
-	Xuerui Wang <kernel@xen0n.name>,
-	Jiaxun Yang <jiaxun.yang@flygoat.com>, linux-kernel@vger.kernel.org,
-	Yuli Wang <wangyuli@uniontech.com>, Jie Fan <fanjie@uniontech.com>,
-	Erpeng Xu <xuerpeng@uniontech.com>
-Subject: Re: [PATCH V2] ahci: Marvell 88SE9215 controllers prefer DMA for
- ATAPI
-Message-ID: <Z9AUUvfId9J66zWS@ryzen>
-References: <20250311030217.4177569-1-chenhuacai@loongson.cn>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Eric <eric.4.debian@grabatoulnz.fr>,
+	Salvatore Bonaccorso <carnil@debian.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Jian-Hong Pan <jhp@endlessos.org>, regressions@lists.linux.dev,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Dieter Mummenschanz <dmummenschanz@web.de>
+Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
+ board type") on reboot (but not cold boot)
+Message-ID: <Z9BFSM059Wj2cYX5@ryzen>
+References: <8763ed79-991a-4a19-abb6-599c47a35514@grabatoulnz.fr>
+ <Z8VLZERz0FpvpchM@x1-carbon>
+ <8b1cbfd4-6877-48ef-b17d-fc10402efbf7@grabatoulnz.fr>
+ <Z8l61Kxss0bdvAQt@ryzen>
+ <Z8l7paeRL9szo0C0@ryzen>
+ <689f8224-f118-47f0-8ae0-a7377c6ff386@grabatoulnz.fr>
+ <Z8rCF39n5GjTwfjP@ryzen>
+ <9c4a635a-ce9f-4ed9-9605-002947490c61@redhat.com>
+ <Z88rtGH39C-S8phk@ryzen>
+ <383d5740-7740-4051-b39a-b8c74b035ec2@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,151 +60,94 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250311030217.4177569-1-chenhuacai@loongson.cn>
+In-Reply-To: <383d5740-7740-4051-b39a-b8c74b035ec2@redhat.com>
 
-Hello Huacai Chen,
+Hello Hans, Eric,
 
-On Tue, Mar 11, 2025 at 11:02:17AM +0800, Huacai Chen wrote:
-> We use CD/DVD drives under Marvell 88SE9215 SATA controller on many
-> Loongson-based machines. We found its PIO doesn't work well, and on the
-> opposite its DMA seems work very well. We don't know the detail of the
-> 88SE9215 SATA controller, but we have tested different CD/DVD drives
-> and they all have problems under 88SE9215 (but they all work well under
-> an Intel SATA controller). So we can define a new AHCI board id named
-> board_ahci_atapi_dma, and for this id we set the ATA_FLAG_ATAPI_DMA and
-> ATA_QUIRK_ATAPI_MOD16_DMA flags on the SATA controller to prefer ATAPI
-> DMA.
-
-This patch does not apply.
-It conflicts with:
-https://web.git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/commit/?h=for-6.15&id=885251dc35767b1c992f6909532ca366c830814a
-
-Please add Daniel to CC when you respin, so that he might also be able
-to test.
-
-
+On Mon, Mar 10, 2025 at 09:12:13PM +0100, Hans de Goede wrote:
 > 
-> BTW, return -EOPNOTSUPP instead of 1 if ATAPI DMA is not supported in
-> atapi_check_dma().
+> I agree with you that this is a BIOS bug of the motherboard in question
+> and/or a bad interaction between the ATI SATA controller and Samsung SSD
+> 870* models. Note that given the age of the motherboard there are likely
+> not going to be any BIOS updates fixing this though.
 
-Please create a separate patch (e.g patch 1/2) for this with a proper
-commit log. (A proper commit log should always answer the question: Why?)
+Looking at the number of quirks for some of the ATI SB7x0/SB8x0/SB9x0 SATA
+controllers, they really look like something special (not in a good way):
+https://github.com/torvalds/linux/blob/v6.14-rc6/drivers/ata/ahci.c#L236-L244
 
+-Ignore SError internal
+-No MSI
+-Max 255 sectors
+-Broken 64-bit DMA
+-Retry SRST (software reset)
 
-> 
-> Reported-by: Yuli Wang <wangyuli@uniontech.com>
-> Tested-by: Jie Fan <fanjie@uniontech.com>
-> Tested-by: Erpeng Xu <xuerpeng@uniontech.com>
-> Tested-by: Yuli Wang <wangyuli@uniontech.com>
-> Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
-> ---
->  drivers/ata/ahci.c        | 12 ++++++++++++
->  drivers/ata/libata-core.c |  6 +++++-
->  include/linux/libata.h    |  1 +
->  3 files changed, 18 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index f813dbdc2346..a64db28549d8 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -49,6 +49,7 @@ enum board_ids {
->  	/* board IDs by feature in alphabetical order */
->  	board_ahci,
->  	board_ahci_43bit_dma,
-> +	board_ahci_atapi_dma,
->  	board_ahci_ign_iferr,
->  	board_ahci_no_debounce_delay,
->  	board_ahci_no_msi,
-> @@ -137,6 +138,12 @@ static const struct ata_port_info ahci_port_info[] = {
->  		.udma_mask	= ATA_UDMA6,
->  		.port_ops	= &ahci_ops,
->  	},
-> +	[board_ahci_atapi_dma] = {
-> +		.flags		= AHCI_FLAG_COMMON,
-> +		.pio_mask	= ATA_PIO4,
-> +		.udma_mask	= ATA_UDMA6,
-> +		.port_ops	= &ahci_ops,
-> +	},
->  	[board_ahci_ign_iferr] = {
->  		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR),
->  		.flags		= AHCI_FLAG_COMMON,
-> @@ -591,6 +598,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	  .driver_data = board_ahci_yes_fbs },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
->  	  .driver_data = board_ahci_yes_fbs },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9215),
-> +	  .driver_data = board_ahci_atapi_dma },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
->  	  .driver_data = board_ahci_no_debounce_delay },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642), /* highpoint rocketraid 642L */
-> @@ -1917,6 +1926,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	/* save initial config */
->  	ahci_pci_save_initial_config(pdev, hpriv);
->  
-> +	if (board_id == board_ahci_atapi_dma)
-> +		pi.flags |= ATA_FLAG_ATAPI_DMA;
-> +
-
-No need for these three lines, just rename your board_ahci_atapi_dma
-board to board_ahci_atapi_dma_quirk_yes_fbs
-
-and in the initialization of ahci_atapi_dma_quirk_yes_fbs, set:
-AHCI_HFLAGS     (AHCI_HFLAG_ATAPI_DMA_QUIRK |
-		 AHCI_HFLAG_YES_FBS),
-.flags          = AHCI_FLAG_COMMON,
+And that is even without the weird "disable NCQ but only for Samsung SSD
+8xx drives" quirk when using these ATI controllers.
 
 
-And rename ATA_FLAG_ATAPI_DMA to AHCI_HFLAG_ATAPI_DMA_QUIRK and put it in
-AHCI_HFLAGS instead.
+What does bother me is that we don't know if it is this specific mobo/BIOS:
+     Manufacturer: ASUSTeK COMPUTER INC.
+     Product Name: M5A99X EVO R2.0
+     Version: Rev 1.xx
+
+     M5A99X EVO R2.0 BIOS 2501
+     Version 2501
+     3.06 MB
+     2014/05/14
+
+
+that should have a NOLPM quirk, like we do for specific BIOSes:
+https://github.com/torvalds/linux/blob/v6.14-rc6/drivers/ata/ahci.c#L1402-L1439
+
+Or if it this ATI SATA controller that is always broken when it comes
+to LPM, regardless of the drive, or if it is only Samsung drives.
+
+Considering the dmesg comparing cold boot, the Maxtor drive and the
+ASUS ATAPI device seems to be recognized correctly.
+
+Eric, could you please run:
+$ sudo hdparm -I /dev/sdX | grep "interface power management"
+
+on both your Samsung and Maxtor drive?
+(A star to the left of feature means that the feature is enabled)
 
 
 
->  	/* prepare host */
->  	if (hpriv->cap & HOST_CAP_NCQ) {
->  		pi.flags |= ATA_FLAG_NCQ;
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index c085dd81ebe7..87a3dbf3ac93 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3029,6 +3029,10 @@ int ata_dev_configure(struct ata_device *dev)
->  		dev->max_sectors = ATA_MAX_SECTORS;
->  	}
->  
-> +	if ((dev->class == ATA_DEV_ATAPI) &&
-> +	    (ap->flags & ATA_FLAG_ATAPI_DMA))
-> +		dev->quirks |= ATA_QUIRK_ATAPI_MOD16_DMA;
-> +
->  	if ((dev->class == ATA_DEV_ATAPI) &&
->  	    (atapi_command_packet_set(id) == TYPE_TAPE)) {
->  		dev->max_sectors = ATA_MAX_SECTORS_TAPE;
-> @@ -4544,7 +4548,7 @@ int atapi_check_dma(struct ata_queued_cmd *qc)
->  	 */
->  	if (!(qc->dev->quirks & ATA_QUIRK_ATAPI_MOD16_DMA) &&
->  	    unlikely(qc->nbytes & 15))
-> -		return 1;
-> +		return -EOPNOTSUPP;
->  
->  	if (ap->ops->check_atapi_dma)
->  		return ap->ops->check_atapi_dma(qc);
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index c1c57f814b98..67d374279a65 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -194,6 +194,7 @@ enum {
->  					    /* (doesn't imply presence) */
->  	ATA_FLAG_SATA		= (1 << 1),
->  	ATA_FLAG_NO_LPM		= (1 << 2), /* host not happy with LPM */
-> +	ATA_FLAG_ATAPI_DMA	= (1 << 4), /* ATAPI use DMA */
+One guess... perhaps it could be Device Initiated PM that is broken with
+these controllers? (Even though the controller does claim to support it.)
 
-s/ATAPI use DMA/force ATAPI to use DMA/
+Eric, could you please try this patch:
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index f813dbdc2346..ca690fde8842 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -244,7 +244,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	},
+ 	[board_ahci_sb700] = {	/* for SB700 and SB800 */
+ 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL),
+-		.flags		= AHCI_FLAG_COMMON,
++		.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_DIPM,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_pmp_retry_srst_ops,
 
 
->  	ATA_FLAG_NO_LOG_PAGE	= (1 << 5), /* do not issue log page read */
->  	ATA_FLAG_NO_ATAPI	= (1 << 6), /* No ATAPI support */
->  	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
-> -- 
-> 2.47.1
-> 
+
+Normally, I do think that we need more reports, to see if it is just
+this specific BIOS, or all the ATI SB7x0/SB8x0/SB9x0 SATA controllers
+that are broken...
+
+...but, considering how many quirks these ATI controllers have already...
+
+...and the fact that the one (Dieter) who reported that his Samsung SSD 870
+QVO could enter deeper sleep states just fine was running an Intel AHCI
+controller (with the same FW version as Eric), I would be open to a patch
+that sets ATA_FLAG_NO_LPM for all these ATI controllers.
+
+Or a ATA_QUIRK_NO_LPM_ON_ATI, like you suggested, if we are certain that it
+is only Samsung drives that don't work with these ATI SATA controllers.
+
 
 Kind regards,
 Niklas
