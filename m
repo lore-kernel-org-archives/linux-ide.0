@@ -1,126 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC0E71CF8B;
-	Wed, 12 Mar 2025 13:47:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809FB16FF44;
+	Wed, 12 Mar 2025 15:13:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741787228; cv=none; b=GHNolgPVKCk+Q5f0s3Hs+OYZ+vgPXvsTlgZN0bI+6hvOphOM0OLujnVB6gZW8Jz46CWRJf06eztrAzwswK2ePE5kSy3WwmEERriWBWmafnKAN8/bzD4Vn1lB5fkwnruXeZF7KPSfGQd4cf1Ywh22KOPBQI08MgLI6+gG1rtAzcU=
+	t=1741792412; cv=none; b=aqw6v2GFhELaK3z3+MDMWbKkSzbuyDfugT2hxzPXp2UknuBCDWM0v7bJXiXtotTt422p1UmXDOgOQ2nNm/IANbcpZFUB+RxoNsz7WGdrWuKcVgcPvbmDcJjzPKn/r1srDaaUt9QSy+C9nFp4ZPvv8bxF15ccs1w804mxE8kn8/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741787228; c=relaxed/simple;
-	bh=1Yo6vM/LcPOOqzwVk6cJ8+2lf0fFmwLkSDVU6CLWfVo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gUlEbLU374S1A9VEyTxZlKfOM0ejUmyJJDq32MVA0mcAl6XKb0ANZMuQeGSjkVUG6wnkLSMCpn6k3yj0Ypa22yCGk6IQXzVqrLcCiELFkUmwLfS8zrAItucLtdXQKPbRKt4J7uhYej051tV6qnB8eTvjB/b+cfyKF48zDjR33Hk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF830C4CEDD;
-	Wed, 12 Mar 2025 13:47:04 +0000 (UTC)
-From: Huacai Chen <chenhuacai@loongson.cn>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	Huacai Chen <chenhuacai@kernel.org>,
-	Xuerui Wang <kernel@xen0n.name>,
-	Daniel Kral <d.kral@proxmox.com>,
-	linux-kernel@vger.kernel.org,
-	Huacai Chen <chenhuacai@loongson.cn>,
-	Yuli Wang <wangyuli@uniontech.com>,
-	Jie Fan <fanjie@uniontech.com>,
-	Erpeng Xu <xuerpeng@uniontech.com>
-Subject: [PATCH V3] ahci: Marvell 88SE9215 controllers prefer DMA for ATAPI
-Date: Wed, 12 Mar 2025 21:46:54 +0800
-Message-ID: <20250312134654.6699-1-chenhuacai@loongson.cn>
-X-Mailer: git-send-email 2.47.1
+	s=arc-20240116; t=1741792412; c=relaxed/simple;
+	bh=NfYIPDL/R5XU9ENmAwbJywG6k5yNmixA59CUlFuwHPo=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=KjDetCdM+iZ/Gy3o62IVij3iJDEBRFL6Mya+KaDn5dgZ+ZgUhK/YSWFZ8cIkwV8l4/x+6XVKenUEkCpW7Uji4q3/r4Co5HoLCqqc8rQYNUAJfrZDfg17XSYIkghbCshSE+cJpso++2EQE11CpD0yqWDo05zW8n6Ed6NWK0kpqEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NW9D3b3F; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NW9D3b3F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B953BC4CEDD;
+	Wed, 12 Mar 2025 15:13:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741792412;
+	bh=NfYIPDL/R5XU9ENmAwbJywG6k5yNmixA59CUlFuwHPo=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=NW9D3b3FU4fX3QtjTLAnFvyyn3Kk26sXPf05cMKvp85ll2b1wbDhGgWx1JQw7VZzh
+	 Z/XZzKt3+Q8AE3swOVxzmqAmPsIkUHhRtK47WVnIlhW86R1DoQvPU/x+MP4b2eTwjU
+	 hNih9pFTDHSQwz2/QIuTMYhAytLcl3/VRrUUrcTrZSxqRMSIRSEyp7+2YyvuRqAJcB
+	 iAJ7PkMhishhDYNaavzD5uW+E9QIBOW/1SNn50LZxGCRAbENZUI4fODZunyZideioH
+	 qrfLspYGewKhaS9CAr6uoE6qIYhReU0B1trxghTp8DNVncvK9+2vjXl7QR4tUkCNkf
+	 /MA2Zpeo70ExQ==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>, 
+ Huacai Chen <chenhuacai@kernel.org>
+Cc: linux-ide@vger.kernel.org, Huacai Chen <chenhuacai@kernel.org>, 
+ Xuerui Wang <kernel@xen0n.name>, Daniel Kral <d.kral@proxmox.com>, 
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20250312133954.6666-1-chenhuacai@loongson.cn>
+References: <20250312133954.6666-1-chenhuacai@loongson.cn>
+Subject: Re: [PATCH] ata: libata: Return -EOPNOTSUPP instead of 1 in
+ atapi_check_dma()
+Message-Id: <174179241047.984574.18019635919979994622.b4-ty@kernel.org>
+Date: Wed, 12 Mar 2025 16:13:30 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-We use CD/DVD drives under Marvell 88SE9215 SATA controller on many
-Loongson-based machines. We found its PIO doesn't work well, and on the
-opposite its DMA seems work very well. We don't know the detail of the
-88SE9215 SATA controller, but we have tested different CD/DVD drives
-and they all have problems under 88SE9215 (but they all work well under
-an Intel SATA controller). So we can define a new dedicated AHCI board
-id named board_ahci_yes_fbs_atapi_dma for 88SE9215, and for this id we
-set the AHCI_HFLAG_ATAPI_DMA_QUIRK and ATA_QUIRK_ATAPI_MOD16_DMA flags
-on the SATA controller to prefer ATAPI DMA.
+On Wed, 12 Mar 2025 21:39:54 +0800, Huacai Chen wrote:
+> -EOPNOTSUPP means not supported, so return -EOPNOTSUPP instead of 1 is
+> more suitable if ATAPI DMA is not supported in atapi_check_dma().
+> 
+> 
 
-Reported-by: Yuli Wang <wangyuli@uniontech.com>
-Tested-by: Jie Fan <fanjie@uniontech.com>
-Tested-by: Erpeng Xu <xuerpeng@uniontech.com>
-Tested-by: Yuli Wang <wangyuli@uniontech.com>
-Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
----
- drivers/ata/ahci.c    | 11 ++++++++++-
- drivers/ata/ahci.h    |  1 +
- drivers/ata/libahci.c |  4 ++++
- 3 files changed, 15 insertions(+), 1 deletion(-)
+Applied to libata/linux.git (for-6.15), thanks!
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 52ae8f9a7dd6..f3a6bfe098cd 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -63,6 +63,7 @@ enum board_ids {
- 	board_ahci_pcs_quirk_no_devslp,
- 	board_ahci_pcs_quirk_no_sntf,
- 	board_ahci_yes_fbs,
-+	board_ahci_yes_fbs_atapi_dma,
- 
- 	/* board IDs for specific chipsets in alphabetical order */
- 	board_ahci_al,
-@@ -188,6 +189,14 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
-+	[board_ahci_yes_fbs_atapi_dma] = {
-+		AHCI_HFLAGS	(AHCI_HFLAG_YES_FBS |
-+				 AHCI_HFLAG_ATAPI_DMA_QUIRK),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
- 	/* by chipsets */
- 	[board_ahci_al] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_MSI),
-@@ -590,7 +599,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
- 	  .driver_data = board_ahci_yes_fbs },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9215),
--	  .driver_data = board_ahci_yes_fbs },
-+	  .driver_data = board_ahci_yes_fbs_atapi_dma },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
- 	  .driver_data = board_ahci_yes_fbs },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index c842e2de6ef9..2c10c8f440d1 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -246,6 +246,7 @@ enum {
- 	AHCI_HFLAG_NO_SXS		= BIT(26), /* SXS not supported */
- 	AHCI_HFLAG_43BIT_ONLY		= BIT(27), /* 43bit DMA addr limit */
- 	AHCI_HFLAG_INTEL_PCS_QUIRK	= BIT(28), /* apply Intel PCS quirk */
-+	AHCI_HFLAG_ATAPI_DMA_QUIRK	= BIT(29), /* force ATAPI to use DMA */
- 
- 	/* ap->flags bits */
- 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index e7ace4b10f15..22afa4ff860d 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1322,6 +1322,10 @@ static void ahci_dev_config(struct ata_device *dev)
- {
- 	struct ahci_host_priv *hpriv = dev->link->ap->host->private_data;
- 
-+	if ((dev->class == ATA_DEV_ATAPI) &&
-+	    (hpriv->flags & AHCI_HFLAG_ATAPI_DMA_QUIRK))
-+		dev->quirks |= ATA_QUIRK_ATAPI_MOD16_DMA;
-+
- 	if (hpriv->flags & AHCI_HFLAG_SECT255) {
- 		dev->max_sectors = 255;
- 		ata_dev_info(dev,
--- 
-2.47.1
+[1/1] ata: libata: Return -EOPNOTSUPP instead of 1 in atapi_check_dma()
+      https://git.kernel.org/libata/linux/c/725ad028
+
+Kind regards,
+Niklas
 
