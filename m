@@ -1,111 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from relay8-d.mail.gandi.net (relay8-d.mail.gandi.net [217.70.183.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732E21B043E;
-	Mon, 17 Mar 2025 17:09:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AAF345BE3;
+	Mon, 17 Mar 2025 19:16:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742231371; cv=none; b=GGMl6dNMhxqK5A3T9uM7tdYszqgilorY0SaAqzcy4n3Oh8u0n1u71ISmuU44N9jl5IOWP/4FzAKU+YNdD0iO5FW0Q8z1GIxmGg/1csvwPWXEkEDrvRpKuRxR6TszqW3UHCO4fRTxC3JKqs7V89gO8E6205gLaXwumls2dI8/3jg=
+	t=1742238963; cv=none; b=guhymBI98qmVodHba783F5I5IoXwcWRoSyrapPU4VweHMYKAZpCcYEJhJzY1inQbv9xCg0vkjEssVHdJC10Tz2WD1vuPWwdqNc0ZtrqFfFUcF+TSjas21/gAKUWm1F9T68ZZQWg6988VN48oJxybWBHbfzaW+PMjYMvSbGFPUBo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742231371; c=relaxed/simple;
-	bh=lzjEQyNrFqiofrWTqg+HjMoyqD6I8IOLRgBp+2jTyso=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mOooJX9e0Uf0erpsOAj0oXygfHTe7Ygwf+INcK2LrFRljJMrCzowgt2QbKpJXrxwSkOZhao9kfDYIxBbutdPU3pKTf6q+eTk3wOVgaLwMJ63Abk+kEJ4FfPNyGoZxAi8H6fJT4G0mqTJKo7rnpxfviki0xobBWIEz1D+xDy0AVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mp+fV+xw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742238963; c=relaxed/simple;
+	bh=XhMpa/9ycy9v4wKZ+kzITAJZDZd9KukS6JT0HJiU3eg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gARM57RGggi2hfQPc9dGvIKeCdlG4alntmhkn7RiztVUACX+Lllz5WA1UdyNjEno9QMVV6ic5DfeyNH6hj2zPNHRPuYGdMvpq3C2kvGqCWr6KW0GvplTpzoZEkGuHxPQnJfXfX5QjpheONNmiUZKOaEDLVIQscle0niB5WkPocE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grabatoulnz.fr; spf=pass smtp.mailfrom=grabatoulnz.fr; dkim=pass (2048-bit key) header.d=grabatoulnz.fr header.i=@grabatoulnz.fr header.b=RlXvvYOZ; arc=none smtp.client-ip=217.70.183.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grabatoulnz.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=grabatoulnz.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mp+fV+xw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 533C6C4CEE3;
-	Mon, 17 Mar 2025 17:09:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742231371;
-	bh=lzjEQyNrFqiofrWTqg+HjMoyqD6I8IOLRgBp+2jTyso=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mp+fV+xwdhZK133qDYGAH1lJlcZeYqEEBOP+TIvxjYbWscyk/SlTbprSzzi7hmflZ
-	 soF/DaOzY2fCUZ7OmqJfKIYl1RXgJ8XgXpsA8mxbVKy9NOJEfvHIOJD4fhP33pJC08
-	 clGMyJL7JjazS3XASZLN3UPbcZTlgfpTdDvDa77vFE7PRtYBiCpHuiuyTTtoEIxqKg
-	 ZojCv6GsSZyI58NWpn+0/0edmGbDcU1pBUyws2a2NLvH0j0mCPlfszPLNIMTJ2tuR3
-	 hsEHn5CmXe2bXpgYgbeGfkypWGx85rkwDKqU8AtVMILPJLvdFoW6gySFBAxa7n28Jg
-	 WyFBDArppcahA==
-Date: Mon, 17 Mar 2025 18:09:25 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Eric <eric.4.debian@grabatoulnz.fr>,
-	Salvatore Bonaccorso <carnil@debian.org>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Jian-Hong Pan <jhp@endlessos.org>, regressions@lists.linux.dev,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Dieter Mummenschanz <dmummenschanz@web.de>
-Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
- board type") on reboot (but not cold boot)
-Message-ID: <Z9hXRYQw1-fX0_PY@ryzen>
-References: <Z8rCF39n5GjTwfjP@ryzen>
- <9c4a635a-ce9f-4ed9-9605-002947490c61@redhat.com>
- <Z88rtGH39C-S8phk@ryzen>
- <383d5740-7740-4051-b39a-b8c74b035ec2@redhat.com>
- <Z9BFSM059Wj2cYX5@ryzen>
- <9ac6e1ab-f2af-4bff-9d50-24df68ca1bb9@redhat.com>
- <Z9LUH2IkwoMElSDg@ryzen>
- <d5470665-4fee-432a-9cb7-fff9813b3e97@redhat.com>
- <Z9L5p6hTp6MATJ80@ryzen>
- <6d125c69-35b2-45b5-9790-33f3ea06f171@redhat.com>
+	dkim=pass (2048-bit key) header.d=grabatoulnz.fr header.i=@grabatoulnz.fr header.b="RlXvvYOZ"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 0E7FE41DF4;
+	Mon, 17 Mar 2025 19:15:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=grabatoulnz.fr;
+	s=gm1; t=1742238959;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KykuL0mQ6nnqkDB6Avuz8qXKuB1dwfpUj+NOwP1wvQQ=;
+	b=RlXvvYOZImWR7jpdNpLxs0YPpYOeLXrX3ptOL4CvSbmX/qNjoMUYZlxrmhhi7bAd7MTvRS
+	LVVn88PB8O4eUakx/inc/myUoSeYSnZuRMbrDzip271VTK5ugKj/lDo1ffelY5NtUsSLkN
+	FTO38e88o/ayyvcFhf0aMjvfu2twOLR/rHR7/EQFhBlGDbjbPhDA0Ud35bbp1b7DSTMjSD
+	Zh+dUyPQMRLMdLlhR2Tb1Zf5VrR0XjixGGx/DPWpNcLlPydUpGIYNp5Q5O+9GsbybJt4X+
+	V1eqA7JZ6lFy4EXO+C5dQ7R2H3PHJG6DvJe4cZ+D4GnLYzlFBO2rQtIJ6W2rRQ==
+Message-ID: <06f76ca1-1a07-4df5-ba50-e36046f58d88@grabatoulnz.fr>
+Date: Mon, 17 Mar 2025 20:15:47 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6d125c69-35b2-45b5-9790-33f3ea06f171@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
+ board type") on reboot (but not cold boot)
+To: Niklas Cassel <cassel@kernel.org>, Hans de Goede <hdegoede@redhat.com>
+Cc: Salvatore Bonaccorso <carnil@debian.org>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Christoph Hellwig <hch@infradead.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Jian-Hong Pan <jhp@endlessos.org>,
+ regressions@lists.linux.dev, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org, linux-ide@vger.kernel.org,
+ Dieter Mummenschanz <dmummenschanz@web.de>
+References: <Z8rCF39n5GjTwfjP@ryzen>
+ <9c4a635a-ce9f-4ed9-9605-002947490c61@redhat.com> <Z88rtGH39C-S8phk@ryzen>
+ <383d5740-7740-4051-b39a-b8c74b035ec2@redhat.com> <Z9BFSM059Wj2cYX5@ryzen>
+ <9ac6e1ab-f2af-4bff-9d50-24df68ca1bb9@redhat.com> <Z9LUH2IkwoMElSDg@ryzen>
+ <d5470665-4fee-432a-9cb7-fff9813b3e97@redhat.com> <Z9L5p6hTp6MATJ80@ryzen>
+ <6d125c69-35b2-45b5-9790-33f3ea06f171@redhat.com> <Z9hXRYQw1-fX0_PY@ryzen>
+Content-Language: en-US
+From: Eric <eric.4.debian@grabatoulnz.fr>
+In-Reply-To: <Z9hXRYQw1-fX0_PY@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-GND-State: clean
+X-GND-Score: -100
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddugedtfeegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuifetpfffkfdpucggtfgfnhhsuhgsshgtrhhisggvnecuuegrihhlohhuthemuceftddunecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefkffggfgfuvfevfhfhjggtgfesthekredttddvjeenucfhrhhomhepgfhrihgtuceovghrihgtrdegrdguvggsihgrnhesghhrrggsrghtohhulhhniidrfhhrqeenucggtffrrghtthgvrhhnpeevffegtdduieefhfeihfdtudefjedttdefhefhtefftdeujeeileehteeuieegheenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppedvrgdtudemtggstdegmeelgedumegsuddttdemgedvudeimeejvghffhemfhgvvdehmeelhegrudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpedvrgdtudemtggstdegmeelgedumegsuddttdemgedvudeimeejvghffhemfhgvvdehmeelhegruddphhgvlhhopeglkffrggeimedvrgdtudemtggstdegmeelgedumegsuddttdemgedvudeimeejvghffhemfhgvvdehmeelhegrudgnpdhmrghilhhfrhhomhepvghrihgtrdegrdguvggsihgrnhesghhrrggsrghtohhulhhniidrfhhrpdhnsggprhgtphhtthhopedufedprhgtphhtthhopegtrghsshgvlheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohephhguvghgohgvuggvsehrvgguhhgrt
+ hdrtghomhdprhgtphhtthhopegtrghrnhhilhesuggvsghirghnrdhorhhgpdhrtghpthhtohepmhgrrhhiohdrlhhimhhonhgtihgvlhhlohesrghmugdrtghomhdprhgtphhtthhopehhtghhsehinhhfrhgruggvrggurdhorhhgpdhrtghpthhtohepmhhikhgrrdifvghsthgvrhgsvghrgheslhhinhhugidrihhnthgvlhdrtghomhdprhgtphhtthhopegulhgvmhhorghlsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehjhhhpsegvnhgulhgvshhsohhsrdhorhhg
+X-GND-Sasl: eric.degenetais@grabatoulnz.fr
 
-Hello Hans,
+Hi Niklas,
 
-On Thu, Mar 13, 2025 at 07:47:11PM +0100, Hans de Goede wrote:
-> Hi,
-> 
-> On 13-Mar-25 4:28 PM, Niklas Cassel wrote:
-> > Hello Hans,
-> > 
-> > On Thu, Mar 13, 2025 at 04:13:24PM +0100, Hans de Goede wrote:
-> >>>
-> >>> Considering that DIPM seems to work fine on the Maxtor drive, I guess your
-> >>> initial suggestion of a Samsung only quirk which only disables LPM on ATI
-> >>> is the best way?
-> >>
-> >> I have no objections against going that route, except that I guess this
-> >> should then be something like ATA_QUIRK_NO_DIPM_ON_ATI to not loose the
-> >> other LPM modes / savings? AFAIK/IIRC there still is quite some powersaving
-> >> to be had without DIPM.
-> > 
-> > I was thinking like your original suggestion, i.e. setting:
-> > ATA_QUIRK_NO_LPM_ON_ATI
-> > 
-> > for all the Samsung devices that currently have:
-> > ATA_QUIRK_NO_NCQ_ON_ATI
-> > 
-> > Considering that this Samsung device only supports DIPM
-> > (and not HIPM), I'm guessing the same is true for the other
-> > Samsung devices as well.
-> 
-> Ah I see ...
-> 
-> > So we might as well just do:
-> > ATA_QUIRK_NO_LPM_ON_ATI
-> 
-> Yes I agree and that will nicely work as a combination of
-> ATA_QUIRK_NO_LPM + ATA_QUIRK_NO_NCQ_ON_ATI functionality
-> so using tested code-paths in a slightly new way.
+Le 17/03/2025 à 18:09, Niklas Cassel a écrit :
+>
+> I sent a patch that implements your original suggestion here:
+> https://lore.kernel.org/linux-ide/20250317170348.1748671-2-cassel@kernel.org/
+>
+> I forgot to add your Suggested-by tag.
+> If the patch solves Eric's problem, I could add the tag when applying.
+I'll report back when the kernel with your proposed patch is built and 
+tested on my system.
+>
+> Kind regards,
+> Niklas
 
-I sent a patch that implements your original suggestion here:
-https://lore.kernel.org/linux-ide/20250317170348.1748671-2-cassel@kernel.org/
+Kind regards
 
-I forgot to add your Suggested-by tag.
-If the patch solves Eric's problem, I could add the tag when applying.
+Eric
 
 
-Kind regards,
-Niklas
