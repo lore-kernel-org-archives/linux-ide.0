@@ -1,158 +1,80 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4C0B1DDC23
-	for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2025 18:47:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9548B231C8D
+	for <linux-ide@vger.kernel.org>; Mon, 17 Mar 2025 11:18:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741891638; cv=none; b=iwGlSfviHMdNZqdBhYBhLKLG9CwxXiTa2XrYT4yFvw4ZZSncVoSMD2LNu6DPV+zDJTDO0VL5XiU5p5GlSalGJzI73BspKU6S7/97N9bDCKIs5JBd+VBYcNW/fOEoftvqZbEoLPkwgUODzz4Gd5KIa/NsAXxe0IZxVKGWLCmJpOc=
+	t=1742210280; cv=none; b=QIWpFXb1IE9BK2QABaK70c8wRjTNl4VAI9bxwEB0KEVXtq+JccGv0ISEhvyA5U+i9UAy6E8u9+tsIGnGfOlCCW1z5NOMALezPNGkcmgFZ9PmztFpoeCdkTqtlOUZbjoJdjvYAcQD3XqfWhtKW3BCx2WsrJV9KA8xzzhYOQQ079A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741891638; c=relaxed/simple;
-	bh=1Wj0bufZ7EjYi7U/RFgZ/s0fjo6rJSEGTvGZw1CTU4M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=r140GXX20ehOU4tjMhtRK9wUeDgfyrDDd5rM4iNnlTjK31Y/5UAwqASv/Vfgn/X/bn7kEpvI0hBi7iUoWkdpvS4NTwduS5T+DQxYBtTzmTx20yYGm/MVNrDRbGei9l1GyWzVXiB4cZczJBaFKVddcRPpbpdpw1YxNkdqxo8lOZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PhVICmjH; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1742210280; c=relaxed/simple;
+	bh=I1vhSdUwsE9ZrD56e9nBNdKT5ekJCp/puRbz9j156eo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=agd5Newl93YtB6J25V9hRK16VW4YJCg5uhz+pbCAEdx1TL1HQCk0ikIPM52+mkhn3PUPGU4hEKp32sXHapmBPA86j3XC/vZ3fZ5yeTXcaHU2N0mhlEThVzdOU+/H1mE8gxb2fPrOHfjUS46CUAKU9eyugCHYkwbV1TorqjQzVB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zotvqb8R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PhVICmjH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1741891635;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1GojteExoK1LwIk/yNQWtkCvbvibA9jZBZEt4xD5tPU=;
-	b=PhVICmjHiAkzwUUZdyoL4osWwKgGaaM7zdk9P/YL2vpeRn968IH5uCqAgL1omOKL45FhDR
-	+m3xVx+6k+obwDjZfpkW9Wx+bEUuujV22U3tA7c8MaV/EfBBXAu9IBqsI9PTrr7v9SugSr
-	P1I2cPT3l16UWaPUfBr8mgPhsd6EZSM=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-668-1d-lPrHBNF-OcleyZLm2xg-1; Thu, 13 Mar 2025 14:47:14 -0400
-X-MC-Unique: 1d-lPrHBNF-OcleyZLm2xg-1
-X-Mimecast-MFC-AGG-ID: 1d-lPrHBNF-OcleyZLm2xg_1741891633
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-ac28a2c7c48so134220766b.3
-        for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2025 11:47:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741891633; x=1742496433;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1GojteExoK1LwIk/yNQWtkCvbvibA9jZBZEt4xD5tPU=;
-        b=xUw3GnvNzuIgK/iS+XIsSuERbNvSZGCIU9qB+qeziOldWElKnVkb2fdWY44jUcpzj6
-         o9qUAbz0Vkq7espiDdckItdZCEar4kiOzrV3bIaxUJpta/8IKBB1J98gSuUCIq9pQCOm
-         D4fDsbMAf5tHfsl8VoncKIvWrchlROH0t/CNlS3q5EcieEhAHUQ8T8nzDist7jIk+s3p
-         kcwqeeFnVw6tuJUGm8pVHl5s5HKcNNUk5qVk5CrURhX9l5cE9pFE+MpHCn0WHnudkA4O
-         VbA5G959ibEc9PHZjslrpJhL3zZtjluceQC9fC2cxNFeIMccLUdbf5aOhLs8wNMAvAkP
-         zjtg==
-X-Forwarded-Encrypted: i=1; AJvYcCXCjKw3UmmZQ0I7/2CcExA7s4g4OE+9aSAxEAytnn/EqdYhNLiTcQ+5IwuekrWwJbh4P9IOyY3GJJs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyQSEw1htQwWB8Q+TyWXQm/tLvU2zoBQscS9/BUHztf85pXii9h
-	ff8nN02IHywjzrBlwzwTSeBDfPI5wdj1Aaa4TD0EHy3wSz4tTsJhQEqXm+YENy0RgXSqAhj5mZj
-	1a9IRBqpY+jRaZiQH0fLKEM9XSM2FfOWeT6tbBmX+KAezBYMgWQJfLKgPUA==
-X-Gm-Gg: ASbGncuO40qExYBFn5g/Bul6RfCT7bdgHAzIwPn4ox8zaS4u3xBA1dDkRtF1U6zv3Jb
-	Fxppud8ka/6ttEO94C07IJgwNNnZQ5mlSDuFjE9oKozljXJhueNNnuGU79Vaa9sf53w+KoKffV4
-	ywDfGdNMNcvPDnKcsaZsC8BA5BLbasEm/g+X3EPErT1BN78JfFzbSpb/BAEXG8fYHShBnrvoVWA
-	eP00h228Td+HfTNfVeLRmfKBa7C17I2YHS8VZfE+BAKPVYAiF2mJCPiMVX1zU52ZjhJ84N3TgdD
-	GAwm2/Cawr57/yI3AN/FM6rN1MlARlU0KYMHeB4phEetJXPw6DQ3Ido9drYVAdnlR+CfeUGmSgZ
-	x/c0lcpX66VheeNjc/bA+mdWe+6MgllzScdeaGE7N7yV56DF9jNWZJ3vtz3khTaXwpw==
-X-Received: by 2002:a17:906:f59d:b0:ac2:8428:c5c2 with SMTP id a640c23a62f3a-ac328fbd7a2mr59818466b.20.1741891633360;
-        Thu, 13 Mar 2025 11:47:13 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IF200838Q9PH//rlXMgJcC7gCBuHjGntLC+HFTNJDzLV0/czimB9kN73ACIsQRgz1KoSS/F/Q==
-X-Received: by 2002:a17:906:f59d:b0:ac2:8428:c5c2 with SMTP id a640c23a62f3a-ac328fbd7a2mr59815866b.20.1741891633001;
-        Thu, 13 Mar 2025 11:47:13 -0700 (PDT)
-Received: from ?IPV6:2001:1c00:c32:7800:5bfa:a036:83f0:f9ec? (2001-1c00-0c32-7800-5bfa-a036-83f0-f9ec.cable.dynamic.v6.ziggo.nl. [2001:1c00:c32:7800:5bfa:a036:83f0:f9ec])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ac314a48b51sm112898266b.149.2025.03.13.11.47.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 Mar 2025 11:47:12 -0700 (PDT)
-Message-ID: <6d125c69-35b2-45b5-9790-33f3ea06f171@redhat.com>
-Date: Thu, 13 Mar 2025 19:47:11 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zotvqb8R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3646C4CEF6;
+	Mon, 17 Mar 2025 11:17:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1742210280;
+	bh=I1vhSdUwsE9ZrD56e9nBNdKT5ekJCp/puRbz9j156eo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Zotvqb8RX1hc5yxKX34MAymcDg7zbZnlLJLY61/qwOX24CHACD+q+wkya0L87eC2R
+	 y+J0oTlQu+BTvsATz4zJ306kRgDVmLwLBc/c+XtoIO/H8WN55KlQZQLElpRW21QE1U
+	 J2z9i932RQqHKOOfpObB/LFp5Ev6pnpCU9CFpMWcTawN3meJoAwhzsfe7DwFSJNuBu
+	 88RwxvPLX/S3grXFUQvv1Lv4cpWYselb2OPQiWnMb3+6mBd7pAVRz0w3Ec7FQtoY3f
+	 Qh8lwhAnQoHFwr9Ai3Uk44SlFifkx3T7F7taTVq1p210r6NyfLmWaiEzup9fhpZDJB
+	 WTot0v30ieq8g==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	Hannes Reinecke <hare@suse.de>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH] ata: libata: Fix NCQ Non-Data log not supported print
+Date: Mon, 17 Mar 2025 12:17:55 +0100
+Message-ID: <20250317111754.1666084-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Regression from 7627a0edef54 ("ata: ahci: Drop low power policy
- board type") on reboot (but not cold boot)
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Eric <eric.4.debian@grabatoulnz.fr>,
- Salvatore Bonaccorso <carnil@debian.org>,
- Mario Limonciello <mario.limonciello@amd.com>,
- Christoph Hellwig <hch@infradead.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- Damien Le Moal <dlemoal@kernel.org>, Jian-Hong Pan <jhp@endlessos.org>,
- regressions@lists.linux.dev, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org, linux-ide@vger.kernel.org,
- Dieter Mummenschanz <dmummenschanz@web.de>
-References: <Z8l7paeRL9szo0C0@ryzen>
- <689f8224-f118-47f0-8ae0-a7377c6ff386@grabatoulnz.fr>
- <Z8rCF39n5GjTwfjP@ryzen> <9c4a635a-ce9f-4ed9-9605-002947490c61@redhat.com>
- <Z88rtGH39C-S8phk@ryzen> <383d5740-7740-4051-b39a-b8c74b035ec2@redhat.com>
- <Z9BFSM059Wj2cYX5@ryzen> <9ac6e1ab-f2af-4bff-9d50-24df68ca1bb9@redhat.com>
- <Z9LUH2IkwoMElSDg@ryzen> <d5470665-4fee-432a-9cb7-fff9813b3e97@redhat.com>
- <Z9L5p6hTp6MATJ80@ryzen>
-Content-Language: en-US, nl
-From: Hans de Goede <hdegoede@redhat.com>
-In-Reply-To: <Z9L5p6hTp6MATJ80@ryzen>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1169; i=cassel@kernel.org; h=from:subject; bh=I1vhSdUwsE9ZrD56e9nBNdKT5ekJCp/puRbz9j156eo=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJvsDw6dnNPxAWrh5eMBebm80ybEq4z9wOj8Q/dKeWp0 9jsl+ce7ChlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBEWO4wMqyWn31/7frwpSdv nbu4b/MfiXaHytXbhX7Gn/Y8Vfsrz0eYkeGZsmt27P6d5RZ9T1P1asyfxj2YpNJe31T/6eYHdUn dTA4A
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Hi,
+Currently, both ata_dev_config_ncq_send_recv() - which checks for NCQ
+Send/Recv Log (Log Address 13h) and ata_dev_config_ncq_non_data() -
+which checks for NCQ Non-Data Log (Log Address 12h), uses the same
+print when the log is not supported:
 
-On 13-Mar-25 4:28 PM, Niklas Cassel wrote:
-> Hello Hans,
-> 
-> On Thu, Mar 13, 2025 at 04:13:24PM +0100, Hans de Goede wrote:
->>>
->>> Considering that DIPM seems to work fine on the Maxtor drive, I guess your
->>> initial suggestion of a Samsung only quirk which only disables LPM on ATI
->>> is the best way?
->>
->> I have no objections against going that route, except that I guess this
->> should then be something like ATA_QUIRK_NO_DIPM_ON_ATI to not loose the
->> other LPM modes / savings? AFAIK/IIRC there still is quite some powersaving
->> to be had without DIPM.
-> 
-> I was thinking like your original suggestion, i.e. setting:
-> ATA_QUIRK_NO_LPM_ON_ATI
-> 
-> for all the Samsung devices that currently have:
-> ATA_QUIRK_NO_NCQ_ON_ATI
-> 
-> Considering that this Samsung device only supports DIPM
-> (and not HIPM), I'm guessing the same is true for the other
-> Samsung devices as well.
+  "NCQ Send/Recv Log not supported"
 
-Ah I see ...
+This seems like a copy paste error, since NCQ Non-Data Log is actually
+a separate log.
 
-> So we might as well just do:
-> ATA_QUIRK_NO_LPM_ON_ATI
+Fix the print the reference the correct log.
 
-Yes I agree and that will nicely work as a combination of
-ATA_QUIRK_NO_LPM + ATA_QUIRK_NO_NCQ_ON_ATI functionality
-so using tested code-paths in a slightly new way.
+Fixes: 284b3b77ea88 ("libata: NCQ encapsulation for ZAC MANAGEMENT OUT")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-
-Hans
-
-
-
-
-> to disable both HIPM and DIPM
-> (since only DIPM would have been enabled without this quirk anyway).
-> 
-> 
->> Yes the most severe problems do seem to come from that specific mix,
->> although the long list of other ATI controller quirks also shows those
->> controllers are somewhat finicky.
-> 
-> Definitely!
-> 
-> 
-> Kind regards,
-> Niklas
-> 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 193fc3942fd3a..e17e16706db70 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2274,7 +2274,7 @@ static void ata_dev_config_ncq_non_data(struct ata_device *dev)
+ 
+ 	if (!ata_log_supported(dev, ATA_LOG_NCQ_NON_DATA)) {
+ 		ata_dev_warn(dev,
+-			     "NCQ Send/Recv Log not supported\n");
++			     "NCQ Non-Data Log not supported\n");
+ 		return;
+ 	}
+ 	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_NON_DATA,
+-- 
+2.48.1
 
