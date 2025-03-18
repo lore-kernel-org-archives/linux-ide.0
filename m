@@ -1,77 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA00D207641
-	for <linux-ide@vger.kernel.org>; Tue, 18 Mar 2025 09:14:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD14B209692;
+	Tue, 18 Mar 2025 10:43:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742289279; cv=none; b=pnDpLYcTAZ+vC0Ej7bq8BGfLb2mW5yVWPOq8wEq4XeA3gp5ZJFbbpH1tEhvJHDGnk+Q8sLa7P5FqzGzMKGLMa9FA7F6Ph99BdAaB1K1Wx0vSJen1FGvxPrlRYK9785z/Pw/0wmTrnAyXwtHEQbOiMGkpappSvZBrkTpT61Xzsz0=
+	t=1742294611; cv=none; b=hhTWRqUDiRX1QgF902UK7/srgcoXqqD0y5IlQXUrNNWDerpNS6orAIrXO8FMlNGJ/olMwehp8J4Jm+Kw+EP629rFYCVX3TMHj9UWisZoPHEIdzsoxlXbBa95oI+tPrQwex0jVQd2r2mzLAR8V6KwBS8ef5MSawABbCBZQLlZVwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742289279; c=relaxed/simple;
-	bh=J3GfXt0j2iexuCwTZb4J1S8dJ7HoyBPpsylx46jVAJc=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=oBiN+obIQcvcw1o/NJRZ/WA4tdjPsEZu8hVxXriuAhjmpkTQFJrCExd+6/6hovNKI3zI4E8ewwpxYYvUB8qcwq4iDbMbQbFUgQ6RuhlIGKsnFvd0GBmBqgtxwRjaz7zIB9v1Yfu3COMNCLJg0Rn2xO9i4KTFpOxRE9Wb47vPrHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IXXyGS3Q; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IXXyGS3Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55E36C4CEEE;
-	Tue, 18 Mar 2025 09:14:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742289278;
-	bh=J3GfXt0j2iexuCwTZb4J1S8dJ7HoyBPpsylx46jVAJc=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=IXXyGS3Qf/mB8RfUK8ot+WCOYDuh5Re50h2+1/Wyp6sWE4uiqiYkJMABo2NpKr4eL
-	 lg5bKlWeVPUCsdZyqM1QTT/chn2zt6i9Pe7fGvIVtwC3IpGHxvJ1LP8To7yjjH+Wbo
-	 E3326ZLLFs2xzq3WKaltWEkQ/D+TUIGF5ziWjIQguQWY1w3HZEj80MqLCjGRmRlXGh
-	 qfdn0IDUmoT+O0MZW5E1qiWneurnwW9YyJwTVkuwD3e8ai2wc13n6gAp/8mIgz+9ri
-	 Bj6lfWBiWz2oH67GQx8tR6Q1w+1KZ0gkfjjib+NISqVgJ0t/zaHy0Yb3Y16eGdsccT
-	 DNzc9VVHIyG4w==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, 
- Mario Limonciello <mario.limonciello@amd.com>, 
- Jian-Hong Pan <jhp@endlessos.org>, 
- Mika Westerberg <mika.westerberg@linux.intel.com>, 
- Niklas Cassel <cassel@kernel.org>
-Cc: Salvatore Bonaccorso <carnil@debian.org>, 
- Hans de Goede <hdegoede@redhat.com>, 
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
- Basavaraj Natikar <Basavaraj.Natikar@amd.com>, 
- Eric <eric.4.debian@grabatoulnz.fr>, linux-ide@vger.kernel.org
-In-Reply-To: <20250317170348.1748671-2-cassel@kernel.org>
-References: <20250317170348.1748671-2-cassel@kernel.org>
-Subject: Re: [PATCH] ata: libata-core: Add ATA_QUIRK_NO_LPM_ON_ATI for
- certain Samsung SSDs
-Message-Id: <174228927606.1766726.17326013286026138020.b4-ty@kernel.org>
-Date: Tue, 18 Mar 2025 10:14:36 +0100
+	s=arc-20240116; t=1742294611; c=relaxed/simple;
+	bh=GQESFm5xXK0HxnEUgsMuSTIkriJaDW3id7OyUxuOkWQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=k7BWoJ8B50tcRf3tYqIUUerEMbNuPI9HWWKMKBcpqAgyKz1heT6yuf+0brwrMorsMO3d7LnEvfeqdteiHu1oiAJY6mgrpJxkETLNrcu1i/37xubB9dWAAdieRZ9zGxGw4vGJD0gsq12OhOPw/FGab2YdutN92oRoOpd87ReCfq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4F0EC4CEDD;
+	Tue, 18 Mar 2025 10:43:28 +0000 (UTC)
+From: Huacai Chen <chenhuacai@loongson.cn>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	Huacai Chen <chenhuacai@kernel.org>,
+	Xuerui Wang <kernel@xen0n.name>,
+	Daniel Kral <d.kral@proxmox.com>,
+	linux-kernel@vger.kernel.org,
+	Huacai Chen <chenhuacai@loongson.cn>,
+	Yuli Wang <wangyuli@uniontech.com>,
+	Jie Fan <fanjie@uniontech.com>,
+	Erpeng Xu <xuerpeng@uniontech.com>
+Subject: [PATCH V4] ahci: Marvell 88SE9215 controllers prefer DMA for ATAPI
+Date: Tue, 18 Mar 2025 18:43:14 +0800
+Message-ID: <20250318104314.2160526-1-chenhuacai@loongson.cn>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Transfer-Encoding: 8bit
 
-On Mon, 17 Mar 2025 18:03:49 +0100, Niklas Cassel wrote:
-> Before commit 7627a0edef54 ("ata: ahci: Drop low power policy board type")
-> the ATI AHCI controllers specified board type 'board_ahci' rather than
-> board type 'board_ahci'. This means that LPM was historically not enabled
-> for the ATI AHCI controllers.
-> 
-> By looking at commit 7a8526a5cd51 ("libata: Add ATA_HORKAGE_NO_NCQ_ON_ATI
-> for Samsung 860 and 870 SSD."), it is clear that, for some unknown reason,
-> that Samsung SSDs do not play nice with ATI AHCI controllers. (When using
-> other AHCI controllers, NCQ can be enabled on these Samsung SSDs without
-> issues.)
-> 
-> [...]
+We use CD/DVD drives under Marvell 88SE9215 SATA controller on many
+Loongson-based machines. We found its PIO doesn't work well, and on the
+opposite its DMA seems work very well.
 
-Applied to libata/linux.git (for-6.14), thanks!
+We don't know the detail of the 88SE9215 SATA controller, but we have
+tested different CD/DVD drives and they all have problems under 88SE9215
+(but they all work well under an Intel SATA controller). So, we consider
+this problem is bound to 88SE9215 SATA controller rather than bound to
+CD/DVD drives.
 
-[1/1] ata: libata-core: Add ATA_QUIRK_NO_LPM_ON_ATI for certain Samsung SSDs
-      https://git.kernel.org/libata/linux/c/f2aac4c7
+As a solution, we define a new dedicated AHCI board id which is named
+board_ahci_yes_fbs_atapi_dma for 88SE9215, and for this id we set the
+AHCI_HFLAG_ATAPI_DMA_QUIRK and ATA_QUIRK_ATAPI_MOD16_DMA flags on the
+SATA controller in order to prefer ATAPI DMA.
 
-Kind regards,
-Niklas
+Reported-by: Yuli Wang <wangyuli@uniontech.com>
+Tested-by: Jie Fan <fanjie@uniontech.com>
+Tested-by: Erpeng Xu <xuerpeng@uniontech.com>
+Tested-by: Yuli Wang <wangyuli@uniontech.com>
+Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+---
+ drivers/ata/ahci.c    | 11 ++++++++++-
+ drivers/ata/ahci.h    |  1 +
+ drivers/ata/libahci.c |  4 ++++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 52ae8f9a7dd6..f3a6bfe098cd 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -63,6 +63,7 @@ enum board_ids {
+ 	board_ahci_pcs_quirk_no_devslp,
+ 	board_ahci_pcs_quirk_no_sntf,
+ 	board_ahci_yes_fbs,
++	board_ahci_yes_fbs_atapi_dma,
+ 
+ 	/* board IDs for specific chipsets in alphabetical order */
+ 	board_ahci_al,
+@@ -188,6 +189,14 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
++	[board_ahci_yes_fbs_atapi_dma] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_YES_FBS |
++				 AHCI_HFLAG_ATAPI_DMA_QUIRK),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ 	/* by chipsets */
+ 	[board_ahci_al] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_MSI),
+@@ -590,7 +599,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9215),
+-	  .driver_data = board_ahci_yes_fbs },
++	  .driver_data = board_ahci_yes_fbs_atapi_dma },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index c842e2de6ef9..2c10c8f440d1 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -246,6 +246,7 @@ enum {
+ 	AHCI_HFLAG_NO_SXS		= BIT(26), /* SXS not supported */
+ 	AHCI_HFLAG_43BIT_ONLY		= BIT(27), /* 43bit DMA addr limit */
+ 	AHCI_HFLAG_INTEL_PCS_QUIRK	= BIT(28), /* apply Intel PCS quirk */
++	AHCI_HFLAG_ATAPI_DMA_QUIRK	= BIT(29), /* force ATAPI to use DMA */
+ 
+ 	/* ap->flags bits */
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index e7ace4b10f15..22afa4ff860d 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1322,6 +1322,10 @@ static void ahci_dev_config(struct ata_device *dev)
+ {
+ 	struct ahci_host_priv *hpriv = dev->link->ap->host->private_data;
+ 
++	if ((dev->class == ATA_DEV_ATAPI) &&
++	    (hpriv->flags & AHCI_HFLAG_ATAPI_DMA_QUIRK))
++		dev->quirks |= ATA_QUIRK_ATAPI_MOD16_DMA;
++
+ 	if (hpriv->flags & AHCI_HFLAG_SECT255) {
+ 		dev->max_sectors = 255;
+ 		ata_dev_info(dev,
+-- 
+2.47.1
 
