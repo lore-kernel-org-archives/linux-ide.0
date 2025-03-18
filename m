@@ -1,69 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E283186A
-	for <linux-ide@vger.kernel.org>; Tue, 18 Mar 2025 05:19:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 103361917F1
+	for <linux-ide@vger.kernel.org>; Tue, 18 Mar 2025 08:01:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742275162; cv=none; b=WXNjoE59FQu2/ZP3MIZGJBxcoi0vvCbltIUDmgVNgb3jpw0FTUekbW8dNXSTLGQRJGSiVBFg2xDFyLyGtzoaZ9jO0IGwRfMxYGYSNLJu0Ms3jbv+VoRQ+QNFOq5Iu73o582IXTZSU18cNzOzVz6IXrrjYtAQH6+vpaoNtvqZkik=
+	t=1742284875; cv=none; b=FqS1CwBDD5+aVBNlctxNAfXe2xPWrPUkxVI96XodRPATR2re7kjV70tLYPPEOGF3VOifVr06lRQX52wcTbVW0bk3/x16OrLxVexEWEbYPo04W8Jw20NRvMhIpiJ5EIMx3cI7T3SHy4Sxi6oWjVJkDyeKtUefSAu4dvlgk8xOleA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742275162; c=relaxed/simple;
-	bh=/TmxxXGWFlIeusd6nrjDbcxI3N36R3b0PTAH9116H8c=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s6ahD4Sr2wjuomqrXQ9dQTUgOebfvC4BuD1IaKM0sfudwG4bmTaegW6panU2SQArtnaTujbE5C4sbYZfx02FQ77lQavqEVDzc2lfw3YboL+7SKKiH7vYvPTUJvBgFdJw8KygRjy83vxj9mQeAu4YkdDXmwr2/Z9ickljwF7fZlY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l1Ayto0a; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742284875; c=relaxed/simple;
+	bh=BI0xue928PffjLPtGZL0KW+GDiGw6uJihNIadWkmv8g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rLruf1Ps1Fdu1zr2ZgYQwVb6syEC8rzUJ2rvs/5bkAKOUmqmsvD51Z59yVHZ+erTdoblyqQxjQFTl/+WaB4LVcC6joD+3Z6GQspwo6sFAwo5pbNlQeF/gsapLruaMH9OA79YMUbPPLGHg0xKUWbNLe1mKK8a3ypOzg8Ejynt8pg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j9eViW4C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l1Ayto0a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EB9DC4CEDD;
-	Tue, 18 Mar 2025 05:19:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j9eViW4C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A9A9C4CEE9;
+	Tue, 18 Mar 2025 08:01:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742275161;
-	bh=/TmxxXGWFlIeusd6nrjDbcxI3N36R3b0PTAH9116H8c=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=l1Ayto0avx+fUTLzEBVP2yiguMAHaWAtBME/ZFrklqYZzH0rLx6kg8IdFVSJs1ZDM
-	 frTcodrCeBUF/q7Z0NZEFi3jJhX1z2UFPD9KNmLi3L+IZEfvY0H56kv7VNC1jm4bUn
-	 vQxlv4msuRY+k2kgweWND3nNu2mYXWMZY91rpgTtW0QGJLfBkvJENkLfwHiu01fjeV
-	 Xp5mklnABWeTbR/pm4En+g+n4aLwvDEs/0/5GZPnFfEVjESdu2bruNKfTUZdKNNjo8
-	 4h+0bv7Fc22vcHfW0xKlQ6OiKyv/Ib0H+P9icoowxwd0VdmHiDcFb+mJ6LW3+ViS5i
-	 2aFtAP001nE5A==
-Message-ID: <5db1373b-3136-4a43-a986-24715a8c5d18@kernel.org>
-Date: Tue, 18 Mar 2025 14:18:51 +0900
+	s=k20201202; t=1742284874;
+	bh=BI0xue928PffjLPtGZL0KW+GDiGw6uJihNIadWkmv8g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=j9eViW4CjgxLOzeyX3X+7tASWexcIVra/96jyXSIb/OMcK3pkAdgvWLHY7kIafLIg
+	 Xb8Z6X8/Yo+AjjKYRwq+I9r1luzL5NmNhCFauWDrHU7/vRw40J3MRyXVrrN/uX0NaE
+	 l9D7/BGlYkqSUCcEoMIkyDR80fiS9HfEpVfmSxe0PcmHCyIFQQEONzVGMtRpv31f9P
+	 i/6LyBGEP9rqqg60YHGNfvx9RYzPe8kN1m4QDzbYIVwE/OEyVQPVfOaJMVWaXHipTb
+	 DzlnNNg+zebkWWz2NyCgndwjWk7/ff5SG/8513zQ2CRujLMRIVq48OnL+6CT5T5C3/
+	 /hQvhWv5i5HaA==
+Date: Tue, 18 Mar 2025 09:01:10 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, Damien Le Moal <dlemoal@kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Subject: Re: [PATCH V3] ata: ahci: simplify init function
+Message-ID: <Z9koRvxBwzwfjQ81@ryzen>
+References: <20250114182956.40923-1-thenzl@redhat.com>
+ <0e2a0f69-7b98-4b48-8a68-6a554cbbec09@kernel.org>
+ <be4fb93d-ab73-47d1-bbd9-1ac098b23ca3@redhat.com>
+ <abef767e-9479-4109-8057-d549ac999107@redhat.com>
+ <Z9gxiFiKsfXXyOkp@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata: Fix NCQ Non-Data log not supported print
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-References: <20250317111754.1666084-2-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20250317111754.1666084-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z9gxiFiKsfXXyOkp@ryzen>
 
-On 3/17/25 8:17 PM, Niklas Cassel wrote:
-> Currently, both ata_dev_config_ncq_send_recv() - which checks for NCQ
-> Send/Recv Log (Log Address 13h) and ata_dev_config_ncq_non_data() -
-> which checks for NCQ Non-Data Log (Log Address 12h), uses the same
-> print when the log is not supported:
-> 
->   "NCQ Send/Recv Log not supported"
-> 
-> This seems like a copy paste error, since NCQ Non-Data Log is actually
-> a separate log.
-> 
-> Fix the print the reference the correct log.
-> 
-> Fixes: 284b3b77ea88 ("libata: NCQ encapsulation for ZAC MANAGEMENT OUT")
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Hello Tomas,
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+On Mon, Mar 17, 2025 at 02:28:25PM +0000, Niklas Cassel wrote:
+> On Mon, Mar 17, 2025 at 03:00:46PM +0100, Tomas Henzl wrote:
+> > Hi Damien,
+> > 
+> > the V3  patch applies to the for-6.15 branch with just an offset.
+> > Can you take it as it is or do you want me to resend?
+> > 
+> > Regards,
+> > Tomas
+> 
+> Please rebase and send a v4 with an improved commit log.
+> 
+> -Remove the double newlines.
+> 
+> -Use paragraphs (with an empty line between paragraphs).
+>  (There can be multiple sentences in one paragraph.)
+> 
+> -Improve the motivation. I.e. "removing a few lines" doesn't make sense,
+>  you are actually adding lines:
+>  1 file changed, 12 insertions(+), 11 deletions(-)
+> 
+>  You are however moving all the IRQ vector allocations into a single
+>  place/function, instead of having the allocations spread out over
+>  two separate call sites, so your refactoring does make sense, since
+>  it improves code readability.
 
--- 
-Damien Le Moal
-Western Digital Research
+If you want this patch to be queued up for 6.15, please send a new version
+this week, because after this week, it will instead be queued up for 6.16.
+
+
+Kind regards,
+Niklas
