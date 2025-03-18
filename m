@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 103361917F1
-	for <linux-ide@vger.kernel.org>; Tue, 18 Mar 2025 08:01:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 712621A08A8;
+	Tue, 18 Mar 2025 08:02:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742284875; cv=none; b=FqS1CwBDD5+aVBNlctxNAfXe2xPWrPUkxVI96XodRPATR2re7kjV70tLYPPEOGF3VOifVr06lRQX52wcTbVW0bk3/x16OrLxVexEWEbYPo04W8Jw20NRvMhIpiJ5EIMx3cI7T3SHy4Sxi6oWjVJkDyeKtUefSAu4dvlgk8xOleA=
+	t=1742284927; cv=none; b=SA7JkNkF227xR/PCvoKfruhuW9KTkCXlfujtp2oNasf4xHDkm+Ypsn76Ug1Ss38+Axm67e+RTE3WsvBBk+auPOjlr2QPalbom/6VdLhpQPy9hwkhDGaH3inwIQXyQ8f90wl5bxJQdBJHiCNscX4VuCGfTidyt+ebhovQUuHycxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742284875; c=relaxed/simple;
-	bh=BI0xue928PffjLPtGZL0KW+GDiGw6uJihNIadWkmv8g=;
+	s=arc-20240116; t=1742284927; c=relaxed/simple;
+	bh=yq8bTVzhnA3ZI7HrCjVP8FhWvMQwJUtYAE8vqqYL5s8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rLruf1Ps1Fdu1zr2ZgYQwVb6syEC8rzUJ2rvs/5bkAKOUmqmsvD51Z59yVHZ+erTdoblyqQxjQFTl/+WaB4LVcC6joD+3Z6GQspwo6sFAwo5pbNlQeF/gsapLruaMH9OA79YMUbPPLGHg0xKUWbNLe1mKK8a3ypOzg8Ejynt8pg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j9eViW4C; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=AA2REjFMSCSZHyXBNzscHZDD89T6XnZQOQEBkPsFGAZ6dFrDX5xao9fvoSZ0qT6dCggEMf2Jkz6ZiuzRQjlvP1KKXUI4ATfW7OpmknME8UTgUZhWQbXIVlHbgnNLHTgW580v7cV3vEsSusl0z2KjFXNI71aoH5B77mYKV0WBbNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R+mKSbJP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j9eViW4C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A9A9C4CEE9;
-	Tue, 18 Mar 2025 08:01:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R+mKSbJP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2714C4CEE9;
+	Tue, 18 Mar 2025 08:02:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742284874;
-	bh=BI0xue928PffjLPtGZL0KW+GDiGw6uJihNIadWkmv8g=;
+	s=k20201202; t=1742284926;
+	bh=yq8bTVzhnA3ZI7HrCjVP8FhWvMQwJUtYAE8vqqYL5s8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=j9eViW4CjgxLOzeyX3X+7tASWexcIVra/96jyXSIb/OMcK3pkAdgvWLHY7kIafLIg
-	 Xb8Z6X8/Yo+AjjKYRwq+I9r1luzL5NmNhCFauWDrHU7/vRw40J3MRyXVrrN/uX0NaE
-	 l9D7/BGlYkqSUCcEoMIkyDR80fiS9HfEpVfmSxe0PcmHCyIFQQEONzVGMtRpv31f9P
-	 i/6LyBGEP9rqqg60YHGNfvx9RYzPe8kN1m4QDzbYIVwE/OEyVQPVfOaJMVWaXHipTb
-	 DzlnNNg+zebkWWz2NyCgndwjWk7/ff5SG/8513zQ2CRujLMRIVq48OnL+6CT5T5C3/
-	 /hQvhWv5i5HaA==
-Date: Tue, 18 Mar 2025 09:01:10 +0100
+	b=R+mKSbJPB1ss5Vs63lwldxaAmkFlVaZJV4zK0VejpURVqy/6jktuA+zGi7mz5/+Yc
+	 88zv6gOpNwMFqygMkwsMfI88+YOXeN6VF1dU4kbLRB/Ggq+qvHaNgzZpXTDtngKR3B
+	 KHBadiYdfUZ/Gu+x/3wpx2k3sCmSDYCXZIMB5AyOBsmJL+hWxbZag+skIS3uAy87Fc
+	 qSKb+RibvKbUt2DSsyyna2/BMpvKv3Bdd7TxyAheVKnOR5hqTmioZiS5k7MEV6tClA
+	 B2wBrC5k6ijXqkcld++DJ5rguqbIiQecm+OEOI2hYK0Ezc2JS8DqYtednIIoz6SCP6
+	 tvsT0OVLBgLvg==
+Date: Tue, 18 Mar 2025 09:02:01 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, Damien Le Moal <dlemoal@kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: Re: [PATCH V3] ata: ahci: simplify init function
-Message-ID: <Z9koRvxBwzwfjQ81@ryzen>
-References: <20250114182956.40923-1-thenzl@redhat.com>
- <0e2a0f69-7b98-4b48-8a68-6a554cbbec09@kernel.org>
- <be4fb93d-ab73-47d1-bbd9-1ac098b23ca3@redhat.com>
- <abef767e-9479-4109-8057-d549ac999107@redhat.com>
- <Z9gxiFiKsfXXyOkp@ryzen>
+To: Huacai Chen <chenhuacai@loongson.cn>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	Huacai Chen <chenhuacai@kernel.org>,
+	Xuerui Wang <kernel@xen0n.name>, Daniel Kral <d.kral@proxmox.com>,
+	linux-kernel@vger.kernel.org, Yuli Wang <wangyuli@uniontech.com>,
+	Jie Fan <fanjie@uniontech.com>, Erpeng Xu <xuerpeng@uniontech.com>
+Subject: Re: [PATCH V3] ahci: Marvell 88SE9215 controllers prefer DMA for
+ ATAPI
+Message-ID: <Z9koefNibN99tslN@ryzen>
+References: <20250312134654.6699-1-chenhuacai@loongson.cn>
+ <Z9Gsq9Yz7nDQ_fOx@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -46,35 +47,57 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z9gxiFiKsfXXyOkp@ryzen>
+In-Reply-To: <Z9Gsq9Yz7nDQ_fOx@ryzen>
 
-Hello Tomas,
+Hello Huacai,
 
-On Mon, Mar 17, 2025 at 02:28:25PM +0000, Niklas Cassel wrote:
-> On Mon, Mar 17, 2025 at 03:00:46PM +0100, Tomas Henzl wrote:
-> > Hi Damien,
-> > 
-> > the V3  patch applies to the for-6.15 branch with just an offset.
-> > Can you take it as it is or do you want me to resend?
-> > 
-> > Regards,
-> > Tomas
+On Wed, Mar 12, 2025 at 04:47:55PM +0100, Niklas Cassel wrote:
+> On Wed, Mar 12, 2025 at 09:46:54PM +0800, Huacai Chen wrote:
+> > We use CD/DVD drives under Marvell 88SE9215 SATA controller on many
+> > Loongson-based machines. We found its PIO doesn't work well, and on the
+> > opposite its DMA seems work very well. We don't know the detail of the
+> > 88SE9215 SATA controller, but we have tested different CD/DVD drives
+> > and they all have problems under 88SE9215 (but they all work well under
+> > an Intel SATA controller). So we can define a new dedicated AHCI board
+> > id named board_ahci_yes_fbs_atapi_dma for 88SE9215, and for this id we
+> > set the AHCI_HFLAG_ATAPI_DMA_QUIRK and ATA_QUIRK_ATAPI_MOD16_DMA flags
+> > on the SATA controller to prefer ATAPI DMA.
 > 
-> Please rebase and send a v4 with an improved commit log.
+> This is a wall of text.
 > 
-> -Remove the double newlines.
+> Could you please use paragraphs? (with an empty line between paragraphs).
 > 
-> -Use paragraphs (with an empty line between paragraphs).
->  (There can be multiple sentences in one paragraph.)
+> (There can be multiple sentences in one paragraph.)
 > 
-> -Improve the motivation. I.e. "removing a few lines" doesn't make sense,
->  you are actually adding lines:
->  1 file changed, 12 insertions(+), 11 deletions(-)
+> This is a good example:
 > 
->  You are however moving all the IRQ vector allocations into a single
->  place/function, instead of having the allocations spread out over
->  two separate call sites, so your refactoring does make sense, since
->  it improves code readability.
+> commit 6bdbb73dc8d99fbb77f5db79dbb6f108708090b4
+> Author: Bibo Mao <maobibo@loongson.cn>
+> Date:   Sat Mar 8 13:52:04 2025 +0800
+> 
+>     LoongArch: KVM: Fix GPA size issue about VM
+>     
+>     Physical address space is 48 bit on Loongson-3A5000 physical machine,
+>     however it is 47 bit for VM on Loongson-3A5000 system. Size of physical
+>     address space of VM is the same with the size of virtual user space (a
+>     half) of physical machine.
+>     
+>     Variable cpu_vabits represents user address space, kernel address space
+>     is not included (user space and kernel space are both a half of total).
+>     Here cpu_vabits, rather than cpu_vabits - 1, is to represent the size of
+>     guest physical address space.
+>     
+>     Also there is strict checking about page fault GPA address, inject error
+>     if it is larger than maximum GPA address of VM.
+>     
+>     Cc: stable@vger.kernel.org
+>     Signed-off-by: Bibo Mao <maobibo@loongson.cn>
+>     Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+> 
+> 
+> 
+> Otherwise, this looks good to me.
+
 
 If you want this patch to be queued up for 6.15, please send a new version
 this week, because after this week, it will instead be queued up for 6.16.
