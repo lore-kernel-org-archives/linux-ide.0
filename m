@@ -1,64 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 933F6170A11
-	for <linux-ide@vger.kernel.org>; Wed, 19 Mar 2025 16:30:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E98E633985
+	for <linux-ide@vger.kernel.org>; Wed, 19 Mar 2025 20:22:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742401823; cv=none; b=nsqrZSomqcPqWyzRfjpoqI0vlNItpGx/l7GC0ujzs04eL6xr8Ae5WHcnifST+r63hpvtX+8/vwqDB2gpxBhmn5+MIMPZvav36Lzusjf3cBZBMtOg7SZfY90pBC/np7FX3rUtaA4rUY5Ao5jgy7yULVftTC3ZbX/3EZxOLCF5LgQ=
+	t=1742415740; cv=none; b=BDe4pee/6PUrPjtjgitmlKfPzvSOFtMZDLijejkuCWjeV3NR+hlr6KMQjIAZktg4XnQhJ42v/R7A05fEXbM0lxvtfHRhzcqoqFz2uYJ3h/1AQ8BCTZOn4RycTSR4o9koCx7uEjVIg5F5OKDpgeBNOQBRXLHSCVr48GZMIO29KdQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742401823; c=relaxed/simple;
-	bh=taF7byazV+Fbu4XWKFYUckln04ZGtP7KpFoEGTUsxW0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=fprYu5ZarY36fmR1E+fDF+vo+RjOULw1uvbpZLskxdgrrHwoQ6q+UjQPsVU3wl8Xk5g8k4/HWTz3RnCEISC0oAWznQ3nN1k80mH3Kq1jz39jSBSDcoE0I70jGnUoPvaYLyJb/zgR1pw1P6t/wcZ9y8iz9oBQK2ra4VieDyGYvb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oP4tSKAJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742415740; c=relaxed/simple;
+	bh=XJdstNocPpWqsAcKy3MvAU1tO2sJVTuKyoL8DNp4EmU=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=W+Wc+s0RbII6MeIUkO8bg1rxFsICKyz4rUSKd/5VNQgatkseWax6lMYC+WlS7C29vStoAHv4XQbNUkXjMowxbRIspOshdmS3lxXYsmYrINbOKK6Zn3Dr8PQpoY+DuNVMTHj9YLTMghHKhf3l5j63aG9S9wE8Imqzgq38uM7qz48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KJLCygtL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oP4tSKAJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 345F5C4CEE4;
-	Wed, 19 Mar 2025 16:30:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KJLCygtL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9FCAC4CEE4;
+	Wed, 19 Mar 2025 20:22:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742401823;
-	bh=taF7byazV+Fbu4XWKFYUckln04ZGtP7KpFoEGTUsxW0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=oP4tSKAJ5iTmKtyNG6spzYB1JNTpchiMp1roJEWNal4PBSoub7UFAqR8ioVFjsAyC
-	 jEvYx6SLTCiZpHbJlDmQxBmf3IMpHe7EplHtKL6trnsSDrLrdot6AN6BJ5DnR6OFv/
-	 2u9fjhLo6AdyfwmK0ODumhxiQeaiULWMqv3xiWJ1gDpR0jAPA3hTW4pZZPt1lRLccT
-	 bxERj4T5mQaZfJEDN95gCdgWxExKmPgcEyOUBizIQSlSwk6ZWjKb0VBttBROEiBlq+
-	 POGLTYsgQYgNoWrY+ogHpR4m7nHc1Iw/vTJb5fns1H5wBpPgRORxcrgre/gjmMJrj/
-	 8LnVNrOzS3oAQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: linux-ide@vger.kernel.org, Tomas Henzl <thenzl@redhat.com>
-Cc: dlemoal@kernel.org, Niklas.Cassel@wdc.com
-In-Reply-To: <20250319155030.16410-1-thenzl@redhat.com>
-References: <20250319155030.16410-1-thenzl@redhat.com>
-Subject: Re: [PATCH V4] ata: ahci: simplify init function
-Message-Id: <174240182194.3567406.3561491357742146708.b4-ty@kernel.org>
-Date: Wed, 19 Mar 2025 17:30:21 +0100
+	s=k20201202; t=1742415739;
+	bh=XJdstNocPpWqsAcKy3MvAU1tO2sJVTuKyoL8DNp4EmU=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=KJLCygtL9TsApaN/3XSNzrP/8x5bw1cgq4A9oStKsv6AaaW5y45BnUi7ILCDScMle
+	 clNkiLqLXnfpch9pN2RmV+XDhn1v4tbsjfda26Qp7NupmLvIZUFFPsUs88h4EecKT/
+	 QdAgqilakqOEHqt6pp5dgsOQziaEnBH9h0lbZv44skyKgVxLQBi9yINzXqLJOFHFJw
+	 9ROCzi2uEXoNJNSn8L77scQeHZ1k5s27iOh1axqVxtopegwvKGT2f0Ymcg0kw/5vEI
+	 0k7kVIgfH9ZA4LrR1u+BZ390TxS/sszc1uUHLbY9sbFeQMfRlKBPwONtfyoywPoPHD
+	 moWaRH/J8ejiA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id AE0793806654;
+	Wed, 19 Mar 2025 20:22:56 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.14-final
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20250319094950.2576556-1-cassel@kernel.org>
+References: <20250319094950.2576556-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20250319094950.2576556-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-final
+X-PR-Tracked-Commit-Id: f2aac4c73c9945cce156fd58a9a2f31f2c8a90c7
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 281e239698357d60e1e2acd9eef1308c2ae2d73f
+Message-Id: <174241577522.1182345.7749511367966354928.pr-tracker-bot@kernel.org>
+Date: Wed, 19 Mar 2025 20:22:55 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
 
-On Wed, 19 Mar 2025 16:50:30 +0100, Tomas Henzl wrote:
-> There is no functional change done with this patch.
-> 
-> This patch moves all the IRQ vector allocations into a single
-> function. Instead of having the allocations spread out over
-> two separate call sites everything will be handled in ahci_init_irq.
-> Also a direct call into pci(m)_intx will be removed.
-> 
-> [...]
+The pull request you sent on Wed, 19 Mar 2025 10:49:50 +0100:
 
-Applied to libata/linux.git (for-6.15), thanks!
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.14-final
 
-[1/1] ata: ahci: simplify init function
-      https://git.kernel.org/libata/linux/c/565d065a
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/281e239698357d60e1e2acd9eef1308c2ae2d73f
 
-Kind regards,
-Niklas
+Thank you!
 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
