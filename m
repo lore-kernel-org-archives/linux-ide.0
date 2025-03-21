@@ -1,69 +1,73 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EE181CEEBE
-	for <linux-ide@vger.kernel.org>; Fri, 21 Mar 2025 15:14:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EFBE1D5174
+	for <linux-ide@vger.kernel.org>; Fri, 21 Mar 2025 15:14:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742570062; cv=none; b=fMiX7Q+7TD2Qs1b8Z67E8vbZRJ/EjalSAWRaYq07CIKra7qbYvBMVTHgB3U4aMvfyF2sX8lQaiY/znL3DQs64UQTRX5QgfqjIyQ4QS5TD12WZanEM47tufZdSrffQAJvHU0CeO+enzVqNIRTwqn/QVLNgnjxQ61n30/em1jMQrY=
+	t=1742570064; cv=none; b=V2Q0pjLURNcv6vGem9XWZ1WgBjWU1WoXb147Be7LB+0xYCZQaNfrQCBAPDv63PuVH+oS5K8PsKIrHEJc7c93GRoJSAB3qX+JPdq3KvnTEKYbEV7vAwpPE5uOHNg5++p8x4a2rZhJlRYITqEtoDvy/sxTcO2OC+i0eDUjDpm+0ow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742570062; c=relaxed/simple;
-	bh=LYmRH9Cq4K1QOssewGuoOledSXQRtypRIg8gqFLtk9k=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FWSeNs9gA/k37eaIo01R+fweG5XtSjXXamtAI+04T3nx1UO7EvHuqBeFJWXXcVYo4PiJyrlz2ZEsSxkq2nyjbY3nwqf3Z/iVOVdfnNRblJxcMamB2JndbYe5qsLTBbfIgDTifWyaYJze96l2FOli6+T5csM3MiD5Ofaz0CGt8hc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hqfvWdVv; arc=none smtp.client-ip=209.85.128.43
+	s=arc-20240116; t=1742570064; c=relaxed/simple;
+	bh=PcjryRlrJ0EzTEA0KQuSX5b/a9W1a1f8F2Cggo9W6AM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=V+PZpTNNove8UFt3e2/uVcSxxpo+11qI7FDG8LKC1xfBcq37rKgT2Juiq2k2Rb+fOU+QL4buf/J0h8O5nue5+KO9TzTg0cyqAKmN1XSaU0+omTmAedIPwACcuxjgTWKHz4fdqUBS/lKf5CKZhGcDHWJ3kQ6wRRrPhuV1WH53L5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iAq5O215; arc=none smtp.client-ip=209.85.221.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hqfvWdVv"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-43cec5cd73bso14054095e9.3
-        for <linux-ide@vger.kernel.org>; Fri, 21 Mar 2025 08:14:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iAq5O215"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-39133f709f5so1149088f8f.0
+        for <linux-ide@vger.kernel.org>; Fri, 21 Mar 2025 08:14:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742570059; x=1743174859; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Z2hyT5/ovzNQkIlW4tZIGwANWfne1WKXAckGUYStO4A=;
-        b=hqfvWdVvO5k+D5SRKwVIbJ8WXXqcH5pJszq6bY++ZaOtEBJTQzasGsv3FYf5eYQGYs
-         EW4x8ZOYbtKb+ZDglLpHYgs2iNJTxpy+vYMzNu2TW+TkVm2oDaiTABig4TqKmtuJq2qe
-         TkDWUVxBEziVZ7I0v+cn2hJsILoTN4kcbZXFZLh/1G8CuAb1MziBDy5lbRkj4ReHg6dd
-         mJdfcg+BWx3Z9D5vbv6wTMwnCF4efaHvhpQ9HMzqbA9u31lt5HCIbeUT7HLbhJqvk27Y
-         9ZNhGDTOjqdVpVmppEk6TFbpiTzOujpS57r2C9Eg2/hHxwXgW86+3VUoir/ZfmgfkUSJ
-         UmUQ==
+        d=gmail.com; s=20230601; t=1742570061; x=1743174861; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Bw4PtT/lB2aWDcr15yYUQR1jwUEUAys+a1iOBtSSp1Q=;
+        b=iAq5O215kIPJF0iCXF+oiRJBioumgiHNZc8n/Y9sDV+YKPKCD8IT5jCAN9X0bVXldG
+         JulIDsfc3X9yLX5Fu+yWcv4rTt1dsyfh7IZbxmy8Nxoj4GJT3jq6wWu3QZQjEC4nc5zR
+         mUTDe+fM1iwMzOsGCuXC/ck3FrjDnYML0uB0Ay0oDkgXxf11iZPl1g7+JJ7Oh1mxwhON
+         1/0xj/3aqTxd9pM4L+EIfh+Kls2E74tpMLSmwfmNFqMMzT0SYN0oeyEf+x51RtlWsWt0
+         0nQVvpsxh7ODegEk8+vGxuhG9BGf4CeJHEM2s9+n8wQNTEM5nl0/Eeo9H76RSZqBFzUS
+         hXcg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742570059; x=1743174859;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Z2hyT5/ovzNQkIlW4tZIGwANWfne1WKXAckGUYStO4A=;
-        b=PrA8r6e6lB/Nl0Et4pnntSIrIw/mst6SOlDvFAtrZ/Ym4abDRTvdu6DHK28sg9h7j/
-         KHBcyHWuacZbc5BlDQFumRPMjsKZAAPLXL/JNws+g9kXSDZg/BaL7gBXqZXMxCoqOu8S
-         rz67nLqJkxzpty/JvHmW7lsTtyQ68s8ryzcUbDcuaE3CAAPzj1lXB3BFTvU5UommOq8W
-         VrBwsfdvQcX4dlWV3U4NACaSvHuushPYNJzUEx0Pp81hiMHgMqBu+1XW09agIgGPznDn
-         a4PBDZR3ghMPcfuF0dIhAvMqUTKJoPPtD20AGSSThr/qTQdYNz4n44pmM37W1JObu/af
-         6sCg==
-X-Gm-Message-State: AOJu0YxJc7CFK527UePqkDvb5R6WHihGwAp7D8VGVH2EvSkXDj08DzwX
-	OEVb2hH1mpcbCuziAE1DXtaXOQcDG61Cp24Qn+z7rQ8K1eOtkipdSeIdbOpx
-X-Gm-Gg: ASbGnctmAiwPnASp6Bl+1A8t1TKpEP29ITvPZ2u3l4PXReIqCmHInIYRQoNGuUU2rmG
-	cR53cI9X8AlVPBqTb1nocuTMmWx6LoMjczxh2WJqPkvdbD9Wy58bFqpfcj2soxmMjptWcsWZaIw
-	PHBy8O4eitkucgg6ko2gQXMqUCu8e9aYfkUWTEF9ttg9/dvFF9YkG+L8OqNj9IKipANtW4V+hCl
-	c12Cqgn/jmdEr3WTtV605vZCLmEeKsns4GcYKppai3kWJYEA+EZZ3EiuNKyJl2xaHIacnrIZph0
-	hZ4alQV+PJ8kxRLGiPXs+S/i/FKheWcT1iJwhfWlTeE=
-X-Google-Smtp-Source: AGHT+IE9GCNJDGcMiMyFx90gLrAaHGK2esZea+Di+Tw8SPg76cVdqeh0akv06jz/IJ+Coh87d+ZkEQ==
-X-Received: by 2002:a05:600c:5488:b0:43d:cc9:b09d with SMTP id 5b1f17b1804b1-43d50a2123emr38003705e9.20.1742570058384;
-        Fri, 21 Mar 2025 08:14:18 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1742570061; x=1743174861;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Bw4PtT/lB2aWDcr15yYUQR1jwUEUAys+a1iOBtSSp1Q=;
+        b=YMHkys/SUQgmB+/W+B/YH50TmIyF02eYuTPK90fwp4G7mPIrV9F15mXsPD6XGb/fvE
+         Yjwh7ZtNTlCXBCa3CfvxukOo8v5HimAow6F2o9uhfekUMAjjGhA90hAGthrNDVL68xCm
+         rgN8kwOKiF5Drbi8H8R9JFCztL0CZSN+h15mwGtEFC6sNknW2kLBPOY7O74TUYn+qs34
+         ltjPPNyJKiWCcXKei7L4tWYveWsYTCdy/zgmw9iOX1XqsbMzKj/KRG8ChB5+qn5ujYCE
+         t1KHB+0QBbMJLPeIhmtwxMws3B1VRxHqalyMc0FgMzWMMzpiyqpq30fLKqpRbGO2qpt5
+         XVHg==
+X-Gm-Message-State: AOJu0YwqJ9EgFGWL7wxkjb01Cu8m0Gu3JPK4kVZZnbDh/D52lgtWwAoX
+	g0jMKugJ3yXb+lvZvEkrGvxDVi/CekDUvaUasAVTxNaGp+3pxPHIkyqKxhsr
+X-Gm-Gg: ASbGncusQbhL8fKtgl/FqH/cFs+m5GiKFBi3IlX7fOKlSYvOyeOpTIEV2Ksh7TNJ3fn
+	7uXVZ3cvpG/gZhOON0XIqosa/ZRssZalXHT/0uo4R/C90jw1TRD7Vgy8kljVrMaX1HxEQGJQmRV
+	HivtC20YlzIBiMlpzj1DSqVl77TFKO6homhalBjaRVtPDQ5JXnv/Gb6/Rf3p8+/fKQom2ysEzfF
+	nXIyI2Pt1iTY/CqmhSucpNqZ6CoZQx4ZDpjbRhTjhF7xfl+GiI+rWMRvsiRMQVnGqwgfDa5KL0I
+	/etQdWgQOQ9dRYxpy/0+Hhtf5KzMYB1ecn5D1pC6+eo=
+X-Google-Smtp-Source: AGHT+IFb+0/dKo1TFb+Bbop6PqLIYlIpYGZM0/yO4W/9OX7j50q+loM7JMu4FwIcxCMdHv+UYNsMRA==
+X-Received: by 2002:a05:6000:1ac8:b0:390:e853:85bd with SMTP id ffacd0b85a97d-3997f9371f1mr4613702f8f.48.1742570060076;
+        Fri, 21 Mar 2025 08:14:20 -0700 (PDT)
 Received: from gmail.com ([2a01:e11:1403:8620:91ef:3e94:acab:b42b])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d4fcea6ecsm29700585e9.5.2025.03.21.08.14.16
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d43f32fcdsm82352145e9.7.2025.03.21.08.14.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Mar 2025 08:14:17 -0700 (PDT)
+        Fri, 21 Mar 2025 08:14:19 -0700 (PDT)
 From: Paolo Pisati <p.pisati@gmail.com>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
 	Geert Uytterhoeven <geert@linux-m68k.org>
 Cc: linux-ide@vger.kernel.org,
 	linux-m68k@lists.linux-m68k.org
-Subject: [PATCH 0/3] m68k: amiga: CS-Lab Warp ata support (and a small zorro id refactor)
-Date: Fri, 21 Mar 2025 16:14:13 +0100
-Message-Id: <20250321151416.338756-1-p.pisati@gmail.com>
+Subject: [PATCH 1/3] include/uapi/linux/zorro_ids.h: add more cslab warp id
+Date: Fri, 21 Mar 2025 16:14:14 +0100
+Message-Id: <20250321151416.338756-2-p.pisati@gmail.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250321151416.338756-1-p.pisati@gmail.com>
+References: <20250321151416.338756-1-p.pisati@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -72,25 +76,43 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Patch 01 is a small refactor of the CS-Lab Zorro ids
-Patch 02 is the driver for the CS-Lab Warp pata/CF socket
-Patch 03 enables the driver in amiga_defconfig
+Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
+---
+ arch/m68k/amiga/config.c       | 4 ++--
+ include/uapi/linux/zorro_ids.h | 5 ++++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-Paolo Pisati (3):
-  include/uapi/linux/zorro_ids.h: add more cslab warp id
-  amiga: cslab ata support
-  m68k: amiga_defconfig: enable PATA_CSWARP
-
- arch/m68k/amiga/config.c          |   4 +-
- arch/m68k/configs/amiga_defconfig |   1 +
- drivers/ata/Kconfig               |  12 ++
- drivers/ata/Makefile              |   1 +
- drivers/ata/pata_cswarp.c         | 210 ++++++++++++++++++++++++++++++
- drivers/zorro/zorro.ids           |   5 +
- include/uapi/linux/zorro_ids.h    |  11 +-
- 7 files changed, 241 insertions(+), 3 deletions(-)
- create mode 100644 drivers/ata/pata_cswarp.c
-
+diff --git a/arch/m68k/amiga/config.c b/arch/m68k/amiga/config.c
+index 0147130dc34e..a76bc9daf38a 100644
+--- a/arch/m68k/amiga/config.c
++++ b/arch/m68k/amiga/config.c
+@@ -182,8 +182,8 @@ int __init amiga_parse_bootinfo(const struct bi_record *record)
+ 			dev->boardsize = be32_to_cpu(cd->cd_BoardSize);
+ 
+ 			/* CS-LAB Warp 1260 workaround */
+-			if (be16_to_cpu(dev->rom.er_Manufacturer) == ZORRO_MANUF(ZORRO_PROD_CSLAB_WARP_1260) &&
+-			    dev->rom.er_Product == ZORRO_PROD(ZORRO_PROD_CSLAB_WARP_1260)) {
++			if (be16_to_cpu(dev->rom.er_Manufacturer) == ZORRO_MANUF(ZORRO_PROD_CSLAB_WARP_CTRL) &&
++			    dev->rom.er_Product == ZORRO_PROD(ZORRO_PROD_CSLAB_WARP_CTRL)) {
+ 
+ 				/* turn off all interrupts */
+ 				pr_info("Warp 1260 card detected: applying interrupt storm workaround\n");
+diff --git a/include/uapi/linux/zorro_ids.h b/include/uapi/linux/zorro_ids.h
+index 393f2ee9c042..0be1fb0c3915 100644
+--- a/include/uapi/linux/zorro_ids.h
++++ b/include/uapi/linux/zorro_ids.h
+@@ -450,7 +450,10 @@
+ #define  ZORRO_PROD_VMC_HYPERCOM_4				ZORRO_ID(VMC, 0x02, 0)
+ 
+ #define ZORRO_MANUF_CSLAB					0x1400
+-#define  ZORRO_PROD_CSLAB_WARP_1260				ZORRO_ID(CSLAB, 0x65, 0)
++#define ZORRO_PROD_CSLAB_WARP_DDR3				ZORRO_ID(CSLAB, 0x3c, 0)
++#define ZORRO_PROD_CSLAB_WARP_VRAM				ZORRO_ID(CSLAB, 0x64, 0)
++#define ZORRO_PROD_CSLAB_WARP_CTRL				ZORRO_ID(CSLAB, 0x65, 0)
++#define ZORRO_PROD_CSLAB_WARP_XROM				ZORRO_ID(CSLAB, 0x66, 1)
+ 
+ #define ZORRO_MANUF_INFORMATION					0x157C
+ #define  ZORRO_PROD_INFORMATION_ISDN_ENGINE_I			ZORRO_ID(INFORMATION, 0x64, 0)
 -- 
 2.34.1
 
