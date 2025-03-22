@@ -1,144 +1,389 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E185422A4EA;
-	Fri, 21 Mar 2025 16:09:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ED9120F093
+	for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2025 13:41:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742573390; cv=none; b=I9StbMDukHYd/6DrdUlGnxZwARh3RFDXz2RxzLsCbj/3YfqpZAIkOrkmaku/a7h2fbMLoGk6mcmSSZPttiSXCGBO4ntOmNVnRLa+54r60clDj6oG32UQsuJcABSj5iGllhhChx7fHjrWKL4dETdQ2wOeLDgUCu7j22VcnlRid8s=
+	t=1742650907; cv=none; b=uHJYDJ7S32Hol1wukS6inyOIIQ7lvQuUH9QJCT93vTh2FTDilszMAjr9nikt4GF6GHNFYRo9+yZGvfWgFsVlqHDe0c9VPqLzGLM4Np3xZiHehaS8SqWyJApAat1G1VUSq/tOmy4DQv9l1Ed8DmCIULGOicKfOWjxLQNrrQJa9lU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742573390; c=relaxed/simple;
-	bh=aDAlamYyZ4jkLWyWBaRa75vEGUzN9zvUrX/xuDuvQhE=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=W8GSzjFGkTawitgT+C3LIx/prfaouzw2I9HtJAEFRJyYUrydiAVX2KPqMpw614wRo92tIm444HvTqEltO+7sutpTrjx09TjNHUw3jCp6B+2NIxiE0zc8qHyguky0+Oo1UZuVLSvxPWP/jmhrrNfbnvcuhES4QMUis+qMGb9xcRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KD1uX7gP; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1742650907; c=relaxed/simple;
+	bh=5aL8SrG+x4rQKrmwLxnlmPG5cozMRSGfXtiDopezcIQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZkWLQoL/+KVLvJw4CIOLoXQjkQaf4g0gqDupQio5xba4XxI4Pw1Sr9QeU+2Z0d1N9QzDt/Kva37lawAVP1+5BRHSugcAbBS4VSg3bY1ASkPp70O/mfL+GNkPmCiCOUlZ4ZxAIpjLtVT5mqazb5U1ApXTWE8JK7iMPtiYYFt+kLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VysgTe+R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KD1uX7gP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1742573390; x=1774109390;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=aDAlamYyZ4jkLWyWBaRa75vEGUzN9zvUrX/xuDuvQhE=;
-  b=KD1uX7gP/LojJ727AwyAAyD0Nif/BSbN6jJiNHdeu/UGg7KOcOSrIayc
-   zib/pyedUdNPJ4gkTR8fD+esqiAblSHVsozPQfuaLHTdPbRxCF5v7uaWS
-   yMtSEWBAwysHpJPOtpgiKebJjf20UbffOFIPsV5FpUflgzXTFxqWy7l7r
-   H8ubMuMdMU6XS2ACvFM1Kamh45nczZD2ix4bS85icbG+Xtyz2+MqMEftg
-   nJcEJyaCFejn3YlHhic51frQvzNhQ2fHxP+fIu8ir8UDtRroTGy+VNX6W
-   AkZ8ajr1b+0kxXohXJ2Ncd607RBSDXS2ns4ll1OnKQA/AKzLpYk5Xl3ir
-   g==;
-X-CSE-ConnectionGUID: 1QYfAh+lSPyiBhy4jKntNg==
-X-CSE-MsgGUID: D0Sr5P9LT/CIeSc9ezn13w==
-X-IronPort-AV: E=McAfee;i="6700,10204,11380"; a="61366675"
-X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
-   d="scan'208";a="61366675"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:08:47 -0700
-X-CSE-ConnectionGUID: s+SzOXF7TAiwIAcfG0mbgQ==
-X-CSE-MsgGUID: 6hxEBaxKRL6vcWoyAx4wig==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
-   d="scan'208";a="124388577"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.112])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:08:30 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 21 Mar 2025 18:08:26 +0200 (EET)
-To: Easwar Hariharan <eahariha@linux.microsoft.com>, 
-    Andrew Morton <akpm@linux-foundation.org>
-cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
-    Julia Lawall <Julia.Lawall@inria.fr>, 
-    Nicolas Palix <nicolas.palix@imag.fr>, 
-    James Smart <james.smart@broadcom.com>, 
-    Dick Kennedy <dick.kennedy@broadcom.com>, 
-    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-    Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
-    David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
-    Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
-    Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
-    Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-    "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
-    Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-    Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
-    Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
-    Sascha Hauer <s.hauer@pengutronix.de>, 
-    Pengutronix Kernel Team <kernel@pengutronix.de>, 
-    Fabio Estevam <festevam@gmail.com>, 
-    Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
-    Hans de Goede <hdegoede@redhat.com>, 
-    =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-    Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
-    Selvin Xavier <selvin.xavier@broadcom.com>, 
-    Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
-    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-    cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>, 
-    linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-    linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-    ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
-    linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
-    linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
-    linux-spi@vger.kernel.org, imx@lists.linux.dev, 
-    linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
-    ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH v3 14/16] platform/x86/amd/pmf: convert timeouts to
- secs_to_jiffies()
-In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-14-a43967e36c88@linux.microsoft.com>
-Message-ID: <1252f601-97fd-f199-c339-5bd4ea8060dc@linux.intel.com>
-References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com> <20250225-converge-secs-to-jiffies-part-two-v3-14-a43967e36c88@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VysgTe+R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7816BC4CEDD;
+	Sat, 22 Mar 2025 13:41:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1742650906;
+	bh=5aL8SrG+x4rQKrmwLxnlmPG5cozMRSGfXtiDopezcIQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=VysgTe+R5jZLILcSOM2aE1nm+lgswkhNavaL5zUhcSse7Iecv65l1xaEoobu5lFye
+	 myVLvRHb2yXI58rjvJEDF3HBzSRdgSa2ediP+xbV+1L1y8l0ocensSN/HMvLuneN9M
+	 OCs0U6V4Bm9Qn58INBSQTd42TlaGmCLbu63Kv1wDxAqZ5kgYzIq5z0/D6hmYKFH5L2
+	 4QATby3CJKIN7JglT+RvWiDiFGtMCq2NlQesxuMajSL7UeAqedper60CqkUhMTMib7
+	 t91W/IhSSsF55ZnT6gVQBoSo8dmqsCo3GRxkeaA3aFOaQnbLqzEsztWeTJVj0x5TjQ
+	 vtjghhW6976iQ==
+Message-ID: <f9d2da13-1179-483f-a685-fa67d7abd367@kernel.org>
+Date: Sat, 22 Mar 2025 09:41:44 -0400
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] amiga: cslab ata support
+To: Paolo Pisati <p.pisati@gmail.com>, Niklas Cassel <cassel@kernel.org>,
+ Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org
+References: <20250321151416.338756-1-p.pisati@gmail.com>
+ <20250321151416.338756-3-p.pisati@gmail.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20250321151416.338756-3-p.pisati@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, 25 Feb 2025, Easwar Hariharan wrote:
+On 2025/03/21 11:14, Paolo Pisati wrote:
+> Driver for the on-board IDE interface on CS-Lab Warp Expansion Card
+> (NOTE that idemode=native has to be set in Warp Configuration)
+> 
+> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
 
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
-> 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
-> 
-> @depends on patch@
-> expression E;
-> @@
-> 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
-> 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 
-Applied to the review-ilpo-next branch.
+Please change the commit title to something like:
+
+ata: pata_cswarp: Add Amiga cslab ata support
 
 > ---
->  drivers/platform/x86/amd/pmf/acpi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/ata/Kconfig            |  12 ++
+>  drivers/ata/Makefile           |   1 +
+>  drivers/ata/pata_cswarp.c      | 210 +++++++++++++++++++++++++++++++++
+>  drivers/zorro/zorro.ids        |   5 +
+>  include/uapi/linux/zorro_ids.h |   6 +
+>  5 files changed, 234 insertions(+)
+>  create mode 100644 drivers/ata/pata_cswarp.c
 > 
-> diff --git a/drivers/platform/x86/amd/pmf/acpi.c b/drivers/platform/x86/amd/pmf/acpi.c
-> index dd5780a1d06e1dc979fcff5bafd6729bc4937eab..f75f7ecd8cd91c9d55abc38ce6e46eed7fe69fc0 100644
-> --- a/drivers/platform/x86/amd/pmf/acpi.c
-> +++ b/drivers/platform/x86/amd/pmf/acpi.c
-> @@ -220,7 +220,7 @@ static void apmf_sbios_heartbeat_notify(struct work_struct *work)
->  	if (!info)
->  		return;
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index e00536b49552..9ec4d3a7ec1e 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -1025,6 +1025,18 @@ config PATA_GAYLE
 >  
-> -	schedule_delayed_work(&dev->heart_beat, msecs_to_jiffies(dev->hb_interval * 1000));
-> +	schedule_delayed_work(&dev->heart_beat, secs_to_jiffies(dev->hb_interval));
->  	kfree(info);
->  }
+>  	  If unsure, say N.
 >  
-> 
-> 
+> +config PATA_CSWARP
+> +	tristate "Amiga CS Warp PATA support"
+> +	depends on M68K && AMIGA
+> +	help
+> +	  This option enables support for the on-board IDE
+> +	  interface on CS-Lab Warp Expansion Card
+> +	  (NOTE that idemode=native has to be set in Warp
+> +	  Configuration)
+
+Looks like the lines are short. Please use up to 80 chars per line here.
+
+> +
+> +	  If unsure, say N.
+> +
+> +
+>  config PATA_BUDDHA
+>  	tristate "Buddha/Catweasel/X-Surf PATA support"
+>  	depends on ZORRO
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index 20e6645ab737..7b9b87ebacea 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -98,6 +98,7 @@ obj-$(CONFIG_PATA_WINBOND)	+= pata_sl82c105.o
+>  obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
+>  obj-$(CONFIG_PATA_FALCON)	+= pata_falcon.o
+>  obj-$(CONFIG_PATA_GAYLE)	+= pata_gayle.o
+> +obj-$(CONFIG_PATA_CSWARP)	+= pata_cswarp.o
+>  obj-$(CONFIG_PATA_BUDDHA)	+= pata_buddha.o
+>  obj-$(CONFIG_PATA_ISAPNP)	+= pata_isapnp.o
+>  obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
+> diff --git a/drivers/ata/pata_cswarp.c b/drivers/ata/pata_cswarp.c
+> new file mode 100644
+> index 000000000000..29d76b22f1b2
+> --- /dev/null
+> +++ b/drivers/ata/pata_cswarp.c
+> @@ -0,0 +1,210 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +/*
+> + * Amiga CS Warp PATA controller driver
+> + *
+> + * Copyright (c) 2024 CS-Lab s.c.
+> + *		http://www.cs-lab.eu
+> + *
+> + * Based on pata_gayle.c, pata_buddha.c and warpATA.device:
+> + *
+> + *     Created 2 Jun 2024 by Andrzej Rogozynski
+> + */
+> +
+> +#include <linux/ata.h>
+> +#include <linux/blkdev.h>
+> +#include <linux/delay.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/kernel.h>
+> +#include <linux/libata.h>
+> +#include <linux/mm.h>
+> +#include <linux/module.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/zorro.h>
+> +#include <scsi/scsi_cmnd.h>
+> +#include <scsi/scsi_host.h>
+> +
+> +#include <asm/amigahw.h>
+> +#include <asm/amigaints.h>
+> +#include <asm/amigayle.h>
+> +#include <asm/setup.h>
+> +
+> +#define DRV_NAME "pata_cswarp"
+> +#define DRV_VERSION "0.1.0"
+
+There is no need for a driver version. The driver comes with the kernel, it is
+not external.
+
+> +
+> +#define WARP_OFFSET_ATA         0x6000
+> +#define REV16(x) ((uint16_t)((x << 8) | (x >> 8)))
+
+Very generic macrom name... And that is just a byte swap. We have functions for
+that already, so why define this ?
+
+> +
+> +static const struct scsi_host_template pata_cswarp_sht = {
+> +	ATA_PIO_SHT(DRV_NAME),
+> +};
+> +
+> +/* FIXME: is this needed? */
+
+If you need to fix it, then please do it. Otherwise, remove this comment please.
+
+> +static unsigned int pata_cswarp_data_xfer(struct ata_queued_cmd *qc,
+> +					 unsigned char *buf,
+> +					 unsigned int buflen, int rw)
+> +{
+> +	struct ata_device *dev = qc->dev;
+> +	struct ata_port *ap = dev->link->ap;
+> +	void __iomem *data_addr = ap->ioaddr.data_addr;
+> +	unsigned int words = buflen >> 1;
+> +
+> +	/* Transfer multiple of 2 bytes */
+> +	if (rw == READ)
+> +		raw_insw((u16 *)data_addr, (u16 *)buf, words);
+> +	else
+> +		raw_outsw((u16 *)data_addr, (u16 *)buf, words);
+> +
+> +	/* Transfer trailing byte, if any. */
+> +	if (unlikely(buflen & 0x01)) {
+> +		unsigned char pad[2] = { };
+> +
+> +		/* Point buf to the tail of buffer */
+> +		buf += buflen - 1;
+> +
+> +		if (rw == READ) {
+> +			raw_insw((u16 *)data_addr, (u16 *)pad, 1);
+> +			*buf = pad[0];
+> +		} else {
+> +			pad[0] = *buf;
+> +			raw_outsw((u16 *)data_addr, (u16 *)pad, 1);
+> +		}
+> +		words++;
+> +	}
+> +
+> +	return words << 1;
+> +}
+> +
+> +/*
+> + * Provide our own set_mode() as we don't want to change anything that has
+> + * already been configured..
+> + */
+> +static int pata_cswarp_set_mode(struct ata_link *link,
+> +			       struct ata_device **unused)
+> +{
+> +	struct ata_device *dev;
+> +
+> +	ata_for_each_dev(dev, link, ENABLED) {
+> +		/* We don't really care */
+> +		dev->pio_mode = dev->xfer_mode = XFER_PIO_0;
+> +		dev->xfer_shift = ATA_SHIFT_PIO;
+> +		dev->flags |= ATA_DFLAG_PIO;
+> +		ata_dev_info(dev, "configured for PIO\n");
+> +	}
+> +	return 0;
+> +}
+> +
+> +static struct ata_port_operations pata_cswarp_ops = {
+> +	.inherits	= &ata_sff_port_ops,
+> +	.sff_data_xfer	= pata_cswarp_data_xfer,
+> +	.cable_detect	= ata_cable_unknown,
+> +	.set_mode	= pata_cswarp_set_mode,
+> +};
+> +
+> +static int pata_cswarp_probe(struct zorro_dev *z,
+> +			     const struct zorro_device_id *ent)
+> +{
+> +	static const char board_name[] = "csWarp";
+> +	struct ata_host *host;
+> +	void __iomem *cswarp_ctrl_board;
+> +	unsigned long board;
+> +
+> +	board = z->resource.start;
+
+Please fold this above with the declaration:
+
+	unsigned long board = z->resource.start;
+
+> +
+> +	dev_info(&z->dev, "%s IDE controller (board: 0x%lx)\n", board_name,
+> +		 board);
+> +
+> +	if (!devm_request_mem_region(&z->dev, board + WARP_OFFSET_ATA, 0x1800,
+> +				     DRV_NAME))
+> +		return -ENXIO;
+> +
+> +	/* allocate host */
+> +	host = ata_host_alloc(&z->dev, 1);
+> +	if (!host)
+> +		return -ENXIO;
+> +
+> +	cswarp_ctrl_board = (void *)board;
+> +
+> +	struct ata_port *ap = host->ports[0];
+> +	void __iomem *base = cswarp_ctrl_board + WARP_OFFSET_ATA;
+
+Please do not mix code and declarations. Move the declarations at the top of the
+functions. (yes, C allows this, but we do not use this style in the kernel).
+
+> +
+> +	ap->ops = &pata_cswarp_ops;
+> +
+> +	ap->pio_mask = ATA_PIO4;
+> +	ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY |
+> +		ATA_FLAG_PIO_POLLING;
+> +
+> +	ap->ioaddr.data_addr		= base;
+> +	ap->ioaddr.error_addr		= base + 1 * 4;
+> +	ap->ioaddr.feature_addr		= base + 1 * 4;
+> +	ap->ioaddr.nsect_addr		= base + 2 * 4;
+> +	ap->ioaddr.lbal_addr		= base + 3 * 4;
+> +	ap->ioaddr.lbam_addr		= base + 4 * 4;
+> +	ap->ioaddr.lbah_addr		= base + 5 * 4;
+> +	ap->ioaddr.device_addr		= base + 6 * 4;
+> +	ap->ioaddr.status_addr		= base + 7 * 4;
+> +	ap->ioaddr.command_addr		= base + 7 * 4;
+> +
+> +	ap->ioaddr.altstatus_addr	= base + (0x1000 | (6UL << 2));
+> +	ap->ioaddr.ctl_addr			= base + (0x1000 | (6UL << 2));
+
+It would be nice to have macro definitions for all the magic numbers you use for
+offsets into base, to document these values.
+
+> +
+> +	ap->private_data = (void *)0;
+
+= NULL please. And that should not be needed as this is the inital value anyway.
+
+> +
+> +	ata_port_desc(ap, "  cmd 0x%lx ctl 0x%lx", (unsigned long)base,
+> +		      (unsigned long)ap->ioaddr.ctl_addr);
+> +
+> +	ata_host_activate(host, 0, NULL,
+> +			  IRQF_SHARED, &pata_cswarp_sht);
+> +
+> +	return 0;
+> +}
+> +
+> +static void pata_cswarp_remove(struct zorro_dev *z)
+> +{
+> +	struct ata_host *host = dev_get_drvdata(&z->dev);
+> +
+> +	ata_host_detach(host);
+> +}
+> +
+> +static const struct zorro_device_id pata_cswarp_zorro_tbl[] = {
+> +	{ ZORRO_PROD_CSLAB_WARP_CTRL, 0},
+> +	{ 0 }
+> +};
+> +MODULE_DEVICE_TABLE(zorro, pata_cswarp_zorro_tbl);
+> +
+> +static struct zorro_driver pata_cswarp_driver = {
+> +	.name           = "pata_cswarp",
+> +	.id_table       = pata_cswarp_zorro_tbl,
+> +	.probe          = pata_cswarp_probe,
+> +	.remove         = pata_cswarp_remove,
+> +};
+> +
+> +/*
+> + * We cannot have a modalias for X-Surf boards, as it competes with the
+> + * zorro8390 network driver. As a stopgap measure until we have proper
+> + * MFD support for this board, we manually attach to it late after Zorro
+> + * has enumerated its boards.
+> + */
+> +static int __init pata_cswarp_late_init(void)
+> +{
+> +	struct zorro_dev *z = NULL;
+> +
+> +	/* Auto-bind to regular boards */
+> +	zorro_register_driver(&pata_cswarp_driver);
+> +
+> +	/* Manually bind to all boards */
+> +	while ((z = zorro_find_device(ZORRO_PROD_CSLAB_WARP_CTRL, z))) {
+> +		static struct zorro_device_id cswarp_ent = {
+> +			ZORRO_PROD_CSLAB_WARP_CTRL, 0
+> +		};
+> +
+> +		pata_cswarp_probe(z, &cswarp_ent);
+> +	}
+> +	return 0;
+> +}
+> +late_initcall(pata_cswarp_late_init);
+> +
+> +MODULE_AUTHOR("Andrzej Rogozynski");
+> +MODULE_DESCRIPTION("low-level driver for CSWarp PATA");
+> +MODULE_LICENSE("GPL");
+> +MODULE_VERSION(DRV_VERSION);
+> diff --git a/drivers/zorro/zorro.ids b/drivers/zorro/zorro.ids
+> index 119abea8c6cb..33418af7488a 100644
+> --- a/drivers/zorro/zorro.ids
+> +++ b/drivers/zorro/zorro.ids
+> @@ -400,6 +400,11 @@
+>  	0100  ISDN Blaster Z2 [ISDN Interface]
+>  	0200  HyperCom 4 [Multi I/O]
+>  	0600  HyperCom 4+ [Multi I/O]
+> +1400 CSLab
+> +	6000  Warp DDR3 Memory
+> +	0001  Warp Video Memory
+> +	0101  Warp Control Registers
+> +	0201  Warp Flash ROM
+>  157c  Information
+>  	6400  ISDN Engine I [ISDN Interface]
+>  2017  Vortex
+> diff --git a/include/uapi/linux/zorro_ids.h b/include/uapi/linux/zorro_ids.h
+> index 0be1fb0c3915..5736d2bf0295 100644
+> --- a/include/uapi/linux/zorro_ids.h
+> +++ b/include/uapi/linux/zorro_ids.h
+> @@ -455,6 +455,12 @@
+>  #define ZORRO_PROD_CSLAB_WARP_CTRL				ZORRO_ID(CSLAB, 0x65, 0)
+>  #define ZORRO_PROD_CSLAB_WARP_XROM				ZORRO_ID(CSLAB, 0x66, 1)
+>  
+> +#define ZORRO_MANUF_CSLAB                   0x1400
+> +#define ZORRO_PROD_CSLAB_WARP_DDR3          ZORRO_ID(CSLAB, 0x3c, 0)
+> +#define ZORRO_PROD_CSLAB_WARP_VRAM          ZORRO_ID(CSLAB, 0x64, 0)
+> +#define ZORRO_PROD_CSLAB_WARP_CTRL          ZORRO_ID(CSLAB, 0x65, 0)
+> +#define ZORRO_PROD_CSLAB_WARP_XROM          ZORRO_ID(CSLAB, 0x66, 1)
+> +
+>  #define ZORRO_MANUF_INFORMATION					0x157C
+>  #define  ZORRO_PROD_INFORMATION_ISDN_ENGINE_I			ZORRO_ID(INFORMATION, 0x64, 0)
+>  
+
 
 -- 
- i.
-
+Damien Le Moal
+Western Digital Research
