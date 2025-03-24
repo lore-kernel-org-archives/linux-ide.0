@@ -1,70 +1,70 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7C5A25DCFA
-	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 12:16:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7808F25DCF8
+	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 12:16:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742818612; cv=none; b=eEvr4mzXAUpASB0loD/ibAMKnc0+8zGIt0INNQU22MtSf0A5NEoFS7GcDhDVvHmzbMEJap6D+G8kyv0yXv6pecbX00Ng0zUcAjAvFuqoHI//+h40d8OcIg1Fet+PqlvTEhUnuvOvPD2XSjSWfkZRc7sazcrDUPbQqI+B/RG6s1k=
+	t=1742818614; cv=none; b=b/n0ils8Iwnz5ptPJaAshuZWWgOsatujupCNa2Zmpzn7Au0El7Y9zqpID4GHywAyooRT+G1RwfPmR4YlyyEs1+VC6QcHuhlh4hWcqrCx3rml28JAI5oesLcK1Kosa1e9KJ8Z3HIMWBv4q+3CK7/q/sJoUV3Um0ZBsgAUWN3CiUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742818612; c=relaxed/simple;
-	bh=y0y9DBWxWNZskx7dSirVLJ4UYEQsYJZGkerOi2idTUM=;
+	s=arc-20240116; t=1742818614; c=relaxed/simple;
+	bh=kuvEtbfkl6Ezkk+GzK431w6+dJv4gwMnjWAsjS7JUro=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=aSQ0Z7DGBE7Wl/gNqzGZu64CS5X2fzXCdlYKhWRI0PFzGpJG2ecfDybAPmHJ1gTqdbGsdIg9TW7dH9I8ResOMSJktgBjUEt6R/cuFiedvfWUXCkblWvk2kNjcz9eIPuTFQ+zJx5XiDbrvubpDUMtGy32/+MCCFoLdUtfzWxhGr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SnN35oia; arc=none smtp.client-ip=209.85.221.54
+	 MIME-Version; b=PyO4EO3xuRUw4mmY7bBMTtUQBpgT+mZoAhu4czRBQQFh2gAcax42FGRAKz1ESZESwugjX1qoqR9GxhBFzlP+WlYed3+coJkRluQXcy/cUSgg43DeDObaLDXfop3pgzh+D+PPZUdovebxr2975WsV6l6fOOM2ZktrCaEgCDQESTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dKKm4sbz; arc=none smtp.client-ip=209.85.221.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SnN35oia"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-390e3b3d3f4so2750846f8f.2
-        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 05:16:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dKKm4sbz"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-3912baafc58so3370996f8f.1
+        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 05:16:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742818609; x=1743423409; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1742818611; x=1743423411; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=U/5QKJRQFmOiVIYZFGjmeM5uxqtjsm5TVNG+LAuHHW4=;
-        b=SnN35oiaXe2nl+4d4Mo1DRvpWX1JjnEB2+/fq7M77eCf/yjmrxR4FNv23MaaQv38uX
-         V2yO0zSuoka7egM4gFjtuJc7pCAyP9FFRCP5CsZN2HXY1yIVsVEOoZ+jwimUaTFXever
-         aitG2cI2FqVFeGX/VDWGQDbVvg+/MPyWgf0/i5TymJnPzqgjOx4Wxmmw/+QcXgJMnvoq
-         XQ6Cd+lZIuhBROrsZ9mq41Qin3Zv0zFqp00Z9F3busp3B4zq5e2QbTqOEL22JBShk/1U
-         2pxtpsoSIJ8aEGVDWHkdN4dShC1xNQT/davvvaSJG5ePOWlLPkznJhT7PVb4u5RIZbtn
-         DTiA==
+        bh=s6YiPFHtVVCD1GlwrwHfTYc90+3I8KRnjgLcn6s+bxU=;
+        b=dKKm4sbzrj/rB7/F7L7Kms9nAtrAXNB5XBSbewab8uq7vtzTvXISkUhKsfsqywZfc2
+         zQ8yVS4B3b8BH9aVP8u0PSJtUoeZgtA/mv8TBGl5eJ8rkmcmc2SqHOtAEvs5UG1Ec2DU
+         V1fy/ICDKc5sy8p746A3NV1BQ55rYzMruCcTtKHTC4/HvfsyFEDZh6pw402FlYCf4YZV
+         Hey/i1EHm/PuERHYUgmw9Si1Ji4Ly48FPIHERCKwsQJRuJbBnp3w7tROsdnHPP0HFwlS
+         wdD3SU5q56svhaj+Q43OAWc7pXXYiLjT7rXbsCgss65trEIIIN0G9xAzYfHGu5U+7tYr
+         3lfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742818609; x=1743423409;
+        d=1e100.net; s=20230601; t=1742818611; x=1743423411;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=U/5QKJRQFmOiVIYZFGjmeM5uxqtjsm5TVNG+LAuHHW4=;
-        b=XbvNyk6rJWePQOLvHD1r+r7o3s0dC/udn6Li2ZZ0UmSvdiaYtdLvQP6lIsomo1qefS
-         OesNNCmWveK2+tOQztprBWywK9Taubhd2QiRSpsNdVI73Y/rDaLSndrsYEzkMAPERKjw
-         +BwqNd8H/9Z02n8qESI2eullNA1M8meARE4ubnM0AYdQ4ZyiwYF5+p4m6BL9eR2ReP+D
-         7MkanqmPdDRn3twCT4a/6bQWim7B32jUmY5XSX7+Iv3X8goq665zXiRE7MZE3Ou0NIAe
-         RZpEioSy2O1fRc2K79cKHPHABZ8Uxb4nxKRlB2HnDakJkGcs6dtEZTOkMco5rTyoNb8O
-         ZPfQ==
-X-Gm-Message-State: AOJu0YzxM0itTxKesLUw1tHvs7yGcyS3Ds/p8d7yd79YcqrWSAnIiMuj
-	9kcieMUJYeOa7SUgXMReSFQhEIrVpYuIYyJ1FpwAeupD2UXTxankN/AtA+c0
-X-Gm-Gg: ASbGncvIllwJAmX6rekr2sFteGBU1U46Euyp9YOiq2A+edf+Q5/nss8m4FZ4XidM1DH
-	Vok+VNK0Zvcmv8x1Y9AefYq21ybgUfYgTUMCgyUakcnV1GEUFXz0e0bih3ec02Xh31S8aTyxAyP
-	DtC4T/NgZhosgHaz5DpX7n548KYeLO0BWAuphWi++8I6obT4rn75LtTmzh6RXlLG9kAwphYm3xy
-	iHHNvvTWtqEhFxxijY1laeSzmUcJPdhC2Gz5o27uBwEIx0/vi7m5L4bNZDzNq1YOwbfB4o51n0N
-	wiFwn9F/MJ1dHOfuuKMy4kDWbsh0O0JTYXVhifna/V0=
-X-Google-Smtp-Source: AGHT+IG+fLoGI0iN4FRW0j8vTx/tO3CvaqUmTkc9GOjG0wJ6nZVQuLRwtIenDrew/zYAunbD4tOFmA==
-X-Received: by 2002:a5d:6c6b:0:b0:390:e9ea:59a with SMTP id ffacd0b85a97d-3997f8edb2amr11190740f8f.5.1742818608948;
-        Mon, 24 Mar 2025 05:16:48 -0700 (PDT)
+        bh=s6YiPFHtVVCD1GlwrwHfTYc90+3I8KRnjgLcn6s+bxU=;
+        b=pdvEQvv6g7D9MpboxU/eWbWKLWH2lTG6BWKdgDr9wiO/NnN0B3eE2rfmxO8hvhfHMO
+         J2Ez21I1HCvbXgXnQrU5GX9VYueyTgXdxxXTQba4KpiLqF7Plx2zoEWStxdsXmkf6eSe
+         k20lSqrd9KLRmkR5W8PVg4q9Q5DHyGA7KS4FeCrezykAbBQmMz8ENqjpVIokPVciF1Gp
+         Y59j8NNl80DaF3xt6Cz4dJNEV520ButA5Jph5NxIc77tPMUIkUCp2gZ3QvSsNCnnd5hA
+         uR1iPBMppFu+Zy81iKSMwkZq4+GJ0diQarZ1crr1BaVb0WbvFDzW86OySXUd00mgV7WB
+         Gn+g==
+X-Gm-Message-State: AOJu0YzWbFU/XjZg74+27LlHCsB262xc2tTt3nesqobS35IaQgf8e2gR
+	Lqr+eg8+3JH8C2iKmBlJe0Y9l8S5/8ocWKGhezB/a6mBa8qI8dhx
+X-Gm-Gg: ASbGncstarb5FRzkC81QR87O/P2EQAoGN+vC2qFFvBqCyR2vILF/6ZxG+kAxg+Thh9e
+	54yuFguYqmg5M8dfENUn8skoA4b44W6C/nY0RZJQ3i5lTyLp7T1QKy2ho+AMJYTNLbV7Q2KlhRd
+	fzB07D+TZizmYd/iPobQrpvKMcC5UlR80VyrKSDJYdoDIOvOMp7nwk5LGf26Afel4yCfpwe+5KJ
+	fg9ig7g2ZlCISsnWlBbP9NHreOpA0+FQEpxmvpQ0th/Qhkkdish372qWuwR5J7HNAenUk88IlE5
+	lr3gmEN8lBHDu8JWp92GHT5bJLCjSSBwLjtTyArIUgE=
+X-Google-Smtp-Source: AGHT+IFrbLF4MB7E5uF3pvUrcTFBxHW+1xGCe23DUKwj2zEx+ZxX9VyDqp731FjRRoxle/7Rv33lhg==
+X-Received: by 2002:a05:6000:1ac7:b0:38d:d666:5448 with SMTP id ffacd0b85a97d-3997f93874cmr11994033f8f.40.1742818610454;
+        Mon, 24 Mar 2025 05:16:50 -0700 (PDT)
 Received: from gmail.com ([2a01:e11:1403:8620:fd58:9303:2c1b:4279])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d4fdbd348sm118942425e9.39.2025.03.24.05.16.47
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3997f9b55cdsm10875824f8f.52.2025.03.24.05.16.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Mar 2025 05:16:48 -0700 (PDT)
+        Mon, 24 Mar 2025 05:16:49 -0700 (PDT)
 From: Paolo Pisati <p.pisati@gmail.com>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
 	Geert Uytterhoeven <geert@linux-m68k.org>
 Cc: linux-ide@vger.kernel.org,
 	linux-m68k@lists.linux-m68k.org
-Subject: [PATCH v3 1/2] ata: pata_cswarp: Add Amiga cslab ata support
-Date: Mon, 24 Mar 2025 13:16:44 +0100
-Message-Id: <20250324121645.208368-2-p.pisati@gmail.com>
+Subject: [PATCH v3 2/2] m68k: amiga_defconfig: enable PATA_CSWARP
+Date: Mon, 24 Mar 2025 13:16:45 +0100
+Message-Id: <20250324121645.208368-3-p.pisati@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250324121645.208368-1-p.pisati@gmail.com>
 References: <20250324121645.208368-1-p.pisati@gmail.com>
@@ -76,243 +76,23 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Driver for the on-board IDE interface on CS-Lab Warp Expansion Card
-(NOTE that idemode=native has to be set in Warp Configuration)
-
 Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
 ---
- drivers/ata/Kconfig       |  11 +++
- drivers/ata/Makefile      |   1 +
- drivers/ata/pata_cswarp.c | 186 ++++++++++++++++++++++++++++++++++++++
- 3 files changed, 198 insertions(+)
- create mode 100644 drivers/ata/pata_cswarp.c
+ arch/m68k/configs/amiga_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index e00536b49552..a278386f0fa2 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -1025,6 +1025,17 @@ config PATA_GAYLE
- 
- 	  If unsure, say N.
- 
-+config PATA_CSWARP
-+	tristate "Amiga CS Warp PATA support"
-+	depends on M68K && AMIGA
-+	help
-+	  This option enables support for the on-board IDE interface on
-+	  CS-Lab Warp Expansion Card (NOTE that idemode=native has to be
-+	  set in Warp Configuration)
-+
-+	  If unsure, say N.
-+
-+
- config PATA_BUDDHA
- 	tristate "Buddha/Catweasel/X-Surf PATA support"
- 	depends on ZORRO
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 20e6645ab737..7b9b87ebacea 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -98,6 +98,7 @@ obj-$(CONFIG_PATA_WINBOND)	+= pata_sl82c105.o
- obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
- obj-$(CONFIG_PATA_FALCON)	+= pata_falcon.o
- obj-$(CONFIG_PATA_GAYLE)	+= pata_gayle.o
-+obj-$(CONFIG_PATA_CSWARP)	+= pata_cswarp.o
- obj-$(CONFIG_PATA_BUDDHA)	+= pata_buddha.o
- obj-$(CONFIG_PATA_ISAPNP)	+= pata_isapnp.o
- obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
-diff --git a/drivers/ata/pata_cswarp.c b/drivers/ata/pata_cswarp.c
-new file mode 100644
-index 000000000000..fd135fe3bde7
---- /dev/null
-+++ b/drivers/ata/pata_cswarp.c
-@@ -0,0 +1,186 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+/*
-+ * Amiga CS Warp PATA controller driver
-+ *
-+ * Copyright (c) 2024 CS-Lab s.c.
-+ *		http://www.cs-lab.eu
-+ *
-+ * Based on pata_gayle.c, pata_buddha.c and warpATA.device:
-+ *
-+ *     Created 2 Jun 2024 by Andrzej Rogozynski
-+ */
-+
-+#include <linux/ata.h>
-+#include <linux/blkdev.h>
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/libata.h>
-+#include <linux/mm.h>
-+#include <linux/module.h>
-+#include <linux/platform_device.h>
-+#include <linux/zorro.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_host.h>
-+
-+#include <asm/amigahw.h>
-+#include <asm/amigaints.h>
-+#include <asm/amigayle.h>
-+#include <asm/setup.h>
-+
-+#define DRV_NAME "pata_cswarp"
-+
-+#define WARP_OFFSET_ATA         0x6000
-+
-+static const struct scsi_host_template pata_cswarp_sht = {
-+	ATA_PIO_SHT(DRV_NAME),
-+};
-+
-+static unsigned int pata_cswarp_data_xfer(struct ata_queued_cmd *qc,
-+					 unsigned char *buf,
-+					 unsigned int buflen, int rw)
-+{
-+	struct ata_device *dev = qc->dev;
-+	struct ata_port *ap = dev->link->ap;
-+	void __iomem *data_addr = ap->ioaddr.data_addr;
-+	unsigned int words = buflen >> 1;
-+
-+	/* Transfer multiple of 2 bytes */
-+	if (rw == READ)
-+		raw_insw((u16 *)data_addr, (u16 *)buf, words);
-+	else
-+		raw_outsw((u16 *)data_addr, (u16 *)buf, words);
-+
-+	/* Transfer trailing byte, if any. */
-+	if (unlikely(buflen & 0x01)) {
-+		unsigned char pad[2] = { };
-+
-+		/* Point buf to the tail of buffer */
-+		buf += buflen - 1;
-+
-+		if (rw == READ) {
-+			raw_insw((u16 *)data_addr, (u16 *)pad, 1);
-+			*buf = pad[0];
-+		} else {
-+			pad[0] = *buf;
-+			raw_outsw((u16 *)data_addr, (u16 *)pad, 1);
-+		}
-+		words++;
-+	}
-+
-+	return words << 1;
-+}
-+
-+/*
-+ * Provide our own set_mode() as we don't want to change anything that has
-+ * already been configured..
-+ */
-+static int pata_cswarp_set_mode(struct ata_link *link,
-+			       struct ata_device **unused)
-+{
-+	struct ata_device *dev;
-+
-+	ata_for_each_dev(dev, link, ENABLED) {
-+		/* We don't really care */
-+		dev->pio_mode = dev->xfer_mode = XFER_PIO_0;
-+		dev->xfer_shift = ATA_SHIFT_PIO;
-+		dev->flags |= ATA_DFLAG_PIO;
-+		ata_dev_info(dev, "configured for PIO\n");
-+	}
-+	return 0;
-+}
-+
-+static struct ata_port_operations pata_cswarp_ops = {
-+	.inherits	= &ata_sff_port_ops,
-+	.sff_data_xfer	= pata_cswarp_data_xfer,
-+	.cable_detect	= ata_cable_unknown,
-+	.set_mode	= pata_cswarp_set_mode,
-+};
-+
-+static int pata_cswarp_probe(struct zorro_dev *z,
-+			     const struct zorro_device_id *ent)
-+{
-+	static const char board_name[] = "csWarp";
-+	struct ata_host *host;
-+	struct ata_port *ap;
-+	void __iomem *cswarp_ctrl_board, *base;
-+	unsigned long board = z->resource.start;
-+
-+	dev_info(&z->dev, "%s IDE controller (board: 0x%lx)\n", board_name,
-+		 board);
-+
-+	if (!devm_request_mem_region(&z->dev, board + WARP_OFFSET_ATA, 0x1800,
-+				     DRV_NAME))
-+		return -ENXIO;
-+
-+	host = ata_host_alloc(&z->dev, 1);
-+	if (!host)
-+		return -ENXIO;
-+
-+	cswarp_ctrl_board = (void *)board;
-+
-+	ap = host->ports[0];
-+	base = cswarp_ctrl_board + WARP_OFFSET_ATA;
-+
-+	ap->ops = &pata_cswarp_ops;
-+
-+	ap->pio_mask = ATA_PIO4;
-+	ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY |
-+		ATA_FLAG_PIO_POLLING;
-+
-+	ap->ioaddr.data_addr		= base;
-+	ap->ioaddr.error_addr		= base + 1 * 4;
-+	ap->ioaddr.feature_addr		= base + 1 * 4;
-+	ap->ioaddr.nsect_addr		= base + 2 * 4;
-+	ap->ioaddr.lbal_addr		= base + 3 * 4;
-+	ap->ioaddr.lbam_addr		= base + 4 * 4;
-+	ap->ioaddr.lbah_addr		= base + 5 * 4;
-+	ap->ioaddr.device_addr		= base + 6 * 4;
-+	ap->ioaddr.status_addr		= base + 7 * 4;
-+	ap->ioaddr.command_addr		= base + 7 * 4;
-+
-+	ap->ioaddr.altstatus_addr	= base + (0x1000 | (6UL << 2));
-+	ap->ioaddr.ctl_addr		= base + (0x1000 | (6UL << 2));
-+
-+	ata_port_desc(ap, "  cmd 0x%lx ctl 0x%lx", (unsigned long)base,
-+		      (unsigned long)ap->ioaddr.ctl_addr);
-+
-+	return ata_host_activate(host, 0, NULL,
-+			  IRQF_SHARED, &pata_cswarp_sht);
-+}
-+
-+static void pata_cswarp_remove(struct zorro_dev *z)
-+{
-+	struct ata_host *host = dev_get_drvdata(&z->dev);
-+
-+	ata_host_detach(host);
-+}
-+
-+static const struct zorro_device_id pata_cswarp_zorro_tbl[] = {
-+	{ ZORRO_PROD_CSLAB_WARP_1260, 0},
-+	{ 0 }
-+};
-+MODULE_DEVICE_TABLE(zorro, pata_cswarp_zorro_tbl);
-+
-+static struct zorro_driver pata_cswarp_driver = {
-+	.name           = "pata_cswarp",
-+	.id_table       = pata_cswarp_zorro_tbl,
-+	.probe          = pata_cswarp_probe,
-+	.remove         = pata_cswarp_remove,
-+};
-+
-+static int __init pata_cswarp_init(void) {
-+	return zorro_register_driver(&pata_cswarp_driver);
-+}
-+
-+static void __exit pata_cswarp_unregister(void) {
-+	zorro_unregister_driver(&pata_cswarp_driver);
-+}
-+
-+module_init(pata_cswarp_init);
-+module_exit(pata_cswarp_unregister);
-+
-+MODULE_AUTHOR("Andrzej Rogozynski");
-+MODULE_DESCRIPTION("low-level driver for CSWarp PATA");
-+MODULE_LICENSE("GPL");
+diff --git a/arch/m68k/configs/amiga_defconfig b/arch/m68k/configs/amiga_defconfig
+index c705247e7b5b..feed92c95394 100644
+--- a/arch/m68k/configs/amiga_defconfig
++++ b/arch/m68k/configs/amiga_defconfig
+@@ -334,6 +334,7 @@ CONFIG_ATA=y
+ # CONFIG_ATA_VERBOSE_ERROR is not set
+ # CONFIG_ATA_BMDMA is not set
+ CONFIG_PATA_GAYLE=y
++CONFIG_PATA_CSWARP=y
+ CONFIG_PATA_BUDDHA=y
+ CONFIG_MD=y
+ CONFIG_BLK_DEV_DM=m
 -- 
 2.34.1
 
