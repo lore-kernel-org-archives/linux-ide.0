@@ -1,95 +1,100 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4D4225E469
-	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 12:02:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7002C18A6C1
+	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 12:16:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742817779; cv=none; b=cCS+3ooimWSvcipKr0LVrKDMiyTf8q8jQgLYv8lqyhNc8O5B+7L9mTklzGgf7A4V/CmiQFYxYA15HYofjD4y9Ukr0QmGuLq/+NGdLRGLj8+7iSjqG15kP/DP5emkF0CTgyUmtpV+lN2FGkIBmd4o61uWI2pyLFaxt5ywLZ0q054=
+	t=1742818611; cv=none; b=WsHOwrVsOs7E8dwdz4ErLaNJyALC3gkgpAqW+sauPwry1ijUW2gymkezNn3E7UwjESXavM9/74MseJYqfY/YhVva081IT8Gx1tP6drnk2DZxiWOlXu3NjCdFai9SWiCHN5292B+R8IUcEaS5uOhdYypiiwsvUgBg2cfrVXUUM6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742817779; c=relaxed/simple;
-	bh=FEELsc+xwThvLoMBMuRuxxISfKrU7ZgpIA5jdXNoaG8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pWBlLfoedWD4oH7lx8GLi/La3USfE5vgi5PMTSfYvrtd57K6Ce5Z6YRX8XSoOFaTOOwd5P3x2y/gBaANviuqkeWCu+Owjx+Tk07TysCtJEBbs59FHU2gt5bioFSZB+pxeuYZAZaxUQkyiXzNHisudY66qVL4Xgelv46OI3/fT+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cARur/kI; arc=none smtp.client-ip=209.85.128.41
+	s=arc-20240116; t=1742818611; c=relaxed/simple;
+	bh=Zd9O3wgUBveXcpIkFGnAl7IKOr8i7o+05htXPaF/MPE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CPtmyHW7EcgJ9y16Nsw8hZpilcLRAqN42LnelxU9rDeEUMVGwuJfk0JmKDH50gM2Lx5aEHft7DON5KlJtFEGZPqaBRp/C5+CJschQClByU9zz1i0CyvUdVSA3mlLFE1rU+C+8yzt1TrtM+yqPT5bqeS+l+8rlCoJTNyQI5roFJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dD2dc4pU; arc=none smtp.client-ip=209.85.221.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cARur/kI"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-43d2d952eb1so32179075e9.1
-        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 05:02:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dD2dc4pU"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-391342fc148so2911876f8f.2
+        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 05:16:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742817776; x=1743422576; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Z4akC+OE/V18+0Ds7y+PLOH+odBGH6DeU4C0bDZQdAs=;
-        b=cARur/kIuLP0CIGDkP3OzuGzDPBmIiDJ4CeB6muak3PhmiRVbMbDueQVJq+Ktli5mw
-         IZ8Kd33xkG1QFZ79065rV/ms7M4bS7soWFTDG0OAS3+uBgUF4ee837jb8K2nAlhI3zMy
-         7PmA9XDpTWR8Bn/uaKxoAWX7qkod0IfiVjNiMJv7qA+5nI73SfR2haoQJEzjIi9iXV5q
-         YGLa5qd562PAm5VRinmeEkcT1ogo5QrGyJmLmYfCKPxs2DNj+RZnYLnKe6j5nCXbJz1D
-         r3WbMi44SzwMJvZVdBqpRDmwvNzwe47TQ81JjluiMorQSR20Rq4TW8xFstEuGwHx/VXd
-         SdrA==
+        d=gmail.com; s=20230601; t=1742818608; x=1743423408; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=+H8UDgPvKl0q0KE4YlI6KMrCDjDegTtPX3i53ZqeH7U=;
+        b=dD2dc4pUaYueVQcQh818WfMkrKk3lbGjok0C3uMyQhh5WnGXwj4IhFhwoqKsVhEV8T
+         qv8ilJbu0nZsEKJDm5H2vpN099qTvRJ/nWlL3mpIrm0IP8hj9225GtV04MlOenUJH4Vh
+         0LUxV2P+bY2QGvgauDXjo93adyr2pbAP/aL5q3uy5UlmVtd+G08DIyM2+wJL8PcFakNk
+         ZiHmKCkZYwb52J+n/eDr0OvRtYZc5gr3UzL/TcTwcEhoj5O19jBUY4zN3I3pZGTCpr8U
+         F3SFUiMii05QtqFv/i1wsgQUy6NOhG6lFqMNXs/gqSprirrrC+PVfmmBRiSj+udGiO80
+         7Hlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742817776; x=1743422576;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Z4akC+OE/V18+0Ds7y+PLOH+odBGH6DeU4C0bDZQdAs=;
-        b=Po1Iq4yGexI+9L7ZVy0q40EHWQ7FXxIjVSduVrr4fMt+AW5BsHG6BjAFQ/yPY+U343
-         LcgEzj9HCzNhVO6of5rQdESi8z0WorFe6VHxNOOSI03tsWdIaEWkKqRP67V4GtkZ6lLx
-         i9H9xQTWA47MIQidUJ+3I56qLe2S8NL6yY6qeA+gF3PTsmjB8mZXAkrSTYtUuAdosPuE
-         Tj4tZswmo4gzi78SV+mgQbAi8FYwbGrKWGWxksrV2WVwAq9ARO5t3zNhkjM9ljM3Pz5G
-         zZKKlnKLa7xcC//IV6x+RpSSCWT6HgoPSFw90da/Bi54LwmPZHa5x9xvQxG1PQoIHQ4f
-         vP+A==
-X-Forwarded-Encrypted: i=1; AJvYcCV0+xuJopBEP3yc9zex5eGxL3r5h2KYUhVnDK8N+1435ejDV/y1mnRP1jS2bCR0Ebii6RtcoA+dg7o=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz5oo9qTHZOChLDAWA0rSGPO4opJB9vLjbC78gmsonZ3uB7igh9
-	hp4CHRnFVudg6j+40V30H2TEEtT/IkWOnmSZrW4mMqx3OM08KK9O
-X-Gm-Gg: ASbGncvOzZ69qM7LqcwoUxEtycRq0qKZvwnxmx0QzlIgMtuBongnUsCd6POYRp+uW0A
-	emVXu9YvphN+u5r4EVAO3bcHKlNesXl/F9OLCiXaeeK6he/EpnMeizANWqz/u+iz+HG3tAIIEYQ
-	mDxNZxJyoQzyJQwx2glBusUbCgjwCEcxoRq6sCHMLaKEkReBgoWmEB9vwPujzELdc1jaaRGoLSH
-	ix80Ks3YHWEy2ya9+P5DbK7iPA3ladw1DMYgGQ7nRzhfI1Y6tuqO0nnFbxHd1hvM6c7kzbrLEBr
-	ix3CGB61cgnguGVk3m+WIPe+GM3DdFKVZ5DbQqK4oyf6nZLlCuGWxg==
-X-Google-Smtp-Source: AGHT+IEy5hkQSrWaXlMErAFYM7j9pi0vrafE9+qzG+rQptrMzz86XaBSW22qUN0n6ekkJhhoPp0fcQ==
-X-Received: by 2002:a05:600c:b94:b0:43c:ec4c:25b1 with SMTP id 5b1f17b1804b1-43d50a21273mr109713525e9.23.1742817775591;
-        Mon, 24 Mar 2025 05:02:55 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1742818608; x=1743423408;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=+H8UDgPvKl0q0KE4YlI6KMrCDjDegTtPX3i53ZqeH7U=;
+        b=wpQz8tmzfP9kU3DxFNs6255RJE4DrXcQ0L0KaQWGKnJrAp3P6uK2dAX1Et4mtXXmpL
+         Q1XgoZnX04hYIWEQ3EjgnTe9WBeqU4n02OJ8nplXYrG7X/plXDEF1ZeDA+KJFhsBOq/H
+         jWCi2MEd/Zx/kOGKugcEuMyHBzJWbGDO+sSBySsxWsRmkEbFYvwDsocLOYsQaD+f42I+
+         ZJS/4Q0PeJ6MY1UVhY7OBcTJ8pbebOJfPBRgeC7Htw4Nnmhn6eu4z1K3d7RnWb445puC
+         CaSBOx9/dQ3jEsdJ/ezosjEAqEhTMZtPUrGQoUUxTy9OBCT+GITCMju8hnlBrdfz31tA
+         fFcg==
+X-Gm-Message-State: AOJu0YyGKnH5W6NA7qPy4IfhhAj6V68ITJrNQ9uAOm9NS2S0W2iiYrXj
+	X4dIIcNu/Cs20nwc0bvdy4PEQsNBDu3Zb+kw2xc6dXfa8OR+qSVWrE2q0/OQ
+X-Gm-Gg: ASbGncvr6+QqXQBAVC0XidmgmK/6/cHGxU+fQhnbhFFx5hygej/M7nekN+ic8SON9zR
+	KujSAEuKGyv5LdAC13IsPbs/xHWv2p1/yuE5kUZ6q6RT5v8yx69T3mY1DU1XSvkZ58987Nzo6cA
+	CUg5eL5gIkYgr0EZMQmYtRp6Lvs4EhoGVd8oo5d2sZhro3P+DGU7+PDLTVWfLE+KTVWwRqUlAjX
+	WI/KL/fmoQKPklN9D8UG2VAsq86uuiAvZv+H574jDWKqkqtk90/FekUDjRnYRrDZ/WZGfWXzcra
+	GnWSTc2wLijDJXcYSNZs0vuaJe6xJI6LdPXNMK8x2oE=
+X-Google-Smtp-Source: AGHT+IG/6kcJD1oo8dsIlQAJ4NNfzobfsMiNQ9/vxprxO69/IzfHBZ5ZIAbDY3eVWJuy5oV008sXvg==
+X-Received: by 2002:a05:6000:4009:b0:391:300f:749e with SMTP id ffacd0b85a97d-3997f8f5d96mr9692105f8f.11.1742818607412;
+        Mon, 24 Mar 2025 05:16:47 -0700 (PDT)
 Received: from gmail.com ([2a01:e11:1403:8620:fd58:9303:2c1b:4279])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d4fd277c9sm121085865e9.22.2025.03.24.05.02.54
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3997f9e6651sm10824083f8f.75.2025.03.24.05.16.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Mar 2025 05:02:54 -0700 (PDT)
-Date: Mon, 24 Mar 2025 13:02:54 +0100
+        Mon, 24 Mar 2025 05:16:46 -0700 (PDT)
 From: Paolo Pisati <p.pisati@gmail.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Paolo Pisati <p.pisati@gmail.com>, Niklas Cassel <cassel@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: Re: [PATCH v2 2/2] ata: pata_cswarp: Add Amiga cslab ata support
-Message-ID: <Z+FJ7pB8uWFqNBW+@amaterasu.local>
-References: <20250324092409.99430-1-p.pisati@gmail.com>
- <20250324092409.99430-3-p.pisati@gmail.com>
- <60c4bdf5-9c6f-40d9-b7b9-2fbfde6fdfd1@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-ide@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org
+Subject: [PATCH v3 0/2] m68k: pata_cswarp: Add Amiga cslab ata support
+Date: Mon, 24 Mar 2025 13:16:43 +0100
+Message-Id: <20250324121645.208368-1-p.pisati@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <60c4bdf5-9c6f-40d9-b7b9-2fbfde6fdfd1@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Mar 24, 2025 at 07:00:47AM -0400, Damien Le Moal wrote:
-> > +	ata_port_desc(ap, "  cmd 0x%lx ctl 0x%lx", (unsigned long)base,
-> > +		      (unsigned long)ap->ioaddr.ctl_addr);
-> > +
-> > +	ata_host_activate(host, 0, NULL,
-> > +			  IRQF_SHARED, &pata_cswarp_sht);
-> 
-> 	return ata_host_activate(host, 0, NULL,
-> 				 IRQF_SHARED, &pata_cswarp_sht);
-> 
-> so that errors are properly reported.
+Here is a driver (and the subsequent defconfig change) for the pata/CF socket in
+the CS-Lab Warp series of Amiga boards.
 
-Ack, will send a v3 and reorder the patches.
+Changes in v3:
+ - suppress a comment
+ - properly return ata_host_activate() error code
+
+Change in v2:
+ - fix style, remove duplicate swap macro, driver version, etc
+ - rework the zorro attach mechanism
+ - remove the unnecessary zorro ids refactor
+
+Paolo Pisati (2):
+  ata: pata_cswarp: Add Amiga cslab ata support
+  m68k: amiga_defconfig: enable PATA_CSWARP
+
+ arch/m68k/configs/amiga_defconfig |   1 +
+ drivers/ata/Kconfig               |  11 ++
+ drivers/ata/Makefile              |   1 +
+ drivers/ata/pata_cswarp.c         | 186 ++++++++++++++++++++++++++++++
+ 4 files changed, 199 insertions(+)
+ create mode 100644 drivers/ata/pata_cswarp.c
+
 -- 
-bye,
-p.
+2.34.1
+
