@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 826911953A9
-	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 10:53:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71BD92C80
+	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 11:00:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742813599; cv=none; b=Je/nbwN+zhK2HlRKEwfhYTFowpsZaDCEp+8V+fY8IoN5UIHWrTRd/zQWK/70pMEAwjVZa817MmI8LslcdB8mY/VFuz6ZkTv2yev1JQR2E83brYEbmjhfHzE1VOqZe1sag5LbsqThckW2vAI51AlxcHDK14ETXD5swQDL1Ltbmi4=
+	t=1742814049; cv=none; b=ZVcuJywt8F3zO2kWcCiU7W9nr9j/nqEjj+nHs4poLE7IKh8e+WIAsh4GtXv86Z631EqTR1XLN4FuRwe0l/nGtBuKSclf7bgB5Dd4psTRHUVZt2sSSyCxURAX2Z1Un/yCoM7KCkXgrPP1860MZgLmnt0nPnZhhYVxQPk3Hp5gN8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742813599; c=relaxed/simple;
-	bh=QHbMLkCvI+ls17TLVs90ZoEm0j+SRAngOjag3OCoFE4=;
+	s=arc-20240116; t=1742814049; c=relaxed/simple;
+	bh=6YPKgdTbamjogK55gjYKj3KkZNIVl0oV0cDaa4otfDE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rfqOCTimxNTayOwUxJSp54XrOxKoO/BS6tuLKaZXP1l+mxZ9JqhRHUn6MV+hm5Bm3JHoMYbHG2p3m7J5Sla1WGdnKDR9Qdwf71VwhiCf4bgvE3lTe4Kw+MWFNUcfpFgJNzyv3O97U+EGbHL/+qt5+qncfRoYicc2txgjRzkLLw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u9m2Jivn; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Me31tfowYIu0ocRcy8A+tfI4F6hQYxfP+lLyXwT5t2maItPzhPyLTRWx125feEeKBu1XPuca2Fn3l4XvaZbNH9V5SVBSNAN0IjArQZKVbB53Gjo+fEOeRUf+SJiAzA6G37Lqi/kRdOuWLo0V7hSCjVYwGZP8Xp25j99qA2dzTek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E1M3KP2Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u9m2Jivn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8130EC4CEDD;
-	Mon, 24 Mar 2025 10:53:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E1M3KP2Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72B31C4CEDD;
+	Mon, 24 Mar 2025 11:00:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742813599;
-	bh=QHbMLkCvI+ls17TLVs90ZoEm0j+SRAngOjag3OCoFE4=;
+	s=k20201202; t=1742814048;
+	bh=6YPKgdTbamjogK55gjYKj3KkZNIVl0oV0cDaa4otfDE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=u9m2JivnVer8HQvLuZJmv992SltwyAkUPYGQMe4edwd2RlHuGEkTA93dIFZatStdq
-	 4udE0TlGsg2NVU0XKTzXEN5PloRTBJGsQ5MWRQO7rV+bgVtXzjvbHn6DO7W5nk6Mkv
-	 vY1LoRXvlcjg83K5TEUk4XWrSKACp5I4k059H8EpSMJK4RjA8EVkr3iIau7JCNPqTS
-	 6/WT4o6FooVZVRPmH6vs0ByqjRzMiU+mvTCrpAkkvsDNDLBV3Cz8S/9TaF7qV6PewA
-	 bWT0IDXr/RCGolXq/fE8/sAR77F0aDxqGwicB17+qI5CAUisQg2dKFeRnWOkXgXBcs
-	 M1rJgH5Suz2nA==
-Message-ID: <c874f648-8583-4c6c-9ce5-5ba369ccc731@kernel.org>
-Date: Mon, 24 Mar 2025 06:53:17 -0400
+	b=E1M3KP2Qzx0CEtmrvxOmsAjjAq0y2iGnFEzz3nKoO5tT+bUbLdkJwvNrKSQ7EXQYT
+	 /EfCbrwNH07YduQf0lVp+xcMCbYzbL8dpWM3wnVljj781/qmE7gDQkxa+6AC3A4DnE
+	 iWk++BLg9qv3qjNx1i1FPc8gNZcvfyT8apphzIR+1WemNw2m3mZBcPIYTLpwq4m1ea
+	 dWB9HbOkXPeXWnpn0HFZBV7tKmvYte1C6jQBtwOcUoheAFAF1WuOgBrrH8KGLiOu7g
+	 DmE7W70xSFn0lajy5MsShxxaWn/j/Ez/MLO2svz5vCP4+JfcYkJjRYeGI8xEeRYo4f
+	 nGK6vko5IeucQ==
+Message-ID: <60c4bdf5-9c6f-40d9-b7b9-2fbfde6fdfd1@kernel.org>
+Date: Mon, 24 Mar 2025 07:00:47 -0400
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,47 +35,94 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] m68k: amiga_defconfig: enable PATA_CSWARP
+Subject: Re: [PATCH v2 2/2] ata: pata_cswarp: Add Amiga cslab ata support
 To: Paolo Pisati <p.pisati@gmail.com>, Niklas Cassel <cassel@kernel.org>,
  Geert Uytterhoeven <geert@linux-m68k.org>
 Cc: linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org
 References: <20250324092409.99430-1-p.pisati@gmail.com>
- <20250324092409.99430-2-p.pisati@gmail.com>
+ <20250324092409.99430-3-p.pisati@gmail.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20250324092409.99430-2-p.pisati@gmail.com>
+In-Reply-To: <20250324092409.99430-3-p.pisati@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 2025/03/24 5:24, Paolo Pisati wrote:
-> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
-> ---
->  arch/m68k/configs/amiga_defconfig | 1 +
->  1 file changed, 1 insertion(+)
+> Driver for the on-board IDE interface on CS-Lab Warp Expansion Card
+> (NOTE that idemode=native has to be set in Warp Configuration)
 > 
-> diff --git a/arch/m68k/configs/amiga_defconfig b/arch/m68k/configs/amiga_defconfig
-> index c705247e7b5b..feed92c95394 100644
-> --- a/arch/m68k/configs/amiga_defconfig
-> +++ b/arch/m68k/configs/amiga_defconfig
-> @@ -334,6 +334,7 @@ CONFIG_ATA=y
->  # CONFIG_ATA_VERBOSE_ERROR is not set
->  # CONFIG_ATA_BMDMA is not set
->  CONFIG_PATA_GAYLE=y
-> +CONFIG_PATA_CSWARP=y
+> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
 
-This needs to be patch 2, otherwise there will be some bisectability issues.
-Unless Geert wants to take this patch and we queue patch 1 (the driver) through
-libata tree.
+2 nits below.
 
-Geert,
+[...]
 
-How do yu want to proceed ? We can take everything through libata, or you can
-take both patches through your tree. I do not have a strong preference either way.
+> +static int pata_cswarp_probe(struct zorro_dev *z,
+> +			     const struct zorro_device_id *ent)
+> +{
+> +	static const char board_name[] = "csWarp";
+> +	struct ata_host *host;
+> +	struct ata_port *ap;
+> +	void __iomem *cswarp_ctrl_board, *base;
+> +	unsigned long board = z->resource.start;
+> +
+> +	dev_info(&z->dev, "%s IDE controller (board: 0x%lx)\n", board_name,
+> +		 board);
+> +
+> +	if (!devm_request_mem_region(&z->dev, board + WARP_OFFSET_ATA, 0x1800,
+> +				     DRV_NAME))
+> +		return -ENXIO;
+> +
+> +	/* allocate host */
 
->  CONFIG_PATA_BUDDHA=y
->  CONFIG_MD=y
->  CONFIG_BLK_DEV_DM=m
+Not a very useful comment :)
+You can drop this as the function name is obvious.
+
+> +	host = ata_host_alloc(&z->dev, 1);
+> +	if (!host)
+> +		return -ENXIO;
+> +
+> +	cswarp_ctrl_board = (void *)board;
+> +
+> +	ap = host->ports[0];
+> +	base = cswarp_ctrl_board + WARP_OFFSET_ATA;
+> +
+> +	ap->ops = &pata_cswarp_ops;
+> +
+> +	ap->pio_mask = ATA_PIO4;
+> +	ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY |
+> +		ATA_FLAG_PIO_POLLING;
+> +
+> +	ap->ioaddr.data_addr		= base;
+> +	ap->ioaddr.error_addr		= base + 1 * 4;
+> +	ap->ioaddr.feature_addr		= base + 1 * 4;
+> +	ap->ioaddr.nsect_addr		= base + 2 * 4;
+> +	ap->ioaddr.lbal_addr		= base + 3 * 4;
+> +	ap->ioaddr.lbam_addr		= base + 4 * 4;
+> +	ap->ioaddr.lbah_addr		= base + 5 * 4;
+> +	ap->ioaddr.device_addr		= base + 6 * 4;
+> +	ap->ioaddr.status_addr		= base + 7 * 4;
+> +	ap->ioaddr.command_addr		= base + 7 * 4;
+> +
+> +	ap->ioaddr.altstatus_addr	= base + (0x1000 | (6UL << 2));
+> +	ap->ioaddr.ctl_addr		= base + (0x1000 | (6UL << 2));
+> +
+> +	ata_port_desc(ap, "  cmd 0x%lx ctl 0x%lx", (unsigned long)base,
+> +		      (unsigned long)ap->ioaddr.ctl_addr);
+> +
+> +	ata_host_activate(host, 0, NULL,
+> +			  IRQF_SHARED, &pata_cswarp_sht);
+
+	return ata_host_activate(host, 0, NULL,
+				 IRQF_SHARED, &pata_cswarp_sht);
+
+so that errors are properly reported.
+
+> +
+> +	return 0;
+> +}
+> +
 
 
 -- 
