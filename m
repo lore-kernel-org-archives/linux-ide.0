@@ -1,70 +1,111 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ua1-f46.google.com (mail-ua1-f46.google.com [209.85.222.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A564522A;
-	Sat, 22 Mar 2025 20:49:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48AAA18DB34
+	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 08:04:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742676575; cv=none; b=WlZof364K6pLsR76MKkyRhFK3iKLJKtRB1777SRQvOel1ViyVMsFCeehJejxFRWa0NEM68sw8+PtuWGsODPCUO55y8eXIP+s4/aGI+enpdyGkescutqGFkAS9/+GkFpP9GyLSAxEN2Sxx82vXZAW9tEgxIiZrEUaAC1DRdp3FVY=
+	t=1742803453; cv=none; b=mXv0h5sbGxwMQKNbdB2iEt4hzlAxzI5VMHsg5A4JpRtZ9LnGyjtyUpf/tq4T5i6UyQ5LmY6hBw2gFWUTdDjSGBN4mEWWFcw8j+488FsESgamLO+eypFrihU7ZLqwqtt/tddm/tSY5JifO3IZb4ZEa3GLJo+kUxCfjMHu0m5GsgQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742676575; c=relaxed/simple;
-	bh=Dpt+Qi5HL/LChEojVIg8fKxr9rwU5ToF2s3T9oZbW4g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h8nOtC1MNWNusQ2hSTy0D1KkXDUjmOhMfZ4R8k7TC78Tc85xVryFNmxN+h6pNJ3LIpPEKspRI1bXT/oSR0NklEYycXgEy9Zy+AJI28oBzCi9gPAu+YZUun5H6CayQaq3nead41ua+1hJL6dS66gXay5EPqlNpP4uhLLmaHhiw4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=roVYuGKG; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="roVYuGKG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=49++YOCyQWNmUfGfaJCXgmwoTlehQ0ChbOtbRtnavLU=; b=roVYuGKGAaveFhl9FahKGqzjb5
-	h0kjrdCPRxnKe3RFeqW97s5/xsj85NS93PYA+escS/2VOUFpxsw7VQEL0zYFjOKerpijkbt11CoF1
-	JREIwNfyfObEovtcRhtzVBWf0ft4BpGT7xJ+PpAeyCvrOXfjfh4d8B0ryDsmIM5r0y1d86tNKNfH5
-	h1qQm3LKwYrsoQtJ4bc6aR5yn7YSSK0bSQtAJ4p5AfWL9Spq996yI74QVuMPM+yLbvhT+/LF8ilGV
-	qKpse/gjnUMhbFO3p/sePHkonIS7aAxQv57XJysvbu0xbR/5ynGsyQlWNM2230XeECLg2Km4VTjTV
-	TuQe/M5Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tw5mV-00000005pJc-2fN2;
-	Sat, 22 Mar 2025 20:49:23 +0000
-Date: Sat, 22 Mar 2025 20:49:23 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Michal Hocko <mhocko@suse.com>
-Cc: lsf-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org,
-	linux-ide@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, bpf@vger.kernel.org
-Subject: Re: REMINDER - LSF/MM/BPF: 2025: Call for Proposals
-Message-ID: <Z98iU2mcZhuV_1Cv@casper.infradead.org>
-References: <Z4pwZkf3px21OVJm@tiehlicka>
+	s=arc-20240116; t=1742803453; c=relaxed/simple;
+	bh=waIDTzfJeGprf0IJDgI4ophvCidcyEBtX1rhBS0R948=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Ma3QH216lXT7Q71Ld8bxvCPS7Zy0wib+Qsp6UhiAetneEgoV1v6TDT0NBt6OWbrxhzXlzZhlhnqBJn99admvdkhP4SjYr16DzIW21dC24oskfRuOE3CoCUc3jyCxcMJgUgYO/XqdLugMl/FBJu3P/1B8ic6f6kLuUS3Uwmibha4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.222.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ua1-f46.google.com with SMTP id a1e0cc1a2514c-86d5e42c924so4174625241.3
+        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 01:04:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742803450; x=1743408250;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=LW8fSp8pDr8IytbOKxU9Ce5slmJtka15/u9Kms9+eGM=;
+        b=YR4W4I6lmDEUTBZO4GwO9PQAWk1vBGpXTP+x4uLOGSEu+GXMjWDraUj5ASQZ2cZejF
+         4/cUiLTiibkbJ42mAP8KD7PGjqRvcuWWsYzRI/4ryB0cYIQmvQTDFjGgHFOYkUUL1u41
+         6zW823seKTfjgEhWkWwem9f8UO4BmOrd2KdKyS1cjoDg6g8+Gd8AWnJt7lAnFvWjBfTU
+         iZ6Iot4DCqkxoxdmw9zw5/LM+xyWEISVeMQvniroQ+gEzAI0ZRe9AyHNHJ5BjAeOYe3J
+         kX6LtkAQIOhGC6bpe0bP4+eSTZuNjD+hbJ6fxSBIdJtVJIBEBu6ejBBzpZBoavxdp43N
+         M3GA==
+X-Forwarded-Encrypted: i=1; AJvYcCXHtJi9bcMzTqoDA0DTplHX8ga83HDeGPcZO+HkltJSsCAI4BHUL+Gp2H/PXWibfx6wjbjUWq0GEHE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxxCYCOprkgezoC7ntONbgTF6f2tMkutvA0j7JtXVH50qc3GNvh
+	ZY6OdDfEw4EY/HVkfvHcackwBS2IsesgY9WhYbFyvOB550pDGSRhuJMrTywK
+X-Gm-Gg: ASbGncvEplWobkH5jvKm1548sldWAIq4N7k+x7JgZyI822OA3U5VmISRt/VA9GwUWd6
+	3yJJlp+ESh2HkeS0kwonYccyLhxFGuyankPaDHdnxK5L6BEBbxlZIj7+9QSzXnlRrsoY3AsMWiB
+	YKGLhRgkn2gWu/s0mpg/0Rx4HblHVGF+z5LNPRxyC4vlwSN1Amd8KfTwAU/7I7YcG8/9TlzeI1p
+	F5SsDcpvhSQRuj+C8dSOT11boxGV93zj7JlpyDl2xzMxmyzlbOqKhMCzYezy+CppcfX+4XPC73z
+	IKkyT/DxPp+WvVz9OzIplZu2pFyMYDXOqrCmvNzhDTMcTYAwK7Xto/C3dnvcLUrXUfqZDkdIqIv
+	4npsi9x6FvCxOO/+KRg==
+X-Google-Smtp-Source: AGHT+IF/Q1dyDdNy5IQ55TtA6Ra7WjA3NPjuMxO/F5hz8JKK+U8CFdGoPwK4DQn6xdBmpli1x2qdIw==
+X-Received: by 2002:a05:6102:390e:b0:4bb:cf34:3757 with SMTP id ada2fe7eead31-4c50d5e2787mr8013440137.17.1742803450019;
+        Mon, 24 Mar 2025 01:04:10 -0700 (PDT)
+Received: from mail-ua1-f45.google.com (mail-ua1-f45.google.com. [209.85.222.45])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-86f9f455488sm1492274241.23.2025.03.24.01.04.09
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 24 Mar 2025 01:04:09 -0700 (PDT)
+Received: by mail-ua1-f45.google.com with SMTP id a1e0cc1a2514c-86929964ed3so3887295241.0
+        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 01:04:09 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXovKilOOCcZlccf0pobG5gOL0hKW+n5oRKpUBVnG+0QtXbub7T0gYElEKe7x5i24/YhTy9RcL6m+Y=@vger.kernel.org
+X-Received: by 2002:a05:6102:3f0d:b0:4c3:6979:2ef with SMTP id
+ ada2fe7eead31-4c50d620e46mr5828890137.21.1742803449228; Mon, 24 Mar 2025
+ 01:04:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z4pwZkf3px21OVJm@tiehlicka>
+References: <20250321151416.338756-1-p.pisati@gmail.com> <20250321151416.338756-2-p.pisati@gmail.com>
+In-Reply-To: <20250321151416.338756-2-p.pisati@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 24 Mar 2025 09:03:57 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdWzNdJesbKeWBrJ88rHBWP36k23EQo80TjYbe4V6vprhQ@mail.gmail.com>
+X-Gm-Features: AQ5f1JqPior9Jo9Nzr-fOs-iHqTJa_bcQoKsPvZY5OyLpkGT1K3mjUiFtrnvQgA
+Message-ID: <CAMuHMdWzNdJesbKeWBrJ88rHBWP36k23EQo80TjYbe4V6vprhQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] include/uapi/linux/zorro_ids.h: add more cslab warp id
+To: Paolo Pisati <p.pisati@gmail.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
+	linux-m68k@lists.linux-m68k.org
+Content-Type: text/plain; charset="UTF-8"
 
-I've had a quick look around the hotel.
+Hi Paolo,
 
-All four conference rooms we're using are on the Mezzanine level.  You can
-take the elevator to that floor, or if you're coming in from the outside,
-there's a staircase to get to the mezzanine.  The doors that lead from
-City Councillors St to the mezzanine level were locked when I tried to
-open them today, but maybe they'll be open on Monday.  Also the courtyard
-door from Sherbrooke is locked.
+On Fri, 21 Mar 2025 at 16:14, Paolo Pisati <p.pisati@gmail.com> wrote:
+> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
 
-Concerto (the MM track room) is separate from all the others.  It's a
-little hidden; you start going towards the Milton brasserie, and then
-turn right just before you enter it.  It was set up with dining today,
-so maybe we get special MM snacks?  ;-)
+Thanks for your patch!
 
-The Opus, Tchaikovsky and Beethoven rooms are all near each other towards
-the north end of the hotel.  If you take the elevator, turn right towards
-these three rooms (and left to go to Concerto).  There's also a Vivaldi
-room that I don't think we're using.
+> --- a/include/uapi/linux/zorro_ids.h
+> +++ b/include/uapi/linux/zorro_ids.h
+> @@ -450,7 +450,10 @@
+>  #define  ZORRO_PROD_VMC_HYPERCOM_4                             ZORRO_ID(VMC, 0x02, 0)
+>
+>  #define ZORRO_MANUF_CSLAB                                      0x1400
+> -#define  ZORRO_PROD_CSLAB_WARP_1260                            ZORRO_ID(CSLAB, 0x65, 0)
+
+This removes a definition; was it incorrect? Please explain in the
+patch description, especially as this is a uapi header file.
+
+> +#define ZORRO_PROD_CSLAB_WARP_DDR3                             ZORRO_ID(CSLAB, 0x3c, 0)
+> +#define ZORRO_PROD_CSLAB_WARP_VRAM                             ZORRO_ID(CSLAB, 0x64, 0)
+> +#define ZORRO_PROD_CSLAB_WARP_CTRL                             ZORRO_ID(CSLAB, 0x65, 0)
+> +#define ZORRO_PROD_CSLAB_WARP_XROM                             ZORRO_ID(CSLAB, 0x66, 1)
+
+What do these represent? Please explain in the patch description.
+
+>
+>  #define ZORRO_MANUF_INFORMATION                                        0x157C
+>  #define  ZORRO_PROD_INFORMATION_ISDN_ENGINE_I                  ZORRO_ID(INFORMATION, 0x64, 0)
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
