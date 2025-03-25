@@ -1,279 +1,107 @@
-Received: from mail-vk1-f173.google.com (mail-vk1-f173.google.com [209.85.221.173])
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EAA4802
-	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 13:22:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7057C18A6AB
+	for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2025 15:55:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742822533; cv=none; b=dtWbTJKA5gZngVYKRDUP/KwO4yeTeD7CyaQ34lLoTAih4i0ANWKrRt6LO/WkBUsIf+Z3el5IU/A6cnADbd5Utpo9jTJZcjp7lbRENZeeK2fFuvkfjvwnXAQ9wvaRFaJFevacKj8vkFxrJzJZ1uGoLGXrCuKq421Cl9L4FloEsnQ=
+	t=1742918138; cv=none; b=HTIfYfYHhLv4XUm6t3ump3pY3PfRFiJ5WRSuOnFKMxjmskMvjxh0GbzKV+ZAWCkGUT69z2OrxHYDtbgTIj2OnlJ5Ah3vMBn/ulHaw8ZYq0f0DNFw3sCCTG0rgzD3uqlMsb8ZD7oBmb+wNItVt7RupNI9UTZ3ZIhNgfnFMbE6MMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742822533; c=relaxed/simple;
-	bh=i1XKwX+9HeRav3Y+xuPOHeamNCFkO9DYG+SjERgnylM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PDp/6GkS2i09Z2PiJUM/erhbmg6SYuJxpv8AHThLzd0KuRoWXnjOwDZNXQb/Ojcqm4di1EZpF4EvSqNspciaeE0r7gD/OpqHCmm+t/x1foAOyIPbXhwkYjY9NWnHmLnasV5/rnqoMrVgqDJzWy/cwJjGEr/zeV5lPpbLuvfe2k4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+	s=arc-20240116; t=1742918138; c=relaxed/simple;
+	bh=CMWVz33lT6p1f+17izyO+br6W04HIXsYhjFMmrBViqA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iWhgixnsV8oLFrCHbuRPk32wYBfChdVyP8wmL3ZWDiFsCUHraoIihoXtMPnCYp/rKrGuiDrMhjb23LynwWqM+wfgPHhfEX8Lee4Slw14ZqRF31DxkWCtMzJ6OyLsGf152vpbC0zGOtDIixMAl8GICJPrHDAqgyxe8VefyUXU+U0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dpl5vPje; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vk1-f173.google.com with SMTP id 71dfb90a1353d-523eb86b31aso1825331e0c.0
-        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 06:22:11 -0700 (PDT)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dpl5vPje"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-43d0782d787so41266565e9.0
+        for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2025 08:55:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1742918134; x=1743522934; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=JssoJbGxAXlBbUyT3ON3KKR9aBT8d77H2v38bI0fixI=;
+        b=dpl5vPje5rtXufx3lehJVcux7kuUPjyhizKIIZj1C9GP0wT36kCzAOP1izyAt832wf
+         otnSazZmS3ps2DeXr64jGZk2Dk3Eafl8SfTqN8rFgMULAP+dEAsq5NlAI7cHOeMcGBVC
+         tAsAzIgqDtuZx/rybet/H3mYIt3hydJbS9bI2UrE7gpcIxGrZUYhiH4cyXtcRw8rgnLN
+         wJjNmBNWGtPj/YA/RCgZhg91c4np9Y7zw6zZlgjA8aofWB+uZgUMhM43BptANfVKGZnY
+         Mfe8XxCYUAun0pMq/1qPYCzeVO7aQ1JFzW4osGKCFDRjk6UOjswuYsd3f4+RTdWCeDi/
+         Ywzg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742822530; x=1743427330;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=T3vM1FQGsYOgCMm5GZoL9ZjRBchcaCoOlh/TAPpEk4Y=;
-        b=IwlXCm60zAN24ANkXdR4/APhcz5cXXu8vXsdJwImMIEJSN+uVVM9UsNyxVAIJximZ5
-         6DhGdZOksdgul6/4Vvf77tDsLZzrICAf7u5N0nkZpcGUWAC5jsyrIukO4zg9DCRBje7f
-         iBekylHtX4LSafqegjaNF/ogW/umHIdave1hWWeSM73lXLKDSmstTn6sg1wxBpnsUERf
-         NYVguSS7btt0WP5ZlVoEpLa4f7VMjRToFUdSjSdZvDSyvQcd5bJc42TN8bRCbWc5pXGY
-         rhFpSbe2eR4fq7o9tnFN6/MuNnPom3s9Upgz6pO1q+by3lJaQeVxvwF5JyFcyxialLrq
-         8eDg==
-X-Forwarded-Encrypted: i=1; AJvYcCXhWkrjoaJQyBtmDymJ0jhHp4Lk3t3baZYLPg/u4OPYSW0sq0dYbOLlPHobHfQFvHeVrPn/auzQ7hc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzo4Bn9PwoA/9wcB+6Z6qNyDI6a8Qr2nO/ge6/sedDlCCbkInMv
-	zY1FFP2qEQE3hHlUnmu4WBFwfLU0vAPkPMNp7xAsTg55jifmPUQ6somDi97Z
-X-Gm-Gg: ASbGncvMDa44dZ1fuH0A/okR5DRhPiNwQYUosaHNld5iqlsEaOAdLJrJ4fCmP14HRdT
-	V+FyfH+IIEqxsnxW7iJDWbp8Za0H02ZUuGntFSOxEusIpSxTNldHCb51/0/2okv8lmF6JWVEFZQ
-	3tw6Pdy0jebANdcTZ1FP1Az2Xa7h6OGKiNGqHHcLdgqkid6uVDBhlQXiPvssS4AkE6tnwVeen7a
-	a3cJRKbcX+wndqZIJvqsNUJlywW25fjXRB0gTVEXyV7cgyyeqjOzpB+gwlHDaHIdtv44EGlryvc
-	t+PD8jWzNCeavjUXQQZ5GCZSMKqThvhb8No6GYslMYzz6U0vdsUK2yrpTW+EFSfjcKEH+9zuKm8
-	w4fwHpGY=
-X-Google-Smtp-Source: AGHT+IFVdYebeiaGJ5eCHrtYftGmh/MHFLpU6Iyttf+uaxZATkWttdKA8maHsOC/8Wdv5sCiLnsvjw==
-X-Received: by 2002:a05:6122:507:b0:520:5a87:6717 with SMTP id 71dfb90a1353d-525a80ccc98mr7978493e0c.0.1742822529932;
-        Mon, 24 Mar 2025 06:22:09 -0700 (PDT)
-Received: from mail-ua1-f47.google.com (mail-ua1-f47.google.com. [209.85.222.47])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-525a76456cesm1353914e0c.34.2025.03.24.06.22.09
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Mar 2025 06:22:09 -0700 (PDT)
-Received: by mail-ua1-f47.google.com with SMTP id a1e0cc1a2514c-8670fd79990so1728893241.3
-        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2025 06:22:09 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCWaykJ94QOGZuhzyX7HePuy/aiN0E+37x3bvKNpDSftx4Ebe/JcYtx2aGRS9LtAbjMMQ/Bqj7r/l9g=@vger.kernel.org
-X-Received: by 2002:a05:6102:32c5:b0:4bb:e36f:6a30 with SMTP id
- ada2fe7eead31-4c50d5471femr6234904137.15.1742822529274; Mon, 24 Mar 2025
- 06:22:09 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1742918134; x=1743522934;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JssoJbGxAXlBbUyT3ON3KKR9aBT8d77H2v38bI0fixI=;
+        b=IStMbqiQ1GKfrKCSzR/Z8eGWiEkSFu56P4fQeNVjuohE2qgtWX2xiVvsbABuFCkSYp
+         UQrJkhgCg4kanqktrQ0qCPcJQbNa0gVAuOmpn0Z0N97+KPsV8iXXSRt/7ISMpmbtMIn4
+         oTke9wonsWtz00yXmWCdtIiOnwqmbz9MdtakVHaKGAMhOzYXblnMU269dRNKtSeE3wrH
+         WHml9pszzRzMSIdshdBJPCHrZ7mIjCD7u1MwTYD0LY3eyLUuXW80eRRMPB5OuYZ9p5iW
+         rCb/7UT0Wy3sTvlbn6tPqsTyzFY8czQfZuzPG+tnPpFqYkMBKIoekD3ILKbkXNDi/g8h
+         Gaaw==
+X-Forwarded-Encrypted: i=1; AJvYcCVp7Q0TJ+i5AwKJvD6bXkg+BnH9Avk+aLse+KnlCdSQ1OOENtG7Xc1fC2SReYDX4+hrO8JzoM20HyQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywe9rNm8ppsPRsxO5BdnMWRwf8+Gg8QadbFTYolHNppvOgfzpTF
+	uOAmb5dQorZGmktnETppYMimPfgmWCnrWhEvOcPPyR6/QpepV/Yp
+X-Gm-Gg: ASbGnctqTvBHfRmwZM8RkqsfdxO4T4SySWJqmR79Vi4la4RBIGjB+8ejyoiQN7pi11v
+	ocMBZhF/LX2OVcT5c9Ft8+lnhqzbnLqg1zK5GXnNdtKLgOqkhmJfJvIg+tUFfWXxbg6MxOzpyZC
+	haIzOCRyOGzwTA5O2CkZ6pS2F0HmDN3SBPWsL6DPAxJoPuzc6zfkXC3EnQYwk8Aa/5ZYIUCFAIH
+	D5AD/dQ934MOy4dMOAXsLVuAskxWx9nSgw/c2ymecBB9sx8GKTKOGz7xcLdR+YwvyT9gMkSmkQ3
+	m0DDvrsGIBofqbS5u34WcBetJ3rzJvpA9tlpB9gte7g=
+X-Google-Smtp-Source: AGHT+IHRAGJsg97H8EY2q5KgKnz9QjXZ8OYPFvCYzPH9NT6jqf2GHi/kUEYr1z8cYh42PzDyvNoS8w==
+X-Received: by 2002:a5d:6c6b:0:b0:390:e535:8758 with SMTP id ffacd0b85a97d-3997f8f78b5mr17067536f8f.9.1742918133500;
+        Tue, 25 Mar 2025 08:55:33 -0700 (PDT)
+Received: from gmail.com ([2a01:e11:1403:8620:eead:4845:67bf:e110])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3997f9a31a7sm13861603f8f.23.2025.03.25.08.55.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Mar 2025 08:55:32 -0700 (PDT)
+Date: Tue, 25 Mar 2025 16:55:32 +0100
+From: Paolo Pisati <p.pisati@gmail.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Paolo Pisati <p.pisati@gmail.com>, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org
+Subject: Re: [PATCH v3 1/2] ata: pata_cswarp: Add Amiga cslab ata support
+Message-ID: <Z+LR9Glz5iV4Sjll@amaterasu.local>
+References: <20250324121645.208368-1-p.pisati@gmail.com>
+ <20250324121645.208368-2-p.pisati@gmail.com>
+ <CAMuHMdW8WUyUsjG4FaT4nP82pZYVFsUpYNOg2vsPPOthf-O49A@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250324121645.208368-1-p.pisati@gmail.com> <20250324121645.208368-2-p.pisati@gmail.com>
-In-Reply-To: <20250324121645.208368-2-p.pisati@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 24 Mar 2025 14:21:57 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdW8WUyUsjG4FaT4nP82pZYVFsUpYNOg2vsPPOthf-O49A@mail.gmail.com>
-X-Gm-Features: AQ5f1JossREYSfwY4h6KKaFrE0JTJJQ8uMnSZiWGXPrBjpzoTjpi3VGEJ_Yivrw
-Message-ID: <CAMuHMdW8WUyUsjG4FaT4nP82pZYVFsUpYNOg2vsPPOthf-O49A@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] ata: pata_cswarp: Add Amiga cslab ata support
-To: Paolo Pisati <p.pisati@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAMuHMdW8WUyUsjG4FaT4nP82pZYVFsUpYNOg2vsPPOthf-O49A@mail.gmail.com>
 
-Hi Paolo,
+On Mon, Mar 24, 2025 at 02:21:57PM +0100, Geert Uytterhoeven wrote:
+> >
+> > +               }
+> > +               words++;
+> > +       }
+> > +
+> > +       return words << 1;
+> 
+> This can be one more than buflen, when the latter is odd.
+> Why not just return buflen instead?
 
-On Mon, 24 Mar 2025 at 13:16, Paolo Pisati <p.pisati@gmail.com> wrote:
-> Driver for the on-board IDE interface on CS-Lab Warp Expansion Card
-> (NOTE that idemode=native has to be set in Warp Configuration)
->
-> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
+I think "every" m68k pata driver is buggy in this regard, e.g. pata_buddha,
+pata_gayle, pata_falcon, etc
+And words++ can go too.
 
-Thanks for your patch!
+> > +
+> > +       ata_port_desc(ap, "  cmd 0x%lx ctl 0x%lx", (unsigned long)base,
+> > +                     (unsigned long)ap->ioaddr.ctl_addr);
+> 
+> These two printed addresses are virtual addresses.
+> However, due to the use of a cast instead of ioremap(), they are identical.
+> Still, I think it is better to print board + WARP_OFFSET_ATA and
+> board + WARP_OFFSET_ATA + 0x1000 | (6UL << 2) instead.
 
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -1025,6 +1025,17 @@ config PATA_GAYLE
->
->           If unsure, say N.
->
-> +config PATA_CSWARP
-> +       tristate "Amiga CS Warp PATA support"
-> +       depends on M68K && AMIGA
-
-&& ZORRO?
-
-> +       help
-> +         This option enables support for the on-board IDE interface on
-> +         CS-Lab Warp Expansion Card (NOTE that idemode=native has to be
-> +         set in Warp Configuration)
-> +
-> +         If unsure, say N.
-> +
-> +
->  config PATA_BUDDHA
->         tristate "Buddha/Catweasel/X-Surf PATA support"
->         depends on ZORRO
-
-> --- /dev/null
-> +++ b/drivers/ata/pata_cswarp.c
-> @@ -0,0 +1,186 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +
-> +/*
-> + * Amiga CS Warp PATA controller driver
-> + *
-> + * Copyright (c) 2024 CS-Lab s.c.
-> + *             http://www.cs-lab.eu
-> + *
-> + * Based on pata_gayle.c, pata_buddha.c and warpATA.device:
-> + *
-> + *     Created 2 Jun 2024 by Andrzej Rogozynski
-> + */
-> +
-> +#include <linux/ata.h>
-> +#include <linux/blkdev.h>
-> +#include <linux/delay.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/kernel.h>
-> +#include <linux/libata.h>
-> +#include <linux/mm.h>
-> +#include <linux/module.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/zorro.h>
-> +#include <scsi/scsi_cmnd.h>
-> +#include <scsi/scsi_host.h>
-> +
-> +#include <asm/amigahw.h>
-> +#include <asm/amigaints.h>
-> +#include <asm/amigayle.h>
-> +#include <asm/setup.h>
-> +
-> +#define DRV_NAME "pata_cswarp"
-> +
-> +#define WARP_OFFSET_ATA         0x6000
-> +
-> +static const struct scsi_host_template pata_cswarp_sht = {
-> +       ATA_PIO_SHT(DRV_NAME),
-> +};
-> +
-> +static unsigned int pata_cswarp_data_xfer(struct ata_queued_cmd *qc,
-> +                                        unsigned char *buf,
-> +                                        unsigned int buflen, int rw)
-
-It is a pity ata_port_operations.sff_data_xfer() doesn't take a void *buf,
-else the casts below can be dropped.
-
-Until that has changed, I think it is worthwhile to do the cast only once,
-by introducing a temporary variable:
-
-    u16 *buf16 = (u16 *)buf;
-
-> +{
-> +       struct ata_device *dev = qc->dev;
-> +       struct ata_port *ap = dev->link->ap;
-> +       void __iomem *data_addr = ap->ioaddr.data_addr;
-
-"volatile void __iomem *data_addr ...", so you can drop the casts below.
-
-> +       unsigned int words = buflen >> 1;
-> +
-> +       /* Transfer multiple of 2 bytes */
-> +       if (rw == READ)
-> +               raw_insw((u16 *)data_addr, (u16 *)buf, words);
-> +       else
-> +               raw_outsw((u16 *)data_addr, (u16 *)buf, words);
-> +
-> +       /* Transfer trailing byte, if any. */
-> +       if (unlikely(buflen & 0x01)) {
-> +               unsigned char pad[2] = { };
-> +
-> +               /* Point buf to the tail of buffer */
-> +               buf += buflen - 1;
-
-buf16 += words;
-
-> +
-> +               if (rw == READ) {
-> +                       raw_insw((u16 *)data_addr, (u16 *)pad, 1);
-
-No need to loop, just use raw_inw() for a single word.
-
-> +                       *buf = pad[0];
-> +               } else {
-> +                       pad[0] = *buf;
-> +                       raw_outsw((u16 *)data_addr, (u16 *)pad, 1);
-
-likewise, raw_outw().
-
-> +               }
-> +               words++;
-> +       }
-> +
-> +       return words << 1;
-
-This can be one more than buflen, when the latter is odd.
-Why not just return buflen instead?
-
-> +}
-
-> +static int pata_cswarp_probe(struct zorro_dev *z,
-> +                            const struct zorro_device_id *ent)
-> +{
-> +       static const char board_name[] = "csWarp";
-> +       struct ata_host *host;
-> +       struct ata_port *ap;
-> +       void __iomem *cswarp_ctrl_board, *base;
-> +       unsigned long board = z->resource.start;
-> +
-> +       dev_info(&z->dev, "%s IDE controller (board: 0x%lx)\n", board_name,
-> +                board);
-> +
-> +       if (!devm_request_mem_region(&z->dev, board + WARP_OFFSET_ATA, 0x1800,
-> +                                    DRV_NAME))
-> +               return -ENXIO;
-> +
-> +       host = ata_host_alloc(&z->dev, 1);
-> +       if (!host)
-> +               return -ENXIO;
-> +
-> +       cswarp_ctrl_board = (void *)board;
-
-ioremap(board + WARP_OFFSET_ATA, ...)?
-
-> +
-> +       ap = host->ports[0];
-> +       base = cswarp_ctrl_board + WARP_OFFSET_ATA;
-> +
-> +       ap->ops = &pata_cswarp_ops;
-> +
-> +       ap->pio_mask = ATA_PIO4;
-> +       ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY |
-> +               ATA_FLAG_PIO_POLLING;
-> +
-> +       ap->ioaddr.data_addr            = base;
-> +       ap->ioaddr.error_addr           = base + 1 * 4;
-> +       ap->ioaddr.feature_addr         = base + 1 * 4;
-> +       ap->ioaddr.nsect_addr           = base + 2 * 4;
-> +       ap->ioaddr.lbal_addr            = base + 3 * 4;
-> +       ap->ioaddr.lbam_addr            = base + 4 * 4;
-> +       ap->ioaddr.lbah_addr            = base + 5 * 4;
-> +       ap->ioaddr.device_addr          = base + 6 * 4;
-> +       ap->ioaddr.status_addr          = base + 7 * 4;
-> +       ap->ioaddr.command_addr         = base + 7 * 4;
-> +
-> +       ap->ioaddr.altstatus_addr       = base + (0x1000 | (6UL << 2));
-> +       ap->ioaddr.ctl_addr             = base + (0x1000 | (6UL << 2));
-> +
-> +       ata_port_desc(ap, "  cmd 0x%lx ctl 0x%lx", (unsigned long)base,
-> +                     (unsigned long)ap->ioaddr.ctl_addr);
-
-These two printed addresses are virtual addresses.
-However, due to the use of a cast instead of ioremap(), they are identical.
-Still, I think it is better to print board + WARP_OFFSET_ATA and
-board + WARP_OFFSET_ATA + 0x1000 | (6UL << 2) instead.
-
-> +
-> +       return ata_host_activate(host, 0, NULL,
-> +                         IRQF_SHARED, &pata_cswarp_sht);
-> +}
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Honestly i don't follow you here, but i'll ioremap() and send a v4.
+-- 
+bye,
+p.
