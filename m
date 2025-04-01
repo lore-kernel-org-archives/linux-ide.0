@@ -1,151 +1,113 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21C8B1DB12C
-	for <linux-ide@vger.kernel.org>; Mon, 31 Mar 2025 21:45:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC1913595D;
+	Tue,  1 Apr 2025 01:12:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743457550; cv=none; b=tVqV5UETIyYtvbcvqd9ox9XiQCT/LW640Q27VqyXhUMYtrHwD1fOVLAFI2ys2pfGJx9rmgrIL84Ylc/yI+r3OZVnQKYTq6vyzC36BCNnhhy7NeDvZVAaHoNn/dbo4Cysy92y1Aysw3JfFYVVkbjxYVuAT+d4imfc2R6ajYC2miA=
+	t=1743469958; cv=none; b=ko3S/7l0n6H6Ytc+PSkftHvh/ncgrTh8NnD5PCR/gCoSnRbRajCWfLEDKMEXTHP1c1r/o5aAGIPdGDlFCJMKByC1yaPcHwjFQQQ42WvE8p8rylsJNLxdQ4rnXWArCGKFCc9YSEN5DemD4kyW1hwVhGn7lSQSyqz7DUJwoOf1/fw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743457550; c=relaxed/simple;
-	bh=5Idp/e1CX6KvP46H/IAQSzNlFEJZHJleXvMU+UGEsKY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MguGCs6JeHSZbLa3Eb4i7R4NVF090rw2bvN2ciL2F53ja8o8ep85vMrW2PKaRDUrJBjEsWSKqXtD7RuwL4ZbSpy4Wpwvo8fd8Cm4xtDSlrLXDuoFRqJmxg+uJP4DKUAuJqUl+NM2Db/FS8brrSUt6/pvGw3ebmck1KZqdbrTMyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com; spf=pass smtp.mailfrom=cloud.com; dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b=hYn56Aiy; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cloud.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b="hYn56Aiy"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-43cf3192f3bso49503755e9.1
-        for <linux-ide@vger.kernel.org>; Mon, 31 Mar 2025 14:45:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=citrix.com; s=google; t=1743457546; x=1744062346; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=mlR2/wtGl27sbeVJieM7lcGEWWY98/3HknehfYFQ3N0=;
-        b=hYn56Aiyv02GdoPo4uBxbrlSGBdGlo4UgbwTUBDbw47O/0LcemMuI87AokxOcGJGdn
-         0e39lV85rffVM8FNIbbgBJ69W9BbIL4mmodsu36fr9Z3QVXKnItvyCzxM8ajdlDib5Z4
-         oBoYsA+pEJuUCgXPLyAQ3Sgu03XmGCTzJ/qNc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743457546; x=1744062346;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mlR2/wtGl27sbeVJieM7lcGEWWY98/3HknehfYFQ3N0=;
-        b=o+QoFRpQPZVIYKKohhil8NBjsDsBTOVIZDJXh9TUdVdxZP8NrE06t3VYW+Ruy+YgGT
-         RfYBzJ/Hh8a6LKdiBFBAlt26YOXx3J+CoTTocYOXrF2S9Lh9nMtZ09ARpOBemsWwRtNe
-         OhwEo8NFqhUBcsmun6dBp3Gd8+GhOeoxE0/jp212GjN6gy/oB/10zLia66YbNTqd3sY2
-         RGI5gkF40nMhxUH2enJFLsier32iNGG9lSmzNFrhLW0Zx/2dBWLS5DS4iOV5sOUERkjF
-         7Up4kCIO6U+HoiC+oq5y0TWCYH/7RHTw21aifRZ7AFEZzNR/QmARXBZoIjQ72nD5fy0g
-         t/3w==
-X-Forwarded-Encrypted: i=1; AJvYcCVpPjtbPV95KJFxNK+hOtDaSUWlJOhODp3RsukgKnoTzZlnhys1fQyp6CTHu4YSvhG8EdmwHwUZaHE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJZ/rpjokHSzrc47QyyP4iMGLS4XOPFao4QYA9S3ItQX3uxawp
-	yq9Y3mVleOyUf17HcgIRGk6LHWc/97gbDy+0V53mwqq/aLNWQr7ZFg3DJ4NCQws=
-X-Gm-Gg: ASbGncu9Fga6f9+DTTZxZ5k/74WNRgIzcVYGZNauaY9E3LsLyJ3CIeu41a8j8fTzsQ4
-	v1lqHI/2f3uIWvjY7jYNAStd29b4e2O2r953Zvo1Qqc3MN5BdJI0k7E9m/P6Hn9AGuJdaZh92MO
-	THrLTefSBR9cqMYsBA3uGoq0mBOS9FvVEVRc8CFCyv5OCw9A8ly2q/Tmi65Uf2KYPtedz9Q2z2E
-	vZ5ft2DxZ2dBGWQqQlYZ0u1ie6a2pfPMDPhHK7c6i/JeabVqmmYfEjjl6pp86/q13TQ9mN5IEur
-	qqRMYzHS5Bu2JMTijRigj7T9zKKhM9MlJ4t1z00Mpv+MQpbCPTJyrN4nGMWS/aXg5ioSe50BcEf
-	3QKqaH9bsFw==
-X-Google-Smtp-Source: AGHT+IEht0ibCOVwapLKQorYkWh1tvEc+BCDGhekq3S+vwpg3hG7nDeUzCkmGMWNB+hguSfQi069kg==
-X-Received: by 2002:a05:600c:314b:b0:43c:ea1a:720c with SMTP id 5b1f17b1804b1-43db624b452mr113357845e9.18.1743457546422;
-        Mon, 31 Mar 2025 14:45:46 -0700 (PDT)
-Received: from [192.168.1.183] (host-92-26-98-202.as13285.net. [92.26.98.202])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d82efeacasm177430295e9.23.2025.03.31.14.45.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 31 Mar 2025 14:45:45 -0700 (PDT)
-Message-ID: <0da43a86-81b0-4388-b47b-3a76b15f2a4c@citrix.com>
-Date: Mon, 31 Mar 2025 22:45:43 +0100
+	s=arc-20240116; t=1743469958; c=relaxed/simple;
+	bh=QtIuonNZCyJriEnhzrJtYOm/gXlIyDoxYmcdYo2eO+8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=jIFFRyMsu7GXc4OeF2FTOKEvX1FZ6nqjiqysgqG6Ei+Io9hMVHpr1CmehUqGYmB01zeU8ktfxbQhqPzql/O/EjG8dEHxYh/mHqWS1/BXqNJ12+tXm0SEOZ7TD69nPy1M/zgoVMpb397eE3uZ0y8doxsx94MzLSe6l5k/Lb3dFZc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4ZRVJS1pH9z2CdS4;
+	Tue,  1 Apr 2025 09:09:12 +0800 (CST)
+Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
+	by mail.maildlp.com (Postfix) with ESMTPS id B678A1400F4;
+	Tue,  1 Apr 2025 09:12:31 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 1 Apr 2025 09:12:31 +0800
+Message-ID: <34a6208e-2802-8e3f-1a4d-92919407e7a8@huawei.com>
+Date: Tue, 1 Apr 2025 09:12:30 +0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v1 01/15] x86/msr: Replace __wrmsr() with
- native_wrmsrl()
-To: "Xin Li (Intel)" <xin@zytor.com>, linux-kernel@vger.kernel.org,
- linux-perf-users@vger.kernel.org, linux-hyperv@vger.kernel.org,
- virtualization@lists.linux.dev, linux-edac@vger.kernel.org,
- kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
- linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, bpf@vger.kernel.org,
- llvm@lists.linux.dev
-Cc: tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
- dave.hansen@linux.intel.com, x86@kernel.org, hpa@zytor.com, jgross@suse.com,
- peterz@infradead.org, acme@kernel.org, namhyung@kernel.org,
- mark.rutland@arm.com, alexander.shishkin@linux.intel.com, jolsa@kernel.org,
- irogers@google.com, adrian.hunter@intel.com, kan.liang@linux.intel.com,
- wei.liu@kernel.org, ajay.kaher@broadcom.com, alexey.amakhalov@broadcom.com,
- bcm-kernel-feedback-list@broadcom.com, tony.luck@intel.com,
- pbonzini@redhat.com, vkuznets@redhat.com, seanjc@google.com,
- luto@kernel.org, boris.ostrovsky@oracle.com, kys@microsoft.com,
- haiyangz@microsoft.com, decui@microsoft.com
-References: <20250331082251.3171276-1-xin@zytor.com>
- <20250331082251.3171276-2-xin@zytor.com>
-Content-Language: en-GB
-From: Andrew Cooper <andrew.cooper3@citrix.com>
-Autocrypt: addr=andrew.cooper3@citrix.com; keydata=
- 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
- 6+ahAA==
-In-Reply-To: <20250331082251.3171276-2-xin@zytor.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH 1/5] scsi: hisi_sas: Add host_tagset_enable module param
+ for v3 hw
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, Yihang Li <liyihang9@huawei.com>,
+	<martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <prime.zeng@hisilicon.com>,
+	<linux-ide@vger.kernel.org>
+References: <20250329073236.2300582-1-liyihang9@huawei.com>
+ <20250329073236.2300582-2-liyihang9@huawei.com>
+ <f53505e6-9bfa-4553-91cc-497512a6977f@oracle.com>
+ <e5ab4e5a-33d0-6102-1c5c-f1f83a752346@huawei.com>
+ <c60bb344-5ac1-4e6a-b68c-217c403f7017@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <c60bb344-5ac1-4e6a-b68c-217c403f7017@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepemh500017.china.huawei.com (7.202.181.151) To
+ kwepemg100017.china.huawei.com (7.202.181.58)
 
-On 31/03/2025 9:22 am, Xin Li (Intel) wrote:
-> __wrmsr() is the lowest level primitive MSR write API, and its direct
-> use is NOT preferred.  Use its wrapper function native_wrmsrl() instead.
->
-> No functional change intended.
->
-> Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+On 2025/3/31 15:43, John Garry wrote:
+> On 29/03/2025 09:49, yangxingui wrote:
+>> Hi，John
+>>
+>> On 2025/3/29 16:50, John Garry wrote:
+>>> On 29/03/2025 07:32, Yihang Li wrote:
+>>>
+>>> +
+>>>
+>>>> From: Xingui Yang<yangxingui@huawei.com>
+>>>>
+>>>> After driver exposes all HW queues and application submits IO to 
+>>>> multiple
+>>>> queues in parallel, if NCQ and non-NCQ commands are mixed to sata disk,
+>>>> ata_qc_defer() causes non-NCQ commands to be requeued and possibly 
+>>>> repeated
+>>>> forever.
+>>>
+>>> I don't think that it is a good idea to mask out bugs with module 
+>>> parameters.
+>>>
+>>> Was this the same libata/libsas issue reported some time ago?
+>>
+>> Yeah，related to this issue: https://lore.kernel.org/linux-block/ 
+>> eef1e927-c9b2-c61d-7f48-92e65d8b0418@huawei.com/
+>>
+>> And, Niklas tried to help fix this problem: https://lore.kernel.org/ 
+>> linux-scsi/ZynmfyDA9R-lrW71@ryzen/
+>>
+>> Considering that there is no formal solution yet. And our users rarely 
+>> use SATA disks and SAS disks together on a single machine. For this 
+>> reason, they can flexibly turn off the exposure of multiple queues in 
+>> the scenario of using only SATA disks. In addition, it is also 
+>> convenient to conduct performance comparison tests to expose multiple 
+>> hardware queues and single queues.
+>>
+> 
+> The change in this series does not even solve the issues, as:
+> - you do not guarantee no SAS/SATA mix without that module param enabled
+> - the driver still uses managed interrupts in both cases, so with 
+> disabling host_tagset you are now exposed to CPU hotplug issue of IO 
+> being in-flight when HW queue interrupt is shutdown
 
-The critical piece of information you're missing from the commit message
-is that the MSR_IMM instructions take a single u64.
+Yes, there will be such problems.
 
-Therefore to use them, you've got to arrange for all callers to provide
-a single u64, rather than a split u32 pair.
+> 
+> And pm8001 driver will have the same issue, so we need to find a proper 
+> fix.
+> 
+> Let me consider this issue more.
 
-~Andrew
+OK.
+
+Thanks,
+Xingui
+
+
