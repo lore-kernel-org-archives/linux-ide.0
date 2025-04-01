@@ -1,39 +1,33 @@
-Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB5F642052;
-	Tue,  1 Apr 2025 05:54:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5595BF4ED;
+	Tue,  1 Apr 2025 07:33:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743486877; cv=none; b=jqraQH8ZgKJKBr9zzy58IBiG9GLVukZBmmGPUxl0ZCqCbQLD9XeUVL46xVtMVe0cOzbF0P87v5U191qYJ0t+wd2lXQip6uZXMdC5UPCYBF+GieA8wxysWvaSNdpvuabI2hdAMg3wMyZHwTEjcRPOnGnwC1RyxkW/MoG8uxIpnh8=
+	t=1743492838; cv=none; b=hQIVxraIqo6jL1q8erLyXAiwxkDu7AACrrTVIBljns3CvYyb8skE/3aZ8VQSKChv2rKCwt1kHhlBTDbA1S0SyLI8yd+S4nAC7it7sA2bSxDN9f4Mt+0B+6ASmeznSznQzTnidAASFbiheL8BL2eQdW9/5J5/A29O/oLG+9qfUEI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743486877; c=relaxed/simple;
-	bh=muRCcD6CdqjTJbWO6ypcG2B5pstkv7hwz4Gjs5E8a64=;
+	s=arc-20240116; t=1743492838; c=relaxed/simple;
+	bh=9fUSX84AGTQwcS8mWrhm9T8v7ECk8LOkABdcYYwyGOs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZTXWvadwcBfMAVeIum3PT/KA9ho8/2f8Rc1rBry+jNZZYH5/ejX429sujiVV6JDy9PqvSjx8cQJJY71+ZIafMjV/gkwGpkMbZKCId+XSvN8xqAH4o+VDIRbCURG2G3Anude0/dRCxR9J/bpUufE66VuWdVij4cP2NP5yWed7eNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=mCuaWYHp; arc=none smtp.client-ip=198.137.202.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+	 In-Reply-To:Content-Type; b=DZRSPvMnLBoh5hdsIQDH+8FMSL5KYPJly3rJ29dsHN5rfpgxhPTk0zM9EFzSQXw8XkEk9OmpDvjgX3+plbkNHZEbpcokhC96QtVFbfbprbgRrSkRTJ9Crpr4p99vCaLljzaocSHohROXmvssmnvPVAjnLcit/s6VXuGJlulr21U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FawODzXY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="mCuaWYHp"
-Received: from [192.168.7.202] ([71.202.166.45])
-	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 5315rnna3585174
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Mon, 31 Mar 2025 22:53:50 -0700
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 5315rnna3585174
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2025032001; t=1743486833;
-	bh=IsfDg+Xsar+P1dKxOMDHesRyrvTgpQ4ZnItmblKhbNo=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FawODzXY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38D34C4CEE8;
+	Tue,  1 Apr 2025 07:33:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1743492836;
+	bh=9fUSX84AGTQwcS8mWrhm9T8v7ECk8LOkABdcYYwyGOs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=mCuaWYHpnRlQenAgliGLWATiV5WBBr6xjToONzu4sHItD9CcH/Hn50bDSEPtXNZHr
-	 EmqrAKW9JffJBkWQby7YDNbuh5dAusXyZylpGe//cf2TIpo8U9KQTebtElsvd5V6YU
-	 HF8RdPMDVbhf6+t7dYSnb9ysczMAV1Fx5VJE/67I9mU0mkx81L5F9z8nRvdhiz9hLN
-	 sCK8LNjY5ocO9OXH0mW1yJE2ZnmLSV7SipWK2RChNsbc23C/QGRt/kc29IMVpQqyvo
-	 nZSU48inZXaexf0KV8NOAQgpc90SasTMpL5bfOFSYTA0+0PAcMy4DOrsLjm31CtW80
-	 qxOV8xFK/xmlw==
-Message-ID: <a0254e73-bf7c-4876-b64e-b08e96044666@zytor.com>
-Date: Mon, 31 Mar 2025 22:53:49 -0700
+	b=FawODzXYTMWU4tidl5y+TsTAlyiI2AKo+n58vHlgYAwJ+uGXZpaH2hOMsqCLA2SQc
+	 1qY/Me+zqIEwYwFng50JQqDAr8f8SzDUl279pTrGqNny+XaTvj1lAMZ/i7Uep1061b
+	 0mxRfKl6bTjitBh+895fngPQ891yHIO1OWuQC1rEs0C82MW+BtdkwPJlieUhySBdaU
+	 axIR37GP0UNBhmVm7uNm0sGKc6UvCFG8LlekIzz7YzGrqBskraN2lQiGIycN932aGf
+	 H20JCdhSh9xBGqQW1fdRA5kmGHojsfVoiVdZMVxhO67CnMYn5dOzBmPp+2Ttu4GUXz
+	 H2FuMjscl+K/A==
+Message-ID: <93ec66ce-4fa3-4913-a0b5-9debe47ef8b0@kernel.org>
+Date: Tue, 1 Apr 2025 16:33:55 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -41,112 +35,144 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v1 01/15] x86/msr: Replace __wrmsr() with
- native_wrmsrl()
-To: "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, virtualization@lists.linux.dev,
-        linux-edac@vger.kernel.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-ide@vger.kernel.org,
-        linux-pm@vger.kernel.org, bpf@vger.kernel.org, llvm@lists.linux.dev,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-        dave.hansen@linux.intel.com, x86@kernel.org, jgross@suse.com,
-        andrew.cooper3@citrix.com, peterz@infradead.org, acme@kernel.org,
-        namhyung@kernel.org, mark.rutland@arm.com,
-        alexander.shishkin@linux.intel.com, jolsa@kernel.org,
-        irogers@google.com, adrian.hunter@intel.com, kan.liang@linux.intel.com,
-        wei.liu@kernel.org, ajay.kaher@broadcom.com,
-        alexey.amakhalov@broadcom.com, bcm-kernel-feedback-list@broadcom.com,
-        tony.luck@intel.com, pbonzini@redhat.com, vkuznets@redhat.com,
-        seanjc@google.com, luto@kernel.org, boris.ostrovsky@oracle.com,
-        kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com
-References: <20250331082251.3171276-1-xin@zytor.com>
- <20250331082251.3171276-2-xin@zytor.com> <Z-pruogreCuU66wm@gmail.com>
- <9D15DE81-2E68-4FCD-A133-4963602E18C9@zytor.com>
+Subject: Re: [PATCH] ata: libata-scsi: Set INFORMATION sense data field
+ consistently
+To: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250328183047.2132370-1-ipylypiv@google.com>
 Content-Language: en-US
-From: Xin Li <xin@zytor.com>
-Autocrypt: addr=xin@zytor.com; keydata=
- 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
- l75w1xInsg==
-In-Reply-To: <9D15DE81-2E68-4FCD-A133-4963602E18C9@zytor.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20250328183047.2132370-1-ipylypiv@google.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/31/2025 1:32 PM, H. Peter Anvin wrote:
-> On March 31, 2025 3:17:30 AM PDT, Ingo Molnar <mingo@kernel.org> wrote:
->>
->> * Xin Li (Intel) <xin@zytor.com> wrote:
->>
->>> -	__wrmsr      (MSR_AMD_DBG_EXTN_CFG, val | 3ULL << 3, val >> 32);
->>> +	native_wrmsrl(MSR_AMD_DBG_EXTN_CFG, val | 3ULL << 3);
->>
->> This is an improvement.
->>
->>> -	__wrmsr      (MSR_IA32_PQR_ASSOC, rmid_p, plr->closid);
->>> +	native_wrmsrl(MSR_IA32_PQR_ASSOC, (u64)plr->closid << 32 | rmid_p);
->>
->>> -	__wrmsr      (MSR_IA32_PQR_ASSOC, rmid_p, closid_p);
->>> +	native_wrmsrl(MSR_IA32_PQR_ASSOC, (u64)closid_p << 32 | rmid_p);
->>
->> This is not an improvement.
->>
->> Please provide a native_wrmsrl() API variant where natural [rmid_p, closid_p]
->> high/lo parameters can be used, without the shift-uglification...
->>
->> Thanks,
->>
->> 	Ingo
+On 3/29/25 03:30, Igor Pylypiv wrote:
+> Populate the INFORMATION field with ATA LBA when sense data is obtained
+> by the ata_eh_request_sense(). Kernel already populates the INFORMATION
+
+s/by the/with
+s/Kernel/The kernel or s/Kernel/libata-eh
+
+> field when sense data is reported via autosense or when it is generated
+> by the ata_gen_ata_sense().
 > 
-> Directing this question primarily to Ingo, who is more than anyone else the namespace consistency guardian:
-> 
-> On the subject of msr function naming ... *msrl() has always been misleading. The -l suffix usually means 32 bits; sometimes it means the C type "long" (which in the kernel is used instead of size_t/uintptr_t, which might end up being "fun" when 128-bit architectures appear some time this century), but for a fixed 64-but type we normally use -q.
-> 
-> Should we rename the *msrl() functions to *msrq() as part of this overhaul?
-> 
+> ATA PASS-THROUGH commands, unlike regular ATA commands, populate
+> the INFORMATION field with ATA ERROR, STATUS, DEVICE, and COUNT(7:0)
+> fields thus setting ATA LBA into the INFORMATION field is incorrect.
 
-Per "struct msr" defined in arch/x86/include/asm/shared/msr.h:
+Could you rephrase all of this is a manner that is clearer ? That is, describe
+the problem first and then how you fix it. As-is, this is hard to understand.
 
-struct msr {
-         union {
-                 struct {
-                         u32 l;
-                         u32 h;
-                 };
-                 u64 q;
-         };
-};
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 2796c0da8257..7e93581439b2 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -216,17 +216,30 @@ void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
+>  	scsi_build_sense(cmd, d_sense, sk, asc, ascq);
+>  }
+>  
+> -void ata_scsi_set_sense_information(struct ata_device *dev,
+> -				    struct scsi_cmnd *cmd,
+> -				    const struct ata_taskfile *tf)
+> +/**
+> + *	ata_scsi_set_sense_information - Populate INFORMATION field
+> + *	@qc: ATA command
+> + *
+> + *	Populates the INFORMATION field with ATA LBA.
+> + *
+> + *	LOCKING:
+> + *	None.
+> + */
 
-Probably *msrq() is what we want?
+The function name is clear enough. We do not need this kdoc block to clarify it
+and this is a static function anyway.
+
+> +static void ata_scsi_set_sense_information(struct ata_queued_cmd *qc)
+>  {
+>  	u64 information;
+>  
+> -	information = ata_tf_read_block(tf, dev);
+> +	if (!(qc->flags & ATA_QCFLAG_RTF_FILLED)) {
+> +		ata_dev_dbg(qc->dev,
+> +			    "missing result TF: can't set INFORMATION sense field\n");
+
+Why ata_dev_dbg() ? This should be ata_dev_err(), no ? With your change, this is
+not supposed to be called without the rtf filled...
+
+> +		return;
+> +	}
+> +
+> +	information = ata_tf_read_block(&qc->result_tf, qc->dev);
+>  	if (information == U64_MAX)
+>  		return;
+>  
+> -	scsi_set_sense_information(cmd->sense_buffer,
+> +	scsi_set_sense_information(qc->scsicmd->sense_buffer,
+>  				   SCSI_SENSE_BUFFERSIZE, information);
+>  }
+>  
+> @@ -971,8 +984,7 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+>   *	ata_gen_ata_sense - generate a SCSI fixed sense block
+>   *	@qc: Command that we are erroring out
+>   *
+> - *	Generate sense block for a failed ATA command @qc.  Descriptor
+> - *	format is used to accommodate LBA48 block address.
+> + *	Generate sense block for a failed ATA command @qc.
+>   *
+>   *	LOCKING:
+>   *	None.
+> @@ -982,8 +994,6 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
+>  	struct ata_device *dev = qc->dev;
+>  	struct scsi_cmnd *cmd = qc->scsicmd;
+>  	struct ata_taskfile *tf = &qc->result_tf;
+> -	unsigned char *sb = cmd->sense_buffer;
+> -	u64 block;
+>  	u8 sense_key, asc, ascq;
+>  
+>  	if (ata_dev_disabled(dev)) {
+> @@ -1014,12 +1024,6 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
+>  		ata_scsi_set_sense(dev, cmd, ABORTED_COMMAND, 0, 0);
+>  		return;
+>  	}
+> -
+> -	block = ata_tf_read_block(&qc->result_tf, dev);
+> -	if (block == U64_MAX)
+> -		return;
+> -
+> -	scsi_set_sense_information(sb, SCSI_SENSE_BUFFERSIZE, block);
+>  }
+>  
+>  void ata_scsi_sdev_config(struct scsi_device *sdev)
+> @@ -1679,8 +1683,10 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>  		ata_scsi_set_passthru_sense_fields(qc);
+>  		if (is_ck_cond_request)
+>  			set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
+> -	} else if (is_error && !have_sense) {
+> -		ata_gen_ata_sense(qc);
+> +	} else if (is_error) {
+> +		if (!have_sense)
+> +			ata_gen_ata_sense(qc);
+> +		ata_scsi_set_sense_information(qc);
+>  	}
+>  
+>  	ata_qc_done(qc);
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index 0337be4faec7..ce5c628fa6fd 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -141,9 +141,6 @@ extern int ata_scsi_offline_dev(struct ata_device *dev);
+>  extern bool ata_scsi_sense_is_valid(u8 sk, u8 asc, u8 ascq);
+>  extern void ata_scsi_set_sense(struct ata_device *dev,
+>  			       struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq);
+> -extern void ata_scsi_set_sense_information(struct ata_device *dev,
+> -					   struct scsi_cmnd *cmd,
+> -					   const struct ata_taskfile *tf);
+>  extern void ata_scsi_media_change_notify(struct ata_device *dev);
+>  extern void ata_scsi_hotplug(struct work_struct *work);
+>  extern void ata_scsi_dev_rescan(struct work_struct *work);
 
 
+-- 
+Damien Le Moal
+Western Digital Research
