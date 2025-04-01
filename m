@@ -1,113 +1,90 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC1913595D;
-	Tue,  1 Apr 2025 01:12:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DEE72111;
+	Tue,  1 Apr 2025 05:14:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743469958; cv=none; b=ko3S/7l0n6H6Ytc+PSkftHvh/ncgrTh8NnD5PCR/gCoSnRbRajCWfLEDKMEXTHP1c1r/o5aAGIPdGDlFCJMKByC1yaPcHwjFQQQ42WvE8p8rylsJNLxdQ4rnXWArCGKFCc9YSEN5DemD4kyW1hwVhGn7lSQSyqz7DUJwoOf1/fw=
+	t=1743484487; cv=none; b=hBAw7NTPUhfNdr7XVIeWtaQrX1z2t6Hc9jY6au2QNENDzziCJ5/xL1ajM/tY8gXtZM9ajoGapG4J3VXFEkWgwcVIOUslmWV2zTWFd4ayKqDbvB4M71V+j3ect0GtymkKjuVMpGN/UluJuyc00r7TlPdSViPbjq2cNNIfQ5j5DGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743469958; c=relaxed/simple;
-	bh=QtIuonNZCyJriEnhzrJtYOm/gXlIyDoxYmcdYo2eO+8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=jIFFRyMsu7GXc4OeF2FTOKEvX1FZ6nqjiqysgqG6Ei+Io9hMVHpr1CmehUqGYmB01zeU8ktfxbQhqPzql/O/EjG8dEHxYh/mHqWS1/BXqNJ12+tXm0SEOZ7TD69nPy1M/zgoVMpb397eE3uZ0y8doxsx94MzLSe6l5k/Lb3dFZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4ZRVJS1pH9z2CdS4;
-	Tue,  1 Apr 2025 09:09:12 +0800 (CST)
-Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
-	by mail.maildlp.com (Postfix) with ESMTPS id B678A1400F4;
-	Tue,  1 Apr 2025 09:12:31 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 1 Apr 2025 09:12:31 +0800
-Message-ID: <34a6208e-2802-8e3f-1a4d-92919407e7a8@huawei.com>
-Date: Tue, 1 Apr 2025 09:12:30 +0800
+	s=arc-20240116; t=1743484487; c=relaxed/simple;
+	bh=L4FrkKu0168YmHHVcoVFsbWR9Sf3R8pkxT3Lnke5KJM=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=kq0BZkUZj+rKs/heVI0z4MoitmLUM28mox3pFFb+vX5ZSVpSDbdu5AP8n2zA4s8WbQ+A77+l4VWlPn3qdUUDUjaRrK1s6gpQA3wBzmYVqMI7zCN7UXOzu1XLdm0L3AWrACoKkoVZL8dZ9QgH/XAmtFSBLCHLUyhmDQbvxiZZgZc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=kDAtkLct; arc=none smtp.client-ip=198.137.202.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="kDAtkLct"
+Received: from [127.0.0.1] ([76.133.66.138])
+	(authenticated bits=0)
+	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 5315DrPW3571921
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
+	Mon, 31 Mar 2025 22:13:53 -0700
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 5315DrPW3571921
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
+	s=2025032001; t=1743484436;
+	bh=fXArKFGaxt8nFnaWBdSW+pU45Be8cuJJXPIK/BFyt00=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+	b=kDAtkLct4ESsM95J+GAXm6Ip9nS2vCeNnpZd5bqqzetTLzyI1dGpO4FHTdCywuUb7
+	 WGNeXx4i+jLpuQrfsgKmAO//REzlRpcJIhlg3BiQafg1GzI6ikQM3j7rveeHHx8qEQ
+	 CWx/fzNgtVCbn/YdOsKRTX3+ivqNDh7QpvYGnD8XTDDfehr8TQnDZRQ5T6cB2w2NXq
+	 sNL/9PBtrg1oFPYF0fJT9aZRbEjTs4UCCHnnJFtzzQgDFxprnhDKMIRSwjt3dTD6q1
+	 Lo7DVLOnslrIY9K+rdbbOdFCWR3dM3o3/+miqBEdIWuSpByt20GZTiNiujHjtNVCBm
+	 M4aSJPmJLqUXA==
+Date: Mon, 31 Mar 2025 22:13:51 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
+To: Andrew Cooper <andrew.cooper3@citrix.com>,
+        "Xin Li (Intel)" <xin@zytor.com>, linux-kernel@vger.kernel.org,
+        linux-perf-users@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        virtualization@lists.linux.dev, linux-edac@vger.kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-ide@vger.kernel.org, linux-pm@vger.kernel.org,
+        bpf@vger.kernel.org, llvm@lists.linux.dev
+CC: tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+        dave.hansen@linux.intel.com, x86@kernel.org, jgross@suse.com,
+        peterz@infradead.org, acme@kernel.org, namhyung@kernel.org,
+        mark.rutland@arm.com, alexander.shishkin@linux.intel.com,
+        jolsa@kernel.org, irogers@google.com, adrian.hunter@intel.com,
+        kan.liang@linux.intel.com, wei.liu@kernel.org, ajay.kaher@broadcom.com,
+        alexey.amakhalov@broadcom.com, bcm-kernel-feedback-list@broadcom.com,
+        tony.luck@intel.com, pbonzini@redhat.com, vkuznets@redhat.com,
+        seanjc@google.com, luto@kernel.org, boris.ostrovsky@oracle.com,
+        kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com
+Subject: =?US-ASCII?Q?Re=3A_=5BRFC_PATCH_v1_01/15=5D_x86/msr=3A_Re?=
+ =?US-ASCII?Q?place_=5F=5Fwrmsr=28=29_with_native=5Fwrmsrl=28=29?=
+User-Agent: K-9 Mail for Android
+In-Reply-To: <0da43a86-81b0-4388-b47b-3a76b15f2a4c@citrix.com>
+References: <20250331082251.3171276-1-xin@zytor.com> <20250331082251.3171276-2-xin@zytor.com> <0da43a86-81b0-4388-b47b-3a76b15f2a4c@citrix.com>
+Message-ID: <03874E9B-FAEB-4ACA-B13D-0BED7D54F443@zytor.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH 1/5] scsi: hisi_sas: Add host_tagset_enable module param
- for v3 hw
-Content-Language: en-CA
-To: John Garry <john.g.garry@oracle.com>, Yihang Li <liyihang9@huawei.com>,
-	<martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <prime.zeng@hisilicon.com>,
-	<linux-ide@vger.kernel.org>
-References: <20250329073236.2300582-1-liyihang9@huawei.com>
- <20250329073236.2300582-2-liyihang9@huawei.com>
- <f53505e6-9bfa-4553-91cc-497512a6977f@oracle.com>
- <e5ab4e5a-33d0-6102-1c5c-f1f83a752346@huawei.com>
- <c60bb344-5ac1-4e6a-b68c-217c403f7017@oracle.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <c60bb344-5ac1-4e6a-b68c-217c403f7017@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepemh500017.china.huawei.com (7.202.181.151) To
- kwepemg100017.china.huawei.com (7.202.181.58)
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On 2025/3/31 15:43, John Garry wrote:
-> On 29/03/2025 09:49, yangxingui wrote:
->> Hi，John
+On March 31, 2025 2:45:43 PM PDT, Andrew Cooper <andrew=2Ecooper3@citrix=2E=
+com> wrote:
+>On 31/03/2025 9:22 am, Xin Li (Intel) wrote:
+>> __wrmsr() is the lowest level primitive MSR write API, and its direct
+>> use is NOT preferred=2E  Use its wrapper function native_wrmsrl() inste=
+ad=2E
 >>
->> On 2025/3/29 16:50, John Garry wrote:
->>> On 29/03/2025 07:32, Yihang Li wrote:
->>>
->>> +
->>>
->>>> From: Xingui Yang<yangxingui@huawei.com>
->>>>
->>>> After driver exposes all HW queues and application submits IO to 
->>>> multiple
->>>> queues in parallel, if NCQ and non-NCQ commands are mixed to sata disk,
->>>> ata_qc_defer() causes non-NCQ commands to be requeued and possibly 
->>>> repeated
->>>> forever.
->>>
->>> I don't think that it is a good idea to mask out bugs with module 
->>> parameters.
->>>
->>> Was this the same libata/libsas issue reported some time ago?
+>> No functional change intended=2E
 >>
->> Yeah，related to this issue: https://lore.kernel.org/linux-block/ 
->> eef1e927-c9b2-c61d-7f48-92e65d8b0418@huawei.com/
->>
->> And, Niklas tried to help fix this problem: https://lore.kernel.org/ 
->> linux-scsi/ZynmfyDA9R-lrW71@ryzen/
->>
->> Considering that there is no formal solution yet. And our users rarely 
->> use SATA disks and SAS disks together on a single machine. For this 
->> reason, they can flexibly turn off the exposure of multiple queues in 
->> the scenario of using only SATA disks. In addition, it is also 
->> convenient to conduct performance comparison tests to expose multiple 
->> hardware queues and single queues.
->>
-> 
-> The change in this series does not even solve the issues, as:
-> - you do not guarantee no SAS/SATA mix without that module param enabled
-> - the driver still uses managed interrupts in both cases, so with 
-> disabling host_tagset you are now exposed to CPU hotplug issue of IO 
-> being in-flight when HW queue interrupt is shutdown
+>> Signed-off-by: Xin Li (Intel) <xin@zytor=2Ecom>
+>
+>The critical piece of information you're missing from the commit message
+>is that the MSR_IMM instructions take a single u64=2E
+>
+>Therefore to use them, you've got to arrange for all callers to provide
+>a single u64, rather than a split u32 pair=2E
+>
+>~Andrew
 
-Yes, there will be such problems.
-
-> 
-> And pm8001 driver will have the same issue, so we need to find a proper 
-> fix.
-> 
-> Let me consider this issue more.
-
-OK.
-
-Thanks,
-Xingui
-
-
+That being said, there is nothing wrong with having a two-word convenience=
+ wrapper=2E
