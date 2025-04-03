@@ -1,48 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE2BA2673A0;
-	Thu,  3 Apr 2025 19:05:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8692571BD;
+	Thu,  3 Apr 2025 19:06:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743707129; cv=none; b=lV6xaGwTWptQVocSHQWaRhpY15GnGKSSvk4CTwwT6BVVviTZv5+ecgXiEBNOFbwsC4Mw3uZu/cCpSJfA/7Oh2BCi7Uo5SFWNvgs5mxmvjeOl4QBFv1oyWch7obyUy+v+BZcsgLf62dGMlVlg0Rbci/F8I9Odr30x9q02wa9ugkU=
+	t=1743707170; cv=none; b=RTZN7+t5cqvUPhG8DOk5on11TUjriA+99Tady21tJ0i+aEfkYj+YHwC/RpsNCgVpPldvGbLN500luQw49kAzkxP6WbI/l2sxeW8Aa0wOWeg88PMdV3Mx3o07H3GBQMgWUNPdKx0oUJduLc1en/sS+6b0WK3AEgqoy50Y/OxBNTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743707129; c=relaxed/simple;
-	bh=3J3hZkM/SZWxNodO3DllCHKUec55Vmh7HqP/UlOs3lI=;
+	s=arc-20240116; t=1743707170; c=relaxed/simple;
+	bh=VXmZH9V6z/axWCJeBB01zjQefHERyCjM+PgwTOtgH/s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=s7P3SZFfCBD0FSE7LerklYo3EhW+CVCNssMW/xUJR6TLeZG55EPQzv9lLV0qaIgl/Ti/aKrd85byhkk8bEb8QxR5YzArIFkoBMntfLPmMuZWqjOjHZOSxTHYnaGFx5kNrlzEcRVf7kUIa7i/2ragA+5APZNhC3Z3vH5aN9pvFnc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BtmjMxlc; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=eaK3gOxKfVffdLflJ1+e6ndumH2vGSXkZ9HTT0FVBs4CFCgN6r6ZPueRBVYt+U8J/xDXuAhQhoNonzG8u6t12lSnsMmfXjL0iFQl3Ww9vpnfho+o2ac31lmyolqVg0NzLwpLPpw7ZF4R+y4DU0gX2D76fXT8af8zySLzUInajfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qFfutzwx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BtmjMxlc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 791E1C4CEE3;
-	Thu,  3 Apr 2025 19:05:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qFfutzwx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ADA0C4CEE3;
+	Thu,  3 Apr 2025 19:06:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743707129;
-	bh=3J3hZkM/SZWxNodO3DllCHKUec55Vmh7HqP/UlOs3lI=;
+	s=k20201202; t=1743707169;
+	bh=VXmZH9V6z/axWCJeBB01zjQefHERyCjM+PgwTOtgH/s=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=BtmjMxlcHDLmeY1uMu5dZ9Wmv6NAg8bkSkMLacUG577l5SNbFiT5oK2NNAW+rC6+/
-	 1MZkzwfZYkjCwIxrww/SK6JF+LcoqRkj3A9yddCCmeFXxq16t3w3fijYnFFHO1WXUB
-	 LviVSV6MQTpRdI/dEEPxNLDyG2BA+GYzAfppOCldRt4lia9lxjx/LqbHCfNnabSafc
-	 8tvqlmhu2ou8sH4D/TG/GvIfmjXKP3IBYxodhHTw61L9wlrHm19fcoQWCExfJkag+B
-	 ZaM0dZTUUSadUCiQwtAWSMCNfyjYQTqhwCMQEkbR4El+rZy94kkIzbAak1DrKcbmKu
-	 QK8sovIPww5nA==
+	b=qFfutzwxkTEV2QxibpFIQkGBzX7Jb0CwZWHGgLVUv9EooCLeu2nMA9hpp5vAH+5lw
+	 KG8UYoWVcShJeH+qMBJhO963DCrpnEFlNVKeocP7MHXNZyJ9/eoUvNkJDp7/lVzRfD
+	 4RYtPJkXH8CsCcUue8rB5rhNZV5HwlACvd8s3xYB8WGsrplUbGW8SmBxxPLByuNgjX
+	 +UxrHYSFIbFiyFwD/5sEMgGWAKFxCOTtDsn1ayEYu4eK0EV2/Vg8omzpfKuVS2Xmit
+	 bUyqTwmRc+qU5+mJ8ycqT6E4OJ6lJ0rztXrDGeldRrS3o5fiShJV7BVS2zQQDAG2JT
+	 F8OqlQlB2R91w==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Huacai Chen <chenhuacai@loongson.cn>,
-	Yuli Wang <wangyuli@uniontech.com>,
-	Jie Fan <fanjie@uniontech.com>,
-	Erpeng Xu <xuerpeng@uniontech.com>,
-	Niklas Cassel <cassel@kernel.org>,
+Cc: Niklas Cassel <cassel@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
-	dlemoal@kernel.org,
+	corbet@lwn.net,
+	akpm@linux-foundation.org,
+	paulmck@kernel.org,
+	thuth@redhat.com,
+	rostedt@goodmis.org,
+	bp@alien8.de,
+	ardb@kernel.org,
+	gregkh@linuxfoundation.org,
+	linux-doc@vger.kernel.org,
 	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.13 35/49] ahci: Marvell 88SE9215 controllers prefer DMA for ATAPI
-Date: Thu,  3 Apr 2025 15:03:54 -0400
-Message-Id: <20250403190408.2676344-35-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 05/47] ata: libata-core: Add 'external' to the libata.force kernel parameter
+Date: Thu,  3 Apr 2025 15:05:13 -0400
+Message-Id: <20250403190555.2677001-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250403190408.2676344-1-sashal@kernel.org>
-References: <20250403190408.2676344-1-sashal@kernel.org>
+In-Reply-To: <20250403190555.2677001-1-sashal@kernel.org>
+References: <20250403190555.2677001-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -51,105 +56,143 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.13.9
+X-stable-base: Linux 6.12.21
 Content-Transfer-Encoding: 8bit
 
-From: Huacai Chen <chenhuacai@loongson.cn>
+From: Niklas Cassel <cassel@kernel.org>
 
-[ Upstream commit 0507c777f5d8f9e34b137d28ee263599a7b81242 ]
+[ Upstream commit deca423213cb33feda15e261e7b5b992077a6a08 ]
 
-We use CD/DVD drives under Marvell 88SE9215 SATA controller on many
-Loongson-based machines. We found its PIO doesn't work well, and on the
-opposite its DMA seems work very well.
+Commit ae1f3db006b7 ("ata: ahci: do not enable LPM on external ports")
+changed so that LPM is not enabled on external ports (hotplug-capable or
+eSATA ports).
 
-We don't know the detail of the 88SE9215 SATA controller, but we have
-tested different CD/DVD drives and they all have problems under 88SE9215
-(but they all work well under an Intel SATA controller). So, we consider
-this problem is bound to 88SE9215 SATA controller rather than bound to
-CD/DVD drives.
+This is because hotplug and LPM are mutually exclusive, see 7.3.1 Hot Plug
+Removal Detection and Power Management Interaction in AHCI 1.3.1.
 
-As a solution, we define a new dedicated AHCI board id which is named
-board_ahci_yes_fbs_atapi_dma for 88SE9215, and for this id we set the
-AHCI_HFLAG_ATAPI_DMA_QUIRK and ATA_QUIRK_ATAPI_MOD16_DMA flags on the
-SATA controller in order to prefer ATAPI DMA.
+This does require that firmware has set the appropate bits (HPCP or ESP)
+in PxCMD (which is a per port register in the AHCI controller).
 
-Reported-by: Yuli Wang <wangyuli@uniontech.com>
-Tested-by: Jie Fan <fanjie@uniontech.com>
-Tested-by: Erpeng Xu <xuerpeng@uniontech.com>
-Tested-by: Yuli Wang <wangyuli@uniontech.com>
-Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
-Link: https://lore.kernel.org/r/20250318104314.2160526-1-chenhuacai@loongson.cn
+If the firmware has failed to mark a port as hotplug-capable or eSATA in
+PxCMD, then there is currently not much a user can do.
+
+If LPM is enabled on the port, hotplug insertions and removals will not be
+detected on that port.
+
+In order to allow a user to fix up broken firmware, add 'external' to the
+libata.force kernel parameter.
+
+libata.force can be specified either on the kernel command line, or as a
+kernel module parameter.
+
+For more information, see Documentation/admin-guide/kernel-parameters.txt.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Link: https://lore.kernel.org/r/20250130133544.219297-4-cassel@kernel.org
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/ahci.c    | 11 ++++++++++-
- drivers/ata/ahci.h    |  1 +
- drivers/ata/libahci.c |  4 ++++
- 3 files changed, 15 insertions(+), 1 deletion(-)
+ .../admin-guide/kernel-parameters.txt         |  2 +
+ drivers/ata/libata-core.c                     | 38 +++++++++++++++++++
+ 2 files changed, 40 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index f4cc57d7a6a65..6e81fa91e858b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -63,6 +63,7 @@ enum board_ids {
- 	board_ahci_pcs_quirk_no_devslp,
- 	board_ahci_pcs_quirk_no_sntf,
- 	board_ahci_yes_fbs,
-+	board_ahci_yes_fbs_atapi_dma,
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index d401577b5a6ac..607a8937f1754 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3028,6 +3028,8 @@
+ 			* max_sec_lba48: Set or clear transfer size limit to
+ 			  65535 sectors.
  
- 	/* board IDs for specific chipsets in alphabetical order */
- 	board_ahci_al,
-@@ -188,6 +189,14 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
-+	[board_ahci_yes_fbs_atapi_dma] = {
-+		AHCI_HFLAGS	(AHCI_HFLAG_YES_FBS |
-+				 AHCI_HFLAG_ATAPI_DMA_QUIRK),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
- 	/* by chipsets */
- 	[board_ahci_al] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_MSI),
-@@ -590,7 +599,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
- 	  .driver_data = board_ahci_yes_fbs },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9215),
--	  .driver_data = board_ahci_yes_fbs },
-+	  .driver_data = board_ahci_yes_fbs_atapi_dma },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
- 	  .driver_data = board_ahci_yes_fbs },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 8f40f75ba08cf..10a5fe02f0a45 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -246,6 +246,7 @@ enum {
- 	AHCI_HFLAG_NO_SXS		= BIT(26), /* SXS not supported */
- 	AHCI_HFLAG_43BIT_ONLY		= BIT(27), /* 43bit DMA addr limit */
- 	AHCI_HFLAG_INTEL_PCS_QUIRK	= BIT(28), /* apply Intel PCS quirk */
-+	AHCI_HFLAG_ATAPI_DMA_QUIRK	= BIT(29), /* force ATAPI to use DMA */
- 
- 	/* ap->flags bits */
- 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index fdfa7b2662180..a28ffe1e59691 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1321,6 +1321,10 @@ static void ahci_dev_config(struct ata_device *dev)
- {
- 	struct ahci_host_priv *hpriv = dev->link->ap->host->private_data;
- 
-+	if ((dev->class == ATA_DEV_ATAPI) &&
-+	    (hpriv->flags & AHCI_HFLAG_ATAPI_DMA_QUIRK))
-+		dev->quirks |= ATA_QUIRK_ATAPI_MOD16_DMA;
++			* external: Mark port as external (hotplug-capable).
 +
- 	if (hpriv->flags & AHCI_HFLAG_SECT255) {
- 		dev->max_sectors = 255;
- 		ata_dev_info(dev,
+ 			* [no]lpm: Enable or disable link power management.
+ 
+ 			* [no]setxfer: Indicate if transfer speed mode setting
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c085dd81ebe7f..52b78d22c831a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -88,6 +88,7 @@ struct ata_force_param {
+ 	unsigned int	xfer_mask;
+ 	unsigned int	quirk_on;
+ 	unsigned int	quirk_off;
++	unsigned int	pflags_on;
+ 	u16		lflags_on;
+ 	u16		lflags_off;
+ };
+@@ -331,6 +332,35 @@ void ata_force_cbl(struct ata_port *ap)
+ 	}
+ }
+ 
++/**
++ *	ata_force_pflags - force port flags according to libata.force
++ *	@ap: ATA port of interest
++ *
++ *	Force port flags according to libata.force and whine about it.
++ *
++ *	LOCKING:
++ *	EH context.
++ */
++static void ata_force_pflags(struct ata_port *ap)
++{
++	int i;
++
++	for (i = ata_force_tbl_size - 1; i >= 0; i--) {
++		const struct ata_force_ent *fe = &ata_force_tbl[i];
++
++		if (fe->port != -1 && fe->port != ap->print_id)
++			continue;
++
++		/* let pflags stack */
++		if (fe->param.pflags_on) {
++			ap->pflags |= fe->param.pflags_on;
++			ata_port_notice(ap,
++					"FORCE: port flag 0x%x forced -> 0x%x\n",
++					fe->param.pflags_on, ap->pflags);
++		}
++	}
++}
++
+ /**
+  *	ata_force_link_limits - force link limits according to libata.force
+  *	@link: ATA link of interest
+@@ -486,6 +516,7 @@ static void ata_force_quirks(struct ata_device *dev)
+ 	}
+ }
+ #else
++static inline void ata_force_pflags(struct ata_port *ap) { }
+ static inline void ata_force_link_limits(struct ata_link *link) { }
+ static inline void ata_force_xfermask(struct ata_device *dev) { }
+ static inline void ata_force_quirks(struct ata_device *dev) { }
+@@ -5452,6 +5483,8 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ #endif
+ 	ata_sff_port_init(ap);
+ 
++	ata_force_pflags(ap);
++
+ 	return ap;
+ }
+ EXPORT_SYMBOL_GPL(ata_port_alloc);
+@@ -6264,6 +6297,9 @@ EXPORT_SYMBOL_GPL(ata_platform_remove_one);
+ 	{ "no" #name,	.lflags_on	= (flags) },	\
+ 	{ #name,	.lflags_off	= (flags) }
+ 
++#define force_pflag_on(name, flags)			\
++	{ #name,	.pflags_on	= (flags) }
++
+ #define force_quirk_on(name, flag)			\
+ 	{ #name,	.quirk_on	= (flag) }
+ 
+@@ -6323,6 +6359,8 @@ static const struct ata_force_param force_tbl[] __initconst = {
+ 	force_lflag_on(rstonce,		ATA_LFLAG_RST_ONCE),
+ 	force_lflag_onoff(dbdelay,	ATA_LFLAG_NO_DEBOUNCE_DELAY),
+ 
++	force_pflag_on(external,	ATA_PFLAG_EXTERNAL),
++
+ 	force_quirk_onoff(ncq,		ATA_QUIRK_NONCQ),
+ 	force_quirk_onoff(ncqtrim,	ATA_QUIRK_NO_NCQ_TRIM),
+ 	force_quirk_onoff(ncqati,	ATA_QUIRK_NO_NCQ_ON_ATI),
 -- 
 2.39.5
 
