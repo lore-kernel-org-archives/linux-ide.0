@@ -1,42 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF5BC257AEC;
-	Thu,  3 Apr 2025 19:07:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44B0A277804;
+	Thu,  3 Apr 2025 19:07:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743707229; cv=none; b=PfN1RXEfa4EzbSopmFlIPpfTUSd9nsOxZuVqi9emKcv0LujYJfBDwkIFnQypPKPGvcFkDstFq3nhv4VbBW2FJ0xHy4+o5pt7C2LGZZzbFl534bgDtH711fjKc8JA9Tidi+YlmwTFDeE+622x2XVcfYRY8WVFQkdLOdtwVy3WXWk=
+	t=1743707242; cv=none; b=QnYG+EKX73uhSSwh+etU+ec/I9rSySvBMhtXUi+Macr1pFYHChlUR9IZ8JnfH5Bc4zmvq477iFFlZ2JKKIU9YePT3lp+fdl/j5tt9Z9R7d6ihxG5gdtGQZxxpAQ2Y4L8GCazL5CcT4l+Omfw9EOUqaJ8oLmQ3sG3jtjYiGwlOrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743707229; c=relaxed/simple;
-	bh=xpuDVZlmkyrC9ceX0X/vqHwX01LDAuFrAKMUg4dH9+s=;
+	s=arc-20240116; t=1743707242; c=relaxed/simple;
+	bh=4yJmhhGvOCIorjEfxIkFak6PjpCmAbv87X+zawKb7pc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HygXIUlv9yVxFMFR7okKrm1NcGf7Jb4zourDBTraa7Vb1cfO2HgcdwT/OqssgT8hzXJcK5LjFOO4r1E01AWsCDl/b6Jw325FVbrqoMdgxcaNfLD9bIuETjsogDKpmpy2K6phi0YmXkHg1zaSF3MTtHZkIhrp354weUOtUMCwbok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R6vKPdr+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=kpiMbxSTP7dba7jCkBeXU/93GtBmgvfbhnMDD5PDnLHIIrbNGQoa/3q2VdMChKtPuuYdzUG+NvqO2pVe9NTZMxj+f+LOYnsiIM2kdZ1cbmmcNq4ZwzW56je40geWg+ATmK62kndMh9VZ8LiTRvQ3wkEdKkoYsXnWt8lYgdvV6vk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BzMCSjlX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R6vKPdr+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E383DC4CEE8;
-	Thu,  3 Apr 2025 19:07:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BzMCSjlX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12A15C4AF0C;
+	Thu,  3 Apr 2025 19:07:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743707228;
-	bh=xpuDVZlmkyrC9ceX0X/vqHwX01LDAuFrAKMUg4dH9+s=;
+	s=k20201202; t=1743707242;
+	bh=4yJmhhGvOCIorjEfxIkFak6PjpCmAbv87X+zawKb7pc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=R6vKPdr+b9jeulfkfvG0LlMQ7SyL4/vW97Lf5JCQu6j2BuAp7t/rhl4Ozw8o5BXEu
-	 oTlap2Nv9nM3E/rh15r+nV51f7FAp1WSOkRbieAeo8VNcVh1Uu1iMv0qySRr5a6bKf
-	 0GXHjopnABv06REsG6kTi5WLlSqfO3wWuRBwApaK3UlWwinaY0fpJ8UPT4TNsm8eTW
-	 MqBbjuJZO8zl4f5kYSySVVzvCgGot8j5ubI9OFKLDqYZfJJ1ViCU86HSocJJU3OtYs
-	 K0qCQ8uuAbd5QxwkJSKmozOkbtQEjKty5R8FCDU4k9I8772QljBT/rBi9Pua3M/lo2
-	 WB3uFa9kSDM5g==
+	b=BzMCSjlXqY0H6rt1ZsYrb4kFx12c2XHUvYBBnmTpqqtg0ATm9uhkFJp9iqypahxZr
+	 08Qr/gF7tcuvv9ENbr+o3RSlAw1+YINR1U8Mmc0eJplZocFNEp8QxbinE9zwbclqGy
+	 KhpFqEG7Ur1R6fJ48cPAmp5b7i80il+055KTeE1v77SuPPeSROKehb/CIU/rbrPdW5
+	 E24Z1/OinL4bOff2lr5KGbylU6dHUymWEQ+9Kt3vGZVf1uTDMTOCd6zLaNK3UZ2a14
+	 bnqxZYnKTvY9L+HGc2EObZNe0jxezo/MRiWzn5YkZr/uBcKG5zE77fS1L9xwG6d9kG
+	 +7Hz36sS1Hw6w==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Daniel Kral <d.kral@proxmox.com>,
+Cc: Huacai Chen <chenhuacai@loongson.cn>,
+	Yuli Wang <wangyuli@uniontech.com>,
+	Jie Fan <fanjie@uniontech.com>,
+	Erpeng Xu <xuerpeng@uniontech.com>,
 	Niklas Cassel <cassel@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	dlemoal@kernel.org,
 	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 29/47] ahci: add PCI ID for Marvell 88SE9215 SATA Controller
-Date: Thu,  3 Apr 2025 15:05:37 -0400
-Message-Id: <20250403190555.2677001-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 35/47] ahci: Marvell 88SE9215 controllers prefer DMA for ATAPI
+Date: Thu,  3 Apr 2025 15:05:43 -0400
+Message-Id: <20250403190555.2677001-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250403190555.2677001-1-sashal@kernel.org>
 References: <20250403190555.2677001-1-sashal@kernel.org>
@@ -51,37 +54,102 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.21
 Content-Transfer-Encoding: 8bit
 
-From: Daniel Kral <d.kral@proxmox.com>
+From: Huacai Chen <chenhuacai@loongson.cn>
 
-[ Upstream commit 885251dc35767b1c992f6909532ca366c830814a ]
+[ Upstream commit 0507c777f5d8f9e34b137d28ee263599a7b81242 ]
 
-Add support for Marvell Technology Group Ltd. 88SE9215 SATA 6 Gb/s
-controller, which is e.g. used in the DAWICONTROL DC-614e RAID bus
-controller and was not automatically recognized before.
+We use CD/DVD drives under Marvell 88SE9215 SATA controller on many
+Loongson-based machines. We found its PIO doesn't work well, and on the
+opposite its DMA seems work very well.
 
-Tested with a DAWICONTROL DC-614e RAID bus controller.
+We don't know the detail of the 88SE9215 SATA controller, but we have
+tested different CD/DVD drives and they all have problems under 88SE9215
+(but they all work well under an Intel SATA controller). So, we consider
+this problem is bound to 88SE9215 SATA controller rather than bound to
+CD/DVD drives.
 
-Signed-off-by: Daniel Kral <d.kral@proxmox.com>
-Link: https://lore.kernel.org/r/20250304092030.37108-1-d.kral@proxmox.com
+As a solution, we define a new dedicated AHCI board id which is named
+board_ahci_yes_fbs_atapi_dma for 88SE9215, and for this id we set the
+AHCI_HFLAG_ATAPI_DMA_QUIRK and ATA_QUIRK_ATAPI_MOD16_DMA flags on the
+SATA controller in order to prefer ATAPI DMA.
+
+Reported-by: Yuli Wang <wangyuli@uniontech.com>
+Tested-by: Jie Fan <fanjie@uniontech.com>
+Tested-by: Erpeng Xu <xuerpeng@uniontech.com>
+Tested-by: Yuli Wang <wangyuli@uniontech.com>
+Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+Link: https://lore.kernel.org/r/20250318104314.2160526-1-chenhuacai@loongson.cn
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/ahci.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ata/ahci.c    | 11 ++++++++++-
+ drivers/ata/ahci.h    |  1 +
+ drivers/ata/libahci.c |  4 ++++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 45f63b09828a1..14dd1b432ac34 100644
+index 14dd1b432ac34..650122deb480d 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -589,6 +589,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	  .driver_data = board_ahci_yes_fbs },
+@@ -63,6 +63,7 @@ enum board_ids {
+ 	board_ahci_pcs_quirk_no_devslp,
+ 	board_ahci_pcs_quirk_no_sntf,
+ 	board_ahci_yes_fbs,
++	board_ahci_yes_fbs_atapi_dma,
+ 
+ 	/* board IDs for specific chipsets in alphabetical order */
+ 	board_ahci_al,
+@@ -188,6 +189,14 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
++	[board_ahci_yes_fbs_atapi_dma] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_YES_FBS |
++				 AHCI_HFLAG_ATAPI_DMA_QUIRK),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ 	/* by chipsets */
+ 	[board_ahci_al] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_MSI),
+@@ -590,7 +599,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
  	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
  	  .driver_data = board_ahci_yes_fbs },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9215),
-+	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9215),
+-	  .driver_data = board_ahci_yes_fbs },
++	  .driver_data = board_ahci_yes_fbs_atapi_dma },
  	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
  	  .driver_data = board_ahci_yes_fbs },
  	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 8f40f75ba08cf..10a5fe02f0a45 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -246,6 +246,7 @@ enum {
+ 	AHCI_HFLAG_NO_SXS		= BIT(26), /* SXS not supported */
+ 	AHCI_HFLAG_43BIT_ONLY		= BIT(27), /* 43bit DMA addr limit */
+ 	AHCI_HFLAG_INTEL_PCS_QUIRK	= BIT(28), /* apply Intel PCS quirk */
++	AHCI_HFLAG_ATAPI_DMA_QUIRK	= BIT(29), /* force ATAPI to use DMA */
+ 
+ 	/* ap->flags bits */
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index fdfa7b2662180..a28ffe1e59691 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1321,6 +1321,10 @@ static void ahci_dev_config(struct ata_device *dev)
+ {
+ 	struct ahci_host_priv *hpriv = dev->link->ap->host->private_data;
+ 
++	if ((dev->class == ATA_DEV_ATAPI) &&
++	    (hpriv->flags & AHCI_HFLAG_ATAPI_DMA_QUIRK))
++		dev->quirks |= ATA_QUIRK_ATAPI_MOD16_DMA;
++
+ 	if (hpriv->flags & AHCI_HFLAG_SECT255) {
+ 		dev->max_sectors = 255;
+ 		ata_dev_info(dev,
 -- 
 2.39.5
 
