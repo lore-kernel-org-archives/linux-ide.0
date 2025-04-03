@@ -1,39 +1,40 @@
-Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
+Received: from mout.web.de (mout.web.de [212.227.17.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7403E23F26A;
-	Thu,  3 Apr 2025 07:14:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A108218E050;
+	Thu,  3 Apr 2025 07:33:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743664475; cv=none; b=RIzIufsVYgXIuRanLibrvbBN2E2AI+btWro1mNEcKFwPh24PTpYsg+o/8oWR80POCUObE8qNcExOof4fvmdWI7PegAxRCbHX22dGBUkGOivs9gTv7peDlPQzsPpiCrAutm6dsp8JUoGZmOTk3dxqfJA4bB0ZhdIwk+tB1+Fj0Hs=
+	t=1743665618; cv=none; b=kVWL3HLo9TFENxw5+kE6rh1pNGl17E/jO+anhMnNU0qYMuXTQionAUikxwVLoFGydir4VZyFk32Aq78S8dYBN0eN9K5oN4OklaJOyJDsSyBFkn0BpWPk4vNg2PHw3h9RCvrRfv+PW2BDT2Lud7oc2puwJjZtDC29OD1Bq+s9unw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743664475; c=relaxed/simple;
-	bh=i9chyyVVA4u/5n6H3ot6TYnyHk7hwD1gNPF2JpU27pA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WkU2IsrT/hmZ9X+Bd+CrarCA2ohHSGeVZ6+1vgiUctvz44RXKveLgFSEmA4GUSbN2hmRBdWraJi67fXZkJqAFqSi2GD9++vRuEvvCbv8dx30yyisz1gyG6mf6DFTSNlIEXYVGbtf44TcvWw5kwK+vPo4NYueqsAOOU+Xs8SAXi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=LvUp7AXA; arc=none smtp.client-ip=198.137.202.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+	s=arc-20240116; t=1743665618; c=relaxed/simple;
+	bh=dJJ+aUFzS1eJ3Y+9Uq7t/cMOdPGeVZ8qrjdzXaqiXCg=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=NQClmyun/LPXFp6X8aa0V0WLbcZELXv5mXLaBcRNDB8+VCL4dmAysRfZ3RPzBpjylxBG9z1n31rI+8QYrue8UjV+bxDKBe14IrJJmOHaHKmEA1MUcukdlhwGdaK4S7fKKjwnSv+nqbaeVwO1nbpanQhEBRrdJIXAfxsuhPlDnOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=QAjUFM7M; arc=none smtp.client-ip=212.227.17.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="LvUp7AXA"
-Received: from [192.168.7.202] ([71.202.166.45])
-	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 5337DaOj395784
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Thu, 3 Apr 2025 00:13:36 -0700
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 5337DaOj395784
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2025032001; t=1743664419;
-	bh=dud2+LDxOfaRRcFmlvhcB6Zv69u4yGoWIvsFJ3yQaXY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=LvUp7AXAlEO7ZIoS25ITyVlvXptK8gf870o88D54rWCbMQJtullUs6cSr27rMyA/c
-	 e00XhjujppWmi0xvi52Gm5YkQ9UqdP9DhcXE4mt5uG56eLAwJBxdh7bKLKbRIqR2p0
-	 hxKa4VWv19GOJTD4k62M7VFYmdH3jsk65f7uqAnVJxOmWHStXYZEEGIcS6Niv2j2w8
-	 IpwtqFX6o9BUdi073LOjU6OWdKPza4N1Bv/d9TXdnTnKbzJm97DWYQJKY13xLxauZ1
-	 08EiDBm8bzmIvt+yzgcbSw7C5JTPomxa++o0v4ZpnafbOTywuWRfv+qFdLQxvDDbc8
-	 M3z/FLprqi4PA==
-Message-ID: <9618fccf-3620-4395-bdac-aa8999fe2437@zytor.com>
-Date: Thu, 3 Apr 2025 00:13:35 -0700
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="QAjUFM7M"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1743665608; x=1744270408; i=markus.elfring@web.de;
+	bh=aWI+DAOkP8WUf4wenIkcfrLCKPmvyIpL6FkBiQFz/cc=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=QAjUFM7M3lzEHgelNCdeBpnSmnoUgkRzn2ZBjCh66gmyYtIItmC0hUUkQ0qMAtCh
+	 u0E/DNuJGlM98+56VNrRTo3clzRyt9UmmlhDg9Ulk0m2cWKg2cl9cotccuBQ8kg63
+	 qBNcT12nMQ24miHhDugm8VGgZv8Ak5q5acUOJjXK/afVWjMTu3D0E7sxWdp7EnWqR
+	 jxacQSWjUJyHdNIO7aijqWGqowmjW2Cz7oc1BIL1B9RHrfz6KKO8EBJF/rl1UOEIa
+	 xBh5xUpFi71je/enktmw8g+NCJnELcdNsgkouwLUhR48M9Ns1MjwB2XL04xcr+BhY
+	 M/LMQ6hPFY+fcTTWBQ==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.70.50]) by smtp.web.de (mrweb106
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1N5CQh-1szzn30GJB-00s9jR; Thu, 03
+ Apr 2025 09:33:28 +0200
+Message-ID: <d795a7e3-1558-49c9-85c8-4139c7699304@web.de>
+Date: Thu, 3 Apr 2025 09:33:27 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -41,86 +42,63 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v1 01/15] x86/msr: Replace __wrmsr() with
- native_wrmsrl()
-To: Andrew Cooper <andrew.cooper3@citrix.com>, linux-kernel@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        virtualization@lists.linux.dev, linux-edac@vger.kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-ide@vger.kernel.org, linux-pm@vger.kernel.org,
-        bpf@vger.kernel.org, llvm@lists.linux.dev
-Cc: tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-        dave.hansen@linux.intel.com, x86@kernel.org, hpa@zytor.com,
-        jgross@suse.com, peterz@infradead.org, acme@kernel.org,
-        namhyung@kernel.org, mark.rutland@arm.com,
-        alexander.shishkin@linux.intel.com, jolsa@kernel.org,
-        irogers@google.com, adrian.hunter@intel.com, kan.liang@linux.intel.com,
-        wei.liu@kernel.org, ajay.kaher@broadcom.com,
-        bcm-kernel-feedback-list@broadcom.com, tony.luck@intel.com,
-        pbonzini@redhat.com, vkuznets@redhat.com, seanjc@google.com,
-        luto@kernel.org, boris.ostrovsky@oracle.com, kys@microsoft.com,
-        haiyangz@microsoft.com, decui@microsoft.com
-References: <20250331082251.3171276-1-xin@zytor.com>
- <20250331082251.3171276-2-xin@zytor.com>
- <0da43a86-81b0-4388-b47b-3a76b15f2a4c@citrix.com>
-Content-Language: en-US
-From: Xin Li <xin@zytor.com>
-Autocrypt: addr=xin@zytor.com; keydata=
- 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
- l75w1xInsg==
-In-Reply-To: <0da43a86-81b0-4388-b47b-3a76b15f2a4c@citrix.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Henry Martin <bsdhenrymartin@gmail.com>, linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>
+References: <20250403034520.59597-1-bsdhenrymartin@gmail.com>
+Subject: Re: [PATCH] [ARM] pata_pxa: Fix null-ptr-deref in pxa_ata_probe()
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20250403034520.59597-1-bsdhenrymartin@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:P0596af5ImOODw9qjsedMeKjJOPssNC8dnN/AZJ9h6TIW8YVTf8
+ KI/7kJYBiSNSYPOCyxv9tnm36HB/WpYy/w5gyCJR9YO/1Ngy0Yq3Ns53qNi9L+R8XEU3xBL
+ K/8utBiuIP6ltVp+KpOoXfm5Xb4Bhv9xmRcikkKaphpNz615Is96Etz/w6KeghN3gy2QxRH
+ /obiBRuP09LHwVD/gSYzA==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:xF30ZRSJXlI=;NYQzFuTKlmtshV9ccHiMBtvtyNg
+ KFZXVaNxkuavLV0gydzsX7go/AYBD0vgaLceKJt3EzLo+xtNJkZ2sFBwmyrxy7QRMvSMF5yLK
+ HoTZhRAaUjzSV1F4K2XmlsNNuJgPWPlCJIg5BXCjSKUx/hVNKSt5ReTxut91oIBJkBsahjL5U
+ 53qFYaA7nKe2y12FfcmYbfmY/WoQq96cm1JKPiYR2MREsvz8vmrRDzSExMXipPKYaiUn34eoo
+ h25x62rIZ3g3Y7QikYYuITsLumMo2RBmHQl9EY5SBVE7yHkaSPa9vyObEZpV99Xd+dI7BXVyS
+ lb98thJalKPseKae1m3v1X0ZVqEm/XWJdDAHhuv+xQtaSWapLGX4hinah9l6BJ8XoAkT9CBJY
+ G+taGF0uQkm9NTWec0k/urBg5cgLTcBfyzlDg9refbu60VgKp2k3NLtrDjp4JbZSc9rM4QOSE
+ OWYcnHZSYjmWYnq47I9/tlW/WL6MFSO/ovurkHVrygXtGbBYh04e0c3iaocRiG0G0ZeLLxvkc
+ 6N6dnmOeCL0M8XGvJYuKBjb7CA4sJQ7ETPVPNcMIWZdpXGEB99Fc7aK/XsdmjfnE9QAGntA/r
+ NIveEFU+f0+sZqBPdlhyBLUj/6izF4wDXaOYv6IPy+D2mmIhkVf/6yD8laNTJPVZNbcuujR/s
+ rI3oQ3hrK5zJqu8i8qVQ0hBdP/agtR5EgZ4Wci4QHEY2F1a/ZlTUJFs44U5c8wcDuYznZWsOI
+ YI/RQt+D0Fl+h/V8CwMdUrIQVXh5jhJAe4197PbQBr5dpc+9S4iVaODoGfVy5LsUAbG17gh8A
+ Q5eFeBfnDTZ07IUMRbK7T5R0o0jsQ7xWxkAbnl9KE1Y4SPK9ENZ+Q/0RbYoFtbDUDtpXTSEEB
+ 1BzTIBWK6PTuGuU5kF8U28yTJCMST+xLAnuOeVLnmKL/SBmRgQ5k4f22dr74lboWOevAST9dO
+ Yde+Hkk7xl7X2F3/YpDNK21HAdpfgyiNmD8HtqwslqHvF3kCeeFb1nBr18L2yeEcfYEL0CCeK
+ L8ueEhv4Icl/mTBpFtFfeD4kU/+IDfN53jRh63Cn6oVdwotI2aZxil+LpqG/WULhW6Je4uVSd
+ mtF0qhpeoi8uaRe+42KH3rel3v1MwFTnI7CzA2kEW2kfcET/mMFXQM2aa73xU2luEavdPgrk7
+ gc5tyV2eg6HvYNCI8G+6PWvdx98hnj6Ea64/wV2PuMpOLfWIScr88vG8U4o+zNGqiVm3AGTWI
+ ZOA+MWhFg5ezn9izFvuMQg2Lm6YceSQoInAjX8NwM9t9k2McuVJpLkRJ5SQD4AesYlhPhPBO6
+ WNR3/Z1p9cks63q4hBmJ05FpgElHRpZaIDO8Rjb6Kt69+yHHF8ZSWTqwV8plx3FsxFDuI6LJq
+ IFqF4UbBLiO1CZopU0OJTEmQBg8HwwgUWoJiLoBQkyjAZ2D4neYmzmiN5ASph6Ly6xR6/PVNY
+ ia/95pUWSr4Lj2EInuKSfzypJHTqR37/abk3W8oJNH/HegR7V
 
-On 3/31/2025 2:45 PM, Andrew Cooper wrote:
-> On 31/03/2025 9:22 am, Xin Li (Intel) wrote:
->> __wrmsr() is the lowest level primitive MSR write API, and its direct
->> use is NOT preferred.  Use its wrapper function native_wrmsrl() instead.
->>
->> No functional change intended.
->>
->> Signed-off-by: Xin Li (Intel) <xin@zytor.com>
-> 
-> The critical piece of information you're missing from the commit message
-> is that the MSR_IMM instructions take a single u64.
-> 
-> Therefore to use them, you've got to arrange for all callers to provide
-> a single u64, rather than a split u32 pair.
+=E2=80=A6
+> Add NULL check after devm_ioremap() to prevent this issue.
 
-You definitely caught me on how I was thinking it ;)
+Can a summary phrase like =E2=80=9CPrevent null pointer dereference in pxa=
+_ata_probe()=E2=80=9D
+be a bit nicer?
 
-Sometimes it is nice to see a change log with a thinking process.
 
-Thanks!
-     Xin
+=E2=80=A6
+> +++ b/drivers/ata/pata_pxa.c
+> @@ -223,11 +223,16 @@ static int pxa_ata_probe(struct platform_device *p=
+dev)
+>
+>  	ap->ioaddr.cmd_addr	=3D devm_ioremap(&pdev->dev, cmd_res->start,
+>  						resource_size(cmd_res));
+> +	if (!ap->ioaddr.cmd_addr)
+> +		return -ENOMEM;
+
+Can a blank line be desirable after such a statement?
+
+Regards,
+Markus
