@@ -1,108 +1,199 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E7C12E3385;
-	Thu,  3 Apr 2025 10:40:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BDB8253356;
+	Thu,  3 Apr 2025 19:02:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743676830; cv=none; b=Jomf42lnXVUPv5HvEGKxt9fAAHoypWQ80bSlXTX/MBHIXSBts3JrL1xwSopzodRyFKomGFO6FmutpoLq1a+ub2scbF1SA/d5NCLIhPFJ2UZyy78dC36o/V+D1KnmtBJNRHa6qe0i1I9POg2U7qLu/wN1oPnMThOoShq7yVhNOgo=
+	t=1743706948; cv=none; b=Ee+4U5vivkNHkAm0buhw40ztVS7ZqcIHNsj1p50ytWjBN8bokJWKM9Dgc6qFFvP+S63MoZ8JbaZSuvmEoIJ6R0KKsaxCTNtAWzQa80yxyI6ijr8RiRfBOl+XYr3lEGsEP5hTJahfpDrBl3XYTFuYk2RdjCKNVwGv0Fo9L/vKGqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743676830; c=relaxed/simple;
-	bh=hoYH4U5j+7N4XYJinzRVDfRiiFxe9jZtYpOZfODRWvs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YZfuFSgOwNIjJL0e6Zfv4YmXBrPG70F6WhtcG6FVPYE5B66VNA1WWr5d4JwkdkGnCVJYURM3f2vxA87MNNxpIW+Uqtp0mA8nft4a2juuLQs55AfKgh7bTuFjgJNpRFuen2kwp/zlnT28CJ6ACyOuW8QmNH469Yw8H7Ch2HLM4n8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [124.16.141.245])
-	by APP-03 (Coremail) with SMTP id rQCowABXA0CPZe5nlBB5BQ--.32803S2;
-	Thu, 03 Apr 2025 18:40:17 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Wentao Liang <vulab@iscas.ac.cn>
-Subject: [PATCH] libata: Add error handling for pdc20621_i2c_read().
-Date: Thu,  3 Apr 2025 18:39:57 +0800
-Message-ID: <20250403103957.2550-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.42.0.windows.2
+	s=arc-20240116; t=1743706948; c=relaxed/simple;
+	bh=RCKS208+S9uxKFrgFhNxe1Xye6b7JnXWUELLEdZiEiI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=nXyEjLpXm/B3fG85/8OIa2SGeRxGo1X73jwmV35srz7NAs6zpWaoCdukQ0RwrFgytiH+UFdx9gz4jqbkBSe3U3jVvp53Fh0Sjl8jDfr/6nKS3OUjRL/ID5lLF1VSjYHBnFg1MaTM1f8cpQoeYtvOQy6Ja7YUuSjrhVPOErBRTDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KE8G4Dot; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KE8G4Dot"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74236C4CEE3;
+	Thu,  3 Apr 2025 19:02:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1743706948;
+	bh=RCKS208+S9uxKFrgFhNxe1Xye6b7JnXWUELLEdZiEiI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=KE8G4DotWTbQm37cM0a/cwD4kiNU1KeSA74QhbvgJcFDySF5/Q7JBjZ7SLImpgREn
+	 q+ZKlBSEAFkjK5sA1QyQhLxzmYtnQ15PgADPNIk+9a0lwA5l/hH7+KOLM75nZEHFNb
+	 Y2YIAxx6Z4IxrGNV6mbkcbvpurR8WiluZY9CpqeJAd5QBe64p6dKvRVRM3dmCG3/Wj
+	 wgHmsh/K4mKW9nqQjC+AzHC764joTiuTAVzyJ/E12R6MxPpXXd7TyyA8Z1fVtUjy28
+	 iXJqoNlIF0GjmT1WDH4B7fg5NOgYvKu+K3OQVHxVKS8zi/0ezDewsrxwMgcfCM4doZ
+	 3FxQyyLrJPfcw==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Sasha Levin <sashal@kernel.org>,
+	corbet@lwn.net,
+	akpm@linux-foundation.org,
+	paulmck@kernel.org,
+	thuth@redhat.com,
+	rostedt@goodmis.org,
+	bp@alien8.de,
+	ardb@kernel.org,
+	gregkh@linuxfoundation.org,
+	jpoimboe@kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.14 07/54] ata: libata-core: Add 'external' to the libata.force kernel parameter
+Date: Thu,  3 Apr 2025 15:01:22 -0400
+Message-Id: <20250403190209.2675485-7-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250403190209.2675485-1-sashal@kernel.org>
+References: <20250403190209.2675485-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.14
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowABXA0CPZe5nlBB5BQ--.32803S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFykuFW7Zr1UCFW8Xw17Awb_yoW8trWxpr
-	4xKas8KryUW3W2vFy3JrsxXFyrWw4kGa42kFWkC34fZw1Sqws7ZFyIgayrt3WjkF17W3Wx
-	Z3W8tFWkCrWUXrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvv14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
-	AVWUtwCY02Avz4vE14v_Gw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
-	1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
-	14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
-	IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E
-	87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73Uj
-	IFyTuYvjfUejgxUUUUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwoBA2fuKuvzSwAAs-
 
-The pdc20621_prog_dimm0() calls the pdc20621_i2c_read(), but does not
-handle the error if the read fails. This could lead to process with
-invalid data. A proper inplementation can be found in
-pdc20621_prog_dimm_global(). As mentioned in its commit:
-bb44e154e25125bef31fa956785e90fccd24610b, the variable spd0 might be
-used uninitialized when pdc20621_i2c_read() fails.
+From: Niklas Cassel <cassel@kernel.org>
 
-Add error handling to the pdc20621_i2c_read(). If a read operation fails,
-an error message is logged via dev_err(), and return an under-zero value
-to represent error situlation.
+[ Upstream commit deca423213cb33feda15e261e7b5b992077a6a08 ]
 
-Add error handling to pdc20621_prog_dimm0() in pdc20621_dimm_init(), and
-return a none-zero value when pdc20621_prog_dimm0() fails.
+Commit ae1f3db006b7 ("ata: ahci: do not enable LPM on external ports")
+changed so that LPM is not enabled on external ports (hotplug-capable or
+eSATA ports).
 
-Fixes: 4447d3515616 ("libata: convert the remaining SATA drivers to new init model")
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+This is because hotplug and LPM are mutually exclusive, see 7.3.1 Hot Plug
+Removal Detection and Power Management Interaction in AHCI 1.3.1.
+
+This does require that firmware has set the appropate bits (HPCP or ESP)
+in PxCMD (which is a per port register in the AHCI controller).
+
+If the firmware has failed to mark a port as hotplug-capable or eSATA in
+PxCMD, then there is currently not much a user can do.
+
+If LPM is enabled on the port, hotplug insertions and removals will not be
+detected on that port.
+
+In order to allow a user to fix up broken firmware, add 'external' to the
+libata.force kernel parameter.
+
+libata.force can be specified either on the kernel command line, or as a
+kernel module parameter.
+
+For more information, see Documentation/admin-guide/kernel-parameters.txt.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Link: https://lore.kernel.org/r/20250130133544.219297-4-cassel@kernel.org
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/sata_sx4.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ .../admin-guide/kernel-parameters.txt         |  2 +
+ drivers/ata/libata-core.c                     | 38 +++++++++++++++++++
+ 2 files changed, 40 insertions(+)
 
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index a482741eb181..a4027eb2fb66 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -1117,9 +1117,14 @@ static int pdc20621_prog_dimm0(struct ata_host *host)
- 	mmio += PDC_CHIP0_OFS;
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index fb8752b42ec85..aa7447f8837cb 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3116,6 +3116,8 @@
+ 			* max_sec_lba48: Set or clear transfer size limit to
+ 			  65535 sectors.
  
- 	for (i = 0; i < ARRAY_SIZE(pdc_i2c_read_data); i++)
--		pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
--				  pdc_i2c_read_data[i].reg,
--				  &spd0[pdc_i2c_read_data[i].ofs]);
-+		if (!pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
-+				       pdc_i2c_read_data[i].reg,
-+				       &spd0[pdc_i2c_read_data[i].ofs])){
-+			dev_err(host->dev,
-+				"Failed in i2c read at index %d: device=%#x, reg=%#x\n",
-+				i, PDC_DIMM0_SPD_DEV_ADDRESS, pdc_i2c_read_data[i].reg);
-+			return -1;
++			* external: Mark port as external (hotplug-capable).
++
+ 			* [no]lpm: Enable or disable link power management.
+ 
+ 			* [no]setxfer: Indicate if transfer speed mode setting
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d956735e2a764..0cb97181d10a9 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -88,6 +88,7 @@ struct ata_force_param {
+ 	unsigned int	xfer_mask;
+ 	unsigned int	quirk_on;
+ 	unsigned int	quirk_off;
++	unsigned int	pflags_on;
+ 	u16		lflags_on;
+ 	u16		lflags_off;
+ };
+@@ -331,6 +332,35 @@ void ata_force_cbl(struct ata_port *ap)
+ 	}
+ }
+ 
++/**
++ *	ata_force_pflags - force port flags according to libata.force
++ *	@ap: ATA port of interest
++ *
++ *	Force port flags according to libata.force and whine about it.
++ *
++ *	LOCKING:
++ *	EH context.
++ */
++static void ata_force_pflags(struct ata_port *ap)
++{
++	int i;
++
++	for (i = ata_force_tbl_size - 1; i >= 0; i--) {
++		const struct ata_force_ent *fe = &ata_force_tbl[i];
++
++		if (fe->port != -1 && fe->port != ap->print_id)
++			continue;
++
++		/* let pflags stack */
++		if (fe->param.pflags_on) {
++			ap->pflags |= fe->param.pflags_on;
++			ata_port_notice(ap,
++					"FORCE: port flag 0x%x forced -> 0x%x\n",
++					fe->param.pflags_on, ap->pflags);
 +		}
++	}
++}
++
+ /**
+  *	ata_force_link_limits - force link limits according to libata.force
+  *	@link: ATA link of interest
+@@ -486,6 +516,7 @@ static void ata_force_quirks(struct ata_device *dev)
+ 	}
+ }
+ #else
++static inline void ata_force_pflags(struct ata_port *ap) { }
+ static inline void ata_force_link_limits(struct ata_link *link) { }
+ static inline void ata_force_xfermask(struct ata_device *dev) { }
+ static inline void ata_force_quirks(struct ata_device *dev) { }
+@@ -5460,6 +5491,8 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ #endif
+ 	ata_sff_port_init(ap);
  
- 	data |= (spd0[4] - 8) | ((spd0[21] != 0) << 3) | ((spd0[3]-11) << 4);
- 	data |= ((spd0[17] / 4) << 6) | ((spd0[5] / 2) << 7) |
-@@ -1284,6 +1289,8 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
++	ata_force_pflags(ap);
++
+ 	return ap;
+ }
+ EXPORT_SYMBOL_GPL(ata_port_alloc);
+@@ -6272,6 +6305,9 @@ EXPORT_SYMBOL_GPL(ata_platform_remove_one);
+ 	{ "no" #name,	.lflags_on	= (flags) },	\
+ 	{ #name,	.lflags_off	= (flags) }
  
- 	/* Programming DIMM0 Module Control Register (index_CID0:80h) */
- 	size = pdc20621_prog_dimm0(host);
-+	if (size < 0)
-+		return 1;
- 	dev_dbg(host->dev, "Local DIMM Size = %dMB\n", size);
++#define force_pflag_on(name, flags)			\
++	{ #name,	.pflags_on	= (flags) }
++
+ #define force_quirk_on(name, flag)			\
+ 	{ #name,	.quirk_on	= (flag) }
  
- 	/* Programming DIMM Module Global Control Register (index_CID0:88h) */
+@@ -6331,6 +6367,8 @@ static const struct ata_force_param force_tbl[] __initconst = {
+ 	force_lflag_on(rstonce,		ATA_LFLAG_RST_ONCE),
+ 	force_lflag_onoff(dbdelay,	ATA_LFLAG_NO_DEBOUNCE_DELAY),
+ 
++	force_pflag_on(external,	ATA_PFLAG_EXTERNAL),
++
+ 	force_quirk_onoff(ncq,		ATA_QUIRK_NONCQ),
+ 	force_quirk_onoff(ncqtrim,	ATA_QUIRK_NO_NCQ_TRIM),
+ 	force_quirk_onoff(ncqati,	ATA_QUIRK_NO_NCQ_ON_ATI),
 -- 
-2.42.0.windows.2
+2.39.5
 
