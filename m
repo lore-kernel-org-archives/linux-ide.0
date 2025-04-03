@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24599280CCD;
-	Thu,  3 Apr 2025 19:08:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9973C28136C;
+	Thu,  3 Apr 2025 19:08:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743707298; cv=none; b=dfunIJu2T3vuhylIEoBOZjMKYj8expckiZehtEceG5l8IO+HJGdb/wWNzI63ln+81gynlsP1ptLkfCvcrsbbQTVmrrS+wtlVqSw0WukwxVNIZF0DDuaIgmjbPD5rXJQXq3nNeRVepFI5arX5a3q1KXIawhA/WeJVWwG1qXzXThc=
+	t=1743707302; cv=none; b=gPxVqgiyege/vRA5VH4KDZNoilmk439zGQd03TIqKcRwudP/I3ut3tbzuwRqDMo7EP2hv9VwcYJRXb7I7jJJ16npRkzvz26ldKZPpxlqkqmBXgerUMf/XgmZTayE7JHtkcf5GPP2R8BDiTAA9mUSwDDQkA1jvBKrsUvXXRjGZaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743707298; c=relaxed/simple;
-	bh=EqgthMe/ybxzBKOL3auf3kwi4fu/9h9nVy80O0xqMR4=;
+	s=arc-20240116; t=1743707302; c=relaxed/simple;
+	bh=LULJsvR3DNjAfkqsMqTroQWaBYJWcsCdkxB5BToOd1c=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RxYpSIqLUvoSHy9iKd42kQsEJ6MGOojeLOr8xyPMnBo9+Ax1hPKIhFuU+jlPzwHOy35scvFThE+h0QdcDE0ArupnZjsYYyx1igg6qrdIp7zTmrVmH2y2HeNJ3JPcoX27jM8ptE7X0Tjm5ZbOtE2rcT898caLCLcEx2fL9Q3PFD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iFcfZdPZ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=XBiPbr+ALGl4av1P6SZQa/IBKLbAvcv8HUwpJUwCeT9L9+E6pELZRmiUAv6al70m4DTGhKvjBzTsUTGwk1ana7nohwfx97cG3PDjp2nT09/6vZEEAUjewggFLCW/kf1CoBRurrpIeSPvSIk585TUe1brrSf2VinOGNgEYPBHPGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YFnTviiQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iFcfZdPZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA249C4CEEC;
-	Thu,  3 Apr 2025 19:08:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YFnTviiQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3700C4CEE3;
+	Thu,  3 Apr 2025 19:08:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743707296;
-	bh=EqgthMe/ybxzBKOL3auf3kwi4fu/9h9nVy80O0xqMR4=;
+	s=k20201202; t=1743707302;
+	bh=LULJsvR3DNjAfkqsMqTroQWaBYJWcsCdkxB5BToOd1c=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=iFcfZdPZ3Xyivo4lLXVtVbuCUOelGw2c9+s/5FdE46K65XkSuc0DYwkOGwVvReo+z
-	 w0Py4tjnOg92H9yJb7yHKTeiOyUNTJFIptp+GG3S3IEu/NbRc2YHcVFoxpLmA3ZTxk
-	 VwaM9ZxPaL9BW4rkhqPc3/WMp/4OWfEGZvZ1ozXtdRVX4uPmhj9NjB05W2lr1BnusQ
-	 esgG5RkUmQ/u9CZfNaY/9/lCxeLZEhTGWR1UqlMOD/tjGft7xoVB6+ID8eJ/g8FUFs
-	 e1D6laLLt5io0lTA3WtjbcUTKRfFztpC/kGpfEAAr9c0Ww1YXuRZwKIq8p2YmUH8N+
-	 0z3VZ4yQUCS9A==
+	b=YFnTviiQAp7fTfmD2vZMwTtyZYsfzUGJGrvex8jaSFzfirqEVNkE79nIyrVNFguie
+	 tginN3XgK8jMocm1UtROVSPqDcT1pjlCiz2cj4BX1SAR2EnwzjvZLk/SC3Thbj663f
+	 YeR6o9dG6YSloKO1aTfcimzF4iAlJxOMKXIahiqnLbgXh809uZoMnBUpY7oEc/ifMF
+	 fo254FdIfO6E/bg7c83qrAQ7C6lCyxEbTXkj60kCbwL07i8nZMYlXynjRqbc/9gdPn
+	 +FKVa0CIQHZ2DDwqnf5QpEfg+cgGz9n5YIQT2S/Yx4KQHjJqc5W3NBsO0NezR2+kAy
+	 og1aA5znz6ovA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>,
-	Philip Pemberton <lists@philpem.me.uk>,
-	Damien Le Moal <dlemoal@kernel.org>,
+Cc: Daniel Kral <d.kral@proxmox.com>,
+	Niklas Cassel <cassel@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
+	dlemoal@kernel.org,
 	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 12/26] ata: libata-eh: Do not use ATAPI DMA for a device limited to PIO mode
-Date: Thu,  3 Apr 2025 15:07:31 -0400
-Message-Id: <20250403190745.2677620-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 16/26] ahci: add PCI ID for Marvell 88SE9215 SATA Controller
+Date: Thu,  3 Apr 2025 15:07:35 -0400
+Message-Id: <20250403190745.2677620-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250403190745.2677620-1-sashal@kernel.org>
 References: <20250403190745.2677620-1-sashal@kernel.org>
@@ -51,55 +51,37 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.85
 Content-Transfer-Encoding: 8bit
 
-From: Niklas Cassel <cassel@kernel.org>
+From: Daniel Kral <d.kral@proxmox.com>
 
-[ Upstream commit 91ec84f8eaddbc93d7c62e363d68aeb7b89879c7 ]
+[ Upstream commit 885251dc35767b1c992f6909532ca366c830814a ]
 
-atapi_eh_request_sense() currently uses ATAPI DMA if the SATA controller
-has ATA_FLAG_PIO_DMA (PIO cmds via DMA) set.
+Add support for Marvell Technology Group Ltd. 88SE9215 SATA 6 Gb/s
+controller, which is e.g. used in the DAWICONTROL DC-614e RAID bus
+controller and was not automatically recognized before.
 
-However, ATA_FLAG_PIO_DMA is a flag that can be set by a low-level driver
-on a port at initialization time, before any devices are scanned.
+Tested with a DAWICONTROL DC-614e RAID bus controller.
 
-If a controller detects a connected device that only supports PIO, we set
-the flag ATA_DFLAG_PIO.
-
-Modify atapi_eh_request_sense() to not use ATAPI DMA if the connected
-device only supports PIO.
-
-Reported-by: Philip Pemberton <lists@philpem.me.uk>
-Closes: https://lore.kernel.org/linux-ide/c6722ee8-5e21-4169-af59-cbbae9edc02f@philpem.me.uk/
-Tested-by: Philip Pemberton <lists@philpem.me.uk>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Link: https://lore.kernel.org/r/20250221015422.20687-2-cassel@kernel.org
+Signed-off-by: Daniel Kral <d.kral@proxmox.com>
+Link: https://lore.kernel.org/r/20250304092030.37108-1-d.kral@proxmox.com
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/libata-eh.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/ata/ahci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 9cc0225221849..3263fc13491e1 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1496,8 +1496,15 @@ unsigned int atapi_eh_request_sense(struct ata_device *dev,
- 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf.command = ATA_CMD_PACKET;
- 
--	/* is it pointless to prefer PIO for "safety reasons"? */
--	if (ap->flags & ATA_FLAG_PIO_DMA) {
-+	/*
-+	 * Do not use DMA if the connected device only supports PIO, even if the
-+	 * port prefers PIO commands via DMA.
-+	 *
-+	 * Ideally, we should call atapi_check_dma() to check if it is safe for
-+	 * the LLD to use DMA for REQUEST_SENSE, but we don't have a qc.
-+	 * Since we can't check the command, perhaps we should only use pio?
-+	 */
-+	if ((ap->flags & ATA_FLAG_PIO_DMA) && !(dev->flags & ATA_DFLAG_PIO)) {
- 		tf.protocol = ATAPI_PROT_DMA;
- 		tf.feature |= ATAPI_PKT_DMA;
- 	} else {
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6e76780fb4308..98104d0b842bd 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -591,6 +591,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
+ 	  .driver_data = board_ahci_yes_fbs },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9215),
++	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
 -- 
 2.39.5
 
