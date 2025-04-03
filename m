@@ -1,50 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8692571BD;
-	Thu,  3 Apr 2025 19:06:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA8D426E166;
+	Thu,  3 Apr 2025 19:06:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743707170; cv=none; b=RTZN7+t5cqvUPhG8DOk5on11TUjriA+99Tady21tJ0i+aEfkYj+YHwC/RpsNCgVpPldvGbLN500luQw49kAzkxP6WbI/l2sxeW8Aa0wOWeg88PMdV3Mx3o07H3GBQMgWUNPdKx0oUJduLc1en/sS+6b0WK3AEgqoy50Y/OxBNTo=
+	t=1743707214; cv=none; b=BX1ixvfgrcOW4f5UOGGvdOy1Cy5C5q5FEApCuW48kftOayqfy1+TE48G+cpsTcQBJb//Q/ZqhMUQHFmALWxrnar8qI0RlWUD8EjWtDkcXqMioiSjVU/kOqEtdUrFxh/2jM+3KjzUVzs8yKy9twsx9z/+94RZ3Y26lAffVI2PVwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743707170; c=relaxed/simple;
-	bh=VXmZH9V6z/axWCJeBB01zjQefHERyCjM+PgwTOtgH/s=;
+	s=arc-20240116; t=1743707214; c=relaxed/simple;
+	bh=ZCC9jh7ZVX2fGD7QT2FFdDBEpGSuODp4SIPv7b74Fa0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eaK3gOxKfVffdLflJ1+e6ndumH2vGSXkZ9HTT0FVBs4CFCgN6r6ZPueRBVYt+U8J/xDXuAhQhoNonzG8u6t12lSnsMmfXjL0iFQl3Ww9vpnfho+o2ac31lmyolqVg0NzLwpLPpw7ZF4R+y4DU0gX2D76fXT8af8zySLzUInajfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qFfutzwx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=dswB1Rxa2ty8Dg7uHXNplQTyu5HaZn3Hnp/UYGmR1z38TuH2gcYajrjhCN9KvzIA6TlYjJXc+u5F/g8wYli+aphtgKZzBk/+DmaixngTlC5zhOaMXU3nnNakIDKpLKnGZdins7xskz4kiSucPc+A+OyN6gat6i+ynG+GgMfyhPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ktgdy73Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qFfutzwx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ADA0C4CEE3;
-	Thu,  3 Apr 2025 19:06:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ktgdy73Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6C01C4CEE8;
+	Thu,  3 Apr 2025 19:06:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743707169;
-	bh=VXmZH9V6z/axWCJeBB01zjQefHERyCjM+PgwTOtgH/s=;
+	s=k20201202; t=1743707214;
+	bh=ZCC9jh7ZVX2fGD7QT2FFdDBEpGSuODp4SIPv7b74Fa0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=qFfutzwxkTEV2QxibpFIQkGBzX7Jb0CwZWHGgLVUv9EooCLeu2nMA9hpp5vAH+5lw
-	 KG8UYoWVcShJeH+qMBJhO963DCrpnEFlNVKeocP7MHXNZyJ9/eoUvNkJDp7/lVzRfD
-	 4RYtPJkXH8CsCcUue8rB5rhNZV5HwlACvd8s3xYB8WGsrplUbGW8SmBxxPLByuNgjX
-	 +UxrHYSFIbFiyFwD/5sEMgGWAKFxCOTtDsn1ayEYu4eK0EV2/Vg8omzpfKuVS2Xmit
-	 bUyqTwmRc+qU5+mJ8ycqT6E4OJ6lJ0rztXrDGeldRrS3o5fiShJV7BVS2zQQDAG2JT
-	 F8OqlQlB2R91w==
+	b=ktgdy73Z3lp11eCqFK5v8bluA6YX5tQ96HzA9ECY8afe8upmla3u6lQaJkL4NflPL
+	 IN6xF1QqhfwjZWw0eJ1TES4r5UliLSypK4sgMlj6RfE3imNK4qBQG+Rou7F2NzKDSx
+	 2gE22leb4io7lHoamBG9AK3W48l6rwLCY8Ha17aTwadhIvyIY8cjKerTPdwZ6/XM9v
+	 rl202oR5Z+b22KArz5HQ+Dzp19xETgVFbjoIZJpVNb/oj4MxMKbvBmfFTqIqic0wWB
+	 HK9mk9ANU2ELFlVldisAnj5OMPBm+kfFqKKiz8cm4c24rmzpn3iqh3ZWcRdJg71S7x
+	 vqn+kK3nf+7pg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
 Cc: Niklas Cassel <cassel@kernel.org>,
+	Philip Pemberton <lists@philpem.me.uk>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
-	corbet@lwn.net,
-	akpm@linux-foundation.org,
-	paulmck@kernel.org,
-	thuth@redhat.com,
-	rostedt@goodmis.org,
-	bp@alien8.de,
-	ardb@kernel.org,
-	gregkh@linuxfoundation.org,
-	linux-doc@vger.kernel.org,
 	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 05/47] ata: libata-core: Add 'external' to the libata.force kernel parameter
-Date: Thu,  3 Apr 2025 15:05:13 -0400
-Message-Id: <20250403190555.2677001-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 23/47] ata: libata-eh: Do not use ATAPI DMA for a device limited to PIO mode
+Date: Thu,  3 Apr 2025 15:05:31 -0400
+Message-Id: <20250403190555.2677001-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250403190555.2677001-1-sashal@kernel.org>
 References: <20250403190555.2677001-1-sashal@kernel.org>
@@ -61,138 +53,53 @@ Content-Transfer-Encoding: 8bit
 
 From: Niklas Cassel <cassel@kernel.org>
 
-[ Upstream commit deca423213cb33feda15e261e7b5b992077a6a08 ]
+[ Upstream commit 91ec84f8eaddbc93d7c62e363d68aeb7b89879c7 ]
 
-Commit ae1f3db006b7 ("ata: ahci: do not enable LPM on external ports")
-changed so that LPM is not enabled on external ports (hotplug-capable or
-eSATA ports).
+atapi_eh_request_sense() currently uses ATAPI DMA if the SATA controller
+has ATA_FLAG_PIO_DMA (PIO cmds via DMA) set.
 
-This is because hotplug and LPM are mutually exclusive, see 7.3.1 Hot Plug
-Removal Detection and Power Management Interaction in AHCI 1.3.1.
+However, ATA_FLAG_PIO_DMA is a flag that can be set by a low-level driver
+on a port at initialization time, before any devices are scanned.
 
-This does require that firmware has set the appropate bits (HPCP or ESP)
-in PxCMD (which is a per port register in the AHCI controller).
+If a controller detects a connected device that only supports PIO, we set
+the flag ATA_DFLAG_PIO.
 
-If the firmware has failed to mark a port as hotplug-capable or eSATA in
-PxCMD, then there is currently not much a user can do.
+Modify atapi_eh_request_sense() to not use ATAPI DMA if the connected
+device only supports PIO.
 
-If LPM is enabled on the port, hotplug insertions and removals will not be
-detected on that port.
-
-In order to allow a user to fix up broken firmware, add 'external' to the
-libata.force kernel parameter.
-
-libata.force can be specified either on the kernel command line, or as a
-kernel module parameter.
-
-For more information, see Documentation/admin-guide/kernel-parameters.txt.
-
+Reported-by: Philip Pemberton <lists@philpem.me.uk>
+Closes: https://lore.kernel.org/linux-ide/c6722ee8-5e21-4169-af59-cbbae9edc02f@philpem.me.uk/
+Tested-by: Philip Pemberton <lists@philpem.me.uk>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Link: https://lore.kernel.org/r/20250130133544.219297-4-cassel@kernel.org
+Link: https://lore.kernel.org/r/20250221015422.20687-2-cassel@kernel.org
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../admin-guide/kernel-parameters.txt         |  2 +
- drivers/ata/libata-core.c                     | 38 +++++++++++++++++++
- 2 files changed, 40 insertions(+)
+ drivers/ata/libata-eh.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index d401577b5a6ac..607a8937f1754 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3028,6 +3028,8 @@
- 			* max_sec_lba48: Set or clear transfer size limit to
- 			  65535 sectors.
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 3b303d4ae37a0..16cd676eae1f9 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1542,8 +1542,15 @@ unsigned int atapi_eh_request_sense(struct ata_device *dev,
+ 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf.command = ATA_CMD_PACKET;
  
-+			* external: Mark port as external (hotplug-capable).
-+
- 			* [no]lpm: Enable or disable link power management.
- 
- 			* [no]setxfer: Indicate if transfer speed mode setting
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c085dd81ebe7f..52b78d22c831a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -88,6 +88,7 @@ struct ata_force_param {
- 	unsigned int	xfer_mask;
- 	unsigned int	quirk_on;
- 	unsigned int	quirk_off;
-+	unsigned int	pflags_on;
- 	u16		lflags_on;
- 	u16		lflags_off;
- };
-@@ -331,6 +332,35 @@ void ata_force_cbl(struct ata_port *ap)
- 	}
- }
- 
-+/**
-+ *	ata_force_pflags - force port flags according to libata.force
-+ *	@ap: ATA port of interest
-+ *
-+ *	Force port flags according to libata.force and whine about it.
-+ *
-+ *	LOCKING:
-+ *	EH context.
-+ */
-+static void ata_force_pflags(struct ata_port *ap)
-+{
-+	int i;
-+
-+	for (i = ata_force_tbl_size - 1; i >= 0; i--) {
-+		const struct ata_force_ent *fe = &ata_force_tbl[i];
-+
-+		if (fe->port != -1 && fe->port != ap->print_id)
-+			continue;
-+
-+		/* let pflags stack */
-+		if (fe->param.pflags_on) {
-+			ap->pflags |= fe->param.pflags_on;
-+			ata_port_notice(ap,
-+					"FORCE: port flag 0x%x forced -> 0x%x\n",
-+					fe->param.pflags_on, ap->pflags);
-+		}
-+	}
-+}
-+
- /**
-  *	ata_force_link_limits - force link limits according to libata.force
-  *	@link: ATA link of interest
-@@ -486,6 +516,7 @@ static void ata_force_quirks(struct ata_device *dev)
- 	}
- }
- #else
-+static inline void ata_force_pflags(struct ata_port *ap) { }
- static inline void ata_force_link_limits(struct ata_link *link) { }
- static inline void ata_force_xfermask(struct ata_device *dev) { }
- static inline void ata_force_quirks(struct ata_device *dev) { }
-@@ -5452,6 +5483,8 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- #endif
- 	ata_sff_port_init(ap);
- 
-+	ata_force_pflags(ap);
-+
- 	return ap;
- }
- EXPORT_SYMBOL_GPL(ata_port_alloc);
-@@ -6264,6 +6297,9 @@ EXPORT_SYMBOL_GPL(ata_platform_remove_one);
- 	{ "no" #name,	.lflags_on	= (flags) },	\
- 	{ #name,	.lflags_off	= (flags) }
- 
-+#define force_pflag_on(name, flags)			\
-+	{ #name,	.pflags_on	= (flags) }
-+
- #define force_quirk_on(name, flag)			\
- 	{ #name,	.quirk_on	= (flag) }
- 
-@@ -6323,6 +6359,8 @@ static const struct ata_force_param force_tbl[] __initconst = {
- 	force_lflag_on(rstonce,		ATA_LFLAG_RST_ONCE),
- 	force_lflag_onoff(dbdelay,	ATA_LFLAG_NO_DEBOUNCE_DELAY),
- 
-+	force_pflag_on(external,	ATA_PFLAG_EXTERNAL),
-+
- 	force_quirk_onoff(ncq,		ATA_QUIRK_NONCQ),
- 	force_quirk_onoff(ncqtrim,	ATA_QUIRK_NO_NCQ_TRIM),
- 	force_quirk_onoff(ncqati,	ATA_QUIRK_NO_NCQ_ON_ATI),
+-	/* is it pointless to prefer PIO for "safety reasons"? */
+-	if (ap->flags & ATA_FLAG_PIO_DMA) {
++	/*
++	 * Do not use DMA if the connected device only supports PIO, even if the
++	 * port prefers PIO commands via DMA.
++	 *
++	 * Ideally, we should call atapi_check_dma() to check if it is safe for
++	 * the LLD to use DMA for REQUEST_SENSE, but we don't have a qc.
++	 * Since we can't check the command, perhaps we should only use pio?
++	 */
++	if ((ap->flags & ATA_FLAG_PIO_DMA) && !(dev->flags & ATA_DFLAG_PIO)) {
+ 		tf.protocol = ATAPI_PROT_DMA;
+ 		tf.feature |= ATAPI_PKT_DMA;
+ 	} else {
 -- 
 2.39.5
 
