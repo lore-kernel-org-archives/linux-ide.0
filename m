@@ -1,101 +1,111 @@
-Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f196.google.com (mail-pl1-f196.google.com [209.85.214.196])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAFDA13BC02;
-	Wed,  2 Apr 2025 15:57:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EF032E339D;
+	Thu,  3 Apr 2025 03:45:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743609469; cv=none; b=N7IYpBKxDWDTbHbZl2QfG4Z42IhZ/MObjKqViZ0J+dZzB5MSLk8rl4gDO6tWb89td2BrAZTdNoPlRz1l1QB0Zy6NOgERowZ2aB0l+xxJBwcwoM1Gupq88H/XO44NV0wGulvgaBrAY84bWkz2GbnnIG/5G+LUSS9Dx4LqcPQHiWI=
+	t=1743651930; cv=none; b=MVxAlhXPh+2RoEPrCQn5wwZg2+YBkILrJToQw4imb9Xy5vt3OYcBv1wEuKeYzqmtopqifzgkti6MUEIIY80cx9at4akUJ40MZ6k1BeEBMzrLGsp452gYhS3Ny0O8W5gCGEgbKPjhnIG0/XJVhQsZFMErY5mk9SY8LgBJ3Kuy8mQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743609469; c=relaxed/simple;
-	bh=Xa25b++XKImzKTw5z/38OkUO4BtW0ZFRs8vcKJg4Ci0=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=KqevmoRNS/JLMzShGmes/+ya60dVgqv5eCM+ferB8VkmbgPkgLST8qKlF8SL1VIcOpmmFVMTVNj7E00VoAF2VfYKAi3K78HgwlWa5wsEJK43eSgfWRzJ2v+80TGvU1f26zbmseDq4X03/4FGbtGbufxy4CIQvJ80NpzikGAo7ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=PKY9pYPR; arc=none smtp.client-ip=198.137.202.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+	s=arc-20240116; t=1743651930; c=relaxed/simple;
+	bh=wzGWIf2FB1q0DOg13NZ39UTzns9D7dBSNr9vPGyZCb0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VMu1sJHI/OAtFtMKWgzyhtEPO8CPY0qHOfSrM6U/jibIbI0igw4dn/STaHUksHMxBNJAhwYreJ40zRVWXotFt6Sn1EJ1HJRzz4YcH0oxJtSDMZoF9QDX24JrjI8Ae7CG50JgMZaYq6Hy6MPsiC2w5DwRuJXgVxHGNIBHv+gPPqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UYfTfa7P; arc=none smtp.client-ip=209.85.214.196
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="PKY9pYPR"
-Received: from [127.0.0.1] ([76.133.66.138])
-	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 532FutGe095148
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Wed, 2 Apr 2025 08:56:56 -0700
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 532FutGe095148
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2025032001; t=1743609418;
-	bh=Xa25b++XKImzKTw5z/38OkUO4BtW0ZFRs8vcKJg4Ci0=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=PKY9pYPRwrzTz3T2wfMHzO5CxQTclyrXpopuE633CLIfZy/ukPrGJisoGqNXqtKGR
-	 Kwz413hdEtK5pBXselQWUxDFcZNypXyGZdI8G30/DwRJXDsP4zWDSJB/AE9/Rxd+2y
-	 UpqxkHxOPXPWmGYI+FJgvcCaL46+fNbgfHJ0c/b1wjVyQCE2qT0M/ZA7JLtTSrk+kH
-	 ZmVpsuIPE4MYWvvrXrlGIXqvQJY0mfJeR5VLbutwJ29pIU+n402Afr0HUdg174buI6
-	 LnlSkpy+WJQiHzFkU9vzRc2V7DoFNa6OrQ/gdWEEYK97M+97vAsoAKJUgXaK8+OFNg
-	 pTT1Aq8YFeE0Q==
-Date: Wed, 02 Apr 2025 08:56:55 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
-To: Dave Hansen <dave.hansen@intel.com>, Xin Li <xin@zytor.com>,
-        Ingo Molnar <mingo@kernel.org>
-CC: linux-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, virtualization@lists.linux.dev,
-        linux-edac@vger.kernel.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-ide@vger.kernel.org,
-        linux-pm@vger.kernel.org, bpf@vger.kernel.org, llvm@lists.linux.dev,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-        dave.hansen@linux.intel.com, x86@kernel.org, jgross@suse.com,
-        andrew.cooper3@citrix.com, peterz@infradead.org, acme@kernel.org,
-        namhyung@kernel.org, mark.rutland@arm.com,
-        alexander.shishkin@linux.intel.com, jolsa@kernel.org,
-        irogers@google.com, adrian.hunter@intel.com, kan.liang@linux.intel.com,
-        wei.liu@kernel.org, ajay.kaher@broadcom.com,
-        alexey.amakhalov@broadcom.com, bcm-kernel-feedback-list@broadcom.com,
-        tony.luck@intel.com, pbonzini@redhat.com, vkuznets@redhat.com,
-        seanjc@google.com, luto@kernel.org, boris.ostrovsky@oracle.com,
-        kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com
-Subject: =?US-ASCII?Q?Re=3A_=5BRFC_PATCH_v1_01/15=5D_x86/msr=3A_Re?=
- =?US-ASCII?Q?place_=5F=5Fwrmsr=28=29_with_native=5Fwrmsrl=28=29?=
-User-Agent: K-9 Mail for Android
-In-Reply-To: <e5770add-9d18-40e1-929d-df7c40f3c7d1@intel.com>
-References: <20250331082251.3171276-1-xin@zytor.com> <20250331082251.3171276-2-xin@zytor.com> <Z-pruogreCuU66wm@gmail.com> <9D15DE81-2E68-4FCD-A133-4963602E18C9@zytor.com> <a0254e73-bf7c-4876-b64e-b08e96044666@zytor.com> <e5770add-9d18-40e1-929d-df7c40f3c7d1@intel.com>
-Message-ID: <ADCFB190-A89A-460D-81A6-80E20AEFBFBC@zytor.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UYfTfa7P"
+Received: by mail-pl1-f196.google.com with SMTP id d9443c01a7336-22928d629faso4520425ad.3;
+        Wed, 02 Apr 2025 20:45:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1743651928; x=1744256728; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Tw2FNjZg97zEj3C90ptNSlwRVtq6qjFq0b/HRBNiad4=;
+        b=UYfTfa7PSE6aTW/3xEGtePQjbSTNu3WFOx5nZvIWAXic2z4rENdGBLSoOi+06yant4
+         iw048VzLXx2GFTDKOiA6heXQuY9m6qQpuLmbCnGKf9jYLkkQQJu/rMfBv1ngE4VGos/D
+         tTfED3obb4S6NB+piynIgzn66j+gMYPDuPyirzupefJOTfNcRCFbqI0p62WnHh2E6mYP
+         me+O5vUhSykCYnyYybI7E+qKs3QSBYDy3JWqTzUODsmhf5W+YRlxK+Knq3J1fB3Euj9J
+         vH5d3ikCLtGBryHgD/0aMORdWCWgPiBcsezee+jMigv8dfJUqSJiyMlQwriQqxPiK0h0
+         jpwQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1743651928; x=1744256728;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Tw2FNjZg97zEj3C90ptNSlwRVtq6qjFq0b/HRBNiad4=;
+        b=fykJNLJVZSuWFW8H8ndqElHWkCdkds8dCQZym7CZzfjCjv5jIXxEA+9SHzQ53m9879
+         J8HAOYFG4gUhd6CrKBOnst7DbohS2yOdMUja8kNu7WllyBeAreHxmwNEqKA05zPX23NU
+         1mgxnM26cxxevMmqkyuzZ2VRsAX056Ie9b2pOItLswZTK+wbRRmCSnirP7B8eGpMlEqR
+         g2ZgeeUrklpTFcQ7ISpDLptJFsW8iIbppNGvSClTJD8fXMUeZL0m0X9rF20MzS2F/gKP
+         d9TeL07a5bN+60qK43QONGel17laqWVzH2BIAsuElDLoXDBU487L3pgcH4nlQ/ZRoXF6
+         yOEg==
+X-Forwarded-Encrypted: i=1; AJvYcCUZWzuG5s0n6Mm3XT9PmbnhdMBDqp972X/eL2JW5HeWjVWjKCt+q12awQ6ga1MJjoh53W+ygYOSQ8s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzhaWYoKxW3Cu/H6dHacOZ4wHO0ww8haz6YLfVmeGHbf70oqqQ5
+	Nh2EuvI8hnig6tV51YFXaaah9Qt75vGjC1CvalgWVQkJX+hw0Um2
+X-Gm-Gg: ASbGncueZ2sCuKQm+WxaJ/Apd7Ed0bOrVC/fgUDwIwDqU7qlmP7X6feTW7SJ99bSEM2
+	043ZF1ChGZmu44C3AW7xVtLyDR54ON+L7ZXA8WxG2zewTqf3EtouVJQPydvgrceUvlqvvzrvSH7
+	2hmtFVZqYoDe6qWHV2S9+vwn2cJpj2cTTBHvajmXPD2gXdK4MtL3yD6CfWR/V5wjnkQgusyZQlh
+	XKVJgOIiWKG7Dzuik47mfm+yoVO7wrWcuG5cfzs5MX+uyPqAncGmkG1GWInA9KBZNQS6MAg1WUM
+	wPypmaHYiEYlKfC+cSI0vCdsa07bNUIj2d4cKtb3F1Yy/2b9T7SiCNkdzh4poU4qyNCHXiM=
+X-Google-Smtp-Source: AGHT+IEsZviSPWU5erAdmB+yYTEcid7r7jqoBDS4VRoer2qsYY99qTObr9INv6/B7nY2jDRez/iJ4Q==
+X-Received: by 2002:a17:903:19ef:b0:223:33cb:335f with SMTP id d9443c01a7336-2292f9493e3mr300357035ad.3.1743651928403;
+        Wed, 02 Apr 2025 20:45:28 -0700 (PDT)
+Received: from henry.localdomain ([111.202.148.167])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-229785ada60sm4037155ad.3.2025.04.02.20.45.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Apr 2025 20:45:27 -0700 (PDT)
+From: Henry Martin <bsdhenrymartin@gmail.com>
+To: dlemoal@kernel.org,
+	cassel@kernel.org,
+	linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Henry Martin <bsdhenrymartin@gmail.com>
+Subject: [PATCH v1] [ARM] pata_pxa: Fix null-ptr-deref in pxa_ata_probe()
+Date: Thu,  3 Apr 2025 11:45:20 +0800
+Message-Id: <20250403034520.59597-1-bsdhenrymartin@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On April 2, 2025 8:41:07 AM PDT, Dave Hansen <dave=2Ehansen@intel=2Ecom> wr=
-ote:
->On 3/31/25 22:53, Xin Li wrote:
->> Per "struct msr" defined in arch/x86/include/asm/shared/msr=2Eh:
->>=20
->> struct msr {
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 union {
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 struct {
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u32 l=
-;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u32 h=
-;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 };
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 u64 q;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 };
->> };
->>=20
->> Probably *msrq() is what we want?
->
->What would folks think about "wrmsr64()"? It's writing a 64-bit value to
->an MSR and there are a lot of functions in the kernel that are named
->with the argument width in bits=2E
+devm_ioremap() returns NULL on error. Currently, pxa_ata_probe() does
+not check for this case, which results in a NULL pointer dereference.
 
-Personally, I hate the extra verbosity, mostly visual, since numerals are =
-nearly as prominent as capital letters they tend to attract the eye=2E Ther=
-e is a reason why they aren't used this way in assembly languages=2E
+Add NULL check after devm_ioremap() to prevent this issue.
+
+Fixes: 2dc6c6f15da9 ("[ARM] pata_pxa: DMA-capable PATA driver")
+Signed-off-by: Henry Martin <bsdhenrymartin@gmail.com>
+---
+ drivers/ata/pata_pxa.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
+index 434f380114af..cc76290a3b1a 100644
+--- a/drivers/ata/pata_pxa.c
++++ b/drivers/ata/pata_pxa.c
+@@ -223,11 +223,16 @@ static int pxa_ata_probe(struct platform_device *pdev)
+ 
+ 	ap->ioaddr.cmd_addr	= devm_ioremap(&pdev->dev, cmd_res->start,
+ 						resource_size(cmd_res));
++	if (!ap->ioaddr.cmd_addr)
++		return -ENOMEM;
+ 	ap->ioaddr.ctl_addr	= devm_ioremap(&pdev->dev, ctl_res->start,
+ 						resource_size(ctl_res));
++	if (!ap->ioaddr.ctl_addr)
++		return -ENOMEM;
+ 	ap->ioaddr.bmdma_addr	= devm_ioremap(&pdev->dev, dma_res->start,
+ 						resource_size(dma_res));
+-
++	if (!ap->ioaddr.bmdma_addr)
++		return -ENOMEM;
+ 	/*
+ 	 * Adjust register offsets
+ 	 */
+-- 
+2.34.1
+
