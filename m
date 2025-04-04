@@ -1,191 +1,124 @@
-Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50B9E4315C
-	for <linux-ide@vger.kernel.org>; Thu,  3 Apr 2025 21:29:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C790405F7;
+	Fri,  4 Apr 2025 03:55:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743715771; cv=none; b=oIMdAR/wrA+8U30ftz4Yy2PLVnDSssu504kdfTaQRhH+szvHvi8IpuFjRpf6XEaw1685yAGF/NAHvYgRTqka37wVfqucLjJHo29Sh0cJr5QZVkKmjshcWAhBM3fUBzf2CU0reINLL5h9TefYbDYqgidJyiB8eLu0fLdbfmYCO1o=
+	t=1743738922; cv=none; b=cP9q57+9l5cGEuAOZZe+9qJ0OkaW1Q1O0m41WPBUBS+f0iZJwEOQiV4MhqEy1Cx3nK6yotJS4YmFBONqnr0FFXv6SllXbXjQsFvpOSbht6jOzpvR+flsPHTipd7sXyjdYGT1GjqAE/kb2ON8WqbsBNyGZYZ9X4r3nGgVsELD3iQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743715771; c=relaxed/simple;
-	bh=nlwF+7zQGq2HUh16yYIyEZYJ+TKektWBRDNwXwNzVoQ=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=MVpISVy5U9B8Zgm9KRYm28F4zRHT3B02SLNE89UV0U25oTkDM4wSizttP8BhjL/b9BMAv2PuqFEAzbYK2JO9eTxjDr/r16lyumBVw0ZYGW7uoHxsFodAPD0Gd9HjdVPLDgSYcC10zaG3u5BO1Eqz+ZiJC5RNS8Y7SZQsuztSwMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=TR7qM9M1; arc=none smtp.client-ip=209.85.214.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+	s=arc-20240116; t=1743738922; c=relaxed/simple;
+	bh=nfrVIDcX82RBIgB6YujF5Ina9PlmqR0UkrDESoRx/38=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qYKolDXY+jIhVpluhcjEmL6qJj9OIleSmUTx134h68ToKJe2oxL2nHaUNjX2UcxDfr8LkwmdQxeApoXMga7t+unpqGwIfa3radH12mXnOqgkhVpIrkpyRNOsp5Xqv920oNpW4fv3GPHALHHK2+RX06MEzsIAuzZPapba9XWgSC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lAolNBww; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TR7qM9M1"
-Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-22651aca434so14519355ad.1
-        for <linux-ide@vger.kernel.org>; Thu, 03 Apr 2025 14:29:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1743715768; x=1744320568; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=o0cnUQbWUsiUv5dGgvP3QCnvz4IYCWsIxDLFEGTUwHE=;
-        b=TR7qM9M15ZmRCZKmOPHJ88VMuP9GxN3mAue+N+19AM+cCiVhI6V4aoUqiEl0uWsJvm
-         UZ/JuGWEBGZMDxZpkqn7sthSMJH6MJypUT1Lxo2wu/zsr1Hy2RaYjhW4cf9jZ7A9IPJw
-         QZ7hCFqAXrzUvmDkklKrS7Jyn0Qzx5QeprPr3B6VzPVawIydAZ+jBPtAH+ed2t9EQ4V/
-         QS+zGGBqaoL7M8oqxLUHwsurVlzRa6W8fBaar/+ZltBS/58ZPTbtXzBn6V9tlmI57L7a
-         s433jzNySzEwzN3tpmbFgUtxGZue7SshgdFzNjszsWCp1I/Nm7fuXUfl8T8Ks0nbqlVW
-         0L4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743715768; x=1744320568;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=o0cnUQbWUsiUv5dGgvP3QCnvz4IYCWsIxDLFEGTUwHE=;
-        b=Tu009au1R5etf5QKEHjAd2OPOfPGvd2kKvmsW4vcyJ6yvCAst+lj3h3qWtZNeo7lok
-         XgHWZgeHfAwzVgLKXeO2ueCN1f9gm+X8lQrAjUtV9HHLnN07YsL/NvJmbGytmM+y05YL
-         3+zd2WxDrjQzBJ1mGo9D9ZmgeDgTgMTrmXdZYir8C85eQdXODeZTi6Q+UkA1d4EmZwLa
-         YTuTvbH2UPLtcW9M129Y1TVt6lQaVh7YQVlPibta+gsXEeck4aVT7ch9X7+Dsc8s2Kmn
-         qMD9mJmcA2Fq/jKKyzBg/FV8CbSuS+eDw9/7Nds6ji4waUSOJEgd+LWPXcgalBoPHees
-         jPog==
-X-Gm-Message-State: AOJu0Yw9kHAsusW/K4mTAKL3rgasUpAZN2uHcrTsEjMOb0ycSRXsPxX3
-	lpWuVb6NxHiqWCHLigLhvUbLnRWpK5aluVc5lUeOTiuW/uVjfQ5btLss8q+cU4jDVYQbQLNx/QD
-	KmowcQFRLqw==
-X-Google-Smtp-Source: AGHT+IHPtQAcMp97iUwO+iKmkYZGdnjkx3hYPOwQLgDFnvdTsvGov+e4Tx0+KFjRc+ZlGneeC+uKFiwmQdRIHw==
-X-Received: from pfblg21.prod.google.com ([2002:a05:6a00:7095:b0:737:69cc:5b41])
- (user=ipylypiv job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:902:f544:b0:21f:8453:7484 with SMTP id d9443c01a7336-22a8a87ec03mr5663175ad.30.1743715768494;
- Thu, 03 Apr 2025 14:29:28 -0700 (PDT)
-Date: Thu,  3 Apr 2025 14:29:24 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lAolNBww"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32AA3C4CEDD;
+	Fri,  4 Apr 2025 03:55:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1743738920;
+	bh=nfrVIDcX82RBIgB6YujF5Ina9PlmqR0UkrDESoRx/38=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=lAolNBwwQzHEihA6y/2uejPCga+LLvaa9Pj/hHExCZ0z8kkMfauFTsCPvADBNkISG
+	 ZE//FueLAF/834ZoLsKNEZ7pycg0OXGTKloKHxCal+4mhbwUsY6whpY860i7GuV+LK
+	 NCd3y73iKgudx83HG4x4q215yxghwOpu//aRnBUO3S9VMXES0UhFkpEU8+nPWdeYx6
+	 nZRVtaITM6oHxWRHfBdzlfJ5X+fyaeaYw4U8mwUZ7JUyJw6/D/THioIoo3GhR6F+5h
+	 KqQaBomIjMkZRuj/o8WwSJZVE7a7eVwCtAZipgqdtkY/sHgvHGNZjAvFjUuQ5IztrZ
+	 kSfBnbWjJMk9A==
+Message-ID: <6eef4b75-2a2c-42f2-a35e-558260143dba@kernel.org>
+Date: Fri, 4 Apr 2025 12:54:36 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.49.0.504.g3bcea36a83-goog
-Message-ID: <20250403212924.306782-1-ipylypiv@google.com>
-Subject: [PATCH v2] ata: libata-scsi: Set INFORMATION sense data field consistently
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] libata: Add error handling for pdc20621_i2c_read().
+To: Wentao Liang <vulab@iscas.ac.cn>, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250403103957.2550-1-vulab@iscas.ac.cn>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20250403103957.2550-1-vulab@iscas.ac.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The INFORMATION field is not set when sense data is obtained using
-ata_eh_request_sense(). Move the ata_scsi_set_sense_information() call
-to ata_scsi_qc_complete() to consistently set the INFORMATION field
-regardless of the way how the sense data is obtained.
+On 4/3/25 7:39 PM, Wentao Liang wrote:
+> The pdc20621_prog_dimm0() calls the pdc20621_i2c_read(), but does not
 
-This call should be limited to regular commands only, as the INFORMATION
-field is populated with different data for ATA PASS-THROUGH commands.
+The function pdc20621_prog_dimm0() calls the function pdc20621_i2c_read() but
+does...
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
----
 
-Changes in v2:
-- Rephrased commit message to make it clearer.
-- Dropped kernel-doc comment for the ata_scsi_set_sense_information().
+> handle the error if the read fails. This could lead to process with
+> invalid data. A proper inplementation can be found in
 
- drivers/ata/libata-sata.c |  2 --
- drivers/ata/libata-scsi.c | 31 ++++++++++++++-----------------
- drivers/ata/libata.h      |  3 ---
- 3 files changed, 14 insertions(+), 22 deletions(-)
+s/inplementation/implementation
 
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index ba300cc0a3a3..b01b52e95352 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1644,8 +1644,6 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 		if (ata_scsi_sense_is_valid(sense_key, asc, ascq)) {
- 			ata_scsi_set_sense(dev, qc->scsicmd, sense_key, asc,
- 					   ascq);
--			ata_scsi_set_sense_information(dev, qc->scsicmd,
--						       &qc->result_tf);
- 			qc->flags |= ATA_QCFLAG_SENSE_VALID;
- 		}
- 	}
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2796c0da8257..ef117a0bc248 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -216,17 +216,21 @@ void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	scsi_build_sense(cmd, d_sense, sk, asc, ascq);
- }
- 
--void ata_scsi_set_sense_information(struct ata_device *dev,
--				    struct scsi_cmnd *cmd,
--				    const struct ata_taskfile *tf)
-+static void ata_scsi_set_sense_information(struct ata_queued_cmd *qc)
- {
- 	u64 information;
- 
--	information = ata_tf_read_block(tf, dev);
-+	if (!(qc->flags & ATA_QCFLAG_RTF_FILLED)) {
-+		ata_dev_dbg(qc->dev,
-+			    "missing result TF: can't set INFORMATION sense field\n");
-+		return;
-+	}
-+
-+	information = ata_tf_read_block(&qc->result_tf, qc->dev);
- 	if (information == U64_MAX)
- 		return;
- 
--	scsi_set_sense_information(cmd->sense_buffer,
-+	scsi_set_sense_information(qc->scsicmd->sense_buffer,
- 				   SCSI_SENSE_BUFFERSIZE, information);
- }
- 
-@@ -971,8 +975,7 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
-  *	ata_gen_ata_sense - generate a SCSI fixed sense block
-  *	@qc: Command that we are erroring out
-  *
-- *	Generate sense block for a failed ATA command @qc.  Descriptor
-- *	format is used to accommodate LBA48 block address.
-+ *	Generate sense block for a failed ATA command @qc.
-  *
-  *	LOCKING:
-  *	None.
-@@ -982,8 +985,6 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
- 	struct ata_device *dev = qc->dev;
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_taskfile *tf = &qc->result_tf;
--	unsigned char *sb = cmd->sense_buffer;
--	u64 block;
- 	u8 sense_key, asc, ascq;
- 
- 	if (ata_dev_disabled(dev)) {
-@@ -1014,12 +1015,6 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
- 		ata_scsi_set_sense(dev, cmd, ABORTED_COMMAND, 0, 0);
- 		return;
- 	}
--
--	block = ata_tf_read_block(&qc->result_tf, dev);
--	if (block == U64_MAX)
--		return;
--
--	scsi_set_sense_information(sb, SCSI_SENSE_BUFFERSIZE, block);
- }
- 
- void ata_scsi_sdev_config(struct scsi_device *sdev)
-@@ -1679,8 +1674,10 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 		ata_scsi_set_passthru_sense_fields(qc);
- 		if (is_ck_cond_request)
- 			set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
--	} else if (is_error && !have_sense) {
--		ata_gen_ata_sense(qc);
-+	} else if (is_error) {
-+		if (!have_sense)
-+			ata_gen_ata_sense(qc);
-+		ata_scsi_set_sense_information(qc);
- 	}
- 
- 	ata_qc_done(qc);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 0337be4faec7..ce5c628fa6fd 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -141,9 +141,6 @@ extern int ata_scsi_offline_dev(struct ata_device *dev);
- extern bool ata_scsi_sense_is_valid(u8 sk, u8 asc, u8 ascq);
- extern void ata_scsi_set_sense(struct ata_device *dev,
- 			       struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq);
--extern void ata_scsi_set_sense_information(struct ata_device *dev,
--					   struct scsi_cmnd *cmd,
--					   const struct ata_taskfile *tf);
- extern void ata_scsi_media_change_notify(struct ata_device *dev);
- extern void ata_scsi_hotplug(struct work_struct *work);
- extern void ata_scsi_dev_rescan(struct work_struct *work);
+> pdc20621_prog_dimm_global(). As mentioned in its commit:
+> bb44e154e25125bef31fa956785e90fccd24610b, the variable spd0 might be
+> used uninitialized when pdc20621_i2c_read() fails.
+> 
+> Add error handling to the pdc20621_i2c_read(). If a read operation fails,
+> an error message is logged via dev_err(), and return an under-zero value
+> to represent error situlation.
+
+and return a negative error code.
+
+> 
+> Add error handling to pdc20621_prog_dimm0() in pdc20621_dimm_init(), and
+> return a none-zero value when pdc20621_prog_dimm0() fails.
+
+return a negative error code if pdc20621_prog_dimm0() fails.
+
+> 
+> Fixes: 4447d3515616 ("libata: convert the remaining SATA drivers to new init model")
+> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+> ---
+>  drivers/ata/sata_sx4.c | 13 ++++++++++---
+>  1 file changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+> index a482741eb181..a4027eb2fb66 100644
+> --- a/drivers/ata/sata_sx4.c
+> +++ b/drivers/ata/sata_sx4.c
+> @@ -1117,9 +1117,14 @@ static int pdc20621_prog_dimm0(struct ata_host *host)
+>  	mmio += PDC_CHIP0_OFS;
+>  
+>  	for (i = 0; i < ARRAY_SIZE(pdc_i2c_read_data); i++)
+> -		pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
+> -				  pdc_i2c_read_data[i].reg,
+> -				  &spd0[pdc_i2c_read_data[i].ofs]);
+> +		if (!pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
+> +				       pdc_i2c_read_data[i].reg,
+> +				       &spd0[pdc_i2c_read_data[i].ofs])){
+> +			dev_err(host->dev,
+> +				"Failed in i2c read at index %d: device=%#x, reg=%#x\n",
+> +				i, PDC_DIMM0_SPD_DEV_ADDRESS, pdc_i2c_read_data[i].reg);
+> +			return -1;
+
+			return -EIO;
+> +		}
+>  
+>  	data |= (spd0[4] - 8) | ((spd0[21] != 0) << 3) | ((spd0[3]-11) << 4);
+>  	data |= ((spd0[17] / 4) << 6) | ((spd0[5] / 2) << 7) |
+> @@ -1284,6 +1289,8 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
+>  
+>  	/* Programming DIMM0 Module Control Register (index_CID0:80h) */
+>  	size = pdc20621_prog_dimm0(host);
+> +	if (size < 0)
+> +		return 1;
+
+		return size;
+
+>  	dev_dbg(host->dev, "Local DIMM Size = %dMB\n", size);
+>  
+>  	/* Programming DIMM Module Global Control Register (index_CID0:88h) */
+
+
 -- 
-2.49.0.504.g3bcea36a83-goog
-
+Damien Le Moal
+Western Digital Research
