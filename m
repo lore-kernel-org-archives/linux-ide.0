@@ -1,116 +1,97 @@
-Received: from mail-pf1-f196.google.com (mail-pf1-f196.google.com [209.85.210.196])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [212.227.15.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20EDB1465AE;
-	Fri,  4 Apr 2025 06:14:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD66717A300;
+	Fri,  4 Apr 2025 09:22:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743747291; cv=none; b=kt6VZXlCqwsNsdCJpRQ1+ZDksL8Ps1l4cJLQORW/rBM4hzrrp1fJDqmqgPL5PUbBQgdv1JJFI+DJytapbY45U6wScBpK+FqVA+vG0mHJmSSHNVKmYJkHIbnQ4Qmb5ICbVqdWAV5/FjHrOjCyvzS5PJf6Vkfl9QRjHAhS3AYuk+o=
+	t=1743758548; cv=none; b=Z+0yD4VX1UvUhLSmcXu+7qQu8czEJ1RXawDrHfeVazaW7a7JVz2SL4eej5h/saEpmXQsALsDbnMxcTLP9Mq0uSs/H0fVJirXz5NW4vOTXCwO/Q9ulrLSD59m4VqXPACqnN3sVi3YaBcTCtaN2uLuCMkmmwhlwDeuaNGGbZE1kdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743747291; c=relaxed/simple;
-	bh=Q+X2nc6nomcFw4vX18B8NcWcC56hgCUDWerNGnkpS3k=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cyb9FmGpKbq4UzY1A6DNKEfAt+DGHlmFeOJYlIm7vi1eCbuj7IGuGCxYtEoUOy9gHdfmv2yjqFVM+rPDNR8LzVce+Nxbh7AWVwy+lNZ7rwQ9sDW51UbrWoUJ6XJSEcruKtk5A4IBXGPvabfET3UWxTrrZGJio1tMfYvpuLoezRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XYLKwGkT; arc=none smtp.client-ip=209.85.210.196
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1743758548; c=relaxed/simple;
+	bh=4Rmo1OIYfneloOqpbx4GqzJBdNJaS3RqAYXs514+VFA=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=L/JuU95papleQ/EaT9t8IltZXcw0syPMG6xTDgWvTHBuACtHEdqYXOv7AgTVrsudAVDYiHK9uwuPrEvPtRMYKxiUOLgXh98/ksH5SwxpvlD+QnUIXHicXJXQGFeqkJ6dSX5kQ6sfe7rU0/jHcfF8XbPrN/zQ1gZEGn672XaT+HY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=fqcdGoYj; arc=none smtp.client-ip=212.227.15.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XYLKwGkT"
-Received: by mail-pf1-f196.google.com with SMTP id d2e1a72fcca58-736c3e7b390so1584302b3a.2;
-        Thu, 03 Apr 2025 23:14:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743747289; x=1744352089; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2wHSEINwNnkoIONDsN3NFU6pUQ/aEiqLdUv7c1cE3AE=;
-        b=XYLKwGkTt8U70e5vwSgwMvO9NdseE3D8b5UpY53la4YtCGl/VOyTuM06o3LkSgVsv2
-         rrFHpet0xBhdZopJHOQWlJELHs3DJ2MzczdFkhTVal1g9APoA3oZkdmHRFSgYjmgbACz
-         c8nzmiK8DsJ6khVaiqtH5T+3j/y9m2evIhdDBU+cRxvpyzejFvnqKODPmthQ5SICazzP
-         bZWcX1bBLs+zE7ju/y+B4ChRd+ckphrVm+/dbmRPPHT1YCtyvQk7Tb0XXPbftFrqON+y
-         oEoPFDtTsgz9AmFKyTBlOpDrZrJ+tRUU8a+Sdaady40X1rxrqXk9k5Gacqj+48UE7YUj
-         bTXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743747289; x=1744352089;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=2wHSEINwNnkoIONDsN3NFU6pUQ/aEiqLdUv7c1cE3AE=;
-        b=o4Sk3ywO6HZyxYxViNzQxN5+Cf+Mw0oPYMmEiGIzZ+jJPZfrPwmX3AvlB+wRIc1GpH
-         jZOqYXAWH2P77ZDrSnuY/P56hQO8r+/+WpCifvCHd/0M8u0siZIcw6LziNfABaw8Ih9H
-         zy7Kwfb1pTT/GKhWN+y32oYTKyMn1HY0NmAnIcL/uQGgkXKNtxXCqs9dKdT9RncRoYZe
-         3M3AZ+oe+Qn7aCNc9XONn9cUaKKQ8vVVCpSvczz/K1GXFqfaqG4j9T1uXzt+tLXt5K/0
-         wKsOy8D1QQ0/ebKbpze7DUgxyrc27Ttbmh5d3otUBqHirGBooxiS/78zUlCg+s0P+XqM
-         mU1g==
-X-Forwarded-Encrypted: i=1; AJvYcCVgDGKFUn8BYmnQpfp26S2KPLh0WU67Gws0UFCUwi301BOt5+82QFYO5UqcheC/SxZmClRf50fImILVYS0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyWItagoUsUMZiZTRkpa+aKy7Wad+MmTXERiegvURUXX0ErbCzq
-	0KEDNyisgjQKJYWOGxHdpLXk/L0eKn/xqOM8GzEgSU92rAJyJv7X
-X-Gm-Gg: ASbGnctv57DJgSeYRQ0cq5HCMumNi9EjdDQ8WDbA5dSO5Y4FAVJ2ytiNtcDwo35l3Gf
-	L2Sr6jiXVFytd4FOir03KHZYMX9S89WhLMJw7Pgw91uFmm21wfdZvAO5USL+uCxbR1z9AEpOzsE
-	wbQTEu7fCWmIjMNkr4zEE9PzzW31biMwobMO1J5goNDDnTLq7LvB+BMuzfJdT0lkR5zSmv0PXk3
-	dU6Agw6NkjusErmRCxiDvy6Qv7OdyzjJA+nGRVKT50skG+qnHGEtWqmOHvJGad5E7TIpUP94dwQ
-	XSnrx6ngOGSZmH5+zrBi7ZWmbrP5UqzEaYTkK2N9xQ5zpg/mXoV3YaSwVYetnXvRqwLXUw==
-X-Google-Smtp-Source: AGHT+IHK6KAghY4r6JYoithJV2ZGL4jKogLKnmv2gszlamlSnbrI1gSpcnkAdg54t7RMxDURdTLUog==
-X-Received: by 2002:a05:6a00:2e0f:b0:736:3d7c:2368 with SMTP id d2e1a72fcca58-739e6ff1d17mr1953597b3a.7.1743747289156;
-        Thu, 03 Apr 2025 23:14:49 -0700 (PDT)
-Received: from henry.localdomain ([223.72.104.236])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-739da0b41dfsm2602210b3a.136.2025.04.03.23.14.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Apr 2025 23:14:48 -0700 (PDT)
-From: Henry Martin <bsdhenrymartin@gmail.com>
-To: dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Henry Martin <bsdhenrymartin@gmail.com>
-Subject: [PATCH v2] ata: pata_pxa: Fix potential NULL pointer dereference in pxa_ata_probe()
-Date: Fri,  4 Apr 2025 14:14:38 +0800
-Message-Id: <20250404061438.67557-1-bsdhenrymartin@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <d16bdd67-5060-4bb1-991b-6c82f3936ace@kernel.org>
-References: <d16bdd67-5060-4bb1-991b-6c82f3936ace@kernel.org>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="fqcdGoYj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1743758526; x=1744363326; i=markus.elfring@web.de;
+	bh=4Rmo1OIYfneloOqpbx4GqzJBdNJaS3RqAYXs514+VFA=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=fqcdGoYjwDCm73eGlCCAZmCCOCbDjUQ9eYSJdBu9Za/o8oVr5mpY9YyS3AP4lVV2
+	 NU2rw/rUURCTfRgfDK6uDHoK6TU1nTB7jPUQavnfFi1XibrBcuEwiV0Aj0MUcbwZi
+	 PZ0H+J6dlpwc6BpOV53L/sOrS7QCV1OaGdvXHc6HKs4+2EilgtRrD9Fy3oumHOKys
+	 sGMATqyjHLjtPB9hRUL8IgSplsgkEjL5yACGNPDAwLkCvUJfqAIJECMmUsQ+Vmdyf
+	 lDe3b1i09zCBJcFqKct4ghNe1IWjNI/sHMvfm26DQvFISlqd0VB80bVNuRqGIJzSu
+	 H4Dzbq8zLFuRpJmCaQ==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.70.27]) by smtp.web.de (mrweb006
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1M2Phi-1twmxc2nks-00A9jP; Fri, 04
+ Apr 2025 11:22:06 +0200
+Message-ID: <879740e3-d485-4150-b0d4-538cae5bf39e@web.de>
+Date: Fri, 4 Apr 2025 11:22:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+To: Henry Martin <bsdhenrymartin@gmail.com>, linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>
+References: <20250404061438.67557-1-bsdhenrymartin@gmail.com>
+Subject: Re: [PATCH v2] ata: pata_pxa: Fix potential NULL pointer dereference
+ in pxa_ata_probe()
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20250404061438.67557-1-bsdhenrymartin@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:J3YN1v4LFbVMz8/fgW2pgoPiU14nM8S6d3tgV9tJZBA0RllY44A
+ MNj+NSWfeT/oG3dfDfVsRozVlly4vFCTVH58Sn1yhVzw06o/xR4gg+fkIIN7+rIBZTiFqK5
+ 4onzODLvNLj7zu9gJekp3ayis4SRyL4tj1+Dnw4DjdOpEBHrE5RPSxQ1fDy+JLR7AUI5WUC
+ fvK56f/GDVbygLwOZW99w==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:5EydMVgJFUU=;524IjyqXC4wNhljffufiWc/e2EB
+ HMx6wUUgxnJ7+NZEvEd8wXbuqoUr4I9SYAYmNAS2V+8j4k6oQLQFJxXytJybprKktB455fKne
+ tfLQtuW6+4d9BzK77tR7wgxmNnMRCWCuC16Y0ITkEpqu6y3qWtTyHqMJ//yhTCOMiR0gejas7
+ +HSZ6I36PCOqFXcs77MceIZpBzYC3NW2zYJPR7C3ZciRZ48lKVQ6u/eRYOckqssL9q6ojh+3e
+ js1X0ZZAeG/3dF+B/ryUmwsvDM0+ykOWXELJjkEmJlPzneHke51mjTkcVxohJHMrg2j4AsdFk
+ w2OK6uB13hqQrhHnTTCE7I7FiVd002dJxAziDFqGNWra53Ob5HpfbXWpyIMgcOs+4sO+OYLE4
+ uT6KHB2k2OVyShAn3oxP13XqXFcJJQbEspRQDMLB4432YsRdIikSuQ/D1qAJAQKZ5xgw8tSw7
+ pkb/cCTmADMYlZsG5evlHEtCoY8YOYty2RmgwD6kJxFCMaVw9DOcadobPFRkF8SKzwSP/s/f/
+ Hop2fQmzf3bPk0urPEFcPkBzXeauuPKjntm14Xjjwukp6jJrvWO+jQ+VFuWhQufBj4LJvoWY8
+ lcuJy66+Z6XcizS0CN2IQ/cqGlEG68EhW/DTWKGPFXo9UNMi3YJBvsecHR+8lday3rUi1Lk+H
+ JUq4w/P49ENNpq69HQEpZ2+wQ9o6qY79o43glXI+NKW70FZIbzUd06G6O80JYKeTXnm3J4O/7
+ jI+xIvXbGc4wmidtOAiKowB96X+WoUzd0IVzT5NHzwtgSJK+01VU7sdmq6WypHCKKmM0UqtTG
+ S6KuMRWcoUHhc7aw9cqM2yiBb26gDVsJXr5oxnWZ2rSLMbE2HDksoY2otp+FY0OWTFgTAjwr7
+ FhVYF11gR0RPc+HOxDM93KrGgvuB+L3xIELEplsoggN/mBVVEwEbnphfj7brC7wSJPYFTRkBJ
+ GQcd5/zkwv7V9Mwqys6V4VX2TKoQZkByFp55jdIv159bmgdIBcOpeyxjfXECpCkax9zIv/WeW
+ FvRSTaAY85iVBOflGqosMGocx1UGU72KRp7y4jRLycK9ZYb/0DGD7kksplvdouuQlPQYMBJuu
+ UOE4cR14SF7yiWk/fu5xPV0XSWeUo5k9hiVIMgo9A0dhLY28y7vsrxzHTJKhe6fLrnT4j3Dgl
+ TdoqPHtG5HxUz6q3Q64bkHSvQV6lHiJw+Bc0mnxEGMPFEP5hyeqZpjIK+ooOWsepeC7appXc7
+ du0l6PbZbB1gg2beZaS4a18AkIJE/ToAFwPUAsPKk0WXLcfDdhfSMCgDGU4FJQT932tQz3iFV
+ YH9KuyeROJQU+qRUHc+WhgSRu3HsTrukPt+kR9zu28r2ExUl+WWHy90mFpvQs6sq7PvMNjXK2
+ lkQnMQxSsFstSkaNRRjvBWzX2QSE1nzzBsPgP9YjGf9vnyno78Fafec2O8GGnuxYuf039Xkam
+ nQLcr3/stuUSaCzzTLCQ/zug6RuU0+lFaAUmTcnYyWk3ow38pX/+sjhV3m8AIkk0VlbmjUw==
 
-devm_ioremap() returns NULL on error. Currently, pxa_ata_probe() does
-not check for this case, which can result in a NULL pointer dereference.
+=E2=80=A6
+> Add NULL check after devm_ioremap() to prevent this issue.
 
-Add NULL check after devm_ioremap() to prevent this issue.
+May you omit the word =E2=80=9Cpotential=E2=80=9D from the summary phrase?
 
-Fixes: 2dc6c6f15da9 ("[ARM] pata_pxa: DMA-capable PATA driver")
-Signed-off-by: Henry Martin <bsdhenrymartin@gmail.com>
----
-V1 -> V2: Correct commit message and keep a blank line after check.
 
- drivers/ata/pata_pxa.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+=E2=80=A6
+> ---
+> V1 -> V2: Correct commit message and keep a blank line after check.
 
-diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
-index 434f380114af..03dbaf4a13a7 100644
---- a/drivers/ata/pata_pxa.c
-+++ b/drivers/ata/pata_pxa.c
-@@ -223,10 +223,16 @@ static int pxa_ata_probe(struct platform_device *pdev)
- 
- 	ap->ioaddr.cmd_addr	= devm_ioremap(&pdev->dev, cmd_res->start,
- 						resource_size(cmd_res));
-+	if (!ap->ioaddr.cmd_addr)
-+		return -ENOMEM;
- 	ap->ioaddr.ctl_addr	= devm_ioremap(&pdev->dev, ctl_res->start,
- 						resource_size(ctl_res));
-+	if (!ap->ioaddr.ctl_addr)
-+		return -ENOMEM;
- 	ap->ioaddr.bmdma_addr	= devm_ioremap(&pdev->dev, dma_res->start,
- 						resource_size(dma_res));
-+	if (!ap->ioaddr.bmdma_addr)
-+		return -ENOMEM;
- 
- 	/*
- 	 * Adjust register offsets
--- 
-2.34.1
+Can such an adjustment become helpful for any more places?
 
+Regards,
+Markus
