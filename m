@@ -1,180 +1,160 @@
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+Received: from mail-pf1-f202.google.com (mail-pf1-f202.google.com [209.85.210.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC53E189913
-	for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2025 21:44:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23EE8213230
+	for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2025 23:24:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744321483; cv=none; b=M9J4afHgwNjdd+7y8SFw35k0DhBK/Z7CQtkdsf66JTzEUCpFEAOGqYSb5vGHziecB71GK+2jqvwYy19XvlHm4ZQNWC0v0JgORnpK4o4hDznEs/i7SxxJVCJ0WYUL0qkYb6X17TViGcAbKNLXDuoVtxqx1v1JrhN5LUDJ2YPuRpc=
+	t=1744327464; cv=none; b=a+1E4hHYBdAWvTmKqaUtRixpRWHJ3F5aDw6FIlY7tuGqpoJ/Bl8Fs2XWwv9ZwtbP558QO3qfxDMbdURFKQJ01iHYK6BQxuGF9AsnJr7NloIJ+17MwfwyFeCZuEX6u2OXg6+uRRrrL6OmRtwYDBIJg08xklmSgiK89P/LN0/EwDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744321483; c=relaxed/simple;
-	bh=KklelM4fdLjlU3BKm7DQG5Urfqu2IiWQ1IMx8OKCk/k=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=neoWrJcmqGdYiZoMdvAT3ifTmDWn8+Bv+bD3yRMJWVF8u1Z5P1Af0UvBGaeMgaNe5suzdcr6gJjjBqzTOdr4N68fTO+Lu5VzZr384C9IoiKtKJ711pddVzduWOC6h5E1IjAv1+zoOaCkbRzLkWLuqBQZyLaLTMKXFagu8AVKavk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ano4706K; arc=none smtp.client-ip=209.85.218.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1744327464; c=relaxed/simple;
+	bh=fRu1wIpBkqC/PAC+6Z3ide0GL77+kwaEESC4lKY2HQM=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=UgXT6jAsq77tfba6N5K7rzTjzMD/8GJkJYM6rT42JBtEgRJmBe+3kj1j0ZxBqY29uk+ty7lDANx8xAgrxRT5uBbDQ4bg5i7d/vVqp9svgf24RMIx6cyvdzk69wtQu+W7udMpT4nUaPGaEFzbtSVdsPLUzpyPqhq5QjNPXAhYv0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=3u7Ky+9f; arc=none smtp.client-ip=209.85.210.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ano4706K"
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-ac3eb3fdd2eso259064566b.0
-        for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2025 14:44:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="3u7Ky+9f"
+Received: by mail-pf1-f202.google.com with SMTP id d2e1a72fcca58-736c0306242so1617190b3a.1
+        for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2025 16:24:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744321479; x=1744926279; darn=vger.kernel.org;
-        h=content-transfer-encoding:autocrypt:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mGc98gxYxUKlLAT9GDeQKNinJ5BrItYsfd69E7F/iGw=;
-        b=Ano4706KKt33eH5K1j+0iu6znzuRkMY9gM2ghz0+KGQSmeK0NuH8jaBUi3n8+yAnvf
-         KFNzshU1fcv1txeeLLozmCHmi3ud5mvnfycQcjtwrMtpODyeYlwjTB3LGR6O3SMbnwfp
-         4guaOJZmTxurPZ1tKb+Tm+82SQL6U8E2ToT2GBQ5Nd3T2NIyfzN+lp1FpjwstfcJQdRc
-         uMZEbHYXkYP+cT4PsqbtDNDNco5SrRpGldv03tbWHCj3lbWIlZTRoIM/tUBlOXAvnxWT
-         t9v2JwrhljcvdLGvW09fk11rX72CrIhk+ngNlsMqOI+N3Ms6ILu5zY03pdYVAyvWMJeX
-         cwEQ==
+        d=google.com; s=20230601; t=1744327461; x=1744932261; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+8Hj0FhxYq298MEgk+A50ezX9To9apyasGONCk8/EIY=;
+        b=3u7Ky+9frkNfCSvunj3hgyXaCVhwQWpsJbi1kvWmQtcGe+GsRD598bauPycpTprcD6
+         XGD+aPRexvyp8B8N5R+Y40IN+xBJMgfvd2vo8wEWcDIFLVunLWkQCGQTP1OF8+5Of5tY
+         h4gTalndOQUdDo50dGBtpP9O9VAPvw2fFnSmo1ySO1fzEWNakHbU3PYx2wpMv1Ig9YW5
+         v06Qe7baAARVR3deBAk9aM2bEqc2ROzGrDzz6/tvmsLuBFYWsfqD3K2l1WKJX3SnbqDD
+         H7Sxc+25sn/E2kpmCWLuUQi/Iq7M8NHLMtgELvTYk+iLGHNJbb+0cw3ePrc8PkUVEz8J
+         Ij7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744321479; x=1744926279;
-        h=content-transfer-encoding:autocrypt:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mGc98gxYxUKlLAT9GDeQKNinJ5BrItYsfd69E7F/iGw=;
-        b=nSjuQStpaoNUYrAaWDdX+qv0HC7dZLOMUoYiI7u6bvnxnsyIKpDXoJBDIlAES9bWVE
-         aNAsyUo6VtuRysYDiSfGTjkk/74UOMU0X+ACM9rOST8jaUfktzOiwPd1SBEynQFJoS9c
-         7FyBtBCNaf0Mbi2YnWm/ZgzO2YJjYl3LJ5U2wtqi9t6gjYU/O6zSsGttszZfgqvczfr7
-         Qn9DciVVz5gNmmEOJgObcjJBScAcsHuchRjrghVLIsIRi/Emu8m/Hr5rTX75sXsCo4Hy
-         c72KgzoyRevODg2/F1xpQZxK+Z3unK/aE5siCYo8BIubTK/HElxxzLPg3tV0LDbP6Eo0
-         oXGA==
-X-Gm-Message-State: AOJu0YxJnm6o7UwB/0nTLPYFGzQV0Yszk8TKMSlcrRiME1MV16ahPEio
-	tzTmH5BmTedF6n9HXeC6Gw80k8skppwDUhfPPDxbp6p4DxF6kWwmHX+gbg==
-X-Gm-Gg: ASbGncsvVKUkreU8frDc/HZcaPdr5FNzLcn4TsPYf8BMrASVOc3nc3GEUhZPtlJarAS
-	pHBc1zoew8GkJqisrdicoPvdgHFIK0fAOgEnUoT/cOfpSCNWfwZdVXHHbSsuFTTXDVzOYBM1LSZ
-	26b0Ccc+z4+3LxI/9kmHnskk3nqLJv9un7DdrG6z+heqXUG9RoQYLZyx6gO7i2GaBgmVzoabIxe
-	3ZWNcd+IB/0pMWfwkjh+4AI3SJvotqETTDA4pZ4a3q3n8AMqf1ZGYhmMfcv1WXUVTmzT8SjGJyP
-	9xL9jyqL5DW2Rlrm51kj1kQhlfgSBPfcUBredzBpEmDijific9ImAcEEkqfAusysCxH2qgqe0mx
-	fjjp/TCCn30xE3t9uyrzhvZ17YQAmKKvCQwO5EL94EiSgO35vFBR1AiaRKwgK9of46gEzpn+ICB
-	8RSDo6u5U6BLRrW8PcGZdN2cHJd0HLbg==
-X-Google-Smtp-Source: AGHT+IEk0CgYVZPs37F23lVIPGgU9lIfpMYyT2q8/wGL4KHIhoX5EEG1NmwWY7bJAqCjS480kFLwYg==
-X-Received: by 2002:a17:907:9624:b0:ac3:773:62a7 with SMTP id a640c23a62f3a-acad34d94camr20859066b.31.1744321478853;
-        Thu, 10 Apr 2025 14:44:38 -0700 (PDT)
-Received: from ?IPV6:2a02:3100:ae9e:d00:d036:f606:fd6b:eb81? (dynamic-2a02-3100-ae9e-0d00-d036-f606-fd6b-eb81.310.pool.telefonica.de. [2a02:3100:ae9e:d00:d036:f606:fd6b:eb81])
-        by smtp.googlemail.com with ESMTPSA id 4fb4d7f45d1cf-5f36ef5c445sm68816a12.31.2025.04.10.14.44.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Apr 2025 14:44:38 -0700 (PDT)
-Message-ID: <f9e7276d-d9f9-47cd-8b9b-5dc85567489a@gmail.com>
-Date: Thu, 10 Apr 2025 23:45:26 +0200
+        d=1e100.net; s=20230601; t=1744327461; x=1744932261;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+8Hj0FhxYq298MEgk+A50ezX9To9apyasGONCk8/EIY=;
+        b=hLOl5IqIuuC27TO8d4uoEiDAQmsXvV8KI4oIC59DIgh4WHIsdTtqd9bae7dXNpu0e+
+         n2ai5LYNnZsEykutUnThh6XvTnoMQl4QZFEjeNF8srrbUZNnBgrrShywwvw65Gxg2bQt
+         eY1DF6iUURJiH5K7zD4DOViyhuOugytIifgEc6PO7lz10huvkt85k1dl3UmraPUro5bl
+         zlFYy8TwLhF8zLTBRylBMtUeNoKFyb4PDnamup4OVI54tkBVP5OaChOKolEX2Goh8slw
+         9gZPmF13Rr0/9IAtoS5frJhzzZ8qAk3tO6xbyfl6TbmMES4f45dMGMynqxjWs+vYb+9/
+         gsTA==
+X-Forwarded-Encrypted: i=1; AJvYcCXj0lwfA5lkXi2wg+lQEinrqIShtC3fvr0oAlO/NY5fST28yijE7nPb2nekdsw7OtOt0uu82O4SBrI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YysoBl/WFCAKaUSIx1Rbt0BeQwz4IhQVx9a3SWB2h569l86ZaGA
+	7l+T9iE1eb0JD+5k3+tBOHNsvd/2VK9knQP/RsamU6/wyxZX+U/i882EPckOqVGzQ7xqMJuoqo3
+	ItQ==
+X-Google-Smtp-Source: AGHT+IHWYnK2BwFW7Mr5VmhaaxwX1jXjykj9i9MFxC3vV2mlnL+NePMyv0dJBUjVtFSac3MvKiuBJyLqfxA=
+X-Received: from pfbfj37.prod.google.com ([2002:a05:6a00:3a25:b0:730:8b4c:546c])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:21c7:b0:736:5c8e:baaa
+ with SMTP id d2e1a72fcca58-73bd119427emr706022b3a.2.1744327460939; Thu, 10
+ Apr 2025 16:24:20 -0700 (PDT)
+Date: Thu, 10 Apr 2025 16:24:19 -0700
+In-Reply-To: <20250331082251.3171276-11-xin@zytor.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH] ata: libata-core: Simplify ata_print_version_once
-Autocrypt: addr=hkallweit1@gmail.com; keydata=
- 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
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+References: <20250331082251.3171276-1-xin@zytor.com> <20250331082251.3171276-11-xin@zytor.com>
+Message-ID: <Z_hTI8ywa3rTxFaz@google.com>
+Subject: Re: [RFC PATCH v1 10/15] KVM: VMX: Use WRMSRNS or its immediate form
+ when available
+From: Sean Christopherson <seanjc@google.com>
+To: "Xin Li (Intel)" <xin@zytor.com>
+Cc: linux-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, 
+	linux-hyperv@vger.kernel.org, virtualization@lists.linux.dev, 
+	linux-edac@vger.kernel.org, kvm@vger.kernel.org, 
+	xen-devel@lists.xenproject.org, linux-ide@vger.kernel.org, 
+	linux-pm@vger.kernel.org, bpf@vger.kernel.org, llvm@lists.linux.dev, 
+	tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, 
+	dave.hansen@linux.intel.com, x86@kernel.org, hpa@zytor.com, jgross@suse.com, 
+	andrew.cooper3@citrix.com, peterz@infradead.org, acme@kernel.org, 
+	namhyung@kernel.org, mark.rutland@arm.com, alexander.shishkin@linux.intel.com, 
+	jolsa@kernel.org, irogers@google.com, adrian.hunter@intel.com, 
+	kan.liang@linux.intel.com, wei.liu@kernel.org, ajay.kaher@broadcom.com, 
+	alexey.amakhalov@broadcom.com, bcm-kernel-feedback-list@broadcom.com, 
+	tony.luck@intel.com, pbonzini@redhat.com, vkuznets@redhat.com, 
+	luto@kernel.org, boris.ostrovsky@oracle.com, kys@microsoft.com, 
+	haiyangz@microsoft.com, decui@microsoft.com
+Content-Type: text/plain; charset="us-ascii"
 
-Use dev_dbg_once() instead of open-coding the once functionality.
+On Mon, Mar 31, 2025, Xin Li (Intel) wrote:
+> Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+> ---
+>  arch/x86/include/asm/msr-index.h |  6 ++++++
+>  arch/x86/kvm/vmx/vmenter.S       | 28 ++++++++++++++++++++++++----
+>  2 files changed, 30 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/msr-index.h b/arch/x86/include/asm/msr-index.h
+> index e6134ef2263d..04244c3ba374 100644
+> --- a/arch/x86/include/asm/msr-index.h
+> +++ b/arch/x86/include/asm/msr-index.h
+> @@ -1226,4 +1226,10 @@
+>  						* a #GP
+>  						*/
+>  
+> +/* Instruction opcode for WRMSRNS supported in binutils >= 2.40 */
+> +#define ASM_WRMSRNS		_ASM_BYTES(0x0f,0x01,0xc6)
+> +
+> +/* Instruction opcode for the immediate form RDMSR/WRMSRNS */
+> +#define ASM_WRMSRNS_RAX		_ASM_BYTES(0xc4,0xe7,0x7a,0xf6,0xc0)
+> +
+>  #endif /* _ASM_X86_MSR_INDEX_H */
+> diff --git a/arch/x86/kvm/vmx/vmenter.S b/arch/x86/kvm/vmx/vmenter.S
+> index f6986dee6f8c..9fae43723c44 100644
+> --- a/arch/x86/kvm/vmx/vmenter.S
+> +++ b/arch/x86/kvm/vmx/vmenter.S
+> @@ -64,6 +64,29 @@
+>  	RET
+>  .endm
+>  
+> +/*
+> + * Write EAX to MSR_IA32_SPEC_CTRL.
+> + *
+> + * Choose the best WRMSR instruction based on availability.
+> + *
+> + * Replace with 'wrmsrns' and 'wrmsrns %rax, $MSR_IA32_SPEC_CTRL' once binutils support them.
+> + */
+> +.macro WRITE_EAX_TO_MSR_IA32_SPEC_CTRL
+> +	ALTERNATIVE_2 __stringify(mov $MSR_IA32_SPEC_CTRL, %ecx;		\
+> +				  xor %edx, %edx;				\
+> +				  mov %edi, %eax;				\
+> +				  ds wrmsr),					\
+> +		      __stringify(mov $MSR_IA32_SPEC_CTRL, %ecx;		\
+> +				  xor %edx, %edx;				\
+> +				  mov %edi, %eax;				\
+> +				  ASM_WRMSRNS),					\
+> +		      X86_FEATURE_WRMSRNS,					\
+> +		      __stringify(xor %_ASM_AX, %_ASM_AX;			\
+> +				  mov %edi, %eax;				\
+> +				  ASM_WRMSRNS_RAX; .long MSR_IA32_SPEC_CTRL),	\
+> +		      X86_FEATURE_MSR_IMM
+> +.endm
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/ata/libata-core.c |  6 +++---
- include/linux/libata.h    | 13 +------------
- 2 files changed, 4 insertions(+), 15 deletions(-)
+This is quite hideous.  I have no objection to optimizing __vmx_vcpu_run(), but
+I would much prefer that a macro like this live in generic code, and that it be
+generic.  It should be easy enough to provide an assembly friendly equivalent to
+__native_wrmsr_constant().
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 773799cfd..e58a22e83 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6682,11 +6682,11 @@ const struct ata_port_info ata_dummy_port_info = {
- };
- EXPORT_SYMBOL_GPL(ata_dummy_port_info);
- 
--void ata_print_version(const struct device *dev, const char *version)
-+void ata_print_version_once(const struct device *dev, const char *version)
- {
--	dev_printk(KERN_DEBUG, dev, "version %s\n", version);
-+	dev_dbg_once(dev, "version %s\n", version);
- }
--EXPORT_SYMBOL(ata_print_version);
-+EXPORT_SYMBOL(ata_print_version_once);
- 
- EXPORT_TRACEPOINT_SYMBOL_GPL(ata_tf_load);
- EXPORT_TRACEPOINT_SYMBOL_GPL(ata_exec_command);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index e5695998a..02c9f621e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -41,16 +41,7 @@
-  */
- #undef ATA_IRQ_TRAP		/* define to ack screaming irqs */
- 
--
--#define ata_print_version_once(dev, version)			\
--({								\
--	static bool __print_once;				\
--								\
--	if (!__print_once) {					\
--		__print_once = true;				\
--		ata_print_version(dev, version);		\
--	}							\
--})
-+void ata_print_version_once(const struct device *dev, const char *version);
- 
- /* defines only for the constants which don't work well as enums */
- #define ATA_TAG_POISON		0xfafbfcfdU
-@@ -1593,8 +1584,6 @@ do {								\
- #define ata_dev_dbg(dev, fmt, ...)				\
- 	ata_dev_printk(debug, dev, fmt, ##__VA_ARGS__)
- 
--void ata_print_version(const struct device *dev, const char *version);
--
- /*
-  * ata_eh_info helpers
-  */
--- 
-2.49.0
 
+> +
+>  .section .noinstr.text, "ax"
+>  
+>  /**
+> @@ -123,10 +146,7 @@ SYM_FUNC_START(__vmx_vcpu_run)
+>  	movl PER_CPU_VAR(x86_spec_ctrl_current), %esi
+>  	cmp %edi, %esi
+>  	je .Lspec_ctrl_done
+> -	mov $MSR_IA32_SPEC_CTRL, %ecx
+> -	xor %edx, %edx
+> -	mov %edi, %eax
+> -	wrmsr
+> +	WRITE_EAX_TO_MSR_IA32_SPEC_CTRL
+>  
+>  .Lspec_ctrl_done:
+>  
+> -- 
+> 2.49.0
+> 
