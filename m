@@ -1,80 +1,58 @@
-Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B68B38385;
-	Sat, 12 Apr 2025 23:11:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 503A042AA1
+	for <linux-ide@vger.kernel.org>; Mon, 14 Apr 2025 01:08:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744499495; cv=none; b=TXPgZ9muWRN+Mm+EKUEy1M+jnFzLdHI3EB1Px7usmziRebLEL1dDI6T+THRhPMgiOiF/BIooaWVVxVMtV8pZZAJieC6FWYe0SzfvnZZPV9qccjCXidEePrYMTc3bdTtmoDloaKqDBuBqRm+3s352k7fTr9HSGjZQFSvBZ33NLrQ=
+	t=1744592908; cv=none; b=YvxJuZ1+LL6wVUwco7c0TNBdKn0TaBShqknq41TFmGx1VWY1dnAcQJfpxfc1/5073tWVC5KNBE16HBb3sz7fYrUYjLCEyvJjEINy/4UOy2Rux/ScZ+/4RN8KEOTJixlOWHGWdLEynIKtthMVaYGd937Yb2gwnRzIriOYnw4tcsk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744499495; c=relaxed/simple;
-	bh=Z8ANyn5BO+4YSxFMj2ZIePI2Es9dy8Hv6toZ4ucWxdY=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=oxV3o//yquRg90stwy5WFdPY7nwqVebyJ0TO1q6PLe9ttFBhflg9Q37Jt3dB3ncPBAf/hm/OFIloiJoRHVmgCPgzFaB0fW07aWiRXGUJe9zPyegDrzbOTFNqPn19lndi212o1n2vrj5VzKYurEs20ZOBOwcMV3q246un7E1N5/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=lMBig7n3; arc=none smtp.client-ip=198.137.202.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+	s=arc-20240116; t=1744592908; c=relaxed/simple;
+	bh=lQDyHbKaTmxLDOgy5Q7KvFV/pToUjrzalrWzWV99syM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lReHIfRm18z/UrRJYMawtOdy0AjW4Lude5bBtfbsMqFPpqMjw0RPwrOuf9CGmocmyfhTdjPgZj1771FfUuLkZwFe0fpOgAvycZB9c32WgbZZjEwCf754yOM19D0dLJLRPGlWkiTVPWMTC9xckailGMaTTC06TrpuNBjINOA0Lto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H0jngsUq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="lMBig7n3"
-Received: from [127.0.0.1] ([76.133.66.138])
-	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 53CNA8tE1265382
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Sat, 12 Apr 2025 16:10:09 -0700
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 53CNA8tE1265382
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2025032001; t=1744499412;
-	bh=Z8ANyn5BO+4YSxFMj2ZIePI2Es9dy8Hv6toZ4ucWxdY=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=lMBig7n3wyGQ77xYpn5pnxKVN4QM3Vkq6hDZcLvPaFwS2PWF/n09rzmm4i6ZIrSlX
-	 ldJKqqxh7XGdq6n0fK1xSbkbF0eDIoNvUz2LhiGL+7mwgnCfFlBgBbxU3imjGP8GwY
-	 zTU8dvf1jWNkf6+mSxkledPR0XPGAcZA1I9f+5+YiIA5YgCTj3M0isuBNWaO1BHck1
-	 A5Uh/ZdjOxEnzIwdlikBQnfr1jA4LYpMjCETWZHP0OeiOO0PyexivLyItY7m/buoB1
-	 Qlv5YTi1XbrFcCf8wBQrrImS7wL6ntMIDtBYRTjjMB9jzG1ZKHtxezcpa9pVk9CqYV
-	 YnyFnuF53LDCw==
-Date: Sat, 12 Apr 2025 16:10:06 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
-To: Xin Li <xin@zytor.com>, Jim Mattson <jmattson@google.com>,
-        Sean Christopherson <seanjc@google.com>
-CC: linux-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, virtualization@lists.linux.dev,
-        linux-edac@vger.kernel.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-ide@vger.kernel.org,
-        linux-pm@vger.kernel.org, bpf@vger.kernel.org, llvm@lists.linux.dev,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-        dave.hansen@linux.intel.com, x86@kernel.org, jgross@suse.com,
-        andrew.cooper3@citrix.com, peterz@infradead.org, acme@kernel.org,
-        namhyung@kernel.org, mark.rutland@arm.com,
-        alexander.shishkin@linux.intel.com, jolsa@kernel.org,
-        irogers@google.com, adrian.hunter@intel.com, kan.liang@linux.intel.com,
-        wei.liu@kernel.org, ajay.kaher@broadcom.com,
-        bcm-kernel-feedback-list@broadcom.com, tony.luck@intel.com,
-        pbonzini@redhat.com, vkuznets@redhat.com, luto@kernel.org,
-        boris.ostrovsky@oracle.com, kys@microsoft.com, haiyangz@microsoft.com,
-        decui@microsoft.com
-Subject: =?US-ASCII?Q?Re=3A_=5BRFC_PATCH_v1_10/15=5D_KVM=3A_VMX=3A_Use_WR?=
- =?US-ASCII?Q?MSRNS_or_its_immediate_form_when_available?=
-User-Agent: K-9 Mail for Android
-In-Reply-To: <fa16949e-7842-45f7-9715-1bdda13b762a@zytor.com>
-References: <20250331082251.3171276-1-xin@zytor.com> <20250331082251.3171276-11-xin@zytor.com> <Z_hTI8ywa3rTxFaz@google.com> <CALMp9eRJkzA2YXf1Dfxt3ONP+P9aTA=WPraOPJPJ6C6j677+6Q@mail.gmail.com> <fa16949e-7842-45f7-9715-1bdda13b762a@zytor.com>
-Message-ID: <EAB44BB2-99BB-4D4A-8306-0235D2931E72@zytor.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H0jngsUq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC463C4CEDD;
+	Mon, 14 Apr 2025 01:08:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744592907;
+	bh=lQDyHbKaTmxLDOgy5Q7KvFV/pToUjrzalrWzWV99syM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=H0jngsUq63g4fiIqmo8jj1kYJ++DVmaKEOTxd/f4xElOdlf73Cz/KSPAlxVDEI9LD
+	 8olMoTBc4ROKIKo/BnEZYFG0EMR4CWHNNDbl1TvCtMkdKIey/JZczl1QRSQbTHTjZy
+	 XSuL4ouHljskiq0aF9kehsv2TJiQ5MRWWeE6RpqsTis0QLBoVR+xRpGaFLdZoydD6/
+	 vUJhluLR5NbkF0EoNo9IKwImY+6kzhDQ4fYKefdGHfcNx5K6wY/6c78Cw5NVcTEfgD
+	 V3yKu77oNxuOC9OSoe8hhZtrdqeDmuvvnx8/V+b25rXYVSAa6ZkqLPp166rzI/QhKY
+	 PzsY8b3jSMcXA==
+Message-ID: <d2ffd49d-4148-47fc-9377-949dfa7dcd68@kernel.org>
+Date: Mon, 14 Apr 2025 10:07:39 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ata: libata-core: Simplify ata_print_version_once
+To: Heiner Kallweit <hkallweit1@gmail.com>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+References: <3c13edc3-89ee-442f-ac7a-767ea5097424@gmail.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <3c13edc3-89ee-442f-ac7a-767ea5097424@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On April 11, 2025 9:32:32 PM PDT, Xin Li <xin@zytor=2Ecom> wrote:
->On 4/11/2025 2:12 PM, Jim Mattson wrote:
->> Surely, any CPU that has WRMSRNS also supports "Virtualize
->> IA32_SPEC_CTRL," right? Shouldn't we be using that feature rather than
->> swapping host and guest values with some form of WRMSR?
->
->Good question, the simple answer is that they are irrelevant=2E
+On 4/11/25 2:59 PM, Heiner Kallweit wrote:
+> Use dev_dbg_once() instead of open-coding the once functionality.
+> 
+> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 
-Also, *in this specific case* IA32_SPEC_CTRL is architecturally nonseriali=
-zing, i=2Ee=2E WRMSR executes as WRMSRNS anyway=2E
+Applied to for-6.16. Thanks !
+
+-- 
+Damien Le Moal
+Western Digital Research
