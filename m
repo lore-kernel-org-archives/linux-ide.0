@@ -1,72 +1,71 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FBE921883C
-	for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 18:04:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03CF521E097
+	for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 18:05:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744740244; cv=none; b=RMBnQ+UGSSo8iiUL2hY32aj23lBOl7b5TZNNljNIibo/xzS4Zn0U1W9GsD3NQQp8X4ke8l3KqeWd+y4/VQ+SZPRkpHIWmNrfdx9bsYlhQowjASFegkFw9Y7KBF/ivTnDGTEwM5chEOTdHjcvaCgbyYp7TEG5iSRcralCA/BZUJo=
+	t=1744740311; cv=none; b=JXBf1WSizg58V9sHRgiME2JXKa/5Y0C0bAUnrkQkOGpaufarVSJQn0Y9sDgf26LRyX3rcqsdk5kM05jvGsVVAviTZlkbZMDE197VrNxfxmSM67MadK3pC1P39pnhxfc0XS6NURIv8t0QeGWD6SU7kqptqRLBhZ6yn7sKLAXH9U4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744740244; c=relaxed/simple;
-	bh=wOCrRkHubym7IKs5I+04VQPvDY70ptHb1RCTzXYz3Dk=;
+	s=arc-20240116; t=1744740311; c=relaxed/simple;
+	bh=YcuHIKfq0aZ5FQjSXwqQWBJcujLVaOEdCCIlwjaV2lU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SVgmNdDvfKtR8vEfzw+yftWDQX4OqPvnbL9bnuJ9/tzuEtWg1QA2SxPGLwWsVx4CVoS3dFJ5bvnMMojLnZMDxTHQVPRj/Vp3BhKDSh5/52ePwwYrtV9HnJdxGwLTQmScZDy8xvP0YhpruLogpHbOICQIqzx9wRVeY5PvO4ov9fE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=WjczA1Sb; arc=none smtp.client-ip=209.85.214.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=meYvQNhH9gKmMLlnLZSFB6pq/SXgt051DEfcgSlS0kcKEan7L8rnj98bxtYcCgXsBsHn5b+Q47xXE76pD97uyxW2w3DHYQ5B4TgAjI39eXgNGL3QBNl8j1Hxn4PUoWFgpfa79z1rS8vZyIAjSxAr3HSmybv9/IpojoUDmfD7/70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=SOzJPq1N; arc=none smtp.client-ip=209.85.214.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WjczA1Sb"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2264c9d0295so25725ad.0
-        for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 11:04:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="SOzJPq1N"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2264c9d0295so26155ad.0
+        for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 11:05:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1744740242; x=1745345042; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1744740309; x=1745345109; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=65U1OJDd5z4gnvZn4OFYO2gVhpQmaCHeDffOYxstFNQ=;
-        b=WjczA1SbRqFn+VU2BJYWOuG/gKmq0sS4WXkMMU9ViF6+BCmKm3xq5Y/beFadiJ35HL
-         x0Kshys063aS6/LCzL+C1gkaC0t3Gj8qWihmqebZ0rQ/rf68ALfAdxlWcQaGkvflLf4X
-         vBz+Te9F8emJYPmiBfm9hij72zzsfx9hTVoMOsHFSXgUhzKStO1S1eq+LmVmpPKzHwI2
-         fPERInOlu5D4grnxSTDF/oPXr+SbgFWBvxAjqJ+4SA8YZri286VTJg9TC7kJ/zVQUzf9
-         RRLb3uUSl2tDS7Z17MceHIKdKVnXUejmiWLuxc2hatKlYVnIcuoWz5zzgupFuJeqjtzD
-         G9bw==
+        bh=lkkBDEMu3ClPVlV02k6xSb6QkvNhpwkTDj/2dcO/xeU=;
+        b=SOzJPq1Ni/MI4QoUh5s/jw4Zch9uGHMrIoLQRmmTvHrzRfrfETlXrLsiZb3lw+7cuw
+         ElfnOnBeOZm2rgcUrakKK2uoj4L8JHDQ9nKCEjAbQRKK3vCyrd3CNaa5FpraLu6+8xl5
+         j9w1IQ8WPgcfj6g0axBdas6YzkVrS3l3DxsQdvNV0tZp+nFVSrbflSTcb1mbFmGgeGf/
+         oIJhSoWWenUJVroHAhnsuk5ZQiHVQnBbmFWrI+7F1VLbKzry2jb+OeOSgXdhvUtNmbk8
+         d6Y5sVmm2V023X94Cx5isEMHdDg6VDKBhrlNWK2gl2fkkmaB65P8hxcvbA60TiosmbT/
+         T8fQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744740242; x=1745345042;
+        d=1e100.net; s=20230601; t=1744740309; x=1745345109;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=65U1OJDd5z4gnvZn4OFYO2gVhpQmaCHeDffOYxstFNQ=;
-        b=U96jUdYWMRO8AF0LHYApbK6kp9oKvYS4AeGzPAza4xLOjdTZrbG5FeUfgklEbK1hm1
-         TNm+YleZIcH95AnnCvGcKLIoGSWOxldlHAqxlNaxAUr/hIp5bnMancToTL3tnS55VJh3
-         G8lBNLU1fVuI+t0QjgbahLTm8RE61aqjO0hPfo69EZZhwhmv2813WJWOCByExldL7AiO
-         RwU8mGLoUXMwJiiWu2auTmsjpe8CBws0toa+YNlk1BDPKgd5Y0tItJVmV77vKnz9u2xW
-         wlR9IrPotkvrSU/EVQJ0izYewaVjQlUrsvP3bVn51tNLES+zVtX3RMgS2zbDspZqOpBp
-         BPNw==
-X-Forwarded-Encrypted: i=1; AJvYcCV9aHlsAJ9NkQlBIw050tlSgLbEeopXFaM1IzHG9oj+mLZBAzUO15as9JosSQGBGXHV862hQcLiHSk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw7M/gyCCkaWSm3iqTjBs05gHZPq5FzOXP8LUy1/eDSIHl18XmV
-	+377aC3z6PWgIpDWaIpDYOwIbhae1hceXMcG4+RpuwdINrhB97VWRwlFwFYwWuksfeADuaKNUHi
-	pwA==
-X-Gm-Gg: ASbGnctkOZc8n5ZTPUS03SJUHuu0XgoilTyRxjp0uS9/uFLUlo3NiGWmwECRtrsH7GO
-	t02gSPJxWisuhiuuxVeeJ1oOX4nVGKCm+YMfMmwucV6mWQ7brCfJGyGrkSDyiWLvx2LuzOQnYZM
-	NSfH8Ux72ZiM+IS9kQSFmlbbZtYX8yRNVVbOkicpy0RQlh3iuwPVGJ/2dn3l0RPnjvEV+ARfNkD
-	pAb11hZlLIj2oHqJgjQJ9M0AakAskdwsjZMrjB/uejGPoMipTvr5FMSvhrz+uUjEikIEPMfqyP2
-	FOSAsuVtEhdcYB9VMddGwMaLuLTbODEp5GPFTev5TMjpulPFlAgLC8dck4UWI6/MyYTUWUw5UrP
-	w
-X-Google-Smtp-Source: AGHT+IGRpWVkZCTIMCAHWHi7zd/6xEroEkfxdkrwI3BN+Xe2bmZJlfG3UX0RMCNXgDRrSbpNNdLe6A==
-X-Received: by 2002:a17:903:1b6b:b0:223:5696:44f5 with SMTP id d9443c01a7336-22c3171e6e8mr214365ad.12.1744740241838;
-        Tue, 15 Apr 2025 11:04:01 -0700 (PDT)
+        bh=lkkBDEMu3ClPVlV02k6xSb6QkvNhpwkTDj/2dcO/xeU=;
+        b=VId8ZoX6DC2I+0tARYP3ut9YfWQrnSY2sZx7DoyE3iGBHtnxvih9CdryYIsws84Xp5
+         R+wk+Kf6DCg7RxAQL1J5aT6iNEGDmUJ1J12ja5/dXL/ZpLbj+O6TqKn5mbnDYI8ZHklO
+         +MPNIlVfOyaRIbGfimjtbTolJiUvcwEAbaNMAEqWBxaNH8IHUfkfrTrfzTioLX1mG6lQ
+         JA/5U6Sg/8lWb4PS8HQsn3haSawOxFS8P+uwdG9lLwcwdeSDFF193BZqoU/caXIqCWy/
+         qy8DuU3MMhpaAVhE7PCFEGzl5vvzprICfnDkVK7UlmX1SkhDBRo7DXM0HLeWyaC1M3O+
+         KoRQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVAekbcg41TgkhvJk+isHkLmfRyDnaiPWs2kSaqiV23j/6LgtdbJNNqNG+8xE4uX4gId/znJUIuI+Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4GqaJHOHKtI+FA1mxbT4ctn/qAtXzhtdbpMPQDlWiOpZGTuR6
+	AYqX5gVqKunhYztp9Wwb+sloS1jxlhuD9Y1qkGkZuIx9qYaE018bnNdCr/V8Tg==
+X-Gm-Gg: ASbGncvzPzJT6ZfJ8JnCUbIm3dHldXJBD8tAmom1xKKLSXy5rV6GJk2UPGS+QF4gECT
+	MGffkXD1YuBCtlVMN2tGkg+CvTdx3LMIEHzAch/OU0vwZnn/AgpVn2D1wV5KmrPaUzKld6E7sq0
+	2ov7PmXojjZ4Pi3ygG72AER8r5MKzIzGVzRSuE7KF5tNiPIqTQK6BpQRqhdJ6QA8FS2PkB4mmX4
+	9fjsQVf5l8hCDbywrwH75TsfVUCpBS5GLWBWYUdW0AtHsDm2nVROdrVkw9rG25KVn5uXDzs++SU
+	uGm/buVL2iYlvp6yn1lw9rjS6DWMma66JBgFCuFSFbw2J4GsMQdUnzZFmjB8rmnZm34qYTI+IrR
+	g
+X-Google-Smtp-Source: AGHT+IFInNsVMzJBd8UCPD/uyCnBKsXkqn4AGumDbjEnrYw7Qxqltc7O0EawSFchVRqzPsc1jFZTJQ==
+X-Received: by 2002:a17:902:ccc8:b0:21d:dba1:dd72 with SMTP id d9443c01a7336-22c31bd357fmr45425ad.15.1744740308648;
+        Tue, 15 Apr 2025 11:05:08 -0700 (PDT)
 Received: from google.com (24.21.230.35.bc.googleusercontent.com. [35.230.21.24])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b02a11d298esm9458505a12.34.2025.04.15.11.04.00
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-306df2fb0bcsm13539895a91.36.2025.04.15.11.05.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Apr 2025 11:04:00 -0700 (PDT)
-Date: Tue, 15 Apr 2025 11:03:56 -0700
+        Tue, 15 Apr 2025 11:05:07 -0700 (PDT)
+Date: Tue, 15 Apr 2025 11:05:03 -0700
 From: Igor Pylypiv <ipylypiv@google.com>
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
 	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 2/3] ata: libata-sata: Simplify sense_valid fetching
-Message-ID: <Z_6fjLf-g_WQkL9u@google.com>
+Subject: Re: [PATCH v2 3/3] ata: libata-sata: Use BIT() macro
+Message-ID: <Z_6fz6kKim5upPtj@google.com>
 References: <20250415073013.414987-5-cassel@kernel.org>
- <20250415073013.414987-7-cassel@kernel.org>
+ <20250415073013.414987-8-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -75,18 +74,17 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250415073013.414987-7-cassel@kernel.org>
+In-Reply-To: <20250415073013.414987-8-cassel@kernel.org>
 
-On Tue, Apr 15, 2025 at 09:30:16AM +0200, Niklas Cassel wrote:
-> While the SENSE DATA VALID field in the ACS-6 specification is 47 bits,
-> we are currently only fetching 32 bits, because these are the only bits
-> that we care about (these bits represent the tags (which can be 0-31)).
+On Tue, Apr 15, 2025 at 09:30:17AM +0200, Niklas Cassel wrote:
+> The BIT() macro is commonly used in the kernel.
+> Make use of it when converting a tag, fetched from the Successful NCQ
+> Commands log or the NCQ Command Error log, to a bit field.
+> This makes the code easier to read.
 > 
-> Thus, replace the existing logic with a simple get_unaligned_le32().
-> 
-> While at it, change the type of sense_valid to u32.
-> 
+> Suggested-by: Igor Pylypiv <ipylypiv@google.com>
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+
+Thanks!
