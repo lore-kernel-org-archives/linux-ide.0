@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 480EA279915
-	for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 07:30:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE2A027A124
+	for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 07:30:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744702231; cv=none; b=dxyLsPL0YT9r+MlINiH4xU0DdZNEP7H4U5Bd5XgaezzMhHYkmdckiGTFnfO9J+8FeQgyuulKcaTzp5m537erSeO1KGCTbOaOAZqmNSn6DmDLroOQVYpJ1ZPMj5IsUJ6E4iEaNFnqMXAZS99KrV4zliDExs/tLuuTzqThsKq/ZjY=
+	t=1744702232; cv=none; b=gsRFmyHpRzYcpP9s3IPvS7uTwioc9t9zBE3jCL7M/lDjCLyFgpxLoZvewI6bUrr5wQ/N9Yif+0bmiiCrK7diQsz6uFkjlcgNWSi51b/eZi0qroKhJooXkhKDLtW0WEadEksQYUp9YvKYTlgW2UI7PUKpJmm41Wezm3EWvtjpRUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744702231; c=relaxed/simple;
-	bh=tnWrOQ62iZUFDVAIY8wXVG37wEWAK+JeOdeF0XfEuvE=;
+	s=arc-20240116; t=1744702232; c=relaxed/simple;
+	bh=qFQpWHxGOeNl4Q8PK1tl8kiUBzVYuUd1q2DNjBZSWHc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Pll26cKhEZT6nUx/W2XPGdfw67amD3zi0/mXursNOCu4KC01ZRqqmJSw8x+AxNP4uzttl8oBLpEFpest8jEEUSJ1UN5H6uzB1wkJO5PsDqgZ0U6wnalHJMkzMePxPy0q7tM15lG0afR2WnCcyfEklf2bJmJ9RVlVLY8IA1CTkPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h4OI8DOI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=TWsH/7ba/B296Fo3q31qOjMtGIb++LKEYAAWgfH1GtpPkWajjKAKfkpYUMDKIkoAiVkI9aChWBttFnk2ubwYuxWTTVMuTGt1ZT3t9oB8xf/0I1w58R/pZaawUCOuzFSn+6xpj/gO/cM0LapoCvREmHY7Jioy0/dyZYGP1yU0E6Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p6qNf/aR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h4OI8DOI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 809F5C4CEDD;
-	Tue, 15 Apr 2025 07:30:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p6qNf/aR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29F69C4CEED;
+	Tue, 15 Apr 2025 07:30:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744702230;
-	bh=tnWrOQ62iZUFDVAIY8wXVG37wEWAK+JeOdeF0XfEuvE=;
+	s=k20201202; t=1744702232;
+	bh=qFQpWHxGOeNl4Q8PK1tl8kiUBzVYuUd1q2DNjBZSWHc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=h4OI8DOIBFW/AD4OgguDSsXWY7zDcdW+TptKRxVco1dEHpKMyF2zERbdm/iGQVAsp
-	 fpcjB81NF2GWVlrnM7ws+v/XEilP3HrdW5m0daxvxF3zFW4lodVmZe9UvJer403qnR
-	 fU3/TSiTjQJAgxxpCCRMl/z3V+5/m9uVCgp5ugGy2g3gtbXnL4r0X50xoFu8lBUJ9x
-	 uM7eBVOOspPiGjZFvrHE7pgLorH3KlVmzS1BLgztdsM5A4AyhMZYGzZVtaXP/lpQBW
-	 SCoZmZAxLdUC9/R4cSGVZKallYR0UMdCQJW9ks+6oAM3vj0RWfmquR319MERYh/eDW
-	 vB7A0lNaADDTg==
+	b=p6qNf/aRhdWMeo2JPKfvVeKcYLeT02PVJVTa46pBHJ0Hp92GfdNdieYsBnfHSrqkU
+	 QeZ+aluTkSe2NcyVgfcsGbU5YbxXjXazaU+rSZaRg6qldCTgukhiNpITr/gLIIoq8X
+	 DfFkBX9bOkVNuLDElf0ZkyZ3oKY6ZyzcohXthiY29xaOiEjVglHIya4OZL5emngBkt
+	 jr4e72LHrsBzpeSLZcoMBX7QydSgkk4I7hgTI8RxzO3rgh5y/OH+HPCh5dC0iBN0RP
+	 TjrEycmm4MTrJw4IIb/oyUAWizXdbWpnVRjTfji/np2Zu/u+eTTEVRxCHO6KxlpfrO
+	 FZiupoNSBW2Tg==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org,
 	Igor Pylypiv <ipylypiv@google.com>,
 	Hannes Reinecke <hare@suse.de>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v2 2/3] ata: libata-sata: Simplify sense_valid fetching
-Date: Tue, 15 Apr 2025 09:30:16 +0200
-Message-ID: <20250415073013.414987-7-cassel@kernel.org>
+Subject: [PATCH v2 3/3] ata: libata-sata: Use BIT() macro
+Date: Tue, 15 Apr 2025 09:30:17 +0200
+Message-ID: <20250415073013.414987-8-cassel@kernel.org>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250415073013.414987-5-cassel@kernel.org>
 References: <20250415073013.414987-5-cassel@kernel.org>
@@ -44,50 +44,43 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1448; i=cassel@kernel.org; h=from:subject; bh=tnWrOQ62iZUFDVAIY8wXVG37wEWAK+JeOdeF0XfEuvE=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNL/cXPFTur9xp5y1E7uyL55E9a15raaNgeuWac/ISqwp Tn8WaxWRykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACYSEcHI8Err9L6Pfbcb5sSp 29+dMf9NoZKW/82c/vDb3XF5h+8bVTAy9CTzCGV8WpUkxbl6p4Dx/tojOQvm6t841lGkukz69x5 FbgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1233; i=cassel@kernel.org; h=from:subject; bh=qFQpWHxGOeNl4Q8PK1tl8kiUBzVYuUd1q2DNjBZSWHc=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNL/cXPdrO49e/d9c/PfKKmPvQ2O+jUhjKtte11CsqQmT DlUm768o5SFQYyLQVZMkcX3h8v+4m73KccV79jAzGFlAhnCwMUpABNZu5eRoW1VuY3gvZdb21+0 7/yw4sYntuTbSQoci9L47qokzpPgW8zwT5PL97Fo6OUtGSkO/x5dzW099qsxi2u9YIlYlW+UC7M UKwA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-While the SENSE DATA VALID field in the ACS-6 specification is 47 bits,
-we are currently only fetching 32 bits, because these are the only bits
-that we care about (these bits represent the tags (which can be 0-31)).
+The BIT() macro is commonly used in the kernel.
+Make use of it when converting a tag, fetched from the Successful NCQ
+Commands log or the NCQ Command Error log, to a bit field.
+This makes the code easier to read.
 
-Thus, replace the existing logic with a simple get_unaligned_le32().
-
-While at it, change the type of sense_valid to u32.
-
+Suggested-by: Igor Pylypiv <ipylypiv@google.com>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-sata.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/libata-sata.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 2e4463d3a356..076953d18db9 100644
+index 076953d18db9..4e3034af285e 100644
 --- a/drivers/ata/libata-sata.c
 +++ b/drivers/ata/libata-sata.c
-@@ -1509,9 +1509,10 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
- 	struct ata_queued_cmd *qc;
- 	unsigned int err_mask, tag;
- 	u8 *sense, sk = 0, asc = 0, ascq = 0;
--	u64 sense_valid, val;
- 	u16 extended_sense;
- 	bool aux_icc_valid;
-+	u32 sense_valid;
-+	u64 val;
- 	int ret = 0;
- 
- 	err_mask = ata_read_log_page(dev, ATA_LOG_SENSE_NCQ, 0, buf, 2);
-@@ -1529,8 +1530,7 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
- 		return -EIO;
+@@ -1545,7 +1545,7 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
+ 		 * If the command does not have any sense data, clear ATA_SENSE.
+ 		 * Keep ATA_QCFLAG_EH_SUCCESS_CMD so that command is finished.
+ 		 */
+-		if (!(sense_valid & (1ULL << tag))) {
++		if (!(sense_valid & BIT(tag))) {
+ 			qc->result_tf.status &= ~ATA_SENSE;
+ 			continue;
+ 		}
+@@ -1634,7 +1634,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+ 		return;
  	}
  
--	sense_valid = (u64)buf[8] | ((u64)buf[9] << 8) |
--		((u64)buf[10] << 16) | ((u64)buf[11] << 24);
-+	sense_valid = get_unaligned_le32(&buf[8]);
- 	extended_sense = get_unaligned_le16(&buf[14]);
- 	aux_icc_valid = extended_sense & BIT(15);
- 
+-	if (!(link->sactive & (1 << tag))) {
++	if (!(link->sactive & BIT(tag))) {
+ 		ata_link_err(link, "log page 10h reported inactive tag %d\n",
+ 			     tag);
+ 		return;
 -- 
 2.49.0
 
