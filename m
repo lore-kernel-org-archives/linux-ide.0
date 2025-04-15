@@ -1,169 +1,79 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AD53433A8
-	for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 06:51:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95CE18DB2F;
+	Tue, 15 Apr 2025 06:57:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744699915; cv=none; b=tKqVOYylZ7Q/ptOLT3kg5dfjexLsMjv+9FD8nUozTzMRuxQet0bN6xXI6u17oN140na3mXlVxmGlQRzlpAfbYqAm+UNuTbSLycsvoRR2cxE9O2AzIpWV4QOSY9+NGNj07teajFipb1WvsH9nzYzWzWrGTU7sFxWmxQh5MpLpvEk=
+	t=1744700271; cv=none; b=OSz7f2Odq+Ge9h0XuAFBFSxLbP4ZEAFNtbiiE0HQcyaplQY433rygBqM6kiB/LXqPAZ1bppTvOJ2QrgfncPDd3WOo+TZj7BdaEOZMi1uzoJfvdqSWq3CN3o0pXqMZ1KRtHBjUL6bTUZjJ6LO/mMq0UlP22l0MVhImz+Cpx29KRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744699915; c=relaxed/simple;
-	bh=LcI0KWFFEC11TNcauEhwXE3Z/hVgcoS2vhGe/494R9A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=P0BuTjShghblvabLpLEthiHA+TnLpoKn+9Bkvb2yyKSyN39X7Ocmw4NEKIKzRTcXNxAb84WRi+KJYZWHmAyIp3BenCJ0jtBBYUttWr2bCeZf5QL9/TA7odhDe5+qJSBmaP2kb6XZJ1Rd0SpV0HAsdONWFe7gyOHBYjZuyshSksQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MpAXzgd9; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+zc9m6+E; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MpAXzgd9; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+zc9m6+E; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1744700271; c=relaxed/simple;
+	bh=tEL///cSukVzcGZZ+2nvW1x1tC0cDrQQQifctHJH11o=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=EJnZD9txx1Hr5BYWgGsO+m3VtFHIpbVUakQ5AsrG0vRUYGDXl0ugxohBY+Xa5fANwsdkoN5MxWb9GB/HkVsiLjlx5kvRU644DINu0nTv8NxX8pSEoOESyeogBbERHMRbORSnLj6ammLceC6DULPK13+QquCNN8HfwUNq9H8Q9tU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=YCTksIhB; arc=none smtp.client-ip=198.137.202.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MpAXzgd9";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+zc9m6+E";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MpAXzgd9";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+zc9m6+E"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 4F6011F38A;
-	Tue, 15 Apr 2025 06:51:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1744699911; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O2h/E9d2jVJqEGPbbfIAUl+9CwroCDdU5TaLidlsFf0=;
-	b=MpAXzgd98B7Zftt7Dve4TgZbuxH8MNav7ofJHEPDrrZdfRpOipAlHWdhNoymp7dmldfyAC
-	XqRG+14fT7d6W045EtQuKGB6y5jMSWt7uensTyEgNLRndjw4sPc7A3320d0n2TRACjsC6a
-	8KmHpIrTsLUi1056MNmpbWNhFeS6SeI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1744699911;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O2h/E9d2jVJqEGPbbfIAUl+9CwroCDdU5TaLidlsFf0=;
-	b=+zc9m6+ETAGZ0NaAJZsoECKwiG3A5J5/PtR86cI9DjCRKevJQrxRiDZoVfRL/MYyIFhtnq
-	x/cjNpSOwvwr9KBw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=MpAXzgd9;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=+zc9m6+E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1744699911; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O2h/E9d2jVJqEGPbbfIAUl+9CwroCDdU5TaLidlsFf0=;
-	b=MpAXzgd98B7Zftt7Dve4TgZbuxH8MNav7ofJHEPDrrZdfRpOipAlHWdhNoymp7dmldfyAC
-	XqRG+14fT7d6W045EtQuKGB6y5jMSWt7uensTyEgNLRndjw4sPc7A3320d0n2TRACjsC6a
-	8KmHpIrTsLUi1056MNmpbWNhFeS6SeI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1744699911;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=O2h/E9d2jVJqEGPbbfIAUl+9CwroCDdU5TaLidlsFf0=;
-	b=+zc9m6+ETAGZ0NaAJZsoECKwiG3A5J5/PtR86cI9DjCRKevJQrxRiDZoVfRL/MYyIFhtnq
-	x/cjNpSOwvwr9KBw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2589C137A5;
-	Tue, 15 Apr 2025 06:51:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id irlHBwcC/meEJQAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 15 Apr 2025 06:51:51 +0000
-Message-ID: <24c4c3a3-01a3-4f69-9fdc-8154ceceb5c3@suse.de>
-Date: Tue, 15 Apr 2025 08:51:46 +0200
+	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="YCTksIhB"
+Received: from [127.0.0.1] ([76.133.66.138])
+	(authenticated bits=0)
+	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 53F6unIB2639618
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
+	Mon, 14 Apr 2025 23:56:50 -0700
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 53F6unIB2639618
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
+	s=2025032001; t=1744700212;
+	bh=tEL///cSukVzcGZZ+2nvW1x1tC0cDrQQQifctHJH11o=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+	b=YCTksIhBMy5xplKGhKrpvDh+Gt4mtL5UACeLF4lslUD1VbrgQuefYVuMy0mei/Q60
+	 vdGgLY87TG/KgIIPPcUrpz6SBT/6R3SCkZ+mQgyRjw0lb2t8Z6V/DQuBdKKBVkDe+6
+	 dRzEAkOrIYGAMUNvTt4/aZ57QFtr4kcQPeum8uV8El7RCdX3ykwKs8rLpr1awvDFX1
+	 umsqFcRaAuHx6n2uvOGXI6BLdb5fvTagOGQLqqGtBW5qmxwGylfYFOFTGabqO9jMtD
+	 +PmCyVIUbPX92wEig0ZdnACF2Cws0xiPBLd5Sq9WMGFTT/VPR9E/iDGKXpwNHIR5BM
+	 tHMRkCne6bI6g==
+Date: Mon, 14 Apr 2025 23:56:47 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
+To: Xin Li <xin@zytor.com>, Jim Mattson <jmattson@google.com>,
+        Sean Christopherson <seanjc@google.com>
+CC: linux-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, virtualization@lists.linux.dev,
+        linux-edac@vger.kernel.org, kvm@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-ide@vger.kernel.org,
+        linux-pm@vger.kernel.org, bpf@vger.kernel.org, llvm@lists.linux.dev,
+        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+        dave.hansen@linux.intel.com, x86@kernel.org, jgross@suse.com,
+        andrew.cooper3@citrix.com, peterz@infradead.org, acme@kernel.org,
+        namhyung@kernel.org, mark.rutland@arm.com,
+        alexander.shishkin@linux.intel.com, jolsa@kernel.org,
+        irogers@google.com, adrian.hunter@intel.com, kan.liang@linux.intel.com,
+        wei.liu@kernel.org, ajay.kaher@broadcom.com,
+        bcm-kernel-feedback-list@broadcom.com, tony.luck@intel.com,
+        pbonzini@redhat.com, vkuznets@redhat.com, luto@kernel.org,
+        boris.ostrovsky@oracle.com, kys@microsoft.com, haiyangz@microsoft.com,
+        decui@microsoft.com
+Subject: =?US-ASCII?Q?Re=3A_=5BRFC_PATCH_v1_10/15=5D_KVM=3A_VMX=3A_Use_WR?=
+ =?US-ASCII?Q?MSRNS_or_its_immediate_form_when_available?=
+User-Agent: K-9 Mail for Android
+In-Reply-To: <0cad1e0b-2bfd-4258-90cd-8d319bf0e74a@zytor.com>
+References: <20250331082251.3171276-1-xin@zytor.com> <20250331082251.3171276-11-xin@zytor.com> <Z_hTI8ywa3rTxFaz@google.com> <CALMp9eRJkzA2YXf1Dfxt3ONP+P9aTA=WPraOPJPJ6C6j677+6Q@mail.gmail.com> <fa16949e-7842-45f7-9715-1bdda13b762a@zytor.com> <EAB44BB2-99BB-4D4A-8306-0235D2931E72@zytor.com> <0cad1e0b-2bfd-4258-90cd-8d319bf0e74a@zytor.com>
+Message-ID: <D212FABE-38FE-45D3-A082-CA819CCFFF95@zytor.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] ata: libata-sata: Simplify sense_valid fetching
-To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
-References: <20250411132522.126316-3-cassel@kernel.org>
- <20250411132522.126316-4-cassel@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250411132522.126316-4-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4F6011F38A
-X-Spam-Score: -4.51
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_TLS_ALL(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_DN_SOME(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_THREE(0.00)[4];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spam-Level: 
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On 4/11/25 15:25, Niklas Cassel wrote:
-> While the sense_valid field is 47 bits according to the specification,
-> we are currently only fetching 32 bits, because these are the only
-> bits that represent the tags (0-31), which is all we care about.
-> 
-> Thus, replace the existing logic with a simple get_unaligned_le32().
-> 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->   drivers/ata/libata-sata.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index 2e4463d3a356..5ba79a1053ea 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -1529,8 +1529,7 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
->   		return -EIO;
->   	}
->   
-> -	sense_valid = (u64)buf[8] | ((u64)buf[9] << 8) |
-> -		((u64)buf[10] << 16) | ((u64)buf[11] << 24);
-> +	sense_valid = get_unaligned_le32(&buf[8]);
->   	extended_sense = get_unaligned_le16(&buf[14]);
->   	aux_icc_valid = extended_sense & BIT(15);
->   
+On April 14, 2025 10:48:47 AM PDT, Xin Li <xin@zytor=2Ecom> wrote:
+>On 4/12/2025 4:10 PM, H=2E Peter Anvin wrote:
+>> Also,*in this specific case* IA32_SPEC_CTRL is architecturally nonseria=
+lizing, i=2Ee=2E WRMSR executes as WRMSRNS anyway=2E
+>
+>While the immediate form WRMSRNS could be faster because the MSR index
+>is available *much* earlier in the pipeline, right?
 
-Description is ever so misleading; we never fetched 47 bits to start
-with. All we do is simplify the logic.
-But whatever.
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Yes, but then it would be redundant with the virtualization support=2E
