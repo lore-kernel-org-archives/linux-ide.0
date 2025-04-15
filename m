@@ -1,80 +1,92 @@
-Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48BF22DFA4F;
-	Tue, 15 Apr 2025 17:08:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FBE921883C
+	for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 18:04:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744736890; cv=none; b=KyHL87JWKokV0W0b5lKliSUtx4R+KInGhsUzj8ghuFJUYerTM1oc5GB4oaoIjZw/sWePE5jfQIbYvUZhnyPzLqfuJ5pgz8K7bgH5KvwzlOfP0uAof/NFpQ24KJ93w2RVQAQuqwVcg2aJ94iiDbHzIeeP8bQebAqD1XQzdRDrOvU=
+	t=1744740244; cv=none; b=RMBnQ+UGSSo8iiUL2hY32aj23lBOl7b5TZNNljNIibo/xzS4Zn0U1W9GsD3NQQp8X4ke8l3KqeWd+y4/VQ+SZPRkpHIWmNrfdx9bsYlhQowjASFegkFw9Y7KBF/ivTnDGTEwM5chEOTdHjcvaCgbyYp7TEG5iSRcralCA/BZUJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744736890; c=relaxed/simple;
-	bh=ks0jrFHArrBhG+gklxA2J2EYohMH9zdshNRVwNuGI7o=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=jh0GNSXhyNutn+5FSldYC/4aYN2ksWMJOyuPIypIgj14Jg3ee4NJ/VzuqY4qz1MLynSKLvVbrTqFwsxOOl1kUNVgM5bwrtveCzXM3JmOoEJ/Yy0uHaSsXOZgV7a81AMMhv3qYKBa5CEJavkkJsjEbQKR85gkdUFsei6+TQv866E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=WhE95lEV; arc=none smtp.client-ip=198.137.202.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+	s=arc-20240116; t=1744740244; c=relaxed/simple;
+	bh=wOCrRkHubym7IKs5I+04VQPvDY70ptHb1RCTzXYz3Dk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SVgmNdDvfKtR8vEfzw+yftWDQX4OqPvnbL9bnuJ9/tzuEtWg1QA2SxPGLwWsVx4CVoS3dFJ5bvnMMojLnZMDxTHQVPRj/Vp3BhKDSh5/52ePwwYrtV9HnJdxGwLTQmScZDy8xvP0YhpruLogpHbOICQIqzx9wRVeY5PvO4ov9fE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=WjczA1Sb; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="WhE95lEV"
-Received: from [127.0.0.1] ([76.133.66.138])
-	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 53FH73ta2925188
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Tue, 15 Apr 2025 10:07:04 -0700
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 53FH73ta2925188
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2025032001; t=1744736825;
-	bh=ks0jrFHArrBhG+gklxA2J2EYohMH9zdshNRVwNuGI7o=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=WhE95lEVDeqFGhmykheloCvIa6ec/L8hMkhyTQr4nggCQ2MNaB7hQEnWWqckSYu1M
-	 FE/9lDKGBEsoxf1Fo/4TYjWfKG76tlO1rnm1kp56okVOdII9+UvHjC6xjsPgkldKF/
-	 /Q1USB71Bg7FETpP89gzIM+/TSWjQPfMrln6Vm6Fs3trJnlHEknKcSEVnAn35LwL3B
-	 BtdNdByM7Ug96H+fmgHGlD77jXZNMMvnEE6HU+LJ8nK+7UhdSrlyP9wLK8cDaKhR1R
-	 9aDa46yO3/W/rBR4d9umQD8jDcaEpM7DfRECTnLjrbzw2a/RBUSJ+b/LP4FJciRNSQ
-	 WUVFIq1GFqr6w==
-Date: Tue, 15 Apr 2025 10:07:01 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
-To: Xin Li <xin@zytor.com>, Jim Mattson <jmattson@google.com>,
-        Sean Christopherson <seanjc@google.com>
-CC: linux-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, virtualization@lists.linux.dev,
-        linux-edac@vger.kernel.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-ide@vger.kernel.org,
-        linux-pm@vger.kernel.org, bpf@vger.kernel.org, llvm@lists.linux.dev,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-        dave.hansen@linux.intel.com, x86@kernel.org, jgross@suse.com,
-        andrew.cooper3@citrix.com, peterz@infradead.org, acme@kernel.org,
-        namhyung@kernel.org, mark.rutland@arm.com,
-        alexander.shishkin@linux.intel.com, jolsa@kernel.org,
-        irogers@google.com, adrian.hunter@intel.com, kan.liang@linux.intel.com,
-        wei.liu@kernel.org, ajay.kaher@broadcom.com,
-        bcm-kernel-feedback-list@broadcom.com, tony.luck@intel.com,
-        pbonzini@redhat.com, vkuznets@redhat.com, luto@kernel.org,
-        boris.ostrovsky@oracle.com, kys@microsoft.com, haiyangz@microsoft.com,
-        decui@microsoft.com
-Subject: =?US-ASCII?Q?Re=3A_=5BRFC_PATCH_v1_10/15=5D_KVM=3A_VMX=3A_Use_WR?=
- =?US-ASCII?Q?MSRNS_or_its_immediate_form_when_available?=
-User-Agent: K-9 Mail for Android
-In-Reply-To: <c4fcb208-ee5d-4781-85ce-3b75e651d047@zytor.com>
-References: <20250331082251.3171276-1-xin@zytor.com> <20250331082251.3171276-11-xin@zytor.com> <Z_hTI8ywa3rTxFaz@google.com> <CALMp9eRJkzA2YXf1Dfxt3ONP+P9aTA=WPraOPJPJ6C6j677+6Q@mail.gmail.com> <fa16949e-7842-45f7-9715-1bdda13b762a@zytor.com> <EAB44BB2-99BB-4D4A-8306-0235D2931E72@zytor.com> <0cad1e0b-2bfd-4258-90cd-8d319bf0e74a@zytor.com> <D212FABE-38FE-45D3-A082-CA819CCFFF95@zytor.com> <c4fcb208-ee5d-4781-85ce-3b75e651d047@zytor.com>
-Message-ID: <B2461564-F050-463D-8679-122724559D07@zytor.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WjczA1Sb"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2264c9d0295so25725ad.0
+        for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2025 11:04:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1744740242; x=1745345042; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=65U1OJDd5z4gnvZn4OFYO2gVhpQmaCHeDffOYxstFNQ=;
+        b=WjczA1SbRqFn+VU2BJYWOuG/gKmq0sS4WXkMMU9ViF6+BCmKm3xq5Y/beFadiJ35HL
+         x0Kshys063aS6/LCzL+C1gkaC0t3Gj8qWihmqebZ0rQ/rf68ALfAdxlWcQaGkvflLf4X
+         vBz+Te9F8emJYPmiBfm9hij72zzsfx9hTVoMOsHFSXgUhzKStO1S1eq+LmVmpPKzHwI2
+         fPERInOlu5D4grnxSTDF/oPXr+SbgFWBvxAjqJ+4SA8YZri286VTJg9TC7kJ/zVQUzf9
+         RRLb3uUSl2tDS7Z17MceHIKdKVnXUejmiWLuxc2hatKlYVnIcuoWz5zzgupFuJeqjtzD
+         G9bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744740242; x=1745345042;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=65U1OJDd5z4gnvZn4OFYO2gVhpQmaCHeDffOYxstFNQ=;
+        b=U96jUdYWMRO8AF0LHYApbK6kp9oKvYS4AeGzPAza4xLOjdTZrbG5FeUfgklEbK1hm1
+         TNm+YleZIcH95AnnCvGcKLIoGSWOxldlHAqxlNaxAUr/hIp5bnMancToTL3tnS55VJh3
+         G8lBNLU1fVuI+t0QjgbahLTm8RE61aqjO0hPfo69EZZhwhmv2813WJWOCByExldL7AiO
+         RwU8mGLoUXMwJiiWu2auTmsjpe8CBws0toa+YNlk1BDPKgd5Y0tItJVmV77vKnz9u2xW
+         wlR9IrPotkvrSU/EVQJ0izYewaVjQlUrsvP3bVn51tNLES+zVtX3RMgS2zbDspZqOpBp
+         BPNw==
+X-Forwarded-Encrypted: i=1; AJvYcCV9aHlsAJ9NkQlBIw050tlSgLbEeopXFaM1IzHG9oj+mLZBAzUO15as9JosSQGBGXHV862hQcLiHSk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7M/gyCCkaWSm3iqTjBs05gHZPq5FzOXP8LUy1/eDSIHl18XmV
+	+377aC3z6PWgIpDWaIpDYOwIbhae1hceXMcG4+RpuwdINrhB97VWRwlFwFYwWuksfeADuaKNUHi
+	pwA==
+X-Gm-Gg: ASbGnctkOZc8n5ZTPUS03SJUHuu0XgoilTyRxjp0uS9/uFLUlo3NiGWmwECRtrsH7GO
+	t02gSPJxWisuhiuuxVeeJ1oOX4nVGKCm+YMfMmwucV6mWQ7brCfJGyGrkSDyiWLvx2LuzOQnYZM
+	NSfH8Ux72ZiM+IS9kQSFmlbbZtYX8yRNVVbOkicpy0RQlh3iuwPVGJ/2dn3l0RPnjvEV+ARfNkD
+	pAb11hZlLIj2oHqJgjQJ9M0AakAskdwsjZMrjB/uejGPoMipTvr5FMSvhrz+uUjEikIEPMfqyP2
+	FOSAsuVtEhdcYB9VMddGwMaLuLTbODEp5GPFTev5TMjpulPFlAgLC8dck4UWI6/MyYTUWUw5UrP
+	w
+X-Google-Smtp-Source: AGHT+IGRpWVkZCTIMCAHWHi7zd/6xEroEkfxdkrwI3BN+Xe2bmZJlfG3UX0RMCNXgDRrSbpNNdLe6A==
+X-Received: by 2002:a17:903:1b6b:b0:223:5696:44f5 with SMTP id d9443c01a7336-22c3171e6e8mr214365ad.12.1744740241838;
+        Tue, 15 Apr 2025 11:04:01 -0700 (PDT)
+Received: from google.com (24.21.230.35.bc.googleusercontent.com. [35.230.21.24])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b02a11d298esm9458505a12.34.2025.04.15.11.04.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Apr 2025 11:04:00 -0700 (PDT)
+Date: Tue, 15 Apr 2025 11:03:56 -0700
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 2/3] ata: libata-sata: Simplify sense_valid fetching
+Message-ID: <Z_6fjLf-g_WQkL9u@google.com>
+References: <20250415073013.414987-5-cassel@kernel.org>
+ <20250415073013.414987-7-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250415073013.414987-7-cassel@kernel.org>
 
-On April 15, 2025 10:06:01 AM PDT, Xin Li <xin@zytor=2Ecom> wrote:
->On 4/14/2025 11:56 PM, H=2E Peter Anvin wrote:
->>> arlier in the pipeline, right?
->> Yes, but then it would be redundant with the virtualization support=2E
->>=20
->
->So better to drop this patch then=2E
+On Tue, Apr 15, 2025 at 09:30:16AM +0200, Niklas Cassel wrote:
+> While the SENSE DATA VALID field in the ACS-6 specification is 47 bits,
+> we are currently only fetching 32 bits, because these are the only bits
+> that we care about (these bits represent the tags (which can be 0-31)).
+> 
+> Thus, replace the existing logic with a simple get_unaligned_le32().
+> 
+> While at it, change the type of sense_valid to u32.
+> 
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Yeah, if it gets pulled in as a consequence of a global change that is OK =
-but the local change makes no sense=2E
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
