@@ -1,80 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46A6A1D8E10
-	for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2025 08:36:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAB8316D9C2;
+	Wed, 16 Apr 2025 08:43:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744792601; cv=none; b=jZmBuYsOcWYXHebP2Vb9TxE3TvnK/kYC0ZBY6TA+opqShXNr9h6dsRHM4OpGTP/Ue9yeIvfpG0QtVQ4jXSgh2UjuTkqvaUiFNsX7tmY9C9bY3WF16RRwXMnuqM8HbnHQygZ1teY7HQsRbghF3RIibZx6dUJgNliAuL+Zy6+5r50=
+	t=1744793006; cv=none; b=XdejxhpnW5YbALrZX7puTHcZFnamsJMO1a+JZ5oMVb752WOoG/5i5oFLyeuEftDdZQEEAFyATtNfB+KPv2Q7tDz3HVhRISmktAKfUnhUrK8On1/LSkLq+M6evU7D2TbUYORxesQHKlBwb6zjyZKrAlji1bJ6dWmQS1OmceiAJxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744792601; c=relaxed/simple;
-	bh=rayKgY2WT+jfH/BO2GyKKl2OLa1FVUg/7VeMDjMCUVo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=M6J0/JuRdmjdWPNHBUqpRXDjSqw38s/arn5IqHhxcwLW5Zauo+ZJij0tiAjDI3KXUFWI52R4OfSQMlkLlJpf8wA7a+3OpAwbDDOIgOhie2K0xdbaoxBqL/oPeyFXfoKKmqLGVQzeejV+fvl3N9Lqi4UD8dYH/aCNW7BGSL5m1a0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h9RUoJVb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744793006; c=relaxed/simple;
+	bh=3uo6MB6VnKgDqvxnaj6h84rvVaHk1H/NFJSScIYSVio=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=WR2qICMz8GJd+JU8lgWm7k03q4DFgflQRZ5Cx2G0ZTAjv1hkxYmB3N0tgKgdjK7SdVcVvSo40sh/klG64QUQuvQ8BepBs2L/he0GUHCsEpKNccIHZwQc101Ar8Y2ZdRCcHlFmy110+N4Ox/he9qGIW9TJ04nPqLK88V0XpIy8jY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5scOhPM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h9RUoJVb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3079FC4CEE2;
-	Wed, 16 Apr 2025 08:36:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5scOhPM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEAC2C4CEE2;
+	Wed, 16 Apr 2025 08:43:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744792600;
-	bh=rayKgY2WT+jfH/BO2GyKKl2OLa1FVUg/7VeMDjMCUVo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=h9RUoJVb9m7miaTkbsG3oxq84dcCxLQt7GIPpoMIABOM/1P/YJBSub3uuUITqrl6a
-	 vtqWc5gbjVJ6DGbNrxUAQdFV05FEA5Lqn6QF681YqpDPdzTClGmj3pip9imsA4hFbq
-	 DC53DEFb5K/NR8cRmGZqdphiVXA8mZ9DAMrfQB3+g0B+ePjlnnqxvzsUugGAg8pTHH
-	 tfR/7xV7e1C2ZlbmxIVZ36H3nhVknlubrtg5VYW4LboHC7RTennCNrmpFxLXiJ59Cj
-	 hqTmiWOKiDoplRkuIa7Bnm4ibz1UuauppcpFtKve8stzcaas5pW0NdtbOZzNQO+6rV
-	 dkLUplkO9rpZQ==
-Message-ID: <81ea1d99-e668-4285-b85f-d5f332ac9b9f@kernel.org>
-Date: Wed, 16 Apr 2025 17:35:53 +0900
+	s=k20201202; t=1744793006;
+	bh=3uo6MB6VnKgDqvxnaj6h84rvVaHk1H/NFJSScIYSVio=;
+	h=From:To:Subject:Date:From;
+	b=P5scOhPMJtC1M2CIPYbq3hsKS/0z1dAYsMKG+mhmjuVkOCJGpNSl45TBOWiXVoJzB
+	 tNNsYMnEaFIYN+9f2t0JL//I/G9+IjnYkAr4nmN3hd1xcPxj9BeuEBO03SkSIgWw6D
+	 NfSx5mnbigtEO9rpRQCmONfFo3Fl851eS/AHXFpG6127j68Oxt7E1snZAr8i9LITV/
+	 xO2xwN5mPa3RLIJYfAFEpIeqMkohZ5K7lHcwGQYOH+yHAdXAnUAdcgYdYbubjZd96C
+	 0aL/XvxZszWa24u5FJ1sDCJ3VjMoXTjrYRGFeRPjmrQDw7mHaBzfXa+TcDNXUIpMnL
+	 zi+M/yqFUieOQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 0/3] CDL Feature control improvements
+Date: Wed, 16 Apr 2025 17:42:35 +0900
+Message-ID: <20250416084238.258169-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] ata: libata-sata: Save all fields from sense data
- descriptor
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
- Hannes Reinecke <hare@suse.de>
-References: <20250415073013.414987-5-cassel@kernel.org>
- <20250415073013.414987-6-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250415073013.414987-6-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 4/15/25 4:30 PM, Niklas Cassel wrote:
-> When filling the taskfile result for a successful NCQ command, we use
-> the SDB FIS from the FIS Receive Area, see e.g. ahci_qc_ncq_fill_rtf().
-> 
-> However, the SDB FIS only has fields STATUS and ERROR.
-> 
-> For a successful NCQ command that has sense data, we will have a
-> successful sense data descriptor, in the Sense Data for Successful NCQ
-> Commands log.
-> 
-> Since we have access to additional taskfile result fields, fill in these
-> additional fields in qc->result_tf.
-> 
-> This matches how for failing/aborted NCQ commands, we will use e.g.
-> ahci_qc_fill_rtf() to fill in some fields, but then for the command that
-> actually caused the NCQ error, we will use ata_eh_read_log_10h(), which
-> provides additional fields, saving additional fields/overriding the
-> qc->result_tf that was fetched using ahci_qc_fill_rtf().
-> 
-> Fixes: 18bd7718b5c4 ("scsi: ata: libata: Handle completion of CDL commands using policy 0xD")
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+Control of the enable/disable state of an ATA device Command Duration
+Limits (CDL) features has issues:
+1) Incorrect feature state report translation in libata-scsi
+2) The state reported when enabling the feature was being ignored, which
+caused needless SET FEATURES commands to be issued to the device, thus
+causing an unwanted reset of the CDL statistics log page (which is
+implied by any CDL activation action).
 
-Applied to for-6.15-fixes. Thanks !
+These patches address these 2 issues.
+
+Martin,
+
+I can take the scsi patch if you are OK with it. Or the reverse, you can
+take all patches through the scsi tree if you prefer. Please let me
+know.
+
+Damien Le Moal (3):
+  ata: libata-scsi: Fix ata_msense_control_ata_feature()
+  ata: libata-scsi: Improve CDL control
+  scsi: Improve CDL control
+
+ drivers/ata/libata-scsi.c | 19 +++++++++++++++----
+ drivers/scsi/scsi.c       | 36 ++++++++++++++++++++++++------------
+ 2 files changed, 39 insertions(+), 16 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.49.0
+
