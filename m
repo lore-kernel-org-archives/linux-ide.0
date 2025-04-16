@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B0F140E5F
-	for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2025 09:31:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63A9C140E5F
+	for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2025 09:31:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744795900; cv=none; b=OKLWveTGq2SQ1wEOSPx0krlhbLdonM56hDW6nLYEQulEE45FL5CEyKOrexpy1Kom13LZyox+eq337zagVWLreuaSSVulyhnOKt+UbflPCGFSHW801s0QlSOcT+zTHEc1XkQJpbiDyiqUD8OezPb3Q8YPFeJ++nbclthCh6c5otA=
+	t=1744795901; cv=none; b=Cr1C7QREEY2ciuMHKOM8sOK2cbjg/VjvEfVIDGzGssV4eNvIOyselketCjyQy1sHwMnXV4Sfe9MT6hllGjcZ19SaP6TDcbgCLY8aOl2u9Dv6Z6z0gM2Ij0+u07BsBA1/kTQziYynpqmHLUcbuRXjGySq8iN1nE/haAop4oFqyCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744795900; c=relaxed/simple;
-	bh=/VX9vFfl2tswwHcuk9WHl4haJeoP4oRCjezyiPR0kPM=;
+	s=arc-20240116; t=1744795901; c=relaxed/simple;
+	bh=SxGDxesBuOrQMQ4ndt0+cpwVugmTRwb32y6/Gks+PI0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BknwKmLYbRTzUSBLJMfuv960oLZHLeKC91b00Tfn9A73uMEBkFZFDEx2FueCIfJEmaFevBu5gBl/dNSOLXijDbu603lC1Tnb/cw2JODxksvg+vzkh/C/cmiZYjNlmmI5td+xnvzAu0DLBi49Beeg4zr2LDMU35WnTEmyzy6FKRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r9rM/S/3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Lkc4K+Trz/ZjZSCwUUHw/E36C8mqLuaiBKgv+/ypeBEIKc2pCMbgiPRV2tIdGStX2/6FflUoET3gCEY3Ilc4ejV3JpywhSjMAx+6wvmD83zS8UUmZOPL3JDs72cUdJsjqWLlW3RXSYlZDDNlejSZ2kOn1ama/l+tGE+Y/LIXSQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jtzgC9bw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r9rM/S/3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59677C4CEED;
-	Wed, 16 Apr 2025 09:31:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jtzgC9bw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0512DC4CEE9;
+	Wed, 16 Apr 2025 09:31:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744795899;
-	bh=/VX9vFfl2tswwHcuk9WHl4haJeoP4oRCjezyiPR0kPM=;
+	s=k20201202; t=1744795901;
+	bh=SxGDxesBuOrQMQ4ndt0+cpwVugmTRwb32y6/Gks+PI0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=r9rM/S/3RTG5pw2wBR6pNZZcVUV+TSRmz1OXIH6YD6UH0NQKd5GXCtr/QEPdYofoE
-	 Fvp58IQ+YKOJgRBxP2v+uCwQxkHSXJIwuQVPsVwOMQgLQjUNoO+4LnFzJ3KHO39nvz
-	 WpyOc1BK1gZEqzSjPb6lIMVMGb5z9w1QBq+QTYjk9VAj+itBtP/RK6O/baBXzuPM4F
-	 ka1erR9JVIRuCjHF/eMGXLPPw1FvDSFAwX+zOX2Rf41xcB85g7Nb7YIWpUTZUopuBP
-	 5pO5c6OX59cDLWcHrt1Vyi0CRkKcFznmsWrFMHBWtqmUPOXhCa7f0CzKPl3K0Rzp7t
-	 9orFIPU4V3kfg==
+	b=jtzgC9bw6HhiOk1UJLb/GyWvHA884mu97NLFevLA9+urTOUzY1uPVf/oaLp7ftzLA
+	 hqmoQ+/QJzdhyTb42uP8L2cYtSX17gFpOaLFFTo1CvgErgvFwkNzzkBXbpbXq8PwPT
+	 G664EH/6L3vaENu0Ktu3x8U4OtEIrCiX8+1TFqg10XEcPuk3J8tk7tKgxD9eGKP3dQ
+	 /ENjQsmzzfFLvuJ8XOQ8khi3reNLyA/MSrWmTbi+44BuVkT0ymUok8jPOxDwu9I2tT
+	 Qp6mT5xPdKu8IkwmsSMXghaO0lKylOAgJTwCqK4xKitfCrJw/xEuV4p65gMZNUunCT
+	 H5aCmds57ygrA==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org,
 	Igor Pylypiv <ipylypiv@google.com>,
 	Hannes Reinecke <hare@suse.de>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 1/3] ata: libata-sata: Save all fields from sense data descriptor
-Date: Wed, 16 Apr 2025 11:31:29 +0200
-Message-ID: <20250416093127.63666-6-cassel@kernel.org>
+Subject: [PATCH v3 2/3] ata: libata-sata: Simplify sense_valid fetching
+Date: Wed, 16 Apr 2025 11:31:30 +0200
+Message-ID: <20250416093127.63666-7-cassel@kernel.org>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250416093127.63666-5-cassel@kernel.org>
 References: <20250416093127.63666-5-cassel@kernel.org>
@@ -44,76 +44,60 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2653; i=cassel@kernel.org; h=from:subject; bh=/VX9vFfl2tswwHcuk9WHl4haJeoP4oRCjezyiPR0kPM=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNL/V3yRPhPeVlmz8Uhkwi/HflN7pekPXZ1fnc2ufBSxc UuX6Ly2jlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEwktoDhn7lHotT7czU6/ytr H72sSznzy3/lz0L9+tBZ/47v+2HufZfhD1flfONVdgcDVQwqUtTPKHw+rLQuyNdKvvqn3zrz33P nMQIA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1865; i=cassel@kernel.org; h=from:subject; bh=SxGDxesBuOrQMQ4ndt0+cpwVugmTRwb32y6/Gks+PI0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNL/V3z5/+XB1a0yzL9Ox4ap7jtdwPvWZn1BTqSeRJ/1D 6PzXe1KHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjIfXuG/0Wnt9Q951qQsevH vQulcgsCTTccrnfvNvBqym/+dSmI+RQjw+r4CRfddD8eebSdY37xRu2bvmvq5kyyTf6UYRlbz1P 9kREA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-When filling the taskfile result for a successful NCQ command, we use
-the SDB FIS from the FIS Receive Area, see e.g. ahci_qc_ncq_fill_rtf().
+While the SENSE DATA VALID field in the ACS-6 specification is 47 bits,
+we are currently only fetching 32 bits, because these are the only bits
+that we care about (these bits represent the tags (which can be 0-31)).
 
-However, the SDB FIS only has fields STATUS and ERROR.
+Thus, replace the existing logic with a simple get_unaligned_le32().
 
-For a successful NCQ command that has sense data, we will have a
-successful sense data descriptor, in the Sense Data for Successful NCQ
-Commands log.
+While at it, change the type of sense_valid to u32.
 
-Since we have access to additional taskfile result fields, fill in these
-additional fields in qc->result_tf.
-
-This matches how for failing/aborted NCQ commands, we will use e.g.
-ahci_qc_fill_rtf() to fill in some fields, but then for the command that
-actually caused the NCQ error, we will use ata_eh_read_log_10h(), which
-provides additional fields, saving additional fields/overriding the
-qc->result_tf that was fetched using ahci_qc_fill_rtf().
-
-Fixes: 18bd7718b5c4 ("scsi: ata: libata: Handle completion of CDL commands using policy 0xD")
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 ---
- drivers/ata/libata-sata.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/ata/libata-sata.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index ba300cc0a3a3..2e4463d3a356 100644
+index 2e4463d3a356..89d3b784706b 100644
 --- a/drivers/ata/libata-sata.c
 +++ b/drivers/ata/libata-sata.c
-@@ -1510,6 +1510,8 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
+@@ -1509,9 +1509,10 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
+ 	struct ata_queued_cmd *qc;
  	unsigned int err_mask, tag;
  	u8 *sense, sk = 0, asc = 0, ascq = 0;
- 	u64 sense_valid, val;
-+	u16 extended_sense;
-+	bool aux_icc_valid;
+-	u64 sense_valid, val;
+ 	u16 extended_sense;
+ 	bool aux_icc_valid;
++	u32 sense_valid;
++	u64 val;
  	int ret = 0;
  
  	err_mask = ata_read_log_page(dev, ATA_LOG_SENSE_NCQ, 0, buf, 2);
-@@ -1529,6 +1531,8 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
+@@ -1529,8 +1530,7 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
+ 		return -EIO;
+ 	}
  
- 	sense_valid = (u64)buf[8] | ((u64)buf[9] << 8) |
- 		((u64)buf[10] << 16) | ((u64)buf[11] << 24);
-+	extended_sense = get_unaligned_le16(&buf[14]);
-+	aux_icc_valid = extended_sense & BIT(15);
+-	sense_valid = (u64)buf[8] | ((u64)buf[9] << 8) |
+-		((u64)buf[10] << 16) | ((u64)buf[11] << 24);
++	sense_valid = get_unaligned_le32(&buf[8]);
+ 	extended_sense = get_unaligned_le16(&buf[14]);
+ 	aux_icc_valid = extended_sense & BIT(15);
  
- 	ata_qc_for_each_raw(ap, qc, tag) {
- 		if (!(qc->flags & ATA_QCFLAG_EH) ||
-@@ -1556,6 +1560,17 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
+@@ -1545,7 +1545,7 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
+ 		 * If the command does not have any sense data, clear ATA_SENSE.
+ 		 * Keep ATA_QCFLAG_EH_SUCCESS_CMD so that command is finished.
+ 		 */
+-		if (!(sense_valid & (1ULL << tag))) {
++		if (!(sense_valid & (1 << tag))) {
+ 			qc->result_tf.status &= ~ATA_SENSE;
  			continue;
  		}
- 
-+		qc->result_tf.nsect = sense[6];
-+		qc->result_tf.hob_nsect = sense[7];
-+		qc->result_tf.lbal = sense[8];
-+		qc->result_tf.lbam = sense[9];
-+		qc->result_tf.lbah = sense[10];
-+		qc->result_tf.hob_lbal = sense[11];
-+		qc->result_tf.hob_lbam = sense[12];
-+		qc->result_tf.hob_lbah = sense[13];
-+		if (aux_icc_valid)
-+			qc->result_tf.auxiliary = get_unaligned_le32(&sense[16]);
-+
- 		/* Set sense without also setting scsicmd->result */
- 		scsi_build_sense_buffer(dev->flags & ATA_DFLAG_D_SENSE,
- 					qc->scsicmd->sense_buffer, sk,
 -- 
 2.49.0
 
