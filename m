@@ -1,63 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 395B82550C4
-	for <linux-ide@vger.kernel.org>; Thu, 17 Apr 2025 17:06:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2470221563
+	for <linux-ide@vger.kernel.org>; Thu, 17 Apr 2025 23:50:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744909592; cv=none; b=Y1PCGadAmUj7PCCPrM2AkBnAy8dsH7QTrUw9tSdmwDMopNcaxUPI4AF0dIlWVrrK/iIwuuFwH7N3JEb1hbWdhxU1xUrtSLNcDDeAqXwc71/8GQJbC3avbvpr2Imz3RmzOb3t9zzDl0PkQSkiyZE7h/cZW7TFHErAbY4Ipy07B0M=
+	t=1744933832; cv=none; b=Bi44lJpWwQznt/If3GxAbhxB/N3sSfWisdzVn3yvnNJc64engxAKoWvucJjkKapgqoEQ5uuafun2LrtVXVwkN7jnvic5jPX3QHig9kEEiXMFdBD33arQr0B++zn/h8793R2dRqY9FTLrJXmgS1Hsy+sLZTXktSQxO8h+nJceTsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744909592; c=relaxed/simple;
-	bh=86Oqz9rtTQmpGfN14C4Fg8yWMgaHPepqJUn631Rm6XE=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=CvQhoNoZ4nbjFt8N8nVe6ALS9xyW3FDf0i2wcSLo6qCTxLaUExHr32hcY/Wx6r56LSrOX5sp9iDCgcxdYGYEzeA4i6lxLkqnZWb3DNX4ov44/oX6ph6HdInYZLc+34LtKZvsm7BqScEAuNIGMStcHHr+lomyBvDVp+ANUYbgH+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YSrU/C5H; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744933832; c=relaxed/simple;
+	bh=QHqNVd85ZFl8xsBHZhkWI7oDS+opVNyxYGMYKO5k/+s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dD4uryCTCH9ze3v/zZ0dFLXIQFqrSEBY/3p47F+agOWPwurbUtNS3UoMAENF7mVOrzoupf5hsvro8QfLlBl7mWr/i9qHRkPfbLLvoERGopnbgjQ3zLY2wqvnpRsFWA+DZWWAn/DA6BVvmgi/zGCeeG24svNec6poWLcli6Ecktc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=sOg995bC; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YSrU/C5H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A96A3C4CEE4;
-	Thu, 17 Apr 2025 17:06:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744909591;
-	bh=86Oqz9rtTQmpGfN14C4Fg8yWMgaHPepqJUn631Rm6XE=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=YSrU/C5HaY48PC079kK8RzogR1nnios4K1T3IB/yYLVfba5nxWUJkqRGYJAcO348P
-	 tuFmF/BKUucMbrFBX/BtSJM2xNaKh9ymwHmWmc68WGs9gQhIIffDNSaKQAAF8IxQnR
-	 o3ZTsPcE68SfFDteIcW2F6xP9YJ91z5OhH7Gs2Zl7E6Ylr9SWv8eAqHepyX1WfQNTH
-	 vHE2pQEAg7KZ4K36Kq3ByJn9iG7s5SUNb2BSMynxXpJdrtWQCHm0cu3NN9H8ZkG/1y
-	 qPa5dwrMxSKsGaURDD5QLFba1v0IPN6+Upzots3Vr0XLsioSRNg2CVMlvF7RxJD60z
-	 kOCjRoPRfdgbw==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EADB1380664C;
-	Thu, 17 Apr 2025 17:07:10 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 6.15-rc3
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20250417113247.272720-1-dlemoal@kernel.org>
-References: <20250417113247.272720-1-dlemoal@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20250417113247.272720-1-dlemoal@kernel.org>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.15-rc3
-X-PR-Tracked-Commit-Id: 399eab7f92fb73ffe621294a2d6bec8fc9f3b36b
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: ec4c6d1ec4537bb41f57875e4929122e9160d01c
-Message-Id: <174490962944.4147514.16835734031379435403.pr-tracker-bot@kernel.org>
-Date: Thu, 17 Apr 2025 17:07:09 +0000
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="sOg995bC"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2263428c8baso89575ad.1
+        for <linux-ide@vger.kernel.org>; Thu, 17 Apr 2025 16:50:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1744933830; x=1745538630; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=axmNKkL10Icp7dnw5fKVIFJVjkhf304enEMguGPoSWo=;
+        b=sOg995bCGgy+k/7wV2iN9x5FmmdpFHzUXnZ7DPbPwRR8WlbYxneNacPIMp+/iFuUZR
+         enGztNjO7L33zfqIzvbMs5jNYtNqX8CckF4pHCcf6uEtGuQneDUn93uPt8nyLZFGcetz
+         o1zc9j2+4lHVQrZ0g0G+UqdUH1PydVa/qsotNlostrE4+/psmnOTBMY/oZLJfDbCovbM
+         Eex4rXuVLhfMiKy125D6xPrWw5wvIRPc/RrtuHbx5fi9BDWJEJXYw9t9uKPwLf3m5jq3
+         OxdWUTHrRc327S0nrL2uRD4aJwLpcMauHjZFYYDqJNpSJWOn97G5ZnIonm6fGzfdHBcH
+         V6Xg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744933830; x=1745538630;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=axmNKkL10Icp7dnw5fKVIFJVjkhf304enEMguGPoSWo=;
+        b=VUhbT6mUIYM1WnCrcfRM0OISRq7ezl6SpnPaMzbKKKYMJcbwDuZiUoYm0SiqEc0U/a
+         FgBg/WX0/qTw3R/iorbw3C9/qb+EVdGCpqmKOi/jmcyj/eFPJhdH8XIPihMD4lRDXSTV
+         27f7AoPgabZt67sSzvkZJaPBehG7lrj49yFwaJc/ajSLqGyNJlA/Ou30YqydL2QLjUdh
+         GVoR3a0sHXnH5fJgQJqNZ/wL7Al8TfQXCzFW9rdPcLvJzTDH0CbXU0TOOR7WOXQKKeDy
+         1pSD0RKCa0zKYdy9zHkMOjud997hjnJvXEx6px+kvlG9cI0ckhFEp0/vtqMd+/nRQFPP
+         6aZw==
+X-Gm-Message-State: AOJu0Yw6nlPuJc5hCqekmEUaTAk6rQ/D+kzqSSmS/rzlLR6v16kG3/Es
+	V4ud8IrwmszAYV0Qz3JKwmZGCkEGr8darAK14/JJick1Y8a1tyJh8SpDnfivBw==
+X-Gm-Gg: ASbGncvQEL1rxaZPTnqnl0nIbhVdA89EYHZ0p4FD4fv8kh5aLOv0N7DTFAzXNYkfkLw
+	zhHWn396OQI6OPwnnUaxFTsSMhVUylc+H/DUkgCzjkIV114NqaaaZ80X6oOHGk99hfrLnPBEKGi
+	nbB0HFrDhWuDXDiNo5cx2yR32PjIzu3kgPl+gDanlfDmuISHWzNE0GFay5aaqWXoVDD9vjs1dUt
+	G9YCA1IHwR/6IcQCXQ+TRlSSYYNFYMre4YCazisXO09s5jr7mk0Jk1ya4lmK4hUa4zRqD+elPhb
+	KBvPjPY84dTV1uZzKu8hAdTr+Vw83hYTpK/zmmg1Iag5Dq3ek48VeaHbNnmxpun4MuqHQaOa6aF
+	z
+X-Google-Smtp-Source: AGHT+IHsbEMgkqIPYgNBlqdEICBwdwTNJqRgCXucSH1SLA1563+ad5x7yd2ss0cA2elpGel9St/hEw==
+X-Received: by 2002:a17:902:ce07:b0:216:6ecd:8950 with SMTP id d9443c01a7336-22c54577a9cmr701005ad.19.1744933829618;
+        Thu, 17 Apr 2025 16:50:29 -0700 (PDT)
+Received: from google.com (24.21.230.35.bc.googleusercontent.com. [35.230.21.24])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50ed1a64sm5819915ad.203.2025.04.17.16.50.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Apr 2025 16:50:28 -0700 (PDT)
+Date: Thu, 17 Apr 2025 16:50:24 -0700
+From: Igor Pylypiv <ipylypiv@google.com>
 To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/3] ata: libata-scsi: Fix
+ ata_msense_control_ata_feature()
+Message-ID: <aAGTwMfhPPOBYrnf@google.com>
+References: <20250416084238.258169-1-dlemoal@kernel.org>
+ <20250416084238.258169-2-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250416084238.258169-2-dlemoal@kernel.org>
 
-The pull request you sent on Thu, 17 Apr 2025 20:32:47 +0900:
+On Wed, Apr 16, 2025 at 05:42:36PM +0900, Damien Le Moal wrote:
+> For the ATA features subpage of the control mode page, the T10 SAT-6
+> specifications state that:
+> 
+> For a MODE SENSE command, the SATL shall return the CDL_CTRL field value
+> that was last set by an application client.
+> 
+> However, the function ata_msense_control_ata_feature() always sets the
+> CDL_CTRL field to the 0x02 value to indicate support for the CDL T2A and
+> T2B pages. This is thus incorrect and the value 0x02 must be reported
+> only after the user enables the CDL feature, which is indicated with the
+> ATA_DFLAG_CDL_ENABLED device flag. When this flag is not set, the
+> CDL_CTRL field of the ATA feature subpage of the control mode page must
+> report a value of 0x00.
+> 
+> Fix ata_msense_control_ata_feature() to report the correct values for
+> the CDL_CTRL field, according to the enable/disable state of the device
+> CDL feature.
+> 
+> Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.15-rc3
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/ec4c6d1ec4537bb41f57875e4929122e9160d01c
+> ---
+>  drivers/ata/libata-scsi.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 2796c0da8257..e6c652b8a541 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2453,8 +2453,9 @@ static unsigned int ata_msense_control_ata_feature(struct ata_device *dev,
+>  	 */
+>  	put_unaligned_be16(ATA_FEATURE_SUB_MPAGE_LEN - 4, &buf[2]);
+>  
+> -	if (dev->flags & ATA_DFLAG_CDL)
+> -		buf[4] = 0x02; /* Support T2A and T2B pages */
+> +	if ((dev->flags & ATA_DFLAG_CDL) &&
 
-Thank you!
+Do we need to check the ATA_DFLAG_CDL flag? If ATA_DFLAG_CDL_ENABLED is set
+then ATA_DFLAG_CDL must be set as well?
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+ata_mselect_control_ata_feature() only checks the ATA_DFLAG_CDL_ENABLED flag.
+
+> +	    (dev->flags & ATA_DFLAG_CDL_ENABLED))
+> +		buf[4] = 0x02; /* T2A and T2B pages enabled */
+>  	else
+>  		buf[4] = 0;
+>  
+> -- 
+> 2.49.0
+> 
+> 
+
+Thanks,
+Igor
