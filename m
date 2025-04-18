@@ -1,127 +1,124 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 702E08C1E
-	for <linux-ide@vger.kernel.org>; Fri, 18 Apr 2025 00:09:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF7001C5485;
+	Fri, 18 Apr 2025 05:40:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744934966; cv=none; b=tldHpoZ5Ua26wZiVC/u0liiJ6zScSH2M1bMVr0q7E2X+EBUNAEDVu5dS/8HdnN/4CLttB48CQFUUemHo+6mckwH8t4uO9pnhoR1XR3tAmKcKon2zYzns1X+HuGLqpF8qYRi3H59/+jaYMAQqVCVlzu+kBAKzLVPYAN9RTyctFyg=
+	t=1744954802; cv=none; b=lnETLLOJ/0MwfEDSPZi7w9d8AMhiwuXy1rFrqp4VoeAcfL+aj78CTo3fsKp1vDzWqTEMNljoW7ktz+GWHp2rHT7ZeBHSW9gJvOF6LH7VPuFCiGMlqEJZO/3zums8pNXQn9d66DCNn9IHkcuPQLFW76qTzPvBJBO4JVl3uVcpkYc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744934966; c=relaxed/simple;
-	bh=1iz9cSuAyLptqR95CHj47SCbPvg7Ohoe4JgNu+5U5qQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sBjPfuit6X1rTTreOj7ICmXicv3Krpu9M7PaBKu94uKT46uUt88qNhqik4MOnPfYdB5P6rWrKTKJQ/b1boiTxgVCmFrrLLTiyrZbPzCKN7Q/XVSUd+yzt83/xIFf4sNbOSu3h98Fd66fRqD/COIW6PQGbd9F5iucMxNmmUQOobY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=4nBXufVf; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1744954802; c=relaxed/simple;
+	bh=xXdAX38nqDnPAIBIXh/Qg/ZdEBA5X2yVVJ/FqSg+1xs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=a7zxGCeBtsudoaLdt2ja6fp+DeJI3OGKWHT5u1MMSWWQZAJ/cN5idxDVkwkvJ3rReKLnNu76Q5riPq8a9FTK8YGCOrdDIgDPyq+ML9vERIdJkNlt6pVcFXgwkxalnrrLECkHmjuBtTEEZlaJmJwiixcXm0DlmtXNuI2qFvXS8L4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tksuFZrD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="4nBXufVf"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2264c9d0295so48425ad.0
-        for <linux-ide@vger.kernel.org>; Thu, 17 Apr 2025 17:09:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1744934964; x=1745539764; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jRMQb6QKHkmqTIiBM1Dt1HJPQdB2qTTEuCJ+2vuCv5Q=;
-        b=4nBXufVf16edin5u70QmZSswWZ1rgDhrUDhZGk019WxD0uvUoGpsYxZCjShvxvvZ8Z
-         wRrS6Ko7VwGi7BwfSWhPDAE3VqFqDCiuOgDWPTwXGIc+QqEJdPw5wo1HQ7+1AELo8oeK
-         5Q2fDOn+uSa2w+Mc9xkDLEsGza2upiyMQ4u9lScELHegeCMZlHP3lZiW12f3hjdFx9+D
-         ubatEaYfG03qO+Ayfg7IalyI+bvxA7AAFzC3j6r6Epjp8XhHJWC5pFzk/2RTjRN5LCJT
-         c9lF+CK3LW+amvrweyONSkeFNIi6nabWIHEIf2DWXph4jtixkvDQs1rcjAnNTgw4hx2b
-         9Fnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744934964; x=1745539764;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jRMQb6QKHkmqTIiBM1Dt1HJPQdB2qTTEuCJ+2vuCv5Q=;
-        b=kafOt7jwT8eLcojQ2Ajqz9J38cpZCbMhFih2p2VT9iaIwnMd4zlq41C3KjFZpmGRjw
-         MTqp/NgXRGhfvOK2DZPerjRmxHRwHC0ovKy0e181SneXq9EXnj1Oqsl4R8GyYVUMK7H+
-         Q/VFsh1q7yf9WBkZFchFlVmu2SUlmU5DUjCsCSQxoiRk4/z1HZcqjP31k1W/ZpdwH1nP
-         VOGPTd5k7Mu/40AHYvmROXfxDZFB0Buv/lVE50iZG6GxyhL+5UwXMITPD6sp6+L0Vr4P
-         RKMxlwd4SLPwjzJurEqsUWydn0tgrq+aya+rKV0AMpbgBcF8ZW5huPX8vfAguM7C7dWA
-         szBg==
-X-Gm-Message-State: AOJu0YzM85j3ldjuHS8H+QZrQHYuy0Es2JhJ59rIP4k3qKzlE4Llm+iB
-	8XI5YZSRpm7Tk0M6stVg2c/Q5/SPMmqcnopefN6A++ewrLVCLJ0NXafzyYlpWQGD+pggR7Clbel
-	SnA==
-X-Gm-Gg: ASbGncuknNMcPl+H7vNH+mryikB/8qD2I/sWpWP1mloPvsMehpdGrAmEVo6Lm98pgXG
-	nALtUGJVR5prXwUUaRftYo1AQOgEv4iBpBmH8VInmDw0RmTalvepHXn6khxVfNz8mn7pwKKXYv0
-	5ti6r3dNRUYw2F3M7fMT8WfUq44trco7C8lcYOVygF59+tdD01Shz1mgJRKEcFQZ+kt0JoO39vb
-	SaoxwzNtg9lotwmY7AQA3hhujy6JpKORPZDhMR7iPplgEvZahJkhKQyTjm/YFF+CsYRQ1XzvQS2
-	fb5evFBVdWuezNxLtlB7R9+R7gSHpTKCo57pcB/9CwJW6GvY+JCJzllYAPtK1wF32LsOHfYALPe
-	V
-X-Google-Smtp-Source: AGHT+IH/FUWHONJ58qRBe5zN9276vPde2PtlCDbwdodDOO1MF6EJkjcY5EVoILQbbQDQgKGBVq1tRw==
-X-Received: by 2002:a17:902:f603:b0:229:1de5:e8c9 with SMTP id d9443c01a7336-22c54560238mr794325ad.13.1744934963329;
-        Thu, 17 Apr 2025 17:09:23 -0700 (PDT)
-Received: from google.com (24.21.230.35.bc.googleusercontent.com. [35.230.21.24])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50bf5230sm6236225ad.73.2025.04.17.17.09.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Apr 2025 17:09:22 -0700 (PDT)
-Date: Thu, 17 Apr 2025 17:09:18 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/3] scsi: Improve CDL control
-Message-ID: <aAGYLkwoeMJI1s1Q@google.com>
-References: <20250416084238.258169-1-dlemoal@kernel.org>
- <20250416084238.258169-4-dlemoal@kernel.org>
- <aAB3iU7ZuQo5cH9z@google.com>
- <3c8f7e2a-ba73-4943-8372-0f322aaa3935@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tksuFZrD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8AAFC4CEE2;
+	Fri, 18 Apr 2025 05:40:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744954801;
+	bh=xXdAX38nqDnPAIBIXh/Qg/ZdEBA5X2yVVJ/FqSg+1xs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=tksuFZrD9pR0FB5FX7BvE/zN3ZOoKKd7fbvmgCG8JUxfzKmM7jt0lqH3rnofwbBv2
+	 kCzjSV4JPJXWFRmfKB8hEwD7ZxJq4IRNUR/nTvlnHiZlaUzWbQj2AOiderusp+JI/X
+	 YEvDxa9J7HmHHW8xTDIbsiHomkQrR56/3Ekwfb9GrxVuiGTERdX2jfi+B0hff+X8MF
+	 1tPbhjytBp12HJEV2Mr7lK3ViKX+UpHwz12PLQvB5Oq79tm/Zc5n55ZBHgcc9sKIt0
+	 XCOh/mBe7WptFkJ7gPyyEgjuSVQX8Jxt6bVORUd+qEdJ7yq7JjOT+vkrTLIZruvHnH
+	 g6JZEBXcqMsaw==
+Message-ID: <414f4b93-1ccb-4b3d-a47e-c2cb6ac55b8a@kernel.org>
+Date: Fri, 18 Apr 2025 14:39:59 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3c8f7e2a-ba73-4943-8372-0f322aaa3935@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/3] ata: libata-scsi: Fix
+ ata_msense_control_ata_feature()
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+References: <20250416084238.258169-1-dlemoal@kernel.org>
+ <20250416084238.258169-2-dlemoal@kernel.org> <aAGTwMfhPPOBYrnf@google.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <aAGTwMfhPPOBYrnf@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Apr 17, 2025 at 08:08:00PM +0900, Damien Le Moal wrote:
-> On 4/17/25 12:37, Igor Pylypiv wrote:
-> > On Wed, Apr 16, 2025 at 05:42:38PM +0900, Damien Le Moal wrote:
-> >> With ATA devices supporting the CDL feature, using CDL requires that the
-> >> feature be enabled with a SET FEATURES command. This command is issued
-> >> as the translated command for the MODE SELECT command issued by
-> >> scsi_cdl_enable() when the user enables CDL through the device
-> >> cdl_enable sysfs attribute.
-> >>
-> >> However, the implementation of scsi_cdl_enable() always issues a MODE
-> >> SELECT command for ATA devices when the enable argument is true, even if
-> >> CDL is already enabled on the device. While this does not cause any
-> >> issue with using CDL descriptors with read/write commands (the CDL
-> >> feature will be enabled on the drive), issuing the MODE SELECT command
-> >> even when the device CDL feature is already enabled will cause a reset
-> >> of the ATA device CDL statistics log page (as defined in ACS, any CDL
-> >> enable action must reset the device statistics).
-> >>
-> >> Avoid this needless actions (and the implied statistics log page reset)
-> >> by modifying scsi_cdl_enable() to issue the MODE SELECT command to
-> >> enable CDL if and only if CDL is not reported as already enabled on the
-> >> device.
-> > 
-> > Hi Damien,
-> > 
-> > What happens when a drive spins up with CDL enabled? Last year you sent
-> > a patch to make sure that CDL gets disabled by default. Is that still
-> > the case?
+On 4/18/25 08:50, Igor Pylypiv wrote:
+> On Wed, Apr 16, 2025 at 05:42:36PM +0900, Damien Le Moal wrote:
+>> For the ATA features subpage of the control mode page, the T10 SAT-6
+>> specifications state that:
+>>
+>> For a MODE SENSE command, the SATL shall return the CDL_CTRL field value
+>> that was last set by an application client.
+>>
+>> However, the function ata_msense_control_ata_feature() always sets the
+>> CDL_CTRL field to the 0x02 value to indicate support for the CDL T2A and
+>> T2B pages. This is thus incorrect and the value 0x02 must be reported
+>> only after the user enables the CDL feature, which is indicated with the
+>> ATA_DFLAG_CDL_ENABLED device flag. When this flag is not set, the
+>> CDL_CTRL field of the ATA feature subpage of the control mode page must
+>> report a value of 0x00.
+>>
+>> Fix ata_msense_control_ata_feature() to report the correct values for
+>> the CDL_CTRL field, according to the enable/disable state of the device
+>> CDL feature.
+>>
+>> Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > 
-> Yes, that is unchanged so that we keep being consistent with the fact that the
-> scsi layer starts with the sysfs cdl_enabled attribute set to false. So if an
-> ATA device starts with CDL enabled, it will be disabled.
+> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 > 
-> That does not cause any issue with the CDL statistics log page because that page
-> is not persistent and cleared) on power-on-reset events and this change has no
-> effect on that. The CDL statistics log page will always be cleared on boot/reboot.
+>> ---
+>>  drivers/ata/libata-scsi.c | 5 +++--
+>>  1 file changed, 3 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 2796c0da8257..e6c652b8a541 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -2453,8 +2453,9 @@ static unsigned int ata_msense_control_ata_feature(struct ata_device *dev,
+>>  	 */
+>>  	put_unaligned_be16(ATA_FEATURE_SUB_MPAGE_LEN - 4, &buf[2]);
+>>  
+>> -	if (dev->flags & ATA_DFLAG_CDL)
+>> -		buf[4] = 0x02; /* Support T2A and T2B pages */
+>> +	if ((dev->flags & ATA_DFLAG_CDL) &&
 > 
+> Do we need to check the ATA_DFLAG_CDL flag? If ATA_DFLAG_CDL_ENABLED is set
+> then ATA_DFLAG_CDL must be set as well?
 
-Sounds good. Thank you for confirming, Damien!
+Yes, we can remove it. It does not hurt though.
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+> ata_mselect_control_ata_feature() only checks the ATA_DFLAG_CDL_ENABLED flag.
+
+Indeed, but that actually is wrong I think since we should not attempt to issue
+the SET FEATURES command if the drive does not support CDL. This will not happen
+for a control initiated through sysfs, but this code also handles user
+passtrhough commands. I will add a patch to correct that.
 
 > 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+>> +	    (dev->flags & ATA_DFLAG_CDL_ENABLED))
+>> +		buf[4] = 0x02; /* T2A and T2B pages enabled */
+>>  	else
+>>  		buf[4] = 0;
+>>  
+>> -- 
+>> 2.49.0
+>>
+>>
+> 
+> Thanks,
+> Igor
+
+
+-- 
+Damien Le Moal
+Western Digital Research
