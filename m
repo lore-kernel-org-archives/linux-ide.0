@@ -1,126 +1,76 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C12824633C
-	for <linux-ide@vger.kernel.org>; Fri, 18 Apr 2025 23:14:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3278E4C7F
+	for <linux-ide@vger.kernel.org>; Mon, 21 Apr 2025 00:07:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745018096; cv=none; b=H5Xv7Com+XqjXb8O0xcRnKp539CKoZQ+gp370zcoUsM9JG0+AT+JLH5Z71hAdYxKl7K5F3132FY+igRwWQPD48LPzGT1Q0rmHmkrj83bRO6NfshItG/5qgfN3H52URzUitlIgX67QJQ6HePz6MZ0MWhaK6dg3FcW+HB0PNhSI4s=
+	t=1745194068; cv=none; b=HgP4LF8uhNB2qP5fL8p1KO8CF+GsJtk6MPLBvl9CvrSb7HQW+iXpV0R8CqVqTfqpk2H2UbgXAF6gQIKJ7b5PWWu0FxKTmzNINzE2g3Jd7++D8enjjpMOJff1f8R5BrrCxMLpXmWSZJ20jDzrbOnb5VrBFISy6dXfvI7HjBljhV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745018096; c=relaxed/simple;
-	bh=M+yFcxgA5UoT4y3zPDlOIb+luoJpCnpooQU1OrR5U2k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ccmXy7Iv7PLO2te9jgJdxMXTK8S+YkYso7RRFvUthLRYSNahLuAXDg4bC8TZflWDOOQXHeTW+QxbFdbQMqaJbWdItQcnhKmn7T7FJWH11MltoJX1e8u7AQrENX/uGBY5egi6rI2xpoybZWmPNBDw9BP+DFFhhvfIEMHyUPfsVHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=xHZBoIHr; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1745194068; c=relaxed/simple;
+	bh=KQvSPGIZIKFCxRUeo8uoYopk9r2AvnPRF5iOe6zXzc4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ls2wAlJ3Gr2EiZIbZGUhZU7bmLv3KrdnPAw9MRZA/6ul41VpOQLlk/AEAbyi0I+bKKRqIfnaIjGOqVTz6ig5YqzbE9rTr+2Y15rBg9o6HZK3LzHoyfGSFQiJ3GWgUzz5hRKsCnokGRlzMiguduae6gpvxSnq3aBvm0fJVNCXByA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pctlIHU6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="xHZBoIHr"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2242ac37caeso250255ad.1
-        for <linux-ide@vger.kernel.org>; Fri, 18 Apr 2025 16:14:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1745018094; x=1745622894; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=G8up+br7TxL1MAZrYi3mnJnaia6kOAmbO1PhE75M/CI=;
-        b=xHZBoIHrmt0oe4r7Bia7uQmJjMAtpR2UtZVlFqA5gIyJ0aHdfo8sst2mZDdhj2z9jp
-         0RTlZLgCTSAeRBsdnFnPUhJwKoh3m+bDDLEa/okC/oUZRx8nSwC2wyWOXDr/I23EYTFy
-         R0Px6WgZh55Sq25xsOi7RRGTudC5AwP12DcVHElseM2/Bf2vb21cAcQFdPfQaTYeDgKj
-         GIGATI9esizBqVR/pPAq8eKtGixZt4rz1PRt1Vr9Ay0oT9xTibSp3TuQ7H7VBOXCX4R3
-         sKYRR/xvh9+UNrWapGtAvfVMheko55QXENhAPUxHZ+v2vliflSqp9Xzy/AUQIcNCIA1z
-         QLjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745018094; x=1745622894;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=G8up+br7TxL1MAZrYi3mnJnaia6kOAmbO1PhE75M/CI=;
-        b=J7bbGmdHx/Q6p7aMlYKkU+tORWlAbQczgrfNCH086X7FjezG+8wO6NGV8Ie9GzFin/
-         3P+qEznXwaspkGNDpmbYZRjmZhwv24MNO1+Od/uNsCruHub9JRO/Vb2i1XLwvAiIWkvv
-         /65Ljjf5vemrejM1DI7ZJJKuz8Jg3r75j9gAzLdoFas1HhXZxP20F1KZ3guzWEGeiqDA
-         OAdD32Nm3hIELxItzIAdYuwzaMGW8JdHj4OrPAiVj8F9BpUAOvGDF9r1OYqwAdg+RVCT
-         BzQEAyOhP6IOpqYS/kkH6apDocA76hKakPvDilnzDne1yLdVSOz4oyUcTS9VnW7YH9Vd
-         aBGg==
-X-Gm-Message-State: AOJu0YyuISUTk55BA02IsYLwLDpPa4sO47iFArLvJc+EfVERxyZJrRdZ
-	i0yiHoSvFMtrXOiIvMkjOE7a+Z1eynFjmVNvHJLqdyeBH5bxmvMcZ2Wl69pAOw==
-X-Gm-Gg: ASbGncu+Ww8n/usOOnqg80U8Piudr5nASi7zvs1dT4/5q29Fs71imetL4vIWj+qr/P3
-	F/WL601Gvw2JP2vrELfR13/faHfyRXKM1P1T+4z1WOHJFtyM9IwXu9MmwQMVJdkjCrqLMoD4fpu
-	4nbSBtsNiq1fN6mE2OxY5hw7i+DSj4mNqpZW0hhZ+S19/5i6oMnPDNh/Kul1KIzbUxFI9dTdH/9
-	EWfc68LbjxW/iC74a5GqfSOq2+roWNyhdO4An34uePXpp1ChtsT8g2WHniZVB7h/Jn1kG8ciERQ
-	pcuyl6B/8fxXsjOBSofrS23HJTVo/mXmssW9YMyUTZf+XmrsiIeYjYtvfzB9hbJ7PqE3hJZa+bX
-	x
-X-Google-Smtp-Source: AGHT+IGN4I/AGkBiqM6+mhRGskQgTUObnsjlgT9lAu72b7p03Ut83zAPXBy09Axdev+dLWLIfPzmAw==
-X-Received: by 2002:a17:902:ccc6:b0:20c:f40e:6ec3 with SMTP id d9443c01a7336-22c52a93c7emr3910775ad.22.1745018093899;
-        Fri, 18 Apr 2025 16:14:53 -0700 (PDT)
-Received: from google.com (24.21.230.35.bc.googleusercontent.com. [35.230.21.24])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50ed0ed8sm22070875ad.200.2025.04.18.16.14.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Apr 2025 16:14:53 -0700 (PDT)
-Date: Fri, 18 Apr 2025 16:14:48 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 1/4] ata: libata-scsi: Fix
- ata_mselect_control_ata_feature() return type
-Message-ID: <aALc6EzizWjKRduw@google.com>
-References: <20250418230623.375686-1-dlemoal@kernel.org>
- <20250418230623.375686-2-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pctlIHU6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC009C4CEE2;
+	Mon, 21 Apr 2025 00:07:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745194067;
+	bh=KQvSPGIZIKFCxRUeo8uoYopk9r2AvnPRF5iOe6zXzc4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=pctlIHU6Shu7KKSj0SfUYHdP5D5t9G/HYuyv7+H/WwpYc/XFLYdsu8Y0okRBj9HVA
+	 hWBrl4LJfaarGTacFzP2qaGTe4UGagX1vCYAZe6ZTUw3yi0wq0VnzSZ0jp4MqhfPgV
+	 ZHFJiHONSG8SuZ7/064MG1qrhDbuOLNy101OJZx5KZUbZpj3sKCzNv5kXJ41MgQfZp
+	 4xDweQflVR2JGVbzTLZn2wja92CCiOulyajQVdGxom3knxSwu9JGFI09ZY1TCBUwV6
+	 +QBZ8CAtuafIOGpI9m0slA2b03En0oNnb3mVlgFrGlC7RVUMncnmq07cD2dO2uttpq
+	 /Psqh1OjV40kg==
+Message-ID: <9ae95e40-8459-437a-8925-84a9a8bd09e5@kernel.org>
+Date: Mon, 21 Apr 2025 09:06:51 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250418230623.375686-2-dlemoal@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 0/3] Successful NCQ commands sense_valid cleanups/fixes
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
+ Hannes Reinecke <hare@suse.de>
+References: <20250416093127.63666-5-cassel@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20250416093127.63666-5-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sat, Apr 19, 2025 at 08:06:20AM +0900, Damien Le Moal wrote:
-> The function ata_mselect_control_ata_feature() has a return type defined
-> as unsigned int but this function may return negative error codes, which
-> are correctly propagated up the call chain as integers.
+On 4/16/25 6:31 PM, Niklas Cassel wrote:
+> Hello all,
 > 
-> Fix ata_mselect_control_ata_feature() to have the correct int return
-> type.
+> Here comes some minor cleanups/fixes related to the sense_valid field in
+> the Successful NCQ commands log.
 > 
-> While at it, also fix a typo in this function description comment.
 > 
-> Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Niklas Cassel <cassel@kernel.org>
+> Kind regards,
+> Niklas
+> 
+> 
+> Changes since v2:
+> -Picked up tags.
+> -Changed "1ULL << tag" to "1 << tag" in patch 2/3 (Damien).
+> -Improved subject in patch 3/3.
+> 
+> 
+> Niklas Cassel (3):
+>   ata: libata-sata: Save all fields from sense data descriptor
+>   ata: libata-sata: Simplify sense_valid fetching
+>   ata: libata-sata: Use BIT() macro to convert tag to bit field
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+Applied 2/3 and 3/3 to for-6.16. Thanks !
 
-Nice catch!
-
-> ---
->  drivers/ata/libata-scsi.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 2796c0da8257..24e662c837e3 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3886,12 +3886,11 @@ static int ata_mselect_control_spg0(struct ata_queued_cmd *qc,
->  }
->  
->  /*
-> - * Translate MODE SELECT control mode page, sub-pages f2h (ATA feature mode
-> + * Translate MODE SELECT control mode page, sub-page f2h (ATA feature mode
->   * page) into a SET FEATURES command.
->   */
-> -static unsigned int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
-> -						    const u8 *buf, int len,
-> -						    u16 *fp)
-> +static int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
-> +					   const u8 *buf, int len, u16 *fp)
->  {
->  	struct ata_device *dev = qc->dev;
->  	struct ata_taskfile *tf = &qc->tf;
-> -- 
-> 2.49.0
-> 
-> 
+-- 
+Damien Le Moal
+Western Digital Research
