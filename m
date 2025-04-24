@@ -1,123 +1,103 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com [209.85.219.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE66B290BCF;
-	Thu, 24 Apr 2025 18:52:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745520779; cv=pass; b=BMNNGnYR3d6bRd2twRNXSoHFkjcbOlTgOP4aBPrUw1aixggONnWeKXktKUtg/BEJ7h7eelHL3R7ZuYLvnSDKPZTioFJZtTwEjSaRijPbXXmxhn/R3fOATN2E0Pu9GCo962dRoJg+CMqGoZmulZx3/9IqHdnZZ4tsrW4foRkh4ZE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745520779; c=relaxed/simple;
-	bh=Sg+eDpGcEpQdkzE7TxWgzlH0ZwatzsoX6GOqGOsS+1Q=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=AvfUAfBgdgeWsZCo54jU19HkV0PVZYhgmZHp2FiKkpigfxRq7xcFngAYhXm6XlaweV2cL+tdcXo3/26Ges9w8KYomvnbj1CgTnBub4XoHLcNQ307UceKVB9jyWIXQuOq7cOu0kdEJeqDbFbhZcYpmaKq645vr9S9vd5u5ThRV8A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=GLoPQ0qk; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDA011FA85A;
+	Thu, 24 Apr 2025 20:43:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.172
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1745527421; cv=none; b=tq8eab/ubKt0PBTwUYDwjc6XbBUXHkQEulIYCRnpW+t3mly2QTtjW+bWoX03tIRMHFFMg27iX0Crz+lH0C1+Cq75yK/LldVcZOFbeUUlWtW4pNatM0C3vtt/NlKBwHjrJ9xfNp62rtzEBzoqObFEWl8/YVqLcwgct2V+u3MfOic=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1745527421; c=relaxed/simple;
+	bh=jWbtE072NIrMaIeBIzJ/yXydVqEkK3qVNeGEeCKQ4B8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Cr2nsnJKtkw4tan2NcuSXVQH/McbG+wWkgW0S09UhoVt+j7XlFzB+zZFbuMZ4jJkxtQzI9kcwOi5TkcFL3ueWtdSNa8uIaZFEB5w6/T5MQ0QU8vQjhfuU87kHAJW4ek92P0RLQF8WvLgqzB0DwALwJDQn5TrOaU1hDvCtO5P4bI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=d6se57LP; arc=none smtp.client-ip=209.85.219.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="GLoPQ0qk"
-ARC-Seal: i=1; a=rsa-sha256; t=1745520759; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=f67g/KglThRw5wVky3xH3nsJxM3eoPm5hIn3wIWY4iOPe5HwXKP1RHzKfGVh0C3M/XQkben49bhPSSOTFNw/G8IzA55lJXiyiVE7iZXchD9/+vuFo/GP2HRzN4I0H0pSS3SF5IaOaVB6E4PD5mQ3ILEs+5AxTQX9yIKYnNVxQ2k=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1745520759; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=/9frCnYTMVTpm5V5w18G/k5cDEAONcnNNbo6wTNm04s=; 
-	b=hP8WLG6fOselEXBQxz0BWOU/y2Ut31m2VmH5SkMA6r6STNkJ1qDrpwOYruqna2dFLvluRyG4zGJ1yFMhKzZRJnkEda0uptTmrnV7ltB2okFT0wbY8JVOXxMRBVQMWMWGhwWWw65LGEZeJABa/7SteN5WwN4lZC0TQPv/v1G5ims=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
-	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1745520759;
-	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
-	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=/9frCnYTMVTpm5V5w18G/k5cDEAONcnNNbo6wTNm04s=;
-	b=GLoPQ0qk1WjR+1lIkWWUByBXveFgWAkJUxbLRBc+5cA6tt8Jf6BHMFNWLzrpuvd4
-	dPTcaH2V+S5yJUjlogYeDPuiATLZJKZK292R9CZtoN4Vrvkk8jRRANml9FBBmXbiqwP
-	yqU4qcC/IMeL4aOoQNteksUTtZT0ugMpYZjCMUMA=
-Received: by mx.zohomail.com with SMTPS id 1745520756849524.09816512909;
-	Thu, 24 Apr 2025 11:52:36 -0700 (PDT)
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Date: Thu, 24 Apr 2025 20:52:23 +0200
-Subject: [PATCH 2/2] arm64: dts: rockchip: add SATA nodes to RK3576
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d6se57LP"
+Received: by mail-yb1-f172.google.com with SMTP id 3f1490d57ef6-e72bb146baeso1395159276.3;
+        Thu, 24 Apr 2025 13:43:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1745527418; x=1746132218; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=kibNvjYZjZYJR9PgTMJi3nr7GCmsE1rsbx1EBNX1cuM=;
+        b=d6se57LPyHH0H93OZs8LQBzhHJCrWolqC3f93hcHyx6vy4mo1WomzSapz5mU/JL7Ry
+         AAJY5/Hjk2dLoDbJtFg5ehe2kFDnLLXXLc47iTxIc5R3sq9gxo079c3i8m/0fQdaj6mr
+         F1KDojeuEqzT2kL2X3J3MTVPCFOpjApQ+dNqpTEdJbDWcemZ/gEqIe4DFEZUxE1lpcQ/
+         lOWv19XaTYcfBTE49HXTAa+5vEXLnNqLO7eX45lL1FOHP5gX8TNafZTXYaDqRxe67Tlb
+         1PoeFMcnxmZnDoj8cg5mECI2iwyLpnT1VRCOmneMMYKJjUnjIBNe9DDPTUn/gDYeEjBA
+         uG1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745527418; x=1746132218;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kibNvjYZjZYJR9PgTMJi3nr7GCmsE1rsbx1EBNX1cuM=;
+        b=Zl0OFJAGAMkZ3XRTBsbhvHDCr9+MTonAHjb+yWFw6zHKrC4C4uRUrFo44jvhEo8UbH
+         NiXAG1EpPuJfwO+YJP2RtJ3FmZlNBhzFSCkbCBh9kw8RZoG7MAKgOMd8xUez51qM4RdJ
+         7ywxB0yfOuXtDkq3A69c5n3cdXCm7V7ebOO+lRuml8nomvPjiUmdhe+t3JAdJRT9iOp7
+         R77Ux81NQqMFHB0uhCiW6SW3TmR1kisOnisBFRzqj2Y7d2c0Nd5xTCAt8+s3cVmgDtqL
+         kIcIyMfkiW3HVEpoEYfsbNuCL0ub9Lbg2sSrppdqubl5/HVbMMSZbi9HORh2e9dXVDB6
+         Hjog==
+X-Forwarded-Encrypted: i=1; AJvYcCUOqYwrp12BCGDWPnU9dU4+U+lNOcscSpdXdv7Fv151i9e2htEx7RRWn+L7NxvHJBxJ5ccbo4TAI0E=@vger.kernel.org, AJvYcCWO6zffKUaV79THC71jxlwvN18YZCV63xqwQpVmk4qN2MpSHV6Y8/uIeUIhtcvIvDwUa+L5ih0un3HdZ+k6@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0wYZUe5651G/qbt3MvoK0SsG9HyaUMuhCu5Kse4YgzatgH0Vu
+	sAFvJY5VD2N+MSdXHXNE80on4ZPEV++pORVWed9gX2aW9PA9b0mfGXMC5zQf6kXGwUnMOC18Rn3
+	XBKgMSYCA41UmGNLKZ0oVs+VHAnGzY+Ow
+X-Gm-Gg: ASbGnctF9lVqtdnPidzlTl6Nl7u8JBlF8kUKfFAUWWwTqJq12AX7FikhUuQEBPmtDIu
+	jeqr9QFBt5nTBO7Z/5z7cr5ZME9NdrjUTKjejGYzI6FVWPaW7W4EKOWDsIGrpaJ5qBklHmkkc8O
+	pZ/G2WAivuiit9EHDIUzreQSM=
+X-Google-Smtp-Source: AGHT+IGcc7UQ0+MFxh9lLSiRhzOf5fCGqpqJWN/oigg3vrXRTs7T63oIcn1ib8DS92izzMzRa021SQyCvMnr/QFufaU=
+X-Received: by 2002:a05:690c:680f:b0:6fe:abff:cb17 with SMTP id
+ 00721157ae682-7084f129c8amr19443827b3.26.1745527418015; Thu, 24 Apr 2025
+ 13:43:38 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250424-rk3576-sata-v1-2-23ee89c939fe@collabora.com>
-References: <20250424-rk3576-sata-v1-0-23ee89c939fe@collabora.com>
-In-Reply-To: <20250424-rk3576-sata-v1-0-23ee89c939fe@collabora.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
- Serge Semin <fancer.lancer@gmail.com>
-Cc: kernel@collabora.com, 
- Sebastian Reichel <sebastian.reichel@collabora.com>, 
- linux-ide@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
- linux-kernel@vger.kernel.org, 
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-X-Mailer: b4 0.14.2
+References: <CAAZ0mTfQ+feHUeRjC3aH9z=sM92XmXASY+3ELzwXJLfk30h_6A@mail.gmail.com>
+ <62cfcebc-3280-448c-9fe6-ef6df0b3fcb0@kernel.org>
+In-Reply-To: <62cfcebc-3280-448c-9fe6-ef6df0b3fcb0@kernel.org>
+From: Mikko Juhani Korhonen <mjkorhon@gmail.com>
+Date: Thu, 24 Apr 2025 23:43:02 +0300
+X-Gm-Features: ATxdqUHXI9-HqWRMgcmrHXKCUMlG_WouCuHVKNMSZzNA7GGT8FdbiflQSMd5dnA
+Message-ID: <CAAZ0mTdUkG5yp+XkBGE9Wc2V8np6r-DyNJSCa7Yo0k2bNzuq9w@mail.gmail.com>
+Subject: [PATCH v2] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-The Rockchip RK3576 features two SATA nodes. The first, sata0, is behind
-combphy0, which muxes between pcie0 and sata0.
+Make WDC WD20EFAX-68FB5N0 hard drive work again
+after regression in 6.9.0 when LPM was enabled,
+so disable it for this model
 
-The second, sata1, is behind combphy1, which muxes between pcie1, sata1
-and usb_drd1_dwc3.
-
-I've only been able to test sata0 on my board, but it appears to work
-just fine.
-
-Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Signed-off-by: Mikko Korhonen <mjkorhon@gmail.com>
 ---
- arch/arm64/boot/dts/rockchip/rk3576.dtsi | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+drivers/ata/libata-core.c | 5 +++++
+1 file changed, 5 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/rockchip/rk3576.dtsi b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-index ebb5fc8bb8b1363127b9d3782801c4a79b678a92..6e27d744acad2111616eaf4807aea1eac4f00c7f 100644
---- a/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-@@ -1334,6 +1334,36 @@ gmac1_mtl_tx_setup: tx-queues-config {
- 			};
- 		};
- 
-+		sata0: sata@2a240000 {
-+			compatible = "rockchip,rk3576-dwc-ahci", "snps,dwc-ahci";
-+			reg = <0x0 0x2a240000 0x0 0x1000>;
-+			clocks = <&cru ACLK_SATA0>, <&cru CLK_PMALIVE0>,
-+				 <&cru CLK_RXOOB0>;
-+			clock-names = "sata", "pmalive", "rxoob";
-+			interrupts = <GIC_SPI 262 IRQ_TYPE_LEVEL_HIGH>;
-+			power-domains = <&power RK3576_PD_SUBPHP>;
-+			phys = <&combphy0_ps PHY_TYPE_SATA>;
-+			phy-names = "sata-phy";
-+			ports-implemented = <0x1>;
-+			dma-coherent;
-+			status = "disabled";
-+		};
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d956735e2a76..c429ba259548 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4208,6 +4208,11 @@ static const struct ata_dev_quirks_entry
+__ata_dev_quirks[] = {
+       { "WDC WD3000JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+       { "WDC WD3200JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+
++       /*
++        * This specific WD SATA-3 model has problems with LPM.
++        */
++       { "WDC WD20EFAX-68FB5N0",       NULL,   ATA_QUIRK_NOLPM },
 +
-+		sata1: sata@2a250000 {
-+			compatible = "rockchip,rk3576-dwc-ahci", "snps,dwc-ahci";
-+			reg = <0x0 0x2a250000 0x0 0x1000>;
-+			clocks = <&cru ACLK_SATA1>, <&cru CLK_PMALIVE1>,
-+				 <&cru CLK_RXOOB1>;
-+			clock-names = "sata", "pmalive", "rxoob";
-+			interrupts = <GIC_SPI 263 IRQ_TYPE_LEVEL_HIGH>;
-+			power-domains = <&power RK3576_PD_SUBPHP>;
-+			phys = <&combphy1_psu PHY_TYPE_SATA>;
-+			phy-names = "sata-phy";
-+			ports-implemented = <0x1>;
-+			dma-coherent;
-+			status = "disabled";
-+		};
-+
- 		ufshc: ufshc@2a2d0000 {
- 			compatible = "rockchip,rk3576-ufshc";
- 			reg = <0x0 0x2a2d0000 0x0 0x10000>,
+       /*
+        * This sata dom device goes on a walkabout when the ATA_LOG_DIRECTORY
+        * log page is accessed. Ensure we never ask for this log page with
 
--- 
-2.49.0
-
+base-commit: 38fec10eb60d687e30c8c6b5420d86e8149f7557
+--
+2.47.2
