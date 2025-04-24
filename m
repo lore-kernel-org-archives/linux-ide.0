@@ -1,91 +1,85 @@
-Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F22628A41A;
-	Wed, 23 Apr 2025 17:21:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E35F139B;
+	Thu, 24 Apr 2025 05:44:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745428916; cv=none; b=Sa5N0jORnF7Pyjc0osZqbEqgdW14jOQrvzI6JC7kIezX/dvS8klqFZtJACuArku7XwzXFyfMhrdPNOvjKweHHusapHBOJ+312nYsJDHKQzyJdFmZBJgM7Z/o4A05mAx5vbladKDMh0hc0j+QvgStpJyMJaC3UOfsXLAKvRsyk0c=
+	t=1745473448; cv=none; b=E2VdK1cYX5O3E+ksbADO3FhoaUTN9dIxMUsG3XgZqIvjMmVpH0sw3p6nI34J/u3+917edI23F1sKeE4/aHj07dNwaxVSw9bGp4zIRyX4jP9yFX/XL7hP/bsgjGwFfbh3whkmAqoK2m6pyoWo3g0h0x3Q8FVAMaYNwJXbVtV5lA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745428916; c=relaxed/simple;
-	bh=l5lmUxZlXKeEMvSSY7QOBtWKjRhEbQz7PwzMfpBMypg=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=DllRCMZXQ2uySgcZq95OO+anzBffALgu7WzYvaIGXWW3sSkKfmuH9iJTNkVYTvURbuKZbKixv1JLnh0FBb31IcL5LaN7Q1yTewiznd93BBHnzie76ZL7U9pGJqackg+d2IuUG6++y9CPoJSE+5OjDtXvJa3SyG9V7dXZpewFxRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MHp+x/CW; arc=none smtp.client-ip=209.85.128.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1745473448; c=relaxed/simple;
+	bh=Ei5s8CyZRPbJiS3A9xmW0b8dJC52Fb4Ssy01YhH/pU4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=McBm156tt8UmtDHkFArerGk3ppkxHlNJ93fAQVIGxbLA+UQ7LpIyUobSuK1+IJLfnnU84gjlY3wo6opSLn6ehHnq0hfKnGX/5JVyox0hc7QrGIqQOmwRP6PJb9abvwpknOguXT3Jsv6jxo0QcpNRHkAAlJ8a65WY8ZjN+R4hN2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iYzltdpk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MHp+x/CW"
-Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-6fece18b3c8so1752537b3.3;
-        Wed, 23 Apr 2025 10:21:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745428913; x=1746033713; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=iXmo9vqVmeQa+sOqnfl+nEXQq3jE+5ZxEp0WETjKE8k=;
-        b=MHp+x/CWyodAKIHNd4AFtB/4SZQH5m5gj8T70jhyjhk9k7YBthLQ84MIQqu1Z86rl9
-         5/iKwtVLWvKtrBN4Srwf28pSrDBDeAjs/8trgPpTT3oI/6ucv+oZ6MqPfgf2WTXa0WbK
-         txKsZF4YBTRBsbuu70RNhGsR0oOE2MbciLovas+20K+q0nKXuI/LE1AABkeGxBGxr9Z1
-         QxI0oOB2b0SvzIaXfJ3Z/o7xVDm6cXUTbjlHEli0peNzl0atHzyMcbYp+yzc/4lOu4nP
-         GpSw44zbM1apdSrXoNYz8TflgPcCt9Z+ES152c18gh3XGgq9rjwSI7W3O2b+9wQsX41J
-         OIpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745428913; x=1746033713;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=iXmo9vqVmeQa+sOqnfl+nEXQq3jE+5ZxEp0WETjKE8k=;
-        b=uQL/NIoPqgIkTz6FRvlX09Wb1XUJouG3o6oE2X5mKIe3mGj3mAmhXIm2YA7xuj8PBb
-         NuA0wkuPfsSu3ycz/sv1Ikug4LltPy3iDYihC8vxzJ0pkGnuZF7xm0a3lKXvVMZtUnXz
-         MIVV+t+r8h6EHM+LAPJxQn0AKogafOzluw0w2www5QLUXsAkgGGCuyNmMf+UftdTfih+
-         mDBNpaMxFydzlAOehsU1W+pCAiLdTtys7hpSeSy68bR33/z0tnO097nnGPTwTQqBNO0z
-         2awNWRtVAhO0IZrsHa5p8vxYwHDUGE2VX8n0fidrN3yLfawcx+EsnGUMBer4HQXGaqAP
-         T+ig==
-X-Forwarded-Encrypted: i=1; AJvYcCV2t8WVWjUELVI47HdN9OtZkrFwl9Sx9COyI/pHxngZcvlXYwbbUji67DD5Nxc0EmOD/FxiHVGah3w=@vger.kernel.org, AJvYcCXaZZUu0mb+2pJJoV+gGb78xks8kUD6gB/qszVYXo0zln5ZEUJtP0Dgs4vVakZHHiSNa2RFD8v+hybQVXh0@vger.kernel.org
-X-Gm-Message-State: AOJu0YzF7bNJ7F3do1l7rQp/+KRex0UZcf7QKFQbZ/qylIkPtx6TJXgu
-	X+e6Hchrh/Kz1iDBzQjZpQhRtkHRcBJda4RkDXfvsn7aJZz4+GuwqtCFBuhZa3J6Za39v1wSoSY
-	ETFI8cX1+FlJaz+dnwN+u/IOA6WcL+48Y
-X-Gm-Gg: ASbGncuwBi/ekePql16tugupV3EX9rol+C1aG6HNA6lynt07idD9IFlVKfm0qJrk320
-	6nFJmnabQh1ZXdaOR2VL9ube28GNnXgf3TySt8HqNsdZsfHtBMFXgdusKFXo7hUt/X2sSZi+MHv
-	ZIGBvtrAaWNHkDxebJjUzT1NGyhxg7G1yflA==
-X-Google-Smtp-Source: AGHT+IHkg5bg/cDpn+6i3xpfjJEeqIIA2ijyuofxJlhHpzBtnGsqNOzfP1dSpIO8F4YZ+GpZrc0RI14s+zA4z8hyjag=
-X-Received: by 2002:a05:690c:6ac7:b0:706:cc6b:8547 with SMTP id
- 00721157ae682-706ccda139fmr309054537b3.25.1745428913412; Wed, 23 Apr 2025
- 10:21:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iYzltdpk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14CF4C4CEE3;
+	Thu, 24 Apr 2025 05:44:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745473447;
+	bh=Ei5s8CyZRPbJiS3A9xmW0b8dJC52Fb4Ssy01YhH/pU4=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=iYzltdpk7IueGGSpT5MNjvG559ELui5w27k8lJxseWyyFA6j7DJvkQUCMCR1s/bcI
+	 QnSWnaKVVBhPg3FS3rbk2zKzgakyrQKpm94/kRrnpAZbBGImZc5L7TraVI/RRM6C4y
+	 fjHzb80NgjrCFrqeL/jEYmm7XJ4FWSvJXsXvPIZJ7Tjg27f5LTXEzCQjTolfNzrKMS
+	 9bViFtBYeBU+rTcKP+r3g2OGanILAyE6hH3qYailYa1vUyib2ZkLjqFNj+QsT5R+75
+	 aQ7JMjLm1jsBt+K+A4OILvUSMIi8lTqtH2NGl3Dbp1EDCIKLJryYRnDeA4V8fWAx9M
+	 wEVC3YrKY2liQ==
+Message-ID: <62cfcebc-3280-448c-9fe6-ef6df0b3fcb0@kernel.org>
+Date: Thu, 24 Apr 2025 14:44:06 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Mikko Juhani Korhonen <mjkorhon@gmail.com>
-Date: Wed, 23 Apr 2025 20:21:17 +0300
-X-Gm-Features: ATxdqUEGtPpMXAUqNASrwXMaNWzw-7OEkZtV2XSi-wR5Sb0YmnYuePFOVKgt7h8
-Message-ID: <CAAZ0mTfQ+feHUeRjC3aH9z=sM92XmXASY+3ELzwXJLfk30h_6A@mail.gmail.com>
-Subject: [PATCH] libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drive
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drive
+To: Mikko Juhani Korhonen <mjkorhon@gmail.com>,
+ Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <CAAZ0mTfQ+feHUeRjC3aH9z=sM92XmXASY+3ELzwXJLfk30h_6A@mail.gmail.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CAAZ0mTfQ+feHUeRjC3aH9z=sM92XmXASY+3ELzwXJLfk30h_6A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Make WDC WD20EFAX-68FB5N0 hard drive work again
-after regression in 6.9.0 when LPM was enabled,
-so disable it for this model.
+On 4/24/25 02:21, Mikko Juhani Korhonen wrote:
+> Make WDC WD20EFAX-68FB5N0 hard drive work again
+> after regression in 6.9.0 when LPM was enabled,
+> so disable it for this model.
+> 
+> Signed-off-by: Mikko Korhonen <mjkorhon@gmail.com>
+> 
+> diff -u linux-6.14.3/drivers/ata/libata-core.c
+> linux-6.14.3-mk/drivers/ata/libata-core.c
+> --- linux-6.14.3/drivers/ata/libata-core.c      2025-04-20
+> 11:23:22.000000000 +0300
+> +++ linux-6.14.3-mk/drivers/ata/libata-core.c   2025-04-22
+> 16:53:52.341934384 +0300
+> @@ -4238,6 +4238,11 @@
+>        { "WDC WD2500JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+>        { "WDC WD3000JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+>        { "WDC WD3200JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+> +
+> +       /*
+> +        * This specific WD SATA-3 model has problems with LPM.
+> +        */
+> +       { "WDC WD20EFAX-68FB5N0",       NULL,   ATA_QUIRK_NOLPM },
+> 
+>        /*
+>         * This sata dom device goes on a walkabout when the ATA_LOG_DIRECTORY
 
-Signed-off-by: Mikko Korhonen <mjkorhon@gmail.com>
+This looks OK but the patch seems broken (missing separator after sign-off so
+this does not apply.
+Please use "git format-patch" to generate proper patches.
+Also please change the patch title to:
 
-diff -u linux-6.14.3/drivers/ata/libata-core.c
-linux-6.14.3-mk/drivers/ata/libata-core.c
---- linux-6.14.3/drivers/ata/libata-core.c      2025-04-20
-11:23:22.000000000 +0300
-+++ linux-6.14.3-mk/drivers/ata/libata-core.c   2025-04-22
-16:53:52.341934384 +0300
-@@ -4238,6 +4238,11 @@
-       { "WDC WD2500JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
-       { "WDC WD3000JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
-       { "WDC WD3200JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
-+
-+       /*
-+        * This specific WD SATA-3 model has problems with LPM.
-+        */
-+       { "WDC WD20EFAX-68FB5N0",       NULL,   ATA_QUIRK_NOLPM },
+ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
 
-       /*
-        * This sata dom device goes on a walkabout when the ATA_LOG_DIRECTORY
+-- 
+Damien Le Moal
+Western Digital Research
