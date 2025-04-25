@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66886323D;
-	Fri, 25 Apr 2025 01:14:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E601C3594E;
+	Fri, 25 Apr 2025 01:26:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745543670; cv=none; b=GPU/JLdjvcQcZR923uQYLNGFTz7/K6PpXt9yPwzB6vloMjGWWFQjIOTdQZzSV3st/Ggheo2IaxJPwfVsyS0Hk7w/oGF0S5lKI2/+MqrVnf+gM33yKRZ73l/YESJjS9uxvQ097uddFpksBikCUio40UWr9wO7rgsmMS4pvq0lD6E=
+	t=1745544363; cv=none; b=Tfcaeh2DzrbQxZA8cq6BVAKECBkA6mlYEV0LCcnbU8UDX9e3Yo0YYk0dA9/SEn7q3W0sN4xWwwmO5AcxMgESVAayA+9KaJjASOXK4XZRBKREF1z0TmhV7xFWJakennOesjWzOubXVtMIDe4UBJcntyV+yYd72GQTQaab7KZLWcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745543670; c=relaxed/simple;
-	bh=iA7ur5jr+Ij18pQxtEEBC4oOx9yaqy4XI8FUIfaR1+w=;
+	s=arc-20240116; t=1745544363; c=relaxed/simple;
+	bh=zZhhveuhacURq6wUmXqlmvLCXowRmY3258fmMA+iATc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Y7LX+IU4AXV1Arw9ACYLuLaoUjXiWKRzRfh802MatmB1b63ekN5WOATTiF9rJZ28xY6YiFumN6iM7HbcOWox5RhO89tMRhLNjwJ18Gu76Nvj7vyajxAd9Eu3VNVpBFCiPtDhcE3THU4yIA56xihVv4Dcarm0dJdnicDPXESIuzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ocKvN4OL; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=ape1Tr0LgV4TMaG7YzZBpZ2Y6jMwScJ10tR23npCQRptP/OdoNUyB+LNxQxgi7Mu0yNfYJwFWpVsEbjlss14cB/hVoURcs4jPh+bSsZg6plOaKV0763doGvK5cvuQGtwEw7hrWFdAIm56pDnHKHdZYG/tLDlxx2NMFA4UuW/6DE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fFZ/O3ad; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ocKvN4OL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 312ABC4CEE3;
-	Fri, 25 Apr 2025 01:14:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fFZ/O3ad"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CACC3C4CEE3;
+	Fri, 25 Apr 2025 01:26:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745543669;
-	bh=iA7ur5jr+Ij18pQxtEEBC4oOx9yaqy4XI8FUIfaR1+w=;
+	s=k20201202; t=1745544362;
+	bh=zZhhveuhacURq6wUmXqlmvLCXowRmY3258fmMA+iATc=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ocKvN4OLqc83/LctCTGBz5x8TaqUdrosvtOn6I9GGhbYRIy1HS5fLjVkcIhO+6Uoy
-	 5cmZ6DK0yL9Bqx7YjsRM9cdDgWzWOadJf5AEumHtmO6RHrBmlAC+E0cfYnHrmk5IJ/
-	 IlT68jJNdB4LlCNFLx0mM/odJn0gLKFywryn9JXxYXyUtoUdHZaLwef2iZJvCYSTdr
-	 /3n5ZX/pkGdsKPKQ9wuyNaTQXJTJX6OOlswzMZ+FZwh0s9Z2ppWepY9CPgz+9NIFC5
-	 H2ryezmlZb5UDZvyZgy196/gO+E8JPYdBLMV+ADTB5SkHvoo/39DbVTe3nA0j+lX/i
-	 877C52zkJlxxA==
-Message-ID: <5f7a1675-1386-4ca5-8614-99b4847742ab@kernel.org>
-Date: Fri, 25 Apr 2025 10:14:28 +0900
+	b=fFZ/O3adpABtNzLcx26RX2iiMj8wYPb5+FKlbTl23LjxBV2TxXJkS2yM5eak+M0Wb
+	 pzZcs4MOjguvku6M/cZ/soK9A0r2gT9n4zzl8fegDrQ1VAE8MhGM+hsfXHS4gC4f2k
+	 Xd/4za/vLfCqgjPJyS3DXw2VFzUeKUjvCMxlf8RC/z8teZND48qdS+WVznaSxPIJ1h
+	 d9VrN+qW9JC+8PWpNpWzIwN8zDb4FJZGLbIx808Dlc5oAZlAXJ0djaFNjNxrNC02bV
+	 RSihg7maAoolBL1AHgxiqdhcdgWFIyBXo19J8/GqVBJLgT6y5uvkg90oLp5XQcx2SG
+	 cjJGLw8IE0J0A==
+Message-ID: <b24414b9-c7b9-4116-a4d2-59a6686dc343@kernel.org>
+Date: Fri, 25 Apr 2025 10:26:00 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,65 +35,39 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard
- drives
-To: Mikko Juhani Korhonen <mjkorhon@gmail.com>
-Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <CAAZ0mTfQ+feHUeRjC3aH9z=sM92XmXASY+3ELzwXJLfk30h_6A@mail.gmail.com>
- <62cfcebc-3280-448c-9fe6-ef6df0b3fcb0@kernel.org>
- <CAAZ0mTdUkG5yp+XkBGE9Wc2V8np6r-DyNJSCa7Yo0k2bNzuq9w@mail.gmail.com>
+Subject: Re: [PATCH v3] ata: libata-scsi: Do not set the INFORMATION field
+ twice for ATA PT
+To: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250422172123.281387-1-ipylypiv@google.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <CAAZ0mTdUkG5yp+XkBGE9Wc2V8np6r-DyNJSCa7Yo0k2bNzuq9w@mail.gmail.com>
+In-Reply-To: <20250422172123.281387-1-ipylypiv@google.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 4/25/25 05:43, Mikko Juhani Korhonen wrote:
-> Make WDC WD20EFAX-68FB5N0 hard drive work again
-> after regression in 6.9.0 when LPM was enabled,
-> so disable it for this model
+On 4/23/25 02:21, Igor Pylypiv wrote:
+> For ATA PASS-THROUGH + fixed format sense data + NCQ autosense
+> the INFORMATION sense data field is being written twice:
 > 
-> Signed-off-by: Mikko Korhonen <mjkorhon@gmail.com>
-
-I still cannot apply this. I get the errors:
-
-error: corrupt patch at line 10
-error: could not build fake ancestor
-
-Your base-commit is Linus tag for Linux 6.14, which is not appropriate for new
-patches. Please rebase this on libata for-6.15-fixes branch or Linus latest tree.
-
-Also please properly format you commit message to use up to 72 characters per
-line. And terminate your sentence with a period please.
-
-> ---
-> drivers/ata/libata-core.c | 5 +++++
-> 1 file changed, 5 insertions(+)
+> - 1st write: (redundant)
+> scsi_set_sense_information() sets the INFORMATION field to ATA LBA.
+> This is incorrect for ATA PASS-THROUGH.
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index d956735e2a76..c429ba259548 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4208,6 +4208,11 @@ static const struct ata_dev_quirks_entry
-> __ata_dev_quirks[] = {
->        { "WDC WD3000JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
->        { "WDC WD3200JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+> - 2nd write: (correct)
+> ata_scsi_set_passthru_sense_fields() sets the INFORMATION field
+> to ATA ERROR/STATUS/DEVICE/COUNT(7:0) as per SAT spec.
 > 
-> +       /*
-> +        * This specific WD SATA-3 model has problems with LPM.
-> +        */
-> +       { "WDC WD20EFAX-68FB5N0",       NULL,   ATA_QUIRK_NOLPM },
-> +
->        /*
->         * This sata dom device goes on a walkabout when the ATA_LOG_DIRECTORY
->         * log page is accessed. Ensure we never ask for this log page with
+> There is no user-visible issue because second write overwrites
+> the incorrect data from the first write.
 > 
-> base-commit: 38fec10eb60d687e30c8c6b5420d86e8149f7557
-> --
-> 2.47.2
+> This patch eliminates the reduntant write by moving the INFORMATION
+> sense data field population logic to ata_scsi_qc_complete().
+> 
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 
+Applied to for-6.16. Thanks !
 
 -- 
 Damien Le Moal
