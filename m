@@ -1,83 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DE3425E821;
-	Mon, 28 Apr 2025 08:42:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 319F5293B58;
+	Tue, 29 Apr 2025 10:34:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745829726; cv=none; b=NnIfFQPpKXVYFdNyHgbMfUCufhYy79qahjjTMVrrmarnLZ2nrVETgbMWDxzzOswNsJBHXKsE4ablspLQ06pjonClVeJBkvJnHe7UN/BHTcGox7vRpQee8GQ/pCdnjcSGvrF5ykmckZanm3ztJGPmR2uE+LBxPCxHI4k7JoJrEdk=
+	t=1745922899; cv=none; b=NtJ/iwaCJhCWpz+u3sxAzWDUp1w6XUWy6Tfe2MvHjOcJuUQRX2c7oHIKoJ/LdIgATcgqnbsAJl5fNqtyF6Wd7IrpWpCvK+HIT7TuJ4uZL34cs/9eSmBgHRPVGODDg5SNlVb/3221URioto1+ap0TlJmcLM3KCKLceqzwifh3Hjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745829726; c=relaxed/simple;
-	bh=bEhWigbCGAEUWFJ8JkgGyCA/a4Jw1TYA21NKw6cRiPc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ao5++WPbiB+/NAbkHp+rmCU6WhIdlPqesclcQOjurBoOz0YQmfHk1wirn6g1h6zB+kfv131+QohqBpJUAkzCJ2GDeAFUGQnnCg3jOSz7sUMN2N5Dkuqi+X1f3YJ0USSS/WxqJRUdXjdTBJNRkft9rPVJKRbWR3ztwBZ0r2RKU9k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j/Gg3E3f; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745922899; c=relaxed/simple;
+	bh=5Xaiv77pPqDR0JWNZbP97RXrrtQfNbUb/NQWJxnkVrw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qbFnK3WYqgsi0Y7z83jEulIIuv1mSFpsZ6zMxWkapeuka6OqqbWc+MzaMYjU9m6OeQuLlEeWdhkikeFGgKgW3tW2eowDIHYxfr6rJad/ykZvHSxbSKYtJf7oowdQ4IzB36K5kEX4FTWeSMH+iXRchpr25R9T6kaND5ll7pEvSLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xv3f3HPN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j/Gg3E3f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 966BBC4CEEC;
-	Mon, 28 Apr 2025 08:42:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xv3f3HPN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ED33C4CEE3;
+	Tue, 29 Apr 2025 10:34:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745829725;
-	bh=bEhWigbCGAEUWFJ8JkgGyCA/a4Jw1TYA21NKw6cRiPc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=j/Gg3E3fhyeQLQVMiNG1WHtkk53Qf5q9PVGm54dj42RztAU2xCtIsDNi8tWVa33QZ
-	 qVaQ0Vx5Thv6Z+BRv8GJDt6m91NDyHFaD+2eyfMDXuQMNfcqBVEiVc/JtADE97rCLJ
-	 /1eoeiP72GuEn3gshvawW/CvYdWipskarCM7wH68m+7CRbyyzSvggEiiP5LoM8eJYc
-	 MIUExiVVOxLWm2mszicYR4iYigJ9PZ4xvenUIjaQ0AfceCDOqgYR3jSChSSmLLC3mg
-	 ztdpKRZYbenHiqWvY9YDuMVOqnb1jOMCvCcZgSy12VlDNSIVef8SW7FmfR9NQE8rGf
-	 4bIl3NOmzQRfw==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Serge Semin <fancer.lancer@gmail.com>,
-	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Cc: Niklas Cassel <cassel@kernel.org>,
-	kernel@collabora.com,
-	Sebastian Reichel <sebastian.reichel@collabora.com>,
-	linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: (subset) [PATCH 0/2] RK3576 SATA Enablement
-Date: Mon, 28 Apr 2025 10:41:32 +0200
-Message-ID: <174582939239.704591.18413477868629759543.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250424-rk3576-sata-v1-0-23ee89c939fe@collabora.com>
-References: <20250424-rk3576-sata-v1-0-23ee89c939fe@collabora.com>
+	s=k20201202; t=1745922898;
+	bh=5Xaiv77pPqDR0JWNZbP97RXrrtQfNbUb/NQWJxnkVrw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Xv3f3HPN22BsCFvLatg87iv2U79wZb0pZQDrvgBpyuPwsy334ZKBuqJh9I6Sks9CY
+	 F5zAQPm6AtssjmFldHZmuntmkaPBwBF+dfeKVYaOYipu5H3FjgSGYU8G8yKDFfI0BV
+	 QyrXFiDeVxJWRw2jKr8gC32ujSD6Chg2RTnpUpPynzjkinZX8x2xvX0A6DwqlGpxuf
+	 kHxYGHUHVXHF/uyx5DWuty05gXF2FloTRr2AYJH4TBLzOSnqZLblYwbntY/j3jJoGm
+	 rQxC1k9B8eR6NrppxePXzq3a40SH2ENjbQ00JI7SFHM+KXrZbobbKLLT+7h6YYwPGS
+	 uU5SD4DoZ/1OA==
+Message-ID: <4e882e59-149d-4d9e-9897-69dab2659608@kernel.org>
+Date: Tue, 29 Apr 2025 19:34:56 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=687; i=cassel@kernel.org; h=from:subject:message-id; bh=bEhWigbCGAEUWFJ8JkgGyCA/a4Jw1TYA21NKw6cRiPc=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDL47e3WNM4Q6W/6UpNetH99SP87w9LUbD7DNzLnI4wbz XfxunzvKGVhEONikBVTZPH94bK/uNt9ynHFOzYwc1iZQIYwcHEKwEQq7jL8FbKwWjHbfNr8siOi CbMcpWyvMvvfPsXqs+3ao0a9jh+c3Ax/xVfyO7EcLtyfLmQTljxh3Zcs/3TDHFGZkvZD3/tPZNu xAAA=
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard
+ drives
+To: Niklas Cassel <cassel@kernel.org>,
+ Mikko Juhani Korhonen <mjkorhon@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <CAAZ0mTfSFZoL_CS9s1L0JhfaoyMGJ6Up5Z9_YvU-pX05MOZ99w@mail.gmail.com>
+ <aA8xCLulpVz6V8T0@ryzen>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <aA8xCLulpVz6V8T0@ryzen>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, 24 Apr 2025 20:52:21 +0200, Nicolas Frattaroli wrote:
-> This is a tiny series to enable SATA on RK3576. It consists of a patch
-> to add the compatible to the bindings, and a second patch to add the
-> nodes to the SoC .dtsi.
+On 4/28/25 16:40, Niklas Cassel wrote:
+> On Fri, Apr 25, 2025 at 10:33:17PM +0300, Mikko Juhani Korhonen wrote:
+>> Make WDC WD20EFAX-68FB5N0 hard drives work again after regression in
+>> 6.9.0 when LPM was enabled, so disable it for this model.
+>>
+>> Signed-off-by: Mikko Korhonen <mjkorhon@gmail.com>
+>> ---
+>> drivers/ata/libata-core.c | 5 +++++
+>> 1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 773799cfd443..5c2f26945d61 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -4239,6 +4239,11 @@ static const struct ata_dev_quirks_entry
+>> __ata_dev_quirks[] = {
+>>        { "WDC WD3000JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+>>        { "WDC WD3200JD-*",             NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+>>
+>> +       /*
+>> +        * This specific WD SATA-3 model has problems with LPM.
+>> +        */
+>> +       { "WDC WD20EFAX-68FB5N0",       NULL,   ATA_QUIRK_NOLPM },
+>> +
+>>        /*
+>>         * This sata dom device goes on a walkabout when the ATA_LOG_DIRECTORY
+>>         * log page is accessed. Ensure we never ask for this log page with
+>>
+>> base-commit: 14a3cc755825ef7b34c986aa2786ea815023e9c5
+>> --
+>> 2.47.2
 > 
-> I've only been able to test sata0 on my board (Sige5), but the
-> successful test gave me confidence that downstream's "dma-coherent"
-> property here is appropriate and true.
+> Hello Mikko,
 > 
-> [...]
+> I tried to apply this commit, but it fails with:
+> 
+> Applying: ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
+> Patch failed at 0001 ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
+> error: corrupt patch at line 10
+> 
+> 
+> Please use:
+> $ git format-patch -1
+> You should then get a foo.patch.
 
-Applied to libata/linux.git (for-6.16), thanks!
+And please do not copy-paste that into a mailer. Use "git send-email" to send
+the patch.
 
-[1/2] dt-bindings: ata: rockchip-dwc-ahci: add RK3576 compatible
-      https://git.kernel.org/libata/linux/c/b8ed9475
+> 
+> You should then be able to do (locally):
+> $ git checkout HEAD~
+> $ git am foo.patch
+> 
+> to verify that the commit can be applied.
+> 
+> 
+> Kind regards,
+> Niklas
 
 
-I'm assuming that Heiko will pick up patch [2/2].
-
-
-Kind regards,
-Niklas
+-- 
+Damien Le Moal
+Western Digital Research
