@@ -1,96 +1,105 @@
-Received: from mail-yb1-f178.google.com (mail-yb1-f178.google.com [209.85.219.178])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0729625C6EA
-	for <linux-ide@vger.kernel.org>; Mon,  5 May 2025 17:10:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DA661DA31F
+	for <linux-ide@vger.kernel.org>; Mon,  5 May 2025 19:39:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746465023; cv=none; b=jcnBt3izKYrF7Wkv28Mp7IH5LuQIYX3Az1J8a3eReQICxVfl3PhRKbdqxkDUKwHq+OatiVnDUTa0s90030n9LQEamYfTaLNEaNbl0xSBKqrPGA6Vij9IilG/eEm2oiWwhaR0U89WAtNZiTjB6Oik5wxMTp9835BdXuGR9LCcLuQ=
+	t=1746473943; cv=none; b=J/AC7T7Wtk8Tpo9aXbjcfPjzd6iWKw4I4XslYqEu87o1JFA2/jIsYJRkX0I8sPmWgcf4Ns+R3FVtk5B6qZeNCj7m9nMbqag2x3onHBZevFleujKdBSDNcac/IOm4tm8W7QpsOhFXNvx81pQymcxayAZ+7MbNT2ZpCtadqQVOUZk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746465023; c=relaxed/simple;
-	bh=04jR3TVTGHWUAtdDWkNRnN0tDoXvdkLJmMHZPgdNacw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Jrk+0m3pqBojGwkciXMSYbhCtNj7ce+rcDI0en3fVe+LF1Tw4pmLin4nMKsebGeQsXdJ109/ZXLofJy92OcTpz4DAcWdmRKqbJYKkPuc744NdWqEmHcmRY1xmxZHJ61HjfP8UbaI5bFlSd/z6xJ8Y+JWYCLxTg2Jr4Kvb5wmTrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Tm184Wd0; arc=none smtp.client-ip=209.85.219.178
+	s=arc-20240116; t=1746473943; c=relaxed/simple;
+	bh=tczwK4AAfDPvvc9GGKprWsWG0m0jLRJKGXzqoR2sf2I=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=lKhygs1unYlfk16t/7GP+lwtYXjt584nzB1PWiVVzUDajkU7JZ7sZzNgOGT9SrEyEWl1L+y4yuXDSOrn68IEpadDS9ROQbMUfMDFr6tMw6HeZJLCl6PiGA+22dz2VpeelYodjzuLau+/Ragu+v4A6qFPUObHllzTMMAHOgg07TQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LdT54OFP; arc=none smtp.client-ip=209.85.214.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Tm184Wd0"
-Received: by mail-yb1-f178.google.com with SMTP id 3f1490d57ef6-e7569ccf04cso2631194276.0
-        for <linux-ide@vger.kernel.org>; Mon, 05 May 2025 10:10:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LdT54OFP"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-224191d92e4so55334465ad.3
+        for <linux-ide@vger.kernel.org>; Mon, 05 May 2025 12:39:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1746465021; x=1747069821; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=04jR3TVTGHWUAtdDWkNRnN0tDoXvdkLJmMHZPgdNacw=;
-        b=Tm184Wd0WEezRCYRHjSRJ9A9pcqAGCHYAI7B/N/VPzRaHiHxfRyLsmvQZvhPhpwqW5
-         dN48OtXHy7BXqZ/MmwkIAvpb5I0VAT0rX8QwI3CCDz4Wai0+Ndsa4XGuNAAFPkwWhjoR
-         qan1Bac03OGA6w+FHYGAFdp/Xbyi2a+ahyRSICKtZl5uwF95eAjSGpU/pVGP7Ns5lWLx
-         iCDPlnWh1ZGQOniWDI0rU8xK6nlS77VmsG1CClU2Okh8zWvmzDh/4hoPhsKIqtE9Tkyf
-         ER+FaQSAvIl96EorbLcnjjjqK4Ar+K7sIs1bKmZymWoVbIBPOkPE09j7mRwV3vRIT88L
-         n7zw==
+        d=gmail.com; s=20230601; t=1746473941; x=1747078741; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=tczwK4AAfDPvvc9GGKprWsWG0m0jLRJKGXzqoR2sf2I=;
+        b=LdT54OFPz2LBn4U7eG4Iea8lBJx6W7UvrvDAPaY3SHwPdJ4rAwtRwqzihapngeUBJt
+         A0dfAnfGSkKKgrW8QpW6M5nKAE5mfKXmMwxvuJ6FrMHnFBdkczCXZ76Fd9FVtaNNztqW
+         fA1+/dflBOJSM4jmQh+oWlwTKGo9QV4ierD9vdIcwNZMkl6jsuNm9zi8bbBQpWSeLe6u
+         LrMU5LmMO/pa2aJBzgt2yVO6nm1z2mYdJme5MvXyAadceYXpfmOIBosV9EMUngMPzPiU
+         WsorQ0U1q6Y24H9luJCogCrUYvo0lrucMvTOxZWSJCNX49Inm2juj2SeRnfowWKEDqiS
+         3sTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746465021; x=1747069821;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=04jR3TVTGHWUAtdDWkNRnN0tDoXvdkLJmMHZPgdNacw=;
-        b=l3eDAjIDl+B/Cy8zpmLr7FhR04s/iOJ0Zlvflis7jhQ7ZelTfFYwM3XuU+rWQ/pLuU
-         uwnT1Jdsq2YCoOZBcpcWAC3mniFV7ifTguFaoWp0KIV++6qqnURFwme8WphnWtT6mblG
-         c2MDZN2Jwo/HJR2xBRXJt1oxYPWofyYZ75Vrs3S+NOC7wUDmWVI2/K+oXv6L2O47/yhv
-         vXRbfzt0EFGOrAsXIyZQA8ZY63Cg9JVO79a/U8pvepaXIzevdKf82xvvuhoF3eAoasNR
-         WUqBQihV7DATc03eDPR5Xm7+kPg4Qgn+koJnxMS34TJJafALzJibveyWGf3RjmjMQ1sf
-         vFUw==
-X-Forwarded-Encrypted: i=1; AJvYcCVspV9TAMqUKYZ+IA+YKcwyXEVPIU1b9ZMLDN6Rs2t4rcnw9ue8lqIS0Zx3CukHLy+8kuuHyAbc91s=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwVUpI0RfdGzrwLiE9/LdPlZ/fb9BNhiTs/CgiDyLhWdmOP7b26
-	zRhhDvQ/L7Rmc0M+VIA6o9YQqLeysjH/pBaC2K8ZJHYUJprl7PSnLHL9WWsII9jD3O3NUwvn7fu
-	b7IWVMZbMOhlo4+vl0JdPREwbgs4=
-X-Gm-Gg: ASbGncvcTYfQxtdHTLsgKdruSztVntlPgyx0lmFOaQClP2i1RMjRzLhuWODdSRPkYRD
-	JYSnH+UTUEv2baqCNpjgsZiVs8giDR1kOVyJjoTP47QLqeNRAEHn0uRrBK06Yd/sCwyZDHrm3M6
-	pJGIp2i2N52Vnc3E+iDDUSmr0=
-X-Google-Smtp-Source: AGHT+IHTmNVRCv+08s6tzuBT4k1e1IDE1wrKmVhKRQ3k+dt8EmS4qKvTzG4+e4jMVVL9VlWoTTttMimt0Eab2SzUBXQ=
-X-Received: by 2002:a05:6902:1549:b0:e73:1813:b304 with SMTP id
- 3f1490d57ef6-e757d2de5fcmr9090737276.12.1746465020744; Mon, 05 May 2025
- 10:10:20 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1746473941; x=1747078741;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=tczwK4AAfDPvvc9GGKprWsWG0m0jLRJKGXzqoR2sf2I=;
+        b=uCajPGoNAejSeDIbri4XVKGh8lyEQqEjpFXtXc/iou5g1UKtdpRxsvKujoS2h1dAjS
+         L6eWPXrafmTlcTsQD9WjwuM2tOuodwNxqbm2zJF1StN76ob+RFPOBYjyCeh4o6zLUzFK
+         6gjCbxJOvcsvUwp7hDlNHj+vLFPYlwnJHT5VzTpGGk93rbx1T1ndsqfR9b7hq9yNIUyY
+         XD9FDghSW6yqFjQH3ZEj6pdBmmQpsPWn9juSGRU/ZRVutrYSwF/K8Web0NG+gIE4a6D+
+         Xrypn888qZK9Eg2FGXFCpRMLYDNDxvLYccCnUGCpYMcgpFc9NElAJgq2xr3ZPPYKotmq
+         vmWw==
+X-Gm-Message-State: AOJu0Yw9OnM3vWlHJU9LZP1o5AJ7RFIQfvt+q2NcBHOF0rKqfPvF7T/P
+	KBucjmWgkUSRPZa+8pB33NepHjrsumaDuDzGT6V7uG/ugUHu3qCtlx9AirvNnH/81XwQaShVOZN
+	YiAOyjsmzgTYZLtSxu/Luwvhwbqoa1Hyetdo=
+X-Gm-Gg: ASbGnctOdvgLHh1s9mIRct4Dcqf+2gxBY9TbJjTJYg9wbgzBcOL1ai4t4zu9WVkw+3i
+	W0wtwNSdvS4kNzlEbSuW/ymaeQrLlGy5m56VvkbRATwfri5wtA5QKSdcFjPn0NT73bvYsDdp5s0
+	9Pd2RqkK979vepW+1pymha8Qb6mqLAssO02xbiWVg2aymyUSxVkHAxcvaezAyVW2DPKg==
+X-Google-Smtp-Source: AGHT+IH1cv9nHTzpuBleqj2tS/meOsTOqaJj/B0BivafDejxgP/SY8qFHaMpkjLNqKnSLypfAZ+MK7Pjol7URQJSFLs=
+X-Received: by 2002:a17:902:ea0c:b0:224:2384:5b40 with SMTP id
+ d9443c01a7336-22e32aa1e2bmr11069315ad.24.1746473941500; Mon, 05 May 2025
+ 12:39:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CADUzMVbneDW06V4vd8si8k=NN_6df3JeejaF3fVk2U=LVC1UHA@mail.gmail.com>
- <fe406980-f230-4060-9b1a-16295b6cfa48@kernel.org> <88a6fb5f-dc85-41e0-a65d-92704b4c8499@kernel.org>
- <CAAZ0mTeepp7G9CtLFq+U_n0h2+SF8V8j2K=0hkNAp0Fzdc7TAQ@mail.gmail.com> <aBjbSt5hTaUP_JhG@ryzen>
-In-Reply-To: <aBjbSt5hTaUP_JhG@ryzen>
-From: Mikko Juhani Korhonen <mjkorhon@gmail.com>
-Date: Mon, 5 May 2025 20:09:44 +0300
-X-Gm-Features: ATxdqUG9V9ad3ezdW0kiN7liiTgjsDbkOJUEQvPOGiYt6usdU0iansVspbkfWys
-Message-ID: <CAAZ0mTctoC5UCsDVH56x5OS_500URheBU66USNuq+rwktLrEiw@mail.gmail.com>
+From: Ioannis Barkas <jnyb.de@gmail.com>
+Date: Mon, 5 May 2025 22:38:50 +0300
+X-Gm-Features: ATxdqUEbJFUySsGW4AFEiFRCLy6sLX8YnD0iLhGaACcr_Rldx573tS3_9X-glZw
+Message-ID: <CADUzMVaY_nv1tjFtSuuPiNE6=_h2LABaDAjuOhK=FUdDB-LsrQ@mail.gmail.com>
 Subject: Re: [PATCH v4] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>, linux-ide@vger.kernel.org, 
-	Niklas Cassel <Niklas.Cassel@wdc.com>
+To: linux-ide@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-ma 5.5.2025 klo 18.37 Niklas Cassel (cassel@kernel.org) kirjoitti:
+Hello Mikko, thanks for sharing all those details, we have some
+additional information on this.
 
-> On Mon, May 05, 2025 at 10:58:22AM +0300, Mikko Juhani Korhonen wrote:
-> > > > On 5/1/25 05:36, Ioannis Barkas wrote:
-> > > >> It would be better to have more details on this since only the 2TB
-> > > >> model is targeted.
-> > I have two WD20EFAX-68FB5N0 and both behave consistently, unusable
-> > from 6.9.0 on as they just keep resetting the SATA link , but they
-> > have worked flawlessly with 6.8.x for a year and also now with the
-> > quirk applied.
-> > I have also tested a different WDC model with med_power_with_dipm on
-> > the same SATA port and there are no problems.
-> > But after you guys got suspicious I found there is in fact a SATA port
-> > on my motherboard where the WD20EFAX-68FB5N0 works with LPM on
-> This motherboard looks to be AMD chipset, so I assume AMD AHCI controller.
->
-> Could you send the output of:
-> $ lspci -nn | grep -E "SATA|AHCI"
+I am suspicious with hw and not with you. A quirk will affect lots of
+devices and we need to be sure that we have examined the error you get
+so that there is no need to revert things. FYI, I have a disk with a
+quirk for no obvious reason on all hosts because nForce had NCQ
+trouble with it. If a quirk gets applied usually it stays for a long
+time if not forever.
 
-mjkorhon@taavi:~$ sudo lspci -nn | grep -E "SATA|AHCI"
-01:00.1 SATA controller [0106]: Advanced Micro Devices, Inc. [AMD] 500
-Series Chipset SATA Controller [1022:43eb]
+Back to your case, on first look I can see that disks are in mint
+condition and are running the default fw, 82.00A82. Damien is there a
+newer version available?
+Please run a short test to each one to ensure that everything is OK
+after working for 10K+ hours and share their health log again. It is
+clear that both go south at the same time so RAID array dies as
+expected following that initial event. You just leave the PC on and
+then you get that event on both?
+
+Supposing you get no error at disks after all that but still disks go
+offline, I would suggest to update your board fw to version 3621 and
+retest. The controller-disk combo should work fine. Just to clarify
+things, upon turning off LPM, you get no error at all?
+
+Except the short form of lspci, let's get the fulll dump for SATA
+controller to see its active PCI settings with:
+sudo lspci -nnnnvvvvxxxxks 01:00.1
+
+You can get it before touching anything and then with 3621 fw if you
+update your board. This will pinpoint if anything has been modified
+between different fw releases.
+
+If the problem remains no matter what, a quirk is inevitable. Do we
+wish to block LPM on Intel hosts while no one has reported errors? How
+about a new quirk called ATA_QUIRK_NO_LPM_ON_AMD500 for 500 series ICs
+or ATA_QUIRK_NO_LPM_ON_AMD similar to ATA_QUIRK_NO_LPM_ON_ATI blocking
+LPM for ATI chips?
+
+Best regards,
+Ioannis
