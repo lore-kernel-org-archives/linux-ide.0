@@ -1,88 +1,93 @@
-Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com [209.85.219.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3274D27E
-	for <linux-ide@vger.kernel.org>; Sun, 11 May 2025 18:59:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C81F9158DAC
+	for <linux-ide@vger.kernel.org>; Sun, 11 May 2025 19:18:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746989993; cv=none; b=VXqHPL5opiFv899uWW5ON+1Zb/jif2LggqtcJo3KNFIvWnYumLOgmSqTGezhMIZw1HCt7oy17Q31xfJs/ukXyZYk1CkGmpw7VvkpaIYzvH++0bgB7anGnRYdJf0VjT8ZNX/t1CShn4EgGofcvH6idEDxFkcWhqf4iuGgpUKQ2d4=
+	t=1746991097; cv=none; b=dnWHhRl5fjs1nHLoPtI87uhzoYhiu1Ixpn3svr2GKhN3r0QrFxyI3YbiAf3xZgK9b/EYW5ElALmnM4Oyw+sXpsTP6ENlJJ9p/5sC+QNwTVopo5V6HvrkOF2aCQdqjKx4rvYgP1EncMcl1/DJVM7Iq/OksbZSwZGosH8D6CKT5zo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746989993; c=relaxed/simple;
-	bh=ztbsp//ebK/tMpFQ7VkkMsdZAr1IuY6Xz3dTlY6j/2M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Y5MopyswGhducMU0LRFWXjfBaO5cHY0BnC1nKfTlsVWgVMR6Zd6+n6ucGk9ii7mzjFag5IjmOnKq3bjz5+5bWivMKD+GmoSsOFD5bbheOM6qLJveTGl37KS57V1L9Q7P7mJgmd2b3cQweWOUkqCuy079N/n2Is3Upc74rcg9+CI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IgC/hzdJ; arc=none smtp.client-ip=209.85.219.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1746991097; c=relaxed/simple;
+	bh=UcnxY6ZqVqD7l5fRnmYk8gRQ2o/UQFtJxHnMmKcEnjc=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=XxV6e/OU6QSnL/wbPH5Vkd3q3HPLDp3qJVvPMoQd829aa0rouwp/z5VgJWIK4z5jQ6HM9Mgi1Aq59hBg/KuPa24mUPKYVMqES0r6KFfCWN/cQle4uyMOO0pVFzQd70fUhM/QQMgho62YF/chfCx+WXdMVV8EddF6bKQqvOBJYPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rldz1a0M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IgC/hzdJ"
-Received: by mail-yb1-f172.google.com with SMTP id 3f1490d57ef6-e6e1cd3f1c5so2905598276.0
-        for <linux-ide@vger.kernel.org>; Sun, 11 May 2025 11:59:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1746989988; x=1747594788; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=ztbsp//ebK/tMpFQ7VkkMsdZAr1IuY6Xz3dTlY6j/2M=;
-        b=IgC/hzdJ1uL/O//V+znZRVLAJg5Qx4MYwOuEgKbw5Wp6J9kfSD5gr5vC21Gvk1OELT
-         fY98DbNBYE5iiooNUOcCB4CVqfhm+w5Y6SVh4i3HEvLwJbtUJsKHypGoiWkLJ9bKscgm
-         1yJ//2u5NvKwCugTd0kv0zGYR4sT/ZQu0JuShAqT7V5hFYzDxLGeX3qA3WPYcv/IGHVH
-         df7Y8vI+a/hF3Qoki06ZWtG+ztouarPCbumOwt66kjzQkGQ86E0xffNDEQcEpEpXwrev
-         jUxTiwqC8FUByO/WZRnKy6MSA0Bxi6JLTz1dlTD0HSUYxkz5+bueib3vBI2zvNyN/uZK
-         Wi5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746989988; x=1747594788;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ztbsp//ebK/tMpFQ7VkkMsdZAr1IuY6Xz3dTlY6j/2M=;
-        b=IUmFitMxzMlhnhoAX+0ABEutSm7Wg9BzoHaVDV9Fei8Qd5Jx0sH0pM9dsL9+V9IHa5
-         DOwUANPVb3X+VnjK9uvIRzJZ6IVd+ZDHUVzPoTw4Qz3l3ssV0Uqoq98M1xAQuiVlo1bg
-         vWOqdYeC23ShPgWNFtqdwunYfg18Axu3y7Nq6+atwB9VOyWGIp79iYs9SlJh1Ur5F1vi
-         PlJ/AUEeZ4x9E1mRrQaWqN8lU4Ouu87w4S9p9/SIn+TsTm7Zp6SxZKbEEn2168fQTw/y
-         aQRkqneMFuewzKG7OPF5UpzgX2Gg6qrZPRWG6IyphAvmhYJZNB7kfGGPIDVdSw7uNRfK
-         /erw==
-X-Forwarded-Encrypted: i=1; AJvYcCWPHXVrj7wYyoCW5eDOS729lX7JvrRVRcs8orFyyR+3G2ZvkbrZ/vS+MUuxVaXK6v29sVFSSIqttBI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxMlUFWLBBXyk5C5J5fm8l+ep6NS3OI5yKbGOBSahPE3JVz5PMW
-	fKGUz1pdoyar2hJHWHviOP9v9UGF6+6srQ5trTsO+z5MmZgnb5IcqFVTMOiLYg1N2cOUGkSk87L
-	Knf8w5AEJCk7vD9wtUk00/SGfBq0=
-X-Gm-Gg: ASbGncsmiqLawqFQNTJeMT7wfljv4jDTfuJrI5AM2T0Vr2zbTo2aTY6yepu4swpvxYn
-	Fj7vg3E387Ne8irxCuK8dr2/AAtiQ6WHWckhe7NWiAl/Nvq1biNnv97CZZ+5J609J84sCWGKaNF
-	awllTQIWVhRng9XotwLpYj/pkY7FXzdwuZ1Q==
-X-Google-Smtp-Source: AGHT+IGVwRHgz684j5knWWUHLhcfkLIs6zcPyVk15/H2rt0TqYxLCd/3OmWFrFQ7tVmR6ddZxriNVsqlZc5T5K3/2Q0=
-X-Received: by 2002:a05:6902:a85:b0:e70:ab57:45b8 with SMTP id
- 3f1490d57ef6-e78fdc2b94fmr15578506276.15.1746989988479; Sun, 11 May 2025
- 11:59:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rldz1a0M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61656C4CEE4;
+	Sun, 11 May 2025 19:18:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746991097;
+	bh=UcnxY6ZqVqD7l5fRnmYk8gRQ2o/UQFtJxHnMmKcEnjc=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+	b=rldz1a0MAUOYFD6XaFqGouvh4scUCBIWP6shO92UEhsFgzKnFw+3fS2QFe+sL0VOh
+	 DH1tdn0vS82OpUMxuQJfqK5uRF22zXHcssWXI302V2NqsaFeYVFdwNYtULmnuaBq6S
+	 MSU/WgYfz72Jdc8EbKkIsBNf4KAixZxVcoIjPf2Ap8ctXpdbIHfg91K8K3eyvWb0yQ
+	 5xeD2Kz3IHcM2fsfD8DUK7GdM3dv005/g8d+GKvfgsR+PC+dAsHFKxz9z22g9xjOyB
+	 xH9O6XthlbXYkn41Z6XzRqL3N7yFTNodIM9MMH4jRbK1tOLCUPssszhSFKkkfIVNpM
+	 lHU8iqToK8Glg==
+Date: Sun, 11 May 2025 21:18:16 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Mikko Juhani Korhonen <mjkorhon@gmail.com>
+CC: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>,
+ linux-ide@vger.kernel.org, Niklas Cassel <Niklas.Cassel@wdc.com>
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v4=5D_ata=3A_libata=3A_disable_LP?=
+ =?US-ASCII?Q?M_for_WDC_WD20EFAX-68FB5N0_hard_drives?=
+User-Agent: K-9 Mail for Android
+In-Reply-To: <CAAZ0mTdcAazi=133Dz0+OgSGOERe7WmCTr27ePudEVhkJj6VbA@mail.gmail.com>
+References: <CADUzMVbneDW06V4vd8si8k=NN_6df3JeejaF3fVk2U=LVC1UHA@mail.gmail.com> <fe406980-f230-4060-9b1a-16295b6cfa48@kernel.org> <88a6fb5f-dc85-41e0-a65d-92704b4c8499@kernel.org> <CAAZ0mTeepp7G9CtLFq+U_n0h2+SF8V8j2K=0hkNAp0Fzdc7TAQ@mail.gmail.com> <aBjbSt5hTaUP_JhG@ryzen> <CAAZ0mTctoC5UCsDVH56x5OS_500URheBU66USNuq+rwktLrEiw@mail.gmail.com> <f572f7d2-7b14-476e-aab2-bf674811dee5@kernel.org> <CAAZ0mTf3T5RTDKtd148GyGOiVz98isFFbMDXfku8yAk9FfLVeQ@mail.gmail.com> <aB8_rITWsMzkTiyE@ryzen> <CAAZ0mTe7Tpf2F1cKbmr==43pXDUxcPP4Q2AydpyDFJUrFHzNHQ@mail.gmail.com> <98E34F63-CCAE-48C4-9584-9053C3D1A7FD@kernel.org> <CAAZ0mTdcAazi=133Dz0+OgSGOERe7WmCTr27ePudEVhkJj6VbA@mail.gmail.com>
+Message-ID: <48F49924-F5FE-4A91-8323-E2C789D1BEFB@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CADUzMVbneDW06V4vd8si8k=NN_6df3JeejaF3fVk2U=LVC1UHA@mail.gmail.com>
- <fe406980-f230-4060-9b1a-16295b6cfa48@kernel.org> <88a6fb5f-dc85-41e0-a65d-92704b4c8499@kernel.org>
- <CAAZ0mTeepp7G9CtLFq+U_n0h2+SF8V8j2K=0hkNAp0Fzdc7TAQ@mail.gmail.com>
- <aBjbSt5hTaUP_JhG@ryzen> <CAAZ0mTctoC5UCsDVH56x5OS_500URheBU66USNuq+rwktLrEiw@mail.gmail.com>
- <f572f7d2-7b14-476e-aab2-bf674811dee5@kernel.org> <CAAZ0mTf3T5RTDKtd148GyGOiVz98isFFbMDXfku8yAk9FfLVeQ@mail.gmail.com>
- <aB8_rITWsMzkTiyE@ryzen> <CAAZ0mTe7Tpf2F1cKbmr==43pXDUxcPP4Q2AydpyDFJUrFHzNHQ@mail.gmail.com>
- <98E34F63-CCAE-48C4-9584-9053C3D1A7FD@kernel.org>
-In-Reply-To: <98E34F63-CCAE-48C4-9584-9053C3D1A7FD@kernel.org>
-From: Mikko Juhani Korhonen <mjkorhon@gmail.com>
-Date: Sun, 11 May 2025 21:59:12 +0300
-X-Gm-Features: AX0GCFs3pCmPFDbS8MmEme1U8b4YHcyfvpWdBLBFt7o77hTYW5qmkJJ6CveUTgM
-Message-ID: <CAAZ0mTdcAazi=133Dz0+OgSGOERe7WmCTr27ePudEVhkJj6VbA@mail.gmail.com>
-Subject: Re: [PATCH v4] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>, linux-ide@vger.kernel.org, 
-	Niklas Cassel <Niklas.Cassel@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-su 11.5.2025 klo 21.53 Niklas Cassel (cassel@kernel.org) kirjoitti:
-> >linux-6.14.5/.config:CONFIG_SATA_MOBILE_LPM_POLICY=3 (good)
-> >linux-6.8.12/.config:CONFIG_SATA_MOBILE_LPM_POLICY=3 (bad)
 
-Oops got this mixed up, my bad! I meant:
-linux-6.8.12/.config:CONFIG_SATA_MOBILE_LPM_POLICY=3 (god)
-linux-6.14.5/.config:CONFIG_SATA_MOBILE_LPM_POLICY=3 (bad)
 
-Regards,
-Mikko
+On 11 May 2025 20:59:12 CEST, Mikko Juhani Korhonen <mjkorhon@gmail=2Ecom>=
+ wrote:
+>su 11=2E5=2E2025 klo 21=2E53 Niklas Cassel (cassel@kernel=2Eorg) kirjoitt=
+i:
+>> >linux-6=2E14=2E5/=2Econfig:CONFIG_SATA_MOBILE_LPM_POLICY=3D3 (good)
+>> >linux-6=2E8=2E12/=2Econfig:CONFIG_SATA_MOBILE_LPM_POLICY=3D3 (bad)
+>
+>Oops got this mixed up, my bad! I meant:
+>linux-6=2E8=2E12/=2Econfig:CONFIG_SATA_MOBILE_LPM_POLICY=3D3 (god)
+>linux-6=2E14=2E5/=2Econfig:CONFIG_SATA_MOBILE_LPM_POLICY=3D3 (bad)
+
+
+Ok, I see were things went wrong now=2E
+
+Damien asked for the good output for 6=2E8,
+rather than the good output for 6=2E14=2E5, when you plugged the drive in =
+to a port that was working=2E
+
+Basically, we wanted to compare the good 6=2E14=2E5 output with the bad 6=
+=2E14=2E5 output, especially the lpm-pol output=2E
+
+The 6=2E8 output is not interesting at all IMO, because that is before we =
+enabled LPM for all controllers that claim to support it=2E
+
+Sorry for the confusion=2E
+
+If you get a different lpm-pol print, when booting the exact same 6=2E14=
+=2E5 kernel binary,
+but just having the SATA drive plugged in to different ports, and you have=
+ hotplug disabled for all ports in BIOS, suggests a BIOS bug to me=2E
+
+Tomorrow, I will send a patch that will print, per port, if BIOS has marke=
+d the port as external/ hotplug capable or not=2E (Because right now, when =
+we see lpm-pol 0, we don't know if it is because of BIOS settings or Kconfi=
+gs)=2E
+
+
+Kind regards,
+Niklas
+
+
+
