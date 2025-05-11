@@ -1,57 +1,57 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+Received: from mail-yb1-f182.google.com (mail-yb1-f182.google.com [209.85.219.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D62920FA9C
-	for <linux-ide@vger.kernel.org>; Sat, 10 May 2025 18:29:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 116481119A
+	for <linux-ide@vger.kernel.org>; Sun, 11 May 2025 17:08:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746901771; cv=none; b=Gt9tlWTyRBzO9S1TejO91vKpIy38O/vJPn7GvUcumOOKDTS5xp8dnn5se4aYD8JAu5yeL1fxonX9ZFonQEERSUO/p7hsKbEM4Ldm7IyxjeGeC5AjMovijOazlCbwlMf22eNmdxMMzQroR4H03EiR2mVI4cvbdCtQz2JIjMwQ7Qc=
+	t=1746983320; cv=none; b=B0V5lg74Y+YFtDEyp1duOQ1cW2gycEEQahCOXYR+kgGfj3BdD+6u8Ay9WFRY8/vGPXJsmfC8MlY2EShKIfDjlwkJ5dg1bpkGdPXsF/FAAVLFr3K47hjVds6YlRxvQNvZWXmLqf9UyAeHuUd85QrMK8S1X1lB97yeQHQIAReQycM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746901771; c=relaxed/simple;
-	bh=rBisYG527ndXI8JAfmvhlAIwzhZ0xrgox1F01mDhenI=;
+	s=arc-20240116; t=1746983320; c=relaxed/simple;
+	bh=MXP+IDGSHMRsjg8Mm+7f67fZCLG/jGdwW8MUpxfMCuI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KoVi7XiIh4KJLaYaaK3X4XlhrX2I+VOttSjcC0wR8iGMhcG2yYacf+6dkCo/0UywUDfJjVXjf+bnoFgEqOscB9oKIRq4rmjdLxPWTrngGYAX+BAMW760CKL6OLBrpyh8ILYQrI3yGnpRbmNvNT581F1wFYtzI6ro/oUw0R6ehEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J20CB/rF; arc=none smtp.client-ip=209.85.216.46
+	 To:Cc:Content-Type; b=uxfkleBpYckz2GY8VMB/vM4OlsSjL0InXcytf2KO2HuvTHowx7/N35eacjmGwgkdXLaPa8EVarbInnGLuJGdNfZGfFcqwcUsDACRuSGLw8QZmW6XxEBb0OWpc43OkrcwjRqXWwJHpqSg7lqIY9MXz0vtGpAz7yo6C2TQBhRwke4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bD5cHcQI; arc=none smtp.client-ip=209.85.219.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J20CB/rF"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-30ac24ede15so4220495a91.2
-        for <linux-ide@vger.kernel.org>; Sat, 10 May 2025 11:29:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bD5cHcQI"
+Received: by mail-yb1-f182.google.com with SMTP id 3f1490d57ef6-e728cd7150dso3011353276.3
+        for <linux-ide@vger.kernel.org>; Sun, 11 May 2025 10:08:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1746901769; x=1747506569; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1746983318; x=1747588118; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=3DsHTMRQQH0NSHPd7pUXQwUCXcEaFuAhMEKuI9i9UeY=;
-        b=J20CB/rFHKUbuJD5UrLEDjOGehcdhaaN7BPw3BK1wWaYNs5TqeOrRfSVTI9ApNM+uA
-         +82XQAlgx7unEOmhyJFH0+rqhqz2vKFX4d2VadYa7xFLYFWrk6Ga009DGYDW2CSYOcpS
-         ijXN2cEesVeHKlkZ8B+Z9uxPp1IAp0vJb7sXF35BH6OmdRKNm07w4dlQOSrHqcScU1i3
-         5OK+ye0W8HdDKdnS/335swXWv1h9y0uV7wzccHVz6eHfE5gagZEkS4Iwg1AS97YkAYNc
-         w51qhYuXXTqp1GupOPSZprESR3wMXVGnGRqx6o62G7AYDdmCUfcd5Xm+aEJOwkTRgbE2
-         i0jA==
+        bh=GYqT+/ko3TAO2ha1bjDVh5PZbi3rDWyqozEtuVXP4CM=;
+        b=bD5cHcQIoABLZ34zjgmMUEZ3t0glVpIiiUoxQDEGCOAOJ6b3I943Ay+9pkWz6IwZjs
+         V5i/zMR9cfqV3+63rbBUtwiio4Vzs3KjlSG+dmpCIcRRIO9MH9Heqrl/ylZGBrBTJ2a9
+         bu0Uj696NLNb6s+42G1UScsXaWjHptCtjdBO1yf7mC2bVniZn4cYbWHi6wXNcFoxLV7N
+         pZqp+YzUYmPsfCz5rCmuQqk4Uzt9qKxyWZLUZBKUOlSigaYZSCdcoSmvLXqBySjk46Et
+         Ba2aUm3+Z0EoRTksogUEXm+gJfEpLBxEYm9BJNBzOQnynvAUAIR5KBxBkIoG0qAZszQD
+         BcPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746901769; x=1747506569;
+        d=1e100.net; s=20230601; t=1746983318; x=1747588118;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=3DsHTMRQQH0NSHPd7pUXQwUCXcEaFuAhMEKuI9i9UeY=;
-        b=RSan1tIL5/apMw+RV1rQFB2pe8i+EU33mnM66nmVTNmaH9Uw3WKpRaR/NQ7fsUX5iM
-         +5xvdS72327aElCcTwySITKWLiD6cWRouqLMtqdWJyTaCtiz/bv2QQOpibQhJWGf9Lc7
-         AvOqq6yHSb1paG7WlmB48WOEcLaN0Qrf6CLwo0X4OTcYazt/UyEGLLLonLj3Bvih94us
-         MBtir36WWTfJpTGgPsyFKNtKCalWgvJq9aFM+NJ7xT9phgjFO/1xCpEDRsR5BCgW8vKy
-         XUiwerB8K/92+AMfnv37WZXW+6jYncUKlavZufSo12E8cc1v3Vz9psKpA3RB/Q/4qMXc
-         Nx7Q==
-X-Forwarded-Encrypted: i=1; AJvYcCU7W7aeiR9tp3BMuXH4zlQ01PLQNBek6k0Ot5vzw41HqHvYibyu2+HBvxNtHUEzyJQQnHelh3s1RP0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yza9S8IuAsxVJCb51VUvnf6qfSKaqkhJ8eDljyWGIHIV5bIecBj
-	iFbnn5MMgLv/nDWCfNfnzDhpezk9I5WxLOfzMNz/It1fRNjYdfBlA2tJ49bd2wy/r/oOHsUXU26
-	5K7W69MNmkCcFM6mrpw+Av70xfbY=
-X-Gm-Gg: ASbGnctg5h3tT8HCkvNxgG9YyJRAFbwbFoJoWX6SGWgBn+mm9KuTE93X0gDsfe2dt+j
-	okpm+AUAB/Gjed0iEvkjDlsTaK1HfAhC6PEbWD9WxKMPMrybprmLHaExA7YerVuxETe5esTNw9E
-	GmMoAEr9UXuIvtfi2YgKLa0KtQ72Mcs4ewVueWYY8E+A8MxEFt4s83rOTRtq1L6rzwwg==
-X-Google-Smtp-Source: AGHT+IEjAnf9sfWm60uxzMFVSfMYVWFWFaHhyb5nMhywzeEujMvd4lWIQhJZo6eheVi4M9hTaW7Q/pFBE19A1AY+9w4=
-X-Received: by 2002:a17:90b:288b:b0:2ff:7c2d:6ff3 with SMTP id
- 98e67ed59e1d1-30c3d664d3cmr12490998a91.35.1746901769316; Sat, 10 May 2025
- 11:29:29 -0700 (PDT)
+        bh=GYqT+/ko3TAO2ha1bjDVh5PZbi3rDWyqozEtuVXP4CM=;
+        b=aRN6J1W/7TD/p1N5nOvukVRxqLvgGilYJ7KhVKM9YeHdQEFB05i0VTQ5Yxi6MpupAH
+         9KJtQUulOBileqoUPv2FCOfuT2CipEQ4pdF8pRdtsc8V+PW5HWxC9YWKUbcXz+pNMvWr
+         zLRR1eUCvM7uIhIwx47orJYYWV4pS2lAoDlaRpvrw0utosP8yEe7GiBM92jsr05m8sUM
+         B1eYdaIKR7zn9BTgj4MjyBbcTX84Op/pAoMQOnaNmp40923emgxEMtN3AqQY3B9KnZDG
+         VTK5Z6ASOODBd455GUxeF0286wXckdR4UcZAgcCI7nHmaLx6WYVTZGNkd5hMsH7cf6xp
+         fw6w==
+X-Forwarded-Encrypted: i=1; AJvYcCXvCzVlsxSJ6LhaZ48ZEwT9MdJ0cwevNs6GIIkZKVH9pi8ioSZOBvyrzkXN6HySSew9Dkcyz5nJan4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0JBqZ2VbIt67xmutYjr4TyfacpM+uiP7jFIPbQNRo2cMbnZm8
+	GlcyAwDlNA0XaKmO3ONEo0cnTxxBRV6+JCiN2RVML6V63fVgiC/wD5TLL5RxE/aXJlbi2qUEEMK
+	1WQFzmUZ0oFXjnRPFzzh6W+36sps=
+X-Gm-Gg: ASbGncuEraqOJ1EGKbHiAiw5Vf17v2OQTnkgd85JheWNHCh14VGarI1gp/AhB60HETJ
+	Q8engs2tu7AjeEBnO9bzWth87NS6UWkRz59G1cenHvhVuppBCGylhmae5PHcjzd2aB7nXVOhGn/
+	N/1/p4q4exgqOFs1OqkLhsYgEmRCppCzDF5Q==
+X-Google-Smtp-Source: AGHT+IFfrEKZdcUs/gv3JiCRt9XUNxld6Z7ZU0xMsODXCXwwWphGjUrEUtGoAOwv6W2e+Vb8h0HXAudoNA2jdPIlVcg=
+X-Received: by 2002:a05:6902:2587:b0:e79:100d:5a29 with SMTP id
+ 3f1490d57ef6-e79100d5ab4mr8322840276.38.1746983317858; Sun, 11 May 2025
+ 10:08:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -65,25 +65,17 @@ References: <CADUzMVbneDW06V4vd8si8k=NN_6df3JeejaF3fVk2U=LVC1UHA@mail.gmail.com>
  <f572f7d2-7b14-476e-aab2-bf674811dee5@kernel.org> <CAAZ0mTf3T5RTDKtd148GyGOiVz98isFFbMDXfku8yAk9FfLVeQ@mail.gmail.com>
  <aB8_rITWsMzkTiyE@ryzen>
 In-Reply-To: <aB8_rITWsMzkTiyE@ryzen>
-From: Ioannis Barkas <jnyb.de@gmail.com>
-Date: Sat, 10 May 2025 21:29:17 +0300
-X-Gm-Features: AX0GCFu1ujS1B_H6PN4ZeEFn9ORbkRsLR22lEtrSUQ_Ny5HhZntwglQIlJRFGQw
-Message-ID: <CADUzMVYNnwf3hkFSvmS7AG9ocxXKfzd0UhZ_DOW8xJtTGru=Lw@mail.gmail.com>
+From: Mikko Juhani Korhonen <mjkorhon@gmail.com>
+Date: Sun, 11 May 2025 20:08:02 +0300
+X-Gm-Features: AX0GCFuCDlBfpasNclsX5ol1EVXiS__AnkSD-cFbg6T5UN9trO7EaY6vbMDUGHU
+Message-ID: <CAAZ0mTe7Tpf2F1cKbmr==43pXDUxcPP4Q2AydpyDFJUrFHzNHQ@mail.gmail.com>
 Subject: Re: [PATCH v4] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
 To: Niklas Cassel <cassel@kernel.org>
-Cc: Mikko Juhani Korhonen <mjkorhon@gmail.com>, Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org, 
+Cc: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>, linux-ide@vger.kernel.org, 
 	Niklas Cassel <Niklas.Cassel@wdc.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Hello all!
-
-Niklas following my suggestion Mikko updated his BIOS so some settings
-may got reverted to default values.
-
-Best regards,
-Ioannis
-
-On Sat, 10 May 2025 at 14:59, Niklas Cassel <cassel@kernel.org> wrote:
+la 10.5.2025 klo 14.59 Niklas Cassel (cassel@kernel.org) kirjoitti:
 >
 > On Sat, May 10, 2025 at 01:14:52PM +0300, Mikko Juhani Korhonen wrote:
 > > ke 7.5.2025 klo 11.56 Damien Le Moal (dlemoal@kernel.org) kirjoitti:
@@ -93,8 +85,6 @@ On Sat, 10 May 2025 at 14:59, Niklas Cassel <cassel@kernel.org> wrote:
 > > > >>> have worked flawlessly with 6.8.x for a year and also now with the
 > > > Can you share a dmesg output for the good case with 6.8.x kernel ?
 > > > We would like to see differences with the non-working case.
-> >
-> > Hello Damien,
 > > here is the dmesg from good 6.8.12. Thanks!
 >
 > Hello Mikko,
@@ -133,16 +123,15 @@ On Sat, 10 May 2025 at 14:59, Niklas Cassel <cassel@kernel.org> wrote:
 > CONFIG_SATA_MOBILE_LPM_POLICY
 > of these two kernel builds are not the same.
 > Could you double check this?
->
->
->
-> It is theoretically possible that both kernels were built with the same
-> Kconfig value. If your BIOS marks a port as external / hotplug capable,
-> then libata will force set lpm-pol to 0 (overriding the Kconfig value).
->
-> However, if you haven't changed any BIOS settings between booting your
-> two different kernels, then this second scenario sounds very unlikely.
->
->
-> Kind regards,
-> Niklas
+
+Hello Niklas and all!
+I have:
+linux-6.14.5/.config:CONFIG_SATA_MOBILE_LPM_POLICY=3 (good)
+linux-6.8.12/.config:CONFIG_SATA_MOBILE_LPM_POLICY=3 (bad)
+and these are on exactly the same BIOS settings and firmware version.
+There is a hotplugging option for each SATA port but it's been turned
+off all the time. So no luck with theory that something got reverted
+to default in BIOS, sorrry!
+
+Best regards,
+Mikko
