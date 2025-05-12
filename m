@@ -1,41 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA91299AAA;
-	Mon, 12 May 2025 21:57:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8C00299AAA;
+	Mon, 12 May 2025 21:57:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747087068; cv=none; b=tu4M489MZryQUV+rgccebcY+maCMxjwgUdz3KY/RITJJK4o5nHFyWYpVW+dmb7N5DTSL91c0fEuf1fG2+hKcTuHcTAjkGjYwvJsNmNKmNgABFUEWj8S7to+bHusDyV/U/XVQB/iLW9cB7c4IymbHPNwNez6a0v4B9mGqKlouOXA=
+	t=1747087074; cv=none; b=mEb6fpXsCtjYS5tZaOG7DP6nxPwe/Uw8wD/GqlyE/xe7BcliviVKVakqoQBUUPWq1vG5AZjE3VmoS4hMrjpDGwmiviAFKS5+qIAkK0CnU5BvX8Rv/9c/WphvQ6YJG6SYMWvdW3qcn0PlHGtCPKNYoNKDovPmK4uSY/7Qo1ZSa6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747087068; c=relaxed/simple;
-	bh=F2GYr0+7M4/qy66+bLnqegGGLwk4RFGTm4veUraYBFE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TmFtHrmpc8B8WSij/i+7UU64ucQH2Z/MEidW4qfJll7NCp9nOzmViC6W/n89E6KAQmnq2icaITVZiLv47QBRtmOueSamkhBnDgQ009iYYKX7FrX4bcsH+MwocWcxC0H27vEiroFNo/9HyPDVST7YjbVkYMTAYteCOqb7vpYvzoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KKmecZoK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747087074; c=relaxed/simple;
+	bh=D7VFquU0lJm3wQ5q23AcvZBJHJj2ysIMNElXOUUcTFE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nrHEOAsxxCYDjNGvRjSvCJMllMdCMwI5kvr0BEHHKWvMS+gFZV3F4Q1xuCNUyuyBapmzUymULzHX4o+xrC7uHg7pAoigc3B9avsJmM4yymYxEoeiAje8ImQ8CkNb0KIMgX12g7f3HeqR5gtQfeYDRLZOwU3+qG+owP4VvKTQvBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ar09xvJo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KKmecZoK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A421C4CEE7;
-	Mon, 12 May 2025 21:57:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ar09xvJo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB580C4CEE7;
+	Mon, 12 May 2025 21:57:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747087066;
-	bh=F2GYr0+7M4/qy66+bLnqegGGLwk4RFGTm4veUraYBFE=;
+	s=k20201202; t=1747087074;
+	bh=D7VFquU0lJm3wQ5q23AcvZBJHJj2ysIMNElXOUUcTFE=;
 	h=From:To:Cc:Subject:Date:From;
-	b=KKmecZoKeWy/iekckjS75sYCGA0bdrVq7MGU+WSLVkr0xH4Lx/KINZe7cMIm+FlgR
-	 42ZywmgtGv0BzcXSxEKmcGXC5ca4oIPwPO0c6zImXnxfWZmXEc2JExyOQ8pGvcgyPT
-	 HHH3CMlK8C4SFago9Q8kJ3wgYmxLK4LFlW0aPWEHGC+RkKyqEdBdPABpyTGvBQ7L/n
-	 n09B0keSRt1u3Z1n9FKmnyReHGljgFHYsa8XWnPA4ye+cmSEzCpPg63CbWiYnQBcMd
-	 4l7bQCEx2qnfCeqhhNmD/ybzhkS259NkmEAXk095Jp536wQvlICAK9oPh7UE4+6KJh
-	 zMNRiLiZJUsBQ==
+	b=Ar09xvJo+KyQUcfgZGAURPgPV5+5ud4PwNdpUOPrRoWrikjclisFZnh5T7o1hWtD9
+	 7FlwJ1zaaudseU1+fsIaGsunjetKtLcOAHKaLZAIsbZsbY3CD89wFZhV2N+SakdJ+u
+	 AtazEpdjmsEnzCDqJ8wypKrWXZbLRwXuNIijvNEvIES3pfhfbcp8TRmhjPtkangDrv
+	 Sm0mizd+UDTNKOOWhvmzzUa4wGoCFlvD+OZ9hmBvYWQ5oJxQJWR5rLZpzgud2Vkod/
+	 VXvhea0wyidu0F7x9k70sKBNz1Wewdwgz+3RDIqA3F3JgMQdZx/zV41sQ78EbszJbA
+	 c6yGCpj1L1iHg==
 From: "Rob Herring (Arm)" <robh@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>
+	Conor Dooley <conor+dt@kernel.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@bootlin.com>
 Cc: linux-ide@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] dt-bindings: ata: Convert cavium,ebt3000-compact-flash to DT schema
-Date: Mon, 12 May 2025 16:57:41 -0500
-Message-ID: <20250512215742.4178861-1-robh@kernel.org>
+Subject: [PATCH] dt-bindings: ata: Convert marvell,orion-sata to DT schema
+Date: Mon, 12 May 2025 16:57:48 -0500
+Message-ID: <20250512215750.4179075-1-robh@kernel.org>
 X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -45,118 +47,137 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert the Cavium Compact Flash Controller to DT schema format. It's a
-straight-forward conversion.
+Convert the Marvell Orion SATA Controller to DT schema format.
+
+The clocks and clock-names properties were missing. The names for
+phy-names were incorrect. The maximum "nr-ports" was determined from the
+Linux driver.
 
 Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
 ---
- .../ata/cavium,ebt3000-compact-flash.yaml     | 59 +++++++++++++++++++
- .../bindings/ata/cavium-compact-flash.txt     | 30 ----------
- 2 files changed, 59 insertions(+), 30 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/cavium,ebt3000-compact-flash.yaml
- delete mode 100644 Documentation/devicetree/bindings/ata/cavium-compact-flash.txt
+ .../bindings/ata/marvell,orion-sata.yaml      | 83 +++++++++++++++++++
+ .../devicetree/bindings/ata/marvell.txt       | 22 -----
+ 2 files changed, 83 insertions(+), 22 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/marvell,orion-sata.yaml
+ delete mode 100644 Documentation/devicetree/bindings/ata/marvell.txt
 
-diff --git a/Documentation/devicetree/bindings/ata/cavium,ebt3000-compact-flash.yaml b/Documentation/devicetree/bindings/ata/cavium,ebt3000-compact-flash.yaml
+diff --git a/Documentation/devicetree/bindings/ata/marvell,orion-sata.yaml b/Documentation/devicetree/bindings/ata/marvell,orion-sata.yaml
 new file mode 100644
-index 000000000000..349f289b81e6
+index 000000000000..f656ea9223d6
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/cavium,ebt3000-compact-flash.yaml
-@@ -0,0 +1,59 @@
++++ b/Documentation/devicetree/bindings/ata/marvell,orion-sata.yaml
+@@ -0,0 +1,83 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
-+$id: http://devicetree.org/schemas/ata/cavium,ebt3000-compact-flash.yaml#
++$id: http://devicetree.org/schemas/ata/marvell,orion-sata.yaml#
 +$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+title: Cavium Compact Flash
++title: Marvell Orion SATA
 +
 +maintainers:
-+  - Rob Herring <robh@kernel.org>
++  - Andrew Lunn <andrew@lunn.ch>
++  - Gregory Clement <gregory.clement@bootlin.com>
 +
-+description:
-+  The Cavium Compact Flash device is connected to the Octeon Boot Bus, and is
-+  thus a child of the Boot Bus device.  It can read and write industry standard
-+  compact flash devices.
++allOf:
++  - $ref: sata-common.yaml#
 +
 +properties:
 +  compatible:
-+    const: cavium,ebt3000-compact-flash
++    enum:
++      - marvell,orion-sata
++      - marvell,armada-370-sata
 +
 +  reg:
-+    description: The base address of the CF chip select banks.
++    maxItems: 1
++
++  clocks:
++    minItems: 1
++    maxItems: 8
++
++  clock-names:
++    minItems: 1
 +    items:
-+      - description: CF chip select bank 0
-+      - description: CF chip select bank 1
++      - const: '0'
++      - const: '1'
++      - const: '2'
++      - const: '3'
++      - const: '4'
++      - const: '5'
++      - const: '6'
++      - const: '7'
 +
-+  cavium,bus-width:
-+    description: The width of the connection to the CF devices.
++  interrupts:
++    maxItems: 1
++
++  nr-ports:
++    description:
++      Number of SATA ports in use.
 +    $ref: /schemas/types.yaml#/definitions/uint32
-+    enum: [8, 16]
++    maximum: 8
 +
-+  cavium,true-ide:
-+    description: True IDE mode when present.
-+    type: boolean
++  phys:
++    minItems: 1
++    maxItems: 8
 +
-+  cavium,dma-engine-handle:
-+    description: A phandle for the DMA Engine connected to this device.
-+    $ref: /schemas/types.yaml#/definitions/phandle
++  phy-names:
++    minItems: 1
++    items:
++      - const: port0
++      - const: port1
++      - const: port2
++      - const: port3
++      - const: port4
++      - const: port5
++      - const: port6
++      - const: port7
 +
 +required:
 +  - compatible
 +  - reg
++  - interrupts
++  - nr-ports
 +
-+additionalProperties: false
++unevaluatedProperties: false
 +
 +examples:
 +  - |
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <1>;
-+
-+        compact-flash@5,0 {
-+            compatible = "cavium,ebt3000-compact-flash";
-+            reg = <5 0 0x10000>, <6 0 0x10000>;
-+            cavium,bus-width = <16>;
-+            cavium,true-ide;
-+            cavium,dma-engine-handle = <&dma0>;
-+        };
++    sata@80000 {
++        compatible = "marvell,orion-sata";
++        reg = <0x80000 0x5000>;
++        interrupts = <21>;
++        phys = <&sata_phy0>, <&sata_phy1>;
++        phy-names = "port0", "port1";
++        nr-ports = <2>;
 +    };
-diff --git a/Documentation/devicetree/bindings/ata/cavium-compact-flash.txt b/Documentation/devicetree/bindings/ata/cavium-compact-flash.txt
+diff --git a/Documentation/devicetree/bindings/ata/marvell.txt b/Documentation/devicetree/bindings/ata/marvell.txt
 deleted file mode 100644
-index 3bacc8e0931e..000000000000
---- a/Documentation/devicetree/bindings/ata/cavium-compact-flash.txt
+index b460edd12766..000000000000
+--- a/Documentation/devicetree/bindings/ata/marvell.txt
 +++ /dev/null
-@@ -1,30 +0,0 @@
--* Compact Flash
+@@ -1,22 +0,0 @@
+-* Marvell Orion SATA
 -
--The Cavium Compact Flash device is connected to the Octeon Boot Bus,
--and is thus a child of the Boot Bus device.  It can read and write
--industry standard compact flash devices.
+-Required Properties:
+-- compatibility : "marvell,orion-sata" or "marvell,armada-370-sata"
+-- reg           : Address range of controller
+-- interrupts    : Interrupt controller is using
+-- nr-ports      : Number of SATA ports in use.
 -
--Properties:
--- compatible: "cavium,ebt3000-compact-flash";
--
--  Compatibility with many Cavium evaluation boards.
--
--- reg: The base address of the CF chip select banks.  Depending on
--  the device configuration, there may be one or two banks.
--
--- cavium,bus-width: The width of the connection to the CF devices.  Valid
--  values are 8 and 16.
--
--- cavium,true-ide: Optional, if present the CF connection is in True IDE mode.
--
--- cavium,dma-engine-handle: Optional, a phandle for the DMA Engine connected
--  to this device.
+-Optional Properties:
+-- phys		: List of phandles to sata phys
+-- phy-names	: Should be "0", "1", etc, one number per phandle
 -
 -Example:
--	compact-flash@5,0 {
--		compatible = "cavium,ebt3000-compact-flash";
--		reg = <5 0 0x10000>, <6 0 0x10000>;
--		cavium,bus-width = <16>;
--		cavium,true-ide;
--		cavium,dma-engine-handle = <&dma0>;
--	};
+-
+-	sata@80000 {
+-		compatible = "marvell,orion-sata";
+-		reg = <0x80000 0x5000>;
+-		interrupts = <21>;
+-		phys = <&sata_phy0>, <&sata_phy1>;
+-		phy-names = "0", "1";
+-		nr-ports = <2>;
+-	}
 -- 
 2.47.2
 
