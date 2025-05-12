@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B28D299AA5;
-	Mon, 12 May 2025 21:57:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC64299A81;
+	Mon, 12 May 2025 21:57:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747087048; cv=none; b=uoShOSEgrEJPhHw/kL9nQbSDWVw7iw63zX9lbEyLNUGiYX8FMnEKxbpCH0m2DurA7XQ9TmpxA5TJcj74h/oRQoXb5XroSCXxTPbPEtgSlrO2Qm8zldcd2HGvra2N9nuhTzLkjvL1xtdYE1mfDfoS+cHoUGMtrDDtcnOHNtDdsqE=
+	t=1747087054; cv=none; b=fLH97gzrQd37vriJ9pklezmAYl1/DcVRMtMp81e2Wy7mLFayXsBrFvWIrbLO8RU5hOu8M6jWiKCTOK0cDFeuG36KuSS2nJQSdyh5QVWDM0/Hnb0YQzcEUNR2upxks8xh3wGvJrZjtqtTVYWvy/tzuV4xURphPRVXDy/W7GcYh3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747087048; c=relaxed/simple;
-	bh=gE1OR5tGnrn3izCXTAKDAp7UlhwtWcuVL2/OUg0e+64=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LTMkxeWJdiuToxAT7PBFVDKnki1sEi6K3gv1so2atwow2bjmO1UkNp8B1jQDXDQVWK1N613TVlRx8slsSmy8gg4i4hC9HCrYh7cfh0o37+U93KeUjIIgOW6y2K7gygbhyH5r71lbxD/7fprBEhk0Tt2ylKBRLy3wbZy3cOgaheo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ItH3pCZv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747087054; c=relaxed/simple;
+	bh=WsrvOR/i83dt0Bws9AyaGjMaMbCRy19tBSje8RUHgQY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eXytsCml8atFbpSDS9NexZrpRgUBo76A1vmQPLkdDpiObcPeWJ3oVSYBag+R2KAADOipeVtXHlFVdL3bcfpZ5LglDrphR8aZtMyjJ7qpp6lIVTmZUqenyhaXxQdinthUeQ4tWH6IC8yGXvKfmxdfllWBsrAR4iHgRJ3JWFS8bOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gmulNC+K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ItH3pCZv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA65BC4CEE7;
-	Mon, 12 May 2025 21:57:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gmulNC+K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AB03C4CEE7;
+	Mon, 12 May 2025 21:57:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747087047;
-	bh=gE1OR5tGnrn3izCXTAKDAp7UlhwtWcuVL2/OUg0e+64=;
+	s=k20201202; t=1747087054;
+	bh=WsrvOR/i83dt0Bws9AyaGjMaMbCRy19tBSje8RUHgQY=;
 	h=From:To:Cc:Subject:Date:From;
-	b=ItH3pCZvHqmJBQkDsGXWSWkXOi3B5vIfuuhGG9RQ6FvztaYirVuFCwpXWJqdRL99C
-	 rXTlJUkH9hbhfFSzkexDg2JzR/W9zdirbbZye00SO8BrGERf7UF1sREInWDcGVJEtH
-	 IU6IWGoeDFV7XkwpDCiqPdBcwsLkdKSN6riUV06RnG1bexYA/bAj0BdiPAPC+zg0B8
-	 WOGrUjG89RKU0Dt4qSwBBzAxd7uK6Exgant8YJ8MQ8FS33hNJaMzxwzcGvmZ0ht6EX
-	 aojPiC7hasEPnMrtRktPRP7xXLHMcDl9gBt/H5QpNrTGC9+PAqNffyaghe6SU8/sQv
-	 q4mnfA0398C5Q==
+	b=gmulNC+KqXMqyZIV12SUglBxCbPDmlCdwsOrVpKyU3ONIHBEBwsRG/ket7+3rvUep
+	 WaNTZeB3K+5HiW9ibOsOQPDnjNOPkDgP8dGBCw3c1hMtaKp8rW+lCmtpkK1C0SeiCO
+	 2U+m7+Pa8Y/UDWiL/eeIlROhUl4trAasZ1E8pT5qQWZ+l2BqUKxzeHW2coy6VS6GQ9
+	 gZFxFLGBNhz0LTTvqRgARZlOKIgQRn6pl7I9mGhn3mmPj7s8PizYl60RtaUyw1ofZE
+	 xWL5j4/emgpqqFtn46nK92iZts/wX5et+FIXXj8KcGXxOSDhE/gPDdi7Vu2Qk/U9SL
+	 Wa4fGD5iZx/0w==
 From: "Rob Herring (Arm)" <robh@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Patrice Chotard <patrice.chotard@foss.st.com>
+	Conor Dooley <conor+dt@kernel.org>
 Cc: linux-ide@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] dt-bindings: ata: Convert st,ahci to DT schema
-Date: Mon, 12 May 2025 16:57:23 -0500
-Message-ID: <20250512215724.4178359-1-robh@kernel.org>
+Subject: [PATCH] dt-bindings: ata: Convert apm,xgene-ahci to DT schema
+Date: Mon, 12 May 2025 16:57:29 -0500
+Message-ID: <20250512215731.4178567-1-robh@kernel.org>
 X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -46,140 +45,164 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert the ST AHCI SATA Controller to DT schema format.
-
-The phy-names changes from "ahci_phy" to "sata-phy" with the inclusion
-of ahci-common.yaml. That's an ABI change, but the Linux driver at least
-ignores the names. The binding uses "ports-implemented" property, so
-including ahci-common.yaml is required.
+Convert the APM X-Gene AHCI SATA Controller to DT schema format. It's a
+straight-forward conversion.
 
 Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
 ---
- .../devicetree/bindings/ata/ahci-st.txt       | 35 ---------
- .../devicetree/bindings/ata/st,ahci.yaml      | 72 +++++++++++++++++++
- 2 files changed, 72 insertions(+), 35 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ata/ahci-st.txt
- create mode 100644 Documentation/devicetree/bindings/ata/st,ahci.yaml
+ .../bindings/ata/apm,xgene-ahci.yaml          | 58 ++++++++++++++
+ .../devicetree/bindings/ata/apm-xgene.txt     | 77 -------------------
+ 2 files changed, 58 insertions(+), 77 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm,xgene-ahci.yaml
+ delete mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-st.txt b/Documentation/devicetree/bindings/ata/ahci-st.txt
-deleted file mode 100644
-index 909c9935360d..000000000000
---- a/Documentation/devicetree/bindings/ata/ahci-st.txt
-+++ /dev/null
-@@ -1,35 +0,0 @@
--STMicroelectronics STi SATA controller
--
--This binding describes a SATA device.
--
--Required properties:
-- - compatible	   : Must be "st,ahci"
-- - reg		   : Physical base addresses and length of register sets
-- - interrupts	   : Interrupt associated with the SATA device
-- - interrupt-names :   Associated name must be; "hostc"
-- - clocks	   : The phandle for the clock
-- - clock-names	   :   Associated name must be; "ahci_clk"
-- - phys		   : The phandle for the PHY port
-- - phy-names	   :   Associated name must be; "ahci_phy"
--
--Optional properties:
-- - resets	   : The power-down, soft-reset and power-reset lines of SATA IP
-- - reset-names	   :   Associated names must be; "pwr-dwn", "sw-rst" and "pwr-rst"
--
--Example:
--
--	/* Example for stih407 family silicon */
--	sata0: sata@9b20000 {
--		compatible	= "st,ahci";
--		reg		= <0x9b20000 0x1000>;
--		interrupts	= <GIC_SPI 159 IRQ_TYPE_NONE>;
--		interrupt-names	= "hostc";
--		phys		= <&phy_port0 PHY_TYPE_SATA>;
--		phy-names	= "ahci_phy";
--		resets		= <&powerdown STIH407_SATA0_POWERDOWN>,
--				  <&softreset STIH407_SATA0_SOFTRESET>,
--				  <&softreset STIH407_SATA0_PWR_SOFTRESET>;
--		reset-names	= "pwr-dwn", "sw-rst", "pwr-rst";
--		clocks		= <&clk_s_c0_flexgen CLK_ICN_REG>;
--		clock-names	= "ahci_clk";
--	};
-diff --git a/Documentation/devicetree/bindings/ata/st,ahci.yaml b/Documentation/devicetree/bindings/ata/st,ahci.yaml
+diff --git a/Documentation/devicetree/bindings/ata/apm,xgene-ahci.yaml b/Documentation/devicetree/bindings/ata/apm,xgene-ahci.yaml
 new file mode 100644
-index 000000000000..6e8e4b4f3d6c
+index 000000000000..7dc942808656
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/st,ahci.yaml
-@@ -0,0 +1,72 @@
++++ b/Documentation/devicetree/bindings/ata/apm,xgene-ahci.yaml
+@@ -0,0 +1,58 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
-+$id: http://devicetree.org/schemas/ata/st,ahci.yaml#
++$id: http://devicetree.org/schemas/ata/apm,xgene-ahci.yaml#
 +$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+title: STMicroelectronics STi SATA controller
++title: APM X-Gene 6.0 Gb/s SATA host controller
 +
 +maintainers:
-+  - Patrice Chotard <patrice.chotard@foss.st.com>
++  - Rob Herring <robh@kernel.org>
 +
 +allOf:
 +  - $ref: ahci-common.yaml#
 +
 +properties:
 +  compatible:
-+    const: st,ahci
++    enum:
++      - apm,xgene-ahci
++      - apm,xgene-ahci-pcie
 +
-+  interrupt-names:
++  reg:
++    minItems: 4
 +    items:
-+      - const: hostc
++      - description: AHCI memory resource
++      - description: Host controller core
++      - description: Host controller diagnostic
++      - description: Host controller AXI
++      - description: Host controller MUX
++
++  interrupts:
++    maxItems: 1
 +
 +  clocks:
 +    maxItems: 1
 +
-+  clock-names:
-+    items:
-+      - const: ahci_clk
-+
-+  resets:
-+    items:
-+      - description: Power-down line
-+      - description: Soft-reset line
-+      - description: Power-reset line
-+
-+  reset-names:
-+    items:
-+      - const: pwr-dwn
-+      - const: sw-rst
-+      - const: pwr-rst
-+
 +required:
 +  - compatible
-+  - interrupt-names
++  - clocks
 +  - phys
 +  - phy-names
-+  - clocks
-+  - clock-names
 +
 +unevaluatedProperties: false
 +
 +examples:
 +  - |
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/phy/phy.h>
-+    #include <dt-bindings/reset/stih407-resets.h>
-+    #include <dt-bindings/clock/stih407-clks.h>
-+
-+    sata@9b20000 {
-+        compatible    = "st,ahci";
-+        reg           = <0x9b20000 0x1000>;
-+        interrupts    = <GIC_SPI 159 IRQ_TYPE_NONE>;
-+        interrupt-names = "hostc";
-+        phys          = <&phy_port0 PHY_TYPE_SATA>;
-+        phy-names     = "sata-phy";
-+        resets        = <&powerdown STIH407_SATA0_POWERDOWN>,
-+                         <&softreset STIH407_SATA0_SOFTRESET>,
-+                         <&softreset STIH407_SATA0_PWR_SOFTRESET>;
-+        reset-names   = "pwr-dwn", "sw-rst", "pwr-rst";
-+        clocks        = <&clk_s_c0_flexgen CLK_ICN_REG>;
-+        clock-names   = "ahci_clk";
++    sata@1a400000 {
++        compatible = "apm,xgene-ahci";
++        reg = <0x1a400000 0x1000>,
++              <0x1f220000 0x1000>,
++              <0x1f22d000 0x1000>,
++              <0x1f22e000 0x1000>,
++              <0x1f227000 0x1000>;
++        clocks = <&sataclk 0>;
++        dma-coherent;
++        interrupts = <0x0 0x87 0x4>;
++        phys = <&phy2 0>;
++        phy-names = "sata-phy";
 +    };
+diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+deleted file mode 100644
+index 02e690a675db..000000000000
+--- a/Documentation/devicetree/bindings/ata/apm-xgene.txt
++++ /dev/null
+@@ -1,77 +0,0 @@
+-* APM X-Gene 6.0 Gb/s SATA host controller nodes
+-
+-SATA host controller nodes are defined to describe on-chip Serial ATA
+-controllers. Each SATA controller (pair of ports) have its own node.
+-
+-Required properties:
+-- compatible		: Shall contain:
+-  * "apm,xgene-ahci"
+-- reg			: First memory resource shall be the AHCI memory
+-			  resource.
+-			  Second memory resource shall be the host controller
+-			  core memory resource.
+-			  Third memory resource shall be the host controller
+-			  diagnostic memory resource.
+-			  4th memory resource shall be the host controller
+-			  AXI memory resource.
+-			  5th optional memory resource shall be the host
+-			  controller MUX memory resource if required.
+-- interrupts		: Interrupt-specifier for SATA host controller IRQ.
+-- clocks		: Reference to the clock entry.
+-- phys			: A list of phandles + phy-specifiers, one for each
+-			  entry in phy-names.
+-- phy-names		: Should contain:
+-  * "sata-phy" for the SATA 6.0Gbps PHY
+-
+-Optional properties:
+-- dma-coherent		: Present if dma operations are coherent
+-- status		: Shall be "ok" if enabled or "disabled" if disabled.
+-			  Default is "ok".
+-
+-Example:
+-		sataclk: sataclk {
+-			compatible = "fixed-clock";
+-			#clock-cells = <1>;
+-			clock-frequency = <100000000>;
+-			clock-output-names = "sataclk";
+-		};
+-
+-		phy2: phy@1f22a000 {
+-			compatible = "apm,xgene-phy";
+-			reg = <0x0 0x1f22a000 0x0 0x100>;
+-			#phy-cells = <1>;
+-		};
+-
+-		phy3: phy@1f23a000 {
+-			compatible = "apm,xgene-phy";
+-			reg = <0x0 0x1f23a000 0x0 0x100>;
+-			#phy-cells = <1>;
+-		};
+-
+-		sata2: sata@1a400000 {
+-			compatible = "apm,xgene-ahci";
+-			reg = <0x0 0x1a400000 0x0 0x1000>,
+-			      <0x0 0x1f220000 0x0 0x1000>,
+-			      <0x0 0x1f22d000 0x0 0x1000>,
+-			      <0x0 0x1f22e000 0x0 0x1000>,
+-			      <0x0 0x1f227000 0x0 0x1000>;
+-			interrupts = <0x0 0x87 0x4>;
+-			dma-coherent;
+-			clocks = <&sataclk 0>;
+-			phys = <&phy2 0>;
+-			phy-names = "sata-phy";
+-		};
+-
+-		sata3: sata@1a800000 {
+-			compatible = "apm,xgene-ahci-pcie";
+-			reg = <0x0 0x1a800000 0x0 0x1000>,
+-			      <0x0 0x1f230000 0x0 0x1000>,
+-			      <0x0 0x1f23d000 0x0 0x1000>,
+-			      <0x0 0x1f23e000 0x0 0x1000>,
+-			      <0x0 0x1f237000 0x0 0x1000>;
+-			interrupts = <0x0 0x88 0x4>;
+-			dma-coherent;
+-			clocks = <&sataclk 0>;
+-			phys = <&phy3 0>;
+-			phy-names = "sata-phy";
+-		};
 -- 
 2.47.2
 
