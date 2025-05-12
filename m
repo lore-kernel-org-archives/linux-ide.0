@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC64299A81;
-	Mon, 12 May 2025 21:57:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA91299AAA;
+	Mon, 12 May 2025 21:57:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747087054; cv=none; b=fLH97gzrQd37vriJ9pklezmAYl1/DcVRMtMp81e2Wy7mLFayXsBrFvWIrbLO8RU5hOu8M6jWiKCTOK0cDFeuG36KuSS2nJQSdyh5QVWDM0/Hnb0YQzcEUNR2upxks8xh3wGvJrZjtqtTVYWvy/tzuV4xURphPRVXDy/W7GcYh3U=
+	t=1747087068; cv=none; b=tu4M489MZryQUV+rgccebcY+maCMxjwgUdz3KY/RITJJK4o5nHFyWYpVW+dmb7N5DTSL91c0fEuf1fG2+hKcTuHcTAjkGjYwvJsNmNKmNgABFUEWj8S7to+bHusDyV/U/XVQB/iLW9cB7c4IymbHPNwNez6a0v4B9mGqKlouOXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747087054; c=relaxed/simple;
-	bh=WsrvOR/i83dt0Bws9AyaGjMaMbCRy19tBSje8RUHgQY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eXytsCml8atFbpSDS9NexZrpRgUBo76A1vmQPLkdDpiObcPeWJ3oVSYBag+R2KAADOipeVtXHlFVdL3bcfpZ5LglDrphR8aZtMyjJ7qpp6lIVTmZUqenyhaXxQdinthUeQ4tWH6IC8yGXvKfmxdfllWBsrAR4iHgRJ3JWFS8bOs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gmulNC+K; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747087068; c=relaxed/simple;
+	bh=F2GYr0+7M4/qy66+bLnqegGGLwk4RFGTm4veUraYBFE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TmFtHrmpc8B8WSij/i+7UU64ucQH2Z/MEidW4qfJll7NCp9nOzmViC6W/n89E6KAQmnq2icaITVZiLv47QBRtmOueSamkhBnDgQ009iYYKX7FrX4bcsH+MwocWcxC0H27vEiroFNo/9HyPDVST7YjbVkYMTAYteCOqb7vpYvzoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KKmecZoK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gmulNC+K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AB03C4CEE7;
-	Mon, 12 May 2025 21:57:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KKmecZoK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A421C4CEE7;
+	Mon, 12 May 2025 21:57:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747087054;
-	bh=WsrvOR/i83dt0Bws9AyaGjMaMbCRy19tBSje8RUHgQY=;
+	s=k20201202; t=1747087066;
+	bh=F2GYr0+7M4/qy66+bLnqegGGLwk4RFGTm4veUraYBFE=;
 	h=From:To:Cc:Subject:Date:From;
-	b=gmulNC+KqXMqyZIV12SUglBxCbPDmlCdwsOrVpKyU3ONIHBEBwsRG/ket7+3rvUep
-	 WaNTZeB3K+5HiW9ibOsOQPDnjNOPkDgP8dGBCw3c1hMtaKp8rW+lCmtpkK1C0SeiCO
-	 2U+m7+Pa8Y/UDWiL/eeIlROhUl4trAasZ1E8pT5qQWZ+l2BqUKxzeHW2coy6VS6GQ9
-	 gZFxFLGBNhz0LTTvqRgARZlOKIgQRn6pl7I9mGhn3mmPj7s8PizYl60RtaUyw1ofZE
-	 xWL5j4/emgpqqFtn46nK92iZts/wX5et+FIXXj8KcGXxOSDhE/gPDdi7Vu2Qk/U9SL
-	 Wa4fGD5iZx/0w==
+	b=KKmecZoKeWy/iekckjS75sYCGA0bdrVq7MGU+WSLVkr0xH4Lx/KINZe7cMIm+FlgR
+	 42ZywmgtGv0BzcXSxEKmcGXC5ca4oIPwPO0c6zImXnxfWZmXEc2JExyOQ8pGvcgyPT
+	 HHH3CMlK8C4SFago9Q8kJ3wgYmxLK4LFlW0aPWEHGC+RkKyqEdBdPABpyTGvBQ7L/n
+	 n09B0keSRt1u3Z1n9FKmnyReHGljgFHYsa8XWnPA4ye+cmSEzCpPg63CbWiYnQBcMd
+	 4l7bQCEx2qnfCeqhhNmD/ybzhkS259NkmEAXk095Jp536wQvlICAK9oPh7UE4+6KJh
+	 zMNRiLiZJUsBQ==
 From: "Rob Herring (Arm)" <robh@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
@@ -33,9 +33,9 @@ To: Damien Le Moal <dlemoal@kernel.org>,
 Cc: linux-ide@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] dt-bindings: ata: Convert apm,xgene-ahci to DT schema
-Date: Mon, 12 May 2025 16:57:29 -0500
-Message-ID: <20250512215731.4178567-1-robh@kernel.org>
+Subject: [PATCH] dt-bindings: ata: Convert cavium,ebt3000-compact-flash to DT schema
+Date: Mon, 12 May 2025 16:57:41 -0500
+Message-ID: <20250512215742.4178861-1-robh@kernel.org>
 X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -45,164 +45,118 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert the APM X-Gene AHCI SATA Controller to DT schema format. It's a
+Convert the Cavium Compact Flash Controller to DT schema format. It's a
 straight-forward conversion.
 
 Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
 ---
- .../bindings/ata/apm,xgene-ahci.yaml          | 58 ++++++++++++++
- .../devicetree/bindings/ata/apm-xgene.txt     | 77 -------------------
- 2 files changed, 58 insertions(+), 77 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/apm,xgene-ahci.yaml
- delete mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ .../ata/cavium,ebt3000-compact-flash.yaml     | 59 +++++++++++++++++++
+ .../bindings/ata/cavium-compact-flash.txt     | 30 ----------
+ 2 files changed, 59 insertions(+), 30 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/cavium,ebt3000-compact-flash.yaml
+ delete mode 100644 Documentation/devicetree/bindings/ata/cavium-compact-flash.txt
 
-diff --git a/Documentation/devicetree/bindings/ata/apm,xgene-ahci.yaml b/Documentation/devicetree/bindings/ata/apm,xgene-ahci.yaml
+diff --git a/Documentation/devicetree/bindings/ata/cavium,ebt3000-compact-flash.yaml b/Documentation/devicetree/bindings/ata/cavium,ebt3000-compact-flash.yaml
 new file mode 100644
-index 000000000000..7dc942808656
+index 000000000000..349f289b81e6
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/apm,xgene-ahci.yaml
-@@ -0,0 +1,58 @@
++++ b/Documentation/devicetree/bindings/ata/cavium,ebt3000-compact-flash.yaml
+@@ -0,0 +1,59 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
-+$id: http://devicetree.org/schemas/ata/apm,xgene-ahci.yaml#
++$id: http://devicetree.org/schemas/ata/cavium,ebt3000-compact-flash.yaml#
 +$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+title: APM X-Gene 6.0 Gb/s SATA host controller
++title: Cavium Compact Flash
 +
 +maintainers:
 +  - Rob Herring <robh@kernel.org>
 +
-+allOf:
-+  - $ref: ahci-common.yaml#
++description:
++  The Cavium Compact Flash device is connected to the Octeon Boot Bus, and is
++  thus a child of the Boot Bus device.  It can read and write industry standard
++  compact flash devices.
 +
 +properties:
 +  compatible:
-+    enum:
-+      - apm,xgene-ahci
-+      - apm,xgene-ahci-pcie
++    const: cavium,ebt3000-compact-flash
 +
 +  reg:
-+    minItems: 4
++    description: The base address of the CF chip select banks.
 +    items:
-+      - description: AHCI memory resource
-+      - description: Host controller core
-+      - description: Host controller diagnostic
-+      - description: Host controller AXI
-+      - description: Host controller MUX
++      - description: CF chip select bank 0
++      - description: CF chip select bank 1
 +
-+  interrupts:
-+    maxItems: 1
++  cavium,bus-width:
++    description: The width of the connection to the CF devices.
++    $ref: /schemas/types.yaml#/definitions/uint32
++    enum: [8, 16]
 +
-+  clocks:
-+    maxItems: 1
++  cavium,true-ide:
++    description: True IDE mode when present.
++    type: boolean
++
++  cavium,dma-engine-handle:
++    description: A phandle for the DMA Engine connected to this device.
++    $ref: /schemas/types.yaml#/definitions/phandle
 +
 +required:
 +  - compatible
-+  - clocks
-+  - phys
-+  - phy-names
++  - reg
 +
-+unevaluatedProperties: false
++additionalProperties: false
 +
 +examples:
 +  - |
-+    sata@1a400000 {
-+        compatible = "apm,xgene-ahci";
-+        reg = <0x1a400000 0x1000>,
-+              <0x1f220000 0x1000>,
-+              <0x1f22d000 0x1000>,
-+              <0x1f22e000 0x1000>,
-+              <0x1f227000 0x1000>;
-+        clocks = <&sataclk 0>;
-+        dma-coherent;
-+        interrupts = <0x0 0x87 0x4>;
-+        phys = <&phy2 0>;
-+        phy-names = "sata-phy";
++    bus {
++        #address-cells = <2>;
++        #size-cells = <1>;
++
++        compact-flash@5,0 {
++            compatible = "cavium,ebt3000-compact-flash";
++            reg = <5 0 0x10000>, <6 0 0x10000>;
++            cavium,bus-width = <16>;
++            cavium,true-ide;
++            cavium,dma-engine-handle = <&dma0>;
++        };
 +    };
-diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+diff --git a/Documentation/devicetree/bindings/ata/cavium-compact-flash.txt b/Documentation/devicetree/bindings/ata/cavium-compact-flash.txt
 deleted file mode 100644
-index 02e690a675db..000000000000
---- a/Documentation/devicetree/bindings/ata/apm-xgene.txt
+index 3bacc8e0931e..000000000000
+--- a/Documentation/devicetree/bindings/ata/cavium-compact-flash.txt
 +++ /dev/null
-@@ -1,77 +0,0 @@
--* APM X-Gene 6.0 Gb/s SATA host controller nodes
+@@ -1,30 +0,0 @@
+-* Compact Flash
 -
--SATA host controller nodes are defined to describe on-chip Serial ATA
--controllers. Each SATA controller (pair of ports) have its own node.
+-The Cavium Compact Flash device is connected to the Octeon Boot Bus,
+-and is thus a child of the Boot Bus device.  It can read and write
+-industry standard compact flash devices.
 -
--Required properties:
--- compatible		: Shall contain:
--  * "apm,xgene-ahci"
--- reg			: First memory resource shall be the AHCI memory
--			  resource.
--			  Second memory resource shall be the host controller
--			  core memory resource.
--			  Third memory resource shall be the host controller
--			  diagnostic memory resource.
--			  4th memory resource shall be the host controller
--			  AXI memory resource.
--			  5th optional memory resource shall be the host
--			  controller MUX memory resource if required.
--- interrupts		: Interrupt-specifier for SATA host controller IRQ.
--- clocks		: Reference to the clock entry.
--- phys			: A list of phandles + phy-specifiers, one for each
--			  entry in phy-names.
--- phy-names		: Should contain:
--  * "sata-phy" for the SATA 6.0Gbps PHY
+-Properties:
+-- compatible: "cavium,ebt3000-compact-flash";
 -
--Optional properties:
--- dma-coherent		: Present if dma operations are coherent
--- status		: Shall be "ok" if enabled or "disabled" if disabled.
--			  Default is "ok".
+-  Compatibility with many Cavium evaluation boards.
+-
+-- reg: The base address of the CF chip select banks.  Depending on
+-  the device configuration, there may be one or two banks.
+-
+-- cavium,bus-width: The width of the connection to the CF devices.  Valid
+-  values are 8 and 16.
+-
+-- cavium,true-ide: Optional, if present the CF connection is in True IDE mode.
+-
+-- cavium,dma-engine-handle: Optional, a phandle for the DMA Engine connected
+-  to this device.
 -
 -Example:
--		sataclk: sataclk {
--			compatible = "fixed-clock";
--			#clock-cells = <1>;
--			clock-frequency = <100000000>;
--			clock-output-names = "sataclk";
--		};
--
--		phy2: phy@1f22a000 {
--			compatible = "apm,xgene-phy";
--			reg = <0x0 0x1f22a000 0x0 0x100>;
--			#phy-cells = <1>;
--		};
--
--		phy3: phy@1f23a000 {
--			compatible = "apm,xgene-phy";
--			reg = <0x0 0x1f23a000 0x0 0x100>;
--			#phy-cells = <1>;
--		};
--
--		sata2: sata@1a400000 {
--			compatible = "apm,xgene-ahci";
--			reg = <0x0 0x1a400000 0x0 0x1000>,
--			      <0x0 0x1f220000 0x0 0x1000>,
--			      <0x0 0x1f22d000 0x0 0x1000>,
--			      <0x0 0x1f22e000 0x0 0x1000>,
--			      <0x0 0x1f227000 0x0 0x1000>;
--			interrupts = <0x0 0x87 0x4>;
--			dma-coherent;
--			clocks = <&sataclk 0>;
--			phys = <&phy2 0>;
--			phy-names = "sata-phy";
--		};
--
--		sata3: sata@1a800000 {
--			compatible = "apm,xgene-ahci-pcie";
--			reg = <0x0 0x1a800000 0x0 0x1000>,
--			      <0x0 0x1f230000 0x0 0x1000>,
--			      <0x0 0x1f23d000 0x0 0x1000>,
--			      <0x0 0x1f23e000 0x0 0x1000>,
--			      <0x0 0x1f237000 0x0 0x1000>;
--			interrupts = <0x0 0x88 0x4>;
--			dma-coherent;
--			clocks = <&sataclk 0>;
--			phys = <&phy3 0>;
--			phy-names = "sata-phy";
--		};
+-	compact-flash@5,0 {
+-		compatible = "cavium,ebt3000-compact-flash";
+-		reg = <5 0 0x10000>, <6 0 0x10000>;
+-		cavium,bus-width = <16>;
+-		cavium,true-ide;
+-		cavium,dma-engine-handle = <&dma0>;
+-	};
 -- 
 2.47.2
 
