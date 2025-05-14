@@ -1,158 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from devloop.tasossah.com (devloop.tasossah.com [145.239.141.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D029298986
-	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 17:57:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6E9A1C84A6
+	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 18:30:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.239.141.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747245461; cv=none; b=KYwPMBRjvGdH+/hw88DQjgdAwLmHws5XFZU1Yyw6TeXMYUxCcUebWoayjdnnbUh5txMB+UC6p4ur2RYcC92tbl/CJV/6VPrboUo/FMjVBnBfZRKS0UscjzcWPr2ap3gGKVYNplAUMKz+0KiB7peBP4jA72tE+YhrJ2B7UC6SVKU=
+	t=1747247416; cv=none; b=bFpKZFliffYUhHn8ha7KqduCtZv0ihp+1ZEs1xQpdwnt/lXylVQbsd437kMyLMCkVd0F8EF2IlEJNXupSWS89/H5bDibH5PpwyA+iSCSFBNFqXSvvkIgbyjVGpa2VSaq65lC5Xetunh5ARNK1/AY2kGg8yww8s2xzn0JHJEnxRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747245461; c=relaxed/simple;
-	bh=HDEpsG8s0GT1kqq4KCFxr0PLOYeoIDxXcwvGv+hHp4A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YpyM/sldMyEU3lQ4dj3/t27jNAsVOI6VWdPWbyZBxEPLmrTb0R58HAOkq5GD8EJk2Za8s0WhVDW6xVUea1ljJ1FpLWsqd69STdFV6OfV7Q6dWuPJgXkY3Ojg8KqvMG8L2c4pxJ5zaXngM5m9LqXk/3VHPovD3RDotS9dquHTNys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U09tDkYo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747247416; c=relaxed/simple;
+	bh=zxLlAhMqo+J6DjxsOmkcpvBskS8NlFzjcxixQt5vaPY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hCDth4sviYjoF/oORiY+ZhP7FskDFZmulULRpJlVLHAgCx2nuKhKHpcg6OQybggh6z7MU5Ar/CqYn2Ef8KF/QdmnmLD6GjEOvgBPj1TcyL6Kp9gG6jWAnW7fA9o7qyYrEEsGRfFpf9cPq3DyOBzX5NPyruc6wtw3+jMOQt4v0EE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com; spf=pass smtp.mailfrom=tasossah.com; dkim=pass (4096-bit key) header.d=tasossah.com header.i=@tasossah.com header.b=NWehsL7J; arc=none smtp.client-ip=145.239.141.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tasossah.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U09tDkYo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF70BC4CEEF;
-	Wed, 14 May 2025 17:57:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747245460;
-	bh=HDEpsG8s0GT1kqq4KCFxr0PLOYeoIDxXcwvGv+hHp4A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=U09tDkYodU6YS1glLg6ikbqgcz2p1JcNk1vRxNisZ7Xh2qfubvv+5Pz47SIzGL9qy
-	 RMu52If5b5gcxlLeGVt1ZEDH6+codJhsHCHQSh4/qakX8QqkfvADaWxakuDUa3r3wP
-	 NCxiS2SfC3JcVg+wgRe2SR9zXB27qMB7xY/wNlNu3CRzypZhOnMfF9YrRGr3A+ANce
-	 ZzPyVINNeHGsquR3uY5TxXqk0m4J/JJyX67V9OBPD7hp0CKdYx0zCR831qqTmMnfFu
-	 vPOMaHsS2kU06AIIl4UFAEIwdZub9MfT4gMfpeCGg5Bvwy/eF/HDxP36yKzImAAyZl
-	 MVuArpszIhxmQ==
-Date: Wed, 14 May 2025 19:57:37 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Mikko Juhani Korhonen <mjkorhon@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>,
-	linux-ide@vger.kernel.org
-Subject: Re: [PATCH v4] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0
- hard drives
-Message-ID: <aCTZkV5mRjDsYyeE@ryzen>
-References: <aB8_rITWsMzkTiyE@ryzen>
- <CAAZ0mTe7Tpf2F1cKbmr==43pXDUxcPP4Q2AydpyDFJUrFHzNHQ@mail.gmail.com>
- <98E34F63-CCAE-48C4-9584-9053C3D1A7FD@kernel.org>
- <CAAZ0mTdcAazi=133Dz0+OgSGOERe7WmCTr27ePudEVhkJj6VbA@mail.gmail.com>
- <48F49924-F5FE-4A91-8323-E2C789D1BEFB@kernel.org>
- <CAAZ0mTdtOVSidMeC76X9oZyHCtJdgyiu44+UEKqP5tSUaD9ZsQ@mail.gmail.com>
- <aCG-gS2f3uXKaQPj@ryzen>
- <CAAZ0mTfqE+w8BBCyVSg0KKQ6fYZwKaqvh_ND8dLCANg-oMaphA@mail.gmail.com>
- <aCHZg4tj6YwS9vph@ryzen>
- <CAAZ0mTeiVqZQvkWzJ8aFH4FUPCZwy5O+9hPBgDPhSgNNz+t6HA@mail.gmail.com>
+	dkim=pass (4096-bit key) header.d=tasossah.com header.i=@tasossah.com header.b="NWehsL7J"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=tasossah.com; s=devloop; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=qFUt8LMY0bAXaKbjzLPforqwLM9U8iGIMeRKQA1+YW8=; b=NWehsL7JVTcsFzIgY/ThKnbBUA
+	fOQjk+b/998GXa1mh7kxPMvb1g8wr4z4dlF4XOc97noRMCRdEGhza/RS13DI+exmBmVM8jGXIjfx2
+	ItP80h4rqn3YOt2T+tr5umy8XeZ2FwxGQTnLJVoNc2qy2bfwSmehgyScisI9hzxcXIAGIM4YPCmdg
+	wnKKfjb0/AWajenn+bY+MfRlsa9mbk6DYcVX5Ub7Oziki3lgRsoNpthPI+piSccPUQNC7Uu1HKqAl
+	XkOQOJB0xcT+O4niYAgFAJA9AvX9alwYNHnwcEjX/cMAKL0Nix/N42zF6DT54Y1H3coKAhEyZ7DPT
+	1feahQaibnAGpN8YErEzzytMPmjqg7KTx4ps5SNhJ9Vlfh9W4sOp/XFTOGJCEp5eIkmNxQsM1bIKS
+	tygjcxkpszqHWdKVQ44Ma1Cj0XTWF6KUnEmIYXE/HBuxk3ZjZ4J+NCUbN1o7aIDsSw5W9OG8Kb17P
+	bna0n60wpTHNQkH33fKU+ZYr8dvSgDmdGte3g26X9u4FNO9/8S9Yq0cPVC2oH+eeCqI+yKio00PRY
+	Hc4ECR205lqrk3/cunX9uAFmu2+YvWoaCgQMHYfpSTPcbP30c78BJQSoR/2AQtys02vWSkuJIDPmi
+	Lh/pnKbYY3843ld9YN8i1fgQQUvAblexHtKtKMtSo=;
+Received: from [2a02:587:6a09:4a00:e434:6f7a:8bc0:eab1] (helo=localhost.localdomain)
+	by devloop.tasossah.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.97)
+	(envelope-from <tasos@tasossah.com>)
+	id 1uFGrs-0000000BMdQ-2u0g;
+	Wed, 14 May 2025 21:30:12 +0300
+From: Tasos Sahanidis <tasos@tasossah.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Tasos Sahanidis <tasos@tasossah.com>
+Subject: [PATCH] ata: libata-acpi: Do not assume 40 wire cable if no devices are enabled
+Date: Wed, 14 May 2025 21:29:38 +0300
+Message-ID: <20250514182939.151081-1-tasos@tasossah.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAAZ0mTeiVqZQvkWzJ8aFH4FUPCZwy5O+9hPBgDPhSgNNz+t6HA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 
-Hello Mikko,
+On at least an ASRock 990FX Extreme 4 with a VIA VT6330, the devices
+have not yet been enabled by the first time ata_acpi_cbl_80wire() is
+called. This means that the ata_for_each_dev loop is never entered,
+and a 40 wire cable is assumed.
 
-On Mon, May 12, 2025 at 05:16:14PM +0300, Mikko Juhani Korhonen wrote:
-> >
-> Yes, but for some reason now I get different results. I wonder what's
-> different now. The earlier results were on configuration
-> sata ports 5,6 -> WDC WD20EFAX-68FB5N0
-> so LPM had to be disabled (it's impossible to run anything) but can't
-> remember what kernel version and which variation I used to disable it.
-> 
-> Now with vanilla 6.14.5 and configuration:
-> sata ports 5,6 -> WDC WD5000AAKX-001CA0
-> sata ports 3,4 -> WDC WD20EFAX-68FB5N0
-> I get:
+The VIA controller on this board does not report the cable in the PCI
+config space, thus having to fall back to ACPI even though no SATA
+bridge is present.
 
-Well we still see:
+The _GTM values are correctly reported by the firmware through ACPI,
+which has already set up faster transfer modes, but due to the above
+the controller is forced down to a maximum of UDMA/33.
 
-> /dev/sda:
-> 
-> ATA device, with non-removable media
->     Model Number:       WDC WD20EFAX-68FB5N0
->     Firmware Revision:  82.00A82
-> Commands/features:
->     Enabled    Supported:
->        *    Host-initiated interface power management
->        *    Device-initiated interface power management
+Resolve this by returning EAGAIN in ata_acpi_cbl_80wire() if no devices
+have been detected and modify pata_via to handle this scenario.
 
-This drive supports both HIPM and DIPM,
-and has both enabled. (Which makes sense since lpm-pol 3 includes DIPM.)
+First, an unknown cable is assumed which preserves the mode set by the
+firmware, and then on subsequent calls when the devices have been
+enabled, an 80 wire cable is correctly detected.
 
+Signed-off-by: Tasos Sahanidis <tasos@tasossah.com>
+---
+ drivers/ata/libata-acpi.c | 11 ++++++++---
+ drivers/ata/pata_via.c    | 13 ++++++++++---
+ 2 files changed, 18 insertions(+), 6 deletions(-)
 
-> /dev/sdb:
-> 
-> ATA device, with non-removable media
->     Model Number:       WDC WD20EFAX-68FB5N0
->     Firmware Revision:  82.00A82
-> Commands/features:
->     Enabled    Supported:
->        *    Host-initiated interface power management
->             Device-initiated interface power management
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index b7f0bf795521..c508a19c2495 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -523,6 +523,7 @@ EXPORT_SYMBOL_GPL(ata_acpi_gtm_xfermask);
+ int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm)
+ {
+ 	struct ata_device *dev;
++	int ret = -EAGAIN;
+ 
+ 	ata_for_each_dev(dev, &ap->link, ENABLED) {
+ 		unsigned int xfer_mask, udma_mask;
+@@ -530,11 +531,15 @@ int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm)
+ 		xfer_mask = ata_acpi_gtm_xfermask(dev, gtm);
+ 		ata_unpack_xfermask(xfer_mask, NULL, NULL, &udma_mask);
+ 
+-		if (udma_mask & ~ATA_UDMA_MASK_40C)
+-			return 1;
++		ret = 0;
++
++		if (udma_mask & ~ATA_UDMA_MASK_40C) {
++			ret = 1;
++			break;
++		}
+ 	}
+ 
+-	return 0;
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(ata_acpi_cbl_80wire);
+ 
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 696b99720dcb..4d03b4a1ea4d 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -182,6 +182,7 @@ static int via_cable_detect(struct ata_port *ap) {
+ 	const struct via_isa_bridge *config = ap->host->private_data;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u32 ata66;
++	const struct ata_acpi_gtm *gtm;
+ 
+ 	if (via_cable_override(pdev))
+ 		return ATA_CBL_PATA40_SHORT;
+@@ -202,9 +203,15 @@ static int via_cable_detect(struct ata_port *ap) {
+ 	if (ata66 & (0x10100000 >> (16 * ap->port_no)))
+ 		return ATA_CBL_PATA80;
+ 	/* Check with ACPI so we can spot BIOS reported SATA bridges */
+-	if (ata_acpi_init_gtm(ap) &&
+-	    ata_acpi_cbl_80wire(ap, ata_acpi_init_gtm(ap)))
+-		return ATA_CBL_PATA80;
++	gtm = ata_acpi_init_gtm(ap);
++	if (gtm) {
++		int cbl = ata_acpi_cbl_80wire(ap, gtm);
++
++		if (cbl < 0)
++			return ATA_CBL_PATA_UNK;
++		else if (cbl == 1)
++			return ATA_CBL_PATA80;
++	}
+ 	return ATA_CBL_PATA40;
+ }
+ 
+-- 
+2.43.0
 
-This drive supports HIPM and DIPM,
-but only HIPM has been enabled. (Which does not make sense since
-lpm-pol 3 includes DIPM...)
-
-I have no idea what is going on here...
-
-I would add some debug prints around:
-https://github.com/torvalds/linux/blob/v6.15-rc6/drivers/ata/libata-eh.c#L3512-L3520
-
-To
-1) Make sure that we actually send down the SET FEATURES command for
-to the drive.
-
-2) Check the return code (err_mask). This code looks a bit sketchy,
-if (err_mask && err_mask != AC_ERR_DEV) {
-
-It seems that if err_mask == AC_ERR_DEV, the error would get silently
-discarded...
-
-
-Did you do something with this drive?
-Was this perhaps the drive that got timeout? and for some reason
-the timeouts caused DIPM to get disabled?
-
-Did you get any timeouts on the other drive of the same model (/dev/sda) ?
-
-
-> /dev/sdc:
-> 
-> ATA device, with non-removable media
->     Model Number:       WDC WD5000AAKX-001CA0
->     Firmware Revision:  15.01H15
-> Commands/features:
->     Enabled    Supported:
->        *    Host-initiated interface power management
-
-This drive appears to only support HIPM, it does not support DIPM.
-It has HIPM enabled, because that is the only feature supported by
-the drive.
-
-
-
-Looking at what you told before:
-
-WD5000AAKX-001CA0 works with LPM enabled (lpm-pol 3), on port 5-6.
-WD20EFAX-68FB5N0 gets timeouts with LPM enabled (lpm-pol 3), on port 5-6.
-
-Would again suggest that your controller has issues with DIPM.
-The reason why you don't need the "no lpm" quirk on the
-"WDC WD5000AAKX-001CA0" drive is most likely because it doesn't support DIPM.
-
-Remind me again, without any quirks, do you get timeouts for the
-"WDC WD20EFAX-68FB5N0" drive on all drives, or just on port 5-6?
-
-
-I would really like to know why DIPM is not enabled on your device,
-even though it claims support for it, and you are using lpm-pol 3.
-
-
-Kind regards,
-Niklas
