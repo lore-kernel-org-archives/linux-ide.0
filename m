@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B7EAC2F2
-	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 04:05:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83CD4288DA
+	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 04:11:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747195546; cv=none; b=KkzkQz2BEyxEh4atEP0ul1hw4GuTZDRiRMb9vt8SNb5pRbxPB3pjOfTQ7W7brdpZY+mwoj1/HdxFekxWH7oBE5NYTwe+A0fM5iYuQ4ziDYbGpD9BVUkz2tzWVRATf5Pav0KIvFvVrf6ABkJNaK5ioL2y8KZJkBQCKpyt1t1+zJI=
+	t=1747195875; cv=none; b=HbIUTcjnC7p0LGyc5uzlUPURgWoGcrDTiRIRIse3+hVeMQFTxq/b/nX8ZX8bulSUa/5mU5tSMAVdWd8P1OxC4oRe3leaO9aEwa0gdjbdUOyzP4ZzpbP0o3SHYl6/AFLQtIi4u+H2hNL4saTN31qphLBqSuhYSRLQUtcZYrXYXsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747195546; c=relaxed/simple;
-	bh=7b1hQ08KirU6xDoqMbi9W39DDTI9xFBeql6/+Kg7/1Q=;
+	s=arc-20240116; t=1747195875; c=relaxed/simple;
+	bh=mn7s1IYO9pO3OWw5kAsBA9A61QKMXezZMLFFptzPDFk=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Ebxk8yitbgfsJIHT8360AcZGe+iyhawmBtRUOa0fjBgBXNs8pdUKWXQAIX2omVe7Vsh2oL4TZCFR03bJho0yb7dn/t2spDxYf8qNTQwkM9f0oh/RwRAZWeTKZCvuV7JjowOhzN2N7X9mMOeka2h52m3+gJ76enSe3JSG5fNE8OE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z9MCzSd9; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:MIME-Version; b=eN/x1esYBJxvp4MjRtxU5q1VwEtvMnARYeZwcnAC9LDfNjUzojvKbI2t0TRhAzlyQ8vY1t7YRMzG6o/YWJYNq+bxAu8SEXNzQSlrzehn0MG6UeCw+9476VuhjEk7O8w0w/Q/hLzk93/sjUPwUuO8HFr5UeOPeQOtrmxPBcjJY74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uc0eS0MM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z9MCzSd9"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id AB1D2C4CEEE
-	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 04:05:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uc0eS0MM"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id DE2F0C4CEEF
+	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 04:11:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747195545;
-	bh=7b1hQ08KirU6xDoqMbi9W39DDTI9xFBeql6/+Kg7/1Q=;
+	s=k20201202; t=1747195874;
+	bh=mn7s1IYO9pO3OWw5kAsBA9A61QKMXezZMLFFptzPDFk=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=Z9MCzSd9DGddD1m3e1Wza9dC4q02fTzhqUd3HVcq7aR+yDJF7DJQUawmZHpdZ4M8M
-	 pOVzWzhDjqedbEL3NDNoxKXxJBVfEzOmnK3oiJq5KQ16XYAEFbOuz9NnS8l0X+P8ef
-	 zugjqK9xUtQKf2Uk9QaOMH4RS2rSthEZn6ozu6+WjckPvRLqy0TYR/2SI2aG7awbQ1
-	 mnIAnoweImHdxCGG+i5AkD4rfJIn1qU0MiXJGkC4FUlEIaBFzgB4XFHXul4sY3fZof
-	 oG5xoq21iYJyfL6GigVXPW89G8flSUR12fZOir9JioTRusdFIb9DGA6bXgQ49PZe4h
-	 dgzjw55nF9S/g==
+	b=Uc0eS0MMy/wT7k8OGyc5RsxAmDrq72cp4O5KMwDLKO46diab2OAnxzvTbdfzq+h5a
+	 xzYTKPFT4s9sThe4OGDn+bYc/xcCKfgo85D2JtvdNS/w7zD2PFn8NphS83YneZPksA
+	 mrD0PtWUtF6ZC4z1YncF62+rU1EIQzpNBm4sk2gnH+eT4Uts/oCWAvKxegvDwXDjVx
+	 5CGpTWufBdHjoaIsbVxD6QhYVni/uh/N39Jxc4Ys1f4CdRzpxPAVy0R3WesgOdm7KS
+	 QivsM8aWzkAiYJbSgXPnwgfn6tUnnzdsnYVN5e75RjqojANkm1ttyv4JUvb0i/Knhm
+	 BVJMWCEztR3Iw==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 9DF37C41613; Wed, 14 May 2025 04:05:45 +0000 (UTC)
+	id D4202C41613; Wed, 14 May 2025 04:11:14 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-ide@vger.kernel.org
 Subject: [Bug 220121] Not found
-Date: Wed, 14 May 2025 04:05:45 +0000
+Date: Wed, 14 May 2025 04:11:14 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo io_ide@kernel-bugs.osdl.org
@@ -42,12 +42,12 @@ X-Bugzilla-Keywords:
 X-Bugzilla-Severity: high
 X-Bugzilla-Who: tungdangthanh23032004@gmail.com
 X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: ANSWERED
+X-Bugzilla-Resolution: INVALID
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: io_ide@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_status resolution
-Message-ID: <bug-220121-11633-vwkVNjayE7@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: resolution
+Message-ID: <bug-220121-11633-oksugqsT42@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-220121-11633@https.bugzilla.kernel.org/>
 References: <bug-220121-11633@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -67,8 +67,7 @@ Tung (tungdangthanh23032004@gmail.com) changed:
 
            What    |Removed                     |Added
 ----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |ANSWERED
+         Resolution|ANSWERED                    |INVALID
 
 --=20
 You may reply to this email to add a comment.
