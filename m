@@ -1,69 +1,96 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 384941C862D
-	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 17:22:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C4051C8621
+	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 17:22:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747243338; cv=none; b=U8OX2oEoMm1Q8bviRGVzWABuY/RTrFsckuEzcuKmepnMWWVSCLcdVyy41CS8CtBf8UuUSsqFD89aNuK4q+ANS08Sg0m6V9A1qo3gqj0IJ0vo7gdpV3Va47kZBh77knmIeCzWozegXZesDhfFGtyBMGQLb5r7jcpmYiFNLkbWy7c=
+	t=1747243339; cv=none; b=K9C6kU0M5Ngo2ogayrSrO052cLaZfTjIpZt3apoOPjzbk6BkdOv2RDCTvM12yjQ3iNRCPtlOgk+m09QeqR4fhT6K7f3IfBsBRoPD+OCmRcL1mBNQCTwte1Ak/o93jYiCJmxjCXNHd2AgzwNYc9CqVIAQ/isaSMjuSaEodQN5CLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747243338; c=relaxed/simple;
-	bh=wSO7sLabDJNx5rdBnAaZaYAX579JnwjKT6bQXYX4cRs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eM4fAgThVxHGEJLlkIAPw2dG6QS2pEya4W5T3s4vrFj9l8Axm0JJGdI+fQ6PKpJQQa91H17vSvygwOvNyNVJYi3Z654Gxt4mRAynAH65ULM27o5INWWX/3tgIuyOklQER/u9o2T4pgw2ZRCXuFVOPN16+sG8gOERq2/mVvBvM/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dqmQE6pi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747243339; c=relaxed/simple;
+	bh=mDjBa05Wd8XWRi7YnZRidzICSK8bLE0v6Bob/2IxjeE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=THuEXZCMKtTVe57T43AmZB24CPO+1EhhuhwkXHAy44l/RrVpwPn2ibhWGB1GiRyG+N+dDGbHZHnRHVvOPayBbLulzJslsrI6Ry8wjyMnuzB2pQuP1B8qF6N8UbM1oND8U9CuSZMj1GFs7SRITrl/Y6jXt9b8nkmindswO0klV24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X9A520kz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dqmQE6pi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93AE7C4CEE3;
-	Wed, 14 May 2025 17:22:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X9A520kz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E036C4CEE3;
+	Wed, 14 May 2025 17:22:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747243337;
-	bh=wSO7sLabDJNx5rdBnAaZaYAX579JnwjKT6bQXYX4cRs=;
-	h=From:To:Cc:Subject:Date:From;
-	b=dqmQE6piFGQBBTx43b6+Xz1ExlSBqnZ4sKeRHbJnAXvDG/Y09CFjQl1pMwPwPqR2t
-	 FNjE79O9vWk2pgA3jbEGQpT8pKZitNbRmBUNO5L16ZKPS3NWlcEYcLRECKSR6p/UDe
-	 70DzlMTm3bWriKFlF/rvUY0N1lMerxU/ljXkyfKDo7UBcjiA6F7lt33qfJZjx9npAI
-	 lZNxiggV7IHmpkoxbE6gYYXSF9sL6RZjHVt2CcSxKOBMZwmgf134k0jCYD5YEYGrJw
-	 +9elfNLVZNIHft53qTf9+DZ7mYvo0/Cw3rZ9SGF95HwO3uzVCeUdpGdzSZSat4FnVo
-	 80wNZB/gWPtLQ==
+	s=k20201202; t=1747243339;
+	bh=mDjBa05Wd8XWRi7YnZRidzICSK8bLE0v6Bob/2IxjeE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=X9A520kzugARobUY8CtcGv2RSRrlxNASG4+pp6lag/UvgB59T4wx41It5e9nzaKub
+	 BkMdjYRrV4M/Mzt1bqcuxelYY2O0b3rrX85uZIGggT17nE6lsOmD7Ewe4uHepDwIXC
+	 oVZw0I9ybuW9c3M9C4zxviH6Juh+Eu0i3AeFV/LifnSsu1UQVqBN4bf5W4oWmsfVKN
+	 L+HPw4u9XxPVf2R3W3vEmtS7s9LdwDdEOWc4n9N8LkX7VaLidd6gpHocBeTXrwryLR
+	 KEJ9uUwPZYRFQS+rL1zuFvV+TzxNNwmr62UhF89Tu4uCMj8b4W6krjPcTpppfRRvTI
+	 16WktIXGosHGg==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>
 Cc: Mikko Korhonen <mjkorhon@gmail.com>,
 	linux-ide@vger.kernel.org
-Subject: [PATCH 0/7] ata_eh_set_lpm() cleanups
-Date: Wed, 14 May 2025 19:22:10 +0200
-Message-ID: <20250514172210.383801-9-cassel@kernel.org>
+Subject: [PATCH 1/7] ata: libata-eh: Update DIPM comments to reflect reality
+Date: Wed, 14 May 2025 19:22:11 +0200
+Message-ID: <20250514172210.383801-10-cassel@kernel.org>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250514172210.383801-9-cassel@kernel.org>
+References: <20250514172210.383801-9-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=749; i=cassel@kernel.org; h=from:subject; bh=wSO7sLabDJNx5rdBnAaZaYAX579JnwjKT6bQXYX4cRs=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJULjpF3mhuOHzqaZHeBc2Vy5Y9WHKEQVB2V6gfp+9TY fVdG99/6ihlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBEptoz/PcR5/k344bFBwPD CXmB+7Je3M+YkDdHe/HJgEnTmWLYrz1gZJjQPv+5yoUE413XGN6xP696b7nD5PfyC68FOlMTGoR OTWYEAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1838; i=cassel@kernel.org; h=from:subject; bh=mDjBa05Wd8XWRi7YnZRidzICSK8bLE0v6Bob/2IxjeE=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJULjod3+DA4PvCOOHyNQHzMHb+lWKt71+1qx/+OVsr7 OVZDrdlHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjInihGhhsqms07J8Q4Wn/7 EHLF65J2dWT31cO6K1cdn3vi0JyKC9yMDA+LJ0hEamxRlZVYesXf/N37I+5hq96ZTjQQ2Lrlj1t GGwcA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-Hello Damien,
+The comments describing which LPM policies that has DIPM enabled predates
+the introduction of the LPM policies ATA_LPM_MIN_POWER_WITH_PARTIAL and
+ATA_LPM_MED_POWER_WITH_DIPM.
 
-I was trying to understand ata_eh_set_lpm(), and decided that
-it needed some cleanups to make the code more understandable.
+Update the DIPM comments to reflect reality.
 
-Please have a look.
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libata-eh.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-
-Niklas Cassel (7):
-  ata: libata-eh: Update DIPM comments to reflect reality
-  ata: libata-eh: Add ata_eh_set_lpm() WARN_ON
-  ata: libata-eh: Drop dipm variable
-  ata: libata-eh: Introduce dev_has_dipm and dev_has_hipm variables
-  ata: libata-eh: Rename no_dipm variable to be more clear
-  ata: libata-eh: Host support has nothing to do with disabling DIPM
-  ata: libata-eh: Always disable DIPM before calling set_lpm() callback
-
- drivers/ata/libata-eh.c | 41 ++++++++++++++++++++++++++++-------------
- 1 file changed, 28 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index b990c1ee0b12..edbc5d7572d1 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3443,10 +3443,11 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 		return 0;
+ 
+ 	/*
+-	 * DIPM is enabled only for MIN_POWER as some devices
+-	 * misbehave when the host NACKs transition to SLUMBER.  Order
+-	 * device and link configurations such that the host always
+-	 * allows DIPM requests.
++	 * DIPM is enabled only for ATA_LPM_MIN_POWER,
++	 * ATA_LPM_MIN_POWER_WITH_PARTIAL, and ATA_LPM_MED_POWER_WITH_DIPM, as
++	 * some devices misbehave when the host NACKs transition to SLUMBER.
++	 * Order device and link configurations such that the host always allows
++	 * DIPM requests.
+ 	 */
+ 	ata_for_each_dev(dev, link, ENABLED) {
+ 		bool hipm = ata_id_has_hipm(dev->id);
+@@ -3505,7 +3506,11 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	if (ap && ap->slave_link)
+ 		ap->slave_link->lpm_policy = policy;
+ 
+-	/* host config updated, enable DIPM if transitioning to MIN_POWER */
++	/*
++	 * Host config updated, enable DIPM if transitioning to
++	 * ATA_LPM_MIN_POWER, ATA_LPM_MIN_POWER_WITH_PARTIAL, or
++	 * ATA_LPM_MED_POWER_WITH_DIPM.
++	 */
+ 	ata_for_each_dev(dev, link, ENABLED) {
+ 		if (policy >= ATA_LPM_MED_POWER_WITH_DIPM && !no_dipm &&
+ 		    ata_id_has_dipm(dev->id)) {
 -- 
 2.49.0
 
