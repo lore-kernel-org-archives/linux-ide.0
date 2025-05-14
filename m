@@ -1,68 +1,71 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0831856B81
-	for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 11:41:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5367020C016;
+	Wed, 14 May 2025 12:15:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747222877; cv=none; b=YDGIglgdI4ElDpp6h5x1oWQgelSJxMRCW8KCzeC4zpaMhrpo2MiiYVvXoBEH5aHJxs2YBuxMHhzYJGc2bUrMbGMGuJIBNQ9gztbIbQ1MlStAV129dtT6efhRhgEFApUlRxTU7oXuLs5DZi0u+gGuvDXqYbNd0YhbYPyee+S0qeY=
+	t=1747224929; cv=none; b=LU2AX9fsathzzRDECcjqXKbI2hPtl3uuqZMiJgpPXI6PLOspxbjBsfPkhSp4sBLK/hgdvi2CIrmpfDBNs4/N6BUVNgwgTH4Wo/SfdO+k2n1MSr++5egK2r2lUudivkps7yTu5SOq5DphRLIbt0w93sMM/JxMnXB55ssnRnwSe2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747222877; c=relaxed/simple;
-	bh=AvMS1QZuWH8nM9oPd+mGGzHreipLq8tB7qOea+edNvc=;
+	s=arc-20240116; t=1747224929; c=relaxed/simple;
+	bh=Wq2iBIEwsY6FhRxgTv+U9RMmZ6m7AXpMshuV5t9m3Ts=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uByoi2k1iKIAYsmPkbM+hPacytK/Z1J/NRG0R0BRMkAoqocTqQvKKGpXmX/96CndwFuZQUZWijdPYrIPbaK0yIY0hP1rt1MbvDz9ZMDspCdbX2gMHBUy6ZYuT3kBi7X8Lfq3+MCiHQMTgPSClttWDRev8qggBFc78hg9tBAhD5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gyvmSghd; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=k6VzaufGda65EAPZ2JTK2E+JwmzKBuSGJbbYPRfsSWvXbYwLOWO7W3O3pQlsNp9Ej6l6uvOg8gx35d31mZsh0CoHpSXZjfgk8Xwu1krlkotK73v/7EDWZVeYdTXZQg4LWW9hHhPPqJMJh9MQQ21GdeYJ1utWcLtnLRC2qeymT4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dDesafKP; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gyvmSghd"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-442f5b3c710so3633835e9.1
-        for <linux-ide@vger.kernel.org>; Wed, 14 May 2025 04:41:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747222874; x=1747827674; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=et8U1o84ecbh6m4FOLOfviKzf2/yLZIseHIwaaEPlVY=;
-        b=gyvmSghdiXDHg6VHiY23kykWoYflKeAArqj5jSNCyBZd2SWeO9A7UXfvTHOBfVzm17
-         migrRHLM1kZ6xMg9hQ1BPHIXnGG8XvnIcsP6qBnfHmYHz8AIr2YJqgGvmYHfiMtOHOPI
-         R8H5g8YoPNGu7117VuznBm+0kCNJ7jfMsLhbsz2qM21RrGAgPLBttTMEBmSI2S5upe80
-         YCrWhtf52W8TJKNZyk4rupxrTOfOgRSZ4MWnkFZ4QUlOHW/0Wfd3md7QMl6vXIct4b2n
-         RKPexdkrubmv65WKhtsj6JAMo7BosDTPSCtrQAZK3uqj/7VHb8NOL/189JqeN+Eygl9X
-         Vy+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747222874; x=1747827674;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=et8U1o84ecbh6m4FOLOfviKzf2/yLZIseHIwaaEPlVY=;
-        b=MLTZj4cc7h7PAg+74EXedC5JD8uNxdOd9xI89Wej6OVU+LbbLkLHqgD5pnyMBB/CNc
-         ap/T+YVN1bOQ9IbEIYy1Ggx3H/Ou+ziVl3SqiNL6wyUpqwubZo1OL5dIvx+pzLPni/U7
-         50hNk55dtUgSCc/LMoXrCQmfXuCFT7y7F5dm22ksSnaJF/zIHkt06Xot2vilnryaNMPF
-         nQQq69+s6LZUzLMFOMm6lt2B50bG/RVSLw9+aIIh3B2zKRSShwqbbuKFxzG1/UpwYtbi
-         3QL5FW9w6GTuNgbWs49/WXNDiu1zq90DzzvUCXmQzONFkRzMp/hSmn8qOR5+6QiJgA4U
-         dC9w==
-X-Gm-Message-State: AOJu0YyGxbtlhuBJVEkPm2GQx2AMRvrlLuTtaNim2pcVexi58hvBj5X3
-	dKXonrQVpwfeYCBjfNTF4iQczyWXp6/DK2lxK6wnRec7fxq32Y46
-X-Gm-Gg: ASbGncu/lCjpD7oXVOhbyfR5soLjx4LPyEiaPUM1ei/wjLaPHaT0fMOFd3+tSMhzPJ4
-	SENIEeJu2yg8nwZ2gGWG1UhmGau9bJQnM5SaEm490sLfUW7AvIq+qoibF15+j7HqWbUbEuPuzgR
-	D1VZYF151xasCEF5KLBRbSdSoK6SXVlmgEXuJUonn6jq+XuhPLU90CKJ5gtoe8pXn+oi+KeJpd4
-	H4bSNv/S8bV7T28s56RjW5z5cVJclf4Y0lSraTpv8G6gKjH50PGUl7HKuGg7E8XjGPyiyjauMLs
-	ANYm2QmiLPi++42uvSGd8bSVMg0s8C/vP4JbiaXPyVQifKU=
-X-Google-Smtp-Source: AGHT+IGVtf89pkxJBQnHkIvMa5c5+fKBhgVKo/JJ9GqR/nbttBuKODGJ8fajL/+CqsHVRYTyZbU+tg==
-X-Received: by 2002:a05:600c:3b02:b0:43c:ee3f:2c3 with SMTP id 5b1f17b1804b1-442f20bae1emr25599145e9.7.1747222873501;
-        Wed, 14 May 2025 04:41:13 -0700 (PDT)
-Received: from gmail.com ([213.157.19.150])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-442f397926asm26770195e9.36.2025.05.14.04.41.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 May 2025 04:41:12 -0700 (PDT)
-Date: Wed, 14 May 2025 13:41:11 +0200
-From: Paolo Pisati <p.pisati@gmail.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: Re: [PATCH v4 0/2] m68k: pata_cswarp: Add Amiga cslab ata support
-Message-ID: <aCSBV_L-NcNX4n7G@akinoame>
-References: <20250325155613.352680-1-p.pisati@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dDesafKP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1747224927; x=1778760927;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Wq2iBIEwsY6FhRxgTv+U9RMmZ6m7AXpMshuV5t9m3Ts=;
+  b=dDesafKPYQHLMRrBmrBv4lFR5wKME8x9zZTm2xem+9Tg4VshNuOCRBej
+   0Lwx5wNiq8G234hSLdQWNmlecm9zq4dzNaah1p8+cX8p5x2IFtnv/YhUN
+   bOVCvI/urVfYGC6QH1+6JJOOcv6mO4aHDlKzuAR0oHFb1w2VZFR3fPj9Z
+   3b88bPv7o8p09wEW/56nZRO26WjqImEfW4Pg6vu/m/e6yLzwVWQvheOga
+   3daTaywV0VOPkMs9gvmJYfwzcQ5NB7hEyLcjwfQzcEWFtQet3AGSVYegP
+   KRFd6JTq5AUcXfI1bFXqomj72MNYFSHe08ZzNUZZZLqGscD8tswDyTAj1
+   w==;
+X-CSE-ConnectionGUID: I4gjvmluRTmZJEfiNRh8QQ==
+X-CSE-MsgGUID: rt5xYqyLRNOJIYD4Wcddmw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11433"; a="71621443"
+X-IronPort-AV: E=Sophos;i="6.15,288,1739865600"; 
+   d="scan'208";a="71621443"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2025 05:15:26 -0700
+X-CSE-ConnectionGUID: 10hiSKPcTemNRJ3E3wInOw==
+X-CSE-MsgGUID: v2pUpbBIT0uxm7g3oN8LFg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,288,1739865600"; 
+   d="scan'208";a="138071684"
+Received: from lkp-server01.sh.intel.com (HELO 1992f890471c) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 14 May 2025 05:15:19 -0700
+Received: from kbuild by 1992f890471c with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1uFB13-000H5P-1n;
+	Wed, 14 May 2025 12:15:17 +0000
+Date: Wed, 14 May 2025 20:14:36 +0800
+From: kernel test robot <lkp@intel.com>
+To: Byungchul Park <byungchul@sk.com>, linux-kernel@vger.kernel.org
+Cc: Paul Gazzillo <paul@pgazz.com>,
+	Necip Fazil Yildiran <fazilyildiran@gmail.com>,
+	oe-kbuild-all@lists.linux.dev, kernel_team@skhynix.com,
+	torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+	linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+	linux-ext4@vger.kernel.org, mingo@redhat.com, peterz@infradead.org,
+	will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+	joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+	duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
+	tytso@mit.edu, willy@infradead.org, david@fromorbit.com,
+	amir73il@gmail.com, gregkh@linuxfoundation.org, kernel-team@lge.com,
+	linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+	minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com
+Subject: Re: [PATCH v15 02/43] dept: implement DEPT(DEPendency Tracker)
+Message-ID: <202505142038.OTu01zaa-lkp@intel.com>
+References: <20250513100730.12664-3-byungchul@sk.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -71,28 +74,38 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250325155613.352680-1-p.pisati@gmail.com>
+In-Reply-To: <20250513100730.12664-3-byungchul@sk.com>
 
-On Tue, Mar 25, 2025 at 04:56:11PM +0100, Paolo Pisati wrote:
-> Here is a driver (and the subsequent defconfig change) for the pata/CF socket in
-> the CS-Lab Warp series of Amiga boards.
-> 
-> Changes in v4:
->  - refactor pata_cswarp_data_xfer()
->  - ioremap WARP_OFFSET_ATA region
-> 
-> Changes in v3:
->  - suppress a comment
->  - properly return ata_host_activate() error code
-> 
-> Change in v2:
->  - fix style, remove duplicate swap macro, driver version, etc
->  - rework the zorro attach mechanism
->  - remove the unnecessary zorro ids refactor
- 
-Gentle ping about this one: can i get an ACK or a NACK?
+Hi Byungchul,
 
-Thanks.
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on 82f2b0b97b36ee3fcddf0f0780a9a0825d52fec3]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Byungchul-Park/llist-move-llist_-head-node-definition-to-types-h/20250513-181346
+base:   82f2b0b97b36ee3fcddf0f0780a9a0825d52fec3
+patch link:    https://lore.kernel.org/r/20250513100730.12664-3-byungchul%40sk.com
+patch subject: [PATCH v15 02/43] dept: implement DEPT(DEPendency Tracker)
+config: x86_64-kismet-CONFIG_DEBUG_MUTEXES-CONFIG_DEPT-0-0 (https://download.01.org/0day-ci/archive/20250514/202505142038.OTu01zaa-lkp@intel.com/config)
+reproduce: (https://download.01.org/0day-ci/archive/20250514/202505142038.OTu01zaa-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202505142038.OTu01zaa-lkp@intel.com/
+
+kismet warnings: (new ones prefixed by >>)
+>> kismet: WARNING: unmet direct dependencies detected for DEBUG_MUTEXES when selected by DEPT
+   WARNING: unmet direct dependencies detected for DEBUG_RWSEMS
+     Depends on [n]: DEBUG_KERNEL [=y] && !PREEMPT_RT [=y]
+     Selected by [y]:
+     - DEPT [=y] && DEBUG_KERNEL [=y] && LOCK_DEBUGGING_SUPPORT [=y]
+   
+   WARNING: unmet direct dependencies detected for DEBUG_MUTEXES
+     Depends on [n]: DEBUG_KERNEL [=y] && !PREEMPT_RT [=y]
+     Selected by [y]:
+     - DEPT [=y] && DEBUG_KERNEL [=y] && LOCK_DEBUGGING_SUPPORT [=y]
+
 -- 
-bye,
-p.
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
