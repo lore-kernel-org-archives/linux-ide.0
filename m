@@ -1,371 +1,98 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [52.175.55.52])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7A20020E002;
-	Thu, 15 May 2025 09:00:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.175.55.52
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18093F4ED;
+	Thu, 15 May 2025 10:18:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747299638; cv=none; b=G67+PgqIoKcw10os5wUq1TLsrp+WPFF+3Xm3o1jB+zys/I3WPDngP1dZY/2fqzyvmgJ9OkdSm8G6EmP8E29t9YpfO3jwJpiuzjZ0Vd0gLTRM9B3zx72i8upC4LVd0pCN45uOANOKfpgn7yMC0Y2ggvHUwAvbv8zWlIR9NI+CQB0=
+	t=1747304297; cv=none; b=pyofhUB7grHwkZ+FuiKhlLKFEyuZJj4UcozLxT+lXgcudVK4UZZtYzJLfDjp8i7ZEaewGig71o3OAOttVvNPK4k3CRvkpaZjC0CaogrAxoEg6L9HnsAaYXJKb1Prf/MqFCO4IMnC+UolanJn9JsQWCvoYk3TNnhCbTwrZMBcI5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747299638; c=relaxed/simple;
-	bh=zg3NJ0Lxk8k3Eb0xw/q9U+sVcCG+0oMw0HfuXr/aeaQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VYr+TkL3fnvj8ftiifWDPBkKcVjR7AJ8m4dskJUv5IDG/PjX90QheVitz+vFK0RK1R5bSfC5pIet5Ha43Ed5VORiBs5gNxlrfegLO2gX70e6hgL+wXVwqej0VIzBhTpYmL58XxqIc/D+mTSFQYjzbov6WZ0rkMg6tot/A86kVd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=52.175.55.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from E0005154LT.eswin.cn (unknown [10.12.96.103])
-	by app2 (Coremail) with SMTP id TQJkCgCXNpUlrSVozz58AA--.26093S2;
-	Thu, 15 May 2025 17:00:22 +0800 (CST)
-From: hehuan1@eswincomputing.com
-To: dlemoal@kernel.org,
-	cassel@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	p.zabel@pengutronix.de
-Cc: ningyu@eswincomputing.com,
-	linmin@eswincomputing.com,
-	luyulin@eswincomputing.com,
-	Huan He <hehuan1@eswincomputing.com>
-Subject: [PATCH v1 2/2] sata: eswin: Add eic7700 sata driver
-Date: Thu, 15 May 2025 17:00:18 +0800
-Message-ID: <20250515090018.1720-1-hehuan1@eswincomputing.com>
-X-Mailer: git-send-email 2.49.0.windows.1
-In-Reply-To: <20250515085114.1692-1-hehuan1@eswincomputing.com>
-References: <20250515085114.1692-1-hehuan1@eswincomputing.com>
+	s=arc-20240116; t=1747304297; c=relaxed/simple;
+	bh=7oHsPKAdLxbUXJ4kJsp0mQwgN09/1AQyhQbmmj3bihs=;
+	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
+	 Message-Id:Subject; b=Wp5R+y+vVA/NYRjW5AtK2CCTG2PCDkfqXyf8Fi21ElWpu8WZ4ZA++1t7ANxS4y0wbQ9yev8DEMwd8V278UEQLIIdRVKne4Tbm6X6BnC30VXTs1/yjmjxukdUHlrCv5SLvF+99yXowbPF+Hfdd/vPM94eclkpKHc9IEHBcbdg3FA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IFmnyDsU; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IFmnyDsU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45DB4C4CEE7;
+	Thu, 15 May 2025 10:18:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747304296;
+	bh=7oHsPKAdLxbUXJ4kJsp0mQwgN09/1AQyhQbmmj3bihs=;
+	h=Date:From:Cc:To:In-Reply-To:References:Subject:From;
+	b=IFmnyDsU/HJKYwrA7OeeBHmiSpAEdfdnK5yYaiXrOTedmWDtgciYhbYqQPrNHy+XR
+	 6aB5qElkXNjWM7VQLz5XLQeiBjeHP3Yk7LWHm9FsEGqdNnfPTukkt7wDNgVFBzyv8H
+	 8qgYPOQDQexBcvm8Rp3lxOXz8eyikYQBvSHCPqc9m+v4siLvZrOHroFiYxtsmr6dSr
+	 0l+e1QFR7hLZUvc9pxCyi9BDJ+UoQL7hLKE3TBT8Wz4zwSi6BBUrZ4uT/4HCru9sk4
+	 kppF/LEjA3CRzF5hz9yvjsoCwqpMGiPATqcMub6mPj6LdVmoYuRTM4/fs5xVyP5j0C
+	 Y89/UA/HTEwQw==
+Date: Thu, 15 May 2025 05:18:14 -0500
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:TQJkCgCXNpUlrSVozz58AA--.26093S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxKF43Jw1UJw1ruryUGFy3Arb_yoWfZFyrpF
-	4rCFW8JrWDWF1Ig34Iy3W8AF4akr4DWFy2ka4UGw42vws2yw1YgFsIvF98tryDJr97Gay5
-	Xa1qyay3ua1UZ3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBv14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lw4CEc2x0rVAKj4xxMxkF7I0En4kS14v26r1q6r43MxkIecxEwVCm-wCF04
-	k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18
-	MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr4
-	1lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1l
-	IxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4
-	A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUHCJQUUUUU=
-X-CM-SenderInfo: 5khk3tzqr6v25zlqu0xpsx3x1qjou0bp/
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: dlemoal@kernel.org, linmin@eswincomputing.com, 
+ linux-kernel@vger.kernel.org, p.zabel@pengutronix.de, 
+ linux-ide@vger.kernel.org, conor+dt@kernel.org, ningyu@eswincomputing.com, 
+ krzk+dt@kernel.org, cassel@kernel.org, devicetree@vger.kernel.org, 
+ luyulin@eswincomputing.com
+To: hehuan1@eswincomputing.com
+In-Reply-To: <20250515085723.1706-1-hehuan1@eswincomputing.com>
+References: <20250515085114.1692-1-hehuan1@eswincomputing.com>
+ <20250515085723.1706-1-hehuan1@eswincomputing.com>
+Message-Id: <174730429455.126330.3775161741913976026.robh@kernel.org>
+Subject: Re: [PATCH v1 1/2] dt-bindings: sata: eswin: Document for EIC7700
+ SoC
 
-From: Huan He <hehuan1@eswincomputing.com>
 
-Add support for the AHCI SATA controller in Eswin's eic7700 soc,
-which supports SATA PHY initialization, reset control,
-and power management.
+On Thu, 15 May 2025 16:57:23 +0800, hehuan1@eswincomputing.com wrote:
+> From: Huan He <hehuan1@eswincomputing.com>
+> 
+> Add eic7700 AHCI SATA controller device with single port support.
+> For the eic7700 SATA registers, it supports AHCI standard interface,
+> interrupt modes (INTx/MSI/PME), APB reset control,
+> and HSP_SP_CSR register configuration.
+> 
+> Co-developed-by: Yulin Lu <luyulin@eswincomputing.com>
+> Signed-off-by: Yulin Lu <luyulin@eswincomputing.com>
+> Signed-off-by: Huan He <hehuan1@eswincomputing.com>
+> ---
+>  .../bindings/ata/eswin,eic7700-sata.yaml      | 80 +++++++++++++++++++
+>  1 file changed, 80 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/eswin,eic7700-sata.yaml
+> 
 
-Co-developed-by: Yulin Lu <luyulin@eswincomputing.com>
-Signed-off-by: Yulin Lu <luyulin@eswincomputing.com>
-Signed-off-by: Huan He <hehuan1@eswincomputing.com>
----
- drivers/ata/Kconfig        |  12 ++
- drivers/ata/Makefile       |   1 +
- drivers/ata/ahci_eic7700.c | 248 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 261 insertions(+)
- create mode 100644 drivers/ata/ahci_eic7700.c
+My bot found errors running 'make dt_binding_check' on your patch:
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index e00536b49552..474c09543006 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -185,6 +185,18 @@ config AHCI_DWC
- 
- 	  If unsure, say N.
- 
-+config AHCI_EIC7700
-+	tristate "Eswin AHCI SATA support"
-+	depends on ARCH_ESWIN || COMPILE_TEST
-+	select SATA_HOST
-+	help
-+	  This enables the AHCI SATA controller driver for Eswin SoCs. This driver
-+	  is specific to Eswin SoCs and should only be enabled if using such hardware.
-+	  The driver supports eic7700 series chips. The controller supports up
-+	  to 1 port.
-+
-+	  If unsure, say N.
-+
- config AHCI_ST
- 	tristate "ST AHCI SATA support"
- 	depends on ARCH_STI || COMPILE_TEST
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 20e6645ab737..af00e55fa593 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -18,6 +18,7 @@ obj-$(CONFIG_AHCI_CEVA)		+= ahci_ceva.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_DM816)	+= ahci_dm816.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_DWC)		+= ahci_dwc.o libahci.o libahci_platform.o
-+obj-$(CONFIG_AHCI_EIC7700)	+= ahci_eic7700.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_MTK)		+= ahci_mtk.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
-diff --git a/drivers/ata/ahci_eic7700.c b/drivers/ata/ahci_eic7700.c
-new file mode 100644
-index 000000000000..d2b7cafbfdd7
---- /dev/null
-+++ b/drivers/ata/ahci_eic7700.c
-@@ -0,0 +1,248 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * ESWIN EIC7700 AHCI SATA Driver
-+ *
-+ * Copyright 2024, Beijing ESWIN Computing Technology Co., Ltd.. All rights reserved.
-+ *
-+ * Authors: Yulin Lu <luyulin@eswincomputing.com>
-+ *          Huan He <hehuan1@eswincomputing.com>
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pm.h>
-+#include <linux/device.h>
-+#include <linux/of_device.h>
-+#include <linux/platform_device.h>
-+#include <linux/libata.h>
-+#include <linux/ahci_platform.h>
-+#include <linux/acpi.h>
-+#include <linux/pci_ids.h>
-+#include <linux/iommu.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/bitfield.h>
-+#include <linux/regmap.h>
-+#include <linux/reset.h>
-+#include "ahci.h"
-+
-+#define DRV_NAME "ahci"
-+
-+/* Register Definitions */
-+#define SATA_REF_CTRL1                0x338
-+#define SATA_PHY_CTRL0                0x328
-+#define SATA_PHY_CTRL1                0x32c
-+#define SATA_LOS_IDEN                 0x33c
-+#define SATA_AXI_LP_CTRL              0x308
-+#define SATA_REG_CTRL                 0x334
-+#define SATA_MPLL_CTRL                0x320
-+#define SATA_RESET_CTRL               0x340
-+#define SATA_RESET_CTRL_ASSERT        0x3
-+#define SATA_RESET_CTRL_DEASSERT      0x0
-+#define SATA_PHY_RESET                BIT(0)
-+#define SATA_P0_RESET                 BIT(1)
-+#define SATA_LOS_LEVEL                0x9
-+#define SATA_LOS_BIAS                 (0x02 << 16)
-+#define SATA_REF_REPEATCLK_EN         BIT(0)
-+#define SATA_REF_USE_PAD              BIT(20)
-+#define SATA_P0_AMPLITUDE_GEN1        0x42
-+#define SATA_P0_AMPLITUDE_GEN2        (0x46 << 8)
-+#define SATA_P0_AMPLITUDE_GEN3        (0x73 << 16)
-+#define SATA_P0_PHY_TX_PREEMPH_GEN1   0x05
-+#define SATA_P0_PHY_TX_PREEMPH_GEN2   (0x05 << 8)
-+#define SATA_P0_PHY_TX_PREEMPH_GEN3   (0x23 << 16)
-+#define SATA_MPLL_MULTIPLIER          (0x3c << 16)
-+#define SATA_M_CSYSREQ                BIT(0)
-+#define SATA_S_CSYSREQ                BIT(16)
-+
-+struct eswin_ahci_plat {
-+	struct reset_control *apb_rst;
-+};
-+
-+static const struct ata_port_info ahci_port_info = {
-+	.flags		= AHCI_FLAG_COMMON,
-+	.pio_mask	= ATA_PIO4,
-+	.udma_mask	= ATA_UDMA6,
-+	.port_ops	= &ahci_platform_ops,
-+};
-+
-+static const struct ata_port_info ahci_port_info_nolpm = {
-+	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_LPM,
-+	.pio_mask	= ATA_PIO4,
-+	.udma_mask	= ATA_UDMA6,
-+	.port_ops	= &ahci_platform_ops,
-+};
-+
-+static struct scsi_host_template ahci_platform_sht = {
-+	AHCI_SHT(DRV_NAME),
-+};
-+
-+static int eswin_sata_init(struct device *dev)
-+{
-+	struct regmap *regmap;
-+
-+	regmap = syscon_regmap_lookup_by_phandle(dev->of_node, "eswin,hsp_sp_csr");
-+	if (IS_ERR(regmap)) {
-+		dev_dbg(dev, "No hsp_sp_csr phandle specified\n");
-+		return -1;
-+	}
-+
-+	regmap_write(regmap, SATA_REF_CTRL1, 0x1);
-+	regmap_write(regmap, SATA_PHY_CTRL0, (SATA_P0_AMPLITUDE_GEN1 |
-+						 SATA_P0_AMPLITUDE_GEN2 |
-+						 SATA_P0_AMPLITUDE_GEN3));
-+	regmap_write(regmap, SATA_PHY_CTRL1, (SATA_P0_PHY_TX_PREEMPH_GEN1 |
-+						 SATA_P0_PHY_TX_PREEMPH_GEN2 |
-+						 SATA_P0_PHY_TX_PREEMPH_GEN3));
-+	regmap_write(regmap, SATA_LOS_IDEN, SATA_LOS_LEVEL | SATA_LOS_BIAS);
-+	regmap_write(regmap, SATA_AXI_LP_CTRL, SATA_M_CSYSREQ | SATA_S_CSYSREQ);
-+	regmap_write(regmap, SATA_REG_CTRL, SATA_REF_REPEATCLK_EN | SATA_REF_USE_PAD);
-+	regmap_write(regmap, SATA_MPLL_CTRL, SATA_MPLL_MULTIPLIER);
-+	regmap_write(regmap, SATA_RESET_CTRL, 0x0);
-+
-+	return 0;
-+}
-+
-+static int eswin_ahci_platform_resets(struct ahci_host_priv *hpriv,
-+				 struct device *dev)
-+{
-+	struct eswin_ahci_plat *plat = hpriv->plat_data;
-+	struct regmap *regmap;
-+	int ret;
-+
-+	regmap = syscon_regmap_lookup_by_phandle(dev->of_node, "eswin,hsp_sp_csr");
-+	if (IS_ERR(regmap)) {
-+		dev_dbg(dev, "No hsp_sp_csr phandle specified\n");
-+		return -1;
-+	}
-+
-+	plat->apb_rst = devm_reset_control_get_optional(dev, "apb");
-+	if (PTR_ERR(plat->apb_rst) == -EPROBE_DEFER)
-+		return PTR_ERR(plat->apb_rst);
-+
-+	ret = reset_control_assert(plat->apb_rst);
-+	if (ret) {
-+		dev_err(dev, "failed to assert apb_rst\n");
-+		return ret;
-+	}
-+	regmap_write(regmap, SATA_RESET_CTRL, SATA_RESET_CTRL_ASSERT);
-+
-+	regmap_write(regmap, SATA_RESET_CTRL, SATA_RESET_CTRL_DEASSERT);
-+	ret = reset_control_deassert(plat->apb_rst);
-+	if (ret) {
-+		dev_err(dev, "failed to deassert apb_rst\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ahci_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct ahci_host_priv *hpriv;
-+	struct eswin_ahci_plat *plat;
-+	const struct ata_port_info *port;
-+	int ret;
-+
-+	plat = devm_kzalloc(dev, sizeof(*plat), GFP_KERNEL);
-+	if (!plat)
-+		return -ENOMEM;
-+
-+	hpriv = ahci_platform_get_resources(pdev, 0);
-+	if (IS_ERR(hpriv))
-+		return PTR_ERR(hpriv);
-+
-+	hpriv->plat_data = plat;
-+	ret = eswin_ahci_platform_resets(hpriv, dev);
-+	if (ret)
-+		return ret;
-+
-+	ret = ahci_platform_enable_resources(hpriv);
-+	if (ret)
-+		return ret;
-+
-+	eswin_sata_init(dev);
-+
-+	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(41));
-+	if (ret)
-+		return ret;
-+
-+	of_property_read_u32(dev->of_node, "ports-implemented", &hpriv->saved_port_map);
-+
-+	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
-+		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
-+
-+	port = acpi_device_get_match_data(dev);
-+	if (!port)
-+		port = &ahci_port_info;
-+
-+	ret = ahci_platform_init_host(pdev, hpriv, port, &ahci_platform_sht);
-+	if (ret)
-+		goto disable_resources;
-+
-+	return 0;
-+
-+disable_resources:
-+	ahci_platform_disable_resources(hpriv);
-+	return ret;
-+}
-+
-+static void ahci_remove(struct platform_device *pdev)
-+{
-+	ata_platform_remove_one(pdev);
-+}
-+
-+static int eswin_ahci_suspend(struct device *dev)
-+{
-+	int ret;
-+
-+	ret = ahci_platform_suspend(dev);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static int eswin_ahci_resume(struct device *dev)
-+{
-+	int ret;
-+
-+	ret = ahci_platform_resume(dev);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static SIMPLE_DEV_PM_OPS(ahci_pm_ops, eswin_ahci_suspend, eswin_ahci_resume);
-+
-+static const struct of_device_id ahci_of_match[] = {
-+	{ .compatible = "eswin,eic7700-ahci", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, ahci_of_match);
-+
-+static const struct acpi_device_id ahci_acpi_match[] = {
-+	{ "APMC0D33", (unsigned long)&ahci_port_info_nolpm },
-+	{ ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
-+
-+static struct platform_driver ahci_driver = {
-+	.probe = ahci_probe,
-+	.remove = ahci_remove,
-+	.shutdown = ahci_platform_shutdown,
-+	.driver = {
-+		.name = DRV_NAME,
-+		.of_match_table = ahci_of_match,
-+		.acpi_match_table = ahci_acpi_match,
-+		.pm = &ahci_pm_ops,
-+	},
-+};
-+module_platform_driver(ahci_driver);
-+
-+MODULE_DESCRIPTION("ESWIN AHCI SATA driver");
-+MODULE_AUTHOR("Yulin Lu <luyulin@eswincomputing.com>");
-+MODULE_AUTHOR("Huan He <hehuan1@eswincomputing.com>");
-+MODULE_LICENSE("GPL");
--- 
-2.25.1
+yamllint warnings/errors:
+
+dtschema/dtc warnings/errors:
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ata/eswin,eic7700-sata.example.dtb: sata@50420000 (eswin,eic7700-ahci): #size-cells: 0 was expected
+	from schema $id: http://devicetree.org/schemas/ata/sata-common.yaml#
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ata/eswin,eic7700-sata.example.dtb: sata@50420000 (eswin,eic7700-ahci): '#address-cells' is a dependency of '#size-cells'
+	from schema $id: http://devicetree.org/schemas/reg.yaml#
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ata/eswin,eic7700-sata.example.dtb: sata@50420000 (eswin,eic7700-ahci): 'eswin,hsp_sp_csr' does not match any of the regexes: '^#.*', '^(at25|bm|devbus|dmacap|dsa|exynos|fsi[ab]|gpio-fan|gpio-key|gpio|gpmc|hdmi|i2c-gpio),.*', '^(keypad|m25p|max8952|max8997|max8998|mpmc),.*', '^(pciclass|pinctrl-single|#pinctrl-single|PowerPC),.*', '^(pl022|pxa-mmc|rcar_sound|rotary-encoder|s5m8767|sdhci),.*', '^(simple-audio-card|st-plgpio|st-spics|ts),.*', '^100ask,.*', '^70mai,.*', '^8dev,.*', '^GEFanuc,.*', '^IBM,.*', '^ORCL,.*', '^SUNW,.*', '^[a-zA-Z0-9#_][a-zA-Z0-9+\\-._@]{0,63}$', '^[a-zA-Z0-9+\\-._]*@[0-9a-zA-Z,]*$', '^abb,.*', '^abilis,.*', '^abracon,.*', '^abt,.*', '^acbel,.*', '^acelink,.*', '^acer,.*', '^acme,.*', '^actions,.*', '^active-semi,.*', '^ad,.*', '^adafruit,.*', '^adapteva,.*', '^adaptrum,.*', '^adh,.*', '^adi,.*', '^adieng,.*', '^admatec,.*', '^advantech,.*', '^aeroflexgaisler,.*', '^aesop,.*', '^airoha,.*', '^al,.*', '^alcatel,.*', '^aldec,.*', '^alfa-network,.*', '^allegro,.*', '^allegromicro,.*', '^alliedvision,.*', '^allo,.*', '^allwinner,.*', '^alphascale,.*', '^alps,.*', '^alt,.*', '^altr,.*', '^amarula,.*', '^amazon,.*', '^amcc,.*', '^amd,.*', '^amediatech,.*', '^amlogic,.*', '^ampere,.*', '^amphenol,.*', '^ampire,.*', '^ams,.*', '^amstaos,.*', '^analogix,.*', '^anbernic,.*', '^andestech,.*', '^anvo,.*', '^aoly,.*', '^aosong,.*', '^apm,.*', '^apple,.*', '^aptina,.*', '^arasan,.*', '^archermind,.*', '^arcom,.*', '^arctic,.*', '^arcx,.*', '^ariaboard,.*', '^aries,.*', '^arm,.*', '^armadeus,.*', '^armsom,.*', '^arrow,.*', '^artesyn,.*', '^asahi-kasei,.*', '^asc,.*', '^asix,.*', '^aspeed,.*', '^asrock,.*', '^asteralabs,.*', '^asus,.*', '^atheros,.*', '^atlas,.*', '^atmel,.*', '^auo,.*', '^auvidea,.*', '^avago,.*', '^avia,.*', '^avic,.*', '^avnet,.*', '^awinic,.*', '^axentia,.*', '^axis,.*', '^azoteq,.*', '^azw,.*', '^baikal,.*', '^bananapi,.*', '^beacon,.*', '^beagle,.*', '^belling,.*', '^bhf,.*', '^bigtreetech,.*', '^bitmain,.*', '^blaize,.*', '^blutek,.*', '^boe,.*', '^bosch,.*', '^boundary,.*', '^brcm,.*', '^broadmobi,.*', '^bsh,.*', '^bticino,.*', '^buffalo,.*', '^bur,.*', '^bytedance,.*', '^calamp,.*', '^calao,.*', '^calaosystems,.*', '^calxeda,.*', '^cameo,.*', '^canaan,.*', '^caninos,.*', '^capella,.*', '^cascoda,.*', '^catalyst,.*', '^cavium,.*', '^cct,.*', '^cdns,.*', '^cdtech,.*', '^cellwise,.*', '^ceva,.*', '^chargebyte,.*', '^checkpoint,.*', '^chefree,.*', '^chipidea,.*', '^chipone,.*', '^chipspark,.*', '^chongzhou,.*', '^chrontel,.*', '^chrp,.*', '^chunghwa,.*', '^chuwi,.*', '^ciaa,.*', '^cirrus,.*', '^cisco,.*', '^clockwork,.*', '^cloos,.*', '^cloudengines,.*', '^cnm,.*', '^cnxt,.*', '^colorfly,.*', '^compulab,.*', '^comvetia,.*', '^congatec,.*', '^coolpi,.*', '^coreriver,.*', '^corpro,.*', '^cortina,.*', '^cosmic,.*', '^crane,.*', '^creative,.*', '^crystalfontz,.*', '^csky,.*', '^csot,.*', '^csq,.*', '^ctera,.*', '^ctu,.*', '^cubietech,.*', '^cudy,.*', '^cui,.*', '^cypress,.*', '^cyx,.*', '^cznic,.*', '^dallas,.*', '^dataimage,.*', '^davicom,.*', '^deepcomputing,.*', '^dell,.*', '^delta,.*', '^densitron,.*', '^denx,.*', '^devantech,.*', '^dfi,.*', '^dfrobot,.*', '^dh,.*', '^difrnce,.*', '^digi,.*', '^digilent,.*', '^dimonoff,.*', '^diodes,.*', '^dioo,.*', '^dlc,.*', '^dlg,.*', '^dlink,.*', '^dmo,.*', '^domintech,.*', '^dongwoon,.*', '^dptechnics,.*', '^dragino,.*', '^dream,.*', '^ds,.*', '^dserve,.*', '^dynaimage,.*', '^ea,.*', '^ebang,.*', '^ebbg,.*', '^ebs-systart,.*', '^ebv,.*', '^eckelmann,.*', '^econet,.*', '^edgeble,.*', '^edimax,.*', '^edt,.*', '^ees,.*', '^eeti,.*', '^einfochips,.*', '^eink,.*', '^elan,.*', '^element14,.*', '^elgin,.*', '^elida,.*', '^elimo,.*', '^elpida,.*', '^embedfire,.*', '^embest,.*', '^emcraft,.*', '^emlid,.*', '^emmicro,.*', '^empire-electronix,.*', '^emtrion,.*', '^enclustra,.*', '^endless,.*', '^ene,.*', '^energymicro,.*', '^engicam,.*', '^engleder,.*', '^epcos,.*', '^epfl,.*', '^epson,.*', '^esp,.*', '^est,.*', '^ettus,.*', '^eukrea,.*', '^everest,.*', '^everspin,.*', '^evervision,.*', '^exar,.*', '^excito,.*', '^exegin,.*', '^ezchip,.*', '^facebook,.*', '^fairchild,.*', '^fairphone,.*', '^faraday,.*', '^fascontek,.*', '^fastrax,.*', '^fcs,.*', '^feixin,.*', '^feiyang,.*', '^fii,.*', '^firefly,.*', '^focaltech,.*', '^forlinx,.*', '^freebox,.*', '^freecom,.*', '^frida,.*', '^friendlyarm,.*', '^fsl,.*', '^fujitsu,.*', '^fxtec,.*', '^galaxycore,.*', '^gameforce,.*', '^gardena,.*', '^gateway,.*', '^gateworks,.*', '^gcw,.*', '^ge,.*', '^geekbuying,.*', '^gef,.*', '^gehc,.*', '^gemei,.*', '^gemtek,.*', '^genesys,.*', '^genexis,.*', '^geniatech,.*', '^giantec,.*', '^giantplus,.*', '^glinet,.*', '^globalscale,.*', '^globaltop,.*', '^gmt,.*', '^gocontroll,.*', '^goldelico,.*', '^goodix,.*', '^google,.*', '^goramo,.*', '^gplus,.*', '^grinn,.*', '^grmn,.*', '^gumstix,.*', '^gw,.*', '^hannstar,.*', '^haochuangyi,.*', '^haoyu,.*', '^hardkernel,.*', '^hechuang,.*', '^hideep,.*', '^himax,.*', '^hirschmann,.*', '^hisi,.*', '^hisilicon,.*', '^hit,.*', '^hitex,.*', '^holt,.*', '^holtek,.*', '^honestar,.*', '^honeywell,.*', '^hoperf,.*', '^hoperun,.*', '^hp,.*', '^hpe,.*', '^hsg,.*', '^htc,.*', '^huawei,.*', '^hugsun,.*', '^hwacom,.*', '^hxt,.*', '^hycon,.*', '^hydis,.*', '^hynitron,.*', '^hynix,.*', '^hyundai,.*', '^i2se,.*', '^ibm,.*', '^icplus,.*', '^idt,.*', '^iei,.*', '^ifi,.*', '^ilitek,.*', '^imagis,.*', '^img,.*', '^imi,.*', '^inanbo,.*', '^incircuit,.*', '^indiedroid,.*', '^inet-tek,.*', '^infineon,.*', '^inforce,.*', '^ingenic,.*', '^ingrasys,.*', '^injoinic,.*', '^innocomm,.*', '^innolux,.*', '^inside-secure,.*', '^insignal,.*', '^inspur,.*', '^intel,.*', '^intercontrol,.*', '^invensense,.*', '^inventec,.*', '^inversepath,.*', '^iom,.*', '^irondevice,.*', '^isee,.*', '^isil,.*', '^issi,.*', '^ite,.*', '^itead,.*', '^itian,.*', '^ivo,.*', '^iwave,.*', '^jadard,.*', '^jasonic,.*', '^jdi,.*', '^jedec,.*', '^jenson,.*', '^jesurun,.*', '^jethome,.*', '^jianda,.*', '^jide,.*', '^joz,.*', '^kam,.*', '^karo,.*', '^keithkoep,.*', '^keymile,.*', '^khadas,.*', '^kiebackpeter,.*', '^kinetic,.*', '^kingdisplay,.*', '^kingnovel,.*', '^kionix,.*', '^kobo,.*', '^kobol,.*', '^koe,.*', '^kontron,.*', '^kosagi,.*', '^kvg,.*', '^kyo,.*', '^lacie,.*', '^laird,.*', '^lamobo,.*', '^lantiq,.*', '^lattice,.*', '^lckfb,.*', '^lctech,.*', '^leadtek,.*', '^leez,.*', '^lego,.*', '^lemaker,.*', '^lenovo,.*', '^lg,.*', '^lgphilips,.*', '^libretech,.*', '^licheepi,.*', '^linaro,.*', '^lincolntech,.*', '^lineartechnology,.*', '^linksprite,.*', '^linksys,.*', '^linutronix,.*', '^linux,.*', '^linx,.*', '^liontron,.*', '^liteon,.*', '^litex,.*', '^lltc,.*', '^logicpd,.*', '^logictechno,.*', '^longcheer,.*', '^lontium,.*', '^loongmasses,.*', '^loongson,.*', '^lsi,.*', '^lunzn,.*', '^luxul,.*', '^lwn,.*', '^lxa,.*', '^m5stack,.*', '^macnica,.*', '^mantix,.*', '^mapleboard,.*', '^marantec,.*', '^marvell,.*', '^maxbotix,.*', '^maxim,.*', '^maxlinear,.*', '^mbvl,.*', '^mcube,.*', '^meas,.*', '^mecer,.*', '^mediatek,.*', '^megachips,.*', '^mele,.*', '^melexis,.*', '^melfas,.*', '^mellanox,.*', '^memsensing,.*', '^memsic,.*', '^menlo,.*', '^mentor,.*', '^meraki,.*', '^merrii,.*', '^methode,.*', '^micrel,.*', '^microchip,.*', '^microcrystal,.*', '^micron,.*', '^microsoft,.*', '^microsys,.*', '^microtips,.*', '^mikroe,.*', '^mikrotik,.*', '^milkv,.*', '^miniand,.*', '^minix,.*', '^mips,.*', '^miramems,.*', '^mitsubishi,.*', '^mitsumi,.*', '^mixel,.*', '^miyoo,.*', '^mntre,.*', '^mobileye,.*', '^modtronix,.*', '^moortec,.*', '^mosaixtech,.*', '^motorcomm,.*', '^motorola,.*', '^moxa,.*', '^mpl,.*', '^mps,.*', '^mqmaker,.*', '^mrvl,.*', '^mscc,.*', '^msi,.*', '^mstar,.*', '^mti,.*', '^multi-inno,.*', '^mundoreader,.*', '^murata,.*', '^mxic,.*', '^mxicy,.*', '^myir,.*', '^national,.*', '^neardi,.*', '^nec,.*', '^neofidelity,.*', '^neonode,.*', '^netcube,.*', '^netgear,.*', '^netlogic,.*', '^netron-dy,.*', '^netronix,.*', '^netxeon,.*', '^neweast,.*', '^newhaven,.*', '^newvision,.*', '^nexbox,.*', '^nextthing,.*', '^ni,.*', '^nintendo,.*', '^nlt,.*', '^nokia,.*', '^nordic,.*', '^nothing,.*', '^novatek,.*', '^novtech,.*', '^numonyx,.*', '^nutsboard,.*', '^nuvoton,.*', '^nvd,.*', '^nvidia,.*', '^nxp,.*', '^oceanic,.*', '^ocs,.*', '^oct,.*', '^okaya,.*', '^oki,.*', '^olimex,.*', '^olpc,.*', '^oneplus,.*', '^onie,.*', '^onion,.*', '^onnn,.*', '^ontat,.*', '^opalkelly,.*', '^openailab,.*', '^opencores,.*', '^openembed,.*', '^openpandora,.*', '^openrisc,.*', '^openwrt,.*', '^option,.*', '^oranth,.*', '^orisetech,.*', '^ortustech,.*', '^osddisplays,.*', '^osmc,.*', '^ouya,.*', '^overkiz,.*', '^ovti,.*', '^oxsemi,.*', '^ozzmaker,.*', '^panasonic,.*', '^parade,.*', '^parallax,.*', '^pda,.*', '^pegatron,.*', '^pericom,.*', '^pervasive,.*', '^phicomm,.*', '^phytec,.*', '^picochip,.*', '^pinctrl-[0-9]+$', '^pine64,.*', '^pineriver,.*', '^pixcir,.*', '^plantower,.*', '^plathome,.*', '^plda,.*', '^plx,.*', '^ply,.*', '^pni,.*', '^pocketbook,.*', '^polaroid,.*', '^polyhex,.*', '^portwell,.*', '^poslab,.*', '^pov,.*', '^powertip,.*', '^powervr,.*', '^powkiddy,.*', '^pri,.*', '^primeview,.*', '^primux,.*', '^probox2,.*', '^prt,.*', '^pulsedlight,.*', '^purism,.*', '^puya,.*', '^qca,.*', '^qcom,.*', '^qemu,.*', '^qi,.*', '^qiaodian,.*', '^qihua,.*', '^qishenglong,.*', '^qnap,.*', '^quanta,.*', '^radxa,.*', '^raidsonic,.*', '^ralink,.*', '^ramtron,.*', '^raspberrypi,.*', '^raydium,.*', '^rda,.*', '^realtek,.*', '^relfor,.*', '^remarkable,.*', '^renesas,.*', '^rervision,.*', '^retronix,.*', '^revotics,.*', '^rex,.*', '^richtek,.*', '^ricoh,.*', '^rikomagic,.*', '^riot,.*', '^riscv,.*', '^rockchip,.*', '^rocktech,.*', '^rohm,.*', '^ronbo,.*', '^roofull,.*', '^roseapplepi,.*', '^rve,.*', '^saef,.*', '^samsung,.*', '^samtec,.*', '^sancloud,.*', '^sandisk,.*', '^satoz,.*', '^sbs,.*', '^schindler,.*', '^schneider,.*', '^sciosense,.*', '^seagate,.*', '^seeed,.*', '^seirobotics,.*', '^semtech,.*', '^senseair,.*', '^sensirion,.*', '^sensortek,.*', '^sercomm,.*', '^sff,.*', '^sgd,.*', '^sgmicro,.*', '^sgx,.*', '^sharp,.*', '^shift,.*', '^shimafuji,.*', '^shineworld,.*', '^shiratech,.*', '^si-en,.*', '^si-linux,.*', '^siemens,.*', '^sifive,.*', '^siflower,.*', '^sigma,.*', '^sii,.*', '^sil,.*', '^silabs,.*', '^silan,.*', '^silead,.*', '^silergy,.*', '^silex-insight,.*', '^siliconfile,.*', '^siliconmitus,.*', '^silvaco,.*', '^simtek,.*', '^sinlinx,.*', '^sinovoip,.*', '^sinowealth,.*', '^sipeed,.*', '^sirf,.*', '^sis,.*', '^sitronix,.*', '^skov,.*', '^skyworks,.*', '^smartlabs,.*', '^smartrg,.*', '^smi,.*', '^smsc,.*', '^snps,.*', '^sochip,.*', '^socionext,.*', '^solidrun,.*', '^solomon,.*', '^sony,.*', '^sophgo,.*', '^sourceparts,.*', '^spacemit,.*', '^spansion,.*', '^sparkfun,.*', '^spinalhdl,.*', '^sprd,.*', '^square,.*', '^ssi,.*', '^sst,.*', '^sstar,.*', '^st,.*', '^st-ericsson,.*', '^starfive,.*', '^starry,.*', '^startek,.*', '^starterkit,.*', '^ste,.*', '^stericsson,.*', '^storlink,.*', '^storm,.*', '^storopack,.*', '^summit,.*', '^sunchip,.*', '^sundance,.*', '^sunplus,.*', '^supermicro,.*', '^swir,.*', '^syna,.*', '^synology,.*', '^synopsys,.*', '^tbs,.*', '^tbs-biometrics,.*', '^tcg,.*', '^tcl,.*', '^tcs,.*', '^tcu,.*', '^tdo,.*', '^team-source-display,.*', '^technexion,.*', '^technologic,.*', '^techstar,.*', '^techwell,.*', '^teejet,.*', '^teltonika,.*', '^tempo,.*', '^terasic,.*', '^tesla,.*', '^test,.*', '^tfc,.*', '^thead,.*', '^thine,.*', '^thingyjp,.*', '^thundercomm,.*', '^thwc,.*', '^ti,.*', '^tianma,.*', '^tlm,.*', '^tmt,.*', '^topeet,.*', '^topic,.*', '^topland,.*', '^toppoly,.*', '^topwise,.*', '^toradex,.*', '^toshiba,.*', '^toumaz,.*', '^tpk,.*', '^tplink,.*', '^tpo,.*', '^tq,.*', '^transpeed,.*', '^traverse,.*', '^tronfy,.*', '^tronsmart,.*', '^truly,.*', '^tsd,.*', '^turing,.*', '^tyan,.*', '^tyhx,.*', '^u-blox,.*', '^u-boot,.*', '^ubnt,.*', '^ucrobotics,.*', '^udoo,.*', '^ufispace,.*', '^ugoos,.*', '^ultratronik,.*', '^uni-t,.*', '^uniwest,.*', '^upisemi,.*', '^urt,.*', '^usi,.*', '^usr,.*', '^utoo,.*', '^v3,.*', '^vaisala,.*', '^vamrs,.*', '^variscite,.*', '^vdl,.*', '^vertexcom,.*', '^via,.*', '^vialab,.*', '^vicor,.*', '^videostrong,.*', '^virtio,.*', '^virtual,.*', '^vishay,.*', '^visionox,.*', '^vitesse,.*', '^vivante,.*', '^vivax,.*', '^vocore,.*', '^voipac,.*', '^voltafield,.*', '^vot,.*', '^vscom,.*', '^vxt,.*', '^wacom,.*', '^wanchanglong,.*', '^wand,.*', '^waveshare,.*', '^wd,.*', '^we,.*', '^welltech,.*', '^wetek,.*', '^wexler,.*', '^whwave,.*', '^wi2wi,.*', '^widora,.*', '^wiligear,.*', '^willsemi,.*', '^winbond,.*', '^wingtech,.*', '^winlink,.*', '^winsen,.*', '^winstar,.*', '^wirelesstag,.*', '^wits,.*', '^wlf,.*', '^wm,.*', '^wobo,.*', '^wolfvision,.*', '^x-powers,.*', '^xen,.*', '^xes,.*', '^xiaomi,.*', '^xillybus,.*', '^xingbangda,.*', '^xinpeng,.*', '^xiphera,.*', '^xlnx,.*', '^xnano,.*', '^xunlong,.*', '^xylon,.*', '^yadro,.*', '^yamaha,.*', '^yes-optoelectronics,.*', '^yic,.*', '^yiming,.*', '^ylm,.*', '^yna,.*', '^yones-toptech,.*', '^ys,.*', '^ysoft,.*', '^yuridenki,.*', '^yuzukihd,.*', '^zarlink,.*', '^zealz,.*', '^zeitec,.*', '^zidoo,.*', '^zii,.*', '^zinitix,.*', '^zkmagic,.*', '^zte,.*', '^zyxel,.*'
+	from schema $id: http://devicetree.org/schemas/vendor-prefixes.yaml#
+
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20250515085723.1706-1-hehuan1@eswincomputing.com
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
