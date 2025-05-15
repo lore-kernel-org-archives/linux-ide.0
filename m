@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 625D42253EB;
-	Thu, 15 May 2025 12:35:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D64312222CB;
+	Thu, 15 May 2025 12:36:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747312557; cv=none; b=CP3Q5SvNgnbf6E5FEYb7zjKweQRz3geX1CxQbdw3bu30XCX36UGDvj2lWQ895Ld8cn+z0ZBYZ6aNvK8y3wFhItqg9AiHHxpvsp1PU/75hqCvHQGL21mbPWP8f0+JwAVmzznicecPJw0p36z/qUEvQM2uVenWSzmyv/rHwEpHDZ8=
+	t=1747312582; cv=none; b=pUR+AlO/Cg+VnC7RGLUpBRHnROmkkO7d7rQ9gAfiS7ka81N5fyuzG2RbzF1mxYYudY30n0GZZMrhoiputHcbpD3UXkL85+B5gjcqVr2GFjmQlDTRpcZ452g4q6uDW/1zT+DQBMR1PA5Q1Nne6XBxRk4TJTqWi95twKuF+ajVlw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747312557; c=relaxed/simple;
-	bh=2spys5TtRm0Ewp6y0mpAM1/gMoBUOmnHaV6fLn8rsRU=;
+	s=arc-20240116; t=1747312582; c=relaxed/simple;
+	bh=GWuWXPf+Al/gDQ1STMocGcMVo0JocNTWRjrrAr0INos=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fGj1M7mSXKcViNWo3/I1BR39EtEeS6ctQvtllFUiJJbgb98gv5KcAvh4QVrrfsVHHh0EY1wl6gLOQ9xCLYDk0sr0BzjKbdGOMIUlL2K7d9jqN5EdVKEVwjEYHuQJU4fRxZF2l1HRabYeuP8JZtS2y1ppOFxwcjaA4em8hcUYVjs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GrENt0xG; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Qx3mpvbXWZMxF5bIPefRH4eww3LmCSPQOd0Gy7/NV7rwvaloDCuRwAbUjA8yPWwiMxpaVFz0IjDh4LWaCoDcpE5og2F52V8+O5TEsXM+6ozgE8SfB6V6Rql0YXue1UsZGa5fN6ssD0qa8dygJdiRpcD9mJyryvbX73M+6ecEew8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ri8X1V/R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GrENt0xG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC341C4CEF0;
-	Thu, 15 May 2025 12:35:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ri8X1V/R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 835D6C4CEEF;
+	Thu, 15 May 2025 12:36:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747312556;
-	bh=2spys5TtRm0Ewp6y0mpAM1/gMoBUOmnHaV6fLn8rsRU=;
+	s=k20201202; t=1747312582;
+	bh=GWuWXPf+Al/gDQ1STMocGcMVo0JocNTWRjrrAr0INos=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=GrENt0xG8woAl5yoGsX3awmEUvCnPgXy+IDiTQygNNdyPfVxmgObTuWIlnSBgUrF+
-	 Chf8VMAR59D8WeyZ+ypvMafzDOI71286xZFTjrDAh/ejkhz/Z11ayF3yjQV1sC/qqz
-	 8ge3vPGh6izvhntJxTqX/kPP1RndXod6zbnf7tHErq4cHAZJSc4n9fkJ+bB4gSC/Ha
-	 BCZ16CSlTTw5UkoBR1g6u8PmavHHBFYjhX8a3EnyTuaCWeBy/jjiE9wJ0on4LZJuGA
-	 6MTOKkT6Rbv962yJIpG0qseoBQK6a02bMax9IFcPRc+i31ythq2hhvHihZBwOWIhzT
-	 v/oYbcRCCZnGQ==
-Message-ID: <21b60af5-a9f9-49b0-81b1-94f8776636da@kernel.org>
-Date: Thu, 15 May 2025 14:35:51 +0200
+	b=Ri8X1V/RAdNFG4RQr0G9E9/8sZSuKU9+1lsAQ6So3eV41+iKfVhM1KOqJbnednF//
+	 QNtzlq9JEhMtCzPX5wFWsboKTaExaGauwdrSwn7pq8d9Zf4e04mGGvimOhq06ilo+I
+	 VIQqcK50nMp84eYDtF1TbJSRNlzt7Fp0o7QnCroVONqaZuHt8QqPgAWGLF0CV47X/+
+	 sGB+OU+jvV6LNsSmZdBhp70pxwQKI8/LqYXt0yOb+ycJWCFOJNBHYooYblDTMu6zA4
+	 2APICHdsyF/swqhGENdFENXhULH7KA3ZxsUoX7aL839Rv3WIBuvWzXcK2Y5zajYkkN
+	 8L31CODkjLfBQ==
+Message-ID: <919e357c-729e-45a9-82ab-6c2fdaa31288@kernel.org>
+Date: Thu, 15 May 2025 14:36:16 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,32 +35,26 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] dt-bindings: ata: Convert st,ahci to DT schema
+Subject: Re: [PATCH] dt-bindings: ata: Convert apm,xgene-ahci to DT schema
 To: "Rob Herring (Arm)" <robh@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Patrice Chotard <patrice.chotard@foss.st.com>
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
 Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
  linux-kernel@vger.kernel.org
-References: <20250512215724.4178359-1-robh@kernel.org>
-Content-Language: en-US
+References: <20250512215731.4178567-1-robh@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20250512215724.4178359-1-robh@kernel.org>
+In-Reply-To: <20250512215731.4178567-1-robh@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 5/12/25 23:57, Rob Herring (Arm) wrote:
-> Convert the ST AHCI SATA Controller to DT schema format.
-> 
-> The phy-names changes from "ahci_phy" to "sata-phy" with the inclusion
-> of ahci-common.yaml. That's an ABI change, but the Linux driver at least
-> ignores the names. The binding uses "ports-implemented" property, so
-> including ahci-common.yaml is required.
+> Convert the APM X-Gene AHCI SATA Controller to DT schema format. It's a
+> straight-forward conversion.
 > 
 > Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
 
 Applied to for-6.16. Thanks !
-
 
 -- 
 Damien Le Moal
