@@ -1,185 +1,157 @@
-Received: from devloop.tasossah.com (devloop.tasossah.com [145.239.141.69])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B070126AA9E
-	for <linux-ide@vger.kernel.org>; Mon, 19 May 2025 08:59:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.239.141.69
+Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 32C8826B96B;
+	Mon, 19 May 2025 09:18:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747645198; cv=none; b=Uz/erYtPmsl9fdCf9na9UTfAyyXLPHWPjSMXfTveHwbPl/gTS0ZACSYUKle889IwfzET5Dr6fjEgcc8HAGDkDiCciyEz8jqLReymXP4tCvzV56MB9L3A+6nbpnC8gYiSJg7DRlhoJu1JsHfsqi7KowHPS0UNMsvdpBdGXYHFvIc=
+	t=1747646329; cv=none; b=ZS2eNHcjNaFfWOm9poMSOy+31iB+u5N76LQB5Cy/T1DBZnQOgKjR9sWJuKyyuaAygisruyIfhxE1ld9oFJzDg71WlCJ2rRfQUTnJRj/Xh30T2QCX6e4mU/ZwtlyWGY9jBydM9fSWsUDLTfX+HrS2arVuNlhh3oGNASYJu+kmeaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747645198; c=relaxed/simple;
-	bh=zYZm12BSC+rchbIdU8Fdoaqfi/XaRvING6WyyHmdV4Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cxVjQe6Kg2Q1UW2N3V+55jUNlSDYQar6bxlrdMa+675YnuQp2g9ijRGo753ISDaRd1wxXT7V+Hmkvhx+f6fLTtf8AMYoDs2TaJ3Owaf6WqXGhne5wuyEqpcAAHZ/SuTlTid9G0wJNcYnhe37iKkg1FBTWJUjs/xtcBEmd2BUdvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com; spf=pass smtp.mailfrom=tasossah.com; dkim=pass (4096-bit key) header.d=tasossah.com header.i=@tasossah.com header.b=lpQG0HzR; arc=none smtp.client-ip=145.239.141.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tasossah.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=tasossah.com header.i=@tasossah.com header.b="lpQG0HzR"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=tasossah.com; s=devloop; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=GKAGVAmuM+4D27LZt2EKj1PMWe1tH67tMZ0Eg9rcQPo=; b=lpQG0HzRZ8V0jXCEPlaswudUAO
-	WVXA4ORlIoVcV8N3EL6jVRXmD849ZlgqEOtW1yOwogaHXgoCZi05PXLU+vY0ZFYdK9xfssVahyCmF
-	/IO3r5+kxXF39RJgBWqDkCeibMJ9CoZfu+PPmHvxVHL2xN2cz3d7n9ypxehkbFy8qT91nxkzK5K2Y
-	I4WG8nYrXndX4zsic3qw+H9YNp6wrRzHA94gR0nZQoAeS9d1SijRYRUQHFfUYit+KdTaUhT3NRVNl
-	Hn3viWz2qS1PZ5WSCU9H2YTdR0S2ERjS/cvgFRL1YlacVCogL/UJKqzGdNSEn9RsRucZhgwj0BNFf
-	cB+G+Dg+B1nOJQyNsqzpgnHlxPnOFPKJ1aUVZ1TRdXUMyAsxdceROz5ocnRFf2+5bd/QnFIi3Z52o
-	cEW4Tfz/Cp41GxcOSZiEzlk0g1L+r8hnNYO7uxEqa9JdAJ1XL9NGqm/95lUvKwwPl8KsFJ2SDOq37
-	AKtNIKByekSr/KsEEM1azh0zClr9EcoNg2XPb66DMBXzzjUoWSUTrVNGAno74cJaj6SmLOOGokI6c
-	nHjm8kH669mQPD5MazNqrDAbxYSUj4iCSWOVlcIu6DdsK1wki4ad6m5BagiFrHnYTihdEvxQEIUr4
-	zWvx81dDdqZmJkejbHCJN4ATBNbXL1HfUQ/CEKT3U=;
-Received: from [2a02:587:6a09:4a00:71b3:b927:f95e:c3f5] (helo=localhost.localdomain)
-	by devloop.tasossah.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.97)
-	(envelope-from <tasos@tasossah.com>)
-	id 1uGwLi-0000000CGTx-3VSJ;
-	Mon, 19 May 2025 11:59:54 +0300
-From: Tasos Sahanidis <tasos@tasossah.com>
-To: linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Tasos Sahanidis <tasos@tasossah.com>
-Subject: [PATCH v2] ata: libata-acpi: Do not assume 40 wire cable if no devices are enabled
-Date: Mon, 19 May 2025 11:56:55 +0300
-Message-ID: <20250519085945.1399466-1-tasos@tasossah.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1747646329; c=relaxed/simple;
+	bh=KlggbR8P/n36oRZlJZsBth/VG91g9Dz5bdB/P0jqAy0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=I5tSieYR1ckCwfyCrZmtOIRaY0ZyFvyida6pHMN9J2AQWcxsQ8274ay8lCf5IJebYIohvPhlSuYpHjOe3RYHNnx6W8rrj/Ujtgw2u4kPmpmcRpuJ0t8aydzIger6YmVWpIGjRC/SU9HT8Sx1pQBzzrq2su+FYP6cyP7+Pmk7KAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
+X-AuditID: a67dfc5b-669ff7000002311f-75-682af76d6e83
+From: Byungchul Park <byungchul@sk.com>
+To: linux-kernel@vger.kernel.org
+Cc: kernel_team@skhynix.com,
+	torvalds@linux-foundation.org,
+	damien.lemoal@opensource.wdc.com,
+	linux-ide@vger.kernel.org,
+	adilger.kernel@dilger.ca,
+	linux-ext4@vger.kernel.org,
+	mingo@redhat.com,
+	peterz@infradead.org,
+	will@kernel.org,
+	tglx@linutronix.de,
+	rostedt@goodmis.org,
+	joel@joelfernandes.org,
+	sashal@kernel.org,
+	daniel.vetter@ffwll.ch,
+	duyuyang@gmail.com,
+	johannes.berg@intel.com,
+	tj@kernel.org,
+	tytso@mit.edu,
+	willy@infradead.org,
+	david@fromorbit.com,
+	amir73il@gmail.com,
+	gregkh@linuxfoundation.org,
+	kernel-team@lge.com,
+	linux-mm@kvack.org,
+	akpm@linux-foundation.org,
+	mhocko@kernel.org,
+	minchan@kernel.org,
+	hannes@cmpxchg.org,
+	vdavydov.dev@gmail.com,
+	sj@kernel.org,
+	jglisse@redhat.com,
+	dennis@kernel.org,
+	cl@linux.com,
+	penberg@kernel.org,
+	rientjes@google.com,
+	vbabka@suse.cz,
+	ngupta@vflare.org,
+	linux-block@vger.kernel.org,
+	josef@toxicpanda.com,
+	linux-fsdevel@vger.kernel.org,
+	jack@suse.cz,
+	jlayton@kernel.org,
+	dan.j.williams@intel.com,
+	hch@infradead.org,
+	djwong@kernel.org,
+	dri-devel@lists.freedesktop.org,
+	rodrigosiqueiramelo@gmail.com,
+	melissa.srw@gmail.com,
+	hamohammed.sa@gmail.com,
+	harry.yoo@oracle.com,
+	chris.p.wilson@intel.com,
+	gwan-gyeong.mun@intel.com,
+	max.byungchul.park@gmail.com,
+	boqun.feng@gmail.com,
+	longman@redhat.com,
+	yskelg@gmail.com,
+	yunseong.kim@ericsson.com,
+	yeoreum.yun@arm.com,
+	netdev@vger.kernel.org,
+	matthew.brost@intel.com,
+	her0gyugyu@gmail.com
+Subject: [PATCH v16 10/42] dept: distinguish each work from another
+Date: Mon, 19 May 2025 18:17:54 +0900
+Message-Id: <20250519091826.19752-11-byungchul@sk.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20250519091826.19752-1-byungchul@sk.com>
+References: <20250519091826.19752-1-byungchul@sk.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxTHfZ57e++lo8tNp3h9SZxNnIqZjkX0ZHNTtw88WWKyzG9oInVc
+	bV1pTYsFNIsgYBxdq+KA+EJpkXRNW7W2fEClBEvoBKai1oqkghBlIwJdwJYXca7F7MvJL+ef
+	/+98ORwlD0mWc2ptoajXKjUKRkpLx9Ptn2qnM1WfNcRWQ/z1KRouXfMw0HvVjcDTXIZhtDMH
+	niTGELy5e5+CuppeBPahZxQ0hwYQBJwnGHj04kMIx2MMdNWYGCi/fI2BB6/mMURrqzG4fbtg
+	0DFCQ8+ZRgx1owxcrCvHyfE3hlmHiwVH6RoYdl5gYX4oC7oGIhII9G+A89YoA62BLhpCLcMY
+	Ht28xMCA550EekJ3aEhYVkDvWbMErkw0MvAq4aDAEY+x8LDdhiFkywBvRVJ4cupfCfxhbsdw
+	suk6hvDTWwjaTj3H4PNEGOiIj2Hw+2oomPu9E8GwZZyFyl9nWbhYZkFgqqyloSKaDW9mkpfr
+	X2dBWYOXhitvI2jHV8Rj9SDSMRajSIW/iMzFHzMkkLDRpLtRIDcuPGNJRVs/S2y+I8TvzCSX
+	W0cxsU/GJcTn+oUhvslqllSNhzGZuHeP/X5lrnRbvqhRG0X9pq/zpCpvpfHwBFvcFPwHl6JW
+	pgpxnMBvFqJDmiqUtoDjjZ1sihl+rdDXN0uleDH/seA3j0iqkJSj+MgHwpP6pygVfMR/K9jt
+	A0yKaX6NMDM1j1Ms47cIdlMUv5euEtze9gVRWnLfb+pY6Mr5bCHsttIpqcCfSxNqO6vZ94Vl
+	wm1nH30GyWxokQvJ1VpjgVKt2bxRVaJVF2/8UVfgQ8nvcvw8v6cFTfbuDiKeQ4p0mTewXiWX
+	KI2GkoIgEjhKsVjm8q9TyWX5ypKjol63T39EIxqCaAVHK5bKPk8U5cv5g8pC8SdRPCzq/08x
+	l7a8FOVucvE7bwxayxfpCu8/jGXkvQyfzevObcvuOt+8/e3Ui4jzXeGh1ekj25eajzaTrXMt
+	3obMLwq2dRiXtX3jPm7ZX/9l6dwJVe4nQ6jowW+GCYvP7yhe+ed3uuAGy4G/ehR7Z1YN/mAx
+	Wc/tMmdkT7+Ude/OmdYda8o6ffqxbMna4zdzFLRBpczKpPQG5X+H3qqAWQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0iTYRTHe5736mrxtoa9LLQYdDOthlqHLiuQ8qXoQgRBfchhL22oKzZb
+	GQSaTkxT0lhiNdumLNOVayvo4kIULYvK0sxkWVpEkjdqW5qaTaMvhx/nz/93vhyWkN2kFKxO
+	nyka9Jp0JS0hJXs25cZl/IrRrvucr4JgoICEa/UuGtpv1yFw3c3BMNCSDO9CgwgmXrwioNzS
+	jsDe94GAu629CHw152jo+DIfOoMjNLRZimjIraqn4fX3SQz+y2UY6jy74aPzKwnPLzowlA/Q
+	cLU8F4fHNwzjzloGnNnLoL/mCgOTfSpo6+2ioNnaRoGvZzVUVPppaPC1kdB6vx9Dx8NrNPS6
+	pil43vqUhFDJYmgvLabg1rCDhu8hJwHO4AgDbxptGFptkeDOC1vzf/6h4ElxI4b86jsYOt8/
+	QvC44BMGj6uLhubgIAavx0LA7xstCPpLhhgwXxhn4GpOCYIi82US8vyJMDEWvmwNqCDnupuE
+	W1NdaJtacFW6kNA8OEIIed5Twu/gW1rwhWyk8MzBCw+ufGCEvMc9jGDznBS8NTFCVcMAFuw/
+	gpTgqT1PC54fZYxQONSJheGXL5l9UYckm4+K6TqTaFirTpFo3WbTiWHmdHXTKM5GDXQhimB5
+	LoEfcrQwM0xzK/ju7nFihuXcUt5b/JUqRBKW4Lrm8u+s79FMsJBL4u323tkyyS3jx35O4hmW
+	cut5e5Ef/5Mu4evcjbOiiPC+p6h5tivjEvnOukryIpLY0JxaJNfpTRkaXXriGmOaNkuvO70m
+	9XiGB4UfyHl2svQ+CnQkNyGORcp5UrdvlVZGaUzGrIwmxLOEUi6t9a7UyqRHNVlnRMPxI4aT
+	6aKxCS1mSeUi6c6DYoqMO6bJFNNE8YRo+J9iNkKRjTZGsQmSWAthUavjI5fGS6Md8sPdAVVa
+	0l65PzW+QV1dsiMy2Xlpw3Tm9sbEJHNa6oFzCkdyQkHsvfqKwIKnow+iuTLblrVR5oqxqY4p
+	hfVs5cR03KhJW7r1T3Zo/mp7cPe8FGvs+M1d+rnL90e3TO3IH+3ri407syH3m7xwpyJaSRq1
+	GlUMYTBq/gJ+wP42PAMAAA==
+X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-On at least an ASRock 990FX Extreme 4 with a VIA VT6330, the devices
-have not yet been enabled by the first time ata_acpi_cbl_80wire() is
-called. This means that the ata_for_each_dev loop is never entered,
-and a 40 wire cable is assumed.
+Workqueue already provides concurrency control.  By that, any wait in a
+work doesn't prevents events in other works with the control enabled.
+Thus, each work would better be considered a different context.
 
-The VIA controller on this board does not report the cable in the PCI
-config space, thus having to fall back to ACPI even though no SATA
-bridge is present.
+So let dept assign a different context id to each work.
 
-The _GTM values are correctly reported by the firmware through ACPI,
-which has already set up faster transfer modes, but due to the above
-the controller is forced down to a maximum of UDMA/33.
-
-Resolve this by modifying ata_acpi_cbl_80wire() to directly return the
-cable type. First, an unknown cable is assumed which preserves the mode
-set by the firmware, and then on subsequent calls when the devices have
-been enabled, an 80 wire cable is correctly detected.
-
-Since the function now directly returns the cable type, it has been
-renamed to ata_acpi_cbl_pata_type().
-
-Signed-off-by: Tasos Sahanidis <tasos@tasossah.com>
+Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- v1 -> v2: Address review feedback
-     * ata_acpi_cbl_80wire -> ata_acpi_cbl_pata_type
-     * ata_acpi_init_gtm() called inside ata_acpi_cbl_pata_type
+ kernel/workqueue.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
- drivers/ata/libata-acpi.c | 24 ++++++++++++++++--------
- drivers/ata/pata_via.c    |  6 ++----
- include/linux/libata.h    |  7 +++----
- 3 files changed, 21 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index b7f0bf795521..f2140fc06ba0 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -514,15 +514,19 @@ unsigned int ata_acpi_gtm_xfermask(struct ata_device *dev,
- EXPORT_SYMBOL_GPL(ata_acpi_gtm_xfermask);
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index cf6203282737..5a6ab354c416 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -55,6 +55,7 @@
+ #include <linux/kvm_para.h>
+ #include <linux/delay.h>
+ #include <linux/irq_work.h>
++#include <linux/dept.h>
  
- /**
-- * ata_acpi_cbl_80wire		-	Check for 80 wire cable
-+ * ata_acpi_cbl_pata_type - Return PATA cable type
-  * @ap: Port to check
-- * @gtm: GTM data to use
-  *
-- * Return 1 if the @gtm indicates the BIOS selected an 80wire mode.
-+ * Return ATA_CBL_PATA* according to the transfer mode selected by BIOS
-  */
--int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm)
-+int ata_acpi_cbl_pata_type(struct ata_port *ap)
- {
- 	struct ata_device *dev;
-+	int ret = ATA_CBL_PATA_UNK;
-+	const struct ata_acpi_gtm *gtm = ata_acpi_init_gtm(ap);
-+
-+	if (!gtm)
-+		return ATA_CBL_PATA40;
+ #include "workqueue_internal.h"
  
- 	ata_for_each_dev(dev, &ap->link, ENABLED) {
- 		unsigned int xfer_mask, udma_mask;
-@@ -530,13 +534,17 @@ int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm)
- 		xfer_mask = ata_acpi_gtm_xfermask(dev, gtm);
- 		ata_unpack_xfermask(xfer_mask, NULL, NULL, &udma_mask);
+@@ -3155,6 +3156,8 @@ __acquires(&pool->lock)
  
--		if (udma_mask & ~ATA_UDMA_MASK_40C)
--			return 1;
-+		ret = ATA_CBL_PATA40;
-+
-+		if (udma_mask & ~ATA_UDMA_MASK_40C) {
-+			ret = ATA_CBL_PATA80;
-+			break;
-+		}
- 	}
- 
--	return 0;
-+	return ret;
- }
--EXPORT_SYMBOL_GPL(ata_acpi_cbl_80wire);
-+EXPORT_SYMBOL_GPL(ata_acpi_cbl_pata_type);
- 
- static void ata_acpi_gtf_to_tf(struct ata_device *dev,
- 			       const struct ata_acpi_gtf *gtf,
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index 696b99720dcb..c8acf6511071 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -201,11 +201,9 @@ static int via_cable_detect(struct ata_port *ap) {
- 	   two drives */
- 	if (ata66 & (0x10100000 >> (16 * ap->port_no)))
- 		return ATA_CBL_PATA80;
-+
- 	/* Check with ACPI so we can spot BIOS reported SATA bridges */
--	if (ata_acpi_init_gtm(ap) &&
--	    ata_acpi_cbl_80wire(ap, ata_acpi_init_gtm(ap)))
--		return ATA_CBL_PATA80;
--	return ATA_CBL_PATA40;
-+	return ata_acpi_cbl_pata_type(ap);
- }
- 
- static int via_pre_reset(struct ata_link *link, unsigned long deadline)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index e5695998acb0..ec3b0c9c2a8c 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1363,7 +1363,7 @@ int ata_acpi_stm(struct ata_port *ap, const struct ata_acpi_gtm *stm);
- int ata_acpi_gtm(struct ata_port *ap, struct ata_acpi_gtm *stm);
- unsigned int ata_acpi_gtm_xfermask(struct ata_device *dev,
- 				   const struct ata_acpi_gtm *gtm);
--int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm);
-+int ata_acpi_cbl_pata_type(struct ata_port *ap);
- #else
- static inline const struct ata_acpi_gtm *ata_acpi_init_gtm(struct ata_port *ap)
- {
-@@ -1388,10 +1388,9 @@ static inline unsigned int ata_acpi_gtm_xfermask(struct ata_device *dev,
- 	return 0;
- }
- 
--static inline int ata_acpi_cbl_80wire(struct ata_port *ap,
--				      const struct ata_acpi_gtm *gtm)
-+static inline int ata_acpi_cbl_pata_type(struct ata_port *ap)
- {
--	return 0;
-+	return ATA_CBL_PATA40;
- }
+ 	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
  #endif
- 
++	dept_update_cxt();
++
+ 	/* ensure we're on the correct CPU */
+ 	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
+ 		     raw_smp_processor_id() != pool->cpu);
 -- 
-2.43.0
+2.17.1
 
