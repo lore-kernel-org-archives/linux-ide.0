@@ -1,67 +1,67 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55F0F137932;
-	Mon, 19 May 2025 21:50:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5748214F9FB;
+	Mon, 19 May 2025 22:13:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747691404; cv=none; b=L6pkJrwEMaW5S3TZ17M8RmOXCM9jZqMXhfA9+qhl/mH9bfWrsOcWiaE6JDBEXkiUBfDKjYteShI4QPCUa5AVnaUzn6ua7xGKEbyOMTrl+TKroeFvbZjwM9r+nzctPD+Ho1Jleh74jojCHbZy4PuLgsazyojBGwyBcp7fA0UJy3U=
+	t=1747692837; cv=none; b=C3IGFc8bBgFLmvrauFUk8j8daLoBFlRJMAPaL9BSAS05XXKuADJ3yUMvX5cIAsmkgAA/+GXDnF0GmvBldD3Is2LnYqHqmaeSOdO5rBiD8645a90jSFlvQ9QIk1ZzemKyEwdZGHkBg5djzB5+vgwkW1+ptmqp6yKkYw+i2D1aVRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747691404; c=relaxed/simple;
-	bh=nk1HjBox3Kjt9zIijqUm7/KqD/9CnK0ovHp+isqpfKg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ozk+8jQx6MgbTjNTCUI3U9AZ7wosFqR1ro4pXkteac+VxOS8OJeH6DxX2u7h7tX1TzttOoNsmVoxCmrc7EYl18Sfugvc/wqvNSSHdCJ2vWfPrTSImukyjjwjv61lAyvB4NgvfGXVpCH3OlAiblN5ih2qnieOPOF7or5Nn/4zt54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gYX5H7kY; arc=none smtp.client-ip=209.85.128.42
+	s=arc-20240116; t=1747692837; c=relaxed/simple;
+	bh=NSUZa//PMbQUBkSeGSNZ76u24am2xKaB3o89Zddq6v8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EUevjnTs1vVrF5Rb5sMqsCSWgSJiuyT07pmGU4u6QMt5+JPS7kCyDPTgNosbX6BZ45iN1GX3gMW+eVAYL8WN4prIblSfIkXUIsCaAwUEkiEIgGJ66CZYWL2cLct6HFjltPyrEqjCUx+JFVkL+RB9aWSgknOzjA+4h1TOGkXLkiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MOb5Sw2C; arc=none smtp.client-ip=209.85.128.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gYX5H7kY"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-442ed8a275fso61762745e9.2;
-        Mon, 19 May 2025 14:50:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MOb5Sw2C"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-441d1ed82faso37837845e9.0;
+        Mon, 19 May 2025 15:13:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747691400; x=1748296200; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1747692833; x=1748297633; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=1JwiYDLzLnUZuyllep+wyA9Ou4DeGzMfNa8SUSF4OG4=;
-        b=gYX5H7kYcDfxgBsID0uIveWnViVYAXWa4n3+3QPO8p2M7rwoxry/zTA7Mpdf3deG7I
-         XOKb2K9DxQVkGFkCpuOnLxr47vn1aO9lLEj8x6DmOdk1dK5wKkB9XUQwyWycHzYPRzNi
-         h21CiVp/z4iXyOGT1JL64lUN5EM467Ob6SKmx3KtADURYXO8PkdganXqXlGvt+jHObf/
-         H7/ijWyItbUcfFL07Bm3XIFeaOkXuCwRfXp4iXgBx+hIjkiZC/Tlmh0pcrkC1ekUI19H
-         VDPffGk02oQvlwxqZ6H77wpoVeLiyTI/Z3+s7U3Y7YaRw7ewuLiOqnS49fEyT/QzhAfx
-         3MBQ==
+        bh=fA8jQUBnRvZIBCTikrimRgMGDGC/QPUZtjd2PJrgsWE=;
+        b=MOb5Sw2CSXMWTo5J3jcYTfmehrLklayGzb4dohR34q8LUE0fTJqY7ANRzdRGNtN2kW
+         RHGTcFCjj9zlbd2pkMDK2qJbs5Xx2zAqdcE7th1DIKy55dikGshwSecbC1WNvUp9SLDg
+         4Z5QaBGKdkYL7gaE7yaH922pDnxt/vtXOml8i+M8x6k3LU5VcPjMDsRfEF2SDYjIgmh6
+         fvKFw/TZT9ommaUjQu+xNEwmvspxo9Ph7mVM3fO+VRPkMsVPfPAAiux23pHdnqthAsmK
+         r/L7GygctGJUpX3SUyxDTuAP07Kgd+H8bPEh+WLn9cCES/qpC+o1lviEB4zDwZmSdQTW
+         VR0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747691400; x=1748296200;
+        d=1e100.net; s=20230601; t=1747692833; x=1748297633;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=1JwiYDLzLnUZuyllep+wyA9Ou4DeGzMfNa8SUSF4OG4=;
-        b=D96/mc9PGS1hhHjjbmz8vUYizrpJFGVySMyskZYOHW97aAKmPE2NL9D+85d2teEayg
-         iMFlpq6r6gMjXsTxVjkzC/yaRDEVEuMX6xwMO0kT2j3NJBk72CcGnPvCZoo6H5AWOtDw
-         ThR+PwYIRjkSBToO7UYm6D6WD4YmNQwuegqTZMX3yUeBWuMQ4K7QyHtwmy+3HdBkELX+
-         oOa9MV6Xgz6KSEng9bESVyS5cx65PiPTQumiRplrAwgJvimxxwbWesNie1tb5BZ1/nOx
-         BQ/ktsrDfxnb/PC0EyW+lwnG/76CRSoyMZ9qaXDI1HlNMqz56nkV3s+ly/T27uQaS6xN
-         S8mQ==
-X-Gm-Message-State: AOJu0Ywj8O9NvUUOH/czet+XsuQpRJtVcQQ4U6L0yuwIkv7HubJxPbCi
-	ZJzlkzi6/cQRgoSc4/B01KNgYoDA3hiBi5akFCt3el9Xl8AntbQH2594rXopLyTtyFM=
-X-Gm-Gg: ASbGnctwRhUUwu5Dr1wjvt4JwHx+/BmukbN7UJj5knZ2KjIJ7akQRbg3JeqZsgMYcEf
-	Frj4dXtsBCmrKh2snZFkzJ2hGjOk1gaauSsVIqKFF2uqxCAbnUpLpBPdMoO195uQjlIjJ3lh9/J
-	CVcaxHhHURQrnFGW/DN4dqm/Nt0KBi1i15cVzFHYZo+Yo/mmLyDYALFV5EwYtFRW7b8/WLYKmVT
-	MFDCii1K3obJVrqBPVmiDu9gclwWsW2VwLiYXjPn/MJZU+yJ3Ez7acIVm0PhkAZWCeC/DADUI0e
-	A7TIN5UGXRZhDYwZIQYgsK7iXKUTFFyrr8DUcN632SUlsEAgMBxfdOUHDRrcJnVnOIbWxu5TWnv
-	CybUA5e1OzfzD2+fDEbXM5oiM
-X-Google-Smtp-Source: AGHT+IEFCSDEAecoVwaH3nfl4Fu+eVaniRKs6Ki1f2bm1m4XDwBMhrfNZz1WxwvTEWx1P3fX6qWQYw==
-X-Received: by 2002:a05:600c:1e8b:b0:43d:9f2:6274 with SMTP id 5b1f17b1804b1-442fd6205c7mr136535785e9.14.1747691400058;
-        Mon, 19 May 2025 14:50:00 -0700 (PDT)
+        bh=fA8jQUBnRvZIBCTikrimRgMGDGC/QPUZtjd2PJrgsWE=;
+        b=cpIb1XWoo430767tC0ki4dKyvJTbqp6L8efyHRR+IGhmoRqS1hl3Sd3QWjf2/YKiJo
+         OfXoY/TglxthgykGud9HxQUNK8UyhoMylpcKnAQ3sGSNwq/TdSvXCofD58hlXNg3J9Pk
+         R1VNWa/8X+x3Jrfhk/0I3PsOVTkffjsgLSfeddeuS7QWofi1Iwd8ByJnh1x/Adwk5tfU
+         8Ln7ijajS1Kk9/3YFbTpGsP17qoZdsUAZxuZQ3E2ibxVyxn5bDq8h9slXMzjbRbxqQrN
+         21u7MONdjgp4+I0KN+9C1YKfppwLZmlMJy9wzmusVcVOGTTYnaI9/2Iq66ADzlhmZQtA
+         7hXQ==
+X-Gm-Message-State: AOJu0Yy6sYg/OTSt5wHK5cPQ8LioT/Q6OlCq2tTeT9Fm20w2u2G5xOx8
+	ebEqmAqjl2+6+POmusOAQiceGauM+BFoEsKrXx53zSOlq+d0i7bwGsnjumYvMvsPHCM=
+X-Gm-Gg: ASbGnct6tJBe6uBAkyAOUsfiHy/jiVVYKyMq/XzdLAmfTYcBom2t0rT2UwL5KGMp3Z9
+	Mt1Es/ecoLgy+yp/Mwwn5HeerfcF4G+1a295EsyNF7hLRtR8XdB9kA0sVsrjTkq0OcAU1GkbB5d
+	qJSH0EeWLl8ufbmd2wmmmPfpMekPGG0g7It6rx+HqtitXrB1MzNLxXjB0uZ7W8V8tN+0wgDkfVJ
+	JksMPhjedRO7OcTnt6g41IDeTuxiuc/V2PWnIUMf/BVWxnTzD5ZYisYahJHYGqnM89L9pwlzT4z
+	DvqnQj+qLAH2guPYf9I3gZa53lDo9typ9aehrADaV5LE2kHpQI2uDyI+dpcQXRtzFYKUaNu/aFt
+	nTFJjWTMQlLBhbQ==
+X-Google-Smtp-Source: AGHT+IFAAd2kx5FEGUeOyedDaO4us2HR6iRH4rsjbXF7uDDM7wTEliBNznyXtSVukURD/GSKl0Z3gQ==
+X-Received: by 2002:a05:6000:400f:b0:3a0:aed9:e34 with SMTP id ffacd0b85a97d-3a3601db6c1mr12833114f8f.48.1747692833101;
+        Mon, 19 May 2025 15:13:53 -0700 (PDT)
 Received: from localhost.localdomain ([102.164.100.114])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-447f45a8434sm4914195e9.0.2025.05.19.14.49.58
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a35fa8c6d6sm13564822f8f.26.2025.05.19.15.13.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 May 2025 14:49:59 -0700 (PDT)
+        Mon, 19 May 2025 15:13:52 -0700 (PDT)
 From: Alexander Roman <monderasdor@gmail.com>
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org,
 	Alexander Roman <monderasdor@gmail.com>
-Subject: [PATCH] ahci: enhance error handling and resource management in ahci_init_one
-Date: Mon, 19 May 2025 14:49:44 -0700
-Message-ID: <20250519214944.1066-1-monderasdor@gmail.com>
+Subject: [PATCH V2] ahci: enhance error handling and resource management in ahci_init_one
+Date: Mon, 19 May 2025 15:13:34 -0700
+Message-ID: <20250519221334.1802-1-monderasdor@gmail.com>
 X-Mailer: git-send-email 2.49.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -102,7 +102,8 @@ Technical Details:
 
 Note: Some error checks and logging have been simplified to reduce churn while
 maintaining robust error handling. The focus is on critical error paths and
-resource management rather than redundant checks.
+resource management rather than redundant checks. Log levels have been adjusted
+to use dev_warn for non-fatal warnings and dev_dbg for quirk failures.
 
 Signed-off-by: Alexander Roman <monderasdor@gmail.com>
 ---
@@ -164,8 +165,8 @@ diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
      if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
 +        rc = ahci_intel_pcs_quirk(pdev, hpriv);
 +        if (rc) {
-+            dev_err(dev, "Failed to apply Intel PCS quirk: %d\n", rc);
-+            goto err_out;
++            dev_dbg(dev, "Intel PCS quirk failed (%d)\n", rc);
++            goto err_host;
 +        }
 -        ahci_intel_pcs_quirk(pdev, hpriv);
      }
@@ -215,7 +216,7 @@ diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
 
 +    /* apply fixups for broken systems */
      if (ahci_broken_system_poweroff(pdev)) {
-+        dev_err(dev, "WARNING: System may need to power cycle after shutdown\n");
++        dev_warn(dev, "System may need power cycle after shutdown\n");
 -        dev_info(dev, "quirky BIOS, skipping spindown on poweroff\n");
      }
 
@@ -228,7 +229,7 @@ diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
      if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
 +        rc = ahci_intel_pcs_quirk(pdev, hpriv);
 +        if (rc) {
-+            dev_err(dev, "Failed to apply Intel PCS quirk: %d\n", rc);
++            dev_dbg(dev, "Intel PCS quirk failed (%d)\n", rc);
 +            goto err_host;
 +        }
 -        ahci_intel_pcs_quirk(pdev, hpriv);
@@ -267,8 +268,7 @@ diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
      return 0;
 
 +err_host:
-+    if (host)
-+        ata_host_detach(host);
++    ata_host_detach(host); // host is NULL-checked internally
 +err_out:
 +    return rc;
 -    return 0;
