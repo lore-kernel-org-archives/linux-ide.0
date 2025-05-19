@@ -1,180 +1,164 @@
-Received: from mail-vk1-f181.google.com (mail-vk1-f181.google.com [209.85.221.181])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF6B4188006;
-	Sat, 17 May 2025 18:18:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFE5E22A7F9
+	for <linux-ide@vger.kernel.org>; Mon, 19 May 2025 06:12:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747505927; cv=none; b=GpY/CrSG32mUWExbQotAnCyiVzxmo+5ydTI7kUctoPr6zsxugymm8+R1T9B+Tj/E5JvtSotwFQfrwzYnRd03URwBs193EZ383l8Vr2wed7prGXZnB2VG9GSr6sKsEZzGTdIj7ZJxXuUVxwc7jw26hTXp35nOYfNphE7djOU1ilY=
+	t=1747635161; cv=none; b=NjbEVnxb2T1xRId1QbOtO0juKt5vqfO/kvUY6i50DWlkrDXd9rza2Pg/v3EPAOjvO32J5Cbp8N2DGUqahb5aeR17oxvcNTkbTtfpkumxkIo+7RnwlNin6MRzLR/Lr6fWB7fzyQ6CdNB3l2cmA0RQzDrYA68X+62n/LLE6ds0cCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747505927; c=relaxed/simple;
-	bh=Pp6tXXx+lNG4yaP/EfxqA4XweQ6S4PG9HoQ/41NHE1g=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=n1pq2NkBbjjhcG12RmdI1dWYgW1LW/vNYUAJ+d6gs1UxIsvH1q2qZ8xCgaLEVjQ9w8XWbBnSy3F4nDtf4sqL3kKQagKLMb3OFFn4qD/bWnQuQeL+u9YCJbfrBHcKmXnd4Nhx92XdDRoIfN4O6TCpFgShnGpvmERiMnVWirxM6z0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=llFGj0ND; arc=none smtp.client-ip=209.85.221.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1747635161; c=relaxed/simple;
+	bh=n+iaXGG8hCGw3SD2fQbZeC6gBugorMICxl4uQvF1eTk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=B6T3kU4aRsRh65ESPeHK3hC7C69TE3pwkx47TwG+GuayRysAWmKYqgZ2B7PzP+UjX60lUI8uXftmT1EDnbEFE6ItPUCtpCXWZljobP4nIAdNZSr9B5IcF9HA1chx8d5sTIh/SQyvljfj5Bczy6ocQ//7k6NMi7qyTVFQz8Pnwmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=N/Ag7cHA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zT1pVULC; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kW3gKi9V; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ldSkkSkJ; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="llFGj0ND"
-Received: by mail-vk1-f181.google.com with SMTP id 71dfb90a1353d-5241abb9761so1121540e0c.1;
-        Sat, 17 May 2025 11:18:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747505925; x=1748110725; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=z8NB9jhbC6rdOs6uM+OwPkI7Yew3X60lL3ammPMJAlE=;
-        b=llFGj0ND05yv3hnPQKTYkSmJFB6VKm1XqOUmkfLPBqWuEuYsKDaxXrZorfVUh3At92
-         nYkEPX677WvoXe+xKD0lioOf9eSZ9Gtn1WZlERNj3IHmO3TpPk9VoCrpDiBhxePd5MGO
-         QMbPeWvYGqtYRwEuAfGJXnniDD1Iuv76Qmqq5dUL43KBBs1PXNOwIN0dfNT87SPNum1P
-         f7j3W0qNGeVepf85Tq1eORvsm3/2bkMwhAyNtn5T/6y8bofxaaSq7+P+QrnutSR+pYxZ
-         tPH9z4rxqSMY4IR5V7Z9eV3pG0R5doRRSF7QrkSfJX4AuTxPM/BlVCk8Dc0zRg0bampS
-         tqOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747505925; x=1748110725;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=z8NB9jhbC6rdOs6uM+OwPkI7Yew3X60lL3ammPMJAlE=;
-        b=PAfzvCM9Wq/rFbIAZxO+Z7rvZWVruxOVttXUy8/FCR3GpI9v1yJxtx7nJl7jlsV7ef
-         fA4jqA735GYAF6NGugQYvefyNDlnzHIH0xA3KdnRg/r+neo8dVkVruTxxGRmklUlpr3f
-         fbrqiq+mvC8jFVYAoh038vn68Fg1BfUv0/pbMWLQ0swmRWITGhuXhLTE4gcaj6wcr+Oi
-         iDO463MAkKNT7rYGR15C1fVQQSxpAJBcGaV+Nyr8L8xCGWNFluI2JsuRGeIKUaE5eBCI
-         IKYnXHDZ1u/7GnY/SdrwRmI5v4Smu6WoH4+t+4ivHG2G0WB0+9ObuFTuxFIbH3w6+9Tg
-         OseQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUqnUMYSSyG+xyzCyhO7cho8mZPu+5iw7G31uPbwNFImrcCXS2CGdd3+Y4Yi1xnSMmnqkC/8e18KzHO1eU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwwYbWlfKr59jMU/AAX0sIWpz4i4r/0ujIzGh+mxD893TFJ0x9c
-	CurQ4HB0ov/KSsYwAxNwseNYGTgJjQmP76FEg3KApQz981gpOATA3+Zb0MFPqJDFlN78FC5RjxJ
-	oJz1flw7Jzl/0WM4IxSlFG4NOTmw2bLVD0Q8MBxBfFA==
-X-Gm-Gg: ASbGnctebD/rbtjYnaXPUtIH7t1koJtmKsce8ZA7lSoOaV/toTl0wltoAO1VrlK1UZ2
-	txXJ6MMrYk3T8QKMN2+c/yFe1oKtsEv4VvGejll8JVPTfLR5FPg6pheSTmQiW8Ivbf665M+mhZT
-	NvTFIMy3PJfvUvB6yFpW8sweGczkiAfwHDv3n1vIeaPm9AO8kwGv/mRZ/wtMT7+n1I4w==
-X-Google-Smtp-Source: AGHT+IGVRF8w8Iv7zvQQYZOxVZMx8tzMvrSzv6dxW/JM7KhmJhOqhMFCJ+o/9fVM5VNXlbMYE1BAb0VAwMUbX/p00Vk=
-X-Received: by 2002:a05:6122:490a:b0:52b:789:cf93 with SMTP id
- 71dfb90a1353d-52dba88b0f2mr7592772e0c.5.1747505924681; Sat, 17 May 2025
- 11:18:44 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="N/Ag7cHA";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zT1pVULC";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kW3gKi9V";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ldSkkSkJ"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id AF431201DA;
+	Mon, 19 May 2025 06:12:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1747635158; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=iOiVSF/7UKI1Ua9E1RC7/QJH6JErvP/rktnZ/eW7JMc=;
+	b=N/Ag7cHAGm93NnEz+Ld7g9PBFnqzFvLz/fDNcfeeoAFQWCnp9MH6ZLy5S70oWJWz5m0ZPH
+	N1QqUotLIm3pgoNYOb3Jw1htUCKFCgdzjwZnxUpEyuO0D9VvO6Jpxs9fCwk7gFpQ1Fvdul
+	BVVDDe00ULI0iS1jI0Wq0Vw0kGzZKhM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1747635158;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=iOiVSF/7UKI1Ua9E1RC7/QJH6JErvP/rktnZ/eW7JMc=;
+	b=zT1pVULCm6Yw1iNjMQXHnkVibxIkzf6k1Sumaqvhxdc89GlIoW9O70ternmdF5SaAhd+ur
+	1pXY+nTqvs12H6Dg==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=kW3gKi9V;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=ldSkkSkJ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1747635157; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=iOiVSF/7UKI1Ua9E1RC7/QJH6JErvP/rktnZ/eW7JMc=;
+	b=kW3gKi9VXgtwShQidSMuGJmzRdj5PGTRNU6geGuui+luN3vcScpsndeyVPt4AbpzgUEsvS
+	p/UZyurwE6A8yob7MHfCD3FkW226Kd7UnWSZGI/SSGw8+sdZh4a2As4CBAXQGG0QTpy7wz
+	xbrTDDXqQhnndW1POnlZxKijIky5MMs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1747635157;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=iOiVSF/7UKI1Ua9E1RC7/QJH6JErvP/rktnZ/eW7JMc=;
+	b=ldSkkSkJLXNi2cZL5gDVThfVVNeb43QxuSqw3yYk1GjhXItF7HtU+MIqh3qBmoghJsgQsQ
+	iipHmt7uOcnk8nBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 68C5213A30;
+	Mon, 19 May 2025 06:12:37 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id t6ouF9XLKmjfQgAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 19 May 2025 06:12:37 +0000
+Message-ID: <29d05b80-1381-436c-8c6a-ec30113c069d@suse.de>
+Date: Mon, 19 May 2025 08:12:37 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Joj Loj3 <jojloj3@gmail.com>
-Date: Sat, 17 May 2025 14:18:33 -0400
-X-Gm-Features: AX0GCFuZo9RenNhsd61ikKraNIif5h493QtzNWzVKwpSzCLKR8YMoR_TqB2TuHw
-Message-ID: <CAOnE0bQBVS2hz9Mbv+HFLSYUiuTcJJ=A6UqVrhP8Sgf_muMaCg@mail.gmail.com>
-Subject: [BUG] pata_jmicron - JMB368-based IDE to PCIe adapters capped at
- extremely slow speeds
-To: dlemoal@kernel.org, cassel@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: ahci + intel iGPU problems
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ kernel-dev@rsta79.anonaddy.me
+Cc: linux-ide@vger.kernel.org, intel-gfx@lists.freedesktop.org
+References: <aCdAvkKOfBEQCnZd@ryzen>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <aCdAvkKOfBEQCnZd@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-0.998];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_DN_SOME(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[5];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email,suse.de:dkim]
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Score: -4.51
+X-Rspamd-Queue-Id: AF431201DA
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-Apologies for the previous email, which was not formatted as
-plaintext. I have fixed this for this email.
+On 5/16/25 15:42, Niklas Cassel wrote:
+> Hello there,
+> 
+> This bug report came in to Serial ATA bugzilla recently:
+> https://bugzilla.kernel.org/show_bug.cgi?id=220111
+> 
+> The user claims to have bisected a problem to commit
+> 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+> 
+> However, when looking at the dmesg from:
+> https://gitlab.freedesktop.org/drm/i915/kernel/-/issues/14213
+> (see dmesg inlined at the end of this email), I cannot see a
+> single AHCI, SCSI or libata timeout, or any other error that
+> would indicate that there is a problem with the drive.
+> 
+> I do however see a bunch of i915 timeouts.
+> 
+The nasty thing about i915 is that is reconfigures the _root bride_.
+As the i915 device is always built-in, the driver 'knows' what's
+best for the root bridge, and reconfigures it.
+(IIRC this happens if you several outputs and for some reason they
+are not configured correctly.)
+And if you are particularly unlucky the driver configures it wrong,
+killing other devices in the process. That happened to us once, where
+the i915 driver ended up killing the NVMe device.
 
-Dear Maintainers,
-
-Tested on several kernels, including the latest master at time of
-testing ( 6.15.0-0.rc5.250509g9c69f8884904.47.fc43.x86_64 ),
-JMB368-based IDE to PCIe adapters are capped at extremely slow speeds,
-regardless of whether the device attached is capable of much higher
-ones. This issue exists OOTB on Windows as well, but is fixed via
-installing the proper drivers, see
-http://forum.redump.org/topic/59287/fix-for-pex2ide-jmicron-36x-based-pci-adapters-on-windows-1011/
-for more information. I have tested Windows on the same machine and
-confirmed that the issue is fixed once I have installed the proper
-drivers.
-
-Please let me know what additional info is necessary. This is my first
-time submitting a kernel bug, and I'm not sure what extra information
-might be needed.
+Please check the i915 output configuration, and try to get a PCI
+configuration readout before and after loading the i915 driver.
 
 Cheers,
-Bestest
 
-Specific adapter purchased:
-https://www.amazon.com/dp/B000YAX13Y
-
-Quote of the above forum post, if necessary:
-A handful of dumpers have been having issues specifically with the
-StarTech board you can grab on Amazon for a bit over $20 - this has a
-JMB368 controller, but it "should" apply to any given PEX2IDE adapter.
-Specifically - the adapter seems to be very compatible with any given
-IDE optical drive you throw at it, but the read/write speeds are
-"very" poor, similar to PIO4 mode speeds or as if the drive is
-perpetually stuck in a 2x CD-ROM read speed average regardless of
-parameters used.
-
-Additionally, I had minor stability issues on my setup using a 12th
-gen Intel CPU/motherboard that also seem to be caused by how this card
-operates in Windows by default when dumping discs - this also seems to
-fix those issues if you've had any issues on that end.
-
-The "fix" is just manually replacing the generic "Standard Dual
-Channel IDE Controller" you'll have appear in device manager with an
-official driver from 2009 (1.17.49.4) - extract the files from the
-linked cab archive (direct from Microsoft Update Catalog, it's
-signed/legit etc.) to any given dir and manually update the driver by
-pathing to the folder with the cat/inf/sys files.
-
-https://www.catalog.update.microsoft.com/Search.aspx?q=jmb36x
-
-The entire set of drivers can be found here - since MS doesn't denote
-what version or x86/x64 variation as is, here are the relevant x64 and
-x86 drivers:
-
-x64: www.catalog.update.microsoft.com/ScopedViewInline.aspx?updateid=65fceaa7-e6b6-4aac-8846-37b4ca469c5d
-x86: www.catalog.update.microsoft.com/ScopedViewInline.aspx?updateid=9ca80e2c-4391-4e75-8353-af41ef10a5c5
-
-The newer drivers seemingly either fail to install (Device already has
-best available drivers installed) or simply fails outright. This
-specific revision for whatever reason replaces the generic one without
-issue and works as expected. If you want to poke at the later
-versions, be my guest!
-
-
-Output of uname -r on latest kernel:
-
-$ uname -r
-6.15.0-0.rc5.250509g9c69f8884904.47.fc43.x86_64
-
-Output from lspci -v:
-03:00.0 IDE interface: JMicron Technology Corp. JMB368 IDE controller
-(prog-if 85 [PCI native mode-only controller, supports bus mastering])
-    Subsystem: JMicron Technology Corp. JMB368 IDE controller
-    Physical Slot: 1
-    Flags: bus master, fast devsel, latency 0, IRQ 28
-    I/O ports at d010 [size=8]
-    I/O ports at d020 [size=4]
-    I/O ports at d018 [size=8]
-    I/O ports at d024 [size=4]
-    I/O ports at d000 [size=16]
-    Expansion ROM at ee100000 [virtual] [disabled] [size=64K]
-    Capabilities: [68] Power Management version 2
-    Capabilities: [50] Express Legacy Endpoint, IntMsgNum 1
-    Capabilities: [70] MSI: Enable- Count=1/1 Maskable- 64bit-
-    Kernel driver in use: pata_jmicron
-    Kernel modules: pata_jmicron, pata_acpi, ata_generic
-
-Relevant output from dmesg:
-[    3.155555] scsi host6: pata_jmicron
-[    3.159374] scsi host7: pata_jmicron
-[    3.159457] ata7: PATA max UDMA/100 cmd 0xd010 ctl 0xd020 bmdma
-0xd000 irq 28 lpm-pol 0
-[    3.159461] ata8: PATA max UDMA/100 cmd 0xd018 ctl 0xd024 bmdma
-0xd008 irq 28 lpm-pol 0
-[    3.204963] FDC 0 is a post-1991 82077
-[    3.229154] usb-storage 1-3:1.0: USB Mass Storage device detected
-[    3.230081] scsi host8: usb-storage 1-3:1.0
-[    3.230253] usbcore: registered new interface driver usb-storage
-[    3.234360] tg3 0000:01:00.0 eth0: Tigon3 [partno(BCM95754) rev
-5784100] (PCI Express) MAC address 2c:27:d7:2d:99:f4
-[    3.234367] tg3 0000:01:00.0 eth0: attached PHY is 5784
-(10/100/1000Base-T Ethernet) (WireSpeed[1], EEE[0])
-[    3.234370] tg3 0000:01:00.0 eth0: RXcsums[1] LinkChgREG[0]
-MIirq[0] ASF[0] TSOcap[1]
-[    3.234373] tg3 0000:01:00.0 eth0: dma_rwctrl[76180000] dma_mask[64-bit]
-[    3.315037] ata7.00: ATAPI: PLEXTOR DVDR   PX-716A, 1.11, max UDMA/66
-[    3.319542] scsi 6:0:0:0: CD-ROM            PLEXTOR  DVDR   PX-716A
-  1.11 PQ: 0 ANSI: 5
-[    3.362459] sr 6:0:0:0: [sr1] scsi3-mmc drive: 40x/40x writer cd/rw
-xa/form2 cdda tray
-[    3.389254] sr 6:0:0:0: Attached scsi CD-ROM sr1
-[    3.389402] sr 6:0:0:0: Attached scsi generic sg2 type 5
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
