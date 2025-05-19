@@ -1,120 +1,275 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 343AF27511E;
-	Mon, 19 May 2025 09:31:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C6F1A5BA3;
+	Mon, 19 May 2025 10:43:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747647091; cv=none; b=Fc0asa0dhpDOIE0MC1vWRSjjb292c3/f86fMSkbb/v3YLEG35TdB2kIWBA1y1FMWr8NmN0ICZr8Spltj17f66NNWyJVDl6LXb24dDbRh/KgeV/5yvdqoSeHa58UG6NDKwH1PcSK2AeTc5hNCEJcAlWjkO4ca0P7tPZ9Q1/i4b3s=
+	t=1747651415; cv=none; b=OqOkRhpTny/a84WqtIh4qSEhiP1xC5HOVjbVOqHEYOzlkJTOk2Kk2H4mF6Ti57SSLibi7Zut7bfvY1b7+bSZP2gSLOtlB0U3Fl5N1NAlzA7gaYuxY/aIk66+txNxMIjFskegPTi18v9lKHjzgHiH4IefdIOz6uIb3ibZ4608R4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747647091; c=relaxed/simple;
-	bh=FXdfPhdfLVoRwDBosojS9gg4O/gtTxeDHKm6qIIKGEU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=brOIFx3m61vZBx7+J8ZpaPfi3BqnqduvGqQk7ep9x/Iim5V1esf1pxB5KfCBE5xf1zIinlls1ziz9WtiJkaSSpSQm0LaGdNRA+vicx2gUDXooQvvZgDtws38+06K0aR4DUgtzf1L4bDnkQp7IpepO47WJXqvNa06cda3uIvXkvk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CXhxJAlz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747651415; c=relaxed/simple;
+	bh=5DZJQH9f+EDCNfMqJwWp25Moj1Eypz5H0FohbsMrH8M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rMTTyfI9/+CN9q4YV7CtPIuvZzeClcQTZko3GtPV41osfyqsy2a7a4cD5WKBclrV8IhVq3eozS9GIWegF7uBDZKi+FLHaeB9pnF6V+9EmovJH4hN3kbnQtkpPkwK3OalFiPkUIlvobq7dfN7ULIN3nL82JCMuKNaHtSkNahtjss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZY0D3jiw; arc=none smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CXhxJAlz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62211C4CEED;
-	Mon, 19 May 2025 09:31:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747647090;
-	bh=FXdfPhdfLVoRwDBosojS9gg4O/gtTxeDHKm6qIIKGEU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CXhxJAlzGJpMsG1OOb5FTHQQMMUBanDJTGOKz81MVpyJY7dDx2P19hv9QsB5+I61O
-	 lARLyHGnr+cyaMu4t46nnd7UKKq3HwR0LZBz+AgqsIJ0GzveHE6UPe5l9XO2ljfjve
-	 DaRrgoP1Zk7FnR25Po6imZPw1JY6oIeToNgOVbIRsqMeWPoW/WyKKWiXAtbgwd+i/G
-	 4BqfrsOyqbBG87GrgcbSI6xUWkyUkbCbFuhcQDfCMKws35SJiu0/srmPJUdnVBCZ0g
-	 udEmC1kL4Suoq2qEQnZEQK6jKwZT4S1A2vf45zfvm5F2rQwTC3WrjG8pLWFmO/kVtF
-	 2pLfBQ3bzvnHQ==
-Date: Mon, 19 May 2025 11:31:26 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Joj Loj3 <jojloj3@gmail.com>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [BUG] pata_jmicron - JMB368-based IDE to PCIe adapters capped at
- extremely slow speeds
-Message-ID: <aCr6bm7xyBXiF8-G@ryzen>
-References: <CAOnE0bQBVS2hz9Mbv+HFLSYUiuTcJJ=A6UqVrhP8Sgf_muMaCg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZY0D3jiw"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-ad55d6aeb07so250985066b.0;
+        Mon, 19 May 2025 03:43:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1747651411; x=1748256211; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=YQM7iljAqtUi8QBWa7n8hdQ0xpGaEntDhRn6guivn0Q=;
+        b=ZY0D3jiwGwMTgyl+FMFYQcF21bm92SlMB/HJEgwP6x7p6ZKePS9RyRYi0Qa4/IpY60
+         KdMq3rJQiJ8RWSapMYZqhUrRN3Q91yENRmNgADO7HC4wgHoxT/8Vq+U8hc9/sjY11gfw
+         Vh4GogU5QRhFZiNXrrp6EoK1nrBDXEkxoSRllMfVXSuohagxWyATHako32VMGg9XgC/5
+         8Yn2eZRKivlvzwJjNyd+8IFJdZxThHhy4rsR/3amAT8l1Z4ClyCChxlh4MDRRU42FhIb
+         tVUjxPffcbLa55PjmxT9CYnMLJA5zW+GwPjovpVPLzMGgscw6sqE/uqzHrHg0PUiMt65
+         UlKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1747651411; x=1748256211;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=YQM7iljAqtUi8QBWa7n8hdQ0xpGaEntDhRn6guivn0Q=;
+        b=GmF9fO1qWaMiFGtO9mWlFWPks9Ftt73CsJ7cDNeSbGtKtJRSDAi0h9av28pRH7FcsK
+         pMSspthNnIiR8DZuT8Tspz+UMK/LAdPaSYFt7/OYRC04ifhMKvwSjLhlB2pXJOmhvKo6
+         AAxD7pCpSeJH842nuUJkXGVs/lhfppAOa771K5HJqmP3PRQ3o446IbMd2S6WshhEamHe
+         /QnMrRvvR6KR3h4txUZgK4utCSpSqg3LDkVmIe087w5zukkaQ4d4cpSixMmdOG1LNW0U
+         e6wPdz+fo3ya2Q5jgYPnmeE+zcbn1j8OMJY5QyWWjDVYj5TSe+zsd2UpyL62jG+Fmpl3
+         EP2Q==
+X-Gm-Message-State: AOJu0YwrKoitW61/PXg6+JgJRckikEPTswexoZG5NTcTRyQc0M7uVGXk
+	9szk6WviwjUsPa+lrPoNG8LE7pQL6I0SdN61KF+6eE6Mwp3cjEzdGJ/bx42W8cSn
+X-Gm-Gg: ASbGncvF2WZAXHkS3vqjof/sTafqF3sJjIEJcTSHFW6t1KBAD+e2Tn03oA7aAtd5LyU
+	p4cthSngaUcPJpF+3mPfk8fHAE2S3DPTLSGWNsdD2FH+P1fiJgXQzRbSTewKP4wElmzkILSOTfr
+	QlIf5qjzTqpTwiefxYVj1wlLn+LT0nC9uL+w8+7sXo/G3UFLog4dik/yi5bo95ycLSoD+S1500M
+	gNj0eOTM15Lw6wKH+NS9dgPnsgAaw7lZt9De3DC5Al/S6XC3mukFui488/m7ov0xg9e0gCoJGUj
+	sKLYfdItsZHTRfNof7yaZzoJe//9BewrIqXYUTq0J/zrIGZDNznKclj1T+Z+ye8xnKflkFedpQ8
+	9EZlTDXFjT3g=
+X-Google-Smtp-Source: AGHT+IEQvL/8apnFGoJ+7YEnVzq8HintJc/e15UdD76320QhiHZWBMWwA6zkp3+FowBYXIBiBCd3MQ==
+X-Received: by 2002:a17:906:c14d:b0:ad2:26f0:a76 with SMTP id a640c23a62f3a-ad536b7f1d2mr1047148166b.13.1747651399879;
+        Mon, 19 May 2025 03:43:19 -0700 (PDT)
+Received: from localhost.localdomain ([102.164.100.0])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ad52d498909sm566682766b.126.2025.05.19.03.43.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 May 2025 03:43:19 -0700 (PDT)
+From: monderasdor@gmail.com
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] ahci: enhance error handling and resource management in ahci_init_one
+Date: Mon, 19 May 2025 03:43:04 -0700
+Message-ID: <20250519104304.1828-1-monderasdor@gmail.com>
+X-Mailer: git-send-email 2.49.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOnE0bQBVS2hz9Mbv+HFLSYUiuTcJJ=A6UqVrhP8Sgf_muMaCg@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 
-Hello Joj Loj3,
+Problem:
+The current implementation of ahci_init_one has several issues with error handling
+and resource management. It lacks proper error cleanup paths, doesn't initialize
+pointers to NULL, and has inconsistent error handling patterns throughout the code.
+This can lead to resource leaks and make debugging initialization failures difficult.
 
-On Sat, May 17, 2025 at 02:18:33PM -0400, Joj Loj3 wrote:
-> Apologies for the previous email, which was not formatted as
-> plaintext. I have fixed this for this email.
-> 
-> Dear Maintainers,
-> 
-> Tested on several kernels, including the latest master at time of
-> testing ( 6.15.0-0.rc5.250509g9c69f8884904.47.fc43.x86_64 ),
-> JMB368-based IDE to PCIe adapters are capped at extremely slow speeds,
-> regardless of whether the device attached is capable of much higher
-> ones. This issue exists OOTB on Windows as well, but is fixed via
-> installing the proper drivers, see
-> http://forum.redump.org/topic/59287/fix-for-pex2ide-jmicron-36x-based-pci-adapters-on-windows-1011/
-> for more information. I have tested Windows on the same machine and
-> confirmed that the issue is fixed once I have installed the proper
-> drivers.
-> 
-> Please let me know what additional info is necessary. This is my first
-> time submitting a kernel bug, and I'm not sure what extra information
-> might be needed.
+Solution:
+This patch enhances the error handling and resource management in ahci_init_one by:
+- Adding comprehensive error checking with descriptive error messages
+- Improving error propagation through return codes
+- Adding proper error cleanup paths for all resource allocations
+- Initializing pointers to NULL to prevent use-after-free bugs
+- Implementing proper cleanup of allocated resources in error paths
+- Adding more descriptive error messages for all failure points
+- Including error codes in log messages for better diagnostics
+- Adding warning messages for potential system issues
+- Improving code structure with proper error handling paths
+- Adding proper error return labels
+- Making code more maintainable with consistent error handling patterns
 
-I'm not sure what you want us to do with the information that you have
-provided.
+Technical Details:
+- Added proper initialization of pointers (hpriv, host, mmio) to NULL
+- Added error cleanup paths with proper resource release
+- Improved error messages to include specific error codes
+- Added proper error handling for all resource allocation failures
+- Added proper cleanup of allocated resources in error paths
+- Improved code organization with clear error handling paths
+- Added proper error return labels for better code flow
 
-The performance with pata_jmicron is bad, on multiple kernel versions.
-(Which is the oldest kernel version you tested?)
+Signed-off-by: Alexander Roman monderasdor@gmail.com
+---
+drivers/ata/ahci.c | 150 ++++++++++++++++++++++++++++++-----------------------
+1 file changed, 85 insertions(+), 65 deletions(-)
 
-The fact that the default Windows driver has the same problem does not
-help us that much, unless you can figure out what the "good" driver is
-doing that the bad one is not.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1611,460 +1611,555 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent) {
+     struct ahci_host_priv *hpriv = NULL;
+     struct ata_host *host = NULL;
+     void __iomem *mmio = NULL;
++    int n_ports, i, rc = -ENOMEM;
+-    int n_ports, i, rc;
+     u32 tmp, cap, port_map;
+     u32 saved_cap;
+     struct device *dev = &pdev->dev;
 
-You seem to have an ATAPI device using UDMA/66:
-[    3.315037] ata7.00: ATAPI: PLEXTOR DVDR   PX-716A, 1.11, max UDMA/66
+     VPRINTK("ahci_init_one enter\n");
 
-There have been some reports for other PATA drivers (e.g. pata_via) to
-force PIO for ATAPI devices:
-https://lore.kernel.org/linux-ide/20250519085508.1398701-1-tasos@tasossah.com/T/#u
++    /* acquire resources with proper error handling */
+-    /* acquire resources */
+     rc = pcim_enable_device(pdev);
+     if (rc) {
++        dev_err(dev, "Failed to enable PCI device: %d\n", rc);
++        goto err_out;
+-        return rc;
+     }
 
-Have you tried forcing other transfer modes?
-e.g. by adding 'libata.dma=0' on the kernel command line.
+     rc = pcim_iomap_regions(pdev, 1 << AHCI_PCI_BAR_STANDARD, DRV_NAME);
+     if (rc) {
++        dev_err(dev, "Failed to map PCI regions: %d\n", rc);
++        goto err_out;
+-        return rc;
+     }
+     mmio = pcim_iomap_table(pdev)[AHCI_PCI_BAR_STANDARD];
++    if (!mmio) {
++        dev_err(dev, "Failed to get mmio table\n");
++        rc = -ENOMEM;
++        goto err_out;
++    }
 
+     rc = pci_alloc_irq_vectors(pdev, 1, AHCI_MAX_PORTS, PCI_IRQ_ALL_TYPES);
+     if (rc < 0) {
++        dev_err(dev, "Failed to allocate IRQ vectors: %d\n", rc);
++        goto err_out;
+-        return rc;
+     }
 
-Kind regards,
-Niklas
++    /* allocate and initialize host private data */
+     hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+     if (!hpriv) {
++        dev_err(dev, "Failed to allocate host private data\n");
++        goto err_out;
+-        return -ENOMEM;
+     }
 
-> 
-> Relevant output from dmesg:
-> [    3.155555] scsi host6: pata_jmicron
-> [    3.159374] scsi host7: pata_jmicron
-> [    3.159457] ata7: PATA max UDMA/100 cmd 0xd010 ctl 0xd020 bmdma
-> 0xd000 irq 28 lpm-pol 0
-> [    3.159461] ata8: PATA max UDMA/100 cmd 0xd018 ctl 0xd024 bmdma
-> 0xd008 irq 28 lpm-pol 0
-> [    3.204963] FDC 0 is a post-1991 82077
-> [    3.229154] usb-storage 1-3:1.0: USB Mass Storage device detected
-> [    3.230081] scsi host8: usb-storage 1-3:1.0
-> [    3.230253] usbcore: registered new interface driver usb-storage
-> [    3.234360] tg3 0000:01:00.0 eth0: Tigon3 [partno(BCM95754) rev
-> 5784100] (PCI Express) MAC address 2c:27:d7:2d:99:f4
-> [    3.234367] tg3 0000:01:00.0 eth0: attached PHY is 5784
-> (10/100/1000Base-T Ethernet) (WireSpeed[1], EEE[0])
-> [    3.234370] tg3 0000:01:00.0 eth0: RXcsums[1] LinkChgREG[0]
-> MIirq[0] ASF[0] TSOcap[1]
-> [    3.234373] tg3 0000:01:00.0 eth0: dma_rwctrl[76180000] dma_mask[64-bit]
-> [    3.315037] ata7.00: ATAPI: PLEXTOR DVDR   PX-716A, 1.11, max UDMA/66
-> [    3.319542] scsi 6:0:0:0: CD-ROM            PLEXTOR  DVDR   PX-716A
->   1.11 PQ: 0 ANSI: 5
-> [    3.362459] sr 6:0:0:0: [sr1] scsi3-mmc drive: 40x/40x writer cd/rw
-> xa/form2 cdda tray
-> [    3.389254] sr 6:0:0:0: Attached scsi CD-ROM sr1
-> [    3.389402] sr 6:0:0:0: Attached scsi generic sg2 type 5
+     hpriv->mmio = mmio;
+     hpriv->flags = (unsigned long)ent->driver_data;
+     hpriv->irq = pdev->irq;
+
++    /* apply board quirks */
+     if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
++        rc = ahci_intel_pcs_quirk(pdev, hpriv);
++        if (rc) {
++            dev_err(dev, "Failed to apply Intel PCS quirk: %d\n", rc);
++            goto err_out;
++        }
+-        ahci_intel_pcs_quirk(pdev, hpriv);
+     }
+
++    /* apply port map mask if present */
+     ahci_get_port_map_mask(dev, hpriv);
+
++    /* save initial config */
+     rc = ahci_pci_save_initial_config(pdev, hpriv);
+     if (rc) {
++        dev_err(dev, "Failed to save initial configuration: %d\n", rc);
++        goto err_out;
+-        return rc;
+     }
+
++    /* prepare host */
+     cap = hpriv->cap;
+     saved_cap = cap;
+     port_map = hpriv->port_map;
+     n_ports = ahci_calc_n_ports(cap, port_map);
+
+     host = ata_host_alloc_pinfo(dev, ahci_port_info + ent->driver_data, n_ports);
+     if (!host) {
++        dev_err(dev, "Failed to allocate ATA host\n");
++        goto err_out;
+-        return -ENOMEM;
+     }
+
+     host->private_data = hpriv;
+
++    /* configure DMA masks */
+     rc = ahci_configure_dma_masks(pdev, hpriv);
+     if (rc) {
++        dev_err(dev, "Failed to configure DMA masks: %d\n", rc);
++        goto err_host;
+-        return rc;
+     }
+
++    /* initialize adapter */
+     ahci_pci_init_controller(host);
+     rc = ahci_reset_controller(host);
+     if (rc) {
++        dev_err(dev, "Failed to reset controller: %d\n", rc);
++        goto err_host;
+-        return rc;
+     }
+
++    /* apply fixups for broken systems */
+     if (ahci_broken_system_poweroff(pdev)) {
++        dev_err(dev, "WARNING: System may need to power cycle after shutdown\n");
+-        dev_info(dev, "quirky BIOS, skipping spindown on poweroff\n");
+     }
+
++    /* configure LPM policy */
+     for (i = 0; i < n_ports; i++) {
+         ahci_update_initial_lpm_policy(host->ports[i]);
+     }
+
++    /* apply platform-specific workarounds */
+     if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
++        rc = ahci_intel_pcs_quirk(pdev, hpriv);
++        if (rc) {
++            dev_err(dev, "Failed to apply Intel PCS quirk: %d\n", rc);
++            goto err_host;
++        }
+-        ahci_intel_pcs_quirk(pdev, hpriv);
+     }
+
++    /* apply Apple MCP89 workaround */
+     if (is_mcp89_apple(pdev)) {
++        rc = ahci_mcp89_apple_enable(pdev);
++        if (rc) {
++            dev_err(dev, "Failed to enable MCP89 Apple: %d\n", rc);
++            goto err_host;
++        }
+-        ahci_mcp89_apple_enable(pdev);
+     }
+
++    /* apply Acer SA5-271 workaround */
+     acer_sa5_271_workaround(hpriv, pdev);
+
++    /* initialize and enable interrupts */
+     ahci_init_irq(pdev, n_ports, hpriv);
+     ahci_pci_enable_interrupts(host);
+
++    /* print information */
+     ahci_pci_print_info(host);
+
++    /* register with libata */
+     rc = ata_host_activate(host, hpriv->irq, ahci_interrupt, IRQF_SHARED,
++                        &ahci_sht);
+-                        &ahci_sht);
+     if (rc) {
++        dev_err(dev, "Failed to activate ATA host: %d\n", rc);
++        goto err_host;
+-        return rc;
+     }
+
+     return 0;
+
++err_host:
++    if (host)
++        ata_host_detach(host);
++err_out:
++    return rc;
+-    return 0;
+ }
