@@ -1,182 +1,120 @@
-Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 617E1283FE2;
-	Mon, 19 May 2025 09:19:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 343AF27511E;
+	Mon, 19 May 2025 09:31:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747646350; cv=none; b=fAdIGfATeOvniTfOlcnqd45UO25wlXivXoR++aDCdgKyqV8xNc0FnSJVBJTW/eF4nLsqhsxE4jYbnGMCUQtIuodatYZZHg2CqmCqCAYFy1O2f6HP47VhSv02/SpZ8RFGpYqCO7zG2RLxjgPqKCxdQYeuEvgBzsP3fnGDY7NuUoQ=
+	t=1747647091; cv=none; b=Fc0asa0dhpDOIE0MC1vWRSjjb292c3/f86fMSkbb/v3YLEG35TdB2kIWBA1y1FMWr8NmN0ICZr8Spltj17f66NNWyJVDl6LXb24dDbRh/KgeV/5yvdqoSeHa58UG6NDKwH1PcSK2AeTc5hNCEJcAlWjkO4ca0P7tPZ9Q1/i4b3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747646350; c=relaxed/simple;
-	bh=Kn0pCpXycQGzli+Ttb42Y8sONcxizenmqlKSwqT8CyA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=YQVBEYzKp8LqHn0sKp7LWY7gYIFqutW+dsSXhBi3fEjas/6P+rS1C9RAA/t52pfK3d+KeqP7X3NM3aXWTRcAbR/fgVOy0OLs58rVl8rmtGllUo8KBA4YOOiDEyPo7Kp1hS/3097N12wYcEK/NI6LZbEOvO+P1iZhQ4dl95QPJfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
-X-AuditID: a67dfc5b-669ff7000002311f-63-682af77127a4
-From: Byungchul Park <byungchul@sk.com>
-To: linux-kernel@vger.kernel.org
-Cc: kernel_team@skhynix.com,
-	torvalds@linux-foundation.org,
-	damien.lemoal@opensource.wdc.com,
-	linux-ide@vger.kernel.org,
-	adilger.kernel@dilger.ca,
-	linux-ext4@vger.kernel.org,
-	mingo@redhat.com,
-	peterz@infradead.org,
-	will@kernel.org,
-	tglx@linutronix.de,
-	rostedt@goodmis.org,
-	joel@joelfernandes.org,
-	sashal@kernel.org,
-	daniel.vetter@ffwll.ch,
-	duyuyang@gmail.com,
-	johannes.berg@intel.com,
-	tj@kernel.org,
-	tytso@mit.edu,
-	willy@infradead.org,
-	david@fromorbit.com,
-	amir73il@gmail.com,
-	gregkh@linuxfoundation.org,
-	kernel-team@lge.com,
-	linux-mm@kvack.org,
-	akpm@linux-foundation.org,
-	mhocko@kernel.org,
-	minchan@kernel.org,
-	hannes@cmpxchg.org,
-	vdavydov.dev@gmail.com,
-	sj@kernel.org,
-	jglisse@redhat.com,
-	dennis@kernel.org,
-	cl@linux.com,
-	penberg@kernel.org,
-	rientjes@google.com,
-	vbabka@suse.cz,
-	ngupta@vflare.org,
-	linux-block@vger.kernel.org,
-	josef@toxicpanda.com,
-	linux-fsdevel@vger.kernel.org,
-	jack@suse.cz,
-	jlayton@kernel.org,
-	dan.j.williams@intel.com,
-	hch@infradead.org,
-	djwong@kernel.org,
-	dri-devel@lists.freedesktop.org,
-	rodrigosiqueiramelo@gmail.com,
-	melissa.srw@gmail.com,
-	hamohammed.sa@gmail.com,
-	harry.yoo@oracle.com,
-	chris.p.wilson@intel.com,
-	gwan-gyeong.mun@intel.com,
-	max.byungchul.park@gmail.com,
-	boqun.feng@gmail.com,
-	longman@redhat.com,
-	yskelg@gmail.com,
-	yunseong.kim@ericsson.com,
-	yeoreum.yun@arm.com,
-	netdev@vger.kernel.org,
-	matthew.brost@intel.com,
-	her0gyugyu@gmail.com
-Subject: [PATCH v16 42/42] dept: call dept_hardirqs_off() in local_irq_*() regardless of irq state
-Date: Mon, 19 May 2025 18:18:26 +0900
-Message-Id: <20250519091826.19752-43-byungchul@sk.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20250519091826.19752-1-byungchul@sk.com>
-References: <20250519091826.19752-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSW0wTaRTH/b6Zzkwr1bG67iyQaEqIiiuK0fVEXWNi1HnxkgCJSoLWZbJt
-	BNRWUVZNQJBFsIgYqIBgKVorFMWWB29VFgTFC1ZlEQhWwA3YcGmstNqCu9t6eTn55X/O+Z2X
-	wxCyB6JQRpV6QFCnKpLllISUjIZULdr/MUq5xOdfAZ7xXBLOXzNTYL9ai8DckInB2bIRXnlH
-	EEw8fUaArtiOoKr/NQENrQ4ENtNxCl7+Mw06PC4K2orzKciqvkbB8+FJDL0lRRhqLZvgjXGQ
-	hMeFBgw6JwXluiwcKO8w+Iw1NBgzImHAVEbDZH8MtDk6RWDrWQillb0U3LG1kdB6YwDDy1vn
-	KXCY/xPB49aHJHgLwsB+RiuCujEDBcNeIwFGj4uGF416DK362VCfHRDmfPhXBA+0jRhyLl7H
-	0NF9G8Hd3D4MFnMnBc2eEQxWSzEB/sstCAYKRmk4ccpHQ3lmAYL8EyUkZPcuh4lPgcsV4zGQ
-	eaGehLrPnWjtr7y50oz45hEXwWdbD/F+z98Ub/PqSf6RgeNvlr2m+ey7PTSvtxzkraYovvqO
-	E/NVbo+It9ScpHiLu4jm80Y7MD/W3k5vDd8hWZ0kJKvSBPXiNbskyhKTidyXOf3wk3N+IgON
-	Ts1DYoZjl3E2w1vyO/eNnRYFmWLncV1dPiLIs9i5nFU7GMglDMF2TuVeVXSjPMQwM9nd3MjH
-	kOAMyUZyxWeHcZCl7C9cnc6JvzrncLX1jV884kDek9+Mgixjl3MdtZVk0Mmx1WLu+FD7t4Wf
-	uL9MXWQhkurRlBokU6WmpShUycuilempqsPRv+1NsaDAexmPTSbcQG57bBNiGSQPkdbbFihl
-	IkWaJj2lCXEMIZ8lrbHOV8qkSYr0PwT13p3qg8mCpgmFMaT8R+lS76EkGfu74oCwRxD2Cerv
-	XcyIQzMQCk0wZ5g+RazbEL8ozB1R5vJuW53f122vII64Lzkd85aEDzY44iY8fzpaok9eiU6c
-	ErdfdyVn08Ltimloj2HleP9Qaaxjy9HNjUU+bXjDinjXQ5P+3tz1mzXhC3Z5435IvL9FW5gr
-	fxt7Nt5/b+YbSdbQ+xmrLtE/f4bCCHF7ORMpJzVKRUwUodYo/geZXTjvWgMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSe0yTZxSH977flUr1W0f0i8zgmhARohOyuuNlTJMlviPRuEgwMfFS9Iv9
-	YkFplcniBUZ1CMLQpSAorKKplRZlrZtaqSEQwKoTFKyKgEIWlbSURCkO7C6ty/45efL7nTzn
-	n8NTqovMXF7O3SsZcrV6NaugFetWFC/Ke5usW/K07WMITZTQcOayg4WeS3YEjitFGEY71sCj
-	yQCCd793U1Bt7kFwdniQgiudQwg8tu9Z6P1jJvSFxlnwmstYKD53mYX7/jCGgaqTGOzOtfDM
-	+oKGO5UNGKpHWThdXYwj4xWGKWsjB9bCRBix1XIQHk4F75CPgfY6LwOe/hSoqR9gocXjpaHz
-	2giGXvcZFoYc/zBwp/MWDZMV8dBzopyBpmADC/5JKwXW0DgHD1otGDots6HZFLEeffM3A13l
-	rRiOnv8FQ9+TGwhuljzH4HT4WGgPBTC4nGYKpi90IBipGOPgyPEpDk4XVSAoO1JFg2lAA+/+
-	jFyum0iFop+baWj6y4dWpRNHvQOR9sA4RUyub8l06CFLPJMWmtxuEMn12kGOmG72c8Ti3Edc
-	tmRyrmUUk7OvQwxxNh5jifP1SY6UjvVhErx3j1s/b5Ni5Q5JL+dLhk/Ttyl0VTYbvado1v67
-	p6apQjQ2oxTF8KLwmfg8+CMTZVZYID5+PEVFOU6YL7rKX0RyBU8Jvhnio7onqBTx/EdCthh4
-	GxvdoYVE0fyTH0dZKSwVm6pH8X/OBNHe3PreExPJ+8vaUZRVgkbss9fTlUhhQR80ojg5Nz9H
-	K+s1i427dAW58v7F23fnOFHkgawHwyeuoYneNW1I4JE6VtnsWahTMdp8Y0FOGxJ5Sh2nbHQl
-	6VTKHdqC7yTD7q2GfXrJ2IbieVo9R5mxUdqmEnZq90q7JGmPZPi/xXzM3ELkMGd0pSVmvjke
-	JgFfxup4r7nQLidkqot/SNfZ85b7tZVfsocr3N1Z5o5u/EnivJSFL7eslE3fpCjkQ5qu0tjP
-	Sw6Xx141rqvxa1Zl/5ow/Nug3j2z9sHBvGx3zX2rvCAtb8j2dVowM3wg6YvNWV+1XOpyBq3T
-	hxwvD3y4gVnGuNW0UadNTaYMRu2/Yfj0JDwDAAA=
-X-CFilter-Loop: Reflected
+	s=arc-20240116; t=1747647091; c=relaxed/simple;
+	bh=FXdfPhdfLVoRwDBosojS9gg4O/gtTxeDHKm6qIIKGEU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=brOIFx3m61vZBx7+J8ZpaPfi3BqnqduvGqQk7ep9x/Iim5V1esf1pxB5KfCBE5xf1zIinlls1ziz9WtiJkaSSpSQm0LaGdNRA+vicx2gUDXooQvvZgDtws38+06K0aR4DUgtzf1L4bDnkQp7IpepO47WJXqvNa06cda3uIvXkvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CXhxJAlz; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CXhxJAlz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62211C4CEED;
+	Mon, 19 May 2025 09:31:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747647090;
+	bh=FXdfPhdfLVoRwDBosojS9gg4O/gtTxeDHKm6qIIKGEU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CXhxJAlzGJpMsG1OOb5FTHQQMMUBanDJTGOKz81MVpyJY7dDx2P19hv9QsB5+I61O
+	 lARLyHGnr+cyaMu4t46nnd7UKKq3HwR0LZBz+AgqsIJ0GzveHE6UPe5l9XO2ljfjve
+	 DaRrgoP1Zk7FnR25Po6imZPw1JY6oIeToNgOVbIRsqMeWPoW/WyKKWiXAtbgwd+i/G
+	 4BqfrsOyqbBG87GrgcbSI6xUWkyUkbCbFuhcQDfCMKws35SJiu0/srmPJUdnVBCZ0g
+	 udEmC1kL4Suoq2qEQnZEQK6jKwZT4S1A2vf45zfvm5F2rQwTC3WrjG8pLWFmO/kVtF
+	 2pLfBQ3bzvnHQ==
+Date: Mon, 19 May 2025 11:31:26 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Joj Loj3 <jojloj3@gmail.com>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUG] pata_jmicron - JMB368-based IDE to PCIe adapters capped at
+ extremely slow speeds
+Message-ID: <aCr6bm7xyBXiF8-G@ryzen>
+References: <CAOnE0bQBVS2hz9Mbv+HFLSYUiuTcJJ=A6UqVrhP8Sgf_muMaCg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOnE0bQBVS2hz9Mbv+HFLSYUiuTcJJ=A6UqVrhP8Sgf_muMaCg@mail.gmail.com>
 
-For dept to function properly, dept_task()->hardirqs_enabled must be set
-correctly.  If it fails to set this value to false, for example, dept
-may mistakenly think irq is still enabled even when it's not.
+Hello Joj Loj3,
 
-Do dept_hardirqs_off() regardless of irq state not to miss any
-unexpected cases by any chance e.g. changes of the state by asm code.
+On Sat, May 17, 2025 at 02:18:33PM -0400, Joj Loj3 wrote:
+> Apologies for the previous email, which was not formatted as
+> plaintext. I have fixed this for this email.
+> 
+> Dear Maintainers,
+> 
+> Tested on several kernels, including the latest master at time of
+> testing ( 6.15.0-0.rc5.250509g9c69f8884904.47.fc43.x86_64 ),
+> JMB368-based IDE to PCIe adapters are capped at extremely slow speeds,
+> regardless of whether the device attached is capable of much higher
+> ones. This issue exists OOTB on Windows as well, but is fixed via
+> installing the proper drivers, see
+> http://forum.redump.org/topic/59287/fix-for-pex2ide-jmicron-36x-based-pci-adapters-on-windows-1011/
+> for more information. I have tested Windows on the same machine and
+> confirmed that the issue is fixed once I have installed the proper
+> drivers.
+> 
+> Please let me know what additional info is necessary. This is my first
+> time submitting a kernel bug, and I'm not sure what extra information
+> might be needed.
 
-Signed-off-by: Byungchul Park <byungchul@sk.com>
----
- include/linux/irqflags.h | 14 ++++++++++++++
- kernel/dependency/dept.c |  1 +
- 2 files changed, 15 insertions(+)
+I'm not sure what you want us to do with the information that you have
+provided.
 
-diff --git a/include/linux/irqflags.h b/include/linux/irqflags.h
-index d8b9cf093f83..586f5bad4da7 100644
---- a/include/linux/irqflags.h
-+++ b/include/linux/irqflags.h
-@@ -214,6 +214,13 @@ extern void warn_bogus_irq_restore(void);
- 		raw_local_irq_disable();		\
- 		if (!was_disabled)			\
- 			trace_hardirqs_off();		\
-+		/*					\
-+		 * Just in case that C code has missed	\
-+		 * trace_hardirqs_off() at the first	\
-+		 * place e.g. disabling irq at asm code.\
-+		 */					\
-+		else					\
-+			dept_hardirqs_off();		\
- 	} while (0)
- 
- #define local_irq_save(flags)				\
-@@ -221,6 +228,13 @@ extern void warn_bogus_irq_restore(void);
- 		raw_local_irq_save(flags);		\
- 		if (!raw_irqs_disabled_flags(flags))	\
- 			trace_hardirqs_off();		\
-+		/*					\
-+		 * Just in case that C code has missed	\
-+		 * trace_hardirqs_off() at the first	\
-+		 * place e.g. disabling irq at asm code.\
-+		 */					\
-+		else					\
-+			dept_hardirqs_off();		\
- 	} while (0)
- 
- #define local_irq_restore(flags)			\
-diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-index a08d0e16978b..4ca1cc04293c 100644
---- a/kernel/dependency/dept.c
-+++ b/kernel/dependency/dept.c
-@@ -2248,6 +2248,7 @@ void noinstr dept_hardirqs_off(void)
- 	 */
- 	dept_task()->hardirqs_enabled = false;
- }
-+EXPORT_SYMBOL_GPL(dept_hardirqs_off);
- 
- void noinstr dept_update_cxt(void)
- {
--- 
-2.17.1
+The performance with pata_jmicron is bad, on multiple kernel versions.
+(Which is the oldest kernel version you tested?)
 
+The fact that the default Windows driver has the same problem does not
+help us that much, unless you can figure out what the "good" driver is
+doing that the bad one is not.
+
+You seem to have an ATAPI device using UDMA/66:
+[    3.315037] ata7.00: ATAPI: PLEXTOR DVDR   PX-716A, 1.11, max UDMA/66
+
+There have been some reports for other PATA drivers (e.g. pata_via) to
+force PIO for ATAPI devices:
+https://lore.kernel.org/linux-ide/20250519085508.1398701-1-tasos@tasossah.com/T/#u
+
+Have you tried forcing other transfer modes?
+e.g. by adding 'libata.dma=0' on the kernel command line.
+
+
+Kind regards,
+Niklas
+
+> 
+> Relevant output from dmesg:
+> [    3.155555] scsi host6: pata_jmicron
+> [    3.159374] scsi host7: pata_jmicron
+> [    3.159457] ata7: PATA max UDMA/100 cmd 0xd010 ctl 0xd020 bmdma
+> 0xd000 irq 28 lpm-pol 0
+> [    3.159461] ata8: PATA max UDMA/100 cmd 0xd018 ctl 0xd024 bmdma
+> 0xd008 irq 28 lpm-pol 0
+> [    3.204963] FDC 0 is a post-1991 82077
+> [    3.229154] usb-storage 1-3:1.0: USB Mass Storage device detected
+> [    3.230081] scsi host8: usb-storage 1-3:1.0
+> [    3.230253] usbcore: registered new interface driver usb-storage
+> [    3.234360] tg3 0000:01:00.0 eth0: Tigon3 [partno(BCM95754) rev
+> 5784100] (PCI Express) MAC address 2c:27:d7:2d:99:f4
+> [    3.234367] tg3 0000:01:00.0 eth0: attached PHY is 5784
+> (10/100/1000Base-T Ethernet) (WireSpeed[1], EEE[0])
+> [    3.234370] tg3 0000:01:00.0 eth0: RXcsums[1] LinkChgREG[0]
+> MIirq[0] ASF[0] TSOcap[1]
+> [    3.234373] tg3 0000:01:00.0 eth0: dma_rwctrl[76180000] dma_mask[64-bit]
+> [    3.315037] ata7.00: ATAPI: PLEXTOR DVDR   PX-716A, 1.11, max UDMA/66
+> [    3.319542] scsi 6:0:0:0: CD-ROM            PLEXTOR  DVDR   PX-716A
+>   1.11 PQ: 0 ANSI: 5
+> [    3.362459] sr 6:0:0:0: [sr1] scsi3-mmc drive: 40x/40x writer cd/rw
+> xa/form2 cdda tray
+> [    3.389254] sr 6:0:0:0: Attached scsi CD-ROM sr1
+> [    3.389402] sr 6:0:0:0: Attached scsi generic sg2 type 5
