@@ -1,58 +1,59 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D57B81C700D
-	for <linux-ide@vger.kernel.org>; Mon, 19 May 2025 13:11:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAF611FF5E3
+	for <linux-ide@vger.kernel.org>; Mon, 19 May 2025 13:20:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747660295; cv=none; b=Q3q+2Npe4dHTlB/O91xw+WdrE93QY/GJO4z3klitXTHMPswzP11S7xQqgEYPK+307UCYf5p6PZBjbIQkVZ2AyHOX23LPdAFHNwUEic88lQZpOZ7IkEYKuVb6YfICJOyiSRf9dxlvnMXz5TpQAUMIQP/ow9TGJYYFKSJI4aKQ4lg=
+	t=1747660808; cv=none; b=qKPde6X9N+KB0gZbYVdvTbTvM82VzjOdPDJTyKlchaRPI96PBgFyPk74VfKeYtP2TDbqdSTbz9X4v3MHKxzBhK/OFQE+JGww7BjyqPlDoRTYHR85OCIbE+rcr7upOgriZmFDUuhlqAZG/KyeSowJY+UR2/DbgoBghoA3EZgJvec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747660295; c=relaxed/simple;
-	bh=P8RdGThU+hipR/2ad3qsz05rSrV8fdqfpNK+4SlxH9k=;
+	s=arc-20240116; t=1747660808; c=relaxed/simple;
+	bh=nxoWE+FDEtbiDeNp3AYwgTty3MNtuqLCi8CD8g6LxbY=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=KonnMoAHauVexkuhqp0pKT92GHxWBDz3A8QxL2JPUjRar8CiKgYcIOYzfzK98fvpPY0V0qQN4RyDhoN5kDCtiweHpwVF/qp7+ha6AgSVrxLREiEtK6Tt6KrCs/zaBKRWnGfjot/mfDVjabck6gUFmb9svZxMAOMEgwF9GfRqOxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=URXRugDZ; arc=none smtp.client-ip=192.198.163.10
+	 MIME-Version:Content-Type; b=cxh8wLDdvEHmA8axE83vMqQMtEaESKLdtHgz5TI373PDu+q/KBy8uw9riHIUkHrr6XBIZDs3IYf07RImqbXQUZ788/9pEMp028x6mjcObvx43BwfXyOFfDOUIp7EZfaAQZ4bNbnVq/nUUeAWxfEjUjXf/GQkcSrqYEkQWq6Ocng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cFaXY88w; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="URXRugDZ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cFaXY88w"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1747660294; x=1779196294;
+  t=1747660806; x=1779196806;
   h=from:to:cc:subject:in-reply-to:references:date:
    message-id:mime-version;
-  bh=P8RdGThU+hipR/2ad3qsz05rSrV8fdqfpNK+4SlxH9k=;
-  b=URXRugDZmzN0kwujEfu43u7ISGYkWCSga+KXK12tKV2wMfaoZiurucso
-   nD+Am2OWhW869YcQpuhU5VdSWtDY7uzNWN11Mum8MSEE4ylo+kLpBGxJr
-   caQVIiHf0uu5jeHdhJpPZPtQx3+lUfhWLW7+4HQlpjHxwHR3Lxyo6uplh
-   F32dJiu4K0ouOyKElqZznST3OzoPDtkeuqVl7ATsWvKvkWo6lXlPbklyy
-   /T5KLEsZcaaslz9W/kThbjtcfXzjZGuvRDtwOYG7KVP7TA5Dl4WI06jor
-   uDAz8G6p5eKFbQVBQog+8lRbzpssPNVa9Tw8vEMbri475zLtZrDeaSShC
-   g==;
-X-CSE-ConnectionGUID: RaUUczXtS3OqgHbuON8MuQ==
-X-CSE-MsgGUID: xVJsoY+HSNeuXStsKCsatw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11438"; a="60900848"
+  bh=nxoWE+FDEtbiDeNp3AYwgTty3MNtuqLCi8CD8g6LxbY=;
+  b=cFaXY88w5Ze56N8iJqVF/SvGM3tDzp0P6ePWzpguAxds0OHIXTI4PECW
+   rkWD0IMPDLdA9bXVm67zPLUU5SOnnlLic+dYBpol7eNZYf/CSON8svq21
+   uxLlLYmDBj3IUGNJtr6jrTKuLiQQoXjn/Uskag2JU45eL/IcXRQtQNIjc
+   6952NUF4zJl52NtwflSEtiokQXTiLDltfrwr7lz3ynJC7GdrjqpT1+oQ7
+   2bxcMXhCJztwFEWaxMN0io94whAEymlZwa2yX4+CM7/qc+XT4NR8erdxL
+   TFlr87xcfpL4tlvp+oUGJr7anecjXmZUtzzoCVD0TwTN7s54d+YYUU05o
+   Q==;
+X-CSE-ConnectionGUID: i0HMlKS2SteFhu66avwbLg==
+X-CSE-MsgGUID: hqHo1R9cSM65/AA/KpRqiw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11438"; a="60215082"
 X-IronPort-AV: E=Sophos;i="6.15,300,1739865600"; 
-   d="scan'208";a="60900848"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2025 06:11:33 -0700
-X-CSE-ConnectionGUID: 8MjmC/5nS5GOJvSUuHALnA==
-X-CSE-MsgGUID: 6LhtoAN+RMOWj4tVd4mDeg==
+   d="scan'208";a="60215082"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2025 06:20:05 -0700
+X-CSE-ConnectionGUID: ZjzQ2iBeRdeX671b1QcEMQ==
+X-CSE-MsgGUID: aUerapTcRfa6xlXBKPsLtw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.15,300,1739865600"; 
-   d="scan'208";a="176482580"
+   d="scan'208";a="140386209"
 Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.244.201])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2025 06:11:31 -0700
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2025 06:20:03 -0700
 From: Jani Nikula <jani.nikula@linux.intel.com>
-To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
- kernel-dev@rsta79.anonaddy.me
+To: Hannes Reinecke <hare@suse.de>, Niklas Cassel <cassel@kernel.org>,
+ Damien Le Moal <dlemoal@kernel.org>, kernel-dev@rsta79.anonaddy.me
 Cc: linux-ide@vger.kernel.org, intel-gfx@lists.freedesktop.org
 Subject: Re: ahci + intel iGPU problems
-In-Reply-To: <aCdAvkKOfBEQCnZd@ryzen>
+In-Reply-To: <29d05b80-1381-436c-8c6a-ec30113c069d@suse.de>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 References: <aCdAvkKOfBEQCnZd@ryzen>
-Date: Mon, 19 May 2025 16:11:28 +0300
-Message-ID: <875xhwvj7j.fsf@intel.com>
+ <29d05b80-1381-436c-8c6a-ec30113c069d@suse.de>
+Date: Mon, 19 May 2025 16:20:00 +0300
+Message-ID: <8734d0vitb.fsf@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -61,15 +62,27 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-On Fri, 16 May 2025, Niklas Cassel <cassel@kernel.org> wrote:
-> I do however see a bunch of i915 timeouts.
+On Mon, 19 May 2025, Hannes Reinecke <hare@suse.de> wrote:
+> The nasty thing about i915 is that is reconfigures the _root bride_.
+> As the i915 device is always built-in, the driver 'knows' what's
+> best for the root bridge, and reconfigures it.
+> (IIRC this happens if you several outputs and for some reason they
+> are not configured correctly.)
+> And if you are particularly unlucky the driver configures it wrong,
+> killing other devices in the process. That happened to us once, where
+> the i915 driver ended up killing the NVMe device.
+>
+> Please check the i915 output configuration, and try to get a PCI
+> configuration readout before and after loading the i915 driver.
 
-The i915 timeouts are normal for when its unable to talk to the display,
-perhaps because it isn't there.
+Would you mind pointing me at where you think we're doing nasty stuff,
+please? Sincere question.
+
+Side note, i915 supports discrete devices too.
+
 
 BR,
 Jani.
-
 
 -- 
 Jani Nikula, Intel
