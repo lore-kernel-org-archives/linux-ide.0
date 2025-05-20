@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B172A7260A
-	for <linux-ide@vger.kernel.org>; Tue, 20 May 2025 09:29:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF54C21C9EE
+	for <linux-ide@vger.kernel.org>; Tue, 20 May 2025 09:30:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747733369; cv=none; b=rriFiK+WHyHpcTefBP3EwT0C3yvkS5WFG7W/W+C0rTIecuxEtvwnXKhBEYJMB7Wbdns76HzO9gFSSVtxhTNHHykwR+wjQC0O9TV6Cpygdy04hvnSCBf9hzqvKMn3ZiUIu7MwSsc6TABz+2WbEdofqfxTbFhvCxrkGbdQaueUxfc=
+	t=1747733436; cv=none; b=ifqXykuZj7owDL/BU17NRW4QDgETkZNT8vN+d3d98FeOvcLBbezqqpuEgGOu6szDsHMSgfKdeRgWhE2wYyc1hXpqwvogum29iLsEF5Yucp8VSNFvz7ZZNspc1YZ0piPp1nkC/r4SrL70V/9FiJWIkrdWF9Ht3uK4M2QFQRmxkxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747733369; c=relaxed/simple;
-	bh=9zM39MvfkjoH+H+U08m5XfKQ5XNvvIXGQhi9ad3cn/U=;
+	s=arc-20240116; t=1747733436; c=relaxed/simple;
+	bh=LdfXLFQdE0mpvPiFMJkiMSBC1Q/d7knv3M2L/3iw+Ew=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IPcCcDLq+ZaNzN4s4+bA8FcrXlqTRHOfsLM72i+e7+EtgdsQqaYGsRW6Hne+3BoxkhppQ5WBbh2MhSfkr6zbI7CA9dJMnN8xl36Sic+rzXdmFOyGqaLR3ToQJCWnJHMxjc5vLtkvUaT3CsEMhKESUVGbIcVHth3Wa40FPyiD998=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tLB6B5De; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=O+BhmmsOZnhgwm2nHTNEl94OFQK7nQPbscZ5YjkGwc32mUAO9pWUFP+W/yIr87xBxSz8V2FTVNz3faxGjwT1T8X4WzagKh7P8gqrZ6sYbeKVgvHwGLgUMVeBBAcfpq2SVKblA5joISRgUDE/MYxTqfqNeqpr2cywpzE6hmuelwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pcfrg4eE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tLB6B5De"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DB06C4CEE9;
-	Tue, 20 May 2025 09:29:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pcfrg4eE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB228C4CEE9;
+	Tue, 20 May 2025 09:30:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747733369;
-	bh=9zM39MvfkjoH+H+U08m5XfKQ5XNvvIXGQhi9ad3cn/U=;
+	s=k20201202; t=1747733435;
+	bh=LdfXLFQdE0mpvPiFMJkiMSBC1Q/d7knv3M2L/3iw+Ew=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=tLB6B5DeoAQwb/CQKVgBelvFc2IbEZaSwseLGu3+VmgKq28baxFei1li5UofULD7o
-	 q5Q4aG5JU5oTuZ0B0z2YKvNvynOxxgO7pcw0141jwdPLjWnln77NofWLBFUMH97XT0
-	 UOa+XNP6tpG7j9J1O6O6PHmWKH2wHwJ8Wat/lyxfdW1kizS8+eT+oqi/OymquRvjsL
-	 WSm8ketZ55kwEJ2zD6wmW7VUVrpYvhaPjlJV+epugZ6r1LtX+JutqLZD//9mFir2Wi
-	 U/KBeLTMv2VDxDeGQFJItchEDciCLGxdZoceA1R+8AKtdxb9GK8ZaBn786JGTos1UD
-	 2nZ3uxftpyDnA==
-Message-ID: <001a24b4-1f77-42db-91ad-462bc835e275@kernel.org>
-Date: Tue, 20 May 2025 11:29:26 +0200
+	b=Pcfrg4eEysj8BRMajMzfwPhBU8VFKhkUnV8PLBqlyt/D9Nkoqg8ZECzFFYFASTzIl
+	 g+4RVIkidRsrQVYiV9Aa+B8xcFScDOqiNK1TjiRtfnuPX7ehgW+dKrEy/TSzFvHUZ7
+	 Z6QuQGyz0UtoTqYDamcwlumqLRNcpfobDfJpycoqMBIDO+aaBzd88BqFTVqydShamV
+	 dUtiW0NwMITMknTpWK4UxNyNM8n1EOgA1SMP3ys647tCfWpZ8V0ecXcFMhy+TgqBNS
+	 trtruNnvlzzFw9IT2fexuBUtH6bASunn1hrFPmRvIiqGH+ZT8NyJ4iyz49dOQGfZyU
+	 dyq09SCOpp0zg==
+Message-ID: <5c94f5d7-95ee-4341-adbb-89d6bb48fa1e@kernel.org>
+Date: Tue, 20 May 2025 11:30:33 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,57 +35,63 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: libata-acpi: Do not assume 40 wire cable if no
- devices are enabled
+Subject: Re: [PATCH v2] ata: pata_via: Force PIO for ATAPI devices on
+ VT6415/VT6330
 To: Tasos Sahanidis <tasos@tasossah.com>, linux-ide@vger.kernel.org
 Cc: Niklas Cassel <cassel@kernel.org>
-References: <20250519085945.1399466-1-tasos@tasossah.com>
+References: <20250519085508.1398701-1-tasos@tasossah.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20250519085945.1399466-1-tasos@tasossah.com>
+In-Reply-To: <20250519085508.1398701-1-tasos@tasossah.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2025/05/19 10:56, Tasos Sahanidis wrote:
-> On at least an ASRock 990FX Extreme 4 with a VIA VT6330, the devices
-> have not yet been enabled by the first time ata_acpi_cbl_80wire() is
-> called. This means that the ata_for_each_dev loop is never entered,
-> and a 40 wire cable is assumed.
+On 2025/05/19 10:49, Tasos Sahanidis wrote:
+> The controller has a hardware bug that can hard hang the system when
+> doing ATAPI DMAs without any trace of what happened. Depending on the
+> device attached, it can also prevent the system from booting.
 > 
-> The VIA controller on this board does not report the cable in the PCI
-> config space, thus having to fall back to ACPI even though no SATA
-> bridge is present.
+> In this case, the system hangs when reading the ATIP from optical media
+> with cdrecord -vvv -atip on an _NEC DVD_RW ND-4571A 1-01 and an
+> Optiarc DVD RW AD-7200A 1.06 attached to an ASRock 990FX Extreme 4,
+> running at UDMA/33.
 > 
-> The _GTM values are correctly reported by the firmware through ACPI,
-> which has already set up faster transfer modes, but due to the above
-> the controller is forced down to a maximum of UDMA/33.
+> The issue can be reproduced by running the same command with a cygwin
+> build of cdrecord on WinXP, although it requires more attempts to cause
+> it. The hang in that case is also resolved by forcing PIO. It doesn't
+> appear that VIA has produced any drivers for that OS, thus no known
+> workaround exists.
 > 
-> Resolve this by modifying ata_acpi_cbl_80wire() to directly return the
-> cable type. First, an unknown cable is assumed which preserves the mode
-> set by the firmware, and then on subsequent calls when the devices have
-> been enabled, an 80 wire cable is correctly detected.
+> HDDs attached to the controller do not suffer from any DMA issues.
 > 
-> Since the function now directly returns the cable type, it has been
-> renamed to ata_acpi_cbl_pata_type().
+> Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/916677
+> Signed-off-by: Tasos Sahanidis <tasos@tasossah.com>
 
-Nit: "it has been renamed" -> "it is renamed"
+Doesn't this need a Cc: stable tag ? I can add it when applying.
 
-> @@ -530,13 +534,17 @@ int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm)
->  		xfer_mask = ata_acpi_gtm_xfermask(dev, gtm);
->  		ata_unpack_xfermask(xfer_mask, NULL, NULL, &udma_mask);
+
+> ---
+>  v1 -> v2: Wrap long line
+> 
+>  drivers/ata/pata_via.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+> index 696b99720dcb..d82728a01832 100644
+> --- a/drivers/ata/pata_via.c
+> +++ b/drivers/ata/pata_via.c
+> @@ -368,7 +368,8 @@ static unsigned int via_mode_filter(struct ata_device *dev, unsigned int mask)
+>  	}
 >  
-> -		if (udma_mask & ~ATA_UDMA_MASK_40C)
-> -			return 1;
-> +		ret = ATA_CBL_PATA40;
-> +
-> +		if (udma_mask & ~ATA_UDMA_MASK_40C) {
-> +			ret = ATA_CBL_PATA80;
+>  	if (dev->class == ATA_DEV_ATAPI &&
+> -	    dmi_check_system(no_atapi_dma_dmi_table)) {
+> +	    (dmi_check_system(no_atapi_dma_dmi_table) ||
+> +	     config->id == PCI_DEVICE_ID_VIA_6415)) {
+>  		ata_dev_warn(dev, "controller locks up on ATAPI DMA, forcing PIO\n");
+>  		mask &= ATA_MASK_PIO;
+>  	}
 
-Please change this to "return ATA_CBL_PATA80;" and change the last return at the
-end of the function to "return ATA_CBL_PATA40;". That will be cleaner.
-
-Other than these, this looks good.
 
 -- 
 Damien Le Moal
