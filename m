@@ -1,111 +1,92 @@
-Received: from mail-yb1-f170.google.com (mail-yb1-f170.google.com [209.85.219.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 776BD25A33D
-	for <linux-ide@vger.kernel.org>; Tue, 20 May 2025 04:37:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B172A7260A
+	for <linux-ide@vger.kernel.org>; Tue, 20 May 2025 09:29:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747715833; cv=none; b=V2A6fPFJ7PsDE0Sq96uVQEQRrcUEQmnA8JtTDYpRDTsAu3x7OvknVkbUojuxY20xRkzcIBHdPvqNLN7aJUwVjM3Ca6+xdA9i1w4yOxJrwOTHAHFZbfyffqlPYxsNZ0Y+wgNqLgHZqEMDWdKVbaa0kw/iams3N9N3JHFR0VtqUuY=
+	t=1747733369; cv=none; b=rriFiK+WHyHpcTefBP3EwT0C3yvkS5WFG7W/W+C0rTIecuxEtvwnXKhBEYJMB7Wbdns76HzO9gFSSVtxhTNHHykwR+wjQC0O9TV6Cpygdy04hvnSCBf9hzqvKMn3ZiUIu7MwSsc6TABz+2WbEdofqfxTbFhvCxrkGbdQaueUxfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747715833; c=relaxed/simple;
-	bh=yGPunZS/YlovfaXou2nccgWByBF94Lq7JkjeyqtJ20o=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FEdPX0X5g9IHLUndx5iBdJePwPXfF6xQpGQPXh4O8L3/pwKm3DjhsBmc3f702kr8Or5wGvDex6WymE7+v5MIpb7GpkDb/d0gZhoPU6OYKj9/ymmahQXcfd5Zgf9OhtfMUU71Fcgd/92GH19zK/YA92sQrHJytK5SCL1DdrsVo8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FRlnl7B4; arc=none smtp.client-ip=209.85.219.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1747733369; c=relaxed/simple;
+	bh=9zM39MvfkjoH+H+U08m5XfKQ5XNvvIXGQhi9ad3cn/U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IPcCcDLq+ZaNzN4s4+bA8FcrXlqTRHOfsLM72i+e7+EtgdsQqaYGsRW6Hne+3BoxkhppQ5WBbh2MhSfkr6zbI7CA9dJMnN8xl36Sic+rzXdmFOyGqaLR3ToQJCWnJHMxjc5vLtkvUaT3CsEMhKESUVGbIcVHth3Wa40FPyiD998=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tLB6B5De; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FRlnl7B4"
-Received: by mail-yb1-f170.google.com with SMTP id 3f1490d57ef6-e7b943bcf0cso2155762276.3
-        for <linux-ide@vger.kernel.org>; Mon, 19 May 2025 21:37:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747715830; x=1748320630; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=OFTN2UgB/ickwzIPyeCn88gSQu1cBtJ8NEr1Tj/8FH4=;
-        b=FRlnl7B40UG/HWptHyzETZnexyHb/Pgm7ZF6kFzhRfm2s3xTEW1yRjC5YpSTUc0kth
-         0NLh4/Jm+xKWV4ZwdEJliFzncXRZAL7AQvyYi2tBpzsTDPk4PY/1HZcci6qTjgRQ+eUk
-         moPpTwhOWiJGv6roZGoIr1VbxoEMGQgO3ofTwuSl9kdyJUTMq/NgMX8eJzV18Jj0JBVF
-         rG1eUgT2Hx46EENg2d3crTOu2G1NWSnqBMXUQITk/5JqQLn1TCGPgY9CMqZuUw716mgr
-         QDTOXCyLjIwfJEXamJ/j5OBCA59GOSe7/kCj+Y1iYGuEVVl2bKP86nJHys36BXxKtzNo
-         P67A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747715830; x=1748320630;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=OFTN2UgB/ickwzIPyeCn88gSQu1cBtJ8NEr1Tj/8FH4=;
-        b=wfl+CdjkyLMi8cJ1x10YG5CIw6pQlvd7b9g1LquVfbl79oMz8AC2+pUvoHDKX899L1
-         ayAuhleDK14kaCju65nwCHbBB0cj+jhYauaVLu5CKxYvVMA7HzGxY89F8Y4i+vyV5mgH
-         fe/BhCFFWjz1i0Nk8oJaWjd3CVbZDiT6R2QvT+iZRSaKrymPpSRgipS1uwKlcDAhKR0x
-         wyPE8RSWbinM2ndW2qZTEmlwFEI5+Ha0JhVMtljyO1Hm1APFhnNkCXbyTJXPkoYEwsBG
-         s6QEV5pzrSw2OAYla0TOCceKtQcJH7miRZE4Zt1fYOU/jupiE3+RD4FxvdEP8ecd2JSp
-         rUYA==
-X-Forwarded-Encrypted: i=1; AJvYcCVN1NL02UpXfgfchNYgkExzuJ1ym9QP4l/FxNzC/18sZLFamJI9aLx4R9hYdp01G/N/OrJmV6HeG6s=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBvPrLym8+/iPZcb6PUeqsRbo0zSxJ1oUeimvdKfuLKWn3Sova
-	dVBlIxjM2etGaChbw2apYLTrfp9iDP5CmMP93BjlaD/fJEp7Yk6ABnrhRhQevz70KOjF0HLAs4j
-	U+VrfakWT8n795k80J0Q5NaTunxHBOfKa417w
-X-Gm-Gg: ASbGncsFpfLdXgPbZ0wB7aetsc0aiTNLjXmpUrVC+9voWBm7BSGHU6rHVGkuRxYl9PO
-	xU7IjHrDJpLk6vaxVtAnxQ7xd1m0T5ky+0xyIgU7C8Gug5AAHvfIpri9OvBjOKjPzv21GeaBu3b
-	GMqVetBMrrQaAhcbnFzfY455EdFUFxcJkhZw==
-X-Google-Smtp-Source: AGHT+IHfTc8FezKFa9CaJAmaeM6UuVxfWL/FJ9YlMnkfOs0wz4tUuHg6lNZgAPufz0Y/r4m54Q2bMN320iU8ScCKVnc=
-X-Received: by 2002:a05:6902:704:b0:e6d:f287:bf9 with SMTP id
- 3f1490d57ef6-e7b6d42c564mr18722779276.22.1747715830357; Mon, 19 May 2025
- 21:37:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tLB6B5De"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DB06C4CEE9;
+	Tue, 20 May 2025 09:29:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747733369;
+	bh=9zM39MvfkjoH+H+U08m5XfKQ5XNvvIXGQhi9ad3cn/U=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=tLB6B5DeoAQwb/CQKVgBelvFc2IbEZaSwseLGu3+VmgKq28baxFei1li5UofULD7o
+	 q5Q4aG5JU5oTuZ0B0z2YKvNvynOxxgO7pcw0141jwdPLjWnln77NofWLBFUMH97XT0
+	 UOa+XNP6tpG7j9J1O6O6PHmWKH2wHwJ8Wat/lyxfdW1kizS8+eT+oqi/OymquRvjsL
+	 WSm8ketZ55kwEJ2zD6wmW7VUVrpYvhaPjlJV+epugZ6r1LtX+JutqLZD//9mFir2Wi
+	 U/KBeLTMv2VDxDeGQFJItchEDciCLGxdZoceA1R+8AKtdxb9GK8ZaBn786JGTos1UD
+	 2nZ3uxftpyDnA==
+Message-ID: <001a24b4-1f77-42db-91ad-462bc835e275@kernel.org>
+Date: Tue, 20 May 2025 11:29:26 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250515135622.720623-7-cassel@kernel.org>
-In-Reply-To: <20250515135622.720623-7-cassel@kernel.org>
-From: Mikko Juhani Korhonen <mjkorhon@gmail.com>
-Date: Tue, 20 May 2025 07:36:34 +0300
-X-Gm-Features: AX0GCFvBQ0uU4M3x7L_EFdHp_QFwghcKQQq6_UZkgYjsCdR8mK3G3MUFQLFlkjc
-Message-ID: <CAAZ0mTfgYMQE2xBgmUE4Asx5X7ssth0L7AYQkLmjnT=+bG35vw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] ata_eh_set_lpm() cleanups
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ata: libata-acpi: Do not assume 40 wire cable if no
+ devices are enabled
+To: Tasos Sahanidis <tasos@tasossah.com>, linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>
+References: <20250519085945.1399466-1-tasos@tasossah.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20250519085945.1399466-1-tasos@tasossah.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-to 15.5.2025 klo 16.56 Niklas Cassel (cassel@kernel.org) kirjoitti:
->
-> Hello all,
->
-> I was trying to understand ata_eh_set_lpm(), and decided that
-> it needed some cleanups to make the code more understandable.
->
-> Please have a look.
->
->
-> Changes since v1:
-> -Squashed patches 3 and 4 as requested by Damien.
-> -Squashed patches 6 and 7 as requested by Damien.
-> -Changed WARN_ON to WARN_ON_ONCE.
-> -Changed patch 1 to remove parts of a comment that is no longer true.
->
->
-> Niklas Cassel (5):
->   ata: libata-eh: Update DIPM comments to reflect reality
->   ata: libata-eh: Add ata_eh_set_lpm() WARN_ON_ONCE
->   ata: libata-eh: Rename hipm and dipm variables
->   ata: libata-eh: Rename no_dipm variable to be more clear
->   ata: libata-eh: Keep DIPM disabled while modifying the allowed LPM
->     states
->
->  drivers/ata/libata-eh.c | 39 ++++++++++++++++++++++++++-------------
->  1 file changed, 26 insertions(+), 13 deletions(-)
->
-> --
-> 2.49.0
->
+On 2025/05/19 10:56, Tasos Sahanidis wrote:
+> On at least an ASRock 990FX Extreme 4 with a VIA VT6330, the devices
+> have not yet been enabled by the first time ata_acpi_cbl_80wire() is
+> called. This means that the ata_for_each_dev loop is never entered,
+> and a 40 wire cable is assumed.
+> 
+> The VIA controller on this board does not report the cable in the PCI
+> config space, thus having to fall back to ACPI even though no SATA
+> bridge is present.
+> 
+> The _GTM values are correctly reported by the firmware through ACPI,
+> which has already set up faster transfer modes, but due to the above
+> the controller is forced down to a maximum of UDMA/33.
+> 
+> Resolve this by modifying ata_acpi_cbl_80wire() to directly return the
+> cable type. First, an unknown cable is assumed which preserves the mode
+> set by the firmware, and then on subsequent calls when the devices have
+> been enabled, an 80 wire cable is correctly detected.
+> 
+> Since the function now directly returns the cable type, it has been
+> renamed to ata_acpi_cbl_pata_type().
 
-Hello Niklas!
+Nit: "it has been renamed" -> "it is renamed"
 
-just tried this patch set for the non working case of my
-sata ports 5,6 -> WDC WD20EFAX-68FB5N0
-but as was kind of expected there was not any change.
+> @@ -530,13 +534,17 @@ int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm)
+>  		xfer_mask = ata_acpi_gtm_xfermask(dev, gtm);
+>  		ata_unpack_xfermask(xfer_mask, NULL, NULL, &udma_mask);
+>  
+> -		if (udma_mask & ~ATA_UDMA_MASK_40C)
+> -			return 1;
+> +		ret = ATA_CBL_PATA40;
+> +
+> +		if (udma_mask & ~ATA_UDMA_MASK_40C) {
+> +			ret = ATA_CBL_PATA80;
 
-Best regards,
-Mikko
+Please change this to "return ATA_CBL_PATA80;" and change the last return at the
+end of the function to "return ATA_CBL_PATA40;". That will be cleaner.
+
+Other than these, this looks good.
+
+-- 
+Damien Le Moal
+Western Digital Research
