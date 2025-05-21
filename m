@@ -1,45 +1,45 @@
 Received: from devloop.tasossah.com (devloop.tasossah.com [145.239.141.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0EBC21ABB9
-	for <linux-ide@vger.kernel.org>; Wed, 21 May 2025 08:38:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6680A33F3
+	for <linux-ide@vger.kernel.org>; Wed, 21 May 2025 08:56:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.239.141.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747816701; cv=none; b=F9lBYtYBa5tIpyQVvIZIgn20Vn5Q2LWPV9rNchEumJarNRatPZzHSQGqFQA5mc2OZNIrUaZdurlakHGRtq76yxL1gFZ4K+wWqdcRLUyb/dMnI3JPXgQoQgp85XWblwqW26TflTVxKzW/Yh4rztikithu/xnhDodYmybAPTexV0w=
+	t=1747817819; cv=none; b=k+Y34irmtOlzRUB13LbBshnDks5DS7a5FUoOfHdh+awVCLgQj3A5BM2079xYAg08YmZW9cFPc4ux4HnjsVeWYyaqi0RinhOK0mG/mRbPXkQoHJxzw582Bwg4BNKfGCqDYJI8e94ypeyYmncL+K77qggyTb72C+LnwlesnRSjuyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747816701; c=relaxed/simple;
-	bh=c6uEf+ZkibC/CStLe9MXKlgyLIvIhf2Y69pjMb8IAC8=;
+	s=arc-20240116; t=1747817819; c=relaxed/simple;
+	bh=89xpaeLKIilgCa8VPZiCd1dNxWt94p0mr+mN4ZHLYaA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RfrokJiMdbUxxb8NzaDPzbulFq8NF97Us0+YYzgodPrwHjc98zdbWNwhBPDDtL0JeLJyU/IPJShHrrQFg6yJFUR1ojQIX1/ZXlSV1X2E2vTPaM6/WywU9ng2rzYIv1Fpb7zJmruEUcUcYjOtOY4mu9KkMpsMWHbZaZ4T7z1LsNg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com; spf=pass smtp.mailfrom=tasossah.com; dkim=pass (4096-bit key) header.d=tasossah.com header.i=@tasossah.com header.b=XAUH+DuN; arc=none smtp.client-ip=145.239.141.69
+	 In-Reply-To:Content-Type; b=mh7xo9FgLzmRuTT4UY9RtLeFCA9pjsHHIN+XX5quJ4XfRkowKlsjNoteSfIt2LCgMBDoQRt6ZrMDXCk55vh5nyqeCsSqpTzQNcVVFvPmNGH90m2oJx6CqII8g2iAPC8gq45tSCYq3IrFFu2EC4tqt4hsmMiwms4qb0c2fJEAUT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com; spf=pass smtp.mailfrom=tasossah.com; dkim=pass (4096-bit key) header.d=tasossah.com header.i=@tasossah.com header.b=VSoYBNAV; arc=none smtp.client-ip=145.239.141.69
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tasossah.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=tasossah.com header.i=@tasossah.com header.b="XAUH+DuN"
+	dkim=pass (4096-bit key) header.d=tasossah.com header.i=@tasossah.com header.b="VSoYBNAV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=tasossah.com; s=devloop; h=Content-Transfer-Encoding:Content-Type:
 	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
 	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
 	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=rQAD9E91Q8rNiVSWuhOddNsq6Pr8cUauVv2/PxS84J0=; b=XAUH+DuNZURn//vAjkPx1Mgl2T
-	YXmgrB3EBBwYtnKxtwMsSyEt0iq6n+GwFyTIWFU+kO2nXmVslzcDIfHgC3elfamR0r4Lo2hynGdpr
-	zj0W+jKTPzErnoxgaM32dWimxov24yxCYjizWzUKnmz7ulFQtnB6HTOVPu0ANn3wiWZs6UaC9EkBU
-	L6QAzkvAwv97akel4P+Hqk0zQzWoZSyDZ3rKjQ8C3DY4dJxcv3t/h4jXNAySKnaOsF7/KfZsZCkyj
-	v+p6D9+UrbOGSGCVW9O7xlcgLZKjPtzxeY09AIvXJYo3mgeOoaUuIrFwGDLq8JL8e0pyXnbZ0hBj+
-	ooAAGFN7qqvaNrpXUlilh5oKo4sNTciSgU93v8fnHgu1TfKDAnsrl5OCTVY4M/HiJYFW1qwL9MZEG
-	IeB7yTSXxUcJVHix7gp1k53p4jM511oQERY2Wr7eAE1gta5lAWQawACcyuD3mJz/ne1JYhEMsly4G
-	pJ4OKUIqZKTjmVHSJyecz/Vgz6Y0TlcAZD7ZnG0cVSY8UeOeER1PRjT0+vfpzDQy5aFOG4Kup9Efr
-	FOJAJcD9huKVAhvpKEMXxCCgrFBNKiXP54Ki+UyQtoociC5yID92Eguelk+VUF9Auju1b+/ByVeEq
-	RqRJPvEsmwsLb6O3+HKcp80mXIfQP0ApbOygd2Iu4=;
+	bh=eucWOZBQoc9kDpugYII4VrzuNaXAhglkFKCeHZHz+ng=; b=VSoYBNAV2uWH6KLJVijTEVEkLE
+	PE38tlu3mBGze7jxpo5IIEpsrAXomHAzNVaxRZxbtH5xQjvE6bwxC2q5yYZOT64Xf+b+pwWDFw+OZ
+	W+UOfZaSczcNF8++TvtAL5OgeJKoUq7yFi1Hq1oagUO8bBvVrQO9W3kBTQ/DH0fS5fmH+iMHyJSG4
+	sYgHjU3G8j387UXSZsyuknMGve1n0lVgWDOPJXIQyEok3L2MhqF1179ZYLV0Mg4PcVw4guQPpZ9/j
+	JXAqabLWbEvY42tDPn//CPEkvryb7XTc4kJNWEnh6kWkD3cnTuF71/gvziQf0Bnn8DoKfBzgbUOjj
+	d1v1FS89iOg4a/DfQ4RxkaDqgakLNPGBwizIyC6Tmluloq9Qs0WqFODOOZLD/OA8cJGS0RwgpXY7F
+	xYDYlNGPvdROGIfrLuM9sFUxXxIabHwym502IICQ9hWJoUHhGCM51oveCsmgUkt5BwBQ1LMcNDw8A
+	EBEK9XdBc2fOHXbtKcggYDokJ0nTQ8nGnCwO2/wwxtjxmdcZvyph9GNw0HhwbiT1gUwv2BnhMp9ib
+	qWQu2vpdlAeD2jTRd2GmEZPyNdX0UeMDwKGQKPbHjm5NeJibDnSpj2oAvYsuoRJ7eUdJGk2QZ/5K3
+	9JrvOeRCXGWn9jGBzGueC491E7Cm9pGZbCEkCrn1k=;
 Received: from [2a02:587:6a09:4a00:3263:4c19:b861:4371]
 	by devloop.tasossah.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.97)
 	(envelope-from <tasos@tasossah.com>)
-	id 1uHexm-0000000CbvQ-19Ug;
-	Wed, 21 May 2025 11:38:10 +0300
-Message-ID: <8890b47a-1aa0-49cb-9a5d-0c5fe2dcebbb@tasossah.com>
-Date: Wed, 21 May 2025 11:38:05 +0300
+	id 1uHfFv-0000000Cc4P-1cAY;
+	Wed, 21 May 2025 11:56:55 +0300
+Message-ID: <920a533b-a881-4e26-9129-9e4499b13774@tasossah.com>
+Date: Wed, 21 May 2025 11:56:50 +0300
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,12 +47,12 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: pata_via: Force PIO for ATAPI devices on
- VT6415/VT6330
+Subject: Re: [PATCH v2] ata: libata-acpi: Do not assume 40 wire cable if no
+ devices are enabled
 To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc: Niklas Cassel <cassel@kernel.org>
-References: <20250519085508.1398701-1-tasos@tasossah.com>
- <5c94f5d7-95ee-4341-adbb-89d6bb48fa1e@kernel.org>
+References: <20250519085945.1399466-1-tasos@tasossah.com>
+ <001a24b4-1f77-42db-91ad-462bc835e275@kernel.org>
 From: Tasos Sahanidis <tasos@tasossah.com>
 Content-Language: el-GR, en-GB
 Autocrypt: addr=tasos@tasossah.com; keydata=
@@ -97,36 +97,48 @@ Autocrypt: addr=tasos@tasossah.com; keydata=
  LGgUMIh4G/AErjVzHN14l32vXOw2Gqtm/ZOB6Dbc8TE6xZfvhm8umKDSJMMgUwGpmR0afFqY
  z1BoGgqb+Obimcy8gj/lHTEJ3XuAsWVgh6qdAW+btexzxFNBZNRlvf0iWKS9ZrJoGm75vP6G
  cq8pgdDuXavruyMo+8FAM271vGEkaQdYOegODcSPutYoK8jtXj3r5zRHvSbk1xOOsIw=
-In-Reply-To: <5c94f5d7-95ee-4341-adbb-89d6bb48fa1e@kernel.org>
+In-Reply-To: <001a24b4-1f77-42db-91ad-462bc835e275@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2025-05-20 12:30, Damien Le Moal wrote:
-> On 2025/05/19 10:49, Tasos Sahanidis wrote:
->> The controller has a hardware bug that can hard hang the system when
->> doing ATAPI DMAs without any trace of what happened. Depending on the
->> device attached, it can also prevent the system from booting.
->>
->> In this case, the system hangs when reading the ATIP from optical media
->> with cdrecord -vvv -atip on an _NEC DVD_RW ND-4571A 1-01 and an
->> Optiarc DVD RW AD-7200A 1.06 attached to an ASRock 990FX Extreme 4,
->> running at UDMA/33.
->>
->> The issue can be reproduced by running the same command with a cygwin
->> build of cdrecord on WinXP, although it requires more attempts to cause
->> it. The hang in that case is also resolved by forcing PIO. It doesn't
->> appear that VIA has produced any drivers for that OS, thus no known
->> workaround exists.
->>
->> HDDs attached to the controller do not suffer from any DMA issues.
->>
->> Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/916677
->> Signed-off-by: Tasos Sahanidis <tasos@tasossah.com>
+On 2025-05-20 12:29, Damien Le Moal wrote:
+> Nit: "it has been renamed" -> "it is renamed"
+
+Will do.
+
+>> @@ -530,13 +534,17 @@ int ata_acpi_cbl_80wire(struct ata_port *ap, const struct ata_acpi_gtm *gtm)
+>>  		xfer_mask = ata_acpi_gtm_xfermask(dev, gtm);
+>>  		ata_unpack_xfermask(xfer_mask, NULL, NULL, &udma_mask);
+>>  
+>> -		if (udma_mask & ~ATA_UDMA_MASK_40C)
+>> -			return 1;
+>> +		ret = ATA_CBL_PATA40;
+>> +
+>> +		if (udma_mask & ~ATA_UDMA_MASK_40C) {
+>> +			ret = ATA_CBL_PATA80;
 > 
-> Doesn't this need a Cc: stable tag ? I can add it when applying.
+> Please change this to "return ATA_CBL_PATA80;" and change the last return at the
+> end of the function to "return ATA_CBL_PATA40;". That will be cleaner.
+> 
+> Other than these, this looks good.
 > 
 
-Yes, please do so. I forgot about it. Thank you!
+Apologies, but I am not sure I understand.
 
---
-Tasos
+Wouldn't changing the last return to ATA_CBL_PATA40 undo the point of
+this change? The function must return ATA_CBL_PATA_UNK if the loop is
+never entered (no enabled devices).
+
+If it does enter the loop but the mask hasn't matched at all after it
+has gone through all the devices, it must return ATA_CBL_PATA40, which
+is why there's the unconditional assignment ret = ATA_CBL_PATA40. If,
+however, there is at least one "80 wire device", the whole cable is
+considered 80 wire (thus the immediate break in the if).
+
+I believe the most that can be done is:
+
+if (udma_mask & ~ATA_UDMA_MASK_40C)
+	return ATA_CBL_PATA80;
+
+with the rest remaining the same. I opted for assignment + break there
+instead of return as it seemed more readable to me, and it's consistent.
