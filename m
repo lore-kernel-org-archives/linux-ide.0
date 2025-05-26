@@ -1,88 +1,92 @@
-Received: from mail-oa1-f50.google.com (mail-oa1-f50.google.com [209.85.160.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1BCC2BD1B
-	for <linux-ide@vger.kernel.org>; Mon, 26 May 2025 14:03:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40FE83C465
+	for <linux-ide@vger.kernel.org>; Mon, 26 May 2025 14:05:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748268235; cv=none; b=r4Rp6irCRZ2+GVAaLRtMk52j7mZDsknPcrSajaFBB8xH2+GaeojQsKDxc46U+fS+XXuAXlS/AoTUInKdQvf1kjwosifF0eKdFE5Mkbx8TQPjQ0tf/ilJaj6rkdvgZGtLMkfmzU372GT7UeajZeV1ee8/2toLB6Pzd2C1TZr1PDw=
+	t=1748268341; cv=none; b=Erf3CuGIecbWqQJfPxjpZ3gMqXgEiUCnRIJPZLeG2bCBRBGl3xf6EBTCWruKd6d/Bo9iYpCZDfwaBh90kcBmfWZNzLT98okvsBTzqxs2VKs8sCUqprIO20HT0d68zWC6WZawdioBqjeQFlTySK1y/mfn8Os8efaGu59GZAKtrWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748268235; c=relaxed/simple;
-	bh=M56FL+UpkK56wuTbs3FGjSdEUPCOwsr0dxOYvxuBUrM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=SPiYmc9JCkQ+f8nzOxlft8Rk1RSZNme6qq7cq8VEAHU80Y4aovzIxBhOdJKRlEH1A3ZWlmiB80nwnXivdMefPS3A6rtd7DlettmX3MV1W71PJ58/EVAqXoKcLSTU+whc7Yq2UE6oxHxf868eIYW4kvhMbRiTNDyoWFruf0aX2XA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.160.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-oa1-f50.google.com with SMTP id 586e51a60fabf-2d522f699bcso855585fac.2
-        for <linux-ide@vger.kernel.org>; Mon, 26 May 2025 07:03:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748268232; x=1748873032;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3Yw5iSzYbzriDp17/brRyJ5/xBiVxOZLd/jW4wl5BxA=;
-        b=VkaYagylmfFSYFvJnXuCESYjRsCUZtPEJa5JoKoIOrdHN11kGReFxFs32T4KMm2KGI
-         ug9M9Krh7hBnoxxH1uIKCDjfuoKBA4HwtVW3dvjEcIkbEEe7mMWMVuTvGyYQUIKge3fL
-         wqRxvO+wLyhKoneM8jqJXONTkpW2TBcsMFjKfpEwGYFeLhcPXohv7WUaUtoN8Um7nn8h
-         26RCy85GFEY3pjMD+cwS6aY9ShRK7jg0+PJwuwtwKFG+ScojvFqH0TOhHhN0nohJsjVd
-         q8J3006EptGdrMZkouh5C0Tl40+hNWaVYCQfswkbJs50Xn+EJA/yodB58OcnuKU2QE8c
-         /ywg==
-X-Forwarded-Encrypted: i=1; AJvYcCVIUz5ktnNE1ATg3XWsIvrrIvLMSe86Hx1HOrVQ2INb1n41eyhhESajsTYMsleCJrrfO8Fo3GynCAg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxzAozEW/EoIGZgAME2DO8Gz/IhIZQugriQQQxD/JYW+qM8TmH5
-	Zd8+rrMvsNoWH9xNFsW/HuT1+cYiXX4IjWKFcY6yZKUzs1JNTEA7XaLbBS8cllY8
-X-Gm-Gg: ASbGncsmDInxzJIVflawgA1BX2NIA1wLPn9QDhUyV7T33c+mDwEpyeMP/AfrBi+JJZU
-	tZRmGrQjJoo2M56HB5pgrQdSdJIF7hHYr9c9LLkNeooZ64OdKAjVggEJWi7/pkJ6N63GS1Qi7/i
-	Ir54+IWBGKW7A09ch31m142Is2e8h5619xf4/kW+7GlY7qEkZFF+LTIpwyj29GVwGLvoF1vk4zv
-	Jhl+QK50Co5sj8IkdaRsQD6sDdrbrzGRZy/ZKH9peb66rlgo3IGuSXFW5QAKkRVZSEJQGnV2aKf
-	BLRRHFimdL56e9ppy6KyVVXoErHgJIyxWSkEMvFPS+tXTiNXxbMZVe1RK4tzKPgBPqpUPs0hTQG
-	oKsTb5g54rI/8zE6a4Q==
-X-Google-Smtp-Source: AGHT+IGHbJrY4pScrp/4fgyjoOW599sUr/odUY2VWB0l4IyD9gxeJP+bdHD30ExVAanYZw0JFot8Gg==
-X-Received: by 2002:a05:6870:1796:b0:2d5:4f4:e24d with SMTP id 586e51a60fabf-2e861d6321dmr4538893fac.6.1748268232263;
-        Mon, 26 May 2025 07:03:52 -0700 (PDT)
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com. [209.85.167.176])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-2e3c06a93d5sm4891214fac.12.2025.05.26.07.03.51
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 May 2025 07:03:51 -0700 (PDT)
-Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-3fefbbc7dd4so1362889b6e.2
-        for <linux-ide@vger.kernel.org>; Mon, 26 May 2025 07:03:51 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXjWu7vl2tcuJ8sVQuXuC43Vdie0Uj3dEnp/FN+PhV/JwqLG9cY4Omv07PYu4nFhmM3r8ncoG2xi+I=@vger.kernel.org
-X-Received: by 2002:a05:620a:3190:b0:7c5:4eee:5409 with SMTP id
- af79cd13be357-7ceecc3c64amr1605591185a.48.1748268219856; Mon, 26 May 2025
- 07:03:39 -0700 (PDT)
+	s=arc-20240116; t=1748268341; c=relaxed/simple;
+	bh=LH6Iq3j6JsOkNQ560qIHHXDt+2hdWhE+g9QluxxGJrg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rv6UJgj+6fpLUhPQQfNg6ThtHiQrHTegzc4SQkkNn67dpdvUi19qSvZ1YuPH+/Cbn6+/0V3HOzqI8y1Zz5uYKfN5MIZeAei9xIDVYS83QX7cA7v6zsa46j+a6OlMFiG2tzLEm1HaK6fM/AjXyYQpt9eoAFfRJkXCUNFGiQo+iIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=alwUrqQe; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="alwUrqQe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1C35C4CEE9;
+	Mon, 26 May 2025 14:05:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1748268340;
+	bh=LH6Iq3j6JsOkNQ560qIHHXDt+2hdWhE+g9QluxxGJrg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=alwUrqQeA58v50sO5AwnAj8HiAqt9wWu35kKVXg4nHl8l5IytmT/Hufo4YBkpS/H+
+	 CpZGqW4La9mxRglDKzjhMMDySTThfmBhWAss/yjmBEOyswHzRaDdlEGewoIIoVFuQr
+	 vIilPX7KZNm6c+Jg/8aOSGtke62xez3Lu0c0MswfLSW3weew65ZOgJJXFlp8WlqhRJ
+	 /40N3e5f0/i7lhZ9lsNzcyHxv6eKsFAQkMI+8xZs/LfnlHPt9+qTO5Qg5fxPAetGAP
+	 CvN6Qn48c3qliUqqQjdgcS2PkUkrVXIiwxciG27jo652ehOyR+/QhnGg/bHEgumvIZ
+	 mhp/EIf9PRFuQ==
+Date: Mon, 26 May 2025 16:05:36 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Jian-Hong Pan <jhp@endlessos.org>
+Cc: kernel-dev@rsta79.anonaddy.me, Hans de Goede <hdegoede@redhat.com>,
+	Andy Yang <andyybtc79@gmail.com>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: ahci: Disallow LPM for ASUSPRO-D840SA motherboard
+Message-ID: <aDR1MB2ppvRq_9-C@ryzen>
+References: <20250526140312.228894-2-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250325155613.352680-1-p.pisati@gmail.com> <20250325155613.352680-3-p.pisati@gmail.com>
-In-Reply-To: <20250325155613.352680-3-p.pisati@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 26 May 2025 16:03:27 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdViC5UYcdca5yHzTYhkNF60sNJOd3y=JMNRn5zfApSEOg@mail.gmail.com>
-X-Gm-Features: AX0GCFuoxcpObwYMdx2bQg0VrY-3KmF7-dZUL-LWHGwcdoJt6f4gDNi9UsoTaqs
-Message-ID: <CAMuHMdViC5UYcdca5yHzTYhkNF60sNJOd3y=JMNRn5zfApSEOg@mail.gmail.com>
-Subject: Re: [PATCH v4 2/2] m68k: defconfig: enable PATA_CSWARP
-To: Paolo Pisati <p.pisati@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250526140312.228894-2-cassel@kernel.org>
 
-On Tue, 25 Mar 2025 at 16:56, Paolo Pisati <p.pisati@gmail.com> wrote:
-> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
+On Mon, May 26, 2025 at 04:03:13PM +0200, Niklas Cassel wrote:
+> A user has bisected a regression which causes graphical corruptions on his
+> screen to commit 7627a0edef54 ("ata: ahci: Drop low power policy board
+> type").
+> 
+> Simply reverting commit 7627a0edef54 ("ata: ahci: Drop low power policy
+> board type") makes the graphical corruptions on his screen to go away.
+> (Note: there are no visible messages in dmesg that indicates a problem
+> with AHCI.)
+> 
+> The user also reports that the problem occurs regardless if there is an
+> HDD or an SSD connected via AHCI, so the problem is not device related.
+> 
+> The devices also work fine on other motherboards, so it seems specific to
+> the ASUSPRO-D840SA motherboard.
+> 
+> While enabling low power modes for AHCI is not supposed to affect
+> completely unrelated hardware, like a graphics card, it does however
+> allow the system to enter deeper PC-states, which could expose ACPI issues
+> that were previously not visible (because the system never entered these
+> lower power states before).
+> 
+> There are previous examples where enabling LPM exposed serious BIOS/ACPI
+> bugs, see e.g. commit 240630e61870 ("ahci: Disable LPM on Lenovo 50 series
+> laptops with a too old BIOS").
+> 
+> Since there hasn't been any BIOS update in years for the ASUSPRO-D840SA
+> motherboard, disable LPM for this board, in order to avoid entering lower
+> PC-states, which triggers graphical corruptions.
+> 
+> Reported-by: Andy Yang <andyybtc79@gmail.com>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220111
+> Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Hello Andy,
 
-Gr{oetje,eeting}s,
-
-                        Geert
+Could you please test this patch?
 
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Kind regards,
+Niklas
