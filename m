@@ -1,120 +1,121 @@
-Received: from mail-vk1-f169.google.com (mail-vk1-f169.google.com [209.85.221.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FA5A54739
-	for <linux-ide@vger.kernel.org>; Mon, 26 May 2025 11:51:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D661146D6A
+	for <linux-ide@vger.kernel.org>; Mon, 26 May 2025 14:03:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748260307; cv=none; b=Nt5JrsO74sJu3A9H8KySxkdextgCdh6fUIrkl66UPLeXqDh79+VRp0ApaFVmkgW5ofVHCYMelKwT16xsFDGsyCpoupoG/lflPWMkEK1WXLZrX68J9lp+IFWW/IXur9hMeSh+V4u32pkYuvaQ6vY2LJUjyF194H7tT3VdAaI+Jkg=
+	t=1748268199; cv=none; b=S8JT0RW07352sJUHagcQQusGM2Q0WPNnoi4zktCQ+6e1LVh8PXHX8hqIAv/V7WuXI6dodfWVypeV7puf5yfOtSWTecWabPpWZfbMMTcKD5eWKfrH4saXakL2CAt1Nxl/t9hK/s7U4eYajpyWF4OU6kLtjYOZiOFtc29Sb1pmLDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748260307; c=relaxed/simple;
-	bh=eVe7gzDvYkF/v7+yXapTB41J01zj8EULcLXAJYEXPmM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hZbgzfVkOJ8XOLamSKLmTS1h/ADtCXZfi73nqwlGLwxFe4/lzfRUU4othbZ8qvpC7fph4URYigyNkMMfv7KTBO6OdBz7q8RMn6qFNr7c1i8rs1FaiZYwDO8H5+R5ljkRqfF5BS4/eFfRTKQHN4EL8xycFxhM5pRr92ENKEXjywY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZgL0wDew; arc=none smtp.client-ip=209.85.221.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1748268199; c=relaxed/simple;
+	bh=cgADaCG4ANfi0RaQJE8ZhI6v1htljNc6MoMXwQzabw0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=J9LD3D0ggeitdEYC5WHfgIbkz8+QBLhOwQ7wWxPVi+w7D/REdXvCJfV9QEIeowcGnEjUz54SykFIcwVGSvnY4bAG9nOD7oz2wdS/Mwy1aDMHofoetv28tjyPq6e1djJfcfW3QaJQDKqzK3EcKQdSw0RzOabdYDI9CzsVNVp71rY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X9U2GefS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZgL0wDew"
-Received: by mail-vk1-f169.google.com with SMTP id 71dfb90a1353d-52dbcd398f9so1464580e0c.0
-        for <linux-ide@vger.kernel.org>; Mon, 26 May 2025 04:51:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1748260305; x=1748865105; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vk7I/TjZus1WfjiLul9K4l43bV0WtVtb36G6wrfsiH4=;
-        b=ZgL0wDewzad+sjLGrTodrMbBrGDcwwQu2VhZPTiMRS8yp5S9jeQvWm/SNb8pUgT5FJ
-         OpaAPqBChVNI+Ymq2K/yJDU7SmIT966mZcTGxXsTZXqFriEyy43d/VK6K2E8xTxZjH3s
-         U62kL9CeeWYKdBw8etgqHHqwezA/Pr8uigxl/tG6hxtLZHfXhtt9Ji2LB+M0JIuIZJWo
-         XFK5zNwJjRzruel+tetDp0k6FLFWdhXcwqaNptz3ijurXSIEXwSnDyqyzPwbc0RWWmqU
-         VxY2CTCW5HjXfyBZMVp1U9qh+laOYur+MZ3prUVO5JS4IxljMPhbnoGh0U9jP3p6lA0H
-         /f4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748260305; x=1748865105;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=vk7I/TjZus1WfjiLul9K4l43bV0WtVtb36G6wrfsiH4=;
-        b=Nqd5QX3xhJlZlZeuEp8DIlyco7nmVTdq4thxBysiVhdo/LoQ0OZCGssfkEB9qD1lz+
-         JFpFuL0agOG+2oGTwb+SVn68iTziDWuOip+Cx4oXVZ1B6p17YT6YtGPXzLWzGNL6c+Hw
-         W0laUtwDJkdYIWN/SFbUdE88oPgt2NGru/Ffo81107wHXXm57uX2biqsqE93yU121fTC
-         aAM6d9vabPC4i2V+Wp3bzlr0Ag6G6y4s/ybPW9QOzFmf5HMVK5ojgJ+9eqH05ry3opWB
-         e50whpHDmWmH+an65xf9zDVZFsTuh7M9kZH7BxVtO06NP5xavHynN6e9IZUI0BJfTFmb
-         A2Cg==
-X-Forwarded-Encrypted: i=1; AJvYcCXaSyJfGg5/a32EIA3NRFtysU6QST3bvTrHbMaBBPXgTRAmIE1v/q9UkeF2rWVIdaBTW76i/rZQ+zY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw1idFbWLfoCO8Us95dsQnhdJOiLgmxBcRAJe7AfGHXC4GMRyBa
-	4OEZIgtNUc2vJk4GvXzwG+hN/VRBHz3RcCN6cTm2jtG+uPQ0Pf8UinJw3nJZqscEk7GH8sgs6mC
-	7d6vRpJFJDtGhkUywuA9k7mtmAsAxVKw=
-X-Gm-Gg: ASbGncsVGcNvhjX1Yh1gNxa/mit06fecKAt4svhr2IBPSuSnF0H5mqgb45oHyucV/Ck
-	iBY+vGdaSx00cK4vH+0PeXtj78bva0KwTi8XWYryBahG0rIVuARwGH2VdJ7chCBNzmtIu5JiyB7
-	31q3kmy/SuYPhOsVRTifiydD0fXUNWxPdcwJReFaVmLH783z/cd698PwDR1Bga4txrPg==
-X-Google-Smtp-Source: AGHT+IEJff5k2A8k6P3iag0uEos2mJDRIGeS8NhKRZjyRef4636hA/5M4HMNpMmn3C4cZE82rze+xiVAJ/76kykfQIw=
-X-Received: by 2002:a05:6122:2007:b0:52d:bcd1:ab55 with SMTP id
- 71dfb90a1353d-52f1ed6fa19mr10025557e0c.2.1748260305247; Mon, 26 May 2025
- 04:51:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X9U2GefS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E03BC4CEE9;
+	Mon, 26 May 2025 14:03:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1748268198;
+	bh=cgADaCG4ANfi0RaQJE8ZhI6v1htljNc6MoMXwQzabw0=;
+	h=From:To:Cc:Subject:Date:From;
+	b=X9U2GefScAneNgQkIFLm9qOkxgQVVFkhX1Mfw5mTXV4Cyq3wi8WtFDvBZIyKnmLPa
+	 Rz4XkFKCZ91/YrJrBQagqmgsI+R63F3YLUwLNGzEMcaGIXiw90w1LVB/dxDBfVEBbJ
+	 1mo/p+CJmKhr2g9Ugg6XW6v4szjYX0vkxHDdOl8G27c820vvjc9jTo593sA9nndIDb
+	 wStnp2rfNUZVMsx5upc10HEPJfbyoiymjMH0PytYojRcMTjD0yiU7IjSydmVMJuSST
+	 qjFZb6ixDpUSyn0ZJ3eqlnTY6r0vuRnEy+b/Drh/L50FQHBsoqjrPvgvsLfvMwFX9D
+	 0a4X29LzvUrqw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Jian-Hong Pan <jhp@endlessos.org>
+Cc: kernel-dev@rsta79.anonaddy.me,
+	Hans de Goede <hdegoede@redhat.com>,
+	Andy Yang <andyybtc79@gmail.com>,
+	linux-ide@vger.kernel.org
+Subject: [PATCH] ata: ahci: Disallow LPM for ASUSPRO-D840SA motherboard
+Date: Mon, 26 May 2025 16:03:13 +0200
+Message-ID: <20250526140312.228894-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250325155613.352680-1-p.pisati@gmail.com> <aCSBV_L-NcNX4n7G@akinoame>
- <30ba2e36-8957-4dc0-a5d7-85ba71ad0a59@kernel.org>
-In-Reply-To: <30ba2e36-8957-4dc0-a5d7-85ba71ad0a59@kernel.org>
-From: Paolo Pisati <p.pisati@gmail.com>
-Date: Mon, 26 May 2025 13:51:34 +0200
-X-Gm-Features: AX0GCFvO8Va9CeULMkFesSsZFw4wit0oh9MQ_2DCVFRYVjrkbWKkIl8KYMha6qQ
-Message-ID: <CAMmgNdZ0RT+GTrK_mmeG3d=Khtck80gE9itrjSQbOrtKB=_U2w@mail.gmail.com>
-Subject: Re: [PATCH v4 0/2] m68k: pata_cswarp: Add Amiga cslab ata support
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, Damien Le Moal <dlemoal@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2709; i=cassel@kernel.org; h=from:subject; bh=cgADaCG4ANfi0RaQJE8ZhI6v1htljNc6MoMXwQzabw0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJMSha8uvYrb6HojuyIzSnCez88X5hwiWdi1McHZbO7m 3ewH4i70VHKwiDGxSArpsji+8Nlf3G3+5TjindsYOawMoEMYeDiFICJ7H7KyLAzduXPqeU3jVYo +q8q+zHzu0v+1Lz1SxU4Hv5an+EukvOCkeFg6hfuXZqmojf2yesW23w40p986+F9sbzXq/O6r5x /v5wNAA==
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Hi Geert,
+A user has bisected a regression which causes graphical corruptions on his
+screen to commit 7627a0edef54 ("ata: ahci: Drop low power policy board
+type").
 
-any chance you could give us an update on this?
+Simply reverting commit 7627a0edef54 ("ata: ahci: Drop low power policy
+board type") makes the graphical corruptions on his screen to go away.
+(Note: there are no visible messages in dmesg that indicates a problem
+with AHCI.)
 
-On Wed, May 14, 2025 at 3:38=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
- wrote:
->
-> On 5/14/25 13:41, Paolo Pisati wrote:
-> > On Tue, Mar 25, 2025 at 04:56:11PM +0100, Paolo Pisati wrote:
-> >> Here is a driver (and the subsequent defconfig change) for the pata/CF=
- socket in
-> >> the CS-Lab Warp series of Amiga boards.
-> >>
-> >> Changes in v4:
-> >>  - refactor pata_cswarp_data_xfer()
-> >>  - ioremap WARP_OFFSET_ATA region
-> >>
-> >> Changes in v3:
-> >>  - suppress a comment
-> >>  - properly return ata_host_activate() error code
-> >>
-> >> Change in v2:
-> >>  - fix style, remove duplicate swap macro, driver version, etc
-> >>  - rework the zorro attach mechanism
-> >>  - remove the unnecessary zorro ids refactor
-> >
-> > Gentle ping about this one: can i get an ACK or a NACK?
->
-> Sorry, this fell through the cracks.
-> This looks OK to me.
->
-> Geert,
->
-> Any comment / ack ? Or do you prefer to take these through the m68k tree =
-?
->
-> --
-> Damien Le Moal
-> Western Digital Research
+The user also reports that the problem occurs regardless if there is an
+HDD or an SSD connected via AHCI, so the problem is not device related.
 
+The devices also work fine on other motherboards, so it seems specific to
+the ASUSPRO-D840SA motherboard.
 
+While enabling low power modes for AHCI is not supposed to affect
+completely unrelated hardware, like a graphics card, it does however
+allow the system to enter deeper PC-states, which could expose ACPI issues
+that were previously not visible (because the system never entered these
+lower power states before).
 
---=20
-bye,
-p.
+There are previous examples where enabling LPM exposed serious BIOS/ACPI
+bugs, see e.g. commit 240630e61870 ("ahci: Disable LPM on Lenovo 50 series
+laptops with a too old BIOS").
+
+Since there hasn't been any BIOS update in years for the ASUSPRO-D840SA
+motherboard, disable LPM for this board, in order to avoid entering lower
+PC-states, which triggers graphical corruptions.
+
+Reported-by: Andy Yang <andyybtc79@gmail.com>
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220111
+Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/ahci.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 163ac909bd06..03f24bff040c 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1411,7 +1411,10 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ static bool ahci_broken_lpm(struct pci_dev *pdev)
+ {
+ 	static const struct dmi_system_id sysids[] = {
+-		/* Various Lenovo 50 series have LPM issues with older BIOSen */
++		/*
++		 * Various Lenovo 50 series and some ASUS boards have LPM issues
++		 * with older BIOS versions.
++		 */
+ 		{
+ 			.matches = {
+ 				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+@@ -1446,6 +1449,13 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
+ 			 */
+ 			.driver_data = "20180310", /* 2.35 */
+ 		},
++		{
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
++				DMI_MATCH(DMI_PRODUCT_VERSION, "ASUSPRO D840MB_M840SA/D840MB"),
++			},
++			.driver_data = "20230208", /* 320 */
++		},
+ 		{ }	/* terminate list */
+ 	};
+ 	const struct dmi_system_id *dmi = dmi_first_match(sysids);
+-- 
+2.49.0
+
