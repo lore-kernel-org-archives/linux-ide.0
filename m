@@ -1,63 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DA3A1A08CA
-	for <linux-ide@vger.kernel.org>; Tue,  3 Jun 2025 17:45:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21B4228ECC9;
+	Wed,  4 Jun 2025 11:37:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748972738; cv=none; b=RWlTksct8s/RlYH6GTpU8qC73nIC+kch6T2cNnLb2E/pFcFFOIzUF+cg36fWGwmbBhA6KnkVL050bmJ8XbsRRdBVYwvr0krJp7UUsk7xa2UnQW/CMHbLcPSU3mZ1UcIkYvefWzuu9gNSAefQD5Wx6wRyB1hLVLkdfplNw7B93kA=
+	t=1749037072; cv=none; b=nwEOtA3tV5A/R+dNGxIOwVyeH0FWC9fSWWNh1kRIsxKDjjLlyN1e1B517INJXktEuOeTR9vdcn4SXAEy6zU/zD6xTab5d8TyhJ+mxyPtZHkee+VY/6kpyC5xdBJ6SGcmHs4Nqrg2uXE+yb4uffklb17XfRx0W5MghqwTsjX3tUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748972738; c=relaxed/simple;
-	bh=ceryW0dT6GixY6w++2+pg3u46GUp+u8UhuN42df11Xg=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=lAlr/znddE4/2a4PnMG9Omqz1f9Cr7JPVjIwST8bt7o2KZaiNngkZaJINPd8vb71A5/heXr0Kys/fMY7ATjJo3/S7UNEDJvMeldEQyFhoLuzu+SmtNxfKKc8GGg4AIGNrFlrqdk3GAUR0tlTVNt9IbtXqOADYCKmqdL2w6rm4aw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k21DCyaG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749037072; c=relaxed/simple;
+	bh=ggwoki9c2BwP/sGTmMHE1VekW49QINGECUTib6v7NpM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fnS+6vEyt9TQNtiBfSLPzOM3OLhnyjQvdaJU+c6QvFTrp7RxdZILtBbtohy6K3CFZ0jdk0iN19IvUAlh0jbrgDY0awoYiCMfT2HaiS0PH9siHo7MkoPzx+wnH8T5dJVv17xUr+lf1ZKOnhHnA7cIVSZEJrtW7eHcvIaaB+qeqig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=neOuFRF4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k21DCyaG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F30CC4CEED;
-	Tue,  3 Jun 2025 17:45:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="neOuFRF4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83471C4CEE7;
+	Wed,  4 Jun 2025 11:37:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748972738;
-	bh=ceryW0dT6GixY6w++2+pg3u46GUp+u8UhuN42df11Xg=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=k21DCyaGhQloHh0q8QJ1P8PsglZ/GXc+8t3iFX0ee8JpqOUW20uVUhmEnCYJxpYZU
-	 AtAB7VKDpMnmgTxMUdqfMIob+A2t4PaiFtI2iK8TsrHTvXNwyaE/ZPHmWVP2N3jits
-	 9Xuys0QKKwAjc9bf7ibkU+d6/L44ytWLMTKNM8ibkoL4QGoDbaeflBAxibaE4tPSHb
-	 z6ehlIEuQeLI+4nXkzPJNe6KNFbcKOXD5zB9fDPUq4HqjnsAeeBJ4E7kE5cPGqRaIW
-	 PoFQcmdSdA0+xY2sccaNPZiirNwZbgIYggtLF1UkEZp9cX42R9D7oYwq+XIHaLV+Rf
-	 xWrv1KB1FyWJg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EADFF380DBEC;
-	Tue,  3 Jun 2025 17:46:11 +0000 (UTC)
-Subject: Re: [GIT PULL] ata changes for 6.16-rc1
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20250603060658.171254-1-dlemoal@kernel.org>
-References: <20250603060658.171254-1-dlemoal@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20250603060658.171254-1-dlemoal@kernel.org>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.16-rc1
-X-PR-Tracked-Commit-Id: a374cfbf609017f77a985357656be07a2da22c5f
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: efe19d34f6361c6fc90a2c249796af929db7d4a8
-Message-Id: <174897277049.1603771.1510743713787631471.pr-tracker-bot@kernel.org>
-Date: Tue, 03 Jun 2025 17:46:10 +0000
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
+	s=k20201202; t=1749037072;
+	bh=ggwoki9c2BwP/sGTmMHE1VekW49QINGECUTib6v7NpM=;
+	h=From:To:Cc:Subject:Date:From;
+	b=neOuFRF48UZGjxlObU4xZCA5Yr9n25W6u25RkSNKEYoOIEw9JUA9ulaCVZe+5lghk
+	 vDC9CaB8Jo4dKC0cdMZ4v3ev3w95q265X23RMSJfMDwyFV5r3efIDpRFx8af1L0FZJ
+	 +FnWZ8T67ALqDl28OFOpLkOELjBELaeZ7Jj6OqUxC2SAR0XFQt6Y8vX0QBlBHYFOly
+	 GJNcz4QDfHos1z3mxPI1zhYRmiuAOXaoOjzMzcSzPx+T7dz2Jd6+81YF9HTOtR/4mB
+	 LWRhfpurNku4qigtpFSKKiD0aHf6h8MRm3/J21GbYevZiA1PHmL1PIT8UzHzpn9JKh
+	 L5YKCSq5yxmSQ==
+From: Philipp Stanner <phasta@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Philipp Stanner <phasta@kernel.org>
+Subject: [PATCH] ata: macio: Use non-hybrid PCI devres API
+Date: Wed,  4 Jun 2025 13:34:24 +0200
+Message-ID: <20250604113423.138595-2-phasta@kernel.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-The pull request you sent on Tue,  3 Jun 2025 15:06:58 +0900:
+macio enables its PCI device with pcim_enable_device(). This,
+implicitly, switches the function pci_request_regions() into managed
+mode, where it becomes a devres function.
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.16-rc1
+The PCI subsystem wants to remove this hybrid nature from its
+interfaces. To do so, users of the aforementioned combination of
+functions must be ported to non-hybrid functions.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/efe19d34f6361c6fc90a2c249796af929db7d4a8
+Replace the call to sometimes-managed pci_request_regions() with one to
+the always-managed pcim_request_all_regions().
 
-Thank you!
+Signed-off-by: Philipp Stanner <phasta@kernel.org>
+---
+Hi,
+seems I forgot sending this patch out a while ago. Mea culpa.
 
+PCI has currently chained the changes mentioned above queued up for
+Linus, so it's probably a good idea to get this into macio relatively
+soonish. Otherwise the driver would likely fail to reload in v6.16,
+because the device's PCI regions remain blocked.
+
+Thx
+P.
+---
+ drivers/ata/pata_macio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index fbf5f07ea357..f7a933eefe05 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -1298,7 +1298,7 @@ static int pata_macio_pci_attach(struct pci_dev *pdev,
+ 	priv->dev = &pdev->dev;
+ 
+ 	/* Get MMIO regions */
+-	if (pci_request_regions(pdev, "pata-macio")) {
++	if (pcim_request_all_regions(pdev, "pata-macio")) {
+ 		dev_err(&pdev->dev,
+ 			"Cannot obtain PCI resources\n");
+ 		return -EBUSY;
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.48.1
+
