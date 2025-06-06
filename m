@@ -1,67 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8B18C0E;
-	Fri,  6 Jun 2025 01:17:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407D22857F5;
+	Fri,  6 Jun 2025 09:01:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749172668; cv=none; b=Rsuz3kzLHvDau2It3xymDtcb/9lC2O8cXn99pXE8Dc2PP0rCgQ+YR4zm07JH2/QlkH0htlbWlkLqi0u5J3pgcbYpYRFw5Vd7iNJuDNTE3a2x+a4X3vpkheh4XNNzIcpv/9xyE1uRcW2P4emdoHfGzjVRaE171EKQtpXURA7gSZw=
+	t=1749200499; cv=none; b=WjncppOy34YbIT43DuA90UJECYh+yjfueFPLjKdSTClPsTySlzT9WnTe5PyT7ertDxs3xhJEsVl0pWKU7Js7zlC6hHoSgj0geEROApPzzBKT8fjDoKHrrFCteIUur5MofKu+E7MIMaThnMk1n5vV3lIoDtsW0xVtkLG/37bQzHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749172668; c=relaxed/simple;
-	bh=IJnSJlEquy9vsdCcu1kOyeNtlynH+OnXTm+/vp//+yk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Erho5ozNHD6LKhMnPPwaP+Cl5Z6Xf8Jeeyo+mm+Vi69cyt1DUYq3Yegyoqv1LVK9qzvuxB21ILZyWYznx/czAhDYCMRmDYMNZl5nO1LM25GkDbDdNrhRx3i8o8U1LbI8UF6z4fcl3Won9Bs9RmCvCKqJvpj/sRzB4PIdKIFeTTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YTTXL3uj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749200499; c=relaxed/simple;
+	bh=ohL+btFfgpdhtKelY1Y8ebWgP4pB+nV8VoY8zvTjM1E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Alm83mBZE2yrgEbLofgJAxcHJXg+y3p2qiAoqM13QlCy0G4UIH83lAYiuoONCjmf5M5FlBaAcCLjWNe8FzhPXWokzagB4VxKDHytcTkiuZ8OxTqkdiA7o7KcLOgqqp073ret6wFRvB0HJ7Nt6nCqB/2wBb4WXTQul0/AFi5EnGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Ijnjazfg; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YTTXL3uj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3ABFC4CEE7;
-	Fri,  6 Jun 2025 01:17:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749172667;
-	bh=IJnSJlEquy9vsdCcu1kOyeNtlynH+OnXTm+/vp//+yk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=YTTXL3ujRja/OXt32PsutC4+4COOnaEHFM888nh5NYR55WCGbTmhwST9tFALHZOSj
-	 RDsDhX5q48MR8/vGpcU/oGg7HEqMonLIfKosJFdDdS3zwfTU2baVjg5uGEln3650g6
-	 WZAXydAY/8rzBSBgA8p1CdALx/Tsv2tDTxIyeVHxFUDfoRjxVtKjgBvGP0xgVdpd66
-	 5bHZhbHp4PcamxUnZT2xsnd+SQALM0cYIH5S+aPM7S5bM5ufll2MWKqR3how5i9/Rh
-	 D+87DBZz1mO1+rNgJOmX2it//OYJA58q+hqnSh4B8/QFqtS07VDlHqZVlZQqpLfC1I
-	 dpESHU2hMUhPg==
-Message-ID: <dbca1709-668f-470f-b1c0-d807f6ba8c9d@kernel.org>
-Date: Fri, 6 Jun 2025 10:17:45 +0900
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Ijnjazfg"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=cltWH0Pdf2xnkg0LSwjiml4ayLwECkb1Q68tVB+aZJY=; t=1749200498; x=1750410098; 
+	b=IjnjazfgXC3iIWFioKDEa8fb7Ze0dSZ1uMIrJ7vWtadfUh9NXE1mZprWzCHUPVZZ8dMSWVgmGFx
+	Nu5To6Tu0xIwQfFTQkHg327RLHPmh5AnFDCCCPBwGxCCZMvtxIUi6uv/STUC2+W5Y/g70Pwe9g9iT
+	/M7wbbZ21YH1Xf7ai2CufgEj3MOjbOiCUDS+S3yPnyJYl6/vqCDREyo8+4jjh5cBGZXfGaLL/jegv
+	jXz2UuxBSxhgOCAJvbErgf9luQYd90iTy3FCaAW3Laq3q/hSoZuNcyGzxB2FIKFnnnKUP0EpLRNtn
+	frSObZxP8bMKM7yxRKvNeILVSmwWa/6zovIQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1uNSxD-00000007Yht-1Czm;
+	Fri, 06 Jun 2025 11:01:35 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] ata: pata_cs5536: fix build on 32-bit UML
+Date: Fri,  6 Jun 2025 11:01:11 +0200
+Message-ID: <20250606090110.15784-2-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: macio: Use non-hybrid PCI devres API
-To: Philipp Stanner <phasta@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250604113423.138595-2-phasta@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20250604113423.138595-2-phasta@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 6/4/25 20:34, Philipp Stanner wrote:
-> macio enables its PCI device with pcim_enable_device(). This,
-> implicitly, switches the function pci_request_regions() into managed
-> mode, where it becomes a devres function.
-> 
-> The PCI subsystem wants to remove this hybrid nature from its
-> interfaces. To do so, users of the aforementioned combination of
-> functions must be ported to non-hybrid functions.
-> 
-> Replace the call to sometimes-managed pci_request_regions() with one to
-> the always-managed pcim_request_all_regions().
-> 
-> Signed-off-by: Philipp Stanner <phasta@kernel.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+On 32-bit ARCH=um, CONFIG_X86_32 is still defined, so it
+doesn't indicate building on real X86 machines. There's
+no MSR on UML though, so add a check for CONFIG_X86.
 
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/ata/pata_cs5536.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+index b811efd2cc34..73e81e160c91 100644
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
+@@ -27,7 +27,7 @@
+ #include <scsi/scsi_host.h>
+ #include <linux/dmi.h>
+ 
+-#ifdef CONFIG_X86_32
++#if defined(CONFIG_X86) && defined(CONFIG_X86_32)
+ #include <asm/msr.h>
+ static int use_msr;
+ module_param_named(msr, use_msr, int, 0644);
 -- 
-Damien Le Moal
-Western Digital Research
+2.49.0
+
