@@ -1,422 +1,208 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E21A760DCF;
-	Mon,  9 Jun 2025 14:36:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BE3019ABD8
+	for <linux-ide@vger.kernel.org>; Mon,  9 Jun 2025 14:49:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749479782; cv=none; b=L2qO9OvSG88VUcyWg0taMBfPApgj6TrjcnL0mWj7YUxWNT+YNBoHDDJl9B2J2TORjiOoyMESBYaFnP656FPkerMDw0Ore0gG9NNY1XfdkkesycmO5OOQTiLC2l1aBdZsY3pD8wPhq19jjwkqLbAU/PiOt5llLlPx70aqboYg9IY=
+	t=1749480565; cv=none; b=EkHQLhIaWRejkG/TST7gdqBYZuwb8eaxbsgMFGtlytsg6YU/0bHrKmIbhKs7pHUnsmnsWv/rP7lMh/87f8jfhE562Z/Z7V6UIISFygtfvCyuVqulHZdvTtTbIYkpt/itQf4qcTHswR7wJiFMD2TcZGGRX860iZ0MuJyS5V3y0qc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749479782; c=relaxed/simple;
-	bh=dtDoz4lFxHUrcNFFc2ksHg5b9nQk/UBSA45CCM1lT3M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Fd4N2H/BoWaFNhS/a1+0ryJ0a7R7V1/YOFgU2lKs9Zbrp/CGJxl0ka/EDI1ZGiljvzTQvXCTQRyimLei11x5Ya9QaXwvVbjcrx0Rdr1zCJo1dAiMWsbLPKEbulP/LFpCDDzuh5RFH2P9aBDcnA09DJ3ztAZcCLYnyQ8oo5IJUfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IIB0bmtg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749480565; c=relaxed/simple;
+	bh=daKXwW+BJu08OEr/zgxGMldNFNXDWbPLqMciurIUmOY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Lz4pWfy2t4b7o0B/gk8BeUN/xX6ZoX0nsh93ggvFxxqy/AikPd5U3MGQ4Jx7EZH1GMuVRpOt3ceRYVpJKkxIc4ezx+6JFxoG5dAxUAfA9rB8i00yENHItOn3ClbwZkntMEo6QmOBZyNUY+qRN4saecATgxV+/Lv9UJ+tfepX9T0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NL9NnH5a; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IIB0bmtg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2D8FC4CEF0;
-	Mon,  9 Jun 2025 14:36:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749479780;
-	bh=dtDoz4lFxHUrcNFFc2ksHg5b9nQk/UBSA45CCM1lT3M=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=IIB0bmtgUJBIR6dCR1po5pvdKRHtFE7AWpA+ome6M7jicyY/jzw9KPr6R3dFOzszN
-	 KgTjtQoDJ+Up/RvX95bNTyMOp+rNqGzT44TBBXdaOX0SOgNt7bimDW4esCJO0pbTgt
-	 f68icJ2iX3ohNucKrXxthOCFqbUxPthojzuSjM/0its+2Ty2Gd8gocLCurtk5LjtBh
-	 WH4bNgMK5frossZ/5EZXFAXR7/qMafJ/rcenzo4KRAZeFm6UKtvACpOYd3Wn/pYJy9
-	 6iuTltXaVu33mYMlfymtYYPxYGC+oek+puV0fhsMlwKX87lUpF2k6Yr/IJwCXCBeUL
-	 SuFC9iBCED0ug==
-From: Hans de Goede <hansg@kernel.org>
-To: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Sebastian Reichel <sre@kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Jiri Kosina <jikos@kernel.org>,
-	Benjamin Tissoires <bentiss@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Andy Shevchenko <andy@kernel.org>,
-	Andi Shyti <andi.shyti@kernel.org>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Hans Verkuil <hverkuil@xs4all.nl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jean Delvare <jdelvare@suse.com>,
-	Guenter Roeck <linux@roeck-us.net>
-Cc: Hans de Goede <hansg@kernel.org>,
-	dri-devel@lists.freedesktop.org,
-	linux-media@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-input@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-i2c@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	linux-hwmon@vger.kernel.org
-Subject: [PATCH v2 1/1] MAINTAINERS: .mailmap: Update Hans de Goede's email address
-Date: Mon,  9 Jun 2025 16:35:57 +0200
-Message-ID: <20250609143558.42941-2-hansg@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250609143558.42941-1-hansg@kernel.org>
-References: <20250609143558.42941-1-hansg@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NL9NnH5a"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1749480562;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Wr/cb7vIXqTLUnN3MrKTcXChu8MG+duLCL6zmeO6U74=;
+	b=NL9NnH5apH8PXPIM7pjrJ18ksbQgAhrrCQsO5RGDHTfZ1jkc0KXcuq1ELAnZYKg3vy2yOv
+	1uQZfTMweHKzY8pyUm0up2ppWvPQSi1tPfvFs0bR5k1L5oAVkM4FT8YWWKwpyvMQTLWW6S
+	xyHhEoDa+xZdTWvuPcUi9ipPysHYz4o=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-641-vnxCeSo_NRmReLGwZIXhzQ-1; Mon, 09 Jun 2025 10:49:20 -0400
+X-MC-Unique: vnxCeSo_NRmReLGwZIXhzQ-1
+X-Mimecast-MFC-AGG-ID: vnxCeSo_NRmReLGwZIXhzQ_1749480560
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-ade70c2cfc1so22658566b.3
+        for <linux-ide@vger.kernel.org>; Mon, 09 Jun 2025 07:49:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749480560; x=1750085360;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Wr/cb7vIXqTLUnN3MrKTcXChu8MG+duLCL6zmeO6U74=;
+        b=texXKW2JQoXNVPWhApef/Wosmk7Rk9dUvbTg6tUCuKdCM/DMRyBsDEQrpDLi32xRjq
+         Fl6sAf3eZRPujdYteCF9G1NnuiKQi/o4snFZYYH2PFM/1txwlwv/AnMwjlo2lP7ltU4G
+         nn4HM8VuW5qRB6cceytkqCa3dkmHVQFQh2bvUw9eDJbCWKTepIUW9PPo1/UublVCXZFH
+         tZAKzrTbDCPuEYaMQmgy4NLckYjzn2s0BYT0f3sT+QC+AelLFRjYIcakFYajV+gaQtGP
+         hmzPDiWmYKMWkNrQ6065B3M2U7V87kEise53ilF5QIrUOH2A61Lr9vXbtC2tW5wnSNw0
+         nKng==
+X-Forwarded-Encrypted: i=1; AJvYcCXXldrIFVmSQd7/QIzZDxUUUggwjSnmrCXW3ngIFi21gz9E5aIxfPvHkV9hGm+XtlIUHH9ySN9eUfY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzznd0U5UFD4sbnn37v/n+rrHNuAWobKA/XsW0/E9gZy6cbqOMr
+	9vvui97iY3r5XmmwClvqxf9YTip4PnpWM8Mrvzm6myh2Ng0uf4EEZl2l7xxiKqNASNu8/97VSgo
+	3STrzZqNZvTyJ1wehO0/41PGpIhDo1Vnk9b9ZTWurgkaJB292dd6/jJM2LYSA3w==
+X-Gm-Gg: ASbGncvSHoOshk28+ech5+G3eadTF3dS1NQI/I2jEUmmbrjKFl+KLqGEdwBi1YlG18E
+	0sWWwexuX1z4UXLwb0MrwruJYCDKMnAYv+BsRbfsR7Ba6QYs9E8m5mLM5xAU3f+Lrw0Wiwc627m
+	oFu5lpOtQ/eoWOQd5b4+xrjkaT/5VIo0xeaetYzJaxlqcF7S1FgeBavP8aOoKpcJRrDQRdwjWtC
+	7wvh/FJEU8SwwP/JLxDICZyShTRRWnpRfsmfu6GNu73KX2vUskxcw4156HegtoK8tVI0IO3pvN3
+	xkDktcWXQkhXWobKFbwXxmq3aiba110RykEHm0yndba1PvAIqTbm0Hb6gwYAwOzYBfgYvQUuwv5
+	RTU0sNDW0bQdNCxY+Kokeeq0om6TWL77Rxn/086/RChOcRC6fIYwXyI7m5+bk4Q==
+X-Received: by 2002:a17:907:86a8:b0:ade:9fb:b07d with SMTP id a640c23a62f3a-ade1a8e9cf8mr1377065466b.4.1749480559684;
+        Mon, 09 Jun 2025 07:49:19 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFi+vj8f6+0p0qzeQ+UGo7KFbmqUn1rDkUQ2q48IW1vkbnj6J3hbKIReaLKWAIbFDI+JN1eEg==
+X-Received: by 2002:a17:907:86a8:b0:ade:9fb:b07d with SMTP id a640c23a62f3a-ade1a8e9cf8mr1377062766b.4.1749480559198;
+        Mon, 09 Jun 2025 07:49:19 -0700 (PDT)
+Received: from ?IPV6:2001:1c00:c32:7800:5bfa:a036:83f0:f9ec? (2001-1c00-0c32-7800-5bfa-a036-83f0-f9ec.cable.dynamic.v6.ziggo.nl. [2001:1c00:c32:7800:5bfa:a036:83f0:f9ec])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ade1dc7c786sm574086066b.172.2025.06.09.07.49.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 09 Jun 2025 07:49:18 -0700 (PDT)
+Message-ID: <6ea509c8-b38d-4941-8a29-c1117ff3dd5b@redhat.com>
+Date: Mon, 9 Jun 2025 16:49:17 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] ata: ahci: Refactor ahci_broken_lpm()
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+Cc: kernel-dev@rsta79.anonaddy.me,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-ide@vger.kernel.org, Mario Limonciello <mario.limonciello@amd.com>
+References: <20250609134539.943587-3-cassel@kernel.org>
+Content-Language: en-US, nl
+From: Hans de Goede <hdegoede@redhat.com>
+In-Reply-To: <20250609134539.943587-3-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-I'm moving all my kernel work over to using my kernel.org email address.
-Update .mailmap and MAINTAINER entries still using hdegoede@redhat.com.
+Hi Niklas,
 
-Signed-off-by: Hans de Goede <hansg@kernel.org>
----
- .mailmap    |  1 +
- MAINTAINERS | 72 ++++++++++++++++++++++++++---------------------------
- 2 files changed, 37 insertions(+), 36 deletions(-)
+On 9-Jun-25 3:45 PM, Niklas Cassel wrote:
+> Currently, the match table in ahci_broken_lpm() contains DMI BIOS dates
+> of BIOSes that are known to be working.
+> 
+> Having a list of known to be working versions is usually the wrong way to
+> do things (as this list could theoretically be infinite).
+> 
+> Refactor this match table to contain DMI BIOS dates of BIOSes that are
+> known to not be working, such that this list can be extended with BIOS
+> versions (for other boards) that are known to not be working, where there
+> is no good BIOS version (because all released versions are broken).
+> 
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/ata/ahci.c | 34 ++++++++++++++++++++++++----------
+>  1 file changed, 24 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 163ac909bd06..a6ce172fa928 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1411,27 +1411,39 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+>  static bool ahci_broken_lpm(struct pci_dev *pdev)
+>  {
+>  	static const struct dmi_system_id sysids[] = {
+> -		/* Various Lenovo 50 series have LPM issues with older BIOSen */
+> +		/* Table contains DMI BIOS dates of BIOSes with broken LPM. */
+>  		{
+>  			.matches = {
+>  				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+>  				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad X250"),
+>  			},
+> -			.driver_data = "20180406", /* 1.31 */
+> +			/*
+> +			 * 1.31, released 20180406, has working LPM, mark any
+> +			 * DMI BIOS date before that as broken.
+> +			 */
 
-diff --git a/.mailmap b/.mailmap
-index 9b0dc7c30e6d..6ea2677ae494 100644
---- a/.mailmap
-+++ b/.mailmap
-@@ -276,6 +276,7 @@ Gustavo Padovan <gustavo@las.ic.unicamp.br>
- Gustavo Padovan <padovan@profusion.mobi>
- Hamza Mahfooz <hamzamahfooz@linux.microsoft.com> <hamza.mahfooz@amd.com>
- Hanjun Guo <guohanjun@huawei.com> <hanjun.guo@linaro.org>
-+Hans de Goede <hansg@kernel.org> <hdegoede@redhat.com>
- Hans Verkuil <hverkuil@xs4all.nl> <hansverk@cisco.com>
- Hans Verkuil <hverkuil@xs4all.nl> <hverkuil-cisco@xs4all.nl>
- Harry Yoo <harry.yoo@oracle.com> <42.hyeyoo@gmail.com>
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b8a8d8a5a2e1..020ee13d64c2 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -207,7 +207,7 @@ X:	arch/*/include/uapi/
- X:	include/uapi/
- 
- ABIT UGURU 1,2 HARDWARE MONITOR DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-hwmon@vger.kernel.org
- S:	Maintained
- F:	drivers/hwmon/abituguru.c
-@@ -371,7 +371,7 @@ S:	Maintained
- F:	drivers/platform/x86/quickstart.c
- 
- ACPI SERIAL MULTI INSTANTIATE DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	platform-driver-x86@vger.kernel.org
- S:	Maintained
- F:	drivers/platform/x86/serial-multi-instantiate.c
-@@ -3506,7 +3506,7 @@ F:	arch/arm64/boot/Makefile
- F:	scripts/make_fit.py
- 
- ARM64 PLATFORM DRIVERS
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- M:	Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
- R:	Bryan O'Donoghue <bryan.odonoghue@linaro.org>
- L:	platform-driver-x86@vger.kernel.org
-@@ -3667,7 +3667,7 @@ F:	drivers/platform/x86/asus*.c
- F:	drivers/platform/x86/eeepc*.c
- 
- ASUS TF103C DOCK DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	platform-driver-x86@vger.kernel.org
- S:	Maintained
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pdx86/platform-drivers-x86.git
-@@ -5553,14 +5553,14 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/peter.chen/usb.git
- F:	drivers/usb/chipidea/
- 
- CHIPONE ICN8318 I2C TOUCHSCREEN DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/input/touchscreen/chipone,icn8318.yaml
- F:	drivers/input/touchscreen/chipone_icn8318.c
- 
- CHIPONE ICN8505 I2C TOUCHSCREEN DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- S:	Maintained
- F:	drivers/input/touchscreen/chipone_icn8505.c
-@@ -6844,7 +6844,7 @@ F:	include/dt-bindings/pmu/exynos_ppmu.h
- F:	include/linux/devfreq-event.h
- 
- DEVICE RESOURCE MANAGEMENT HELPERS
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- R:	Matti Vaittinen <mazziesaccount@gmail.com>
- S:	Maintained
- F:	include/linux/devm-helpers.h
-@@ -7435,7 +7435,7 @@ F:	drivers/gpu/drm/gud/
- F:	include/drm/gud.h
- 
- DRM DRIVER FOR GRAIN MEDIA GM12U320 PROJECTORS
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- S:	Maintained
- T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
- F:	drivers/gpu/drm/tiny/gm12u320.c
-@@ -7809,7 +7809,7 @@ F:	drivers/gpu/drm/ci/xfails/vkms*
- F:	drivers/gpu/drm/vkms/
- 
- DRM DRIVER FOR VIRTUALBOX VIRTUAL GPU
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	dri-devel@lists.freedesktop.org
- S:	Maintained
- T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
-@@ -8208,7 +8208,7 @@ F:	drivers/gpu/drm/panel/
- F:	include/drm/drm_panel.h
- 
- DRM PRIVACY-SCREEN CLASS
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	dri-devel@lists.freedesktop.org
- S:	Maintained
- T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
-@@ -10101,7 +10101,7 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/connector/gocontroll,moduline-module-slot.yaml
- 
- GOODIX TOUCHSCREEN
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- S:	Maintained
- F:	drivers/input/touchscreen/goodix*
-@@ -10139,7 +10139,7 @@ F:	include/dt-bindings/clock/google,gs101.h
- K:	[gG]oogle.?[tT]ensor
- 
- GPD POCKET FAN DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	platform-driver-x86@vger.kernel.org
- S:	Maintained
- F:	drivers/platform/x86/gpd-pocket-fan.c
-@@ -11287,7 +11287,7 @@ F:	drivers/i2c/busses/i2c-via.c
- F:	drivers/i2c/busses/i2c-viapro.c
- 
- I2C/SMBUS INTEL CHT WHISKEY COVE PMIC DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-i2c@vger.kernel.org
- S:	Maintained
- F:	drivers/i2c/busses/i2c-cht-wc.c
-@@ -11868,13 +11868,13 @@ S:	Supported
- F:	sound/soc/intel/
- 
- INTEL ATOMISP2 DUMMY / POWER-MANAGEMENT DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	platform-driver-x86@vger.kernel.org
- S:	Maintained
- F:	drivers/platform/x86/intel/atomisp2/pm.c
- 
- INTEL ATOMISP2 LED DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	platform-driver-x86@vger.kernel.org
- S:	Maintained
- F:	drivers/platform/x86/intel/atomisp2/led.c
-@@ -13535,7 +13535,7 @@ S:	Maintained
- F:	drivers/platform/x86/lenovo-wmi-hotkey-utilities.c
- 
- LETSKETCH HID TABLET DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- S:	Maintained
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/hid/hid.git
-@@ -13585,7 +13585,7 @@ F:	drivers/ata/sata_gemini.c
- F:	drivers/ata/sata_gemini.h
- 
- LIBATA SATA AHCI PLATFORM devices support
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-ide@vger.kernel.org
- S:	Maintained
- F:	drivers/ata/ahci_platform.c
-@@ -13956,7 +13956,7 @@ F:	Documentation/admin-guide/ldm.rst
- F:	block/partitions/ldm.*
- 
- LOGITECH HID GAMING KEYBOARDS
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- S:	Maintained
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/hid/hid.git
-@@ -14623,7 +14623,7 @@ F:	Documentation/devicetree/bindings/power/supply/maxim,max17040.yaml
- F:	drivers/power/supply/max17040_battery.c
- 
- MAXIM MAX17042 FAMILY FUEL GAUGE DRIVERS
--R:	Hans de Goede <hdegoede@redhat.com>
-+R:	Hans de Goede <hansg@kernel.org>
- R:	Krzysztof Kozlowski <krzk@kernel.org>
- R:	Marek Szyprowski <m.szyprowski@samsung.com>
- R:	Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
-@@ -15414,7 +15414,7 @@ Q:	https://patchwork.kernel.org/project/netdevbpf/list/
- F:	drivers/net/ethernet/mellanox/mlxfw/
- 
- MELLANOX HARDWARE PLATFORM SUPPORT
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- M:	Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
- M:	Vadim Pasternak <vadimp@nvidia.com>
- L:	platform-driver-x86@vger.kernel.org
-@@ -16332,7 +16332,7 @@ S:	Maintained
- F:	drivers/platform/surface/surface_gpe.c
- 
- MICROSOFT SURFACE HARDWARE PLATFORM SUPPORT
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- M:	Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
- M:	Maximilian Luz <luzmaximilian@gmail.com>
- L:	platform-driver-x86@vger.kernel.org
-@@ -17496,7 +17496,7 @@ F:	tools/include/nolibc/
- F:	tools/testing/selftests/nolibc/
- 
- NOVATEK NVT-TS I2C TOUCHSCREEN DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/input/touchscreen/novatek,nvt-ts.yaml
-@@ -22430,7 +22430,7 @@ K:	fu[57]40
- K:	[^@]sifive
- 
- SILEAD TOUCHSCREEN DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- L:	platform-driver-x86@vger.kernel.org
- S:	Maintained
-@@ -22463,7 +22463,7 @@ F:	Documentation/devicetree/bindings/i3c/silvaco,i3c-master.yaml
- F:	drivers/i3c/master/svc-i3c-master.c
- 
- SIMPLEFB FB DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-fbdev@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/display/simple-framebuffer.yaml
-@@ -22592,7 +22592,7 @@ F:	Documentation/hwmon/emc2103.rst
- F:	drivers/hwmon/emc2103.c
- 
- SMSC SCH5627 HARDWARE MONITOR DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-hwmon@vger.kernel.org
- S:	Supported
- F:	Documentation/hwmon/sch5627.rst
-@@ -23241,7 +23241,7 @@ S:	Supported
- F:	Documentation/process/stable-kernel-rules.rst
- 
- STAGING - ATOMISP DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- M:	Mauro Carvalho Chehab <mchehab@kernel.org>
- R:	Sakari Ailus <sakari.ailus@linux.intel.com>
- L:	linux-media@vger.kernel.org
-@@ -23538,7 +23538,7 @@ F:	arch/m68k/sun3*/
- F:	drivers/net/ethernet/i825xx/sun3*
- 
- SUN4I LOW RES ADC ATTACHED TABLET KEYS DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/input/allwinner,sun4i-a10-lradc-keys.yaml
-@@ -25258,7 +25258,7 @@ F:	Documentation/hid/hiddev.rst
- F:	drivers/hid/usbhid/
- 
- USB INTEL XHCI ROLE MUX DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-usb@vger.kernel.org
- S:	Maintained
- F:	drivers/usb/roles/intel-xhci-usb-role-switch.c
-@@ -25449,7 +25449,7 @@ F:	Documentation/firmware-guide/acpi/intel-pmc-mux.rst
- F:	drivers/usb/typec/mux/intel_pmc_mux.c
- 
- USB TYPEC PI3USB30532 MUX DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-usb@vger.kernel.org
- S:	Maintained
- F:	drivers/usb/typec/mux/pi3usb30532.c
-@@ -25478,7 +25478,7 @@ F:	drivers/usb/host/uhci*
- 
- USB VIDEO CLASS
- M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-media@vger.kernel.org
- S:	Maintained
- W:	http://www.ideasonboard.org/uvc/
-@@ -26001,7 +26001,7 @@ F:	include/uapi/linux/virtio_snd.h
- F:	sound/virtio/*
- 
- VIRTUAL BOX GUEST DEVICE DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- M:	Arnd Bergmann <arnd@arndb.de>
- M:	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
- S:	Maintained
-@@ -26010,7 +26010,7 @@ F:	include/linux/vbox_utils.h
- F:	include/uapi/linux/vbox*.h
- 
- VIRTUAL BOX SHARED FOLDER VFS DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-fsdevel@vger.kernel.org
- S:	Maintained
- F:	fs/vboxsf/*
-@@ -26263,7 +26263,7 @@ F:	drivers/mmc/host/wbsd.*
- 
- WACOM PROTOCOL 4 SERIAL TABLETS
- M:	Julian Squires <julian@cipht.net>
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	linux-input@vger.kernel.org
- S:	Maintained
- F:	drivers/input/tablet/wacom_serial4.c
-@@ -26424,7 +26424,7 @@ F:	include/linux/wwan.h
- F:	include/uapi/linux/wwan.h
- 
- X-POWERS AXP288 PMIC DRIVERS
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- S:	Maintained
- F:	drivers/acpi/pmic/intel_pmic_xpower.c
- N:	axp288
-@@ -26516,14 +26516,14 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86/mm
- F:	arch/x86/mm/
- 
- X86 PLATFORM ANDROID TABLETS DSDT FIXUP DRIVER
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- L:	platform-driver-x86@vger.kernel.org
- S:	Maintained
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pdx86/platform-drivers-x86.git
- F:	drivers/platform/x86/x86-android-tablets/
- 
- X86 PLATFORM DRIVERS
--M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Hans de Goede <hansg@kernel.org>
- M:	Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
- L:	platform-driver-x86@vger.kernel.org
- S:	Maintained
--- 
-2.49.0
+Note the DMI_BIOS_DATE field is the data the BIOS was build, I would avoid
+the word "released" here since release-notes doucments often contain different
+dates then the actual build date (e.g. see below).
+
+> +			.driver_data = "20180405",
+>  		},
+>  		{
+>  			.matches = {
+>  				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+>  				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad L450"),
+>  			},
+> -			.driver_data = "20180420", /* 1.28 */
+> +			/*
+> +			 * 1.28, released 20180420, has working LPM, mark any
+> +			 * DMI BIOS date before that as broken.
+> +			 */
+> +			.driver_data = "20180419",
+>  		},
+>  		{
+>  			.matches = {
+>  				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+>  				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad T450s"),
+>  			},
+> -			.driver_data = "20180315", /* 1.33 */
+> +			/*
+> +			 * 1.33, released 20180315, has working LPM, mark any
+> +			 * DMI BIOS date before that as broken.
+> +			 */
+> +			.driver_data = "20180314",
+>  		},
+>  		{
+>  			.matches = {
+> @@ -1439,12 +1451,14 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
+>  				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad W541"),
+>  			},
+>  			/*
+> -			 * Note date based on release notes, 2.35 has been
+> -			 * reported to be good, but I've been unable to get
+> -			 * a hold of the reporter to get the DMI BIOS date.
+> -			 * TODO: fix this.
+> +			 * Note: according to release notes, version 2.35 has
+> +			 * working LPM, but we do not have the DMI BIOS date for
+> +			 * this version, so the date, 20180310, is based on the
+> +			 * release notes. Mark any DMI BIOS date before that as
+> +			 * broken.
+> +			 * TODO: find with date with DMI BIOS date.
+>  			 */
+> -			.driver_data = "20180310", /* 2.35 */
+> +			.driver_data = "20180309",
+
+This reminds me that I did eventually got the actual BIOS date from
+the reporter. After some digging I managed to find the email.
+
+The first known working BIOS has a BIOS date of 04/09/2018 so that
+would become "20180409" before your patch / "20180408" after your patch.
+
+I guess you may want to add a prep patch before the rest of this
+series before this patch to make things a bit cleaner.
+
+Regards,
+
+Hans
+
+
+
+
+
+>  		},
+>  		{ }	/* terminate list */
+>  	};
+> @@ -1458,7 +1472,7 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
+>  	dmi_get_date(DMI_BIOS_DATE, &year, &month, &date);
+>  	snprintf(buf, sizeof(buf), "%04d%02d%02d", year, month, date);
+>  
+> -	return strcmp(buf, dmi->driver_data) < 0;
+> +	return strcmp(buf, dmi->driver_data) <= 0;
+>  }
+>  
+>  static bool ahci_broken_online(struct pci_dev *pdev)
 
