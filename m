@@ -1,87 +1,174 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE98192B7D;
-	Mon,  9 Jun 2025 09:44:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 943722609DD;
+	Mon,  9 Jun 2025 12:24:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749462262; cv=none; b=dMXJ4uC5TmZdZZWDrm0QxyzOx2TU3pky13D24njHhoiYNR+UtIOAHAQiUu4M8urvBNZMaYT2L4sG4Z+TFwAKyFx3xFQ53vl2flKFJbug+aRaDLEN5ymKIiGpQIPyf69k6J78dJvzugz4PrR9VWRNdOKBWZk6B/CWJ4lpKiGcWR0=
+	t=1749471880; cv=none; b=dD8+3Zf2RsvOQCJ7sJIAiMHCyQ3AwMiRseKGZWaCUWhshGB3wxOb2ySDvXuHOYauXpRdJ52iVW4enHu9U3Y+/pzteX/oUVLwWgy0ZPXihlmmi4fAKc61OyNfugqHKJbd+kKD4MazFCy2EdUXxRxOuOpsCKiENhzHkoXMQZPNOfk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749462262; c=relaxed/simple;
-	bh=6VKT7iisO0XJVEPjUyklbYNC/poB3XqRGQFAUxfDly0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FeJ+1uQMNmPrURpgbrJFZW7DxZgLaa4V+lUjlKUZoCPgdhjO6sxURGryIS62KvfrQaMEKFDe3TMSzv+bIjW6TptfbuKnalLowc3iGv3xUs+UsU5om2GNJGKYvetO+10qe6IMIJYBPJSbFSVwVyL/NDEofMCrIOvf7fO9rzzLK3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d22qlhG2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749471880; c=relaxed/simple;
+	bh=Hahc+n3Jf7KOUvzlwOx91gFQ+x2DTk5MtNBwOjpizsI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lzdVeSFLL5neLFxQVuLUEdom8jrRX4cIU9TyiS+CJSK8idSG/PywpGncFORdKdxzTmeInOJiKJazBDYDPxb44CNYNWsd1gKYySIgolFnxv9sjXR/L+2nWGjzgH0flS8vmXKs2TPh6rYTvm/0xiRU1UOaJvKI8poAjF776XA0WR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=spnJSzm7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d22qlhG2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0BFCC4CEEB;
-	Mon,  9 Jun 2025 09:44:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="spnJSzm7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E574C4CEEB;
+	Mon,  9 Jun 2025 12:24:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749462262;
-	bh=6VKT7iisO0XJVEPjUyklbYNC/poB3XqRGQFAUxfDly0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=d22qlhG23+Tjy3QEAKLC6qxql7yhrTkY0DpJN1is92G41+ZY7eznwpnlZUS0A/4yM
-	 Rb0B6YtAQXBIv78cHxEoLs0muXlOjBXRwwwezRmj60FjlObxXpBII8CrSHtvpIWPIR
-	 c2bKNyaL1lT100gaKWuT7Uz2h2+0rPjDKiZhwNdMFwS46ipv8c1UVkasxK4+8+yAzO
-	 XjJEh4x9hrT3Nex1ZC6p0W/q0OQd1g8eYT0cu1oSSt/8ZbOKOtIQGX2LdMM1rlxno+
-	 tXFq7t0nM3BMv9cuEloGeyGFvgJbiD/pXtnDCIFwjyPx5MUTzvNQiJdLryl90S7omW
-	 q1zyWjwc89kGw==
-Date: Mon, 9 Jun 2025 11:44:18 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ata: pata_cs5536: fix build on 32-bit UML
-Message-ID: <aEas8qlzCQRJrfip@ryzen>
-References: <20250606090110.15784-2-johannes@sipsolutions.net>
+	s=k20201202; t=1749471880;
+	bh=Hahc+n3Jf7KOUvzlwOx91gFQ+x2DTk5MtNBwOjpizsI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=spnJSzm7W3rfBeE0jvqI/fgvcxYQk9GJ8ZI178bwuR0bl2DV9J9CRx/sHT+fodmpY
+	 2uzgIS6YbvggxigiaG6ZMI21xz6S4kLttgdmD0yGoJ30Nyxm/GmzOwb4n9iolrUzb9
+	 x5M8IHCizv8cnfVmKVFqH192WQMe9WR1wGWc4A6HShAFggqLt1TKZkPkj5xy3eGVhR
+	 sWd+6KyWIbJM1eww90VNwXqynL/bSUJ7m9eB/+hYvSkg2R7bLjTRU6LZBFnWbD+TLN
+	 3inGFcuD+wgdlPAtUEDQ3+bnOc7kdGiNBl1VfxFwGJx9k8w0iKv1yuSKhVqYtYXUu0
+	 JmrutdnFowUIA==
+Message-ID: <54e0a717-e9fc-4534-bc27-8bc1ee745048@kernel.org>
+Date: Mon, 9 Jun 2025 21:24:36 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250606090110.15784-2-johannes@sipsolutions.net>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 08/19] scsi: detect support for command duration limits
+To: Friedrich Weber <f.weber@proxmox.com>,
+ Mira Limbeck <m.limbeck@proxmox.com>, Niklas Cassel <nks@flawful.org>,
+ Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com
+Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>,
+ Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
+ Niklas Cassel <niklas.cassel@wdc.com>
+References: <20230511011356.227789-1-nks@flawful.org>
+ <20230511011356.227789-9-nks@flawful.org>
+ <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
+ <6fb8499a-b5bc-4d41-bf37-32ebdea43e9a@kernel.org>
+ <2e7d6a7e-4a82-4da5-ab39-267a7400ca49@proxmox.com>
+ <b1d9e928-a7f3-4555-9c0a-5b83ba87a698@kernel.org>
+ <a927b51b-1b34-4d4f-9447-d8c559127707@proxmox.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <a927b51b-1b34-4d4f-9447-d8c559127707@proxmox.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello Johannes,
-
-On Fri, Jun 06, 2025 at 11:01:11AM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 6/3/25 20:28, Friedrich Weber wrote:
+>>> They provided controller information via `sas3ircu` and `storcli`:
+>>>
+>>> sas3ircu:
+>>>
+>>>   Controller type                         : SAS3008
+>>>   BIOS version                            : 8.37.00.00
+>>>   Firmware version                        : 16.00.16.00
+>>
+>> Is this the latest available FW for this HBA ? (see below)
 > 
-> On 32-bit ARCH=um, CONFIG_X86_32 is still defined, so it
-> doesn't indicate building on real X86 machines. There's
-> no MSR on UML though, so add a check for CONFIG_X86.
+> It seems 16.00.16.00 is even newer than the latest version available on
+> the Broadcom website, which is a bit strange -- I only found [1] there
+> which has an older 16.00.14.00 (3008_FW_PH16.00.14.00.rar).
+
+So this is an old/now EOL 9300 series HBA, right ? Or is this a 3008 controller
+chip as part of the server motherboard (e.g. a supermicro HBA ?)
+Looking at the Broadcom support page for legacy products, the latest FW version
+seems to be 16.00.10.00.
+
+>>> storcli:
+>>>
+>>> Firmware Package Build = 24.18.0-0021
+>>> Firmware Version = 4.670.00-6500
+>>> CPLD Version = 26515-00A
+>>> Bios Version = 6.34.01.0_4.19.08.00_0x06160200
+>>> HII Version = 03.23.06.00
+>>> Ctrl-R Version = 5.18-0400
+>>> Preboot CLI Version = 01.07-05:#%0000
+>>> NVDATA Version = 3.1611.00-0005
+>>> Boot Block Version = 3.07.00.00-0003
+>>> Driver Name = megaraid_sas
+>>> Driver Version = 07.727.03.00-rc1
+>>
+>> Unfortunately, I do not have any megaraid model so I cannot test/recreate. I
+>> only have mpt3sas (9300, 9400 and 9500 series HBAs) and mpi3mr models (9600 HBA
+>> series).
 > 
-> Reported-by: Arnd Bergmann <arnd@arndb.de>
-
-Reported-by: should be followed by either a Closes: or Link: tag, see:
-https://docs.kernel.org/process/submitting-patches.html#using-reported-by-tested-by-reviewed-by-suggested-by-and-fixes
-
-
-Kind regards,
-Niklas
-
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/ata/pata_cs5536.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> We just realized this is actually the firmware information for a
+> different unrelated controller on the same host (a LSI MegaRAID SAS-3
+> 3108 using the megaraid_sas driver). But the megaraid_sas one is not
+> used in our tests, so please ignore the storcli output we provided.
+> Sorry for the confusion.
 > 
-> diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-> index b811efd2cc34..73e81e160c91 100644
-> --- a/drivers/ata/pata_cs5536.c
-> +++ b/drivers/ata/pata_cs5536.c
-> @@ -27,7 +27,7 @@
->  #include <scsi/scsi_host.h>
->  #include <linux/dmi.h>
->  
-> -#ifdef CONFIG_X86_32
-> +#if defined(CONFIG_X86) && defined(CONFIG_X86_32)
->  #include <asm/msr.h>
->  static int use_msr;
->  module_param_named(msr, use_msr, int, 0644);
-> -- 
-> 2.49.0
+> The controller we're testing with is the SAS3008 I mentioned initially,
+> with firmware version 16.00.16.00 as reported by sas3ircu above.
+
+I do not have this FW... Not sure what the HBA itself is too. I only have some
+Broadcom 9300-XX HBAs that have the 3008 controller.
+
+> FWIW, the user reports they have also seen the same issue with a
+> SAS3-9500-8e Tri-mode HBA.
+
+This one had a FW update last month or so. So checking the latest is required.
+
+>>> And the disk information from `smartctl --xall`
+>>>
+>>> 20T:
+>>>
+>>> === START OF INFORMATION SECTION ===
+>>> Vendor:               WDC
+>>> Product:              WUH722020BL5204
+
+...
+
+>>> Product:              WUH721818AL5204
+
+I have these. I will try to check. But again, I seriously doubt this has
+anything to do with the drives since these do not support CDL, nor do the HBAs
+you listed. None of then support CDL so calling scsi_report_opcode() for
+checking CDL, we should always see the HBA SAT return "CDL not supported".
+
+
+>> I do not think that the drives are relevant for this issue. How the HBA react
+>> to a command error from the drive resulting from the HBA command translation
+>> likely is the issue.
 > 
+> I see, but it is certainly strange that 18T vs 20T drives do seem to
+> make a difference (hotplug works with 18T and doesn't work with 20T).
+
+Probably a timing difference since these drives are not the same generation.
+They have different timing on scan.
+
+>>> If you need any additional information, please let us know!
+>>
+>> Adding the Broadcom folks to this thread, since as suspected, this seems to be
+>> an HBA issue. I strongly suspect that it relates to a recent very similar issue
+>> I have seen with the mpi3mr driver and a 9600 Broadcom HBA: any hotplug of a
+>> drive would completely crash the HBA and a full power cycle was needed to
+>> recover. A simple reboot would not be sufficient. I think the latest HBA FW
+>> version fixes that problem.
+>>
+>> Broadcom team,
+>>
+>> Any comment ?
+
+Broadcom ? Would you care to comment ?
+
+At this point, I have no idea what is going on. My hunch is that it is the HBA
+SAT misbehaving. But that is only a hunch. To prove it, we would likely need a
+bus trace and have Broadcom look at HBA logs (which can be extracted using
+storecli). All of this likely means involving the technical support of the vendors.
+
+
+-- 
+Damien Le Moal
+Western Digital Research
