@@ -1,117 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5D2825A340
-	for <linux-ide@vger.kernel.org>; Mon,  9 Jun 2025 13:45:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40B7A263F38
+	for <linux-ide@vger.kernel.org>; Mon,  9 Jun 2025 13:49:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749476747; cv=none; b=I4y50Wj+D47FV9VXK3RecCtWL2k+36usUkiiSabaehYGVisyWsZScMa5HH2cCH1bF7OrRhD2O3FfRrO9YEwM6QlCiXK8GZVS7pIiUUYwiFOIg4XqlGaVexptzU3XLiNKt9B5gaeeWoRnZ9O6q5DJQxyyypoqwbfXCaDqQ4O/HlU=
+	t=1749476999; cv=none; b=UCP1mw9/8YOEUllf9FspWooiEqdqlW1aD2tJJJ6U0vtSE2sOfUEB0qx+dLp4D1X2OeYIXGNUsN9aF/f8JbpofxRekGC6CPbmw5ZdYA0Mx8uWV2sOVDeLX+XcPlyHhcJxR2tQoHc5TboQL2TvYtU2UaVSljovVxM7oeKEd6wH9QE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749476747; c=relaxed/simple;
-	bh=ySch94OZA20kfyWJKQ3EfvDsM3TBKpn7tFrNsfqjWtI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NsGJ3q9qNOdasnXbzND+HkS48hCRxNkZnsRMERbvnyZUFI2JDyweA0xXcPt0k4XFLtkDMzHfjmkeUKOc8ATnkrx2XjD3frXdRnwQEAMAKb3vFCJqrjIiG6qJ+FxyOT3fBUeH9i1Bs55RZCNUEvqY+WHcP9DMzMBCWI68yvte5kM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s4YaqG3j; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749476999; c=relaxed/simple;
+	bh=2uA3ReNa1CsOaWvykg12CYjX4+HCOFzkEWaPSpTidrM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aX+wSgAp67ZXOpJUN7RTc227n0OuvfC8qkQon85hjHebkA2ErBVQK5XpFAJxfZFSh4+TT0g7UhcgST4ppCxLGXgfY2YtUV4tDa1MM2CsE2r9rVkAHk4LGzMwTyyi34MUnKAv2aIhCPwidbwe1aV3UiSZ4JzbXYFdRfJ4OpbowO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FgmI9svN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s4YaqG3j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99499C4CEF0;
-	Mon,  9 Jun 2025 13:45:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FgmI9svN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD205C4CEEB;
+	Mon,  9 Jun 2025 13:49:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749476747;
-	bh=ySch94OZA20kfyWJKQ3EfvDsM3TBKpn7tFrNsfqjWtI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=s4YaqG3jsWxfWQYdj07vI5+xLVBcY1/IhpnSLUZ/bM0UuNH6iPrwuL+atFMGQmhSW
-	 6FcfQf3SSYP5UQUewg0hZribp17bwjZlGK8viEdhhE46VvtOAfMIsGmMkT6PUiIYp0
-	 whm5LXIoV0Qbgpjz5g3CDTbD8NbAY2IAJs4ekm+gSIBdfUinL6hGCz7xuCIpXCd/Xw
-	 92s7DMhZGk2b9PUuYFXZhan1q+/wU8T3gQdrKi049itSKpE6F0W6C4OsduPQCnlWhK
-	 TvVBmb7s7UuxiqG0oFtslJvlujtPs/kc5wqA560UkBrMx2YJEku2HsdlT2IvuBbBW1
-	 9cbo37mpDHXXw==
+	s=k20201202; t=1749476998;
+	bh=2uA3ReNa1CsOaWvykg12CYjX4+HCOFzkEWaPSpTidrM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FgmI9svNSrst5jn2lJbRwcWqEOJ4gcXJ9VkeXt5Pj81ncecgY1iR/FMrYm1IpanbJ
+	 fOg9u32GzTjnFTymphI2u3bAwBwqJcJ/Y5kyJddyRVzAlw/9fvic69eD0hd8gkoKet
+	 DSzF3M3DFKM6hAiCLm1aoZVCxa66l9p9HrRRpNLSbJ0MHGQvRVjX8szGUGnjokf8Oq
+	 D6Js/S8xV+HiSXhgz43uOlW+I18V+CjFSsH3Kr3V/esFV/N87AwnapAlz0Z6HrTOK1
+	 Z82hrDcfQK2qVqmxhZGSqV7dUTCGBZGVUKs+h7iyN+IdyEQHZrfekJ8lsILgS/71qn
+	 Q4KHbvoCjzRqQ==
+Date: Mon, 9 Jun 2025 15:49:55 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: kernel-dev@rsta79.anonaddy.me,
-	Hans de Goede <hdegoede@redhat.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-ide@vger.kernel.org,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	stable+noautosel@kernel.org,
-	Andy Yang <andyybtc79@gmail.com>
-Subject: [PATCH 2/2] ata: ahci: Disallow LPM for ASUSPRO-D840SA motherboard
-Date: Mon,  9 Jun 2025 15:45:41 +0200
-Message-ID: <20250609134539.943587-4-cassel@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250609134539.943587-3-cassel@kernel.org>
-References: <20250609134539.943587-3-cassel@kernel.org>
+To: Mikko Juhani Korhonen <mjkorhon@gmail.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v4] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0
+ hard drives
+Message-ID: <aEbmg4wqqMaetxzd@ryzen>
+References: <CAAZ0mTdcAazi=133Dz0+OgSGOERe7WmCTr27ePudEVhkJj6VbA@mail.gmail.com>
+ <48F49924-F5FE-4A91-8323-E2C789D1BEFB@kernel.org>
+ <CAAZ0mTdtOVSidMeC76X9oZyHCtJdgyiu44+UEKqP5tSUaD9ZsQ@mail.gmail.com>
+ <aCG-gS2f3uXKaQPj@ryzen>
+ <CAAZ0mTfqE+w8BBCyVSg0KKQ6fYZwKaqvh_ND8dLCANg-oMaphA@mail.gmail.com>
+ <aCHZg4tj6YwS9vph@ryzen>
+ <CAAZ0mTeiVqZQvkWzJ8aFH4FUPCZwy5O+9hPBgDPhSgNNz+t6HA@mail.gmail.com>
+ <aCTZkV5mRjDsYyeE@ryzen>
+ <CAAZ0mTcge55H4Ow0JG8PE5Wpgtz6TG60uvGxRUXrq-aVH4k9aQ@mail.gmail.com>
+ <aEGLCBnh_PSON3Sx@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2428; i=cassel@kernel.org; h=from:subject; bh=ySch94OZA20kfyWJKQ3EfvDsM3TBKpn7tFrNsfqjWtI=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDLcnrZM87lmozJPPnXC9/SIFsdN56rW7dLIvrta8du6V 38L/8943VHKwiDGxSArpsji+8Nlf3G3+5TjindsYOawMoEMYeDiFICJrNRiZNgTuqaf5QKT6+YW 6+13c7REZvDa5JUyG7ZOVO11tDoYIsLw39fqg9uxprVfeqbbGL5J4vwYdjlUW3HLy4vdvvu4kj/ vZgcA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aEGLCBnh_PSON3Sx@ryzen>
 
-A user has bisected a regression which causes graphical corruptions on his
-screen to commit 7627a0edef54 ("ata: ahci: Drop low power policy board
-type").
+Hello Mikko,
 
-Simply reverting commit 7627a0edef54 ("ata: ahci: Drop low power policy
-board type") makes the graphical corruptions on his screen to go away.
-(Note: there are no visible messages in dmesg that indicates a problem
-with AHCI.)
+On Thu, Jun 05, 2025 at 02:18:16PM +0200, Niklas Cassel wrote:
+> 
+> Personally, I think that checking for certain port numbers, for a specific
+> motherboard makes the code very ugly, and will not scale very well if some
+> other motherboard has a different subset of ports where LPM does not work,
+> so I would rather avoid a quirk handling port numbers.
+> 
+> It is unfortunate that the BIOS manufacturer has managed to mess this up,
+> but since this is the first motherboard where I've heard about the problem
+> of LPM only working on certain ports, even though it is a per controller
+> thing, just not having good power saving for this motherboard seems fine.
+> 
+> I suggest that we simply add the DMI name of your motherboard to
+> ahci_broken_lpm().
 
-The user also reports that the problem occurs regardless if there is an
-HDD or an SSD connected via AHCI, so the problem is not device related.
+I just sent out a series which refactors ahci_broken_lpm():
+https://lore.kernel.org/linux-ide/20250609134539.943587-3-cassel@kernel.org/T/#u
 
-The devices also work fine on other motherboards, so it seems specific to
-the ASUSPRO-D840SA motherboard.
+When sending your patch, please base it on top of that series.
 
-While enabling low power modes for AHCI is not supposed to affect
-completely unrelated hardware, like a graphics card, it does however
-allow the system to enter deeper PC-states, which could expose ACPI issues
-that were previously not visible (because the system never entered these
-lower power states before).
+(As without that series, it is not possible to add an entry
+where there is no good BIOS version that has been released.)
 
-There are previous examples where enabling LPM exposed serious BIOS/ACPI
-bugs, see e.g. commit 240630e61870 ("ahci: Disable LPM on Lenovo 50 series
-laptops with a too old BIOS").
 
-Since there hasn't been any BIOS update in years for the ASUSPRO-D840SA
-motherboard, disable LPM for this board, in order to avoid entering lower
-PC-states, which triggers graphical corruptions.
-
-Cc: stable+noautosel@kernel.org # Depends on ahci_broken_lpm() refactor
-Reported-by: Andy Yang <andyybtc79@gmail.com>
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220111
-Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/ahci.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a6ce172fa928..be464d0f46a4 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1460,6 +1460,17 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
- 			 */
- 			.driver_data = "20180309",
- 		},
-+		{
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
-+				DMI_MATCH(DMI_PRODUCT_VERSION, "ASUSPRO D840MB_M840SA"),
-+			},
-+			/*
-+			 * 320, released 20230208, has broken LPM, no working
-+			 * BIOS has been released at time of writing.
-+			 */
-+			.driver_data = "20230208",
-+		},
- 		{ }	/* terminate list */
- 	};
- 	const struct dmi_system_id *dmi = dmi_first_match(sysids);
--- 
-2.49.0
-
+Kind regards,
+Niklas
