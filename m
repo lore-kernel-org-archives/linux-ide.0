@@ -1,63 +1,96 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7253299A8C;
-	Tue, 10 Jun 2025 12:33:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E132BD5BD
+	for <linux-ide@vger.kernel.org>; Tue, 10 Jun 2025 12:37:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749558822; cv=none; b=K4+xYlYcFL2gKM5IjgnG18nz9K1QVDAUK9zfQvrKKOd6gfi2UExeUM2Td2brEvYiMaGfTn4a48hpKVMJSYz2dbjAO8sGOXjeuZZwWRlQkDTRydD4POZPDrOPgUf4p5RDBOduP2Fdsjc4wzCwKYoNYQvzr/ObPZAzHPnBrXe3C5A=
+	t=1749559070; cv=none; b=AcbmpDSU2fMFELzBPAVeOBVrC0wJ68KyEu+pV/9NjThuTbgl/m60ae6suGyu+ZYUO9IJn1FqvmhTcwTCYaP9Q4ba6tkZJZtDoh9HM0RCIyAtLKZKjUFAlJG0IGgSjxQFRAg4qdvNAK8JjoD6e0Hfmd0DHeOIBgsYlTsuDrpILn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749558822; c=relaxed/simple;
-	bh=z5wf/2Wt6sJmolssQJVbXfiaB3yA+Y6FQUeMotADxpw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=XEM69odvJ14+AbuEjgHVuwE3lW3S1q05f0aVneZT32nXnjs85oZrZ0MbilUHe/27D1uCWXqziUDgGgtbV4rr2HkdZ3NDuhusDD+Pp2XA23tixa+/y5x+GkzlN24U7m4e4K5qdWqe6qlN1xFWj13NKv0wYGsf2DiWuVdlBALdqtc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gGxRGaVQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749559070; c=relaxed/simple;
+	bh=PX2LD0Q+G/Y28Wy7C47DNhUI730zQ2rBYk6pTdR4Dck=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=klSnXiCEON2fbpVbGnZVPqzgVDfI4sdPUuMBqUkynDZbd1NkbZFGDhOtfeiCoU1laO2GYh1wUKcRN1gdwIiQ904syxbJBC0kSONSnL1Vc6xgfNDqXoYVIigoJ+foC0Mkj+sdGZ+7oVnnza07gLCFeiWOrLLRn9rI8VAXAceq/l0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z2I278w4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gGxRGaVQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91A32C4CEF1;
-	Tue, 10 Jun 2025 12:33:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z2I278w4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EC97C2BCFB;
+	Tue, 10 Jun 2025 12:37:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749558821;
-	bh=z5wf/2Wt6sJmolssQJVbXfiaB3yA+Y6FQUeMotADxpw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=gGxRGaVQPetq/DA84SLHE7nJpJdrIs7p4nkoTpvcMjV7nn0S2SIgXXdTDJlYK6/We
-	 96VF+cCmppPk3BG+3ZwYfUKW08D2jBCIlkH6hXC8qUVylCARTtsdR4ZktCi+zbPJum
-	 k7DT2M9e9pmOcomirunTVF0sqMtCPCGo+XlTOL37FKKAk82wlTtvqxiqy20CN1Fcdy
-	 cxWWQa7oJ7y+UWgK/vecoXYPKFQ4DdgtTSh/FBdcKcp07k8s6epEk6ORBaa7jE9sS3
-	 VeQsPSzfRKkA4D8C2QZg2LOdD3xJZwOYTRQ3MkzhTVa64/wIQAs/x6d1mIvHjgf39g
-	 yf+3QKM9LLh5g==
-From: Niklas Cassel <cassel@kernel.org>
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
- Johannes Berg <johannes@sipsolutions.net>
-Cc: Damien Le Moal <dlemoal@kernel.org>, 
- Johannes Berg <johannes.berg@intel.com>, Arnd Bergmann <arnd@arndb.de>
-In-Reply-To: <20250606090110.15784-2-johannes@sipsolutions.net>
-References: <20250606090110.15784-2-johannes@sipsolutions.net>
-Subject: Re: [PATCH] ata: pata_cs5536: fix build on 32-bit UML
-Message-Id: <174955882032.1439612.8694655458527101424.b4-ty@kernel.org>
-Date: Tue, 10 Jun 2025 14:33:40 +0200
+	s=k20201202; t=1749559069;
+	bh=PX2LD0Q+G/Y28Wy7C47DNhUI730zQ2rBYk6pTdR4Dck=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Z2I278w4Z/qY79/B1MIu8a/Zs50Rk/zvtPLNiZToZlhG/O7XC17V+CplNdrloCara
+	 f5OeBRq1TA5PuQIpWBhhDj4ZUrPZiQ0I0oLwn+hwNEGMBrIHJ4kntSrgT0bO0XfXVi
+	 gLAeF6qSeYLtnlmrMUcR38JoNontflO8WQcF44CGGcI5ejtf5NfhyxEvHEQv6QVeTG
+	 +vnHdjE1rRxHEZmtuuZ6G5hSqs8t0kmxp9quuWfYs27V76c8o/3UUSV1OBSih4fklR
+	 mdvwwGfVfBzUKRL60qpcqUYWC4GiZhLz5JtRHgJ9xm99sRGIBh0bXLRnWJ9Zt9pwFQ
+	 OEnGQjCNqYX8w==
+Message-ID: <fb578d4c-2669-4b66-90c3-579b870ee4b2@kernel.org>
+Date: Tue, 10 Jun 2025 14:37:46 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/3] ata: ahci: Use correct BIOS build date for
+ ThinkPad W541 quirk
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+Cc: kernel-dev@rsta79.anonaddy.me, Andy Yang <andyybtc79@gmail.com>,
+ Mikko Juhani Korhonen <mjkorhon@gmail.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-ide@vger.kernel.org, Mario Limonciello <mario.limonciello@amd.com>
+References: <20250610110757.1318959-5-cassel@kernel.org>
+ <20250610110757.1318959-6-cassel@kernel.org>
+Content-Language: en-US, nl
+From: Hans de Goede <hansg@kernel.org>
+In-Reply-To: <20250610110757.1318959-6-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
 
-On Fri, 06 Jun 2025 11:01:11 +0200, Johannes Berg wrote:
-> On 32-bit ARCH=um, CONFIG_X86_32 is still defined, so it
-> doesn't indicate building on real X86 machines. There's
-> no MSR on UML though, so add a check for CONFIG_X86.
+Hi,
+
+On 10-Jun-25 1:07 PM, Niklas Cassel wrote:
+> Fix the TODO in ahci_broken_lpm() by using the proper BIOS build date.
 > 
+> The proper BIOS build date was provided by Hans, see Link.
 > 
+> Link: https://lore.kernel.org/linux-ide/6ea509c8-b38d-4941-8a29-c1117ff3dd5b@redhat.com/
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Applied to libata/linux.git (for-6.16-fixes), thanks!
+Thanks, patch looks good to me:
 
-[1/1] ata: pata_cs5536: fix build on 32-bit UML
-      https://git.kernel.org/libata/linux/c/fe5b391f
+Reviewed-by: Hans de Goede <hansg@kernel.org>
 
-Kind regards,
-Niklas
+Regards,
+
+Hans
+
+
+
+> ---
+>  drivers/ata/ahci.c | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 163ac909bd06..e7c8357cbc54 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1438,13 +1438,7 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
+>  				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+>  				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad W541"),
+>  			},
+> -			/*
+> -			 * Note date based on release notes, 2.35 has been
+> -			 * reported to be good, but I've been unable to get
+> -			 * a hold of the reporter to get the DMI BIOS date.
+> -			 * TODO: fix this.
+> -			 */
+> -			.driver_data = "20180310", /* 2.35 */
+> +			.driver_data = "20180409", /* 2.35 */
+>  		},
+>  		{ }	/* terminate list */
+>  	};
 
