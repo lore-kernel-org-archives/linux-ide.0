@@ -1,75 +1,106 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3709B8633F;
-	Mon,  9 Jun 2025 17:13:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EFAC25DCEC;
+	Tue, 10 Jun 2025 07:49:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749489228; cv=none; b=Daa3DI8yQT0M+ov5ekOEvck/AZS4sCeYX3vZ1ncKLQybJHzhfWILEE8ihjOO83Nig3/HBb+vhbZXl41eSAPs/K0TY/L5WcVRnnqjqITJ3GxZL+zDO2w2Fyaa85jFe2Ep9qL9gywXCuc9PqtqWNuhVkEW7YkhOdaPNzTaVH1+Y/E=
+	t=1749541781; cv=none; b=hlLANaPiGMLfr/uobalk+c0a83XIjiJgYTdPn99YpkCD5IY323o2KrpXBWihFEPuc1wTMPNXxLMuOCLITdSH8FsVcJCCGd6Z39pNYbI2OaQHuwbIujjC6Mek42A5Lc4qms7cuwwLceV9Y8mLCl+t59bCI5beFpP/7J8q9BQ1K20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749489228; c=relaxed/simple;
-	bh=LCtcCqp4eZyY16OrOIzQwxcm1EbBkYiqxfbpLfX+HwU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=dssdChOEEY2ff2LIzxL4Wpios5DuCAgIAFwodK9ezC9FsIYYrTtxJa65KaFaiUzwDXOdf3Zzucn1kgjd3hiXujWPCIJGPbjeT3hQu/rDUM5ADoAPf093giAtEwaqhFkWyb80HLcSRmtQRpwja9Q13djgYSRHo3dat3z1wLIowlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=lZQ1g8T6; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1749541781; c=relaxed/simple;
+	bh=Zf8zlM1ikY+x+Aj1YRBI4DnaZ4NqNZdfWKGRPGe8aOI=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=MMkrCcqC4hz+K3zv7Q0cL/FoSmv+CGVcMcl5/veM0MDc/qe7DqnRLVH6g5k11f6XIl1SIQDxFTnASgQ02Cl4EdZe9BiS/Ujslfo5TgKkYzjLLvoMXrFB5zTyIom9CbG6Zrpmrkb5fvx68vGiwgNMawZMP0riRCXmfF2s718MjkQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KM1KIahb; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="lZQ1g8T6"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=LCtcCqp4eZyY16OrOIzQwxcm1EbBkYiqxfbpLfX+HwU=;
-	t=1749489227; x=1750698827; b=lZQ1g8T6Y2F/7cahiw1vtAFbS5hn5c13Yc3lgUEjb/98iAl
-	qRxY1jC3znNY3jSIphcTTO8ng6/auMhna1SYRvcbYrMUeEIxxDAm21gcn8RE26wrPhtTZL/GKCCzk
-	RK9e5jOp0C7Aj321zyQp7KD/hrtHN4Ni73USq/EPkcRj/zVhaWOsRBPZ58uF2341uuwJwKn7vvpOh
-	eyWXGiJPjIJ5VnH74JWvpT332XIDwGMfJ6oqCqKZRP34X1qkBa1q5pv7WcpBRGNQKCeK4+Pmzu9O6
-	JTff+ffRuHsrL+hFymiq6o896H1XpV1SuxO4oUQA0HxgDHn0pwOviqubXEe1xc3w==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1uOg3z-0000000EdGV-1Sfh;
-	Mon, 09 Jun 2025 19:13:35 +0200
-Message-ID: <463157681f084a9c26c24187c984c53b4b634780.camel@sipsolutions.net>
-Subject: Re: [PATCH] ata: pata_cs5536: fix build on 32-bit UML
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Damien Le Moal
-	 <dlemoal@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 09 Jun 2025 19:13:32 +0200
-In-Reply-To: <aEas8qlzCQRJrfip@ryzen> (sfid-20250609_114441_049121_B0F0F5BB)
-References: <20250606090110.15784-2-johannes@sipsolutions.net>
-	 <aEas8qlzCQRJrfip@ryzen> (sfid-20250609_114441_049121_B0F0F5BB)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.54.3 (3.54.3-1.fc41) 
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KM1KIahb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1749541780; x=1781077780;
+  h=from:to:cc:in-reply-to:references:subject:message-id:
+   date:mime-version:content-transfer-encoding;
+  bh=Zf8zlM1ikY+x+Aj1YRBI4DnaZ4NqNZdfWKGRPGe8aOI=;
+  b=KM1KIahbTLOwS1KuFsdOIh5CIwbw4+1A4Wxy1hkKfSCqcMXi3X0/cwLY
+   pJu1etFwgDm4UNeU9g5MsfR5cokprtHBuH2ZhkRiWn7xkyVT1DBoTbFrz
+   5aNCtfk7qxyHsaxP03+7NBxWa1JItZ7aYc8js139okkHS7XFn8G8KB9CT
+   zQiiHQMidT9hQl6j/axycXKvstp8BySjLg2g1u7CKwC7ka8CE13f/OzFg
+   VRscBTUqWWKe2llZCj2xCV6jo6md+9ril9jAyi5vCXXQjar3x3aPY9SW5
+   vorarPgO+9rT/rrplFubfJkq6EoqirSenJSkGEuvDpukBiOwE6WDIMg8I
+   w==;
+X-CSE-ConnectionGUID: AOtDDZgQRRSKne8PvFNQhQ==
+X-CSE-MsgGUID: 9FihaGAvQBiBEo97XD8fCw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11459"; a="77039694"
+X-IronPort-AV: E=Sophos;i="6.16,224,1744095600"; 
+   d="scan'208";a="77039694"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2025 00:49:38 -0700
+X-CSE-ConnectionGUID: ufZhjqNVQGCbIO00v9qvhw==
+X-CSE-MsgGUID: R8sZ0L7BSHmP28FclTzhsw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.16,224,1744095600"; 
+   d="scan'208";a="146682211"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.196])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2025 00:49:30 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ "Rafael J . Wysocki" <rafael@kernel.org>, 
+ Sebastian Reichel <sre@kernel.org>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, Jiri Kosina <jikos@kernel.org>, 
+ Benjamin Tissoires <bentiss@kernel.org>, 
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+ Andy Shevchenko <andy@kernel.org>, Andi Shyti <andi.shyti@kernel.org>, 
+ Laurent Pinchart <laurent.pinchart@ideasonboard.com>, 
+ Hans Verkuil <hverkuil@xs4all.nl>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Jean Delvare <jdelvare@suse.com>, Guenter Roeck <linux@roeck-us.net>, 
+ Hans de Goede <hansg@kernel.org>
+Cc: dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org, 
+ linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org, linux-input@vger.kernel.org, 
+ linux-ide@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
+ linux-i2c@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-hwmon@vger.kernel.org
+In-Reply-To: <20250609143558.42941-1-hansg@kernel.org>
+References: <20250609143558.42941-1-hansg@kernel.org>
+Subject: Re: [PATCH v2 0/1] MAINTAINERS: .mailmap: Update Hans de Goede's
+ email address
+Message-Id: <174954176287.5583.6841576782802896940.b4-ty@linux.intel.com>
+Date: Tue, 10 Jun 2025 10:49:22 +0300
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.13.0
 
-On Mon, 2025-06-09 at 11:44 +0200, Niklas Cassel wrote:
-> Hello Johannes,
->=20
-> On Fri, Jun 06, 2025 at 11:01:11AM +0200, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >=20
-> > On 32-bit ARCH=3Dum, CONFIG_X86_32 is still defined, so it
-> > doesn't indicate building on real X86 machines. There's
-> > no MSR on UML though, so add a check for CONFIG_X86.
-> >=20
-> > Reported-by: Arnd Bergmann <arnd@arndb.de>
->=20
-> Reported-by: should be followed by either a Closes: or Link: tag, see:
-> https://docs.kernel.org/process/submitting-patches.html#using-reported-by=
--tested-by-reviewed-by-suggested-by-and-fixes
+On Mon, 09 Jun 2025 16:35:56 +0200, Hans de Goede wrote:
 
-Here you go:
+> I'm moving all my kernel work over to using my kernel.org email address.
+> 
+> The single patch in this series updates .mailmap and all MAINTAINERS
+> entries still using hdegoede@redhat.com.
+> 
+> Since most of my work is pdx86 related I believe it would be best for Ilpo
+> to merge this through the pdx86 tree (preferable through the fixes branch).
+> 
+> [...]
 
-Link: Arnd said so on IRC.
 
-johannes
+Thank you for your contribution, it has been applied to my local
+review-ilpo-fixes branch. Note it will show up in the public
+platform-drivers-x86/review-ilpo-fixes branch only once I've pushed my
+local branch there, which might take a while.
+
+The list of commits applied:
+[1/1] MAINTAINERS: .mailmap: Update Hans de Goede's email address
+      commit: 3fbf25ecf8b7b524b4774b427657d30a24e696ef
+
+--
+ i.
+
