@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 914B2298CC0
-	for <linux-ide@vger.kernel.org>; Tue, 10 Jun 2025 12:33:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 467192980AC
+	for <linux-ide@vger.kernel.org>; Tue, 10 Jun 2025 12:33:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749558819; cv=none; b=M2wjCMW+yEzON6WK7FHVosYFlWRBCBAM/eA0H8iyGZpI3xDR00yg+qwQPpMRFjrZvtNmpLJiJeof6YOamiSMnvFxRGPlWiy7z0Af/ohaS5ZXEeSYUHY/1aDTcij1JrVJsUGxnaXIXQNZ3dGsU0WVLHqIhotue5MDDQAznp/PZMs=
+	t=1749558820; cv=none; b=S90mwXuzSGJ6ROa5xZ8IKlTcZYEHyQWx9PSWQFMZmlkXqimmx3+HPnCV4x7X4cMDO8K1xXxrGc+8ucqwrlymNctjxk0MA/4BCHN0aCn6YqufARUp8q66e92wJnKGyCa/dSz5VG9mP6VGyyvbpK6mYCdx0QZZ1gvH6MywxvUMryM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749558819; c=relaxed/simple;
-	bh=T9p9xeAgTheeQF1IllfvuzFT139gWb/t0q8PYu9MUAA=;
+	s=arc-20240116; t=1749558820; c=relaxed/simple;
+	bh=ui5pk3o2mGoTs/C/hOlhvKkRYKzWvjD9Gpv55BTGBg0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=V+06sGGup2m0Z85hjJbgpNTqHYXcYnCP2su96EPIr2ANxiE5zPT5Y+U6XbnrQQAy1jcPfQFo5557zuuXJv5BmMhr4mUfRscXVwJWEGi5tOrvtZ9HQp/eqc6BvbwFWpYahtL+zCOJLWP7Rmm4WJrP1SnqCp+Yh3YemMGXMWja63M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d9cyoHCx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Sbt2x3yOXIlRw0KaLGaK37DA37AhqK0UkYpw76e+WrwgWW7e2houTssBhqF4FANLl1Ao9A5rrKXhffoHAcQzmY36xf5b+c+SAW6pzAEwlwj0mAgJ/oH8lW7FGNXk+oodB/EXeYyrT+PYFKe6IJA/C3ukjOucmVK+q5CqqVkMfAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uBtGF4ST; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d9cyoHCx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51282C4CEF1;
-	Tue, 10 Jun 2025 12:33:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uBtGF4ST"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7325DC4CEED;
+	Tue, 10 Jun 2025 12:33:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749558819;
-	bh=T9p9xeAgTheeQF1IllfvuzFT139gWb/t0q8PYu9MUAA=;
+	s=k20201202; t=1749558820;
+	bh=ui5pk3o2mGoTs/C/hOlhvKkRYKzWvjD9Gpv55BTGBg0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=d9cyoHCxHbU7qKoqYnvv4o8kv35VVtdjiMJG3J5t7IyAN2kh/BuuWudyo+00obaYL
-	 nzEEdOC9J4FhX5qarHTuCdyZTRCTzUqaupGDrTS6VyAeY9kWVTxZhaE6frdEEcEHJ/
-	 g/jCep61QJ3z2AY1r85VRDf9lz72/V55MvozUrmjesyiVt7sBPaA02b3PWNFzjnndj
-	 4aJq7/5rQhE+QZGxegUvONXq3hwMFjl6lNTD7I+1O6ebb3RHtOTZN3mi7cV/ffBB/1
-	 Y7PH9xzZDj/U/fdu/irtIloJ+He4y3IKhwBWFwAR3veVqJ4prOaXUY6hbGU41uAfmr
-	 2w4XVT/LyA0qg==
+	b=uBtGF4STsKIZEUwnfn8UDGGv9o2Gm3eBojxpYXoy2w7DKPikXam1E45i1meULR6GU
+	 iKG+ZVLwOwRYhjPryV/Tb/dSOFi/eHlo7u9fa8u9dlhz7Ec/YSCGttPbnnaeJHnD/n
+	 EiN9qHjAqkoLAnc6B6hTADc2ihx2IoZhVWXUSTk3CDIqmt26JM+1Mav2JVdx4+HmNi
+	 PrWHx+w/2KZtKZEy80XWLLd0HrOs27fqX1cCnVoS5KoMieBsXBfV+vuIfBXAAoWOet
+	 QoANEtQOr3AjCH+JviAF8aSeaFvEjfabpq05dTsDGV8D5lFtG/X7hCr+AZpajH4kYT
+	 iuDXgwInilGAQ==
 From: Niklas Cassel <cassel@kernel.org>
 To: linux-ide@vger.kernel.org, Tasos Sahanidis <tasos@tasossah.com>
 Cc: Damien Le Moal <dlemoal@kernel.org>
-In-Reply-To: <20250519085508.1398701-1-tasos@tasossah.com>
-References: <20250519085508.1398701-1-tasos@tasossah.com>
-Subject: Re: [PATCH v2] ata: pata_via: Force PIO for ATAPI devices on
- VT6415/VT6330
-Message-Id: <174955881806.1439612.10734581495050489291.b4-ty@kernel.org>
-Date: Tue, 10 Jun 2025 14:33:38 +0200
+In-Reply-To: <20250519085945.1399466-1-tasos@tasossah.com>
+References: <20250519085945.1399466-1-tasos@tasossah.com>
+Subject: Re: [PATCH v2] ata: libata-acpi: Do not assume 40 wire cable if no
+ devices are enabled
+Message-Id: <174955881920.1439612.3983026713002170732.b4-ty@kernel.org>
+Date: Tue, 10 Jun 2025 14:33:39 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -45,22 +45,22 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Mon, 19 May 2025 11:49:45 +0300, Tasos Sahanidis wrote:
-> The controller has a hardware bug that can hard hang the system when
-> doing ATAPI DMAs without any trace of what happened. Depending on the
-> device attached, it can also prevent the system from booting.
+On Mon, 19 May 2025 11:56:55 +0300, Tasos Sahanidis wrote:
+> On at least an ASRock 990FX Extreme 4 with a VIA VT6330, the devices
+> have not yet been enabled by the first time ata_acpi_cbl_80wire() is
+> called. This means that the ata_for_each_dev loop is never entered,
+> and a 40 wire cable is assumed.
 > 
-> In this case, the system hangs when reading the ATIP from optical media
-> with cdrecord -vvv -atip on an _NEC DVD_RW ND-4571A 1-01 and an
-> Optiarc DVD RW AD-7200A 1.06 attached to an ASRock 990FX Extreme 4,
-> running at UDMA/33.
+> The VIA controller on this board does not report the cable in the PCI
+> config space, thus having to fall back to ACPI even though no SATA
+> bridge is present.
 > 
 > [...]
 
 Applied to libata/linux.git (for-6.16-fixes), thanks!
 
-[1/1] ata: pata_via: Force PIO for ATAPI devices on VT6415/VT6330
-      https://git.kernel.org/libata/linux/c/d29fc02c
+[1/1] ata: libata-acpi: Do not assume 40 wire cable if no devices are enabled
+      https://git.kernel.org/libata/linux/c/33877220
 
 Kind regards,
 Niklas
