@@ -1,85 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 524A51FAA;
-	Tue, 10 Jun 2025 12:31:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 914B2298CC0
+	for <linux-ide@vger.kernel.org>; Tue, 10 Jun 2025 12:33:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749558684; cv=none; b=dAg6x+56+24p9IoRKItnzA8eL5pd9JUXpvF3FYRB1LNvat7NGirGJcIIR0GhMkzO1Ev5D6WF4HeYyb4AyJwJj+3uPL37Knkslf1NT/m8QJPsEeElqesUKb+varGwBnCacVr0lViLNVril7bZk0TzHHjGFzkQ4b0p5wQhO7VlWWE=
+	t=1749558819; cv=none; b=M2wjCMW+yEzON6WK7FHVosYFlWRBCBAM/eA0H8iyGZpI3xDR00yg+qwQPpMRFjrZvtNmpLJiJeof6YOamiSMnvFxRGPlWiy7z0Af/ohaS5ZXEeSYUHY/1aDTcij1JrVJsUGxnaXIXQNZ3dGsU0WVLHqIhotue5MDDQAznp/PZMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749558684; c=relaxed/simple;
-	bh=8BwZyUXjZ+u8UfJhyh4/cxvJDU9B3jL/iOjUeYpFVbI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jw0BvUXP+lCLlnEPpelT0b7ittK5H1pvtsdyZXhD4TprMwB8YtJWLhWAvSjDBl/wlLnFtBA8iPFy+RHNgfBACdq6qYUy8mQeqiEEvrJpnHcijOe7Tqnp0KgopU4Y30iHej3wNCFwoE1pL/AMAq0wXi+1shs+OVGywLcMzNkOzQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=szOg94Fk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749558819; c=relaxed/simple;
+	bh=T9p9xeAgTheeQF1IllfvuzFT139gWb/t0q8PYu9MUAA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=V+06sGGup2m0Z85hjJbgpNTqHYXcYnCP2su96EPIr2ANxiE5zPT5Y+U6XbnrQQAy1jcPfQFo5557zuuXJv5BmMhr4mUfRscXVwJWEGi5tOrvtZ9HQp/eqc6BvbwFWpYahtL+zCOJLWP7Rmm4WJrP1SnqCp+Yh3YemMGXMWja63M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d9cyoHCx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="szOg94Fk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25B56C4CEEF;
-	Tue, 10 Jun 2025 12:31:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d9cyoHCx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51282C4CEF1;
+	Tue, 10 Jun 2025 12:33:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749558684;
-	bh=8BwZyUXjZ+u8UfJhyh4/cxvJDU9B3jL/iOjUeYpFVbI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=szOg94FknpQD/p437CpZhtmGfuGU9iBCvIyiGyvAGjES/B5Bv1EtVk/cQKLiYpaqx
-	 HC8Ctv6FmFjROi/be3vYb43tRZcU65C2M0M3DFHgbRdshmH+W/rmYI6En2YcuYE33z
-	 PJpwvCHi3TYhSxxhhLv5n0z6dpubLjy5d5M+dgmNvvDliUOyCupqRZ3tBaZEtXfl33
-	 lrJf83u9W5s8B36/Da4m4KwjIFjl7ZjxGA1DcuTKkKT9mwkiB9HI02fdR2Xjqh0O+e
-	 hbaGF7JHK1tSf2UuMAIW2WvCL+Ng+dfqD7tLLh8Aoj+uwA0d4Jsf4GCx9YEH7aseij
-	 3jKXCV3bRq55w==
-Date: Tue, 10 Jun 2025 14:31:20 +0200
+	s=k20201202; t=1749558819;
+	bh=T9p9xeAgTheeQF1IllfvuzFT139gWb/t0q8PYu9MUAA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=d9cyoHCxHbU7qKoqYnvv4o8kv35VVtdjiMJG3J5t7IyAN2kh/BuuWudyo+00obaYL
+	 nzEEdOC9J4FhX5qarHTuCdyZTRCTzUqaupGDrTS6VyAeY9kWVTxZhaE6frdEEcEHJ/
+	 g/jCep61QJ3z2AY1r85VRDf9lz72/V55MvozUrmjesyiVt7sBPaA02b3PWNFzjnndj
+	 4aJq7/5rQhE+QZGxegUvONXq3hwMFjl6lNTD7I+1O6ebb3RHtOTZN3mi7cV/ffBB/1
+	 Y7PH9xzZDj/U/fdu/irtIloJ+He4y3IKhwBWFwAR3veVqJ4prOaXUY6hbGU41uAfmr
+	 2w4XVT/LyA0qg==
 From: Niklas Cassel <cassel@kernel.org>
-To: Philipp Stanner <phasta@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ata: macio: Use non-hybrid PCI devres API
-Message-ID: <aEglmHpvqZhbG_AX@ryzen>
-References: <20250604113423.138595-2-phasta@kernel.org>
+To: linux-ide@vger.kernel.org, Tasos Sahanidis <tasos@tasossah.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>
+In-Reply-To: <20250519085508.1398701-1-tasos@tasossah.com>
+References: <20250519085508.1398701-1-tasos@tasossah.com>
+Subject: Re: [PATCH v2] ata: pata_via: Force PIO for ATAPI devices on
+ VT6415/VT6330
+Message-Id: <174955881806.1439612.10734581495050489291.b4-ty@kernel.org>
+Date: Tue, 10 Jun 2025 14:33:38 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250604113423.138595-2-phasta@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-Hello Philipp,
-
-On Wed, Jun 04, 2025 at 01:34:24PM +0200, Philipp Stanner wrote:
-> macio enables its PCI device with pcim_enable_device(). This,
-> implicitly, switches the function pci_request_regions() into managed
-> mode, where it becomes a devres function.
+On Mon, 19 May 2025 11:49:45 +0300, Tasos Sahanidis wrote:
+> The controller has a hardware bug that can hard hang the system when
+> doing ATAPI DMAs without any trace of what happened. Depending on the
+> device attached, it can also prevent the system from booting.
 > 
-> The PCI subsystem wants to remove this hybrid nature from its
-> interfaces. To do so, users of the aforementioned combination of
-> functions must be ported to non-hybrid functions.
+> In this case, the system hangs when reading the ATIP from optical media
+> with cdrecord -vvv -atip on an _NEC DVD_RW ND-4571A 1-01 and an
+> Optiarc DVD RW AD-7200A 1.06 attached to an ASRock 990FX Extreme 4,
+> running at UDMA/33.
 > 
-> Replace the call to sometimes-managed pci_request_regions() with one to
-> the always-managed pcim_request_all_regions().
-> 
-> Signed-off-by: Philipp Stanner <phasta@kernel.org>
-> ---
-> Hi,
-> seems I forgot sending this patch out a while ago. Mea culpa.
-> 
-> PCI has currently chained the changes mentioned above queued up for
+> [...]
 
-chained?
+Applied to libata/linux.git (for-6.16-fixes), thanks!
 
-
-> Linus, so it's probably a good idea to get this into macio relatively
-> soonish. Otherwise the driver would likely fail to reload in v6.16,
-> because the device's PCI regions remain blocked.
-
-I can queue this up for 6.16, but then I think you need to rewrite the
-commit message to motivate why it is a fix (i.e. why it deserves to go
-in to 6.16-rc2).
-
-Or, I can just queue it up for 6.17.
-
-What do you prefer?
-
+[1/1] ata: pata_via: Force PIO for ATAPI devices on VT6415/VT6330
+      https://git.kernel.org/libata/linux/c/d29fc02c
 
 Kind regards,
 Niklas
+
