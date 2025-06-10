@@ -1,116 +1,139 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from borehabit.cfd (ip160.ip-51-81-179.us [51.81.179.160])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84CE7246BA4;
-	Tue, 10 Jun 2025 14:18:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B798722A7E1
+	for <linux-ide@vger.kernel.org>; Tue, 10 Jun 2025 14:56:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.81.179.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749565112; cv=none; b=UT2ozWNzb+jsnlMyVnlIsNtkv8CMKMzmKtrlwPP6TUMR6i5hsXM9BgQ7Vu28I913KPkxw4M8h6WkY0Da5AEdY0msUxFyE+33kSvTJW/D93onwRoMxJJcO6Zgv3RkyJpXuDQWJ+vv8oyiAb0PYCW6gYbLRDiZ23MnKp+AHo8SQ3Q=
+	t=1749567369; cv=none; b=c4DG4Lu94GED7rsupicLsEQL24i4OHfJyXADxrFkNqh6wNzqKCQhYSmz0wlr0HCeBKcvz/v5798OhNJGjOoey1UZkiwEh40i5BKwcMWX8s3CDlRrXp8yfDtaWAkjEF7LFwpAO0Uf6YlTcUSwUKle4f6/koINBLnik1D9pBQPPWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749565112; c=relaxed/simple;
-	bh=F77oOQ5o+TGyFsFaewUxO4I/JYy/wApknI4F+a/DJb0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lsl2TfoAtWXt3uTc+IXUTq76qA8ARYU7vZN3QzNcfAwQCkVLZxBUWwN6GWaT+QMZNwP1j03ZNbANZoGfqGUjnXru7s6Gsp2lNP4krQ6pwg46f19svktRtPkwld23aWuzpip3mESOYQ19gU4QnwOW4QhPjRmDO5pbG5vqbQfgAfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QNA1+5du; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1749567369; c=relaxed/simple;
+	bh=j/qZ6nCFDOcbnwIbag40JF9HDzOLw0n9TJz9U1mz3X8=;
+	h=To:Subject:Date:From:Message-ID:MIME-Version:Content-Type; b=fIHuEl+7nZU4YUrU4gC6l44SC41EMxf2iq/jnogq2caPgZyY772ikETrwwFyuPxIpT/1qVCw7jXvwcUJ/kBVY9VjW512kb05RgXnn+qDNKH4GG0zTfHzTW+i8yoAa+jvi/qP6gDLfKgX6mNNP/rzZXSJkKedyI0QEAF87jAIamI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=borehabit.cfd; spf=pass smtp.mailfrom=borehabit.cfd; dkim=pass (1024-bit key) header.d=borehabit.cfd header.i=@borehabit.cfd header.b=qFbJZct4; arc=none smtp.client-ip=51.81.179.160
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=borehabit.cfd
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=borehabit.cfd
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QNA1+5du"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1749565110; x=1781101110;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=F77oOQ5o+TGyFsFaewUxO4I/JYy/wApknI4F+a/DJb0=;
-  b=QNA1+5duP+vqPIftD18TQ7yM6I8+EQ/mO/e4JCvXbxQ6Z8r54mXzguDq
-   4orhwEajtqBeULcroxbO0yE65t5XvToYGTBf/LJn5XdNcbDvyQ4OiAEy3
-   7KIN15l5IpiNKlLr1NlFua3khMaMhKKgcnIniHdEbLXrQUFHGbwiAIrvU
-   99zeIiHaxz3YeOFdA143HpxsHOcFHUkjxOyZ3Fv4P6ewN9DbE0y7Qpqlc
-   kbuHYKItY2qqBCBHOF40qg+ISPfQGENtN12botloYKU+RKkxgnLy0Rbb5
-   a5OenGPFKejIm/uH2+TdFyE8ZKbURWnyfcXdhluCum8z1QueNHdqSx5xp
-   g==;
-X-CSE-ConnectionGUID: 0caNT4ccRga54gpWqznh9Q==
-X-CSE-MsgGUID: LkSesDivQOmluFvpeKknIA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11460"; a="61953585"
-X-IronPort-AV: E=Sophos;i="6.16,225,1744095600"; 
-   d="scan'208";a="61953585"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2025 07:18:30 -0700
-X-CSE-ConnectionGUID: RqMmOiGfShaLmdHUEXjUtw==
-X-CSE-MsgGUID: GmMUuOmnRxa/we/M4S7gSA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,225,1744095600"; 
-   d="scan'208";a="151847886"
-Received: from linux.intel.com ([10.54.29.200])
-  by orviesa004.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2025 07:18:30 -0700
-Received: from [10.124.220.93] (unknown [10.124.220.93])
-	by linux.intel.com (Postfix) with ESMTP id 7C78220B5736;
-	Tue, 10 Jun 2025 07:18:29 -0700 (PDT)
-Message-ID: <460664b1-df24-4f15-a9b9-6ff2e6a20227@linux.intel.com>
-Date: Tue, 10 Jun 2025 07:18:29 -0700
+	dkim=pass (1024-bit key) header.d=borehabit.cfd header.i=@borehabit.cfd header.b="qFbJZct4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=borehabit.cfd; s=mail; h=Content-Transfer-Encoding:Content-Type:
+	MIME-Version:Message-ID:Reply-To:From:Date:Subject:To:Sender:Cc:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=CFYjPvEUim5mD5QwWelE+Axpgk7p2gwnF2M5gpb++Rg=; b=qFbJZct4mUSF1arAkRKNF1qIXr
+	CbWHheGRyGrHYgohDUvqkX9BmIEDIOmOPRuH0A1wTBKU5SLmIyHrlyM+M5967LrNK5Q8X0QFy61Lg
+	pJB4W61+en+C/IpTp7EwDE7l2+pW2yEGWgJ+zkKpuYmmOm+ICM1pPaun8QiB5DQz8qjU=;
+Received: from admin by borehabit.cfd with local (Exim 4.90_1)
+	(envelope-from <support@borehabit.cfd>)
+	id 1uP0OU-000W8S-Sf
+	for linux-ide@vger.kernel.org; Tue, 10 Jun 2025 21:56:06 +0700
+To: linux-ide@vger.kernel.org
+Subject: WTS Available laptops and Memory
+Date: Tue, 10 Jun 2025 14:56:06 +0000
+From: Exceptional One PC <support@borehabit.cfd>
+Reply-To: info@exceptionalonepc.com
+Message-ID: <71a5f7444885ccf498d9023ec6613f26@borehabit.cfd>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: pata_macio: Fix PCI region leak
-To: Philipp Stanner <phasta@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250610135413.35930-2-phasta@kernel.org>
-Content-Language: en-US
-From: Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20250610135413.35930-2-phasta@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Hello,
+
+Looking for a buyer to move any of the following Items located in USA.
 
 
-On 6/10/25 6:54 AM, Philipp Stanner wrote:
-> pci_request_regions() became a managed devres functions if the PCI
-> device was enabled with pcim_enable_device(), which is the case for
-> pata_macio.
->
-> The PCI subsystem recently removed this hybrid feature from
-> pci_request_region(). When doing so, pata_macio was forgotten to be
-> ported to use pcim_request_all_regions(). If that function is not used,
-> pata_macio will fail on driver-reload because the PCI regions will
-> remain blocked.
->
-> Fix the region leak by replacing pci_request_regions() with its managed
-> counterpart, pcim_request_all_regions().
->
-> Fixes: 51f6aec99cb0 ("PCI: Remove hybrid devres nature from request functions")
-> Signed-off-by: Philipp Stanner <phasta@kernel.org>
-> ---
+Used MICRON SSD 7300 PRO 3.84TB 
+U.2 HTFDHBE3T8TDF SSD 2.5" NVMe 3480GB
+Quantity 400, price $100 EACH 
 
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-> Changes in v2:
->    - Add Fixes: tag and rephrase commit message, since the merge window
->      closed already. (Niklas)
-> ---
->   drivers/ata/pata_macio.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-> index fbf5f07ea357..f7a933eefe05 100644
-> --- a/drivers/ata/pata_macio.c
-> +++ b/drivers/ata/pata_macio.c
-> @@ -1298,7 +1298,7 @@ static int pata_macio_pci_attach(struct pci_dev *pdev,
->   	priv->dev = &pdev->dev;
->   
->   	/* Get MMIO regions */
-> -	if (pci_request_regions(pdev, "pata-macio")) {
-> +	if (pcim_request_all_regions(pdev, "pata-macio")) {
->   		dev_err(&pdev->dev,
->   			"Cannot obtain PCI resources\n");
->   		return -EBUSY;
+ 005052112 _ 7.68TB HDD -$200 PER w/ caddies refurbished 
+ Quantity 76, price $100
 
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+
+
+Brand New CISCO C9300-48UXM-E
+Available 5
+$2000 EACH
+
+
+Brand New C9200L-48T-4X-E
+$1,200 EACH
+QTY4
+
+HP 1040G3 Elite Book Folio Processor :- Intel Core i5
+◻Processor :- Intel Core i5
+◻Generation :- 6th
+◻RAM :- 16GB
+◻Storage :- 256G SSD
+◻Display :- 14 inch" Touch Screen 
+QTY 340 $90 EA
+
+
+
+SK HYNIX 16GB 2RX4 PC4 - 2133P-RAO-10
+HMA42GR7AFR4N-TF TD AB 1526
+QTY560 $20 EA
+
+
+Xeon Gold 6442Y (60M Cache, 2.60 GHz)	
+ PK8071305120500	 
+ QTY670 700 each 
+
+
+SAMSUNG 64GB 4DRX4 PC4-2666V-LD2-12-MAO
+M386A8K40BM2-CTD60 S
+QTY 320 $42 each
+
+
+
+Brand New CISCO C9300-48UXM-E
+Available 5
+$2500 EACH
+
+
+Core i3-1315U (10M Cache, up to 4.50 GHz)	
+ FJ8071505258601
+QTY50  $80 EA
+
+Intel Xeon Gold 5418Y Processors
+QTY28 $780 each
+
+
+Brand New C9200L-48T-4X-E  
+$1000 EACH
+QTY4
+
+
+Brand New Gigabyte NVIDIA GeForce RTX 5090 AORUS
+MASTER OC Graphics Card GPU 32GB GDDR7
+QTY50 $1,300
+
+
+ Brand New N9K-C93108TC-FX-24 Nexus
+9300-FX w/ 24p 100M/1/10GT & 6p 40/100G
+Available 4
+$3000 each
+
+
+
+Brand New NVIDIA GeForce RTX 4090 Founders
+Edition 24GB - QTY: 56 - $700 each
+
+
+
+
+Charles Lawson
+Exceptional One PC
+3645 Central Ave, Riverside
+CA 92506, United States
+www.exceptionalonepc.com
+info@exceptionalonepc.com
+Office: (951)-556-3104
 
