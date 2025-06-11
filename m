@@ -1,72 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12C7C270EC3
-	for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2025 10:31:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208DA2874F4
+	for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2025 13:15:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749637880; cv=none; b=MaCnv/6T2Tj1kOOkFGikNhWYXZpYvH5T1laPhNBix4QRTTseuSXOdsfPFbHSpqcORmtL/TCYSk9iAZcDXqeLSf36zCRFzfuHfcOk28AzDQmUqVQMjHdC1NIc3cUm6unugHX5Jc1KQDwT9egaVY34tgDs6d1MxLxqeKgj9zwqwW4=
+	t=1749647722; cv=none; b=GuFKdAxEw+zsENFufbWiyKpPvC+yJ79GbjW0oEgzXywDfpoLIU0l1kW7O2/23FksV/9hMvNgJJWm6dTSGdBge0WMnFMKp9bb3oMWmPZDWevm4kmScfsvXKW3uKYdy5knOX/7zXqLbQi0pyOrQhN4ZGEiLdAtHTqwQFFkva9Eja0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749637880; c=relaxed/simple;
-	bh=imzJMbb19ZsZvS0UVNJ9SxAe2yYnC1N02exIvDcZ+0E=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Vav1wffqkzYwIf1Bs4GA072NizKmsMa8JbMtweQmhN4bFSZmFwl3rMhEAQ4pYRfWs/caz0069ilBab13jWY1A00BdxImbkFtsSiFElz0AS0+fDT1P0cSKlUSvfoyYbiCySfjZE+zxx7COug++t/KTt3Obr+i8ILBj9d1fDT/4eI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UpNDhxEx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749647722; c=relaxed/simple;
+	bh=eMg3H0fFIz/rvrGsm4hUXKFN89Qxpr6dY7oWGEJjPfM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=CUo9OHTEP6JcnJXqNDN+XpJqziG9huBu6KPaDEseqCzxMY/zpjnso8H8WKLWZ5irqKn7r7jtPBUycMfC4OdoRU1h01Pf29nJV17UxjAa7wVz/Yd/MkGRI62H7vENy3ysN2T46PR1dGRVXw/8HuZpXi7I2k/1Y6NasO2WkpaF9hg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eBjkmnim; arc=none smtp.client-ip=209.85.219.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UpNDhxEx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6D9AC4CEF1;
-	Wed, 11 Jun 2025 10:31:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749637879;
-	bh=imzJMbb19ZsZvS0UVNJ9SxAe2yYnC1N02exIvDcZ+0E=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=UpNDhxEx/BIvv4burop7rfsDzBk14gydupZiU9XjCPeViS6bfnNa44r4Sll2Xgaby
-	 yYHYXcgn91ncGQ2PLWXWU/qSO0pQWTSNoZwGynYXK91cg4ZEMqnpBeecQ+lxcVW2oi
-	 x7SjdkdPWwI7runB9Ozb+Ah3CLm6cQueUtsPrvEwCxLwJ+dHP4/6lVCRHGat83g/bb
-	 uM5S0TjK2NQ/RQmP0zQbfv6d7BmMoAuqrutQsxMFZjcD146xjy2ZLYe02jD7cPu6wZ
-	 OTehuEIsMhJDCANRKWOWFlPQXgB+PkpjceUQBWpccU+zHw3pm0Z3hwD4dWPfxEwRV+
-	 X5QnjJWGvA2Qw==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: kernel-dev@rsta79.anonaddy.me, Hans de Goede <hansg@kernel.org>, 
- Andy Yang <andyybtc79@gmail.com>, 
- Mikko Juhani Korhonen <mjkorhon@gmail.com>, 
- Mika Westerberg <mika.westerberg@linux.intel.com>, 
- linux-ide@vger.kernel.org, Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20250610110757.1318959-5-cassel@kernel.org>
-References: <20250610110757.1318959-5-cassel@kernel.org>
-Subject: Re: [PATCH v2 0/3] Cleanup ahci_broken_lpm()
-Message-Id: <174963787767.1635114.11613333221647910549.b4-ty@kernel.org>
-Date: Wed, 11 Jun 2025 12:31:17 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eBjkmnim"
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e731a56e111so5961024276.1
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2025 06:15:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749647720; x=1750252520; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=eMg3H0fFIz/rvrGsm4hUXKFN89Qxpr6dY7oWGEJjPfM=;
+        b=eBjkmnimosdPjKZmf8Bx3rtR6slV+sHv9IsMi5HEgQB0LQtLhtakW6dmiJMS26JD9X
+         YsnoPNWk0feWv9vveSAOiTvOkDiPZGoslfqjFsFYAbPzuDcEFacg7nzlH5fUiKb0sAbF
+         n6aPCLf6jLzLXCTZ0iABkApQgUUELr4X9LLzhgbmwCF+ZrCGVxs8css7T17WY96Gj3FB
+         h7GE2WeLNlFjTOFXyc9hDPqkNHEqrciAUgoQHw587y2PG3T9kLRinl5oVPfNty7uAT7/
+         7xfYR/kSDm+F2C+VWqJsxfBzgTzPECzRinPLQ0N03yv5t3TPNVbJrHBr+CaL4k7qCZCx
+         v9Aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749647720; x=1750252520;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=eMg3H0fFIz/rvrGsm4hUXKFN89Qxpr6dY7oWGEJjPfM=;
+        b=pZZ4UuNM7K3fBxeeT7UcyFeJnrhkooy6Fh78kztNfHgtyj95n6W0SnaPHjF4eSxdi9
+         c8EFGKup+M93Hr23pMA3978dsU62LD+xmCul06Hf9BTpScglLnO0t30sriDs1rb3zJbh
+         k81oGA/OVkIVeAAdWwKyJiwWkzJmJNMlw5+StINmJexKSNwHNAN693VVZIuzIA96pOoM
+         Tvb844Xw43RnIPPlhIRpwBUuI/IG1YPw3CBreQH42DGGZD8+Yu3vaFuaMjxJLpyiJwGm
+         GEN/BmilgWatFWcz5pYsgMxjTW3AZhPb6xmRqwFylV/5sxeXrimXBELDsp8u40+ZxnWU
+         B9ZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWwEq60KFE7ZCPTPfDYOFmWucCwyAvL/gCIzQzwehPKAF90kTcDnon8Wz4dvwJOe9sCL4E78//Afkg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhQhOq+i/hFsr8fbK1q2qN8Bho9BK+r/AT+YmeSldfvH1Hs+eD
+	mpqozzXC5c/vozIMQ76QtmpC/tUVDHMpAEm5zo59YNEjLU5SBWgJSHI+JvZTzzWm4evaEpMcr/b
+	H16Bns5U2iL+0YaRyFDakEVkvPTMk2P0=
+X-Gm-Gg: ASbGncuBPvOwUR93ycW7daQ0ePNPHLG6OVQAhjFmhSJlgHJ3VfDncBW31whaLcjiDJA
+	rmqMiGR+HABMWFbURBFRC3HHxAx0I6wdSvxLzbIdyIp4RqwzF0n/MiWtnpfJvNJYRmejwD5xbj1
+	cvLz+weJFewaDdbCc9B1uV0JifYzuDc6ecr3bFzwaS7K/xraf+pcVvGNg=
+X-Google-Smtp-Source: AGHT+IE4Nyqcb4JMu4jt29JKjxmK77yeiV7cpJYBIdJZU9yl8frKZDduBGVkH92tiSX7y+XzKVFVo9HzobNBExtbuNc=
+X-Received: by 2002:a05:6902:2511:b0:e81:8390:ed02 with SMTP id
+ 3f1490d57ef6-e81fd948284mr4538254276.11.1749647719955; Wed, 11 Jun 2025
+ 06:15:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+References: <CAAZ0mTdcAazi=133Dz0+OgSGOERe7WmCTr27ePudEVhkJj6VbA@mail.gmail.com>
+ <48F49924-F5FE-4A91-8323-E2C789D1BEFB@kernel.org> <CAAZ0mTdtOVSidMeC76X9oZyHCtJdgyiu44+UEKqP5tSUaD9ZsQ@mail.gmail.com>
+ <aCG-gS2f3uXKaQPj@ryzen> <CAAZ0mTfqE+w8BBCyVSg0KKQ6fYZwKaqvh_ND8dLCANg-oMaphA@mail.gmail.com>
+ <aCHZg4tj6YwS9vph@ryzen> <CAAZ0mTeiVqZQvkWzJ8aFH4FUPCZwy5O+9hPBgDPhSgNNz+t6HA@mail.gmail.com>
+ <aCTZkV5mRjDsYyeE@ryzen> <CAAZ0mTcge55H4Ow0JG8PE5Wpgtz6TG60uvGxRUXrq-aVH4k9aQ@mail.gmail.com>
+ <aEGLCBnh_PSON3Sx@ryzen> <aEbmg4wqqMaetxzd@ryzen>
+In-Reply-To: <aEbmg4wqqMaetxzd@ryzen>
+From: Mikko Juhani Korhonen <mjkorhon@gmail.com>
+Date: Wed, 11 Jun 2025 16:14:44 +0300
+X-Gm-Features: AX0GCFv1MVWt1JeUz8X8IwzWdBOMpz3BqAmSEq6lGWiJBMP2fxPmAbWJTCmk8jU
+Message-ID: <CAAZ0mTdBgeedcF3gE6bKm=+qFj8Sfuc0xVc-kDb2=nhMS3F_3Q@mail.gmail.com>
+Subject: Re: [PATCH v4] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 10 Jun 2025 13:07:58 +0200, Niklas Cassel wrote:
-> This series cleans up ahci_broken_lpm(), and adds ASUSPRO-D840SA to the
-> table of boards with broken LPM.
-> 
-> 
-> Kind regards,
-> Niklas
-> 
-> [...]
+ma 9.6.2025 klo 16.49 Niklas Cassel (cassel@kernel.org) kirjoitti:
+> > It is unfortunate that the BIOS manufacturer has managed to mess this up,
+> > but since this is the first motherboard where I've heard about the problem
+> > of LPM only working on certain ports, even though it is a per controller
+> > thing, just not having good power saving for this motherboard seems fine.
+> >
+> > I suggest that we simply add the DMI name of your motherboard to
+> > ahci_broken_lpm().
+>
+> (As without that series, it is not possible to add an entry
+> where there is no good BIOS version that has been released.)
 
-Applied to libata/linux.git (for-6.16-fixes), thanks!
+Hello Niklas,
 
-[1/3] ata: ahci: Use correct BIOS build date for ThinkPad W541 quirk
-      https://git.kernel.org/libata/linux/c/6f29d393
-[2/3] ata: ahci: Refactor ahci_broken_lpm()
-      https://git.kernel.org/libata/linux/c/e3ea4ae4
-[3/3] ata: ahci: Disallow LPM for ASUSPRO-D840SA motherboard
-      https://git.kernel.org/libata/linux/c/4b151c71
+thanks - ok we are assuming that this is something that happens only
+on this motherboard for this AMD 0x43EB controller at least for now.
+Was your thought also that we restrict disabling lpm only up to the
+current BIOS version, and if there are BIOS updates which don't fix
+the issue we just bump version number here?
+And I guess there are not going to be any firmware updates to the WDC
+WD20EFAX-68FB5N0 drive, I understood that you or Damien might know
+something about this? This would of course not help if the problem is
+in the motherboard.
 
-Kind regards,
-Niklas
-
+Best regards, have a great day,
+Mikko
