@@ -1,102 +1,124 @@
-Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208DA2874F4
-	for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2025 13:15:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FCEB28C017
+	for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2025 13:33:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749647722; cv=none; b=GuFKdAxEw+zsENFufbWiyKpPvC+yJ79GbjW0oEgzXywDfpoLIU0l1kW7O2/23FksV/9hMvNgJJWm6dTSGdBge0WMnFMKp9bb3oMWmPZDWevm4kmScfsvXKW3uKYdy5knOX/7zXqLbQi0pyOrQhN4ZGEiLdAtHTqwQFFkva9Eja0=
+	t=1749648831; cv=none; b=bjWMQGJAsnzFmx1yWhm8wVZRn/FRDsf05eeNq1wCDusNuxD+Hod5ICJtoXnvEfFJH8JBb178hLeWU6COjEnEbrnHDeFbYcFYRykPhDgHbhTzbiYFypy232MDw02R9EcsEbpxcfnWOV3Y6xKWVkY3wm14+r2lPMfiJtBFgskvVFw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749647722; c=relaxed/simple;
-	bh=eMg3H0fFIz/rvrGsm4hUXKFN89Qxpr6dY7oWGEJjPfM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=CUo9OHTEP6JcnJXqNDN+XpJqziG9huBu6KPaDEseqCzxMY/zpjnso8H8WKLWZ5irqKn7r7jtPBUycMfC4OdoRU1h01Pf29nJV17UxjAa7wVz/Yd/MkGRI62H7vENy3ysN2T46PR1dGRVXw/8HuZpXi7I2k/1Y6NasO2WkpaF9hg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eBjkmnim; arc=none smtp.client-ip=209.85.219.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1749648831; c=relaxed/simple;
+	bh=YZG/dBFDoQw3NZN+zkRnfQocEn7C0gbK8Wrh8f3O+8o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A0/4X37kX89ClmAmnGkmd/TMI4vqeNOj+oKYloH6gjiYCKQeStsUOzMLXBMRx+M24O6nkCOeq7XvvsthhtZ0fkskeRELKm6ZbRj3bHavxuFoKbL+N1M5G8KsEPZbkwkIFe2MU7irBtXDkzNTa/18RA1OAuCLZ3Fymv+PG840Yq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UIlvuD0y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eBjkmnim"
-Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e731a56e111so5961024276.1
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2025 06:15:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749647720; x=1750252520; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=eMg3H0fFIz/rvrGsm4hUXKFN89Qxpr6dY7oWGEJjPfM=;
-        b=eBjkmnimosdPjKZmf8Bx3rtR6slV+sHv9IsMi5HEgQB0LQtLhtakW6dmiJMS26JD9X
-         YsnoPNWk0feWv9vveSAOiTvOkDiPZGoslfqjFsFYAbPzuDcEFacg7nzlH5fUiKb0sAbF
-         n6aPCLf6jLzLXCTZ0iABkApQgUUELr4X9LLzhgbmwCF+ZrCGVxs8css7T17WY96Gj3FB
-         h7GE2WeLNlFjTOFXyc9hDPqkNHEqrciAUgoQHw587y2PG3T9kLRinl5oVPfNty7uAT7/
-         7xfYR/kSDm+F2C+VWqJsxfBzgTzPECzRinPLQ0N03yv5t3TPNVbJrHBr+CaL4k7qCZCx
-         v9Aw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749647720; x=1750252520;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=eMg3H0fFIz/rvrGsm4hUXKFN89Qxpr6dY7oWGEJjPfM=;
-        b=pZZ4UuNM7K3fBxeeT7UcyFeJnrhkooy6Fh78kztNfHgtyj95n6W0SnaPHjF4eSxdi9
-         c8EFGKup+M93Hr23pMA3978dsU62LD+xmCul06Hf9BTpScglLnO0t30sriDs1rb3zJbh
-         k81oGA/OVkIVeAAdWwKyJiwWkzJmJNMlw5+StINmJexKSNwHNAN693VVZIuzIA96pOoM
-         Tvb844Xw43RnIPPlhIRpwBUuI/IG1YPw3CBreQH42DGGZD8+Yu3vaFuaMjxJLpyiJwGm
-         GEN/BmilgWatFWcz5pYsgMxjTW3AZhPb6xmRqwFylV/5sxeXrimXBELDsp8u40+ZxnWU
-         B9ZQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWwEq60KFE7ZCPTPfDYOFmWucCwyAvL/gCIzQzwehPKAF90kTcDnon8Wz4dvwJOe9sCL4E78//Afkg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxhQhOq+i/hFsr8fbK1q2qN8Bho9BK+r/AT+YmeSldfvH1Hs+eD
-	mpqozzXC5c/vozIMQ76QtmpC/tUVDHMpAEm5zo59YNEjLU5SBWgJSHI+JvZTzzWm4evaEpMcr/b
-	H16Bns5U2iL+0YaRyFDakEVkvPTMk2P0=
-X-Gm-Gg: ASbGncuBPvOwUR93ycW7daQ0ePNPHLG6OVQAhjFmhSJlgHJ3VfDncBW31whaLcjiDJA
-	rmqMiGR+HABMWFbURBFRC3HHxAx0I6wdSvxLzbIdyIp4RqwzF0n/MiWtnpfJvNJYRmejwD5xbj1
-	cvLz+weJFewaDdbCc9B1uV0JifYzuDc6ecr3bFzwaS7K/xraf+pcVvGNg=
-X-Google-Smtp-Source: AGHT+IE4Nyqcb4JMu4jt29JKjxmK77yeiV7cpJYBIdJZU9yl8frKZDduBGVkH92tiSX7y+XzKVFVo9HzobNBExtbuNc=
-X-Received: by 2002:a05:6902:2511:b0:e81:8390:ed02 with SMTP id
- 3f1490d57ef6-e81fd948284mr4538254276.11.1749647719955; Wed, 11 Jun 2025
- 06:15:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UIlvuD0y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94D6CC4CEF6;
+	Wed, 11 Jun 2025 13:33:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749648830;
+	bh=YZG/dBFDoQw3NZN+zkRnfQocEn7C0gbK8Wrh8f3O+8o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UIlvuD0yZwinUoF5vRxBr5sMo9X0xwmEOijKtVo+UrQd+NMifHHJ6TWrOJApbBlsN
+	 KtfF5t9Ww1Oa2kyPKH4eXTh6/dAD2hNMnC1A09b29D5TVv+iSmnvqblYIo1IuHe+BZ
+	 upmqoCMqiIj5oS54t4g9foIESXKHShfCMNQsEEmoyOLxBDO6LWZuVmIWpWE0dyAMWg
+	 dAc8kwCE/Vq8lwndfJJ7MdvQVyIpLLsWoMB9hQlSvfXRVPwSmUHk7gIGiPdG0CfpPH
+	 Dx6hGUeeYWQa/HETqrvjFzP6zqnYt5W2r814FnTt3V08q/7Yu5hAkOSQUk2IiwLKoF
+	 MVNQiiLg1GajA==
+Date: Wed, 11 Jun 2025 15:33:46 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Mikko Juhani Korhonen <mjkorhon@gmail.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>,
+	linux-ide@vger.kernel.org, Hans de Goede <hansg@kernel.org>
+Subject: Re: [PATCH v4] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0
+ hard drives
+Message-ID: <aEmFuqA5kNhMD41Z@ryzen>
+References: <CAAZ0mTdtOVSidMeC76X9oZyHCtJdgyiu44+UEKqP5tSUaD9ZsQ@mail.gmail.com>
+ <aCG-gS2f3uXKaQPj@ryzen>
+ <CAAZ0mTfqE+w8BBCyVSg0KKQ6fYZwKaqvh_ND8dLCANg-oMaphA@mail.gmail.com>
+ <aCHZg4tj6YwS9vph@ryzen>
+ <CAAZ0mTeiVqZQvkWzJ8aFH4FUPCZwy5O+9hPBgDPhSgNNz+t6HA@mail.gmail.com>
+ <aCTZkV5mRjDsYyeE@ryzen>
+ <CAAZ0mTcge55H4Ow0JG8PE5Wpgtz6TG60uvGxRUXrq-aVH4k9aQ@mail.gmail.com>
+ <aEGLCBnh_PSON3Sx@ryzen>
+ <aEbmg4wqqMaetxzd@ryzen>
+ <CAAZ0mTdBgeedcF3gE6bKm=+qFj8Sfuc0xVc-kDb2=nhMS3F_3Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAAZ0mTdcAazi=133Dz0+OgSGOERe7WmCTr27ePudEVhkJj6VbA@mail.gmail.com>
- <48F49924-F5FE-4A91-8323-E2C789D1BEFB@kernel.org> <CAAZ0mTdtOVSidMeC76X9oZyHCtJdgyiu44+UEKqP5tSUaD9ZsQ@mail.gmail.com>
- <aCG-gS2f3uXKaQPj@ryzen> <CAAZ0mTfqE+w8BBCyVSg0KKQ6fYZwKaqvh_ND8dLCANg-oMaphA@mail.gmail.com>
- <aCHZg4tj6YwS9vph@ryzen> <CAAZ0mTeiVqZQvkWzJ8aFH4FUPCZwy5O+9hPBgDPhSgNNz+t6HA@mail.gmail.com>
- <aCTZkV5mRjDsYyeE@ryzen> <CAAZ0mTcge55H4Ow0JG8PE5Wpgtz6TG60uvGxRUXrq-aVH4k9aQ@mail.gmail.com>
- <aEGLCBnh_PSON3Sx@ryzen> <aEbmg4wqqMaetxzd@ryzen>
-In-Reply-To: <aEbmg4wqqMaetxzd@ryzen>
-From: Mikko Juhani Korhonen <mjkorhon@gmail.com>
-Date: Wed, 11 Jun 2025 16:14:44 +0300
-X-Gm-Features: AX0GCFv1MVWt1JeUz8X8IwzWdBOMpz3BqAmSEq6lGWiJBMP2fxPmAbWJTCmk8jU
-Message-ID: <CAAZ0mTdBgeedcF3gE6bKm=+qFj8Sfuc0xVc-kDb2=nhMS3F_3Q@mail.gmail.com>
-Subject: Re: [PATCH v4] ata: libata: disable LPM for WDC WD20EFAX-68FB5N0 hard drives
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>, linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAZ0mTdBgeedcF3gE6bKm=+qFj8Sfuc0xVc-kDb2=nhMS3F_3Q@mail.gmail.com>
 
-ma 9.6.2025 klo 16.49 Niklas Cassel (cassel@kernel.org) kirjoitti:
-> > It is unfortunate that the BIOS manufacturer has managed to mess this up,
-> > but since this is the first motherboard where I've heard about the problem
-> > of LPM only working on certain ports, even though it is a per controller
-> > thing, just not having good power saving for this motherboard seems fine.
+On Wed, Jun 11, 2025 at 04:14:44PM +0300, Mikko Juhani Korhonen wrote:
+> ma 9.6.2025 klo 16.49 Niklas Cassel (cassel@kernel.org) kirjoitti:
+> > > It is unfortunate that the BIOS manufacturer has managed to mess this up,
+> > > but since this is the first motherboard where I've heard about the problem
+> > > of LPM only working on certain ports, even though it is a per controller
+> > > thing, just not having good power saving for this motherboard seems fine.
+> > >
+> > > I suggest that we simply add the DMI name of your motherboard to
+> > > ahci_broken_lpm().
 > >
-> > I suggest that we simply add the DMI name of your motherboard to
-> > ahci_broken_lpm().
->
-> (As without that series, it is not possible to add an entry
-> where there is no good BIOS version that has been released.)
+> > (As without that series, it is not possible to add an entry
+> > where there is no good BIOS version that has been released.)
+> 
+> Hello Niklas,
+> 
+> thanks - ok we are assuming that this is something that happens only
+> on this motherboard for this AMD 0x43EB controller at least for now.
 
-Hello Niklas,
+From what AMD people told us, this controller is not the same as the ancient
+ATI based AHCI controller that had a bunch of problems with LPM.
 
-thanks - ok we are assuming that this is something that happens only
-on this motherboard for this AMD 0x43EB controller at least for now.
-Was your thought also that we restrict disabling lpm only up to the
-current BIOS version, and if there are BIOS updates which don't fix
-the issue we just bump version number here?
-And I guess there are not going to be any firmware updates to the WDC
-WD20EFAX-68FB5N0 drive, I understood that you or Damien might know
-something about this? This would of course not help if the problem is
-in the motherboard.
+Also, LPM works on some ports, but not others. That suggests that the AHCI
+controller actually supports LPM and that this is a BIOS / integration issue.
 
-Best regards, have a great day,
-Mikko
+
+> Was your thought also that we restrict disabling lpm only up to the
+> current BIOS version, and if there are BIOS updates which don't fix
+> the issue we just bump version number here?
+
+The table in ahci_broken_lpm() previously included BIOS versions that were
+good. (There has been a new version released that has fixed the LPM problem
+that existed in older BIOSes.)
+
+
+I recently added the "ASUSPRO D840MB_M840SA", which does not have any good
+version.
+
+I was thinking that they probably won't release any new BIOS versions for
+"ASUSPRO D840MB_M840SA" and your motherboard, so most likely we will never
+need to bump these. But perhaps that is a silly assumption.
+
+Perhaps a better solution would have been to have two tables?
+
+One table that looks like before. (Anything older than the "good" version
+gets LPM disabled.) And then a new table for boards that we quirk
+unconditionally (because there is no new version that fixes the LPM problems).
+
+Because like you say, perhaps the manufacturer will release a new BIOS with
+simply a small hotfix, and will thus have a newer build date, but will still
+have broken LPM.
+
+Perhaps I should throw out some of the commits from for-6.16-fixes, and
+implement it using two tables instead.
+
+(Commit 6f29d393061c ("ata: ahci: Use correct BIOS build date for ThinkPad
+W541 quirk") can still be kept.)
+
+
+> And I guess there are not going to be any firmware updates to the WDC
+> WD20EFAX-68FB5N0 drive, I understood that you or Damien might know
+> something about this? This would of course not help if the problem is
+> in the motherboard.
+
+I don't think this drive will get any new FW.
+
+
+Kind regards,
+Niklas
