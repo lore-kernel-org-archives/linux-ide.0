@@ -1,79 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B8A21A8405
-	for <linux-ide@vger.kernel.org>; Thu, 12 Jun 2025 14:09:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F5D824886F;
+	Thu, 12 Jun 2025 14:18:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749737360; cv=none; b=b2M9lew7Iaj78bBYAp8YxcGSiXw2E57D7pRfLRSnKGZNrXzaGuP4WKKiKEyvkhqaOqBk0GnhYojOsQiohLM09Q7zHQ6A6LPmWuPjpZLzzqClxa7aX0XjlqzLQ4hOG8obgQ6L2p0oZOVKm/etxyL0xrlIRTOLyGiR3VeKrggRtEk=
+	t=1749737900; cv=none; b=Bx8LNmefFqmSyBOyImXisvrilXG9xxnwPKWa0xIX6qn8+A8Ne1iOX7FG4FBrqazZfdQbLKP7zUvjWoWjyB17ogJzdAHIkV8BQpBWxyzOk4bfBNs4fkHHGbbrMuGqxvabVj9JS4BSH8mVk8jsKIurCU6tVNizRtf4Ikcg29IpigI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749737360; c=relaxed/simple;
-	bh=9V0In3nijsMzAu37UB88LTns/cIdJ0ZmnA69tRKlmkE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rBaWyooHsxBRCku4sAy+SLl4rUUJuWNDJ5OAPbBXXjrBCEHBnWA8qLgOMNo6NBu3ZnNQ2z6NgNLVWwzDIYZwc7nbJFRa8QmcWMOffTp1+IKKgfmE5PLKGfGs9kSVd0Bj4GNZQIEcDdcH6ZEJXv5oM0iv7J4Y/U1J4wz/XnOeKOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OBMS64yo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749737900; c=relaxed/simple;
+	bh=Wm19W6ILPyOeVaqrzCWwFLG2OCJ4d848SPSkvqb417Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GY2gSkrcYBSj7S2x/uHdjqRduFpH1WRdXsRmtgTaxQQyUahDg1cYnHEEA3AnDIX8jA4/Q7Dk5ON+nW6179TqykrV9KpgNgauTQl71v1jVI7bneJIwyQc/b+n8xCXdD0lTbf0cE9296EJuW3ZkQnBuNgg+0fu2x15/uSgLNkEM7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hztyPOui; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBMS64yo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C59BDC4CEEA;
-	Thu, 12 Jun 2025 14:09:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hztyPOui"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91108C4CEEB;
+	Thu, 12 Jun 2025 14:18:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749737357;
-	bh=9V0In3nijsMzAu37UB88LTns/cIdJ0ZmnA69tRKlmkE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OBMS64yoIZW5Xw5zMy7ncDak6wp3wnGmwdpYbE/WjGEs3SVcR6dDULrf6o4CLmnv8
-	 ReFs3DL5Lt14MqI9mDGrhgPUiAXJkMALv4JVaMDn/AuTL2V/PhcFh2US50c3eoNmwd
-	 /z745vyWdk2In8U+IDAX4Glu+f2bNw2etsQtkpRCjoPrJ8cdZeX3F4Hvsb2VsYwbuN
-	 NJx9a1SaxuRR7rkmrzVOKM3G4cWBjNsXmkiv8INaAIu9YrAWWqkQHqXSHw9zsDk/mS
-	 2qyaSBNySMWHrIM/WCf8LbLCQXphdt+a7h7oHLq5ZOywOBSg9bZVRCWQ33p4nycxZc
-	 QrIGkuU/cQl2g==
-Date: Thu, 12 Jun 2025 16:09:13 +0200
+	s=k20201202; t=1749737899;
+	bh=Wm19W6ILPyOeVaqrzCWwFLG2OCJ4d848SPSkvqb417Y=;
+	h=From:To:Cc:Subject:Date:From;
+	b=hztyPOuiSOpQZp4kcZZX9PexGV7E1EiqNM0y3SDDcEaxmDRYMjDLmh5pHh2orL/nK
+	 c4K6NAYIlE1zP8QtIKNNRWFznHuppEHjvN54IQID5NEiZVZne0oD/AiwySG8q91dW1
+	 31zA3+n7qtg6QC07ocsLzJdhjJC0XT2JSX81Mz6f0xv/JszL5ZaEEKLkMDJKRa75Lx
+	 2t2CMyn/4w0s0Aq5bKWEViqRoAXgGzA+IabEmFfaJ9naCGNtVsIdraOmjaST/l5AFj
+	 c4KGNlfqsncJZOG9HjikmvTR4/+kEfYBkC4A63xqSxdJHbdWzgVHTa2bnoBiC0g+X0
+	 UVZbnm4M+uA5g==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
-Cc: kernel-dev@rsta79.anonaddy.me, Hans de Goede <hansg@kernel.org>,
+Cc: kernel-dev@rsta79.anonaddy.me,
+	Hans de Goede <hansg@kernel.org>,
 	Andy Yang <andyybtc79@gmail.com>,
 	Mikko Juhani Korhonen <mjkorhon@gmail.com>,
 	Mika Westerberg <mika.westerberg@linux.intel.com>,
 	linux-ide@vger.kernel.org,
-	Mario Limonciello <mario.limonciello@amd.com>
-Subject: Re: [PATCH v2 0/3] Cleanup ahci_broken_lpm()
-Message-ID: <aErfiWakE9xrEUaR@ryzen>
-References: <20250610110757.1318959-5-cassel@kernel.org>
- <174963787767.1635114.11613333221647910549.b4-ty@kernel.org>
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	stable@vger.kernel.org
+Subject: [PATCH v3] ata: ahci: Disallow LPM for ASUSPRO-D840SA motherboard
+Date: Thu, 12 Jun 2025 16:17:51 +0200
+Message-ID: <20250612141750.2108342-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <174963787767.1635114.11613333221647910549.b4-ty@kernel.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3400; i=cassel@kernel.org; h=from:subject; bh=Wm19W6ILPyOeVaqrzCWwFLG2OCJ4d848SPSkvqb417Y=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDK8HvbFs8ZP7BRTPPrw5plvm1byR4hxv3klrsIqwMQn+ lJ6w/yUjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEwk7xbDP4srAZGdywIDPRef 1PlTaSvd65M+O+MC18dQ0yLJTeefLmL4Zym5w/hJd5PtrGWCB4JeRF8WfFaoffWpnIVzaOfOUwU rmQE=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jun 11, 2025 at 12:31:17PM +0200, Niklas Cassel wrote:
-> On Tue, 10 Jun 2025 13:07:58 +0200, Niklas Cassel wrote:
-> > This series cleans up ahci_broken_lpm(), and adds ASUSPRO-D840SA to the
-> > table of boards with broken LPM.
-> > 
-> > 
-> > Kind regards,
-> > Niklas
-> > 
-> > [...]
-> 
-> Applied to libata/linux.git (for-6.16-fixes), thanks!
-> 
-> [1/3] ata: ahci: Use correct BIOS build date for ThinkPad W541 quirk
->       https://git.kernel.org/libata/linux/c/6f29d393
-> [2/3] ata: ahci: Refactor ahci_broken_lpm()
->       https://git.kernel.org/libata/linux/c/e3ea4ae4
-> [3/3] ata: ahci: Disallow LPM for ASUSPRO-D840SA motherboard
->       https://git.kernel.org/libata/linux/c/4b151c71
+A user has bisected a regression which causes graphical corruptions on his
+screen to commit 7627a0edef54 ("ata: ahci: Drop low power policy board
+type").
 
-Patch [2/3] and [3/3] have been dropped from for-6.16-fixes, will rework
-these as Mikko pointed out that the solution is not really future proof.
+Simply reverting commit 7627a0edef54 ("ata: ahci: Drop low power policy
+board type") makes the graphical corruptions on his screen to go away.
+(Note: there are no visible messages in dmesg that indicates a problem
+with AHCI.)
 
-Patch [1/3] is kept.
+The user also reports that the problem occurs regardless if there is an
+HDD or an SSD connected via AHCI, so the problem is not device related.
 
+The devices also work fine on other motherboards, so it seems specific to
+the ASUSPRO-D840SA motherboard.
 
-Kind regards,
-Niklas
+While enabling low power modes for AHCI is not supposed to affect
+completely unrelated hardware, like a graphics card, it does however
+allow the system to enter deeper PC-states, which could expose ACPI issues
+that were previously not visible (because the system never entered these
+lower power states before).
+
+There are previous examples where enabling LPM exposed serious BIOS/ACPI
+bugs, see e.g. commit 240630e61870 ("ahci: Disable LPM on Lenovo 50 series
+laptops with a too old BIOS").
+
+Since there hasn't been any BIOS update in years for the ASUSPRO-D840SA
+motherboard, disable LPM for this board, in order to avoid entering lower
+PC-states, which triggers graphical corruptions.
+
+Cc: stable@vger.kernel.org
+Reported-by: Andy Yang <andyybtc79@gmail.com>
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220111
+Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+Changes since v2:
+-Rework how we handle the quirk so that we also quirk future BIOS versions
+ unless a build date is explicitly added to driver_data.
+
+ drivers/ata/ahci.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index e7c8357cbc54..c8ad8ace7496 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1410,8 +1410,15 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ 
+ static bool ahci_broken_lpm(struct pci_dev *pdev)
+ {
++	/*
++	 * Platforms with LPM problems.
++	 * If driver_data is NULL, there is no existing BIOS version with
++	 * functioning LPM.
++	 * If driver_data is non-NULL, then driver_data contains the DMI BIOS
++	 * build date of the first BIOS version with functioning LPM (i.e. older
++	 * BIOS versions have broken LPM).
++	 */
+ 	static const struct dmi_system_id sysids[] = {
+-		/* Various Lenovo 50 series have LPM issues with older BIOSen */
+ 		{
+ 			.matches = {
+ 				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+@@ -1440,6 +1447,13 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
+ 			},
+ 			.driver_data = "20180409", /* 2.35 */
+ 		},
++		{
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
++				DMI_MATCH(DMI_PRODUCT_VERSION, "ASUSPRO D840MB_M840SA"),
++			},
++			/* 320 is broken, there is no known good version yet. */
++		},
+ 		{ }	/* terminate list */
+ 	};
+ 	const struct dmi_system_id *dmi = dmi_first_match(sysids);
+@@ -1449,6 +1463,9 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
+ 	if (!dmi)
+ 		return false;
+ 
++	if (!dmi->driver_data)
++		return true;
++
+ 	dmi_get_date(DMI_BIOS_DATE, &year, &month, &date);
+ 	snprintf(buf, sizeof(buf), "%04d%02d%02d", year, month, date);
+ 
+-- 
+2.49.0
+
