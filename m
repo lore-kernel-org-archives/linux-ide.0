@@ -1,104 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52ABF28BA8C
-	for <linux-ide@vger.kernel.org>; Tue, 17 Jun 2025 06:34:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A96D28ECE3
+	for <linux-ide@vger.kernel.org>; Tue, 17 Jun 2025 08:52:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750142054; cv=none; b=sEjT/Fve8G1HrgyLOHpgPNvHo9GW8wbnf32HBDmJUy1BYpDcsX7EWIQABxsCWOMmUHMKhbrE+IlCn9kAGpculbmpiGfZLO4n3puPEFub6F0dPoF9TNcIBuOjBmqpJqD8xfFl6os58OvkVgKjxRKV7c0c1840ZWTTzzXJ2i4jjCI=
+	t=1750150349; cv=none; b=AdDsuhfzvhOsIZk+GZhT1TdkLTcgYIjeiI1UijamhVMTLXOrVnnAQpylNHa7XlqOJnNdYhOtheGuu+4zRyBMQgOZpDEOgdqwkM0T7eR2ue1k4UeiHnWux2dCHSNkCLlQM3uMt287UfVi1rQ0rWgZ4i3nXiBZ8hn9Dnm0Mt/FYMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750142054; c=relaxed/simple;
-	bh=pHpArF3/hTCePSZC0bHdWMXdwtuFUcKI52EuxNgMEzk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Y1oIxI0/INN77PLwVvWuSgVN7jIHCXo4ul24TSs5MV7dMzRKm+BRVvnFh/Izr1Rcg4qAWT8JuiSXlQ7q7FtgFdzVBjXiJHy7fhS9OkEhPRrGRFxOXr80Cr4FEgprUOud/3nqtp/6scbAruCFJCMYbMmUTCbILpr85xo7bpvBjZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lQKuQM5n; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750150349; c=relaxed/simple;
+	bh=7stH/IdhAGZMYPmKcWK59JC1XvmF7pUd0aOV2Ei9P1Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=u3Ghq24pTSfxViW83ufZsmWJJE9Ahw+e/4uYFbSTnPL8vLkOw8lJEOiLWRBNpYC9Mvyzkr/Bj0VE574bULV5NGmQBuC1UhU+wZIXq/wk+0u9Bhg3OK9FkNoBPY4LBRIb/qxlMJtqpSA35DmbEHAnrMEQDueL65f+XArUUf0YkZ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EkCJciP8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lQKuQM5n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 644DCC4CEE3;
-	Tue, 17 Jun 2025 06:34:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EkCJciP8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED9C9C4CEE3;
+	Tue, 17 Jun 2025 08:52:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750142053;
-	bh=pHpArF3/hTCePSZC0bHdWMXdwtuFUcKI52EuxNgMEzk=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=lQKuQM5nsDlg5Iq4YRoX43pcDQlE82qSlj8USccwBng9EZp8WMkLOgEKyVJBpQy5t
-	 Obd3nGGXdZ/aMiVfr06chiXx/Bzv1KbxxMOKaAd0/LRT0xG98/uh6eDdOnDCwv9NWR
-	 9qpq651OwQoqtosWQU55nz8zPVUfJnPRRGCjZk5H/jAEKgj/vNUo9ghV0BcL1iFLaE
-	 y6VLi18QGVeHCUffv2Truyj9u1tGE1dTt6r7XtkvMmn6sX6fEXeZC2rhsd+rN5b2GX
-	 waYqkpavF/YFlexS9T5M0sp9SCMipA8jip5ujdoR6spvaMtY4eFolj+H6C+EF4EWkH
-	 YM768pMjhNAHA==
-Message-ID: <14325a6a-6f95-4767-bcbd-cb9b735e8b37@kernel.org>
-Date: Tue, 17 Jun 2025 15:32:17 +0900
+	s=k20201202; t=1750150348;
+	bh=7stH/IdhAGZMYPmKcWK59JC1XvmF7pUd0aOV2Ei9P1Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EkCJciP8Z6QKU5UnTaSy8SvpBcguJlfaZ4bqYrrIAFR1j6rrAkZRYrnIRYg1w8Ome
+	 QscfKHU+g01FcC4ATCCc2ddkABS8sV/ntI3ggVCG+9WhDUymKD9eOAHZGtLjC1t8g2
+	 53gTnbvY1vF594NSf8xgm1xDU9o1x5yjCn4i3WkcszTAgOt5q02VUvFjfbgoc5RLVU
+	 8/k5WGVB5aWHFtfVcybwsm8kVPi7Lb/d0D3z92t+dtTJUpw2mWO/20qShO5NOe2wsw
+	 /WNPGDDyYXKSoRFIQo1hWcGb42oh9tXCONFmOzaNjrU2J5zU/Uku0wNxlb2i+KF3OJ
+	 UYP4b3hDXEyQQ==
+Date: Tue, 17 Jun 2025 10:52:25 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Mikko Korhonen <mjkorhon@gmail.com>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: ahci: Disallow LPM for Asus B550-F motherboard
+Message-ID: <aFEsyRGzsM65y0xF@ryzen>
+References: <20250617062055.784827-1-mjkorhon@gmail.com>
+ <14325a6a-6f95-4767-bcbd-cb9b735e8b37@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: ahci: Disallow LPM for Asus B550-F motherboard
-To: Mikko Korhonen <mjkorhon@gmail.com>, Niklas Cassel <cassel@kernel.org>,
- linux-ide@vger.kernel.org
-References: <20250617062055.784827-1-mjkorhon@gmail.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250617062055.784827-1-mjkorhon@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <14325a6a-6f95-4767-bcbd-cb9b735e8b37@kernel.org>
 
-On 6/17/25 3:18 PM, Mikko Korhonen wrote:
-> Asus ROG STRIX B550-F GAMING (WI-FI) motherboard has problems on some
-> SATA ports with at least one hard drive model (WDC WD20EFAX-68FB5N0)
-> when LPM is enabled. Disabling LPM solves the issue.
+On Tue, Jun 17, 2025 at 03:32:17PM +0900, Damien Le Moal wrote:
+> On 6/17/25 3:18 PM, Mikko Korhonen wrote:
+> > Asus ROG STRIX B550-F GAMING (WI-FI) motherboard has problems on some
+> > SATA ports with at least one hard drive model (WDC WD20EFAX-68FB5N0)
+> > when LPM is enabled. Disabling LPM solves the issue.
+> > 
+> > Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+> > Signed-off-by: Mikko Korhonen <mjkorhon@gmail.com>
+> > ---
+> > I think we might include the comment about the non working drive model, as
+> > we have tested only one model and in principle this could also be an
+> > interoperation issue. If one would need to enable LPM for the motherboard
+> > and happens to have a working hard drive model, he/she would know
+> > why we have made the patch in the first place.
+> > 
+> >  drivers/ata/ahci.c | 16 ++++++++++++++++
+> >  1 file changed, 16 insertions(+)
+> > 
+> > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> > index c8ad8ace7496..ae8c4072a5a3 100644
+> > --- a/drivers/ata/ahci.c
+> > +++ b/drivers/ata/ahci.c
+> > @@ -1454,6 +1454,22 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
+> >  			},
+> >  			/* 320 is broken, there is no known good version yet. */
+> >  		},
+> > +		{
+> > +			/*
+> > +			 * AMD 500 Series Chipset SATA Controller [1022:43eb]
+> > +			 * on this motherboard timouts on ports 5 and 6
+
+s/timouts/timeouts/
+
+> > +			 * when LPM enabled at least with WDC WD20EFAX-68FB5N0
+> > +			 * hard drives.
+> > +			 */
+> > +			.matches = {
+> > +				DMI_MATCH(DMI_BOARD_VENDOR,
+> > +					"ASUSTeK COMPUTER INC."),
+
+align to open parenthesis
+
+
+> > +				DMI_MATCH(DMI_BOARD_NAME,
+> > +					"ROG STRIX B550-F GAMING (WI-FI)"),
+
+align to open parenthesis
+
+
+> > +			},
+> > +			/* 3621 is broken, there is no known good version yet.
+> > +			 */
 > 
-> Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
-> Signed-off-by: Mikko Korhonen <mjkorhon@gmail.com>
-> ---
-> I think we might include the comment about the non working drive model, as
-> we have tested only one model and in principle this could also be an
-> interoperation issue. If one would need to enable LPM for the motherboard
-> and happens to have a working hard drive model, he/she would know
-> why we have made the patch in the first place.
+> Please use the correct comment format:
 > 
->  drivers/ata/ahci.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index c8ad8ace7496..ae8c4072a5a3 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1454,6 +1454,22 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
->  			},
->  			/* 320 is broken, there is no known good version yet. */
->  		},
-> +		{
-> +			/*
-> +			 * AMD 500 Series Chipset SATA Controller [1022:43eb]
-> +			 * on this motherboard timouts on ports 5 and 6
-> +			 * when LPM enabled at least with WDC WD20EFAX-68FB5N0
-> +			 * hard drives.
-> +			 */
-> +			.matches = {
-> +				DMI_MATCH(DMI_BOARD_VENDOR,
-> +					"ASUSTeK COMPUTER INC."),
-> +				DMI_MATCH(DMI_BOARD_NAME,
-> +					"ROG STRIX B550-F GAMING (WI-FI)"),
-> +			},
-> +			/* 3621 is broken, there is no known good version yet.
-> +			 */
+> 			/*
+> 			 * 3621 is broken and there is no known good version.
+> 			 */
 
-Please use the correct comment format:
+I think having it a single line as:
+	/* 3621 is broken and there is no known good version. */
 
-			/*
-			 * 3621 is broken and there is no known good version.
-			 */
-
-> +		},
->  		{ }	/* terminate list */
->  	};
->  	const struct dmi_system_id *dmi = dmi_first_match(sysids);
+is fine, as it will be less than 80 columns, and matches the
+existing single line comments in the same table.
 
 
--- 
-Damien Le Moal
-Western Digital Research
+Anyway, I can fix these nits up when applying, no need to send a V2.
+
+Mikko, thank you for your efforts in debugging and helping out with
+reviews.
+
+
+Kind regards,
+Niklas
