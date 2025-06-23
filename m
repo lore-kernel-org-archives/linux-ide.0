@@ -1,80 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6859127A10F;
-	Mon, 23 Jun 2025 16:27:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC1E92D3A8C;
+	Mon, 23 Jun 2025 18:23:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750696036; cv=none; b=QemRQqgGu8nI/qPE11Rm3gLmZ1zLlT4/M+lc1elafv2+ISnWvd9dBzutU86bFsL8Y1pXfdEsbBMxOKzr18cvDvCjq0IHpLGxAZ2tTL8r370kRH1TurZlBtZQawZeAj4g73MykZPJOpqC0VCMLhfnS+2Gvp4T45uVMvERHl4koXE=
+	t=1750702984; cv=none; b=Nf+4DvrCtuNt61nnNYMj+bJmiwo+T3fYqZbGVqtTJmbYJ+jl4hEVcsHTD4PKf5fWbQU87VxF4Ov0gdtkziRnYr3zVtAKaABbej4lp92gSyIh9BvYyhrcSeDdG2SW+wKJjZjgZBMTJQ9E6g0JDUo9VF/VzBQi2ErSZviwo6353Ss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750696036; c=relaxed/simple;
-	bh=3EAO3YbUCzx9KDj7eT51E1hoJySpjiCVYtTzyMaRymg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dp9CiQ4IZFHbR68dg2WOZ3gEeYWQYypd+vSV9jNznhR6WyjIaRl9O6w2fJfZRjdYQXoiAQNaHlII7tmj3rKl6ZyoTU24FAgizVLj2b1G8hadQFW+eR9MvC7BV6WJJnBCT1cJvVKLI/6RetL3vza26WKyflwgOAYS4eP8b9xhPWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m0SHEW2f; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750702984; c=relaxed/simple;
+	bh=yVss1NObcfteBX80RsZtJgcrS8aghWOKa6sxZlfxBB4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qOzl1q2pY3QBJJbbQCr9d9HwBENGKp9sCf0rsOzQVa3w1jHz5TjfdjE2eA7ypU7hD/CKdCj8BGI31UnE+dhrdCkysYCMFuGXjK2/TrDOgVkL9/wvot4UdCQfhG4NDOpIz4NBfWMm9NTFqfBRRLXaWn7uzxqOEV2OpJCHshfcJSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tK5YKi1+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m0SHEW2f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DD90C4CEED;
-	Mon, 23 Jun 2025 16:27:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tK5YKi1+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCE3DC4CEEA;
+	Mon, 23 Jun 2025 18:23:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750696036;
-	bh=3EAO3YbUCzx9KDj7eT51E1hoJySpjiCVYtTzyMaRymg=;
-	h=From:To:Cc:Subject:Date:From;
-	b=m0SHEW2fviSGjxg6ilzUo3P+rf63rx1rtJDobLJ3Y1KqHCBTT9suj19xhU2M60NfJ
-	 QYKcz4nhIqZ4GTmVwq4n9IbCgs4rb7zeERnZ4GLFMhrhVkWCPGm5qfy9zWGZpVbGMT
-	 nnmElsH8pQrMekWBjomTmlwayR2IAnE5y/RVkbYqxCWwQBX6ZxAo+78Tq9QW0Fw+1P
-	 raPaIazhI2AZzpOlB3ayXlx5U8XHPgMgLvVcwBb2UndApoUi2wJxc23PLOdboySaAi
-	 Csl77p9XqgC33DUwyHy4Za989Y01UNcVJS3AuFM/U2+wuywmvUT+r1q5/aPDRJzN9R
-	 XfhPONG52WjBA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Hans de Goede <hansg@kernel.org>
-Cc: stable@vger.kernel.org,
-	Andy Yang <andyybtc79@gmail.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: ahci: Use correct DMI identifier for ASUSPRO-D840SA LPM quirk
-Date: Mon, 23 Jun 2025 18:27:11 +0200
-Message-ID: <20250623162710.917979-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.49.0
+	s=k20201202; t=1750702983;
+	bh=yVss1NObcfteBX80RsZtJgcrS8aghWOKa6sxZlfxBB4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=tK5YKi1+fKeFW6amdvVOaTTbw0TzJ84pypUoTx93xdzWtb3xXoaysTS73WpQzadEK
+	 hpqzIGUlLv12aZMhsuak+q3aJRMBpTGANlBIb2Jl41ulSJU2w9rAAuRAW7O26Mpp08
+	 Pd1sSfKF5talgWCjrbxvRO6H9sOAB4gdFVf7LSRbLsTHCivJv7sbdndYxpAg8LkkBA
+	 IZvwSnThn4wG5WridI/yEcjfQT8Grbxj7GhrN3mhthHPI2TRXu7Wt4/e/1AGTLTkLf
+	 dOt5PdaRqrvex8POTmhPK5+4qIyIZxZL+l8i0q8g1stxU3pImak3c0Ct1iBl/U7jXk
+	 /tAsUEmNCgzjg==
+Message-ID: <df05fc95-84e5-4287-a5bd-f4ea081dd47f@kernel.org>
+Date: Mon, 23 Jun 2025 20:23:00 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1193; i=cassel@kernel.org; h=from:subject; bh=3EAO3YbUCzx9KDj7eT51E1hoJySpjiCVYtTzyMaRymg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDIiG+Li+EW/lX2P6qrc5FVutXOlLWPV3pwttQ17HJ48m TtD4SR/RykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACay3J/hv1/CvFUu5rIlOilc D4McwzOqHM6fPVoZyfsjUa0zvIl/EiPDW51NH1jlD0l+Fmb249t874Xkvzm8zqFctVw3I1WXHgv hBQA=
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: ahci: Use correct DMI identifier for ASUSPRO-D840SA
+ LPM quirk
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+Cc: stable@vger.kernel.org, Andy Yang <andyybtc79@gmail.com>,
+ linux-ide@vger.kernel.org
+References: <20250623162710.917979-2-cassel@kernel.org>
+Content-Language: en-US, nl
+From: Hans de Goede <hansg@kernel.org>
+In-Reply-To: <20250623162710.917979-2-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-While most entries in ahci_broken_lpm(), for Lenovo based boards, match on
-DMI_PRODUCT_VERSION, ASUS apparently store the board name in
-DMI_PRODUCT_NAME rather than DMI_PRODUCT_VERSION.
+Hi,
 
-Use the correct DMI identifier (DMI_PRODUCT_NAME) to match the
-ASUSPRO-D840SA board, such that the quirk will actually get applied.
+On 23-Jun-25 6:27 PM, Niklas Cassel wrote:
+> While most entries in ahci_broken_lpm(), for Lenovo based boards,
 
-Cc: stable@vger.kernel.org
-Reported-by: Andy Yang <andyybtc79@gmail.com>
-Closes: https://lore.kernel.org/linux-ide/aFb3wXAwJSSJUB7o@ryzen/
-Fixes: b5acc3628898 ("ata: ahci: Disallow LPM for ASUSPRO-D840SA motherboard")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/ahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Note the Lenovo matching is done on Lenovo laptop model / product
+names not on the (mother/main)board names.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index e5e5c2e81d09..aa93b0ecbbc6 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1450,7 +1450,7 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
- 		{
- 			.matches = {
- 				DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
--				DMI_MATCH(DMI_PRODUCT_VERSION, "ASUSPRO D840MB_M840SA"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "ASUSPRO D840MB_M840SA"),
- 			},
- 			/* 320 is broken, there is no known good version. */
- 		},
--- 
-2.49.0
+> match on
+> DMI_PRODUCT_VERSION, ASUS apparently store the board name in
+> DMI_PRODUCT_NAME rather than DMI_PRODUCT_VERSION.
+
+Actually Lenovo is the weird one here, all other vendors store
+the laptop model-name in PRODUCT_NAME rather then in PRODUCT_VERSION.
+
+For motherboards the motherboard modelnr is typically stored
+in BOARD_NAME and what is in PRODUCT_NAME varies.
+
+E.g. my MSI B550M PRO-VDH desktop motherboard has:
+
+DMI_BOARD_NAME    "B550M PRO-VDH WIFI (MS-7C95)"
+DMI_PRODUCT_NAME  "MS-7C95"
+
+So you may want to reword the commit message a bit.
+
+Either way the patch contents looks good to me:
+
+Reviewed-by: Hans de Goede <hansg@kernel.org>
+
+Regards,
+
+Hans
+
+
+
+
+
+
+> 
+> Use the correct DMI identifier (DMI_PRODUCT_NAME) to match the
+> ASUSPRO-D840SA board, such that the quirk will actually get applied.
+> 
+> Cc: stable@vger.kernel.org
+> Reported-by: Andy Yang <andyybtc79@gmail.com>
+> Closes: https://lore.kernel.org/linux-ide/aFb3wXAwJSSJUB7o@ryzen/
+> Fixes: b5acc3628898 ("ata: ahci: Disallow LPM for ASUSPRO-D840SA motherboard")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/ata/ahci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index e5e5c2e81d09..aa93b0ecbbc6 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1450,7 +1450,7 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
+>  		{
+>  			.matches = {
+>  				DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
+> -				DMI_MATCH(DMI_PRODUCT_VERSION, "ASUSPRO D840MB_M840SA"),
+> +				DMI_MATCH(DMI_PRODUCT_NAME, "ASUSPRO D840MB_M840SA"),
+>  			},
+>  			/* 320 is broken, there is no known good version. */
+>  		},
 
