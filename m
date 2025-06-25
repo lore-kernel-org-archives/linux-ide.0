@@ -1,103 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CF08272812;
-	Wed, 25 Jun 2025 08:52:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 234E32627E9;
+	Wed, 25 Jun 2025 13:20:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750841528; cv=none; b=EhD5G7G95Xg7dyR8bOYprDMc+bVOdo811FOF7J8BgrVbymUA7tE6/tdwCNmZ72D8/tpZVsEDSmXr5bh+5YDqta+AnkmgFY4XRKO2SGF9KH12rNjyWc+vK+7nHorPo4uPi+5tJK2Uaf5TCn4RMqgA36sfOz6jhn4jiDG6msx4EQ8=
+	t=1750857634; cv=none; b=gZqRk8yr5F0h8+55spyX5Nd/kYrkdTC3mmg9biT8YV6qtgMjtz4SqSwo6FMQqTlgV1aGDMlXSh6S00fWgan7r1tcaOjFtxcwjt+CgmLzUwPFemvbUdTlzAMF6IAYxEx4ezu4/sVImVTROrHwxvPPziGnAAZ9WcGo5V+hI/zGFaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750841528; c=relaxed/simple;
-	bh=M1EaWqs7ZEJIPNmfIYJ8HPYPuf1hmnmjEWwJ3k3bSeY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uqeIe9GOdm1e3ETHecYWabyEkiC1HKh9X9q1Lr5WNCol6WVBRScz0TZvCUyin3qwDxAI18YKd8uWLfMy2nbbSmc86JOoul3WceP2KmSXh7TuLvCO3ouw86zNwf+ibIT+nTV3eE3G5Ydyz3fjjD51eCnuvy3gmx3GEH89dpnphMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jaKLbpx9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750857634; c=relaxed/simple;
+	bh=EWBsJf0RFWLnL8G5Ts1cRwIaQph+PvDjEzbM/tZiU0A=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=NRwynIMsAetBGGzLsCqGWuEFOY8w0xW2/8fBIEzKJSZK598nNt8ErpIBDO847/GV+R2Fe3j1OwnJETTM+XYwYlX0VNR4+wXjryrz586GHjFz/JPP5lSoK36ScoS9Ns0tX3CLookSvYm19fx34PJwKFrRU+eWTuxV815lNFE0UPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MVE0CaJ+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jaKLbpx9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCD4EC4CEEA;
-	Wed, 25 Jun 2025 08:52:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MVE0CaJ+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6829FC4CEEF;
+	Wed, 25 Jun 2025 13:20:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750841528;
-	bh=M1EaWqs7ZEJIPNmfIYJ8HPYPuf1hmnmjEWwJ3k3bSeY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jaKLbpx9drFPneXP/+DWu2J9m6SA4uhxmY3zOHlV6ycdpaDiKOCCVv4j0u9NFQb3P
-	 XFGmIt/1Hh/95o5mO75zIa8O6fNtE/NQ26ZA/LBSla1Le1K27FEbMC1e3Z6rqd6Zum
-	 yS12/5BvaCnw+7I9NbhHvFovvkkRny5I4cymWcSCYHKwGhAAnxvfwvm6da0nmttjVc
-	 QnblRwoI4Q3l2yUDbplIV767MEDnlPSgxhdIRjbVmhz5TBYS1YVxS56P+AKrOINkP2
-	 yzRTH05NvoM9VXqwbf3vheHXiy3LHRwkXSZV3YHJzxnnU0gOPheY5rckH0JJzEHvmS
-	 UCdHNsW0jDtbA==
-Date: Wed, 25 Jun 2025 10:52:04 +0200
+	s=k20201202; t=1750857633;
+	bh=EWBsJf0RFWLnL8G5Ts1cRwIaQph+PvDjEzbM/tZiU0A=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=MVE0CaJ+Ldp6NoyAB1DA3ScR7Ct5PjaeKP2+Hu7TQE6i8DD5wFRKZ5dy5zz8s/+te
+	 5TtnfzoiHfT8NdMkgiajZxYWJ/iNbjCpyietr7u7lxcc+T/sGp3WB4RsRdlqcc8Ntc
+	 G2tL4lDgqdzJeoV1R+KGokLrf2zVy350OJ9e2KNTQph2pZCKC/JkDoE8Y+0eiwnAEe
+	 C53gujKaT6XZ/S0q3fZ09JaTdB3c8N69d6q1/V1QMwo3pVAlxrHoO5akpNAjMRUPTu
+	 6LsKf5MeZk3gq5kOFkdohgSuvb6Rpkb9RCuZwrZiqXuCBTmV1j2Xb3f39CbpcJokic
+	 f/sYqmfNiUQVQ==
 From: Niklas Cassel <cassel@kernel.org>
-To: Andy Yang <andyybtc79@gmail.com>
-Cc: Hans de Goede <hansg@kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	dlemoal@kernel.org
+To: Damien Le Moal <dlemoal@kernel.org>, Hans de Goede <hansg@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>
+Cc: stable@vger.kernel.org, Andy Yang <andyybtc79@gmail.com>, 
+ linux-ide@vger.kernel.org
+In-Reply-To: <20250624074029.963028-2-cassel@kernel.org>
+References: <20250624074029.963028-2-cassel@kernel.org>
 Subject: Re: [PATCH v2] ata: ahci: Use correct DMI identifier for
  ASUSPRO-D840SA LPM quirk
-Message-ID: <aFu4tO4Wk1CyeJ9h@ryzen>
-References: <20250624074029.963028-2-cassel@kernel.org>
- <78c03f67-7677-430b-8c47-c1338797ff0d@kernel.org>
- <CAGEiHrCWnC9BDi3DFDiAnoJxB_pFJpv-vcRU9jTmwb3Pxsg_Hw@mail.gmail.com>
+Message-Id: <175085763212.1222616.11590478108629299286.b4-ty@kernel.org>
+Date: Wed, 25 Jun 2025 15:20:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAGEiHrCWnC9BDi3DFDiAnoJxB_pFJpv-vcRU9jTmwb3Pxsg_Hw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-On Wed, Jun 25, 2025 at 06:29:58AM +0000, Andy Yang wrote:
-> On Tuesday, June 24, 2025, Damien Le Moal <dlemoal@kernel.org> wrote:
-> > On 6/24/25 4:40 PM, Niklas Cassel wrote:
-> >> ASUS store the board name in DMI_PRODUCT_NAME rather than
-> >> DMI_PRODUCT_VERSION. (Apparently it is only Lenovo that stores the
-> >> model-name in DMI_PRODUCT_VERSION.)
-> >>
-> >> Use the correct DMI identifier, DMI_PRODUCT_NAME, to match the
-> >> ASUSPRO-D840SA board, such that the quirk actually gets applied.
-> >>
-> >> Cc: stable@vger.kernel.org
-> >> Reported-by: Andy Yang <andyybtc79@gmail.com>
-> >> Closes: https://lore.kernel.org/linux-ide/aFb3wXAwJSSJUB7o@ryzen/
-> >> Fixes: b5acc3628898 ("ata: ahci: Disallow LPM for ASUSPRO-D840SA
-> motherboard")
-> >> Reviewed-by: Hans de Goede <hansg@kernel.org>
-> >> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> >
-> > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> >
-> >
-> > --
-> > Damien Le Moal
-> > Western Digital Research
-> >
+On Tue, 24 Jun 2025 09:40:30 +0200, Niklas Cassel wrote:
+> ASUS store the board name in DMI_PRODUCT_NAME rather than
+> DMI_PRODUCT_VERSION. (Apparently it is only Lenovo that stores the
+> model-name in DMI_PRODUCT_VERSION.)
 > 
-> LGTM. This patch is tested work correctly.
-
-Thank you, I will add your Tested-by tag.
-
-
+> Use the correct DMI identifier, DMI_PRODUCT_NAME, to match the
+> ASUSPRO-D840SA board, such that the quirk actually gets applied.
 > 
-> Again, not sure if its model specific or motherboard specific, if its
-> consider motherboard specific we should use (DMI_BOARD_NAME, D840MB)
-> instead to match the board.
+> [...]
 
-I don't know if it is model specific or motherboard specific.
+Applied to libata/linux.git (for-6.16-fixes), thanks!
 
-Considering how bad this bug is (causing artifacts on the iGPU),
-I guess we should hope that it is only the BIOS for your system,
-and not for all D840MB boards.
-
-So personally, I would go with the narrowest possible match (which
-this patch currently does).
-
-But, I would not be surprised if they actually managed to mess this
-up for all boards. But until someone else reports the same problem,
-I guess we should give them the benefit of the doubt.
-
+[1/1] ata: ahci: Use correct DMI identifier for ASUSPRO-D840SA LPM quirk
+      https://git.kernel.org/libata/linux/c/3e0809b1
 
 Kind regards,
 Niklas
+
