@@ -1,39 +1,39 @@
 Received: from amountary.cfd (ip44.ip-51-81-76.us [51.81.76.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 536923074BD
-	for <linux-ide@vger.kernel.org>; Wed, 25 Jun 2025 02:03:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C0462E630
+	for <linux-ide@vger.kernel.org>; Wed, 25 Jun 2025 02:04:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.81.76.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750816995; cv=none; b=nzj1YeSUcSbSu0sGBZ4COKKtD3FI6ZROMdNybRJdmCimP76U/5ipRGOJbL4+mC5Uv0YCTdKBFUNy6KcDv9y6Y0TQcms5KnMuuy0tH1NScK90xYwf6xNtRFMkjLQsFMLUIuw0f2D9KRjw4Fpxg/OrMdLxrde3gBI7JxjEOFg+GYY=
+	t=1750817093; cv=none; b=J94EuvT+7kWIEM0JH5WQejysDpbYBzHc2JRCrKimGMhg/WKjp4qHUgfacOdQrCDnfJnDkaOeobVSLEBqJVxEBhCPMIcyVsxOLtrWTHCQzzmlpUFfnUh6jB0SMgADXbx6dyQQN55TFyEWCmDLNxS8PKpBm9pDclT3Q7tnvGYPEaU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750816995; c=relaxed/simple;
+	s=arc-20240116; t=1750817093; c=relaxed/simple;
 	bh=ystuPIb1z04584X5UNuypsWSat3RuK32bgjCEidIwVs=;
-	h=To:Subject:Date:From:Message-ID:MIME-Version:Content-Type; b=U3o/MvW3zYZ4cwQMa1kE4drRKHrkOVl0GExz+ECike0d7YA9qrDpGhIIHJv63JMxLjNTRsOb2tqs31o3C8wlr/B5qhW40p1kAdCP8vbv8YfnOrWCI2+Q8zUKjsAlfKTJYStfjTzfUg7kJd4lfiNa7gtybPZdlKpHru6K+hLupXY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=amountary.cfd; spf=pass smtp.mailfrom=amountary.cfd; dkim=pass (1024-bit key) header.d=amountary.cfd header.i=@amountary.cfd header.b=DE+ujG3G; arc=none smtp.client-ip=51.81.76.44
+	h=To:Subject:Date:From:Message-ID:MIME-Version:Content-Type; b=mhTVU6opt49WC9ZGg9HuUGb2l+6wZ+AoYVS61qx46y2+KDH15/79Ygqx/Qnr2ly4bPfTu3ojY4eLZbFnJHLHOBm44i1zXAagS9IQ1J2DUxKDLt5whe2OdfM8Lpb6/SEqlf39dVFRCxrn/0gHAPfZ+rJSlcnwxz5bGFX18W8ZczU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=amountary.cfd; spf=pass smtp.mailfrom=amountary.cfd; dkim=pass (1024-bit key) header.d=amountary.cfd header.i=@amountary.cfd header.b=qvdaHOlj; arc=none smtp.client-ip=51.81.76.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=amountary.cfd
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amountary.cfd
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amountary.cfd header.i=@amountary.cfd header.b="DE+ujG3G"
+	dkim=pass (1024-bit key) header.d=amountary.cfd header.i=@amountary.cfd header.b="qvdaHOlj"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=amountary.cfd; s=mail; h=Content-Type:MIME-Version:Message-ID:Reply-To:From
 	:Date:Subject:To:Sender:Cc:Content-Transfer-Encoding:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
 	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=hduerycFrMHHmX7f0S56SdU5S5R+b6DZqD3AeW+URV0=; b=DE+ujG3GhJq+euj/mmBNXDoZjO
-	cTRBGg7OGnThxkoUThbRJsZourThtasPm0e4jjO8suLhAktLOwVvB8NX28Hd63Hk8iZ3yFJP6UlJn
-	lWrc5pNDW8bil7/AspMp4sDCHlzDZiR0XWy+k10LF7gbUfTLIv3IqpgNXK1chbX9jtcQ=;
+	bh=hduerycFrMHHmX7f0S56SdU5S5R+b6DZqD3AeW+URV0=; b=qvdaHOljiRcvEj/vQI5WdfJqBO
+	wOewOZL/RMRYmXXjSmknkNytZNqPHwzWJwC9IOOQd/P642A5OJuSQv4FtjGQbkhPb+BWIS+8vNQ5x
+	tHmXRBqX5nQet3B+UDiQKw7n4Wlr29f0Ps6UYcBlIOgZgq/F4rDF9ZgJLMwpBh1ZG6Jw=;
 Received: from admin by amountary.cfd with local (Exim 4.90_1)
 	(envelope-from <support@amountary.cfd>)
-	id 1uUFTl-000L0t-8h
-	for linux-ide@vger.kernel.org; Wed, 25 Jun 2025 09:03:13 +0700
+	id 1uUFVK-000N6D-Ut
+	for linux-ide@vger.kernel.org; Wed, 25 Jun 2025 09:04:50 +0700
 To: linux-ide@vger.kernel.org
 Subject: For sale
-Date: Wed, 25 Jun 2025 02:03:13 +0000
+Date: Wed, 25 Jun 2025 02:04:50 +0000
 From: Exceptional One PC <support@amountary.cfd>
 Reply-To: info@exceptionalonepc.com
-Message-ID: <4e4aa7beb8eeccbf07ccd6e550ffacfd@amountary.cfd>
+Message-ID: <4e48681fba41d9e34d06cf9c00c70ca3@amountary.cfd>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
