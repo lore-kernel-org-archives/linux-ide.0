@@ -1,67 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 234E32627E9;
-	Wed, 25 Jun 2025 13:20:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C490823B63A;
+	Thu, 26 Jun 2025 08:24:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750857634; cv=none; b=gZqRk8yr5F0h8+55spyX5Nd/kYrkdTC3mmg9biT8YV6qtgMjtz4SqSwo6FMQqTlgV1aGDMlXSh6S00fWgan7r1tcaOjFtxcwjt+CgmLzUwPFemvbUdTlzAMF6IAYxEx4ezu4/sVImVTROrHwxvPPziGnAAZ9WcGo5V+hI/zGFaY=
+	t=1750926285; cv=none; b=qPwH0G5P5Np/b6k+njTAF9yExCJwKh42OxLCbFFv8sQFfcDoqpbXomhz+sQa65ei9D219jRJhi3PySjZZNhaHcE4aGrZ/5gkuoAED2CSVje5o30s2CWygiCKXvxAHJt1wbNZIm4d/Cr85YuE7KiDz/mB0xz9GryL1vVOapQBET4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750857634; c=relaxed/simple;
-	bh=EWBsJf0RFWLnL8G5Ts1cRwIaQph+PvDjEzbM/tZiU0A=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=NRwynIMsAetBGGzLsCqGWuEFOY8w0xW2/8fBIEzKJSZK598nNt8ErpIBDO847/GV+R2Fe3j1OwnJETTM+XYwYlX0VNR4+wXjryrz586GHjFz/JPP5lSoK36ScoS9Ns0tX3CLookSvYm19fx34PJwKFrRU+eWTuxV815lNFE0UPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MVE0CaJ+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750926285; c=relaxed/simple;
+	bh=I9vZdEkAWXh73EN+tnd305QlTyFdASaPKKuepsi0GTo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p4MYMac+t0rQ+XKkRiGnSWFq9SPFnZGWTm6uKThd2+s1JUWWujQH/mgX02oWQApsUQhL7NtcefIPZOaCGbQ++oLESL6o49Z9P2MJ1zzZvkn/xGN2s3fligNw9BS/B2Ud9ZtDFgtQpHSClmL6Jxg5ey3BFWSAV9yMWm9Kb8AFTb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hfM1ePHX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MVE0CaJ+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6829FC4CEEF;
-	Wed, 25 Jun 2025 13:20:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hfM1ePHX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37F89C4CEEB;
+	Thu, 26 Jun 2025 08:24:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750857633;
-	bh=EWBsJf0RFWLnL8G5Ts1cRwIaQph+PvDjEzbM/tZiU0A=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=MVE0CaJ+Ldp6NoyAB1DA3ScR7Ct5PjaeKP2+Hu7TQE6i8DD5wFRKZ5dy5zz8s/+te
-	 5TtnfzoiHfT8NdMkgiajZxYWJ/iNbjCpyietr7u7lxcc+T/sGp3WB4RsRdlqcc8Ntc
-	 G2tL4lDgqdzJeoV1R+KGokLrf2zVy350OJ9e2KNTQph2pZCKC/JkDoE8Y+0eiwnAEe
-	 C53gujKaT6XZ/S0q3fZ09JaTdB3c8N69d6q1/V1QMwo3pVAlxrHoO5akpNAjMRUPTu
-	 6LsKf5MeZk3gq5kOFkdohgSuvb6Rpkb9RCuZwrZiqXuCBTmV1j2Xb3f39CbpcJokic
-	 f/sYqmfNiUQVQ==
+	s=k20201202; t=1750926285;
+	bh=I9vZdEkAWXh73EN+tnd305QlTyFdASaPKKuepsi0GTo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hfM1ePHXmN+1ekJbJPITqLWNeBh0AWGrkuvHdW26YnIloQKVFaj2Q1iWFevNM1xcE
+	 q6Fb9EsNxmiHGzH8XHTHQpT4cZMu7bTvwXb4mkdfmYhXq1Yf+sIfS/wId6AW8L6/zP
+	 6/Ex1hA8qpR8HLrVh6s4ObpKMabCeBIRy4gUFR+Kl3Ts1VV69fA9DnoIrFPMbDYC00
+	 dcXjF6j600ZIV4RVypNM630ORc0hezJJQas3GodjTFW7Cdde1zut5OzR6QziJvmK/3
+	 NOgcF87lXZ+sH+oQvag35KINoEbldBFZB2xngbORZQZM4u3miVuQDJcTMm50Gr6sm5
+	 c3m3aiWkEdysA==
+Date: Thu, 26 Jun 2025 10:24:34 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, Hans de Goede <hansg@kernel.org>, 
- Niklas Cassel <cassel@kernel.org>
-Cc: stable@vger.kernel.org, Andy Yang <andyybtc79@gmail.com>, 
- linux-ide@vger.kernel.org
-In-Reply-To: <20250624074029.963028-2-cassel@kernel.org>
-References: <20250624074029.963028-2-cassel@kernel.org>
+To: Andy Yang <andyybtc79@gmail.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Hans de Goede <hansg@kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 Subject: Re: [PATCH v2] ata: ahci: Use correct DMI identifier for
  ASUSPRO-D840SA LPM quirk
-Message-Id: <175085763212.1222616.11590478108629299286.b4-ty@kernel.org>
-Date: Wed, 25 Jun 2025 15:20:32 +0200
+Message-ID: <aF0DwglTSwicu/8C@x1-carbon>
+References: <20250624074029.963028-2-cassel@kernel.org>
+ <175085763212.1222616.11590478108629299286.b4-ty@kernel.org>
+ <CAGEiHrDtfwKGN+veFjgODf_0W4yJfDP0f6kqp-dF9xsypoH_0A@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAGEiHrDtfwKGN+veFjgODf_0W4yJfDP0f6kqp-dF9xsypoH_0A@mail.gmail.com>
 
-On Tue, 24 Jun 2025 09:40:30 +0200, Niklas Cassel wrote:
-> ASUS store the board name in DMI_PRODUCT_NAME rather than
-> DMI_PRODUCT_VERSION. (Apparently it is only Lenovo that stores the
-> model-name in DMI_PRODUCT_VERSION.)
-> 
-> Use the correct DMI identifier, DMI_PRODUCT_NAME, to match the
-> ASUSPRO-D840SA board, such that the quirk actually gets applied.
-> 
-> [...]
+Hello Andy,
 
-Applied to libata/linux.git (for-6.16-fixes), thanks!
+On Thu, Jun 26, 2025 at 12:39:26AM +0000, Andy Yang wrote:
+> Thank you once again for your efforts on this patch. I also want to
+> sincerely apologize for any inconvenience caused by the email reply
+> incident.
 
-[1/1] ata: ahci: Use correct DMI identifier for ASUSPRO-D840SA LPM quirk
-      https://git.kernel.org/libata/linux/c/3e0809b1
+Don't even think about it :)
+
+We might have been able to avoid this extra fix,
+but that's it. No biggie regardless.
+
+Thank you for your help debugging this.
+
 
 Kind regards,
 Niklas
-
