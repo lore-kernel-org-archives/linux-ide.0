@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4F2D2264A3
-	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 07:54:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 918122264A3
+	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 07:54:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751010858; cv=none; b=KDlx3OosH3It2BhOQ7Bk8UJwX8d6dvZ2YJOUYYlRaEIyeMuO0XD9+8AYub/NzYPD44fKhe2OB9ntYyw4Q6ioK0aBkSS7xiUTaSzOy0XOCrrsUOxybGP92KxVjJqhCMqu8S6VvQeWifITAsdvbIfAmDaIPtNAuk3yf64JsR2i4P4=
+	t=1751010858; cv=none; b=FwDk7nTqlIu4U4tDXnDFYgBQw61/5qQciSmMgK4WgGEZjWc/FeAEG7jzIyaBaDYwaO91WgaSKlBF7/LG+3pFbiDVEcJXntFHWEopsu1xkXoDgZg25OWuQzfWTTlCn2co58jT3LqUI0I+LK1erv3PcZC6fHj412rnIbgyWB2gEbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751010858; c=relaxed/simple;
-	bh=aHfoKr/Jz+LWxQNgCiQHnsuVZ6cZI6hPbUUzdA3nfxE=;
+	bh=UQUW1Cn8VP1gOylRwYbsPX5LsDUWsGp1OaQ+QHREkxQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=O78yuy25isRUoDqXoIJa5qV2/7i2cggd2XylW7WsGq2LMOspIXmSSW2KdmuuEJfIdHA2pBF48Fy/F0IACkTFDl6APxa92q5L9Lf/DO9EibkTkK65vZ7gpcYy5iKYBWKf/itV+bDhjL/ETp056kI1AK8PAABPvDaqkR4ECzW9kLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sxSdl4hb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=IzOKrZR2UhWAkSy5O/t6v8P5QYVxge1KnnrCxw+An+PQ2/cTsvlrNctBL3/XEG0g7glbvxp/N9/E4B3anVvj64ZgEDo7dVm6Cm2iqklgElNI9vW3gosCDMYOEvOkrAzsSn5U5m4ZYyD+aMmlK/FG1dK3fwOht6yNx7u514sfvt4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Oq0394PQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sxSdl4hb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02FF6C4CEE3;
-	Fri, 27 Jun 2025 07:54:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Oq0394PQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF8BCC4CEED;
+	Fri, 27 Jun 2025 07:54:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751010857;
-	bh=aHfoKr/Jz+LWxQNgCiQHnsuVZ6cZI6hPbUUzdA3nfxE=;
+	s=k20201202; t=1751010858;
+	bh=UQUW1Cn8VP1gOylRwYbsPX5LsDUWsGp1OaQ+QHREkxQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=sxSdl4hbzPwtxQ2Qvy3IvCte7dafDWdfac9XxFjoEUhM6NsZahPCpj3jaANwolYnv
-	 ArprkMPM40c/3r7UECJ+o/GQlkbCKlA7nw183MrIwmONBDd0rDnTf2zTCd8s/YnCoA
-	 1MuTD1Wxj4R9GMnQKkEwPH/go6xuB3SGbcCXZuc/x8t1lX1WQdVaPa6v5NEs2rDOr7
-	 s5FwYYw215/0shqyPzsJnqiqiIr5lfB6yX7oAQ2S3Mg+t6rLTQCEqpWKZAxVT3IxkR
-	 9FZ8oEcpbdJEt4KHRntzrChPwuNfzFvnRhv6tRN9ofPb5IseoXXT/26FIc55p3J2fz
-	 KFcw4Wr6imu7A==
+	b=Oq0394PQtsq+0KdNrhv/WbaGVzrR6iapqEO/xMdhAWuQAsq+ivzFlvbsah9OfWeK8
+	 4gn20uWfKFr9/ZHGsT+BTUgQeNBn88xZYUP2xpf7XsvWb4XaFmjKykxrlQxu20eQiI
+	 y0/7JqWt0X9wSpqcy14U599uzeRFeFLc5suBrGSMM3oOOgrUw43ufyxAP3BAybbMPC
+	 3l15gcpoD6s2lg+6NkCi7cpJKk/7h8Wq2N5JAbOXJTLQ//mD4o8Tj66GizSImCaYpK
+	 k071ezM0AV1gZaRdXpbZVgRkvPDXFJWlnW9qCmi+WwsD2u+z6vkjy3uAG8rgU9tS4p
+	 nzL+P6sljDxdg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
 Cc: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v2 2/6] ata: libata-scsi: Cleanup ata_scsi_offline_dev()
-Date: Fri, 27 Jun 2025 16:52:03 +0900
-Message-ID: <20250627075207.23969-3-dlemoal@kernel.org>
+Subject: [PATCH v2 3/6] ata: Fix SATA_MOBILE_LPM_POLICY description in Kconfig
+Date: Fri, 27 Jun 2025 16:52:04 +0900
+Message-ID: <20250627075207.23969-4-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.50.0
 In-Reply-To: <20250627075207.23969-1-dlemoal@kernel.org>
 References: <20250627075207.23969-1-dlemoal@kernel.org>
@@ -44,66 +44,72 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Change the function ata_scsi_offline_dev() to return a bool and change
-this function kdoc comment to have the correct mention of its call site.
+Improve the description of the possible default SATA link power
+management policies and add the missing description for policy 5.
 No functional changes.
 
+Fixes: a5ec5a7bfd1f ("ata: ahci: Support state with min power but Partial low power state")
+Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-scsi.c | 15 +++++++--------
- drivers/ata/libata.h      |  2 +-
- 2 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/ata/Kconfig | 36 ++++++++++++++++++++++++++----------
+ 1 file changed, 26 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index ccd7651710be..b502b123008a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -4633,24 +4633,23 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
-  *	ata_scsi_offline_dev - offline attached SCSI device
-  *	@dev: ATA device to offline attached SCSI device for
-  *
-- *	This function is called from ata_eh_hotplug() and responsible
-- *	for taking the SCSI device attached to @dev offline.  This
-- *	function is called with host lock which protects dev->sdev
-- *	against clearing.
-+ *	This function is called from ata_eh_detach_dev() and is responsible for
-+ *	taking the SCSI device attached to @dev offline.  This function is
-+ *	called with host lock which protects dev->sdev against clearing.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host lock)
-  *
-  *	RETURNS:
-- *	1 if attached SCSI device exists, 0 otherwise.
-+ *	true if attached SCSI device exists, false otherwise.
-  */
--int ata_scsi_offline_dev(struct ata_device *dev)
-+bool ata_scsi_offline_dev(struct ata_device *dev)
- {
- 	if (dev->sdev) {
- 		scsi_device_set_state(dev->sdev, SDEV_OFFLINE);
--		return 1;
-+		return true;
- 	}
--	return 0;
-+	return false;
- }
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index e00536b49552..1d53d7b568bd 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -117,23 +117,39 @@ config SATA_AHCI
  
- /**
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 48ee7acb87af..8e68f4556962 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -144,7 +144,7 @@ extern struct ata_device *ata_scsi_find_dev(struct ata_port *ap,
- extern int ata_scsi_add_hosts(struct ata_host *host,
- 			      const struct scsi_host_template *sht);
- extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
--extern int ata_scsi_offline_dev(struct ata_device *dev);
-+extern bool ata_scsi_offline_dev(struct ata_device *dev);
- extern bool ata_scsi_sense_is_valid(u8 sk, u8 asc, u8 ascq);
- extern void ata_scsi_set_sense(struct ata_device *dev,
- 			       struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq);
+ config SATA_MOBILE_LPM_POLICY
+ 	int "Default SATA Link Power Management policy"
+-	range 0 4
++	range 0 5
+ 	default 3
+ 	depends on SATA_AHCI
+ 	help
+ 	  Select the Default SATA Link Power Management (LPM) policy to use
+ 	  for chipsets / "South Bridges" supporting low-power modes. Such
+ 	  chipsets are ubiquitous across laptops, desktops and servers.
+-
+-	  The value set has the following meanings:
++	  Each policy combines power saving states and features:
++	   - Partial: The Phy logic is powered but is in a reduced power
++                      state. The exit latency from this state is no longer than
++                      10us).
++	   - Slumber: The Phy logic is powered but is in an even lower power
++                      state. The exit latency from this state is potentially
++		      longer, but no longer than 10ms.
++	   - DevSleep: The Phy logic may be powered down. The exit latency from
++	               this state is no longer than 20 ms, unless otherwise
++		       specified by DETO in the device Identify Device Data log.
++	   - HIPM: Host Initiated Power Management (host automatic transisitons
++		   to partial and slumber).
++	   - DIPM: Device Initiated Power Management (device automatic
++		   transitions to partial and slumber).
++
++	  The possible values for the default SATA link power management
++	  policies are:
+ 		0 => Keep firmware settings
+-		1 => Maximum performance
+-		2 => Medium power
+-		3 => Medium power with Device Initiated PM enabled
+-		4 => Minimum power
+-
+-	  Note "Minimum power" is known to cause issues, including disk
+-	  corruption, with some disks and should not be used.
++		1 => No power savings (maximum performance)
++		2 => HIPM (Partial)
++		3 => HIPM (Partial) and DIPM (Partial and Slumber)
++		4 => HIPM (Partial and DevSleep) and DIPM (Partial and Slumber)
++		5 => HIPM (Slumber and DevSleep) and DIPM (Partial and Slumber)
++
++	  Excluding the value 0, higher values represent policies with higher
++	  power savings.
+ 
+ config SATA_AHCI_PLATFORM
+ 	tristate "Platform AHCI SATA support"
 -- 
 2.50.0
 
