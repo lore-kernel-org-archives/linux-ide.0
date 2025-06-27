@@ -1,80 +1,80 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B328D1DEFE8
-	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 06:01:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8D032A8D0
+	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 06:03:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751004107; cv=none; b=bghYc7P1NHdDk5iwK2RRIAd08Ppp7/SzdTZJs00vMBY28YivM/AtA/5fM9rkwM6pGMbv1m+BB/M774KF4uPm6l9xpajYcvmayOLKHR/mQufaPpIBubJOOX1RiSg21BMkYK+lsukmv9qhJ5GHk2OhBfMMnQf9zLySpsWqmB44Y4c=
+	t=1751004206; cv=none; b=D44KwUeJucmciKHNpogXPEgS2PRTu2aXzrX+l1trH6x46Mx0V+Zb/IpH6KavlJwG+L+jqnG693TGO6ojFtQFT73crVwbqir/LSij7n/z3Oo5J927gHXbK0250PAPN3L8ik4+TkccXD/3E0clb3Aa04rZoiV1DxphgH/gfaQavf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751004107; c=relaxed/simple;
-	bh=95H3boHA6/AhLZa6ocgDB0NDEQRTMJAn356LuxCpCLE=;
+	s=arc-20240116; t=1751004206; c=relaxed/simple;
+	bh=lLRTrcc9DIZ+xcFtLYsueAgQgEhmZgC743BWQPk8SCo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=qLFRhsRnAMLAYFP6Bk2okSEtxKwbBfsasY8pvPBWrkEKeD36gkCPq9ntlKVoVIcmOD1i6oO7TSxXOooSjlrkjKq5lX65PtfsJmNw+wYF7DBisn+qqlEdglVXEu/rP7D0+HmtxOy5fdvufb1+HAHgHZdgW5wUVeXy+X3NMqBIJmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gCblKPYU; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=yhGP1TgG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=SQYyetNu; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=jJiDzgyJ; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=iO7eJCuajhVuij2AVO4sdTBj1PBh1Q80MJn7afuSgX06DgUgyDs/6CMPQKgvR/uCigQNl4lZdjdw2kouSCrQRmWfh1+vA7ARin64O76S/iRbs/D7vRpO+dgWDx50g5W0wjRSQZGQJ9SBm4QkwBczJX5YoLIM+b9isGSMJOjtfQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=XNmPcRW1; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=k782OOh4; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=XNmPcRW1; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=k782OOh4; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gCblKPYU";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="yhGP1TgG";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="SQYyetNu";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="jJiDzgyJ"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="XNmPcRW1";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="k782OOh4";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="XNmPcRW1";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="k782OOh4"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id E9E0D2116D;
-	Fri, 27 Jun 2025 06:01:43 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 195F61F38D;
+	Fri, 27 Jun 2025 06:03:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751004104; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1751004203; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=F2ivPQohFZ7uvRNEC2o2PWuxDfxELcFYMWpO4dPR6u8=;
-	b=gCblKPYUI75GX3OcKmmaoBStnw5eJsz4isM/RPRwp8ma/XPwVdZZXgFG0M0VyGnhiVV1k9
-	Lgq1qkPsjpQTWQvYV5HlcYPoukgZ4K68ZdPjSryalbuw3agrny+8rT9HzUP5iGmfCg3t1v
-	evgJzen64xA/1zZoQ0pWrtR0j9PNgRc=
+	bh=VvmkKucRSbKweex95Msc+4zZatfUmW9QVBBfpWrhqwc=;
+	b=XNmPcRW1l5q75jSuHhsva9/mAyEVadoUNOu4inbzf7TwRig+0uMbN08//QbEduiznSAG/C
+	vQZ12aFZAqe9QqrhUH+EOCQSTMdBtpluMupBrpGF8nCQ2zN2i8ufoXiJXnNjbNb3r69WKN
+	ykHPgSvsCylJhmhDIK1YavK5dYwo9Ls=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751004104;
+	s=susede2_ed25519; t=1751004203;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=F2ivPQohFZ7uvRNEC2o2PWuxDfxELcFYMWpO4dPR6u8=;
-	b=yhGP1TgGSRIhUO6F17xg9jOluo9TYtILCwLEW5Mg1VsN8wqsksGTQBB2VcsGpmwAH6sFB7
-	hal1EezqnqXUtnCQ==
-Authentication-Results: smtp-out1.suse.de;
+	bh=VvmkKucRSbKweex95Msc+4zZatfUmW9QVBBfpWrhqwc=;
+	b=k782OOh4l6ApxfAii0GFKCQu2u/hDAYfQYxwPmiE37xwqzY6PHvH04HRuia8B9sRCLzWEC
+	6qhHDLwkk6IIXWDA==
+Authentication-Results: smtp-out2.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751004103; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1751004203; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=F2ivPQohFZ7uvRNEC2o2PWuxDfxELcFYMWpO4dPR6u8=;
-	b=SQYyetNuuYIw5MydZxwPSiEdH+Fl3+UUgjF6w7AZqvsVe7t8MqX8STgTnoU9oz+lThSEYp
-	/bXtyrrP7c/xiiYYJrVqwlwCrnC07C3LpoaXfzxCpyTrb+CTYaL2CpZOiGTflbN4wR4Xa6
-	J7p4YTcBjXyFip4vQf7q/d8A98ppvw4=
+	bh=VvmkKucRSbKweex95Msc+4zZatfUmW9QVBBfpWrhqwc=;
+	b=XNmPcRW1l5q75jSuHhsva9/mAyEVadoUNOu4inbzf7TwRig+0uMbN08//QbEduiznSAG/C
+	vQZ12aFZAqe9QqrhUH+EOCQSTMdBtpluMupBrpGF8nCQ2zN2i8ufoXiJXnNjbNb3r69WKN
+	ykHPgSvsCylJhmhDIK1YavK5dYwo9Ls=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751004103;
+	s=susede2_ed25519; t=1751004203;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=F2ivPQohFZ7uvRNEC2o2PWuxDfxELcFYMWpO4dPR6u8=;
-	b=jJiDzgyJS3dOBOKHDKXOiYOwILVTZRMt7YyMGsx/Jw94I25QQvVChtl1n7vnq2/+N1QM0M
-	/MP/qcv+Npn7FcAA==
+	bh=VvmkKucRSbKweex95Msc+4zZatfUmW9QVBBfpWrhqwc=;
+	b=k782OOh4l6ApxfAii0GFKCQu2u/hDAYfQYxwPmiE37xwqzY6PHvH04HRuia8B9sRCLzWEC
+	6qhHDLwkk6IIXWDA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C6EED13786;
-	Fri, 27 Jun 2025 06:01:43 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E3BD413786;
+	Fri, 27 Jun 2025 06:03:22 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id rGWDLsczXmj0MAAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 27 Jun 2025 06:01:43 +0000
-Message-ID: <b307707e-66d7-4192-889a-7a5fc75fcd48@suse.de>
-Date: Fri, 27 Jun 2025 08:01:43 +0200
+	id VZ6BNSo0XmhuMQAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 27 Jun 2025 06:03:22 +0000
+Message-ID: <347157db-8a01-47ae-9dba-c46c77bae824@suse.de>
+Date: Fri, 27 Jun 2025 08:03:22 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -82,20 +82,21 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/6] ata: libata-scsi: Cleanup ata_scsi_offline_dev()
+Subject: Re: [PATCH 3/6] ata: Fix SATA_MOBILE_LPM_POLICY description in
+ Kconfig
 To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
  Niklas Cassel <cassel@kernel.org>
 References: <20250627011155.701125-1-dlemoal@kernel.org>
- <20250627011155.701125-3-dlemoal@kernel.org>
+ <20250627011155.701125-4-dlemoal@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250627011155.701125-3-dlemoal@kernel.org>
+In-Reply-To: <20250627011155.701125-4-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
+	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.992];
+	NEURAL_HAM_SHORT(-0.20)[-0.990];
 	MIME_GOOD(-0.10)[text/plain];
 	MID_RHS_MATCH_FROM(0.00)[];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
@@ -116,16 +117,77 @@ X-Spam-Flag: NO
 X-Spam-Score: -4.30
 
 On 6/27/25 03:11, Damien Le Moal wrote:
-> Change the function ata_scsi_offline_dev() to return a bool and change
-> this function kdoc comment to have the correct mention of its call site.
+> Improve the description of the possible default SATA link power
+> management policies and add the missing description for policy 5.
 > No functional changes.
 > 
+> Fixes: a5ec5a7bfd1f ("ata: ahci: Support state with min power but Partial low power state")
+> Cc: stable@vger.kernel.org
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/libata-scsi.c | 15 +++++++--------
->   drivers/ata/libata.h      |  2 +-
->   2 files changed, 8 insertions(+), 9 deletions(-)
+>   drivers/ata/Kconfig | 36 ++++++++++++++++++++++++++----------
+>   1 file changed, 26 insertions(+), 10 deletions(-)
 > 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index e00536b49552..1d53d7b568bd 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -117,23 +117,39 @@ config SATA_AHCI
+>   
+>   config SATA_MOBILE_LPM_POLICY
+>   	int "Default SATA Link Power Management policy"
+> -	range 0 4
+> +	range 0 5
+>   	default 3
+>   	depends on SATA_AHCI
+>   	help
+>   	  Select the Default SATA Link Power Management (LPM) policy to use
+>   	  for chipsets / "South Bridges" supporting low-power modes. Such
+>   	  chipsets are ubiquitous across laptops, desktops and servers.
+> -
+> -	  The value set has the following meanings:
+> +	  Each policy combines power saving states and features:
+> +	   - Partial: The Phy logic is powered but is in a reduced power
+> +                      state. The exit latency from this state is no longer than
+> +                      10us).
+> +	   - Slumber: The Phy logic is powered but is in an even lower power
+> +                      state. The exit latency from this state is potentially
+> +		      longer, but no longer than 10ms.
+> +	   - DevSleep: The Phy logic may be powered down. The exit latency from
+> +	               this state is no longer than 20 ms, unless otherwise
+> +		       specified by DETO in the device Identify Device Data log.
+> +	   - HIPM: Host Initiated Power Management (host automatic transisitons
+> +		   to partial and slumber).
+> +	   - DIPM: Device Initiated Power Management (device automatic
+> +		   transitions to partial and slumber).
+> +
+> +	  The possible values for the default SATA link power management
+> +	  policies are:
+>   		0 => Keep firmware settings
+> -		1 => Maximum performance
+> -		2 => Medium power
+> -		3 => Medium power with Device Initiated PM enabled
+> -		4 => Minimum power
+> -
+> -	  Note "Minimum power" is known to cause issues, including disk
+> -	  corruption, with some disks and should not be used.
+> +		1 => No power savings (maximum performance)
+> +		2 => HIPM (Partial)
+> +		3 => HIPM (Partial) and DIPM (Partial and Slumber)
+> +		4 => HIPM (Partial and DevSleep) and DIPM (Partial and Slumber)
+> +		5 => HIPM (Slumber and DevSleep) and DIPM (Partial and Slumber)
+> +
+> +	  Excluding the value 0, higher values represent policies with higher
+> +	  power savings.
+>   
+>   config SATA_AHCI_PLATFORM
+>   	tristate "Platform AHCI SATA support"
+
+Hmm. Isn't it worth creating an official documentation somewhere in
+Documentation/* to have this available without having to look at the
+source code?
+
+Otherwise:
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
