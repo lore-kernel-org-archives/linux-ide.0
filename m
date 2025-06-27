@@ -1,67 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C490823B63A;
-	Thu, 26 Jun 2025 08:24:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45FAF18027
+	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 01:13:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750926285; cv=none; b=qPwH0G5P5Np/b6k+njTAF9yExCJwKh42OxLCbFFv8sQFfcDoqpbXomhz+sQa65ei9D219jRJhi3PySjZZNhaHcE4aGrZ/5gkuoAED2CSVje5o30s2CWygiCKXvxAHJt1wbNZIm4d/Cr85YuE7KiDz/mB0xz9GryL1vVOapQBET4=
+	t=1750986840; cv=none; b=lrAyHMonoGEXZa6EEJywOid2ByjExpbF3OnFoG0CJjer9tSEgDqTWhayvHEvAfF9xmgpCrfjbPnsi0uw0340ngMsIO6vv/BU2DiI9Ou4o/k/6gtfVXDRfujzrope4JXEEM6mkFnGVC3axOZoKjG7eQsuTbd1TwHRPMkSK0i1TIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750926285; c=relaxed/simple;
-	bh=I9vZdEkAWXh73EN+tnd305QlTyFdASaPKKuepsi0GTo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p4MYMac+t0rQ+XKkRiGnSWFq9SPFnZGWTm6uKThd2+s1JUWWujQH/mgX02oWQApsUQhL7NtcefIPZOaCGbQ++oLESL6o49Z9P2MJ1zzZvkn/xGN2s3fligNw9BS/B2Ud9ZtDFgtQpHSClmL6Jxg5ey3BFWSAV9yMWm9Kb8AFTb8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hfM1ePHX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750986840; c=relaxed/simple;
+	bh=FJs4mF3MoAz6zF+fitBrKASB4dHq9FRpZLLCPHuCgnM=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=p6AAcT+UBjDgAxcPG3BXbSvKSeo5nCrJxiJpXCVvkt20oVgrnbEr7IRmV9mIr55HXwvY5gthgMgzOrkNDB/64TWXIz1f8xk7MmHE4WA2LxyNFhhTIbbiZ31m1EGUCPYP/m+M+XI1jBlfrkONMVj9CLSzVVJKhRgZowI9aHIqO3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C7V6iN5+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hfM1ePHX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37F89C4CEEB;
-	Thu, 26 Jun 2025 08:24:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C7V6iN5+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 356DCC4CEEB;
+	Fri, 27 Jun 2025 01:13:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750926285;
-	bh=I9vZdEkAWXh73EN+tnd305QlTyFdASaPKKuepsi0GTo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hfM1ePHXmN+1ekJbJPITqLWNeBh0AWGrkuvHdW26YnIloQKVFaj2Q1iWFevNM1xcE
-	 q6Fb9EsNxmiHGzH8XHTHQpT4cZMu7bTvwXb4mkdfmYhXq1Yf+sIfS/wId6AW8L6/zP
-	 6/Ex1hA8qpR8HLrVh6s4ObpKMabCeBIRy4gUFR+Kl3Ts1VV69fA9DnoIrFPMbDYC00
-	 dcXjF6j600ZIV4RVypNM630ORc0hezJJQas3GodjTFW7Cdde1zut5OzR6QziJvmK/3
-	 NOgcF87lXZ+sH+oQvag35KINoEbldBFZB2xngbORZQZM4u3miVuQDJcTMm50Gr6sm5
-	 c3m3aiWkEdysA==
-Date: Thu, 26 Jun 2025 10:24:34 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Andy Yang <andyybtc79@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Hans de Goede <hansg@kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: Re: [PATCH v2] ata: ahci: Use correct DMI identifier for
- ASUSPRO-D840SA LPM quirk
-Message-ID: <aF0DwglTSwicu/8C@x1-carbon>
-References: <20250624074029.963028-2-cassel@kernel.org>
- <175085763212.1222616.11590478108629299286.b4-ty@kernel.org>
- <CAGEiHrDtfwKGN+veFjgODf_0W4yJfDP0f6kqp-dF9xsypoH_0A@mail.gmail.com>
+	s=k20201202; t=1750986839;
+	bh=FJs4mF3MoAz6zF+fitBrKASB4dHq9FRpZLLCPHuCgnM=;
+	h=From:To:Subject:Date:From;
+	b=C7V6iN5+eLUmhCEaIyEc4Ejj7m0HN1pG+Vr6sJmJoJWMV2L4EwuYHrT9CyXUQvrNQ
+	 kmizLu8Owt4FYe2IdZlY5WdhB5TId8MIDpuxwORNxZwqVhD3XZCgOTNusE8VoT6B0a
+	 0cPHxsYe5wNAjefgAUHVnNokFTV6HlaHO+stNqVw78cS1Y1fItMl5zRH831PuW8K7f
+	 7Rl9ja0FM+0nEg3jemHwa14RBXmhhgeZQOV9+1fBHolTqgjVmmCiEcw8c+m55y94ac
+	 NNkFSVUQQQcU7kZp6yUSHlo/X4lnQ/qnkwm93DcqTpLSgrJLiTb67+ar5hvj8SG1C9
+	 /z9FwRr3fz+AA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH 0/6] Various cleanups
+Date: Fri, 27 Jun 2025 10:11:49 +0900
+Message-ID: <20250627011155.701125-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAGEiHrDtfwKGN+veFjgODf_0W4yJfDP0f6kqp-dF9xsypoH_0A@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 
-Hello Andy,
+6 patches to clean libata code and better document parameters (config
+and AHCI driver module parameters).
 
-On Thu, Jun 26, 2025 at 12:39:26AM +0000, Andy Yang wrote:
-> Thank you once again for your efforts on this patch. I also want to
-> sincerely apologize for any inconvenience caused by the email reply
-> incident.
+Overall, no functional changes are introduced.
 
-Don't even think about it :)
+Damien Le Moal (6):
+  ata: libata: Remove ATA_DFLAG_ZAC device flag
+  ata: libata-scsi: Cleanup ata_scsi_offline_dev()
+  ata: Fix SATA_MOBILE_LPM_POLICY description in Kconfig
+  ata: libata: Improve LPM policies description
+  ata: ahci: Clarify mobile_lpm_policy description
+  ata: libata-eh: Move and rename ata_eh_set_lpm()
 
-We might have been able to avoid this extra fix,
-but that's it. No biggie regardless.
+ drivers/ata/Kconfig       |  36 +++--
+ drivers/ata/ahci.c        |   4 +-
+ drivers/ata/libata-core.c |  13 +-
+ drivers/ata/libata-eh.c   | 304 +++++++++++++++++++-------------------
+ drivers/ata/libata-scsi.c |  20 ++-
+ drivers/ata/libata.h      |   9 +-
+ include/linux/libata.h    |  18 ++-
+ 7 files changed, 211 insertions(+), 193 deletions(-)
 
-Thank you for your help debugging this.
+-- 
+2.49.0
 
-
-Kind regards,
-Niklas
