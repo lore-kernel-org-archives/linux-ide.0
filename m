@@ -1,80 +1,33 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 693341F9A8B
-	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 06:05:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA1A23C2F
+	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 07:35:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751004358; cv=none; b=Xq7ezOwwRxbL/6QyufsyHEaWPlsyYBgTXJtDBcyUbsSGQY46yBKjqNn8gSFfQqCu/x3I+KO0Q+yUyZmq3LAC8C2KyFDgz7zqMNPMK1TQBNfEG8TGt5KChPuCC9KmK0lsSF62RshVwO/lC4ZbNzw6nKKae/LQdKqWAecFai+TzW4=
+	t=1751009740; cv=none; b=ECmbRr7yETYCxg1vM0N9Y/H1ds4+l+ELBhqJtLtHrxNPFehtNzfGrQzW/fG/plnebu8Mz6NQpGtdWycKlKxOEH1VCLCitaFJn6OY+iXH3mjqehlZOz4dGJRUpfdBX6EBEE0Qk4O+DrxsskW4C8mleAOHDaMh4A5zcYiLH8qG3Ms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751004358; c=relaxed/simple;
-	bh=elkIPvxDXmH5Tq+gVlBFTCFOw+g1Irv+MbIihbDzf5E=;
+	s=arc-20240116; t=1751009740; c=relaxed/simple;
+	bh=k3HCmxRJedGUsbcBuUX+/pQjxijqs2PRbzhkSoMl8lE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=cjyIWgGWYvqdUokztXfzKNE9YDGXrzBd1p9X9udze+Y7FeNKWsUyBjbP2hma/T/VQgOpmZggOBQooUs3lnA0dcaIpjI4VAKwlgg7dCHKvlVtAvwIKOmas+MQWTL0GJQRo5B/Wz1e5pgirYPuVpgN73ULMK7cj727oEwLYbyd9W0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VkUb+r13; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NdPCbjDE; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VkUb+r13; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NdPCbjDE; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 In-Reply-To:Content-Type; b=VDMshJO9orTaOGKpxggPeKlWNvl6QtvReURHS68O+JbBABZREWmdWp7wi+JxOnTLCLCfHerDEOpPFNko7RPy46rXWNVhSg4xe8xmssMlDCjt811NF5+N7wlciGCgE3ibp8prsS9IzVEHCa1Wn+56wzfqN+Ify2XtT9CbiSfagbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aQilk21I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VkUb+r13";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NdPCbjDE";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VkUb+r13";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NdPCbjDE"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id A5CEB1F387;
-	Fri, 27 Jun 2025 06:05:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751004355; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eEkYCjR3LVLr5LmOH2s8+mp04Jcinavj0GCvP0a5kBY=;
-	b=VkUb+r13P1wGyUahGprAB0cTY3D8YhdokkDR6Y1CN3zzAc0knYE7A4OV7XGiUqFgcuJgT9
-	tkBiNH55Q649u/Ojt7sod0UqqJSq+txfhiy7K1WXSISJR/Nfy7LMR4z1YGr94PaVARbl3y
-	PAyBzB+zwDOVyp885bvtlkOeN9o3G3I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751004355;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eEkYCjR3LVLr5LmOH2s8+mp04Jcinavj0GCvP0a5kBY=;
-	b=NdPCbjDEgv3Xe23ICyQ9onRBhi/d5LXktAiedrCzNgTVlVliMcLOnKDvy0gKCCYif5lXjt
-	tYtSYj6zMSHj6zBg==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751004355; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eEkYCjR3LVLr5LmOH2s8+mp04Jcinavj0GCvP0a5kBY=;
-	b=VkUb+r13P1wGyUahGprAB0cTY3D8YhdokkDR6Y1CN3zzAc0knYE7A4OV7XGiUqFgcuJgT9
-	tkBiNH55Q649u/Ojt7sod0UqqJSq+txfhiy7K1WXSISJR/Nfy7LMR4z1YGr94PaVARbl3y
-	PAyBzB+zwDOVyp885bvtlkOeN9o3G3I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751004355;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eEkYCjR3LVLr5LmOH2s8+mp04Jcinavj0GCvP0a5kBY=;
-	b=NdPCbjDEgv3Xe23ICyQ9onRBhi/d5LXktAiedrCzNgTVlVliMcLOnKDvy0gKCCYif5lXjt
-	tYtSYj6zMSHj6zBg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7F1E513786;
-	Fri, 27 Jun 2025 06:05:55 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id iaMfHcM0XmgUMgAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 27 Jun 2025 06:05:55 +0000
-Message-ID: <747de408-13cb-4d4d-a7b1-18434bca65a9@suse.de>
-Date: Fri, 27 Jun 2025 08:05:55 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aQilk21I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE584C4CEE3;
+	Fri, 27 Jun 2025 07:35:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751009740;
+	bh=k3HCmxRJedGUsbcBuUX+/pQjxijqs2PRbzhkSoMl8lE=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=aQilk21IZr8Em7tl6urxaRREePUmTBXM8JfXpINCCBjTz7ISxmL/Ox41KF2I/qH4+
+	 RGqNTCLpyxZY8pIw+2PtPi9pmwbKl5UXLWYjwKsZOi65TCjQRm1dfVsdrt6Ol4Uqty
+	 FB/odqEZwbaypz5Pshw427pQPSISerD+tVddwqhD1ZLqboxWkXO+j+C+I9KW3xRao5
+	 C7N9KzJcAcTq6qWrT3tGfKwvAw/LddBzZessg58I7YZ+l96HUGpaDaL6yZwFtWYem1
+	 iNo5sz5SktUsPR7IrdFd5SefA8yjxGwZVA2ivf5rvzrAJ/je1NO5HfcaWcHvl7poeb
+	 hJRPI7f08eHng==
+Message-ID: <5b3d302b-c4e5-4061-959c-e60b1ec1bc6a@kernel.org>
+Date: Fri, 27 Jun 2025 16:35:38 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -82,57 +35,107 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 6/6] ata: libata-eh: Move and rename ata_eh_set_lpm()
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+Subject: Re: [PATCH 3/6] ata: Fix SATA_MOBILE_LPM_POLICY description in
+ Kconfig
+To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
  Niklas Cassel <cassel@kernel.org>
 References: <20250627011155.701125-1-dlemoal@kernel.org>
- <20250627011155.701125-7-dlemoal@kernel.org>
+ <20250627011155.701125-4-dlemoal@kernel.org>
+ <347157db-8a01-47ae-9dba-c46c77bae824@suse.de>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250627011155.701125-7-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.991];
-	MIME_GOOD(-0.10)[text/plain];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
-X-Spam-Level: 
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <347157db-8a01-47ae-9dba-c46c77bae824@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 6/27/25 03:11, Damien Le Moal wrote:
-> Move the definition of the function ata_eh_set_lpm() to avoid its
-> unnecessary forward declaration and rename the function to
-> ata_eh_link_set_lpm() to clarify that it acts on a link.
-> No functional changes.
+On 6/27/25 15:03, Hannes Reinecke wrote:
+> On 6/27/25 03:11, Damien Le Moal wrote:
+>> Improve the description of the possible default SATA link power
+>> management policies and add the missing description for policy 5.
+>> No functional changes.
+>>
+>> Fixes: a5ec5a7bfd1f ("ata: ahci: Support state with min power but Partial low power state")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>> ---
+>>   drivers/ata/Kconfig | 36 ++++++++++++++++++++++++++----------
+>>   1 file changed, 26 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+>> index e00536b49552..1d53d7b568bd 100644
+>> --- a/drivers/ata/Kconfig
+>> +++ b/drivers/ata/Kconfig
+>> @@ -117,23 +117,39 @@ config SATA_AHCI
+>>   
+>>   config SATA_MOBILE_LPM_POLICY
+>>   	int "Default SATA Link Power Management policy"
+>> -	range 0 4
+>> +	range 0 5
+>>   	default 3
+>>   	depends on SATA_AHCI
+>>   	help
+>>   	  Select the Default SATA Link Power Management (LPM) policy to use
+>>   	  for chipsets / "South Bridges" supporting low-power modes. Such
+>>   	  chipsets are ubiquitous across laptops, desktops and servers.
+>> -
+>> -	  The value set has the following meanings:
+>> +	  Each policy combines power saving states and features:
+>> +	   - Partial: The Phy logic is powered but is in a reduced power
+>> +                      state. The exit latency from this state is no longer than
+>> +                      10us).
+>> +	   - Slumber: The Phy logic is powered but is in an even lower power
+>> +                      state. The exit latency from this state is potentially
+>> +		      longer, but no longer than 10ms.
+>> +	   - DevSleep: The Phy logic may be powered down. The exit latency from
+>> +	               this state is no longer than 20 ms, unless otherwise
+>> +		       specified by DETO in the device Identify Device Data log.
+>> +	   - HIPM: Host Initiated Power Management (host automatic transisitons
+>> +		   to partial and slumber).
+>> +	   - DIPM: Device Initiated Power Management (device automatic
+>> +		   transitions to partial and slumber).
+>> +
+>> +	  The possible values for the default SATA link power management
+>> +	  policies are:
+>>   		0 => Keep firmware settings
+>> -		1 => Maximum performance
+>> -		2 => Medium power
+>> -		3 => Medium power with Device Initiated PM enabled
+>> -		4 => Minimum power
+>> -
+>> -	  Note "Minimum power" is known to cause issues, including disk
+>> -	  corruption, with some disks and should not be used.
+>> +		1 => No power savings (maximum performance)
+>> +		2 => HIPM (Partial)
+>> +		3 => HIPM (Partial) and DIPM (Partial and Slumber)
+>> +		4 => HIPM (Partial and DevSleep) and DIPM (Partial and Slumber)
+>> +		5 => HIPM (Slumber and DevSleep) and DIPM (Partial and Slumber)
+>> +
+>> +	  Excluding the value 0, higher values represent policies with higher
+>> +	  power savings.
+>>   
+>>   config SATA_AHCI_PLATFORM
+>>   	tristate "Platform AHCI SATA support"
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/ata/libata-eh.c | 304 ++++++++++++++++++++--------------------
->   1 file changed, 152 insertions(+), 152 deletions(-)
+> Hmm. Isn't it worth creating an official documentation somewhere in
+> Documentation/* to have this available without having to look at the
+> source code?
+
+Yes, I am considering this.
+I did not write it in the cover letter, but these patches are the first part of
+a much bigger patch series that addresses a lot of LPM issues that we recently
+discovered doing completely unrelated tests. Once that is out, documenting
+everything will be a good thing to do.
+
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Otherwise:
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> 
+> Cheers,
+> 
+> Hannes
 
-Cheers,
 
-Hannes
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Damien Le Moal
+Western Digital Research
