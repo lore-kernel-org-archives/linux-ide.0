@@ -1,403 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5454F194098
-	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 07:54:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9748F4A0C
+	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 09:08:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751010860; cv=none; b=aenIa1nE0w8Knvo8K15P2URk2ayOHuy2aOl6da2XJOZrTkk6QfWGdcx1OORrOZUiEkAw/1KQ4ErPg41Jrj4bQY4mXLpeJPU5kx6J8yx8iSuT68qili8q/9Gt3CGEML4Q8E08IcadCQFlFa6KRg9Ueyq1b/rTGuhhNLRO4ph/Xdo=
+	t=1751015338; cv=none; b=j3zKpUJUXOaejA2CS72b+2lp6rvhSb3+XwxQIkwz8pz+PtSEgyP0SvC/sUvuX0vabscsZgFFy0/lvuN6Xvwo2pXwb3yKOt5EsLna1h7ZYUqlgCLsX6i+JcrAJUVDwyQuxQ1Jyc8DU5E1ESZ1lrA9Nty+h0p220YBgd8vG/gExO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751010860; c=relaxed/simple;
-	bh=1Yb6d8XosbkooT3ZaS5dfwFwoRj40XJl3HBOp268oDw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sw4kZoM8ZBTBr2eVUjAJRBj7U1Up2EV8bX1W3GgHCOv/3xR84OuAaeek+wGgChJOtdgXobgA7bTTKstE0UODaPkJA9vt3xceYtrb1475OvxBt9sG44cP9qbFSJ+ZlsRvKZdWUpj/XCvKJqD7CKWaC25aGlg9RdauO8pfP91WBDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GxIe0aYG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751015338; c=relaxed/simple;
+	bh=M9U1XfMitWlX0neuRy7agZ3ff7L0aa4ZjbjkYBWtjI0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=MzTLRlUR4l8JseEBUEeEEAIE1i82VSZOBTcEbpEzT0n6wCcdPMofifbvJutZoFZOKsV2K1wE+3abXUmrC8GpPRLE64GP8O11QwjPO6ElwSSBRWEvNwS7dpj44uN2pkHq43e0XDyJJHLmgeSYyklgQY9eFLgUrLwihJ6BqP733vE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=H1S3qLF3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=22LA2c3V; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=H1S3qLF3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=22LA2c3V; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GxIe0aYG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4765C4CEEB;
-	Fri, 27 Jun 2025 07:54:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751010860;
-	bh=1Yb6d8XosbkooT3ZaS5dfwFwoRj40XJl3HBOp268oDw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=GxIe0aYGjx9USmfDmumxT25D2x4rO5j+SIEfriSxtcDPY6r60IIdAIxPIa09O7CMw
-	 2197/0iAUpBm/ys5lUQINNtr5OLS121EI7/j6KCToeVuEJtI5+TZKPYKYJHA1QfdHm
-	 bh3l8ZB23+HTKisCXFF6+seskFncZT1rRSyWyEElBq/UKM6fFGZoA80L/MVoMJDgE+
-	 BJ3fBkh3+xBEi6wFjBv2um/hebMn7FzrA3+ztt/z1QykkDmKihaJ9IUmhG76a+QJTI
-	 J2L34k8UErCImpNiUcpRKKsBEsEqgu7UArpwVA08JDehjAJg20mvkAH3PJoqvdmQiS
-	 K62rSVCjBCPVQ==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v2 6/6] ata: libata-eh: Move and rename ata_eh_set_lpm()
-Date: Fri, 27 Jun 2025 16:52:07 +0900
-Message-ID: <20250627075207.23969-7-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.50.0
-In-Reply-To: <20250627075207.23969-1-dlemoal@kernel.org>
-References: <20250627075207.23969-1-dlemoal@kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="H1S3qLF3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="22LA2c3V";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="H1S3qLF3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="22LA2c3V"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id C17BA1F38D;
+	Fri, 27 Jun 2025 09:08:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1751015334; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9ak7g6BFroi2GddNUGdxljueHmwoi5eLoX46A6LMCkg=;
+	b=H1S3qLF3lJWiwnFqJXEnZqtLjfeNMQ/wKsyx2bhhWdeks7yqSdAcQuNVjOb1I3mRv2Fvwj
+	CtxsfM4+xifzcNZ1sIkffqKguCGxMOQC2CCyGd/q+PSJBmROF+4xhkaQP0cZzuG9G8vekR
+	YuRxzbYGeIBCsfvtMbkpwYkUId6PRcs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1751015334;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9ak7g6BFroi2GddNUGdxljueHmwoi5eLoX46A6LMCkg=;
+	b=22LA2c3VLnrVO0aI0Bx+6eDmZoefs/WAdEfA5V42o//D155wrSHytWK+jLUmmr0Q1HxmGo
+	zbr+efY4732D34BA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1751015334; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9ak7g6BFroi2GddNUGdxljueHmwoi5eLoX46A6LMCkg=;
+	b=H1S3qLF3lJWiwnFqJXEnZqtLjfeNMQ/wKsyx2bhhWdeks7yqSdAcQuNVjOb1I3mRv2Fvwj
+	CtxsfM4+xifzcNZ1sIkffqKguCGxMOQC2CCyGd/q+PSJBmROF+4xhkaQP0cZzuG9G8vekR
+	YuRxzbYGeIBCsfvtMbkpwYkUId6PRcs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1751015334;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9ak7g6BFroi2GddNUGdxljueHmwoi5eLoX46A6LMCkg=;
+	b=22LA2c3VLnrVO0aI0Bx+6eDmZoefs/WAdEfA5V42o//D155wrSHytWK+jLUmmr0Q1HxmGo
+	zbr+efY4732D34BA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A2DE6138A7;
+	Fri, 27 Jun 2025 09:08:54 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id KdJeJqZfXmhCZwAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 27 Jun 2025 09:08:54 +0000
+Message-ID: <ea7bb0d8-62bb-4aea-9477-ca984570363d@suse.de>
+Date: Fri, 27 Jun 2025 11:08:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/6] ata: libata: Improve LPM policies description
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
+References: <20250627075207.23969-1-dlemoal@kernel.org>
+ <20250627075207.23969-5-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20250627075207.23969-5-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_THREE(0.00)[3];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
+X-Spam-Level: 
 
-Move the definition of the function ata_eh_set_lpm() to avoid its
-unnecessary forward declaration and rename the function to
-ata_eh_link_set_lpm() to clarify that it acts on a link.
-No functional changes.
-
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+On 6/27/25 09:52, Damien Le Moal wrote:
+> Improve the comment describing enum ata_lpm_policy and add comments
+> within that enum to describe each of the different possible values.
+> The enum values comments match the description given for the
+> CONFIG_SATA_MOBILE_LPM_POLICY config parameter.
+> 
+> No functional changes.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   include/linux/libata.h | 22 +++++++++++++++++-----
+>   1 file changed, 17 insertions(+), 5 deletions(-)
+> 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/ata/libata-eh.c | 304 ++++++++++++++++++++--------------------
- 1 file changed, 152 insertions(+), 152 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 1f90fcd2b3c4..f98d5123e1e4 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -153,8 +153,6 @@ ata_eh_cmd_timeout_table[ATA_EH_CMD_TIMEOUT_TABLE_SIZE] = {
- #undef CMDS
- 
- static void __ata_port_freeze(struct ata_port *ap);
--static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
--			  struct ata_device **r_failed_dev);
- #ifdef CONFIG_PM
- static void ata_eh_handle_port_suspend(struct ata_port *ap);
- static void ata_eh_handle_port_resume(struct ata_port *ap);
-@@ -2073,6 +2071,154 @@ static void ata_eh_get_success_sense(struct ata_link *link)
- 	ata_eh_done(link, dev, ATA_EH_GET_SUCCESS_SENSE);
- }
- 
-+/**
-+ *	ata_eh_link_set_lpm - configure SATA interface power management
-+ *	@link: link to configure
-+ *	@policy: the link power management policy
-+ *	@r_failed_dev: out parameter for failed device
-+ *
-+ *	Enable SATA Interface power management.  This will enable
-+ *	Device Interface Power Management (DIPM) for min_power and
-+ *	medium_power_with_dipm policies, and then call driver specific
-+ *	callbacks for enabling Host Initiated Power management.
-+ *
-+ *	LOCKING:
-+ *	EH context.
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno on failure.
-+ */
-+static int ata_eh_link_set_lpm(struct ata_link *link,
-+			       enum ata_lpm_policy policy,
-+			       struct ata_device **r_failed_dev)
-+{
-+	struct ata_port *ap = ata_is_host_link(link) ? link->ap : NULL;
-+	struct ata_eh_context *ehc = &link->eh_context;
-+	struct ata_device *dev, *link_dev = NULL, *lpm_dev = NULL;
-+	enum ata_lpm_policy old_policy = link->lpm_policy;
-+	bool host_has_dipm = !(link->ap->flags & ATA_FLAG_NO_DIPM);
-+	unsigned int hints = ATA_LPM_EMPTY | ATA_LPM_HIPM;
-+	unsigned int err_mask;
-+	int rc;
-+
-+	/* if the link or host doesn't do LPM, noop */
-+	if (!IS_ENABLED(CONFIG_SATA_HOST) ||
-+	    (link->flags & ATA_LFLAG_NO_LPM) || (ap && !ap->ops->set_lpm))
-+		return 0;
-+
-+	/*
-+	 * This function currently assumes that it will never be supplied policy
-+	 * ATA_LPM_UNKNOWN.
-+	 */
-+	if (WARN_ON_ONCE(policy == ATA_LPM_UNKNOWN))
-+		return 0;
-+
-+	/*
-+	 * DIPM is enabled only for ATA_LPM_MIN_POWER,
-+	 * ATA_LPM_MIN_POWER_WITH_PARTIAL, and ATA_LPM_MED_POWER_WITH_DIPM, as
-+	 * some devices misbehave when the host NACKs transition to SLUMBER.
-+	 */
-+	ata_for_each_dev(dev, link, ENABLED) {
-+		bool dev_has_hipm = ata_id_has_hipm(dev->id);
-+		bool dev_has_dipm = ata_id_has_dipm(dev->id);
-+
-+		/* find the first enabled and LPM enabled devices */
-+		if (!link_dev)
-+			link_dev = dev;
-+
-+		if (!lpm_dev &&
-+		    (dev_has_hipm || (dev_has_dipm && host_has_dipm)))
-+			lpm_dev = dev;
-+
-+		hints &= ~ATA_LPM_EMPTY;
-+		if (!dev_has_hipm)
-+			hints &= ~ATA_LPM_HIPM;
-+
-+		/* disable DIPM before changing link config */
-+		if (dev_has_dipm) {
-+			err_mask = ata_dev_set_feature(dev,
-+					SETFEATURES_SATA_DISABLE, SATA_DIPM);
-+			if (err_mask && err_mask != AC_ERR_DEV) {
-+				ata_dev_warn(dev,
-+					     "failed to disable DIPM, Emask 0x%x\n",
-+					     err_mask);
-+				rc = -EIO;
-+				goto fail;
-+			}
-+		}
-+	}
-+
-+	if (ap) {
-+		rc = ap->ops->set_lpm(link, policy, hints);
-+		if (!rc && ap->slave_link)
-+			rc = ap->ops->set_lpm(ap->slave_link, policy, hints);
-+	} else
-+		rc = sata_pmp_set_lpm(link, policy, hints);
-+
-+	/*
-+	 * Attribute link config failure to the first (LPM) enabled
-+	 * device on the link.
-+	 */
-+	if (rc) {
-+		if (rc == -EOPNOTSUPP) {
-+			link->flags |= ATA_LFLAG_NO_LPM;
-+			return 0;
-+		}
-+		dev = lpm_dev ? lpm_dev : link_dev;
-+		goto fail;
-+	}
-+
-+	/*
-+	 * Low level driver acked the transition.  Issue DIPM command
-+	 * with the new policy set.
-+	 */
-+	link->lpm_policy = policy;
-+	if (ap && ap->slave_link)
-+		ap->slave_link->lpm_policy = policy;
-+
-+	/*
-+	 * Host config updated, enable DIPM if transitioning to
-+	 * ATA_LPM_MIN_POWER, ATA_LPM_MIN_POWER_WITH_PARTIAL, or
-+	 * ATA_LPM_MED_POWER_WITH_DIPM.
-+	 */
-+	ata_for_each_dev(dev, link, ENABLED) {
-+		bool dev_has_dipm = ata_id_has_dipm(dev->id);
-+
-+		if (policy >= ATA_LPM_MED_POWER_WITH_DIPM && host_has_dipm &&
-+		    dev_has_dipm) {
-+			err_mask = ata_dev_set_feature(dev,
-+					SETFEATURES_SATA_ENABLE, SATA_DIPM);
-+			if (err_mask && err_mask != AC_ERR_DEV) {
-+				ata_dev_warn(dev,
-+					"failed to enable DIPM, Emask 0x%x\n",
-+					err_mask);
-+				rc = -EIO;
-+				goto fail;
-+			}
-+		}
-+	}
-+
-+	link->last_lpm_change = jiffies;
-+	link->flags |= ATA_LFLAG_CHANGED;
-+
-+	return 0;
-+
-+fail:
-+	/* restore the old policy */
-+	link->lpm_policy = old_policy;
-+	if (ap && ap->slave_link)
-+		ap->slave_link->lpm_policy = old_policy;
-+
-+	/* if no device or only one more chance is left, disable LPM */
-+	if (!dev || ehc->tries[dev->devno] <= 2) {
-+		ata_link_warn(link, "disabling LPM on the link\n");
-+		link->flags |= ATA_LFLAG_NO_LPM;
-+	}
-+	if (r_failed_dev)
-+		*r_failed_dev = dev;
-+	return rc;
-+}
-+
- /**
-  *	ata_eh_link_autopsy - analyze error and determine recovery action
-  *	@link: host link to perform autopsy on
-@@ -3123,8 +3269,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 			 * to ap->target_lpm_policy after revalidation is done.
- 			 */
- 			if (link->lpm_policy > ATA_LPM_MAX_POWER) {
--				rc = ata_eh_set_lpm(link, ATA_LPM_MAX_POWER,
--						    r_failed_dev);
-+				rc = ata_eh_link_set_lpm(link, ATA_LPM_MAX_POWER,
-+							 r_failed_dev);
- 				if (rc)
- 					goto err;
- 			}
-@@ -3408,153 +3554,6 @@ static int ata_eh_maybe_retry_flush(struct ata_device *dev)
- 	return rc;
- }
- 
--/**
-- *	ata_eh_set_lpm - configure SATA interface power management
-- *	@link: link to configure power management
-- *	@policy: the link power management policy
-- *	@r_failed_dev: out parameter for failed device
-- *
-- *	Enable SATA Interface power management.  This will enable
-- *	Device Interface Power Management (DIPM) for min_power and
-- *	medium_power_with_dipm policies, and then call driver specific
-- *	callbacks for enabling Host Initiated Power management.
-- *
-- *	LOCKING:
-- *	EH context.
-- *
-- *	RETURNS:
-- *	0 on success, -errno on failure.
-- */
--static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
--			  struct ata_device **r_failed_dev)
--{
--	struct ata_port *ap = ata_is_host_link(link) ? link->ap : NULL;
--	struct ata_eh_context *ehc = &link->eh_context;
--	struct ata_device *dev, *link_dev = NULL, *lpm_dev = NULL;
--	enum ata_lpm_policy old_policy = link->lpm_policy;
--	bool host_has_dipm = !(link->ap->flags & ATA_FLAG_NO_DIPM);
--	unsigned int hints = ATA_LPM_EMPTY | ATA_LPM_HIPM;
--	unsigned int err_mask;
--	int rc;
--
--	/* if the link or host doesn't do LPM, noop */
--	if (!IS_ENABLED(CONFIG_SATA_HOST) ||
--	    (link->flags & ATA_LFLAG_NO_LPM) || (ap && !ap->ops->set_lpm))
--		return 0;
--
--	/*
--	 * This function currently assumes that it will never be supplied policy
--	 * ATA_LPM_UNKNOWN.
--	 */
--	if (WARN_ON_ONCE(policy == ATA_LPM_UNKNOWN))
--		return 0;
--
--	/*
--	 * DIPM is enabled only for ATA_LPM_MIN_POWER,
--	 * ATA_LPM_MIN_POWER_WITH_PARTIAL, and ATA_LPM_MED_POWER_WITH_DIPM, as
--	 * some devices misbehave when the host NACKs transition to SLUMBER.
--	 */
--	ata_for_each_dev(dev, link, ENABLED) {
--		bool dev_has_hipm = ata_id_has_hipm(dev->id);
--		bool dev_has_dipm = ata_id_has_dipm(dev->id);
--
--		/* find the first enabled and LPM enabled devices */
--		if (!link_dev)
--			link_dev = dev;
--
--		if (!lpm_dev &&
--		    (dev_has_hipm || (dev_has_dipm && host_has_dipm)))
--			lpm_dev = dev;
--
--		hints &= ~ATA_LPM_EMPTY;
--		if (!dev_has_hipm)
--			hints &= ~ATA_LPM_HIPM;
--
--		/* disable DIPM before changing link config */
--		if (dev_has_dipm) {
--			err_mask = ata_dev_set_feature(dev,
--					SETFEATURES_SATA_DISABLE, SATA_DIPM);
--			if (err_mask && err_mask != AC_ERR_DEV) {
--				ata_dev_warn(dev,
--					     "failed to disable DIPM, Emask 0x%x\n",
--					     err_mask);
--				rc = -EIO;
--				goto fail;
--			}
--		}
--	}
--
--	if (ap) {
--		rc = ap->ops->set_lpm(link, policy, hints);
--		if (!rc && ap->slave_link)
--			rc = ap->ops->set_lpm(ap->slave_link, policy, hints);
--	} else
--		rc = sata_pmp_set_lpm(link, policy, hints);
--
--	/*
--	 * Attribute link config failure to the first (LPM) enabled
--	 * device on the link.
--	 */
--	if (rc) {
--		if (rc == -EOPNOTSUPP) {
--			link->flags |= ATA_LFLAG_NO_LPM;
--			return 0;
--		}
--		dev = lpm_dev ? lpm_dev : link_dev;
--		goto fail;
--	}
--
--	/*
--	 * Low level driver acked the transition.  Issue DIPM command
--	 * with the new policy set.
--	 */
--	link->lpm_policy = policy;
--	if (ap && ap->slave_link)
--		ap->slave_link->lpm_policy = policy;
--
--	/*
--	 * Host config updated, enable DIPM if transitioning to
--	 * ATA_LPM_MIN_POWER, ATA_LPM_MIN_POWER_WITH_PARTIAL, or
--	 * ATA_LPM_MED_POWER_WITH_DIPM.
--	 */
--	ata_for_each_dev(dev, link, ENABLED) {
--		bool dev_has_dipm = ata_id_has_dipm(dev->id);
--
--		if (policy >= ATA_LPM_MED_POWER_WITH_DIPM && host_has_dipm &&
--		    dev_has_dipm) {
--			err_mask = ata_dev_set_feature(dev,
--					SETFEATURES_SATA_ENABLE, SATA_DIPM);
--			if (err_mask && err_mask != AC_ERR_DEV) {
--				ata_dev_warn(dev,
--					"failed to enable DIPM, Emask 0x%x\n",
--					err_mask);
--				rc = -EIO;
--				goto fail;
--			}
--		}
--	}
--
--	link->last_lpm_change = jiffies;
--	link->flags |= ATA_LFLAG_CHANGED;
--
--	return 0;
--
--fail:
--	/* restore the old policy */
--	link->lpm_policy = old_policy;
--	if (ap && ap->slave_link)
--		ap->slave_link->lpm_policy = old_policy;
--
--	/* if no device or only one more chance is left, disable LPM */
--	if (!dev || ehc->tries[dev->devno] <= 2) {
--		ata_link_warn(link, "disabling LPM on the link\n");
--		link->flags |= ATA_LFLAG_NO_LPM;
--	}
--	if (r_failed_dev)
--		*r_failed_dev = dev;
--	return rc;
--}
--
- int ata_link_nr_enabled(struct ata_link *link)
- {
- 	struct ata_device *dev;
-@@ -3943,7 +3942,8 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	config_lpm:
- 		/* configure link power saving */
- 		if (link->lpm_policy != ap->target_lpm_policy) {
--			rc = ata_eh_set_lpm(link, ap->target_lpm_policy, &dev);
-+			rc = ata_eh_link_set_lpm(link, ap->target_lpm_policy,
-+						 &dev);
- 			if (rc)
- 				goto rest_fail;
- 		}
+Cheers,
+
+Hannes
 -- 
-2.50.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
