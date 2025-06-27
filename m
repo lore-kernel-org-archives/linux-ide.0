@@ -1,80 +1,80 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 968D92A8D0
-	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 06:05:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 693341F9A8B
+	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2025 06:05:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751004315; cv=none; b=cMDmZCR3A7AvZglaBY4Ncq1syv97EwSw/6h/9xw4XoTXAMW/V6IWV924GYs/Xa8HQI5R/pxCDoWDRgV5dWMl0xR+GpoXqCP4Bpap9hDm43YpkoV4bG2Vve7R1/IvEjI2WAIcTbfJOObIXEWgGAoy1HS3UYgExGEWKlYebIvJAkw=
+	t=1751004358; cv=none; b=Xq7ezOwwRxbL/6QyufsyHEaWPlsyYBgTXJtDBcyUbsSGQY46yBKjqNn8gSFfQqCu/x3I+KO0Q+yUyZmq3LAC8C2KyFDgz7zqMNPMK1TQBNfEG8TGt5KChPuCC9KmK0lsSF62RshVwO/lC4ZbNzw6nKKae/LQdKqWAecFai+TzW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751004315; c=relaxed/simple;
-	bh=vZjCj3kcqGJQMKdiPcSR188bBpBArguTq9slfRzRdxM=;
+	s=arc-20240116; t=1751004358; c=relaxed/simple;
+	bh=elkIPvxDXmH5Tq+gVlBFTCFOw+g1Irv+MbIihbDzf5E=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=DADNsuqh1YOXEdVUUsWSXBDS+w9OOHLO6jBGBCthMSMs3YX5cq7CAB5LhqAwXEbVuCozMQbyUsCcM/HZ06pgkEcRq/uDZd7TPwspbea7mEDOwCb/9fA7RDryM/eHCMk/8m4ZyOwQzSRl0sKdonWRWIdIjfb6a+aZgfPheBg3rrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JUXrvio2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mvtnH734; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JUXrvio2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mvtnH734; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=cjyIWgGWYvqdUokztXfzKNE9YDGXrzBd1p9X9udze+Y7FeNKWsUyBjbP2hma/T/VQgOpmZggOBQooUs3lnA0dcaIpjI4VAKwlgg7dCHKvlVtAvwIKOmas+MQWTL0GJQRo5B/Wz1e5pgirYPuVpgN73ULMK7cj727oEwLYbyd9W0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VkUb+r13; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NdPCbjDE; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VkUb+r13; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NdPCbjDE; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JUXrvio2";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mvtnH734";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JUXrvio2";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mvtnH734"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VkUb+r13";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NdPCbjDE";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VkUb+r13";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NdPCbjDE"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id E63E91F387;
-	Fri, 27 Jun 2025 06:05:11 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id A5CEB1F387;
+	Fri, 27 Jun 2025 06:05:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751004311; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1751004355; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZurbjVyaJnXLJGUxOQ1/H476OkR9ZvFxEUd0hIes19E=;
-	b=JUXrvio2kDWPyGbhOFRM7HCXn7aQIPiLVnHmFlqYris9fgEnRMqL1bL+69qPTIMzfKqg9s
-	CcT9e7/Nn+qWpN1FYjFhOM8/bv5VQhv351pHJyTDqyfMRUkHFT135RshOZGtfX9FJ+fQk3
-	XgXglnPRve9uaXar73tmMR2R7UvafXc=
+	bh=eEkYCjR3LVLr5LmOH2s8+mp04Jcinavj0GCvP0a5kBY=;
+	b=VkUb+r13P1wGyUahGprAB0cTY3D8YhdokkDR6Y1CN3zzAc0knYE7A4OV7XGiUqFgcuJgT9
+	tkBiNH55Q649u/Ojt7sod0UqqJSq+txfhiy7K1WXSISJR/Nfy7LMR4z1YGr94PaVARbl3y
+	PAyBzB+zwDOVyp885bvtlkOeN9o3G3I=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751004311;
+	s=susede2_ed25519; t=1751004355;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZurbjVyaJnXLJGUxOQ1/H476OkR9ZvFxEUd0hIes19E=;
-	b=mvtnH734cc6IC36I43FauYlf6+uNQ/746QfijGwpxDtxUeu+TYM9qz+jbZdBIwxENifJMM
-	UwdjF5RRZYHZbLAg==
+	bh=eEkYCjR3LVLr5LmOH2s8+mp04Jcinavj0GCvP0a5kBY=;
+	b=NdPCbjDEgv3Xe23ICyQ9onRBhi/d5LXktAiedrCzNgTVlVliMcLOnKDvy0gKCCYif5lXjt
+	tYtSYj6zMSHj6zBg==
 Authentication-Results: smtp-out2.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751004311; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1751004355; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZurbjVyaJnXLJGUxOQ1/H476OkR9ZvFxEUd0hIes19E=;
-	b=JUXrvio2kDWPyGbhOFRM7HCXn7aQIPiLVnHmFlqYris9fgEnRMqL1bL+69qPTIMzfKqg9s
-	CcT9e7/Nn+qWpN1FYjFhOM8/bv5VQhv351pHJyTDqyfMRUkHFT135RshOZGtfX9FJ+fQk3
-	XgXglnPRve9uaXar73tmMR2R7UvafXc=
+	bh=eEkYCjR3LVLr5LmOH2s8+mp04Jcinavj0GCvP0a5kBY=;
+	b=VkUb+r13P1wGyUahGprAB0cTY3D8YhdokkDR6Y1CN3zzAc0knYE7A4OV7XGiUqFgcuJgT9
+	tkBiNH55Q649u/Ojt7sod0UqqJSq+txfhiy7K1WXSISJR/Nfy7LMR4z1YGr94PaVARbl3y
+	PAyBzB+zwDOVyp885bvtlkOeN9o3G3I=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751004311;
+	s=susede2_ed25519; t=1751004355;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZurbjVyaJnXLJGUxOQ1/H476OkR9ZvFxEUd0hIes19E=;
-	b=mvtnH734cc6IC36I43FauYlf6+uNQ/746QfijGwpxDtxUeu+TYM9qz+jbZdBIwxENifJMM
-	UwdjF5RRZYHZbLAg==
+	bh=eEkYCjR3LVLr5LmOH2s8+mp04Jcinavj0GCvP0a5kBY=;
+	b=NdPCbjDEgv3Xe23ICyQ9onRBhi/d5LXktAiedrCzNgTVlVliMcLOnKDvy0gKCCYif5lXjt
+	tYtSYj6zMSHj6zBg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B329313786;
-	Fri, 27 Jun 2025 06:05:11 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7F1E513786;
+	Fri, 27 Jun 2025 06:05:55 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id XQzTKJc0XmjlMQAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 27 Jun 2025 06:05:11 +0000
-Message-ID: <bdaadd4d-d7bc-4cb6-b171-c1c87a92a130@suse.de>
-Date: Fri, 27 Jun 2025 08:05:11 +0200
+	id iaMfHcM0XmgUMgAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 27 Jun 2025 06:05:55 +0000
+Message-ID: <747de408-13cb-4d4d-a7b1-18434bca65a9@suse.de>
+Date: Fri, 27 Jun 2025 08:05:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -82,22 +82,22 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5/6] ata: ahci: Clarify mobile_lpm_policy description
+Subject: Re: [PATCH 6/6] ata: libata-eh: Move and rename ata_eh_set_lpm()
 To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
  Niklas Cassel <cassel@kernel.org>
 References: <20250627011155.701125-1-dlemoal@kernel.org>
- <20250627011155.701125-6-dlemoal@kernel.org>
+ <20250627011155.701125-7-dlemoal@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250627011155.701125-6-dlemoal@kernel.org>
+In-Reply-To: <20250627011155.701125-7-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Spam-Flag: NO
 X-Spam-Score: -4.30
 X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
+	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.989];
+	NEURAL_HAM_SHORT(-0.20)[-0.991];
 	MIME_GOOD(-0.10)[text/plain];
 	MID_RHS_MATCH_FROM(0.00)[];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
@@ -116,34 +116,16 @@ X-Spamd-Result: default: False [-4.30 / 50.00];
 X-Spam-Level: 
 
 On 6/27/25 03:11, Damien Le Moal wrote:
-> Despite its name, the mobile_lpm_policy module parameter defines the
-> default LPM policy to use for an AHCI adapter for all chipsets,
-> including desktop and server chipsets. Clarify this point in the
-> parameter description.
-> 
+> Move the definition of the function ata_eh_set_lpm() to avoid its
+> unnecessary forward declaration and rename the function to
+> ata_eh_link_set_lpm() to clarify that it acts on a link.
 > No functional changes.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/ahci.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
+>   drivers/ata/libata-eh.c | 304 ++++++++++++++++++++--------------------
+>   1 file changed, 152 insertions(+), 152 deletions(-)
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index e5e5c2e81d09..9347d0ec8793 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -674,7 +674,9 @@ MODULE_PARM_DESC(marvell_enable, "Marvell SATA via AHCI (1 = enabled)");
->   
->   static int mobile_lpm_policy = -1;
->   module_param(mobile_lpm_policy, int, 0644);
-> -MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
-> +MODULE_PARM_DESC(mobile_lpm_policy,
-> +		 "Default LPM policy. Despite its name, this parameter applies "
-> +		 "to all chipsets, including desktop and servers chipsets");
->   
->   static char *ahci_mask_port_map;
->   module_param_named(mask_port_map, ahci_mask_port_map, charp, 0444);
-
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
