@@ -1,67 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5F09A59
-	for <linux-ide@vger.kernel.org>; Mon, 30 Jun 2025 04:00:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9B9E1F4E57
+	for <linux-ide@vger.kernel.org>; Mon, 30 Jun 2025 06:28:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751256040; cv=none; b=l2rQKQjliKMum/iKnJzTOmw0pymS87TeVYHyc3XXDUKkcdr+0Ky9JrzcVkCATnyrltXrBaZOrYYWa/pnLvTkh5vy3X7FtOCm+0lppo9Z5QjIOKzxWN5MBDUs3LYhAwfropz6feMtYwdstRn0IfFg3ZagNuyBifFP+QPpaXP0b7U=
+	t=1751264928; cv=none; b=J0e3WfvvvrUUo8OB7CDLY99+Gkuby5CdQiCtyHaBprARak0fyMENUhJ7LzWYx/32jTiGQ5ACzWwFUsyz+nG+YV87JOmAPR9sgR6xr1nUnYccPcqQ2ARmVzvTVwhpB2744gN5D99kU5cxkoHKAHKT7MBYJAbmEVIsTgQVDZO2eNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751256040; c=relaxed/simple;
-	bh=Chsbqxd1N4qyhwFt7uxORGZsYjAmHU+OsXF9x3w6d9g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=f/0W3X41FZgZb067vJp21cRcI6VSkMAeIzg9mLPrgTmcBrR6QkYPQZ3EtQa0c8AUcTGU6HVMZ4Ll57v7uRmzFyPoiCqSauYOJ/654dVx75JTq4DexynoR0tq8YU1ArgkoXd/ah5Wo9KqK/Ane4u4sLQlM2Ap6HZmWHsKUfYbhNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sJmKStFQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751264928; c=relaxed/simple;
+	bh=3HhXg2lkxPYwq2aw9+C9avCrjdbvQEu49yFHB792eGs=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=APdjIrdTdO0ByIrtXVMp9xeelLubx3qKIhwEvEelxSouLPpGPmfsDLoNqecRNG3iTqJUK7/NMmRrObY/lyjVshjDBiq9LZvJHu2LydZTnWb6CQKytZcAXN4O+Y74D/VRFyZ73sWp1ppX1TpTdQCJLr+bh8bZZjSO2kGvYJ261XE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BNw/5Rxm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sJmKStFQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C295CC4CEE3;
-	Mon, 30 Jun 2025 04:00:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BNw/5Rxm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDC3CC4CEEF;
+	Mon, 30 Jun 2025 06:28:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751256040;
-	bh=Chsbqxd1N4qyhwFt7uxORGZsYjAmHU+OsXF9x3w6d9g=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=sJmKStFQwSuPw8z1mjdQTJ/l8exTxE2SaEBlrf9JnWr7I9zXy7JEiXY40I5PgWYzv
-	 Vlqj7u3VBp41o4cCnDkgh9C16l8kdXmZqqiUomD7GQB/f6CHBXoA425u1KmzB3phR1
-	 ZC+rvE0/gEqx0InMhEdwrltlnnZwqTsmbRhc8M+GTqFAwQNikd24dlzV1dZWXqTlmX
-	 LRuiwzk3nfuGgNjkh+0ZkCY/dM5cnrTRfkXWa+bDCSccK2wkenr71DipeE7XaL9hwM
-	 G70MrnjeibYDI5B9G0PrbVV2vJK8VBB6VLSOhpJPKBsGjAzS/R1R4NgmEHYF7okHqi
-	 tLAGGnzqT34rw==
-Message-ID: <d9111596-d9a7-4321-9fee-0a570bd77714@kernel.org>
-Date: Mon, 30 Jun 2025 12:58:30 +0900
+	s=k20201202; t=1751264927;
+	bh=3HhXg2lkxPYwq2aw9+C9avCrjdbvQEu49yFHB792eGs=;
+	h=From:To:Subject:Date:From;
+	b=BNw/5Rxm/OutVA9VJ7TG7k6eXqik4xchny6uOOcjFrIVX8lS62NJkuRcRxRweqelk
+	 HIDGx7d+bTHjGeDf8QE5Uzv8qOJ+967Myxn2MtyqhmbcJ2FboQ2Chbi2cY581zFFoW
+	 YRx8ScfguzYq1hfMIqeGDWFHhf9TPF/cGNlpl1z1v11a/mtUsQns+tzj4cG/ATsKSL
+	 +gnfpIMwy6Bqdvnt6MR1yI7qQm7NjncoedZnhX2d72UCMuzSU1vG6ShtFeQTpv6olP
+	 T8JzdSAcy6XGK7MUYJLiV4yb4zZazXh6Dvot28lq/NJzr8atC49kF8IT0eiJ5Q7yMX
+	 fF/2AVHy3HQxw==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH 00/10] Improve link power management
+Date: Mon, 30 Jun 2025 15:26:27 +0900
+Message-ID: <20250630062637.258329-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.50.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 6/6] ata: libata-eh: Move and rename ata_eh_set_lpm()
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-References: <20250627075207.23969-1-dlemoal@kernel.org>
- <20250627075207.23969-7-dlemoal@kernel.org> <aF54rsmrdoIHl14M@ryzen>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <aF54rsmrdoIHl14M@ryzen>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 6/27/25 7:55 PM, Niklas Cassel wrote:
-> On Fri, Jun 27, 2025 at 04:52:07PM +0900, Damien Le Moal wrote:
->> Move the definition of the function ata_eh_set_lpm() to avoid its
->> unnecessary forward declaration and rename the function to
->> ata_eh_link_set_lpm() to clarify that it acts on a link.
->> No functional changes.
->>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> 
-> Reviewed-by: Niklas Cassel <cassel@kernel.org>
+This patch series improves ATA link power management, mainly for the
+AHCI driver. Follow-up patches will address libsas and AHCI platform
+adapters.
 
-Thanks. Corrected the patches as you suggested and queued them in for-6.17.
+These patches are a mix of code cleanup and LPM management improvements
+around the application of an appropriate initial link power management
+policy and preventing users or system daemons from changing a port link
+power management policy through sysfs when the port or the device does
+not support LPM policies or the port is an external port (and using LPM
+would break the port hotplug capability).
 
+Damien Le Moal (10):
+  ata: libata-core: Introduce ata_dev_config_lpm()
+  ata: libata-core: Move device LPM quirk settings to ata_dev_config_lpm()
+  ata: libata-core: Advertize device support for DIPM and HIPM features
+  ata: libata-eh: Avoid unnecessary resets when revalidating devices
+  ata: libata-sata: Disallow changing LPM state if not supported
+  ata: ahci: Disable DIPM if host lacks support
+  ata: ahci: Disallow LPM policy control for external ports
+  ata: ahci: Disallow LPM policy control if not supported
+  ata: libata-core: Reduce the number of messages signaling broken LPM
+  ata: libata_eh: Add debug messages to ata_eh_link_set_lpm()
+
+ drivers/ata/ahci.c        | 16 +++++++--
+ drivers/ata/libata-core.c | 70 +++++++++++++++++++++++++++++----------
+ drivers/ata/libata-eh.c   | 32 +++++++++++++++++-
+ drivers/ata/libata-sata.c |  5 +++
+ 4 files changed, 102 insertions(+), 21 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.50.0
+
