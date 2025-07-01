@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 602F825B301
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D84BC25B301
 	for <linux-ide@vger.kernel.org>; Tue,  1 Jul 2025 12:55:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751374533; cv=none; b=uij4J/3GroIBR6a784Id5DEaYcd1VKDZDvH3nRWcvEQxToWQZYlAmpzw4FwCVXA+4VN1HcHrX4ip/4XeUKVDRZYj8+tv3l2Ge/1CjMCmtwBILZOFnIN/WypfMbHmOZ/4ateRpeey6HXWM2Lgz3+twbiv+sGvJYCLe9XQEQf9Duk=
+	t=1751374533; cv=none; b=LJeVwT5EiEDw526KKtTsCa1+WQ4ISt2eFmfrPdCb1zW74X+73C2B91T8otSP0r+FL6eKjjFYVLQsUH96gC3JgK9A3VPlqUDCLi5A34dRyh1pTlrwV1FU2nA7YCjE34EoXC55d6ImiQL4Tzi8Q/5TlMnwkdhuDnwo5OH4sJOgFkI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751374533; c=relaxed/simple;
-	bh=6rmzGFT/PrcEZBwuQXJPg/gulvM2i0cKUy8gg26iI9Y=;
+	bh=2QLnYTr94wC3mLJm7DyKMinN2tyuIS1jVy3F2wm4xzE=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=i6a0IQJ/beAgGq6kX+rcQ1eM/Yf1eXCpUL7ga/qFYOOntQU6vDpMRlWGg+R/mOWnxR1r9oqnwoAFBzeHolpbX121XsXtiEECGIsSoW4KoDN4choVm9NjYgsUcnFnLoQ0DQ4Fp24ocKOSY+HwTFl9z7b0KZ/kMcjzOOjx9FsIDvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MTi0j3qU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=XvKyu3tkbN8QXOOv66I//AhOHbZBO/CfKPRCnobJjt6lVF4b2awuPfawO0FXCNOOyKnDR0DfjdnhwRoMYao6nCCSIGMkaCu75DhDOItnPOjVUoax0vfWUvXq1qfSV+oOrn+Y4PZf3de5bjhbuuZr9czscuc/zL3U9jzbNWkqLnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZCLNyx8J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MTi0j3qU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82049C4CEED;
-	Tue,  1 Jul 2025 12:55:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZCLNyx8J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F720C4CEEB;
+	Tue,  1 Jul 2025 12:55:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751374532;
-	bh=6rmzGFT/PrcEZBwuQXJPg/gulvM2i0cKUy8gg26iI9Y=;
+	s=k20201202; t=1751374533;
+	bh=2QLnYTr94wC3mLJm7DyKMinN2tyuIS1jVy3F2wm4xzE=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=MTi0j3qU0pIy8DG/xVSN2IkUgvHj9hGTPf88yp2wfmYRJ39z+ZWOWG1AfbFEqUc04
-	 XSK09s6y4gzDhjQO1mK+RKl5sgPwRlFSWTpw1y0Sb/qIpNUxfp6ONqcfIrmxrk3hai
-	 AcRGJcERKzzvkNVT8rBOuC4EFdg4mUFJ+q3BWx16WEf2Af8SxX98yz2ypNG9BY2gTH
-	 iCqlP4s5TkfIiTMeeMYgGH0oTxBhl9Iijjt0+bx0arUi7hG6zWBs8gWteZ9Kw1Kj+W
-	 uUj71PfGOGSczCPZQJQAEZEIV6qhF1COop7n9VJcWMUGQo/5CBFUQ29RPy5yBhja9I
-	 3lPx/NoPKduNA==
+	b=ZCLNyx8J3wUkEJj8LsjhFmlD34TA2jnSCPw65HrMy+TXiNuBlDg9UK/i4WJh621OC
+	 cEdc9IZMAfu6narlmAslBdKdalrGc/e+Gmed0ujVm6r7ceyPw1wblNgXM0oXFTp4qg
+	 ZuQmdJBpBs3L105sTRovq/tTrpScvsn0NZQewNrJyrufWoJ0SvonRWM+XV48p80Bgx
+	 +A9V0crvTUkcypEG7oc9laW5Yy8MFTUk/qlY9JMeLi49vklKIgJnKxEUS0dQdwtoiy
+	 u95jOBNPm9SeR44xq8v+WrA/EEZSpyyj1pGzmzERwc8q2P8LF6DD0dyi54LqNc9GSx
+	 WgN0w5v3oB6sw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 01/10] ata: libata-core: Introduce ata_dev_config_lpm()
-Date: Tue,  1 Jul 2025 21:53:12 +0900
-Message-ID: <20250701125321.69496-2-dlemoal@kernel.org>
+Subject: [PATCH v3 02/10] ata: libata-core: Move device LPM quirk settings to ata_dev_config_lpm()
+Date: Tue,  1 Jul 2025 21:53:13 +0900
+Message-ID: <20250701125321.69496-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.50.0
 In-Reply-To: <20250701125321.69496-1-dlemoal@kernel.org>
 References: <20250701125321.69496-1-dlemoal@kernel.org>
@@ -43,68 +43,81 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-If the port of a device does not support Device Initiated Power
-Management (DIPM), that is, the port is flagged with ATA_FLAG_NO_DIPM,
-the DIPM feature of a device should not be used. Though DIPM is disabled
-by default on a device, the "Software Settings Preservation feature"
-may keep DIPM enabled or DIPM may have been enabled by the system
-firmware.
+Move the various cases of setting the ATA_QUIRK_NOLPM quirk flag for a
+device in ata_dev_configure() to the function ata_dev_config_lpm().
+This allows having all LPM related settings in one place to facilitate
+maintenance.
 
-Introduce the function ata_dev_config_lpm() to always disable DIPM on a
-device that supports this feature if the port of the device is flagged
-with ATA_FLAG_NO_DIPM. ata_dev_config_lpm() is called from
-ata_dev_configure(), ensuring that a device DIPM feature is disabled
-when it cannot be used.
+No functional changes.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-core.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ drivers/ata/libata-core.c | 43 +++++++++++++++++++++++----------------
+ 1 file changed, 26 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3918ea624e0b..6df5e51ece21 100644
+index 6df5e51ece21..33b2ffd05af7 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2790,6 +2790,30 @@ static void ata_dev_config_cpr(struct ata_device *dev)
- 	kfree(buf);
- }
+@@ -2798,6 +2798,32 @@ static void ata_dev_config_lpm(struct ata_device *dev)
+ 	struct ata_port *ap = dev->link->ap;
+ 	unsigned int err_mask;
  
-+/*
-+ * Configure features related to link power management.
-+ */
-+static void ata_dev_config_lpm(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+	unsigned int err_mask;
++	if (ap->flags & ATA_FLAG_NO_LPM) {
++		/*
++		 * When the port does not support LPM, we cannot support it on
++		 * the device either.
++		 */
++		dev->quirks |= ATA_QUIRK_NOLPM;
++	} else {
++		/*
++		 * Some WD SATA-1 drives have issues with LPM, turn on NOLPM for
++		 * them.
++		 */
++		if ((dev->quirks & ATA_QUIRK_WD_BROKEN_LPM) &&
++		    (dev->id[ATA_ID_SATA_CAPABILITY] & 0xe) == 0x2)
++			dev->quirks |= ATA_QUIRK_NOLPM;
 +
-+	/*
-+	 * Device Initiated Power Management (DIPM) is normally disabled by
-+	 * default on a device. However, DIPM may have been enabled and that
-+	 * setting kept even after COMRESET because of the Software Settings
-+	 * Preservation feature. So if the port does not support DIPM and the
-+	 * device does, disable DIPM on the device.
-+	 */
-+	if (ap->flags & ATA_FLAG_NO_DIPM && ata_id_has_dipm(dev->id)) {
-+		err_mask = ata_dev_set_feature(dev,
-+					SETFEATURES_SATA_DISABLE, SATA_DIPM);
-+		if (err_mask && err_mask != AC_ERR_DEV)
-+			ata_dev_err(dev, "Disable DIPM failed, Emask 0x%x\n",
-+				    err_mask);
++		/* ATI specific quirk */
++		if ((dev->quirks & ATA_QUIRK_NO_LPM_ON_ATI) &&
++		    ata_dev_check_adapter(dev, PCI_VENDOR_ID_ATI))
++			dev->quirks |= ATA_QUIRK_NOLPM;
 +	}
-+}
 +
- static void ata_dev_print_features(struct ata_device *dev)
- {
- 	if (!(dev->flags & ATA_DFLAG_FEATURES_MASK))
-@@ -2963,6 +2987,7 @@ int ata_dev_configure(struct ata_device *dev)
- 			ata_dev_config_chs(dev);
- 		}
++	if (dev->quirks & ATA_QUIRK_NOLPM) {
++		ata_dev_warn(dev, "LPM support broken, forcing max_power\n");
++		ap->target_lpm_policy = ATA_LPM_MAX_POWER;
++	}
++
+ 	/*
+ 	 * Device Initiated Power Management (DIPM) is normally disabled by
+ 	 * default on a device. However, DIPM may have been enabled and that
+@@ -2884,23 +2910,6 @@ int ata_dev_configure(struct ata_device *dev)
+ 	if (rc)
+ 		return rc;
  
-+		ata_dev_config_lpm(dev);
- 		ata_dev_config_fua(dev);
- 		ata_dev_config_devslp(dev);
- 		ata_dev_config_sense_reporting(dev);
+-	/* some WD SATA-1 drives have issues with LPM, turn on NOLPM for them */
+-	if ((dev->quirks & ATA_QUIRK_WD_BROKEN_LPM) &&
+-	    (id[ATA_ID_SATA_CAPABILITY] & 0xe) == 0x2)
+-		dev->quirks |= ATA_QUIRK_NOLPM;
+-
+-	if (dev->quirks & ATA_QUIRK_NO_LPM_ON_ATI &&
+-	    ata_dev_check_adapter(dev, PCI_VENDOR_ID_ATI))
+-		dev->quirks |= ATA_QUIRK_NOLPM;
+-
+-	if (ap->flags & ATA_FLAG_NO_LPM)
+-		dev->quirks |= ATA_QUIRK_NOLPM;
+-
+-	if (dev->quirks & ATA_QUIRK_NOLPM) {
+-		ata_dev_warn(dev, "LPM support broken, forcing max_power\n");
+-		dev->link->ap->target_lpm_policy = ATA_LPM_MAX_POWER;
+-	}
+-
+ 	/* let ACPI work its magic */
+ 	rc = ata_acpi_on_devcfg(dev);
+ 	if (rc)
 -- 
 2.50.0
 
