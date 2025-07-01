@@ -1,95 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69085264F87
-	for <linux-ide@vger.kernel.org>; Tue,  1 Jul 2025 09:27:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2A9A2459D7
+	for <linux-ide@vger.kernel.org>; Tue,  1 Jul 2025 09:43:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751362055; cv=none; b=lPMQjYhD+lFNLpvP7x2Rt542PFXtM71O3kGpJJ/UoqXmeIXNB3JpI0GBf/n7g2vyvCnlMOswM/tlWuASVXU/MSSX8tNPwA9wLZzdo7M3TB0MPz3r4erQghzBEqoGxon9HLRZkxnoRP9k5XINkVfIa6uT3bngHu0q8GRVh7tuL6Y=
+	t=1751363019; cv=none; b=oswa2QjoXdptEo0WmzCVq7n5fNE0805jH1ZidzYjpTPI2bRkrj+qs/BXhvGnGpXNpSEDugvwH+kIWhsyANM3rT6KI4zZxhnfbe79d8Jz/X7U/SKC0KZAzda1fi55dNpGgK30mr85Mqm7jYc+x1mxR/kRvfORcxdHQRJBp7fBIPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751362055; c=relaxed/simple;
-	bh=xamULk3ouQa8EWtbEBlN65vRPG6L9u/qDMC2nMGmKfw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Jv5hEWleD9BBL0LF0wDs3zxQCuUlZyxUm+F8qddjYTkFK7v8pP030UB7RsQawMYXETt/rd66x+1TDWR7yEUC5tgcoYk72azHyGKtRrVoyW4ZFY8OBTZspuBObNeTaSoJg0eQD2FOnmYO3BoIad7sDIR+SeOjVxkXjec31buWu+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A7HerQOH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751363019; c=relaxed/simple;
+	bh=ht01Fmer+/VfZVNt/29Kdv3FUexWIEH57GJM50OpPB0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kHhbeIDDlVrKAjhvh8oZuCSgZFqxYjMU5a/jtQqhVKkm5OW4pcBbClogkoN8fmAYkVu7F+dWNyl1iLv7WCfwFoX7tNBSzB3BqDLnNZV4wg/agTRhGCPKwqna57qjpPzdobZ21W6TumalAtU3aMIQWhuYdo2USBh7sLyyD/2ZX1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hm0bU/9F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A7HerQOH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72CF4C4CEEB;
-	Tue,  1 Jul 2025 09:27:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hm0bU/9F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D9D9C4CEEB;
+	Tue,  1 Jul 2025 09:43:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751362054;
-	bh=xamULk3ouQa8EWtbEBlN65vRPG6L9u/qDMC2nMGmKfw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=A7HerQOHF4TZXRzGuMMRZNBvVjRdtzSbqgak5d1+3XOeDHOxHQen70ckhFV6keq24
-	 svxTojblX5tq8kR0yx5KLL6jXHLoF67CK5mk0pdOpzRCkoLjsGR2FYHTeSckvSvmYr
-	 Yrya6fG0O0kc0qSpSnRXw9DOfDqnXEQuoGv6KZwT4dxlhh5o327NmBr+84tuDQMl8d
-	 /RPqd/OBPmquSwUKAsxRvFg6hv8VtsiaqQj3P5oXW5YVehylDybbEHsU7m4p6VMUWV
-	 IZqleE99GlnnQwrkqrzekFugT8qOkRW24HG+QwmjUj2UBg6EkFSBLiQyj/LM/KaOQ9
-	 nVyE5H/XufUhg==
-Message-ID: <75031003-7816-4e2c-9cfc-57822a9f3321@kernel.org>
-Date: Tue, 1 Jul 2025 18:25:24 +0900
+	s=k20201202; t=1751363017;
+	bh=ht01Fmer+/VfZVNt/29Kdv3FUexWIEH57GJM50OpPB0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hm0bU/9FadG5U5muaCNZJo/1H4EfoSvFwlUDRPx1140Hcfh6a/DO5HQyKmF7lDLJ0
+	 yCXisUZlUrGnFHg+GF+KAn97hWW4QD8nfUMhAIjjLxX6GJm82PPMGTyWR1LZQLs3L+
+	 IqGQmh/X0RfdDl4vpENp1X5jDPZIRl7sh/VLXZD8Ca9qjKyebWvLi7JWLl1yFprG2j
+	 otuiSu4zzgwqH9JCuU1M63x1ITj4EA4IEy5d10J3GnpdAt8oYV59BDE92pIFF3t2JE
+	 lh6GMltHCbDgHiSaHkKt7s1ixRXTT9l/xWZrhOZRu9OHA6Di5EqSD2QUXJ2eim/FVp
+	 3vXd2rNz+maog==
+Date: Tue, 1 Jul 2025 11:43:34 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 07/10] ata: ahci: Disallow LPM policy control for
+ external ports
+Message-ID: <aGOtxhQUNy0OJLA2@ryzen>
+References: <20250701001408.330364-1-dlemoal@kernel.org>
+ <20250701001408.330364-8-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 04/10] ata: libata-eh: Avoid unnecessary resets when
- revalidating devices
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
-References: <20250630062637.258329-1-dlemoal@kernel.org>
- <20250630062637.258329-5-dlemoal@kernel.org>
- <60dd0013-20a3-4b10-a60b-0e567526e0f9@suse.de>
- <097726fe-638a-4336-8427-3eb3055de5b7@kernel.org> <aGOpQtkxF1FehZ9G@ryzen>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <aGOpQtkxF1FehZ9G@ryzen>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250701001408.330364-8-dlemoal@kernel.org>
 
-On 7/1/25 6:24 PM, Niklas Cassel wrote:
-> On Tue, Jul 01, 2025 at 03:48:15PM +0900, Damien Le Moal wrote:
->>
->> There is a 10ms wait already in sata_link_scr_lpm() but it seems to not always
->> be enough. The specs say that transitions out of HIPM "shall not take more than
->> 10ms", but hey, we all know how devices always follow the specs, right ? :)
+On Tue, Jul 01, 2025 at 09:14:05AM +0900, Damien Le Moal wrote:
+> Commit ae1f3db006b7 ("ata: ahci: do not enable LPM on external ports")
+> added an early return in ahci_update_initial_lpm_policy() for all
+> ports flagged as external with the ATA_PFLAG_EXTERNAL port flag (e.g.
+> eSATA ports or hotplug capable ports) so that the target_lpm_policy of
+> these ports is unchanged and set to ATA_LPM_UNKNOWN. thus forcing libata
+> EH to not be called for external port. The goal of this change is to
+> preserve the initial power management policy to not break the hotplug
+> capability of external ports.
 > 
-> HIPM / ALPM includes Partial, Slumber and DevSleep.
+> However, this change is incomplete as users or system daemon (e.g.
+> systemd-udevd) can still apply the system preferred power management
+> policy through sysfs, thus potentially unknowingly breaking the port
+> hotplug capability.
 > 
-> 10 ms is for Slumber.
-
-Oops. Yes, I meant slumber when I said HIPM...
-My brain is in lower power state today :)
-
-> DevSleep can be much longer than that:
->           - DevSleep: The Phy logic may be powered down. The exit latency from
->                       this state is no longer than 20 ms, unless otherwise
->                       specified by DETO in the device Identify Device Data log.
+> Modify ahci_update_initial_lpm_policy() to flag external ports with
+> ATA_FLAG_NO_LPM to prevent changes to the LPM policy by users through
+> the sysfs link_power_management_policy host attribute. Also set the
+> target_lpm_policy of external ports to ATA_LPM_MAX_POWER to ensure
+> that the port is not in a low power state preventing hotplug operations.
 > 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+
+Perhaps also mention that debug message is removed because since
+commit 439d47608bb3 ("ata: libata: Print if port is external on boot")
+it is printed unconditionally at boot.
+
+With that:
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+
+> ---
+>  drivers/ata/ahci.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> From PxDEVSLP.DETO:
->   Device Sleep Exit Timeout (DETO): This field specifies the maximum duration (in
->   approximate 1ms granularity) from DEVSLP de-assertion until the device is ready to
->   accept OOB. The nominal value is 20ms while the max value is 255ms depending
->   on device identification information.
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 0760fa47d90e..a061aa3299ef 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1776,7 +1776,8 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
+>  	 * LPM if the port advertises itself as an external port.
+>  	 */
+>  	if (ap->pflags & ATA_PFLAG_EXTERNAL) {
+> -		ata_port_dbg(ap, "external port, not enabling LPM\n");
+> +		ap->flags |= ATA_FLAG_NO_LPM;
+> +		ap->target_lpm_policy = ATA_LPM_MAX_POWER;
+>  		return;
+>  	}
+>  
+> -- 
+> 2.50.0
 > 
-> 
-> So technically it can be 255 ms :)
-
-Yep. Hence why the 10ms sleep is sometimes not enough.
-
-> Note that we do actually read and save DETO:
-> https://github.com/torvalds/linux/blob/v6.16-rc4/drivers/ata/libahci.c#L2293-L2295
-> 
-> But like you said below, with this patch, we should be able to remove the sleep
-> if we wanted, so I don't think that we necessarily need to increase it.
-
-I definitely do not want to increase it !
-
-
--- 
-Damien Le Moal
-Western Digital Research
