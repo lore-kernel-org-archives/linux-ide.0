@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 927EC3596B
-	for <linux-ide@vger.kernel.org>; Tue,  1 Jul 2025 12:55:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D5E63596B
+	for <linux-ide@vger.kernel.org>; Tue,  1 Jul 2025 12:55:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751374539; cv=none; b=irQ374i1ugQDW/Mzb4r4V3aS8cW/J98aOhlA9by0HmEwldG6pbi4aRRigjExlPMssFoFNn5nZmhjqm17hUnlfW0NmbDFx5+QstZWdwx/4mGBLX8osB3uOOB8HErSaVWXs3/hAIGaIIV8Dk0GVANF6fx3UPRYqCK2eC5gpF9Qlpw=
+	t=1751374540; cv=none; b=RLv4/KmdEUFZkEoNSsSSZD5EBrBG6Iw4zncJJkev1++/YKqBZq6dJqHRwYKHax72TWxYrgK5kxUxT1Q6UqRgc9ODGxu6rdno2WNdTHOq6jGr2wjosDVqyt1FEYJpIvWghO7M0lDbBLfuNfWwM/RsIzniaqiGLNQR578sWCt7tkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751374539; c=relaxed/simple;
-	bh=4SrOsTyUHG9RvBTStbXQ+P+Y2matKcycdhJJyfqkd4w=;
+	s=arc-20240116; t=1751374540; c=relaxed/simple;
+	bh=lE7poR0W3FbvXfof8L1+sSh0mMQo6rpTy9KLwLcwIzc=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FX+oKuSTwI6s1+IeZLuqhuCYzfCvE5Zto2sFkXcueY3S7KZJ2MsTxgOsub5ly6/YSaa1fjyclFtevUl6D/nJvphbvLY1O+YwKNS4Fy0hlL5bdzp3yKFu63U55Ui4ZOOHIy+MEtUvAmDrvhAOlF4wrFtnXpdzXpX7poeOVVkhUdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tZZ59kSo; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=hDRLmUauXHxME5SoltYJe+t5ZhelVfC6wExdUsRffOUI2961esY7imtc1L04Xt39qDARB3hothfXz52M52ZdOIQggUr74djxGXUGacLyVi5IuU6c7psLgLqRIeZ0BW9J2bKj2Dzj2rXASZjvNxS7SeH94P1cDxutW2F5lY9R4Pg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Am99Guzu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tZZ59kSo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0DABC4CEEB;
-	Tue,  1 Jul 2025 12:55:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Am99Guzu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B9B2C4CEF2;
+	Tue,  1 Jul 2025 12:55:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751374538;
-	bh=4SrOsTyUHG9RvBTStbXQ+P+Y2matKcycdhJJyfqkd4w=;
+	s=k20201202; t=1751374539;
+	bh=lE7poR0W3FbvXfof8L1+sSh0mMQo6rpTy9KLwLcwIzc=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=tZZ59kSo1qtIePx34fXuPjHmOYKlPrhtmihTYnjiiH+ys+XJ0xmxiPuhlKLSYZPq5
-	 LLG41zc8V5Zq7c/80O/ZTGvh3pi8pwxgsOswwXHH1Sa0AtCzZcGXZ0oWk2M5ZdTDOR
-	 v1GNULLj/3OoCGNMs7JN+Ihqqn6bn4G3+9ZIKm47b/bMNIme6awqrQ98qo+5tMHE3y
-	 R5cpBczyqhoV11Td9atDHcBNYOJflRqnDpf0+INcm6qhAT0D6XGWNGvNTvuOM6E/72
-	 yXbHolWP0eX2lGCL8zDxlgg2f80CF43LJXxNQpXgYEknJlf06eJ3zT7mFqAJ3tp0Gh
-	 EKIvIaeV11cOw==
+	b=Am99GuzugEXEGKdYWpGTFUnad0juU6nu+26yvJnFVwNkXewOGrqZ9feyjK2lAL26o
+	 mnFu1LteFxEr5sX8u+yMpYrb21tdvlmPHIyIeq+Q1lQIyvcuQV4iIs9cBvRQ7exD3l
+	 5OvAJ1NCjIB2Ma9rXEJODkMc9TpZRcs3wWvAcrI5fQFfB9aZ6Qd5Rscj1IIbPZJjsk
+	 5HWe+f2RZnjhXsAyMHWEpK3j9HvWzYzTxMjMqfcdJGh9VXSSSYAYNJXBvlQYkhMla7
+	 97I+jb4fZCh/VYMc6WoqTNAhPxJnYzXJtBrWU309H8nCayl4UtXYBkts6mzaIpmn2R
+	 AoqrEye6Oo1mw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 08/10] ata: ahci: Disallow LPM policy control if not supported
-Date: Tue,  1 Jul 2025 21:53:19 +0900
-Message-ID: <20250701125321.69496-9-dlemoal@kernel.org>
+Subject: [PATCH v3 10/10] ata: libata_eh: Add debug messages to ata_eh_link_set_lpm()
+Date: Tue,  1 Jul 2025 21:53:21 +0900
+Message-ID: <20250701125321.69496-11-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.50.0
 In-Reply-To: <20250701125321.69496-1-dlemoal@kernel.org>
 References: <20250701125321.69496-1-dlemoal@kernel.org>
@@ -43,46 +43,32 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit fa997b0576c9 ("ata: ahci: Do not enable LPM if no LPM states are
-supported by the HBA") introduced an early return in
-ahci_update_initial_lpm_policy() to ensure that the target_lpm_policy
-of ports belonging to a host that does not support the Partial, Slumber
-and DevSleep power states is unchanged and remains set to
-ATA_LPM_UNKNOWN and thus prevents the execution of
-ata_eh_link_set_lpm().
-
-However, a user or a system daemon (e.g. systemd-udevd) may still
-attempt changing the LPM policy through the sysfs
-link_power_management_policy of the host.
-
-Improve this to prevent sysfs LPM policy changes by setting the flag
-ATA_FLAG_NO_LPM for the port of such host, and initialize the port
-target_lpm_policy to ATA_LPM_MAX_POWER to guarantee that no unsupported
-low power state is being used on the port and its link.
+To facilitate field debugging of link power management related issues,
+add a debug message to ata_eh_link_set_lpm() to easily track LPM policy
+changes done from EH context, that is, during device scan and
+revalidation, error handling, and when a policy change is issued through
+a host sysfs link_power_management_policy attribute.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/ahci.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/ata/libata-eh.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a061aa3299ef..5558e9f7b85d 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1792,7 +1792,10 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
- 	if ((ap->host->flags & ATA_HOST_NO_PART) &&
- 	    (ap->host->flags & ATA_HOST_NO_SSC) &&
- 	    (ap->host->flags & ATA_HOST_NO_DEVSLP)) {
--		ata_port_dbg(ap, "no LPM states supported, not enabling LPM\n");
-+		ata_port_dbg(ap,
-+			"No LPM states supported, forcing LPM max_power\n");
-+		ap->flags |= ATA_FLAG_NO_LPM;
-+		ap->target_lpm_policy = ATA_LPM_MAX_POWER;
- 		return;
- 	}
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 7f5d13f9ca73..0f9c30f9bc1e 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2140,6 +2140,8 @@ static int ata_eh_link_set_lpm(struct ata_link *link,
+ 	if (WARN_ON_ONCE(policy == ATA_LPM_UNKNOWN))
+ 		return 0;
  
++	ata_link_dbg(link, "Set LPM policy: %d -> %d\n", old_policy, policy);
++
+ 	/*
+ 	 * DIPM is enabled only for ATA_LPM_MIN_POWER,
+ 	 * ATA_LPM_MIN_POWER_WITH_PARTIAL, and ATA_LPM_MED_POWER_WITH_DIPM, as
 -- 
 2.50.0
 
