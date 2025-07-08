@@ -1,37 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B7B32989BC
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CA45298258
 	for <linux-ide@vger.kernel.org>; Tue,  8 Jul 2025 07:39:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751960344; cv=none; b=nzNNRJJ2jAJoV6bYEhgWA2UnwYYZw80FwMbwD/pSw+8BR0gkCgIsUs+KNsvRbRQACPEH2WKSC2yxzDpsfDdyn/eQykRNfMBf/d5Z9XDgBDzekc1dzw+MiS1mCO/p6itJ5zssEESrTjIcqA9nQkyEUn1UzcETzmBo6pUoHP7OoVA=
+	t=1751960345; cv=none; b=tcyIvHsV2eU7hRYGaLczga0Sy/ZG402mEomJD7SmG0zVOOqhviewvgsUTXGU4F9nCs/pqI6XuL0bHnAmzBdXze909e3T8WSow5o+tNgcdwMDZF0jeAA0keXYR3fsa3PdGqlRrlFSpFA9KFqAxvLyPFivUEk9FIYrHitxHIygN1s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751960344; c=relaxed/simple;
-	bh=UsUVi/hAqfvkf2vUcGN4PTLNycMc9pyfUZ/AR6h6+pk=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=pms2q0GJsMeWBXVIw/8Jwn1rXOqwEE8RIlzfOxeCZbxKGCDDb6Sg9Y/WztHln7sbuzHgOrw4R6a6SZ5Yg4iExTdTexh0RV/uDNp+cBUn5hECKNCc4mOa8JJOeWV2PMwGPsjA0XAQ0WlotARHCC8IsmUcc/X+H1NklCepB3vv9b4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YMy4lOiU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751960345; c=relaxed/simple;
+	bh=TXl63IqT0lmlOiBhczZtvI/Jx/6HS+vx2wmfv/xxGf0=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=L1Vc++ItKNBzJkzAtcJu30Vki6rE1+Dj55Ewq3e9nvz1c4EQFpG5CzcG2XCexFWBf0zXLKqJD8nbJreVn6kzsbwY9ZOJuIaLIjPQbxorpT9/PbX738uTjZ5BVX7VzfeBP2Z6phJnHR9WMa8ITtZDsVgyNtinsdqhRyuLItDdw3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VnPhlzYg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YMy4lOiU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D428DC4CEED;
-	Tue,  8 Jul 2025 07:39:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VnPhlzYg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83BA8C4CEF0;
+	Tue,  8 Jul 2025 07:39:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1751960344;
-	bh=UsUVi/hAqfvkf2vUcGN4PTLNycMc9pyfUZ/AR6h6+pk=;
-	h=From:To:Subject:Date:From;
-	b=YMy4lOiUh2oB0wvGt5S4HAz2gOaO4tQERtTRT5eOO8qkzkwWW1kyEzgDHuvMTlnBd
-	 9FPRB7ysrJim2qaVif0xjFu3h7G+lWAhllXq/XfmE0qBZYYhmWhssCE+cFxIp8S122
-	 AJDcj15MMN8wI37XSohDp2i7lbqZmlOO1Zi6AlhoC1Tr43FCFkqSyd9Ptr2gsI6YCb
-	 U7FtR4szxgBKMbgJCWVDzgbWnJIVeRnfSY6N5lk66dCjcurkv7SUDqYVnKXTIVAqgN
-	 VbUY+PIDS4dq742vsOnZAjnqlyCsivfuSL0M0TgdgbXOzMuAaOZaibYZBl0/fpewrm
-	 9/db2ioKtTvxQ==
+	bh=TXl63IqT0lmlOiBhczZtvI/Jx/6HS+vx2wmfv/xxGf0=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=VnPhlzYgsr5Rff1ojm4EA36e43DrUV1RXS8P/v9LRdFyorZrQfsz4OEHrIKPLdq0k
+	 l+LInQiv2gddXY3c22SfIXJ9RvX2453NWE+iHhVHV97EJ6ZY/J42SsfdvrLv/+DvEU
+	 +H6HIPiz9E2I9rhiyBFE9GUUUHuuzivIbwL5EKXOOkvhrTxJKprSXLS0Q7YMP1s5K+
+	 jDV43yb68w5+xfdCTijJdKPNk5MBuE/vCUUvvgyzQaEDUKXPyuxCBr+Yhuohpcwr8w
+	 QIpcfry9h3QEWtMckKKCCSWrsWoeuyfbbrSFqepHPqyHJokLg+AXcKo9tEd6rkpdZq
+	 iLdV2ODAQX8sw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v2 0/3] libata-eh cleanups
-Date: Tue,  8 Jul 2025 16:36:45 +0900
-Message-ID: <20250708073648.45171-1-dlemoal@kernel.org>
+Subject: [PATCH v2 1/3] ata: libata-eh: Make ata_eh_followup_srst_needed() return a bool
+Date: Tue,  8 Jul 2025 16:36:46 +0900
+Message-ID: <20250708073648.45171-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.50.0
+In-Reply-To: <20250708073648.45171-1-dlemoal@kernel.org>
+References: <20250708073648.45171-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -40,24 +43,41 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-3 patches to cleanup libata-eh code and its documentation.
-No functional changes are introduced.
+ata_eh_followup_srst_needed() returns an integer used as a boolean. So
+change this function to return that type.
 
-Changes from v1:
- - Correct compilation error when CONFIG_ATA_SFF is not enabled by
-   defining a stub for sata_sff_hardreset().
+No functional changes.
 
-Damien Le Moal (3):
-  ata: libata-eh: Make ata_eh_followup_srst_needed() return a bool
-  ata: libata-eh: Remove ata_do_eh()
-  Documentation: driver-api: Update libata error handler information
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-eh.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- Documentation/driver-api/libata.rst | 21 ++++++-----
- drivers/ata/libata-eh.c             | 56 ++++++++++-------------------
- drivers/ata/libata-sff.c            | 10 +-----
- include/linux/libata.h              | 11 ++++--
- 4 files changed, 39 insertions(+), 59 deletions(-)
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 42aafb1ddb5a..436536112043 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2781,15 +2781,15 @@ static int ata_do_reset(struct ata_link *link, ata_reset_fn_t reset,
+ 	return reset(link, classes, deadline);
+ }
+ 
+-static int ata_eh_followup_srst_needed(struct ata_link *link, int rc)
++static bool ata_eh_followup_srst_needed(struct ata_link *link, int rc)
+ {
+ 	if ((link->flags & ATA_LFLAG_NO_SRST) || ata_link_offline(link))
+-		return 0;
++		return false;
+ 	if (rc == -EAGAIN)
+-		return 1;
++		return true;
+ 	if (sata_pmp_supported(link->ap) && ata_is_host_link(link))
+-		return 1;
+-	return 0;
++		return true;
++	return false;
+ }
+ 
+ int ata_eh_reset(struct ata_link *link, int classify,
 -- 
 2.50.0
 
