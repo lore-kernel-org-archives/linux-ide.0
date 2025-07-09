@@ -1,65 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DD9BE4A;
-	Wed,  9 Jul 2025 13:47:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A02E272E7C;
+	Wed,  9 Jul 2025 13:49:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752068876; cv=none; b=qdp8poB44RrxYwpZWfcU+o1Ll5deygu+qNnTZeuHKuO3IeZOCCbkc6068m56UJcaSxbn9jTLt9LMVmkODibOCQHe6vEYreFCH3g0ShVDasMn7ONbu+iwCxyfwWm1uZEhqUyoiLBDiwvjGOxvA2gXZubZVqcraut/AjOTionjN/w=
+	t=1752068981; cv=none; b=Ijmsb4uJBKprg//U2QeuUdrsBjq9KIaJnL3UhXm/m3d5Deo9uBk42xM8BqQNHzrsowdwf7NHuLv8uUFHBkHiSCszkpUg6SEsNitP3ZrWro95mxb80V1a6pxCLPmjDRr+6cTnbjqspiNhbkx6DDcz5gazMnrdT7Xaf6JEEEmmLNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752068876; c=relaxed/simple;
-	bh=cwQR1JJ8J9ylqx91mKqrQiGKbvgAcWxX2rgGhJsPHsI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QUj0TR+1VtfMFWhT7OSfzJTOZvpQJKhqFHK6zH3l6fORPpTn7cyUkERgRvUIW1OvB/j/mgmzMUzEyO70Cm1Lu0Qq85/BwMoc0uSG8HzceyQkU6vLAVwL0O288Z0XWwISVaeEY/R+LPR4HFxLIPnK/DXXI9qB7e7wKoYUI2GwunE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YqbKgTBa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752068981; c=relaxed/simple;
+	bh=aCprawoDSLPBBi2Eo9Ssh/Z6RI7VTvcZxxrfDFZi8cE=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=tjKOwq6fiQsLt+38bNzb5W1cZZYVsR9qePgOhxKbQnlkk/8LWXfKino2v5LCyLiFt3gBLBx5Iw2isJ9EGiAEqJruJL9NVce9T1y7zBLXfehBtHz8Owfa+kPd7Jdvbw+sN//XAsK9FMyDtNLESuCXbgkIcZA52VSFV7up8DwQhsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OvPiI1RO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YqbKgTBa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2300EC4CEEF;
-	Wed,  9 Jul 2025 13:47:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OvPiI1RO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14479C4CEF1;
+	Wed,  9 Jul 2025 13:49:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752068876;
-	bh=cwQR1JJ8J9ylqx91mKqrQiGKbvgAcWxX2rgGhJsPHsI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YqbKgTBahsrYfRZ/3EXvyQSgufj0K7HkfrN0kwNpshRxqSVkFM2/8v83fosJKySfU
-	 PlwIcfzFGVYuQXo+rpBmDclm+uwSxNZn/M84+ij6CeKLyj0deHry89k2yKw+bdfBkt
-	 RJyTlRjQVVNmrNzlxm+QkWmkanNzIt01tfIEFyXOd51HOfqAqMnmjl6wE4l6CR+Sm/
-	 jsGy1IkHd2xTUJFRO5ej/sZSs6VZRDou5qQJzTWb0T6+tFAuHe5eailw4H1umiA/Kw
-	 qURf9JtC/WSkI43cfCySUtEqzgJvf1ghfaTz3SFqgxTCT87xr03HXSDwbd4sovu8qn
-	 weEi6WxgsDAAw==
-Date: Wed, 9 Jul 2025 15:47:52 +0200
+	s=k20201202; t=1752068981;
+	bh=aCprawoDSLPBBi2Eo9Ssh/Z6RI7VTvcZxxrfDFZi8cE=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=OvPiI1ROrxSnV3OQKbl6bBg8FyQswwjy22V8EFUUMFal1NUz1TcTSNIr2f1mePF5r
+	 wear7KgcqE2Uwbh4z+GVj+AJcdZEi7d5S/bUJJEC2Cc4Q9Tu+n6hVVHFO5p50093PC
+	 TgD1baifyxJ5LU6WgcwZ1MZc6uIlnsfeF+zdJ22naA5csKq2TR+G38G1Y60n7UqLRk
+	 1qvl2j7zqU+uD/aNh5vHoCNl5NqemBjr1Log2xa3R93OiuPuPX+BToXQB24RIhIDUI
+	 jAEN1LiI0lQFS72iDpnk2+WoYmjYCncUwPFlKVXDNCUtDUri7HOPFxmcJAG+rbfuEp
+	 w5gTMYXNDDr7A==
 From: Niklas Cassel <cassel@kernel.org>
-To: Jonathan Velez <jonvelez12345@gmail.com>
-Cc: dlemoal@kernel.org, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, shuah@kernel.org
-Subject: Re: [PATCH] ata: libata-transport: replace scnprintf with sysfs_emit
- for simple attributes
-Message-ID: <aG5zCBjpOuwFs5mh@ryzen>
+To: dlemoal@kernel.org, Jonathan Velez <jonvelez12345@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
+ shuah@kernel.org
+In-Reply-To: <20250709133330.3546-1-jonvelez12345@gmail.com>
 References: <20250709133330.3546-1-jonvelez12345@gmail.com>
+Subject: Re: [PATCH] ata: libata-transport: replace scnprintf with
+ sysfs_emit for simple attributes
+Message-Id: <175206897980.965177.5326786325935383585.b4-ty@kernel.org>
+Date: Wed, 09 Jul 2025 15:49:39 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250709133330.3546-1-jonvelez12345@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-Hello Jonathan,
-
-You forgot to use -v 2 to git format-patch (so that v2 is in the subject),
-and you forgot to add a changelog (changes since v1) after the '---'.
-
-No need to resend, but until next time.
-
-Thank you for your contribution.
-
-
-Kind regards,
-Niklas
-
-
-On Wed, Jul 09, 2025 at 01:33:30PM +0000, Jonathan Velez wrote:
+On Wed, 09 Jul 2025 13:33:30 +0000, Jonathan Velez wrote:
 > sprintf, snprintf, and scnprintf do not consider the PAGE_SIZE maximum
 > of the temporary buffer used for outputting sysfs content and they may
 > overrun the PAGE_SIZE buffer length.
@@ -67,37 +54,13 @@ On Wed, Jul 09, 2025 at 01:33:30PM +0000, Jonathan Velez wrote:
 > To avoid output defects with the ATA transport class simple attributes,
 > use sysfs_emit instead of scnprintf().
 > 
-> This aligns with the sysfs guidance provided in
-> Documentation/filesystems/sysfs.rst.
-> 
-> Signed-off-by: Jonathan Velez <jonvelez12345@gmail.com>
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  drivers/ata/libata-transport.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-> index e898be49df6b..62415fe67a11 100644
-> --- a/drivers/ata/libata-transport.c
-> +++ b/drivers/ata/libata-transport.c
-> @@ -202,7 +202,7 @@ show_ata_port_##name(struct device *dev,				\
->  {									\
->  	struct ata_port *ap = transport_class_to_port(dev);		\
->  									\
-> -	return scnprintf(buf, 20, format_string, cast ap->field);	\
-> +	return sysfs_emit(buf, format_string, cast ap->field);	        \
->  }
->  
->  #define ata_port_simple_attr(field, name, format_string, type)		\
-> @@ -389,7 +389,7 @@ show_ata_dev_##field(struct device *dev,				\
->  {									\
->  	struct ata_device *ata_dev = transport_class_to_dev(dev);	\
->  									\
-> -	return scnprintf(buf, 20, format_string, cast ata_dev->field);	\
-> +	return sysfs_emit(buf, format_string, cast ata_dev->field);	\
->  }
->  
->  #define ata_dev_simple_attr(field, format_string, type)		\
-> -- 
-> 2.43.0
-> 
+> [...]
+
+Applied to libata/linux.git (for-6.17), thanks!
+
+[1/1] ata: libata-transport: replace scnprintf with sysfs_emit for simple attributes
+      https://git.kernel.org/libata/linux/c/48925ba7
+
+Kind regards,
+Niklas
+
