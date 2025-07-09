@@ -1,120 +1,118 @@
-Received: from mail-oo1-f53.google.com (mail-oo1-f53.google.com [209.85.161.53])
+Received: from mail-vk1-f172.google.com (mail-vk1-f172.google.com [209.85.221.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1563317597;
-	Wed,  9 Jul 2025 13:16:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7881B283FF0;
+	Wed,  9 Jul 2025 13:33:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752067021; cv=none; b=K2S85TE7QhHZBEEulXAgRjVBUMMT5/GqGQTuNIjzitLM1F5XfzryQVXWw24J+i/gKUq6MZF+vChed4S6dtzmpdo4g48iZVMAkW6LwpJqupPegQp5+2Z/BJvnbhgEpmrtNbyuXDU9ngS3wyW2dGGFpp1JZs333CVNIacc39eo2kI=
+	t=1752068025; cv=none; b=fQ1sQkMwUwZDk26poKHq7yqUn+kzHeuDh2ehWGPfZ1gADCB6tU4mWE1cGpQ1gr7LPaVH9H+Smc4PLgSKCpfA/3aUs0hryfXBG8RajgxwnW5bo0LXQ8chzqGlVNSejuUo3dcBD930l0aaA1Qtf/VhUgp25pQWxqAbUL6TUqVz8OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752067021; c=relaxed/simple;
-	bh=x3fpg8Dy0RVxmKLMGgruVGhPxehPiWOmCjuuXiZBKcs=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=jYqiO97zZtknrCrpzlp3AR8FaSMdujvCpkdP5rdZBcQIQc/NdzVu4Mlkc0KIHd7hERW0nMa9Z5UrG8npraK4or5BwF8j/g32rGgnOzEmlbhOxbTZ2AbDTYzScMJzzad/T7qaPtkWkklSgU16Bn/Rg+tpQVAUB8W13KJ+r885NPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nHFhTYuI; arc=none smtp.client-ip=209.85.161.53
+	s=arc-20240116; t=1752068025; c=relaxed/simple;
+	bh=QJlrR7trKt+k0DHfB1l8dMYaqpFemIJMJjy9PZjYhGI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mJwy5Fq5q91ICtg2E8Kq5avOTaEyal03KQ0MoGGNSvIdjuhywib2F89sBdziSVsMoOCP9NUhLO67m88eS3NuIYGuucJx1qXKAoWdbKyj3vZu/XbHZmr+jsH0VcEcBsXfN+mopXzgxdfXb4gCPHrbu2+O2CUYB93MngcDePVEJxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KRh/Pyeh; arc=none smtp.client-ip=209.85.221.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nHFhTYuI"
-Received: by mail-oo1-f53.google.com with SMTP id 006d021491bc7-611a7c617b4so1563266eaf.3;
-        Wed, 09 Jul 2025 06:16:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KRh/Pyeh"
+Received: by mail-vk1-f172.google.com with SMTP id 71dfb90a1353d-5314b486207so1996732e0c.2;
+        Wed, 09 Jul 2025 06:33:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752067019; x=1752671819; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=x3fpg8Dy0RVxmKLMGgruVGhPxehPiWOmCjuuXiZBKcs=;
-        b=nHFhTYuIk9kuUIzIJd61GvsohBJ/dQogCzSny4iosn658r8EKwDLQ3dqOu9wwQhq6A
-         BUeJoPexejs+oVRRDTeVjniO4D0nuVwT/YNLOAlMzzl4WjJ4ASY6At/rYdZP/1pOAEAF
-         0EzIHFaMNCqOXGLnqLFnc9yNfadwVjLPktjrDiXdRamHBOso7zEL3TBQueyAA504Dqg4
-         FvWzn37Rk6FTkMvo9qqvbHkLBgO9rNdMnh4qkzuReW1dKkn6a9anCwbJpOyaUifih6Uw
-         iFYf4NcNcGuSXLnt1iwdoNL+CYIYjoaT8MPVSXS0XyApImNyF80i+JZLIQaM3K1arG9q
-         Dwug==
+        d=gmail.com; s=20230601; t=1752068022; x=1752672822; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=8p8Y7xoNQwZAIw4F7Fb5uJJ11m4t3+5eBeshCHSxAZc=;
+        b=KRh/PyehWmz30JkkF3eP7KA+0F0azrF4lR+0lUV4un3JclqIvsjIx5ySw3bc92PInt
+         qNgynzQ0aZNW9COWGJoko3CVhBTCS98s9OHuIimE9D3I7Q0o1LqxRa4gAa/yux4N6/G4
+         dErG7LsBGUZW29XUhx3kZZFmKcgMuywhD/XMGmGun/1MMmDNbhYt+eFyoyswm2oxRDcO
+         YsUznaxx4ZgpAveftX8eFmJSGm+q+mXH5mv5aqP7gwp99ba0I/lU6ROgR/LYCfoefm8m
+         d1PIvC04AiSoWZ8M/QWnVWaAcEtiBmB7DOARVObEj8mRQUDhbp702+4eQzwt4KfK9baV
+         xDdw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752067019; x=1752671819;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=x3fpg8Dy0RVxmKLMGgruVGhPxehPiWOmCjuuXiZBKcs=;
-        b=JHzMWqdV1uqJyj/h9tTX0jHM2fBQnZUBdhZSH0RvbCmbEkH2qB9ki7vZ+QsCz/7PVQ
-         3JoQf4mqYoCHJRInF/PkfOjiorwiwRFG+V/K94ukUbaGn8uh/Iqm6lxtYI9ThWXebbnL
-         1apy7EJfJGSOrk5UD1AT5yehJRKB+V1bkUetgQd4ke4Ul4u1ykkctluz2ZxW1dvcyqbL
-         IA4TX9pFj43Ncw28VTCj02HrHrEP3s0S0Yq4h46jQHijQvXLZufh9/MNrh9lSp3Di73l
-         g4vMhm4PLARci3NngPS8quJX3hIWxS6LggcIyk5y7fddGNsP5mnFPdFp1Ye+0OeVIzDs
-         l4lg==
-X-Forwarded-Encrypted: i=1; AJvYcCUTSSoW0EV2dBDUB45DLSbNhhawT6wGcISeebAGjPfryULIqIeyeAMI1EyfOmU1uc+xus4ZSAFhgKk=@vger.kernel.org, AJvYcCV7FAPe9Qp/eTRRIwxAH04FoLYzg9lnX5GCMrqI3Xvkprjd5hYy/oln+6OTf/LK6XntYWxQ8gSqntXr45JO@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywc97X+Jg0NUOotBaXlTZ+J/JonHftPU8nVxlN6c6qUOKtvRf7d
-	qln4LhIxVOqgWcQJ6V+PHdEGj6lc6dc0DNQAWrGqr1o28RICyQqar0qcj6+IupLs
-X-Gm-Gg: ASbGncttLKnoCqMBDKsFmeOWKu/g5aqTfm+dHqgzfxs+LGpqyFc0FKEeGRCWs90zWek
-	/FPEqUdJOkRAxqPgzlxmXgWIoBfQ5NC7mT4HwU4T0BZ/qTGSZwRpWtsEao5cXbgCJ0loWABAgvE
-	1ibpqslZjswBptdwHFOyVmGcJIEQJiZ1LCXGr872TQVgKwAAjnde+OTbWnqIxZjMu4Av7VfA3pb
-	K4bQDXDhoQVN9gT2pVn2ZC6XtKm2lI/rZViBrIEHrMQJzwdOxRlVWegYKlpy2rOtH/kfpJdtjQz
-	/5+VmsYOnGJsUUWLst8AYGtkbMVgKTDrRDOh8GMkf/RW2VSYfKtzbvfUj25ogOb8KwLZ+JcsYLL
-	ZLkuSCdwXx1QDOmOhB7bdOJMxlB8ZuQxWpHtuu5AfjkqALBYN9sUftXAD6MNmdmpr2OtAFsTYlf
-	an4RWs3Gom0sjxd3Q=
-X-Google-Smtp-Source: AGHT+IH/RpYL3SC5w8Weg0tSS5V8y5e2CZRdslX6oLO4e/F9GZ6xWFR9aq84ebIrVHVBKdU4GLZ12Q==
-X-Received: by 2002:a05:6870:e08f:b0:2c1:4146:c556 with SMTP id 586e51a60fabf-2fef87a8124mr1865603fac.31.1752067018597;
-        Wed, 09 Jul 2025 06:16:58 -0700 (PDT)
-Received: from smtpclient.apple (2603-9000-d600-0325-1c69-8e34-714e-4b84.inf6.spectrum.com. [2603:9000:d600:325:1c69:8e34:714e:4b84])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-53478ebcfcdsm2091515e0c.19.2025.07.09.06.16.57
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 09 Jul 2025 06:16:58 -0700 (PDT)
-Content-Type: text/plain;
-	charset=utf-8
+        d=1e100.net; s=20230601; t=1752068022; x=1752672822;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8p8Y7xoNQwZAIw4F7Fb5uJJ11m4t3+5eBeshCHSxAZc=;
+        b=pgtZfCPMW8NFwJvObHXlDzIICYBj9EcUevA8gst/mUsoXU4hOTwMAjV5uUJnGU0CVU
+         q5h+UTLi95zceOmKTUeKy6J/T+/69C94KwO4TLJlNE5IXm2gWK+rDbTTeSPXaf7e9SHc
+         NwXscjBHy4Pl8NTm/njU/map+LWdnumm6DcUICPMRSgbp/4DA7EyRrgHeyG8neqMQBKu
+         ON1/lM6RqT89sACUpnaOGkfVTh/yacsOB4RphKpaLJMSqXFY9hUkNrVreseP4WOecUlX
+         hdsStEWVE/RPVDpXlK95zX2d0cbcgoIiwFTifPgY6mjzK3kPwMS38z5acyRQHbshb7iw
+         SVnQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVn1XBiXI1dqrnEVoAEk6aFz+coSTCfDJIXeN/W+zUENh3q633YXMQV/5CNvOaCw8jAT18ChV5XYvE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxlgzF+uMR5q0B6u1sTUDB/XJU5XrrOeoslRQ+ykr5xXNtS+o4x
+	Z7lHf6nLjAIovitjQYro99IwQRpE+m3+IzGWLNcRsctOmfdJli9mq8vz
+X-Gm-Gg: ASbGncvIuI2MdrlxmhBhvTul4EBNQ4zgyUUvD6KG6k0AUZb6+tk87ZqUr21VBgsTWHm
+	aD3oypo+Mzv411Zj1iVdzMeqax5RxJhT7Lnuj0q8X7PnorNirglQPXLhkFA563dN7vRUCt2Hiq9
+	F3IKGesIuGBvNT9/b9NNKyxbpaizA0nW7SlJ850P/fYxmuWop3oqgEm/FrBOGJ9eXXHuzJN09T2
+	ETUdGqx+DhllzIcdKd0zPsW+IhfKKSxPb7JAB+7/4g/Jm21UliouniU2h7TmJzugIlSbJdsnbCJ
+	S4r6SNtBy2Xj7MR2whYzRChxh6mmr4sl2P+nr8D3aElGyhzhC82ZTen8R9ti0tQKB7YATKmrZjt
+	WroIaDVvMY7ognMRZrmc4NQqgAblPys+uvLP1j3c=
+X-Google-Smtp-Source: AGHT+IHg9yphXawKg0kB+fw0hzH8WzGI686ZA2Hcr8oBVBE+CGD925dBJEbvwISlK1VPKVP3JKW+Qg==
+X-Received: by 2002:a05:6122:510:b0:52f:47de:3700 with SMTP id 71dfb90a1353d-535d7367703mr1472242e0c.5.1752068022077;
+        Wed, 09 Jul 2025 06:33:42 -0700 (PDT)
+Received: from Ubuntu.. (syn-097-097-020-058.res.spectrum.com. [97.97.20.58])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-534790ed831sm2083240e0c.43.2025.07.09.06.33.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Jul 2025 06:33:41 -0700 (PDT)
+From: Jonathan Velez <jonvelez12345@gmail.com>
+To: dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	shuah@kernel.org,
+	Jonathan Velez <jonvelez12345@gmail.com>
+Subject: [PATCH] ata: libata-transport: replace scnprintf with sysfs_emit for simple attributes
+Date: Wed,  9 Jul 2025 13:33:30 +0000
+Message-ID: <20250709133330.3546-1-jonvelez12345@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.10\))
-Subject: Re: [PATCH] ata: libata-transport: replace scnprintf with sysfs_emit
- for simple attributes
-From: Jonathan Velez <jonvelez12345@gmail.com>
-In-Reply-To: <5331758a-528b-42bc-b57a-5735a8b6e4f8@kernel.org>
-Date: Wed, 9 Jul 2025 09:16:56 -0400
-Cc: cassel@kernel.org,
- linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- shuah@kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <2E579B6D-4398-479F-8E18-31E8AEFBFB2A@gmail.com>
-References: <20250707122004.224770-1-jonvelez12345@gmail.com>
- <5331758a-528b-42bc-b57a-5735a8b6e4f8@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-X-Mailer: Apple Mail (2.3696.120.41.1.10)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
+sprintf, snprintf, and scnprintf do not consider the PAGE_SIZE maximum
+of the temporary buffer used for outputting sysfs content and they may
+overrun the PAGE_SIZE buffer length.
 
+To avoid output defects with the ATA transport class simple attributes,
+use sysfs_emit instead of scnprintf().
 
-> On Jul 7, 2025, at 9:15 PM, Damien Le Moal <dlemoal@kernel.org> wrote:
->=20
-> On 7/7/25 9:20 PM, Jonathan Velez wrote:
->> sprintf, snprintf, and scnprintf do not consider the PAGE_SIZE =
-maximum
->> of the temporary buffer used for outputting sysfs content and they =
-may
->> overrun the PAGE_SIZE buffer length.
->>=20
->> To avoid output defects with the ATA transport class simple =
-attributes,
->> scnprintf() was converted to sysfs_emit(). This aligns with the sysfs
->> guidance provided in Documentation/filesystems/sysfs.rst.
->=20
-> Nit: please use assertive style (no past tense/passive form)
->=20
-> To avoid output defects with the ATA transport class simple =
-attributes,
-> use sysfs_emit instead of scnprintf().
-I will amend the commit message and submit V2 of the patch.
->=20
->>=20
->> Signed-off-by: Jonathan Velez <jonvelez12345@gmail.com>
->=20
-> Otherwise, looks good.
->=20
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Thank you, I=E2=80=99m considering reviewing the rest of the =
-libata-transport.c module for similar updates. Thoughts?
-> --=20
-> Damien Le Moal
-> Western Digital Research
+This aligns with the sysfs guidance provided in
+Documentation/filesystems/sysfs.rst.
+
+Signed-off-by: Jonathan Velez <jonvelez12345@gmail.com>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-transport.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index e898be49df6b..62415fe67a11 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -202,7 +202,7 @@ show_ata_port_##name(struct device *dev,				\
+ {									\
+ 	struct ata_port *ap = transport_class_to_port(dev);		\
+ 									\
+-	return scnprintf(buf, 20, format_string, cast ap->field);	\
++	return sysfs_emit(buf, format_string, cast ap->field);	        \
+ }
+ 
+ #define ata_port_simple_attr(field, name, format_string, type)		\
+@@ -389,7 +389,7 @@ show_ata_dev_##field(struct device *dev,				\
+ {									\
+ 	struct ata_device *ata_dev = transport_class_to_dev(dev);	\
+ 									\
+-	return scnprintf(buf, 20, format_string, cast ata_dev->field);	\
++	return sysfs_emit(buf, format_string, cast ata_dev->field);	\
+ }
+ 
+ #define ata_dev_simple_attr(field, format_string, type)		\
+-- 
+2.43.0
 
