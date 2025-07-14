@@ -1,70 +1,43 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FF173D76;
-	Mon, 14 Jul 2025 07:28:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCDD52E3707;
+	Mon, 14 Jul 2025 07:56:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752478132; cv=none; b=aomytcRmztf3RFInQHdKKaFrVcpTYMmDyL5ueVH+m9ZhRuY2atBWX+X3aG7Rm6cnRDCAQ+xUk28iO3SRoMsX1T90He9uv+pnQ7vYDaoFT5spwmscL4ptDnHJDqNlEQ6uhJJ93sYdGPOgFqkRgBwB+7pHLzvWBsS5RjNMkpw5Aic=
+	t=1752479798; cv=none; b=ETvM7BY61MLZLXjFhYDUrZj/GO42PPz5eXiz4TQoeY0zzpWAhVSdj15/NLBKyxkQjcg1eO4Pns62xdiFJHmDsyTirZlxq26vYoV/JnNa7cx10Qk663BdZ5Hmh9WcMWeLUuMU3srRys9diDAIbH2S9K4rFNRotQVl0Mqn6TMSZ7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752478132; c=relaxed/simple;
-	bh=mcIeN26mW2QOCg36HqShkkGX0SI7BYu0b6H25sH1JrA=;
+	s=arc-20240116; t=1752479798; c=relaxed/simple;
+	bh=pS+IyBVHXRGrL+UhKGBYuMctr3AMVlPFFDs/06qNKkE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GVipo24KzzvWuqBx1jDbHiUTUJzg50nXLwygsE6ZptFuJi2Xxk6o2Ax/KLD3B8hANBWQYptjh4jo+GrCs1JCRamnOTBUUYgoNv3bW201U9J2A/r6rBBuV/+ntfFkSD+1y+v+2AWeCL2xMq5j7ZlWcJ0/fWY2pfGwK6rQ3fjhTIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flawful.org; spf=pass smtp.mailfrom=gmail.com; dkim=pass (1024-bit key) header.d=flawful.org header.i=@flawful.org header.b=JFJ0Bhc8; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flawful.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=G9uOGYGwbJ1cKVBlr3Yli1DB2+Rss1dmJUImO2z+lzko+pq2MToyBDL2th2BeJ2RGdcIEEQs9QbA1c7e/zwX53BlVdGnfmAg8YAPqd0W/vELWgLBa4s6kcWBmqS/ARCNrpwCFbkm4HaqsyQG/rAV2AufnZTxShaWSCpN2sh7YEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YG+uelsq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flawful.org header.i=@flawful.org header.b="JFJ0Bhc8"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-553b60de463so3849518e87.3;
-        Mon, 14 Jul 2025 00:28:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752478128; x=1753082928;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:dkim-signature:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=f2VNptzwv2bPiplAojd0riBXktnKtc+U1EZ4E1NYtxE=;
-        b=pM/doVMIY4KlznyLvG8COcjDufeHo2xlr7N85XndCHh7iLXa7Zqf6FNgKkGgxBJkac
-         /Jqp/XjE0TEHhPHoAfHDq1mBJsDbq4BqfW0olK1GKKb7g/NMCh3GMXaDm6YoQeFJK6bJ
-         UHPoFr2+8GmoxjwTImM8TUKi1lNw18axbX3COvDcReL/aWHHyspwgpPUnUUghGOzZO8k
-         jTdScGkBmMZLRTms6I4v2fFMHT3IlkvdXB+GEnUdKCIeiEFgS5bwXhD6R27GL7YaJJmd
-         MZMBcHpX/uIsGjlmfVh85paCLDhPX2kEDWJO1/zbCjicObAnMshAhdWeu5B6e6dvuDQN
-         KILg==
-X-Forwarded-Encrypted: i=1; AJvYcCWO4+TbiYlidPfSaR+kEAPae5vExxmiRHaI7ndN28+zLVchHdmIKXNVKaL1qcJ/a5FWkyh9rwEU/fY=@vger.kernel.org, AJvYcCXoJr8ucP2cZDnR0NEUuPUzBzdI4XCJshUVZ6L7s2F/wvwxqoECHJNnLylCdM5lNKAiwWqaVWChKZfO4BcN@vger.kernel.org
-X-Gm-Message-State: AOJu0YyqmQiNa/lXuvcc6If+BJvgGYxKXvN0Ocqh7AOvrSeOOZKKlPZj
-	RtYCLGuemPAQ5ljHNaWveMIhRzRzfB2iEGoHjtph9k1/IXC6hhrr59d11yUjCApR0CQ=
-X-Gm-Gg: ASbGncunrlaITiD8xIERp8WvjYq8fHolMLQzgYasdIIRafpTUpXb+XWYEuGdaxZqSzq
-	71iuX56kiH4UjOe19U4n4cbspycR3Tti+oS6dn+3inVV6nITouwpJAPaxvdetU3tdrf8D85m+v0
-	TwSWUE/LNLKWJoVnqF4roRfFKN0A5rEDBT9dcZ8SjisdgoAi0tZC3hOk/h8QbUoYaHe3KGKo/NJ
-	jstPrxGvXUqsSjdb1SYsJn6tZaDmb13wC3mbAp/jN7zjZD/dxKr9e4MrT5+qiAtgf7ObaOMuo90
-	t5qqw+ydGxt0O0imaF8qr288tu8lP9wcHsHix7Y2B1QNg5FhjUoUdnL+QR3yJE5R8djMd7GIhri
-	52e/6/wTwLDSV0x/tuMEw6Rje4DPnSTt2W7Kk+q3aDRkmhX2FKJc=
-X-Google-Smtp-Source: AGHT+IFk3O9vkoMK0ual1K0OKlq4gSNWgzsMAGkIHDMAlkS86/lMzIvTztWLdeBgbxoYovoW4dLkTw==
-X-Received: by 2002:a05:6512:33d6:b0:554:f74b:78ae with SMTP id 2adb3069b0e04-55a0462c4c8mr3455107e87.31.1752478127937;
-        Mon, 14 Jul 2025 00:28:47 -0700 (PDT)
-Received: from flawful.org (c-85-226-250-50.bbcust.telenor.se. [85.226.250.50])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5593c7bb444sm1879287e87.7.2025.07.14.00.28.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Jul 2025 00:28:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-	t=1752478126; bh=mcIeN26mW2QOCg36HqShkkGX0SI7BYu0b6H25sH1JrA=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YG+uelsq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD5B0C4CEED;
+	Mon, 14 Jul 2025 07:56:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752479798;
+	bh=pS+IyBVHXRGrL+UhKGBYuMctr3AMVlPFFDs/06qNKkE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JFJ0Bhc8bHjWrlucyV2mJX6mylGTMyRJWJJv+1rolkJQe54lfH+8DSZ1BB18Gzeec
-	 5ZMaHt1SoM3cK+9P2tO9SwhQpdekCPkPWQeO2lTk1R/eoLJ+M8h1cVd2o61CraSrz+
-	 FDLlWzhrR+G7ebD1PpJ3ofYyW9w0vrShlDHVcyXI=
-Received: by flawful.org (Postfix, from userid 1001)
-	id 2CDD82C7E; Mon, 14 Jul 2025 09:28:46 +0200 (CEST)
-Date: Mon, 14 Jul 2025 09:28:46 +0200
-From: Niklas Cassel <nks@flawful.org>
+	b=YG+uelsqG9Zxy875TjXK/h+Jslf1MbolWIBw9c530DLNo7Z+wTas7L9muV0/RQnyh
+	 t3LcbZlLc9D360doL9XEFsVBVO6GAUw/fZ+GIy1xThGePFyyaVgF9XC9wRz8fF4PCy
+	 thEIzYnA8pOlo2uSmNr36xmTW6PWSAQL8jdN6AC8qTQayESOrcQaUGkQ7DTMySljxx
+	 HKrCLEIP6DMZtW1k2FHbgN6AakL6lEJj+cZfPpLDkPorp6zRbJBYbXc75MqrhmdHSS
+	 7Yz8pEVn54OHXU8MkAWloI97dRVO0BAF7rkWHAFjOMecvMm+V420QVrsZw61/OW5D3
+	 iHfLWDka08qmA==
+Date: Mon, 14 Jul 2025 09:56:34 +0200
+From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Subject: Re: [PATCH v1 1/1] pata_rdc: Use registered definition for the RDC
- vendor
-Message-ID: <aHSxrmZ41-YOP7PW@flawful.org>
-References: <20250711113650.1475307-1-andriy.shevchenko@linux.intel.com>
- <6d0b19d8-fb1a-4a3f-9a21-7c696df880c0@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH v4 2/3] ata: libata-eh: Simplify reset operation
+ management
+Message-ID: <aHS4MmhX0W33SxL7@ryzen>
+References: <20250714005454.35802-1-dlemoal@kernel.org>
+ <20250714005454.35802-3-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -73,18 +46,57 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6d0b19d8-fb1a-4a3f-9a21-7c696df880c0@kernel.org>
+In-Reply-To: <20250714005454.35802-3-dlemoal@kernel.org>
 
-On Mon, Jul 14, 2025 at 09:32:09AM +0900, Damien Le Moal wrote:
-> On 7/11/25 8:36 PM, Andy Shevchenko wrote:
-> > Convert to PCI_VDEVICE() and use registered definition for RDC vendor
-> > from pci_ids.h.
-> > 
-> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+On Mon, Jul 14, 2025 at 09:54:53AM +0900, Damien Le Moal wrote:
+> Introduce struct ata_reset_operations to aggregate in a single structure
+> the definitions of the 4 reset methods (prereset, softreset, hardreset
+> and postreset) for a port. This new structure is used in struct ata_port
+> to define the reset methods for a regular port (reset field) and for a
+> port-multiplier port (pmp_reset field). A pointer to either of these
+> fields replaces the 4 reset method arguments passed to ata_eh_recover()
+> and ata_eh_reset().
 > 
-> Commit title needs "ata: " prefix. Niklas, can you add it when applying ?
+> The definition of the reset methods for all drivers is changed to use
+> the reset and pmp_reset fields in struct ata_port_operations.
+> 
+> A large number of files is modifed, but no functional changes are
+> introduced.
+> 
+> Suggested-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
 
-Yes :)
+(snip)
+
+> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+> index 93ebf566b54e..8de63d889a68 100644
+> --- a/drivers/ata/pata_parport/pata_parport.c
+> +++ b/drivers/ata/pata_parport/pata_parport.c
+> @@ -321,8 +321,7 @@ static void pata_parport_drain_fifo(struct ata_queued_cmd *qc)
+>  static struct ata_port_operations pata_parport_port_ops = {
+>  	.inherits		= &ata_sff_port_ops,
+>  
+> -	.softreset		= pata_parport_softreset,
+> -	.hardreset		= NULL,
+
+I think you need to add .reset.hardreset = NULL, because pata_parport_port_ops
+inherits ata_sff_port_ops, which does set hardreset, so I think this line will
+clear the pointer.
+
+
+> +	.reset.softreset	= pata_parport_softreset,
+>  
+>  	.sff_dev_select		= pata_parport_dev_select,
+>  	.sff_set_devctl		= pata_parport_set_devctl,
+
+
+Rest looks good to me:
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+
+
+Tell me if you want to fix it up when applying or if you want to send a new
+version.
 
 
 Kind regards,
