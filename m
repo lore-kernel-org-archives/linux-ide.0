@@ -1,235 +1,146 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA0C2D190C
-	for <linux-ide@vger.kernel.org>; Fri, 25 Jul 2025 09:29:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.7
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753435772; cv=fail; b=uLJaK+QGTsZG5CZYU5HwcKfTh7iJ2YY2QvTxKdpOtxutxhrFiYuUfW0PzKnbyu/i7mu447QqSOHIdw5I1jLAWpj+4FQcmGSLDSrQydHPOqFcjSaddjRxAnsW+5tb0SiHOSFmZMTF0X9zE/2msp81KfkoyXvmwbsZFGzrVqD+crY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753435772; c=relaxed/simple;
-	bh=trI/PcULIt3xFNmzopaSa5TVVfzwcsIaeHp1ja0JoAc=;
-	h=Date:From:To:CC:Subject:Message-ID:Content-Type:
-	 Content-Disposition:MIME-Version; b=UbmMpUh7oLNNghIpSv+G1oqHMnvNApJ5xIJ6lZcqqUshu2MZJwSayEv/caJuIZkoyO7rGrBsKtoUs0j4lf1mh+0Qco5J/7Cclf9vr8J/nnCUdoYvBGbacuUZnwNQX2PX+4g4kopy7sgodIC2z7y1L2wEhP+k5jXeXtBoB6WD9XA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Fk4sN7Jo; arc=fail smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24B2B2E4266
+	for <linux-ide@vger.kernel.org>; Fri, 25 Jul 2025 10:33:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1753439621; cv=none; b=Ybzef0fOXCWWA65FPfub/gB+K3pYwJm6UvJSpB/JEaKXEnzKICTTgtR1N2KWrH89Xl9DLiwyTSgyrIk1C2RNP2re9FscoUsMYmPn0f6n6Q+/vyczUptt6h9QzjPTnBR7JBcpn9FnXkqMEZe49mkXha7G6y0hfu/3gBam605Ss94=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1753439621; c=relaxed/simple;
+	bh=YP3zgdbV4rWDDNeh6M4/SahHLAfSTyA5yYPF8nAccjM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=p6GeDbElR9nbFKJYr93dInNLzoFG8sS88Gh4F3J73kmW7HuEfzbxURSG4sB0HuOHRcwtnPODhT7OUnfwAAf/KKooKx6QR1VDW8c6jWnZVA1pVWjRRrjA3JqAm+hx580dBzZwuJnGZqlRI2f0Hx3BmlDBoL77o2mqHCv0g2JT2q4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V1UI3XQ1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Fk4sN7Jo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1753435771; x=1784971771;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=trI/PcULIt3xFNmzopaSa5TVVfzwcsIaeHp1ja0JoAc=;
-  b=Fk4sN7JoQUSuAt5ymYKGvMS29O0mg9DGbLCBoZUshU4xxT+p4d/hP/eU
-   I0eGeLCGsyszmXAx15QfxzCKJxvb5NXOniHXHGNHurzo8tGeFtiMhK+Be
-   pVBWV8JMvJR3pGsLwJzUYvQ7ehyQcjwGnZspVH9+eW21sgjcnOt17Rc9j
-   5gJ6TQQIPFPbPEgNUlVRLWgD1+Hw0rPbfkDfbQ1TzYWW8nTwRk+c6LxVz
-   fvCpF5IaZfvEfy9qkTsz9Aj0xSIT1+6Saws7COai1pVJ59NsY+7NiKe1x
-   4WflX4a1azmzkEUFxqx1tZDo8pe0h9To93mSQTDacx95X4CaDYFgzMBlS
-   g==;
-X-CSE-ConnectionGUID: jzcPW2oRTk+ZzMPZkm3JcQ==
-X-CSE-MsgGUID: vKTQsIGVQlOk+aCqF3j52w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11501"; a="81207834"
-X-IronPort-AV: E=Sophos;i="6.16,339,1744095600"; 
-   d="scan'208";a="81207834"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2025 02:29:31 -0700
-X-CSE-ConnectionGUID: Ni3Wg9XoScuPzkKXlqhiKg==
-X-CSE-MsgGUID: wZJY0aNlSTO0w4BjTkV3NA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,339,1744095600"; 
-   d="scan'208";a="165326288"
-Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
-  by orviesa004.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2025 02:29:30 -0700
-Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Fri, 25 Jul 2025 02:29:30 -0700
-Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
- ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26 via Frontend Transport; Fri, 25 Jul 2025 02:29:29 -0700
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (40.107.223.77)
- by edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Fri, 25 Jul 2025 02:29:29 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=G/J6hKMiojb3apkfE8VklSUk/VC4821pPWvj9813zReTQ54vZoNfBnk81wx9WK5QrYV4OzF2v4DpBiKSa3omiCEehkg0hGxHT0SE7uKs5d6HtOgvreaK3il9u2pFoOB1XZFYAOKfNBPxSUZY/e4igeVwWmJ6AcPkGJ2a8UX762wj25e9HMT2vyEG1Cn99jfocHaIIzbfPI5YQ743MOYHYdlx3w+F0UX2WVdFXKyHoEodo4RJnmiY8bL4qOyYdMRfRRL5ydo2w1E4Rapx50zwkcWZf3rpiCrhchfub4Xowp3JYcnzC49dPymsIb7q6pbZG657INghdje5qxy3MW5CzQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GDO4AwXjDZz9iR08s+EM3DtWHUyOiC+8CbMyYRGxZ30=;
- b=hCvn+I8VJSUDPgGaRHcjBIdRZuj/6Pf9AehPJp/51xYWPCH0AOBIhqbMgd6d18vb4VLVgm5cR5Sa4hlZ9g82Gsflfw+drqVlTq3nJtKaCl3O29Xq+tmXVHLDXbzAF2QX1jxS2fjNNyqtuMKcvKqAedq25Lwgd1wpsNpt123+V3SNgL0/GiCan4n76LagH+hXpTvGj7qdpEHFpnX1ovELvnyoRUO6bP48h0IQh7RpRlps3fQ12YjmgHT4EoCVcxfhhRDq0NYk5t8WTSRt7OB4Ariy40xVkJywYhJtKL9F7MjSVudv6LuSTLyjjluHx5nacOf18onbxJrYbjp6/IOudg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from LV3PR11MB8603.namprd11.prod.outlook.com (2603:10b6:408:1b6::9)
- by PH3PPF67C992ECC.namprd11.prod.outlook.com (2603:10b6:518:1::d28) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8964.23; Fri, 25 Jul
- 2025 09:29:27 +0000
-Received: from LV3PR11MB8603.namprd11.prod.outlook.com
- ([fe80::4622:29cf:32b:7e5c]) by LV3PR11MB8603.namprd11.prod.outlook.com
- ([fe80::4622:29cf:32b:7e5c%3]) with mapi id 15.20.8943.029; Fri, 25 Jul 2025
- 09:29:26 +0000
-Date: Fri, 25 Jul 2025 17:29:18 +0800
-From: kernel test robot <oliver.sang@intel.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-CC: <oe-lkp@lists.linux.dev>, <lkp@intel.com>, Niklas Cassel
-	<cassel@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	<linux-ide@vger.kernel.org>, <oliver.sang@intel.com>
-Subject: [linux-next:master] [ata]  4edf1505b7: assertion_failure
-Message-ID: <202507251014.a5becc3b-lkp@intel.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-X-ClientProxiedBy: SI1PR02CA0005.apcprd02.prod.outlook.com
- (2603:1096:4:1f7::13) To LV3PR11MB8603.namprd11.prod.outlook.com
- (2603:10b6:408:1b6::9)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V1UI3XQ1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32A7EC4CEE7;
+	Fri, 25 Jul 2025 10:33:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753439620;
+	bh=YP3zgdbV4rWDDNeh6M4/SahHLAfSTyA5yYPF8nAccjM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=V1UI3XQ1ILsZUWLvdZZOZ0cVP5T8wA0BdNwewnfj8up3XmTfdV43DXkUbyvCTYS1T
+	 LFZz/c7azxmXyJxyvmporpAm7B7wlFMFPPLXurShb+c8tEhBYiTTBnTJDpVRmusiPD
+	 CUpf7joDpTNJ8lhMY1OHHe+1qWcN7wXuqr4oRfrzAxeCVtPzuuP6BnD6/D05lofKlV
+	 XrDQOT/woffjxnPToGEoLzS0lLRktOrKBkey/oSr2HG6NhyiDWngAd9twhe+q8ZyKn
+	 GehbD56qqNjvudX+DMw5h0/0/aUOp8mkPL7uPgxExc4wl9G2IZXPLNKye3MCf7sveO
+	 YYeHRCo93ehhg==
+Message-ID: <243457b5-c1f8-494a-a88a-272c535094a7@kernel.org>
+Date: Fri, 25 Jul 2025 19:33:37 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV3PR11MB8603:EE_|PH3PPF67C992ECC:EE_
-X-MS-Office365-Filtering-Correlation-Id: 635c6ba6-90a0-46e9-a9f9-08ddcb5dbfe0
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
-X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?ZOHyi1XHLw68UrqWc4JXkD1YFQa9ykSI4B66XVw+z5waTNAhWMbukcM/AWCl?=
- =?us-ascii?Q?w4ka6ad8gtAChSjmVIM3nkqkbLHNhr6zhKQq7fNlLC5VR80xhCycB5T58LE1?=
- =?us-ascii?Q?YzBLfHR98Yjbkr7KP4DSqsWHgpQ4NSXNAauJMzDSBeIMslpwfjPsoHJPA2yo?=
- =?us-ascii?Q?SITceH5HV7WT1/aKxKAVw59C55ibZ8lD/4N9URWti7dfB2YT9EZrtq8flp1K?=
- =?us-ascii?Q?NXMAP9+NJQadUCxGxrDb/pe4UKhU9xZgqVIN+PzDGkF4//HE86bgQ6wo6M+g?=
- =?us-ascii?Q?sg9HzSFSUhXHRl9CBXoVgmN8b5bXeHVA/0lnp5ou0EsltuTVXRroFinaVO6g?=
- =?us-ascii?Q?XLczMvykbZa6MQY8ajvJ3DARcrWxfPfsQOC/PVWKfznf7PqJpuUOje0xREv5?=
- =?us-ascii?Q?d/hffILyhQf2nH7LGr1j1sngbteCl8b8aTjCjsg5KZxHLw1RdUvwqGjQs/0G?=
- =?us-ascii?Q?4tn6wGzec122mQCx7XSbfj6EA62xJh8eLjS6BSm+p7ecE5e2VzI+jUZLttYi?=
- =?us-ascii?Q?6BeiGPQGxx9fP/Ty/PFIz7muJ0JxtFFGq0OmBjZoMrNHIkbcpPCzR6iH4nSh?=
- =?us-ascii?Q?WMHA05VzE3bupu4evJrDlMq43wZTYrWSeZB5qNgQpytbqnNZFmXrCm4scF2n?=
- =?us-ascii?Q?XcNwVWnWLGlA4b/mYOiWP6HKNmASrB83et8VwrXisGbyT2z5bmHrcjc8PA1W?=
- =?us-ascii?Q?X0tyezRgweIXYehKV0knx3nY9ts9ngCtkrptZv2f2eNe/SWCH7QFCigggFyf?=
- =?us-ascii?Q?hmTwsd9UefoDAprL1gtUtQ/szz8BJD6SqFLfmjezfQn81MMry9kl79aKSK9D?=
- =?us-ascii?Q?ilM3F327VxGcSalqhDkTSuV6IgSRzXA0Le51KnJy6DSOHT46iSTQ2DpIz9KN?=
- =?us-ascii?Q?yA2ovvBx7EQKYtJh1nN7wE5BIYAPVNNBAK4wDZqqr2dSEly6xdBuIVs4Lcgz?=
- =?us-ascii?Q?yGY/2vk5YyCrWWnvcIpl8VwAt8NCWp0p3MXFWHjmIHX6HAeaLxRTNMefqtIq?=
- =?us-ascii?Q?kJwzlIFzsKec/GUTNFYuJ7SHlkgm8OC9qa1gpPMAtkHCCOASt+TiUByssb2b?=
- =?us-ascii?Q?6dsrldiEknaf3042E+y68KhNf8dXNKfS18fDqzk7Df9WWNYqRo5cacFH97/4?=
- =?us-ascii?Q?vynRbJsQ/+r1ZM/xDFB33AM0rOt1PWGVLq08NVYlYZbTN+tYKc9NRzrxw1d2?=
- =?us-ascii?Q?Wg/nmOsCxSM5jDgja1ycVUnfnbEpky/Uk9+DnxtxAAbEdZItUVMvFBI7qzBZ?=
- =?us-ascii?Q?WTdCSiwmuUJanFLG0grDk945PaXmksfcp01HKNNulntxoT1XqteSKIQNwqUd?=
- =?us-ascii?Q?3IzO+o3gOdHizYXHmJe2xHM9+q9WqJ8kEQXvdPvG6Bz+xaOjD/Ia7mz7yN01?=
- =?us-ascii?Q?oad5zEA=3D?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR11MB8603.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?IrTuepeP1IgbXCHVHt+TkCYrVGw6jiSidaNGuzjHQiqMZvsGatsAEBqjHmLm?=
- =?us-ascii?Q?RPK4bLPQWACBEZIMfLP7S8NgMAL9ZuyiQufBSQD0Xl1Zw30eREWu4NKL9f+P?=
- =?us-ascii?Q?xJUECKPO6VYvPhe6wUSTnt/3RUm6PoXqywyDk7cI3sw0xqPPWggpyodV44zg?=
- =?us-ascii?Q?vo05N9cQkMwqQ/4nc69DAH6ySWZxjczKhA3xRL5RZIZD2C0QsvEOaMpu6124?=
- =?us-ascii?Q?7+5fkBFQNHojg9OT+Adb1VxqvTZ5dwh9NjJLkuIGZ62oyQwxaya6DoRmTet6?=
- =?us-ascii?Q?zQBSvJs+uF1JbnyFEKFvMGIN9BkLjTcNGSxlv0QSPeoVI5tBAdcTF9vymL/t?=
- =?us-ascii?Q?YK7Y5yTJaR2B9GwlGWSxWcdjzV8vg6hpQCIf+s4R8INrqOqpMeNFOZLBAcSa?=
- =?us-ascii?Q?MfvZ4zpDc0xJM45mb8N+wp7RJLJ0LUzAQWkjQma/ADytnMTfXl2sEUe1QYoU?=
- =?us-ascii?Q?Xalxy4KA2u5djEkHGzkJ7DnfAdDk3tXVf3MQ2IO/h/5WLSYNGSA/WkrxLwio?=
- =?us-ascii?Q?u1HxXNK/8THluUQgxbcC/ZhYCT9aSLo7i5af+w74aHwF3Z2KtJDsqmYKMWCc?=
- =?us-ascii?Q?RTd+IlrpviuR9+pcP21NCaxoQBhFbfbEcf2sx/RstsPjy3b+Fhub9ZlXB4y6?=
- =?us-ascii?Q?ao8lxuEgS691hKN1Qh4gXBaO+yz15a4uRjYKHHq4u6rcswPL9UTmL8cyoL7C?=
- =?us-ascii?Q?G/fnYDXxvlkFxEfYs2hGLs2i3xaeLO8TnsRhqQNvIst8MJgpQST7lpkpucQp?=
- =?us-ascii?Q?7n24BWAn0FwholAYArmxx/eBwdh0bnT9a0aPAM6dXDqrUqf+Um5KKpf5CJ57?=
- =?us-ascii?Q?nWhV2BnQIxh3lTf7ry/p5cl2is3adOVV8ioi0sbkICnxrpG3Y1exvrle+Vdg?=
- =?us-ascii?Q?xpNr6XMBZ8OoZYLu6HEPLJCl6sxF9HhhifOF5S4gCkK901LzKdnNj87pfTjG?=
- =?us-ascii?Q?Jd0TMA7/XsHaB+j/uoDP4BbNcAzIWX6uex6y8uJCS2YXMhyF0/mUZ/VWbKW2?=
- =?us-ascii?Q?D42AUnsqVP6uZ9qoAIToMWnAA8lUjMNaQdPPyTAPKB6/wlC41JMeDC5Jxm0u?=
- =?us-ascii?Q?rASNJJag+RbXVeJuP3fw4pUgreuRegwbJUARKkmEvEbS2OGKc2z0vF1tovex?=
- =?us-ascii?Q?Yf9OzWafbjG8T2pjrdKEapIWZzU1D8jAK/MuCLQJqHUDsZfR6kq4BadoGFLP?=
- =?us-ascii?Q?GQJ6tKN9itQSY1vG9LxtyqgnhUUWdMzH02RnBCo895DD5D/GpOlJKhEZhC17?=
- =?us-ascii?Q?Pw6jXR9tRygNtZ+I5wsNejt9dPt2oOFSjLvaqMPXXQVy7SVkUrZ94DiRiQrt?=
- =?us-ascii?Q?O5bcRUaSm41RLuukRATqExcrxnuYhtaH6gSnOwB541hU/j12g5EmJy2mRTzi?=
- =?us-ascii?Q?zxjbOjUS+z1DTi1EHDp4/oCrRxdImYL8i5e9mRms04Q/iNG4GG7d1fNC0HDJ?=
- =?us-ascii?Q?FRCjm9xl5RdQba2/a3XACMw8xnmOO75ltbceuAYcnz/lyiLq71OJxdzGYaM/?=
- =?us-ascii?Q?U4EgH3wPQqnknw3oFmLcwHwLE1tp/oknA8R6plTSrtO8mC+sQfdDchycXINi?=
- =?us-ascii?Q?4xpCz2QqGlqLPczqo2OROfI8SDM9PXA3KFibiEitRWmbwCGXH3dPA1HztViU?=
- =?us-ascii?Q?Kw=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 635c6ba6-90a0-46e9-a9f9-08ddcb5dbfe0
-X-MS-Exchange-CrossTenant-AuthSource: LV3PR11MB8603.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Jul 2025 09:29:26.9350
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: aP0u4jyRQbQjiUg+XaIT+0yCpnC3H01c81Ev4szvKKWuDnQIUILZUvu+9LVQhCsuIXLx5cJKGwfjw6yeWoQOfg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH3PPF67C992ECC
-X-OriginatorOrg: intel.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: Regression on linux-next (next-20250708)
+To: "Borah, Chaitanya Kumar" <chaitanya.kumar.borah@intel.com>
+Cc: "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
+ "intel-xe@lists.freedesktop.org" <intel-xe@lists.freedesktop.org>,
+ linux-ide@vger.kernel.org, mika.westerberg@intel.com,
+ anshuman.gupta@intel.com, "Kurmi, Suresh Kumar"
+ <suresh.kumar.kurmi@intel.com>, "Saarinen, Jani" <jani.saarinen@intel.com>,
+ lucas.demarchi@intel.com, Niklas Cassel <cassel@kernel.org>
+References: <07563042-6576-41cd-9a95-de83cfc95de1@intel.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <07563042-6576-41cd-9a95-de83cfc95de1@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+On 7/25/25 15:43, Borah, Chaitanya Kumar wrote:
+> Hello Damien,
+> 
+> Hope you are doing well. I am Chaitanya from the linux graphics team in 
+> Intel.
+> 
+> This mail is regarding a regression we are seeing in our CI runs[1] on
+> linux-next repository.
+> 
+> Since the version next-20250708 [2], we are seeing the following regression
+> 
+> `````````````````````````````````````````````````````````````````````````````````
+> (kms_pm_rpm:5821) igt_pm-CRITICAL: Test assertion failure function 
+> __igt_pm_enable_sata_link_power_management, file ../lib/igt_pm.c:392:
+> 
+> (kms_pm_rpm:5821) igt_pm-CRITICAL: Failed assertion: write(fd, 
+> "min_power\n", strlen("min_power\n")) == strlen("min_power\n")
+> 
+> (kms_pm_rpm:5821) igt_pm-CRITICAL: Last errno: 95, Operation not supported
+> 
+> (kms_pm_rpm:5821) igt_pm-CRITICAL: error: -1 != 10
+> 
+> Test kms_pm_rpm failed.
+> `````````````````````````````````````````````````````````````````````````````````
+> Details log can be found in [3].
+> 
+> After bisecting the tree, the following patch [4] seems to be the first 
+> "bad" commit
+> 
+> `````````````````````````````````````````````````````````````````````````````````````````````````````````
+> commit 4edf1505b76d30e1e1e283d431e4f84ad01ddcef
+> 
+> Author: Damien Le Moal dlemoal@kernel.org
+> 
+> Date:   Tue Jul 1 21:53:18 2025 +0900
+> 
+> 
+>      ata: ahci: Disallow LPM policy control for external ports
+> `````````````````````````````````````````````````````````````````````````````````````````````````````````
+> 
+> For some context in our kms_pm_rpm tests, we enable min_power policy for 
+> SATA so that we can reach deep runtime power states and restore the 
+> original policy after finishing. [5][6]
+> 
+> IIUC, the above change is based on spec and not something which can be 
+> reverted. So as I see it, we have to drop this code path for external 
+> ports. However I am not sure if we can achieve deep power states without 
+> enforcing it through the sysfs entry.
 
+I am not entirely sure what you mean with the last sentence above, but for
+external ports, LPM cannot be used if you want to keep the port hotplug
+capability alive and working. Without keeping such port at max power state, we
+cannot detect hotplug events (which is super annoying when you have e.g. a
+server with front loading drive bays allowing swapping drives without shutting
+the machine down).
 
-Hello,
+> Atleast for the basic-rte subtest, the test passes if we comment out the 
+> functions controlling the SATA ports. We will need more testing to 
+> determine if this approach work. Any thoughts on it?
 
-we don't have enough knowledge how the issue is related with this change.
-afer rebuilding kernel and rerunning tests, the issue is still persistent.
+Niklas and I actually suspected that we would be getting "complaints" about this
+change. Well... We did :)
 
-f7870e8d345cdabf 4edf1505b76d30e1e1e283d431e
----------------- ---------------------------
-       fail:runs  %reproduction    fail:runs
-           |             |             |
-           :20         100%          20:20    dmesg.assertion_failure
+The problem really is that external ports have never been properly handled by
+libata so SATA hot-plugging never really worked reliably. Patches queued up for
+6.17 before this patch prevent the kernel from changing the power state of
+external port. And this patch was introduced after seeing systemd.udevd setting
+external ports power state to min_power or lower states, thus breaking again the
+hotplug capability.
 
-so we still make out this report FYI.
+The error you are seeing is thus entirely correct and expected.
 
+The question is though: do we want the user to "ignore" hotplug capability and
+instead priviledge low power states. I guess we should have such capability.
 
-kernel test robot noticed "assertion_failure" on:
+> Also, are there other ways to detect a port is external other than 
+> receiving EOPNOTSUPP on the sysfs write?
 
-commit: 4edf1505b76d30e1e1e283d431e4f84ad01ddcef ("ata: ahci: Disallow LPM policy control for external ports")
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
+There is not. But it would be easy to add a sysfs port attribute, e.g.
+/sys/class/ata_port/ata1/external which says "0" for regular ports and "1" for
+external ports. We could also make this attribute writable in the case of
+external port so that doing:
 
-[test failed on linux-next/master 97987520025658f30bb787a99ffbd9bbff9ffc9d]
+echo 0 > /sys/class/ata_port/ata1/external
 
-in testcase: igt
-version: igt-x86_64-74f549981-1_20250719
-with following parameters:
+forces the kernel to ignore the external nature of the port and allow user
+control of the port/device LPM state.
 
-	group: group-12
-
-
-
-config: x86_64-rhel-9.4-func
-compiler: gcc-12
-test machine: 20 threads 1 sockets (Commet Lake) with 16G memory
-
-(please refer to attached dmesg/kmsg for entire log/backtrace)
-
-
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <oliver.sang@intel.com>
-| Closes: https://lore.kernel.org/oe-lkp/202507251014.a5becc3b-lkp@intel.com
-
-
-[   69.863206][  T491]
-[   69.869866][  T493] grep: warning: ? at start of expression
-[   69.871933][  T491] Opened device: /dev/dri/card0
-[   69.873770][  T493]
-[   69.879334][  T491]
-[   69.881231][  T491] (i915_pm_rpm:1622) igt_pm-CRITICAL: Test assertion failure function __igt_pm_enable_sata_link_power_management, file ../lib/igt_pm.c:392:
-[   69.884533][  T493] grep: warning: ? at start of expression
-[   69.885396][ T1622] [IGT] i915_pm_rpm: exiting, ret=98
-[   69.886239][  T491]
-[   69.888431][  T493]
-[   69.904183][  T491] (i915_pm_rpm:1622) igt_pm-CRITICAL: Failed assertion: write(fd, "min_powern", strlen("min_powern")) == strlen("min_powern")
-
-
-The kernel config and materials to reproduce are available at:
-https://download.01.org/0day-ci/archive/20250725/202507251014.a5becc3b-lkp@intel.com
-
-
+Would that work for your case ?
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
-
+Damien Le Moal
+Western Digital Research
