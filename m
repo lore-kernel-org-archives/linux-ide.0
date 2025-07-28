@@ -1,213 +1,300 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 372C69461
-	for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2025 06:08:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753682935; cv=none; b=sEnCkEqHULNdOQAmy12yAa5G7VlDD8ryOxrpzABuPdAQivEq2A/H2nwRvYEpgi802eB83GvhDi1m6Fx8Gov/xnfe2WDCWJKn7O2OPklHNwQ6mLvjNPUXLvxVmKf4MgLoxtEXmNiH1RP11rrG/iL+1SMCjxctiUj74Oa5aJif8lA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753682935; c=relaxed/simple;
-	bh=TXJdiIY6w7n86cirf48VeHVyb8IeCx1WVIreeUwGHq4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=U5dIQqvBt6ZEgBAxFrFUQonVlhpi7lglUUdu22Jy5/SoOglJJUOHEBKK0Wadieixx2ku1WRwBJeCQiOLXXAmQPV06MeG6oRBfCj8kbYccw+0+4fIlwzS5fXB0XT21MoUu4v3bER/KI/gifkcFdNMJ4tqHuJRxUp+NrOG0v/sxVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KC9/PKWO; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0739177111
+	for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2025 16:25:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.14
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1753719916; cv=fail; b=ti9XpDw5ZOBclDlCTGx7FQEQ7XoIFc4shtzHNq6qI7rojsISvHNnJ/IZ+cPHZGeThGhksd4kmskNnywQLM5tTuZGa406KlvfNUmdmBduVhSDZK3D3NeaYsT5xMXmUYFNE+dg5WVYz7WbyguqBCRqb7P/fI0XTZKnGCtJffo69FY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1753719916; c=relaxed/simple;
+	bh=cmEDqPtJtDjdzjhw2fgr8FPrxXjsvugRWbN0sk0uxX4=;
+	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=bOykgNxyZePSiZs/CuLURBIc+ORdlYrmcs8EWQ5n1Tut6O+ojzIO5LjcgJr75R6IW0q8e0/X0ofGW4v8LeGjmz8zZDyjmv8UPQeZLLaDIOgVIpDCV23+UrhzYtYNQmiVPzPUxoeOLvV54tRv+FNGkXu7AB9dKr/uu/2cxER887w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ohz+JpZH; arc=fail smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KC9/PKWO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17343C4CEE7;
-	Mon, 28 Jul 2025 06:08:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753682934;
-	bh=TXJdiIY6w7n86cirf48VeHVyb8IeCx1WVIreeUwGHq4=;
-	h=From:To:Cc:Subject:Date:From;
-	b=KC9/PKWOAh2RwrbQjar3M4EcABSCvRDEgtlM1mY+N0U5C3wfCwjK4EiZiOoJ8XfcW
-	 9PMZ6Fq/hAQ74+agoaIP7vFVFZlqQ0foszjUj3L1DuWZzUDQUJa+j/VU4rd6ML+mDM
-	 WAtuzdLjy/QLDoGD79Vndy0MOLi0+UsHv31DrA9V8wUYhCGnrhJGppVNcD0+Ly0H3/
-	 YMivR6RQOjWK74B3V9WtMrlpWpywaHAH82MySdnpyPhWZEnCcfWdgGYNaTbrCj/pvf
-	 ZTg3x2SiGRX0M2iwmSDTWmTHV6ONsWVzsC2v0Ma5GVauzZCvuiFcpmbvvGtv91ylnG
-	 NGNn2KFZdLCuA==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata changes for 6.17-rc1
-Date: Mon, 28 Jul 2025 15:06:23 +0900
-Message-ID: <20250728060623.187416-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ohz+JpZH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1753719915; x=1785255915;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=cmEDqPtJtDjdzjhw2fgr8FPrxXjsvugRWbN0sk0uxX4=;
+  b=Ohz+JpZHqHZaeD2BRpuHOev/GCY/DkLYpOCissE3Xz9piwW0SyEZ75IO
+   OMWgXR/QsN6bTWos5SHJDP+i6+bTAy9GKhDv0GXsNWOnmben8msVS3npx
+   v48KIPgzdznvDxv0OE4S9vszNPABLrvumgZ5Kun0aQc6dnjlzSRppDxQc
+   eDJ0OckJ04wlctFBr15fHwDCoqPmnRyBR6JoC8TnNFlaRSGp1TzbBIgM8
+   Mj7J578ZIE2OdMTb4ec/Nj18cn5FN1OOv4n9uFlgtfph4htNHQEB3ltjE
+   EmYQuWSYNyw43WD6S5ssJlmh+sIGUWG1L1d+rFqp7LpU4qm6T3QbuJz8V
+   Q==;
+X-CSE-ConnectionGUID: WxwV3SDjQpiZNus8PH+MMw==
+X-CSE-MsgGUID: tesBCHeiThi08UhR523I6Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11505"; a="56053811"
+X-IronPort-AV: E=Sophos;i="6.16,339,1744095600"; 
+   d="scan'208";a="56053811"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2025 09:25:13 -0700
+X-CSE-ConnectionGUID: sphwHT6dR6un+y28JfOc2w==
+X-CSE-MsgGUID: 5If+LwZaSj2uB9EPKHwRMA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.16,339,1744095600"; 
+   d="scan'208";a="167772583"
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by fmviesa004.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2025 09:25:10 -0700
+Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.26; Mon, 28 Jul 2025 09:25:09 -0700
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.26 via Frontend Transport; Mon, 28 Jul 2025 09:25:09 -0700
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (40.107.95.89) by
+ edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.26; Mon, 28 Jul 2025 09:25:09 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=XcjeSEbVhYkNmaAMJX+l/GrlJG636PNMt7UAsel2qP279ruC12UxoBD6qfwRl2sc5paU+BiqxekTvwdIIm2fUQ7j4y5CmgxyClwttISHLoO7TpVHS7WYglHL6ShjeVpKt6NWn53Rz371kmpVXmiGAixXOnuimi13ZIC2+lrfyLBxxCLWhZGvNwbIVL88Q7sHNTB76oEAWKP+P61rgkeNJ+fume2/IDLe2DbRXzRe6s35VCHghoViXH/XiEME9YekTOpI8u0pTy5ZBAX15uHxreIHbXW4NMP0XcITF4FKuA1AuL4oBA+dc/6p6tOQZSUHX0W0aUkJGJzaLNEkUMWZDw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XKu7K93eQBbCYxDVBOcbvCH7JFGbxzv47S5+ZoATDqU=;
+ b=SZufdtEDoufVieAWR/mfxWZO7kFd4qK1Wioit8pC54Xs76HgKPCGSahc9Kxjygp2yedktwcgKlgQXxapWGsbRW3b+R0GQTvRMesY5s7BtLhemrp6No4PLQucuDz5N1j8TYYQXAI1Rait7RUM5rZXXt8ePYlqZF5bqWcy/TJFydMplpYB1cX8G3FytEECG1Bs6mJZeLCFT4sUrBMgIGSSpIijCmiZvff3FrNx7okitoO/ftXwkj+fTzA28aBwtAOb9eE9LjObKPZIbG62wyJ27tpd8NFDgc0deI2fS4jbAgvg3S8vId3r4vWV9KtuOf2LrJcjiFukKDKQ5gjwUsc7xQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from SJ1PR11MB6129.namprd11.prod.outlook.com (2603:10b6:a03:488::12)
+ by IA1PR11MB6289.namprd11.prod.outlook.com (2603:10b6:208:3e7::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8964.24; Mon, 28 Jul
+ 2025 16:25:01 +0000
+Received: from SJ1PR11MB6129.namprd11.prod.outlook.com
+ ([fe80::21c3:4b36:8cc5:b525]) by SJ1PR11MB6129.namprd11.prod.outlook.com
+ ([fe80::21c3:4b36:8cc5:b525%6]) with mapi id 15.20.8964.025; Mon, 28 Jul 2025
+ 16:25:01 +0000
+Message-ID: <d34d122f-2ef8-44f1-83c9-92c7b9e83b6e@intel.com>
+Date: Mon, 28 Jul 2025 21:54:54 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: Regression on linux-next (next-20250708)
+To: Damien Le Moal <dlemoal@kernel.org>
+CC: "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
+	"intel-xe@lists.freedesktop.org" <intel-xe@lists.freedesktop.org>,
+	<linux-ide@vger.kernel.org>, <mika.westerberg@intel.com>,
+	<anshuman.gupta@intel.com>, "Kurmi, Suresh Kumar"
+	<suresh.kumar.kurmi@intel.com>, "Saarinen, Jani" <jani.saarinen@intel.com>,
+	<lucas.demarchi@intel.com>
+References: <07563042-6576-41cd-9a95-de83cfc95de1@intel.com>
+ <f3f779e3-e269-4ac9-9bed-042859d98a83@kernel.org>
+Content-Language: en-GB
+From: "Borah, Chaitanya Kumar" <chaitanya.kumar.borah@intel.com>
+In-Reply-To: <f3f779e3-e269-4ac9-9bed-042859d98a83@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MA5P287CA0024.INDP287.PROD.OUTLOOK.COM
+ (2603:1096:a01:179::14) To SJ1PR11MB6129.namprd11.prod.outlook.com
+ (2603:10b6:a03:488::12)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ1PR11MB6129:EE_|IA1PR11MB6289:EE_
+X-MS-Office365-Filtering-Correlation-Id: 74ca029e-5dc5-41b9-67f0-08ddcdf34d55
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014;
+X-Microsoft-Antispam-Message-Info: =?utf-8?B?MnNGQnBhL1VENEZwam00S2xsSElUdVJVUU90c3NZK3BGUjlncW9xbnlZRndM?=
+ =?utf-8?B?dkcvZ3dmUlFaTzJpNk9hL2xiY0xWd2tYWmFGaXpSTTI2L1NFVlNOT25QWnFq?=
+ =?utf-8?B?NzIxWnY3ajNjdEtwZm5QcjdoWFNRNFBFbFZ1TFlKTVI4czJDSCttOW9TME5p?=
+ =?utf-8?B?aVprYmRPS2lkUWJ4UENVWW9RMkxzZ3RlSURUZkVJMWJzNmNKaXkvK3FZb05u?=
+ =?utf-8?B?SGczSXJZdHYyK1NnZ1JCNWFTT2xpQjhoMWpHM28yU2xEeWN6T1g1d0dIa3pE?=
+ =?utf-8?B?Ynl2YitaMjlJaHpvQ3lEblNaeFpEcjlSUGpud1lSdWVPQXdnM1RoNTBBUmI5?=
+ =?utf-8?B?YVFNTWdQVVlFMWxMM1FWLzg1Q3VpcVNJcVlIc0FCZ1paQzR3TzBjdDNabGdz?=
+ =?utf-8?B?TlRWcjBHbXlxTzF0R1Q0bS9vU0NZZy83V3dMaitHdUNsR2xvR3NDa1BOMWF5?=
+ =?utf-8?B?Ukc3amR4eWtnUzYwdGtLVTQzWlNKRFNTYzF1SG03cVZJNjQzRFJkSStKanda?=
+ =?utf-8?B?aUNBVjExVFFDdlZqZzJGKzhYOFU4RnFWV1F0MGVYRTBaWEVQb251Z3pzS0sv?=
+ =?utf-8?B?ZFRWemNmSm1HbHNZWndlWTVrdGJ2bWVidHBEZGozUXZwNGpaVUJVUll6WDht?=
+ =?utf-8?B?cjVmNHQwaGd5WVFyaGpPQVdsL0hOQTNPL3ZydU1GMUc2ZjNtbTVOTndUbTMv?=
+ =?utf-8?B?WXRpK0FjZ2FadTRUTVA5MFNSQkJ1dXRTRjhDb0NOcXZaYml2RThhd1gyTGd1?=
+ =?utf-8?B?NEsyaHdBeDByV1duUHFTK2RQY25LSGl0VWF4akNUT1lzdkQyN0t3anFoeDRs?=
+ =?utf-8?B?RDFuRmVYYmNBS1NEL0p3SzFHdnRmNzVFVVd4Q0h3c0JxRlVvT2IzN05LY3Jz?=
+ =?utf-8?B?dlJKdWNKZlV0NWdTNlQwVUN3MTArOTB1ZTNkRitiWnR4SGNwMGhwVUwxaE12?=
+ =?utf-8?B?UEcvUlVER095aXpVdDRCZmJOcklneERSc21ZT3NHVTVENytkdVI0bSt3ODBx?=
+ =?utf-8?B?Tk9zT0wzRVdrN1c1R041TUlZSGY3RjZQaTlYM1pYL1VVcE52ekFFTUp2N2ZF?=
+ =?utf-8?B?VGswZ2puVGdEZHl1bUtwVU02ZEVZcjJ5SVB1eDl1YXl2dWt5SWYrTXlpYjFK?=
+ =?utf-8?B?bXM2bytqSU1idTJHU0VpV2JlZkMvWWNkT3dLK3NPamhYWVpzdWR3bGgzWDBV?=
+ =?utf-8?B?T1RqODYxWkFGWEFUQTFxbEEvc0ZWOSthZCtaMnYxSm83UWtrUVVRSTRVN3BO?=
+ =?utf-8?B?V2xjZTZrckx3UjdGdmIvUkUwZ3paaVlKWURJZ21ScEVjM2phaXY1VGpJd1RH?=
+ =?utf-8?B?ZnljZG5WR1RHTEhRSmQwVkszOHN2U2Ezb2Y0TElFT292VHhST3E4ZWFCdVZp?=
+ =?utf-8?B?REwvVmxzckdlZ29XSVB6Y0JWSS9DU3N2YVlRR0RMbVNRSUJITTNBb3lPMllB?=
+ =?utf-8?B?Z2IrbGh0dFcwUmx5a1p1bXFhUEc2QTVSVnFnM2JuN1BjQ0FwajN0L043S0ZH?=
+ =?utf-8?B?emRSVjdZU2pNQWxnRnppUTFpMEkxeGZNQ0NRWEhkRjZoV0M2ZUVpU3dBT3lZ?=
+ =?utf-8?B?dHBQLzNYbjlBWklmZXlYeVk2UG1DaGVMdWxQK1RVRXVwM3czemJiUWdjY1NR?=
+ =?utf-8?B?SG1FVHV2WEZ1Ky9hZHp4MXNaSjRMVXk0d1RNWUhyaXdrMm93cWtJUXYxM2RV?=
+ =?utf-8?B?SmFLYUc1WjU2cHFwL0VjVDV2TE9saXFxNnNHUGN5UlcxSVhNRThRRE0xUXRT?=
+ =?utf-8?B?aGFTY0IvMmV3Q2dWSW5jNGJwdStPSHBMWjlUYnFqQktPZzR6RENIYkpiYkF0?=
+ =?utf-8?B?S1BBYnI3M2Y5N1NEUVZwQTU5Y2V5OTY5c0lZaTJWY3loWG1FTytEYzk3d0RJ?=
+ =?utf-8?B?cmZQMXZqLzJSSG4rRzZZdk04MlNGZG9DTG00MXhMRldLREFCTXdLVTdEb3hP?=
+ =?utf-8?Q?F51x/T8TFIw=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ1PR11MB6129.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?WWlGaU5SeEJBcXJ3bEpJdGVYbHROODdxNHo0OFFoSlNuclhnVzNGNDlZKzBP?=
+ =?utf-8?B?YnF3WDU1NkJNN1VaNGhrdW5MY2t6L1R4clBodzloTzZkamxvL1hZWHl6Nng1?=
+ =?utf-8?B?K1VFVCt1RVRQZzJHTTZqWFRJaFIyYkwzZmxWanNoYk5ITDgvWGxKMkM4Vm5Z?=
+ =?utf-8?B?aU15SDhCSlBrdmdESGQ5VnpXbmpMS0Q1WmNzc2RtbjJGdnN5UmxIbytONk10?=
+ =?utf-8?B?MVVhZnNoY1dnVFBTQVhWM0lhYk0vdnJiTndLVVJGbUNubUp0eFJkemc4N0N2?=
+ =?utf-8?B?bFVKbGxUSXFjVVJRNG96cGZ1bDl4SjBFOHJ6WHg5MS9BbXZ5REdadThKcWlC?=
+ =?utf-8?B?UW85Njc1WkdxU2ZZV0MycGZGeU1lV2JBaHRTdFp0U0NJUXhsTzJwRVE0VkdV?=
+ =?utf-8?B?bXhxK3UzRWhRN25jZ0kvc09wdldLN0xVeXo1amcwRXc1bXd4Si9XRjdTMm5Z?=
+ =?utf-8?B?NzAwcVhCVXNaQ2dybFRoRENnajlMUFhTcCtlZW5uOWpnSmpFdEl2L3FFb3pz?=
+ =?utf-8?B?dEpSc1pnTy95U3V2UUJzMC95OFFKZ0M5MFZEejRJOHVCWmlRNGZzY29UV2xt?=
+ =?utf-8?B?VVdKS3NDUEhOeDd5Y2hnRnQ2L1dyQWhQYXhoNnVkSy9ZWWprenR4WDFPQk9L?=
+ =?utf-8?B?TVZQNG9ReEVKVFI2M2M2VWYrZmhTMmZVV0FTNERPRWhwVnlpQ3BuUk9PNmxt?=
+ =?utf-8?B?SjM1TktzazZVNDQreWdIR3p1cjRYUjE3eXdIb1RobVJPeXFJbG1SUTlzSEJD?=
+ =?utf-8?B?NkcxOXNSQ0pkNkQ0cFluanFnR0ZXRTBIVlBDVWEzKzhsSjRCVjhwbEZlMS82?=
+ =?utf-8?B?SEVza0p4MUxUejdzZzFoZGVLS0NMdHAyNWFvaGVtN0hoRVQyNG9IMGo2eUR6?=
+ =?utf-8?B?M1RJdHVlOHZGSzh5Y3pFaGsrNG9lMlF3b1EzYW9QQzJvdkczZ1dHN0NXc2xn?=
+ =?utf-8?B?NU1yMDVLYXBzZUdKWGVucnZWMFVzVDhHVnA4ZkpmTS9rYUhTajRNWHJOdGxh?=
+ =?utf-8?B?UzBRODBlQW1WS2NMT3JNd2NHK0ZGSU84cjZLbElLR0FteUt6bkl1RFhVdTNQ?=
+ =?utf-8?B?U0xoWWtPYmM3NkhxeDljU1VzM0pPc3gveWQ4S3p4NEV0TG9EMWFQNGZUN21R?=
+ =?utf-8?B?UUppcWNaOFpvdE9paG5aT3V5eEhQOXhMNGd6VXBpTXRUVzczZXdWdHZlMC9k?=
+ =?utf-8?B?V1htbjBRcFMwMzZtWkdyTW93RWMwQjlXeFU0VEZMcTYwRFYvQm04amlpQXh4?=
+ =?utf-8?B?QnBJc2xpUUhjcURmUUxhY01Bai9wZll4anVYa1NXcDlLMmdna0JIcGVFa0dh?=
+ =?utf-8?B?MDFuOWxhYWY4UW5SQ3E2NFM3dExNSWlyMmx0bDh6NzRWQW9Rem5ZQ1lBM0RK?=
+ =?utf-8?B?alhrQy9zdHUvL3NURW5aNFpPamp0bDc3MzhGa3o3M0UrUU85cEdRYzdJN0Zq?=
+ =?utf-8?B?dk5aK3dqWEV3Yi81VDhLZFkvbHo1dmdLWVA5T1hlOG8vUFFuVDZtQSs4eW1K?=
+ =?utf-8?B?UXFvdGdMbG9yTytXVVpDbzN5VzhpNEJHWVNNSVNGY3AvV21HbDRwU2YyZXh0?=
+ =?utf-8?B?Y2M2bGNoazJ2Q3k1cmNZRDVIR21BeThadWNJcit4NnJUUDZHTUREcHFLS3Rs?=
+ =?utf-8?B?L243L0ZwVTZEU2pEbnE5QzVITmtvQ0NMSmtuc1Uxc3hIeGxtNjllR3kxNERP?=
+ =?utf-8?B?K0k1azR4TUQ0VUhnUE9jSU5WeHZzWVhxNVJMdU1OQVpQM1dkNW9DdVIvVW1X?=
+ =?utf-8?B?eSt5VWU4ZnY2MzJjWkx2QVRrUlc5UlovZ24yVUtRcU9NVnRMdWU4eS81azUw?=
+ =?utf-8?B?SFJwalU5bHlmMVFwNHp3Vk41MElTdE4vaW02aUdmZEhOdnpQODVJU0xsV0R1?=
+ =?utf-8?B?N0NaZlhtcDRvRVNnZklFSlhSTXpKVmJkazAwZkNvUTFaZXZjaGlUWnpmbnAw?=
+ =?utf-8?B?U0pBampveXd2ZEd6cXBRcFZyZ0JycmExekMrRm5ESlkxZTRUTXZEMjc0dm83?=
+ =?utf-8?B?dTMycEhTOElIQ0hxbytPMm9lUnlmTmlaZWpES2RXSkZvN0VDVGZCWHV5bGwy?=
+ =?utf-8?B?OGdmM0xrNloycitxd00xWHV1Y1dRTVhveW5lcjRPdU8vTHdKa01iZWJMNDhY?=
+ =?utf-8?B?WktzRktLTTdDY084NXB0b2ZCQytCYWl3Wis4QnYrQ2NUbFFESVNCNkJCZllj?=
+ =?utf-8?Q?ih/QZbZrtkguXPges4Gg0yY=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 74ca029e-5dc5-41b9-67f0-08ddcdf34d55
+X-MS-Exchange-CrossTenant-AuthSource: SJ1PR11MB6129.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2025 16:25:01.7934
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: QXdQOGJYIlheHULvVAYBz7ri30fwN0w24hrY36cu4Xi6Xkm7NGX5I5+Xmi7xDBy25kN1xE6qxAx7HsEXIROtWEwfunAf7wroXuyJihlQ6XM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR11MB6289
+X-OriginatorOrg: intel.com
 
-Linus,
 
-The following changes since commit d0b3b7b22dfa1f4b515fd3a295b3fd958f9e81af:
 
-  Linux 6.16-rc4 (2025-06-29 13:09:04 -0700)
+On 7/28/2025 9:41 AM, Damien Le Moal wrote:
+> On 7/25/25 3:43 PM, Borah, Chaitanya Kumar wrote:
+>> For some context in our kms_pm_rpm tests, we enable min_power policy for SATA
+>> so that we can reach deep runtime power states and restore the original policy
+>> after finishing. [5][6]
+>>
+>> IIUC, the above change is based on spec and not something which can be
+>> reverted. So as I see it, we have to drop this code path for external ports.
+>> However I am not sure if we can achieve deep power states without enforcing it
+>> through the sysfs entry.
+>>
+>> Atleast for the basic-rte subtest, the test passes if we comment out the
+>> functions controlling the SATA ports. We will need more testing to determine if
+>> this approach work. Any thoughts on it?
+>>
+>> Also, are there other ways to detect a port is external other than receiving
+>> EOPNOTSUPP on the sysfs write?
+> 
+> The attached patch adds the "link_power_management_supported" sysfs device
+> attribute for drives connected to AHCI. Would that work for you ?
+> 
 
-are available in the Git repository at:
+Yes this could work. I quickly hacked the test to ignore writing policy 
+if this file returns 0.
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.17-rc1
+Here is the state of the machine I am testing on.
 
-for you to fetch changes up to 546527b92d7e72dcd827675a2d3e580002b09cc1:
+/sys/class/scsi_host/host0/link_power_management_supported: 0
+/sys/class/scsi_host/host1/link_power_management_supported: 0
+/sys/class/scsi_host/host2/link_power_management_supported: 0
+/sys/class/scsi_host/host3/link_power_management_supported: 0
+/sys/class/scsi_host/host4/link_power_management_supported: 1
+/sys/class/scsi_host/host5/link_power_management_supported: 1
+/sys/class/scsi_host/host6/link_power_management_supported: 1
+/sys/class/scsi_host/host7/link_power_management_supported: 1
 
-  Documentation: driver-api: Update libata error handler information (2025-07-16 09:31:43 +0200)
+Regards
 
-----------------------------------------------------------------
-ata changes for 6.17-rc1
+Chaitanya
 
- - Replace the ATA_DFLAG_ZAC device flag with the helper function
-   ata_dev_is_zac() testing directly the device class and device zoned
-   mode (me).
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index 229429ba5027..495fa096dd65 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -1089,6 +1089,7 @@ static struct ata_port_operations ich_pata_ops = {
+>   };
+> 
+>   static struct attribute *piix_sidpr_shost_attrs[] = {
+> +       &dev_attr_link_power_management_supported.attr,
+>          &dev_attr_link_power_management_policy.attr,
+>          NULL
+>   };
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index b335fb7e5cb4..c79abdfcd7a9 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -111,6 +111,7 @@ static DEVICE_ATTR(em_buffer, S_IWUSR | S_IRUGO,
+>   static DEVICE_ATTR(em_message_supported, S_IRUGO, ahci_show_em_supported, NULL);
+> 
+>   static struct attribute *ahci_shost_attrs[] = {
+> +       &dev_attr_link_power_management_supported.attr,
+>          &dev_attr_link_power_management_policy.attr,
+>          &dev_attr_em_message_type.attr,
+>          &dev_attr_em_message.attr,
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index 0708686ca58a..82a1a72e47bf 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -900,6 +900,18 @@ static const char *ata_lpm_policy_names[] = {
+>          [ATA_LPM_MIN_POWER]             = "min_power",
+>   };
+> 
+> +static ssize_t ata_scsi_lpm_supported_show(struct device *dev,
+> +                                struct device_attribute *attr, char *buf)
+> +{
+> +       struct Scsi_Host *shost = class_to_shost(dev);
+> +       struct ata_port *ap = ata_shost_to_port(shost);
+> +
+> +       return sysfs_emit(buf, "%d\n", !(ap->flags & ATA_FLAG_NO_LPM));
+> +}
+> +DEVICE_ATTR(link_power_management_supported, S_IRUGO,
+> +           ata_scsi_lpm_supported_show, NULL);
+> +EXPORT_SYMBOL_GPL(dev_attr_link_power_management_supported);
+> +
+>   static ssize_t ata_scsi_lpm_store(struct device *device,
+>                                    struct device_attribute *attr,
+>                                    const char *buf, size_t count)
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 1c0580627dbb..e9a6f37bd7f9 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -547,6 +547,7 @@ typedef void (*ata_postreset_fn_t)(struct ata_link *link,
+> unsigned int *classes)
+> 
+>   extern struct device_attribute dev_attr_unload_heads;
+>   #ifdef CONFIG_SATA_HOST
+> +extern struct device_attribute dev_attr_link_power_management_supported;
+>   extern struct device_attribute dev_attr_link_power_management_policy;
+>   extern struct device_attribute dev_attr_ncq_prio_supported;
+>   extern struct device_attribute dev_attr_ncq_prio_enable;
+> 
+> 
 
- - Some small cleanup of ata_scsi_offline_dev() code (me).
-
- - Improve the description of the link power management (LPM) policies
-   in Kconfig and in the comments defining these. Together with this,
-   clarify the description of the ahci driver mobile_lpm_policy module
-   parameter (me).
-
- - Various code refactoring of libata LPM handling (ata_eh_set_lpm()
-   renaming, introduce ata_dev_config_lpm(), LPM related quirk handling,
-   and LPM related feature advertizing on device scan) (me).
-
- - Avoid unnecessary device reset when revalidating after an error when
-   LPM is used (me).
-
- - Do not allow setting a port/link LPM policy if LPM is not supported,
-   either because the controller does not support partial, slumber nor
-   devsleep, or when the port is an external port with hotplug
-   capability (me).
-
- - Make sure that device initiated power management (DIPM) is not
-   enabled if the host (controller) lacks support for this feature (me).
-
- - Improve messages and debug messages related to LPM, in particular,
-   reduce the number of messages signaling the lack of LPM support (me).
-
- - Cache in memory a device general purpose log directory to avoid
-   having to access this log for every log page access. The intent here
-   is to reduce the number of read log commands when scanning or
-   revalidating a device (me).
-
- - Change ata_dev_cleanup_cdl_resources() to be a static function (me).
-
- - Rename and simplify the mode setting functions (me).
-
- - Introduce the helper function ata_port_eh_scheduled() to check if EH
-   is pending or running for a port (me)
-
- - Improve ata_eh_set_pending() (return bool instead of int) (me).
-
- - Use sysfs_emit() instead of scnprintf() for libata-transport
-   attributes (Jonathan).
-
- - Use the existing macro definiton of RDC vendor ID instead of
-   hardcoding it in the pata_rdc driver (Andy).
-
- - Rework how EH is called for a port to avoid needing to pass along the
-   prereset, softreset, hardreset and postreset operations. The
-   driver API documentation for this is also updated  (me).
-
-----------------------------------------------------------------
-Andy Shevchenko (1):
-      ata: pata_rdc: Use registered definition for the RDC vendor
-
-Damien Le Moal (26):
-      ata: libata: Remove ATA_DFLAG_ZAC device flag
-      ata: libata-scsi: Cleanup ata_scsi_offline_dev()
-      ata: Fix SATA_MOBILE_LPM_POLICY description in Kconfig
-      ata: libata: Improve LPM policies description
-      ata: ahci: Clarify mobile_lpm_policy description
-      ata: libata-eh: Move and rename ata_eh_set_lpm()
-      ata: libata-core: Introduce ata_dev_config_lpm()
-      ata: libata-core: Move device LPM quirk settings to ata_dev_config_lpm()
-      ata: libata-core: Advertize device support for DIPM and HIPM features
-      ata: libata-eh: Avoid unnecessary resets when revalidating devices
-      ata: libata-sata: Disallow changing LPM state if not supported
-      ata: ahci: Disable DIPM if host lacks support
-      ata: ahci: Disallow LPM policy control for external ports
-      ata: ahci: Disallow LPM policy control if not supported
-      ata: libata-core: Reduce the number of messages signaling broken LPM
-      ata: libata_eh: Add debug messages to ata_eh_link_set_lpm()
-      ata: libata-core: Cache the general purpose log directory
-      ata: libata-core: Make ata_dev_cleanup_cdl_resources() static
-      ata: libata-eh: Rename and make ata_set_mode() static
-      ata: libata-core: Rename ata_do_set_mode()
-      ata: libata: Introduce ata_port_eh_scheduled()
-      ata: libata-eh: use bool for fastdrain in ata_eh_set_pending()
-      ata: libata-eh: Make ata_eh_followup_srst_needed() return a bool
-      ata: libata-eh: Remove ata_do_eh()
-      ata: libata-eh: Simplify reset operation management
-      Documentation: driver-api: Update libata error handler information
-
-Jonathan Velez (1):
-      ata: libata-transport: replace scnprintf with sysfs_emit for simple attributes
-
- Documentation/driver-api/libata.rst     |  25 +-
- drivers/ata/Kconfig                     |  36 ++-
- drivers/ata/ahci.c                      |  25 +-
- drivers/ata/ahci_da850.c                |   6 +-
- drivers/ata/ahci_dm816.c                |   2 +-
- drivers/ata/ahci_imx.c                  |  13 +-
- drivers/ata/ahci_qoriq.c                |   4 +-
- drivers/ata/ahci_xgene.c                |   8 +-
- drivers/ata/ata_piix.c                  |   4 +-
- drivers/ata/libahci.c                   |  10 +-
- drivers/ata/libata-core.c               | 137 +++++++---
- drivers/ata/libata-eh.c                 | 433 ++++++++++++++++----------------
- drivers/ata/libata-pmp.c                |  26 +-
- drivers/ata/libata-sata.c               |   7 +-
- drivers/ata/libata-scsi.c               |  25 +-
- drivers/ata/libata-sff.c                |  18 +-
- drivers/ata/libata-transport.c          |   4 +-
- drivers/ata/libata.h                    |  24 +-
- drivers/ata/pata_acpi.c                 |   2 +-
- drivers/ata/pata_ali.c                  |  10 +-
- drivers/ata/pata_amd.c                  |   4 +-
- drivers/ata/pata_artop.c                |   4 +-
- drivers/ata/pata_atiixp.c               |   2 +-
- drivers/ata/pata_efar.c                 |   2 +-
- drivers/ata/pata_ep93xx.c               |   4 +-
- drivers/ata/pata_hpt366.c               |   2 +-
- drivers/ata/pata_hpt37x.c               |   4 +-
- drivers/ata/pata_hpt3x2n.c              |   2 +-
- drivers/ata/pata_icside.c               |   2 +-
- drivers/ata/pata_it8213.c               |   2 +-
- drivers/ata/pata_jmicron.c              |   2 +-
- drivers/ata/pata_marvell.c              |   2 +-
- drivers/ata/pata_mpiix.c                |   2 +-
- drivers/ata/pata_ns87410.c              |   2 +-
- drivers/ata/pata_octeon_cf.c            |   2 +-
- drivers/ata/pata_oldpiix.c              |   2 +-
- drivers/ata/pata_opti.c                 |   2 +-
- drivers/ata/pata_optidma.c              |   6 +-
- drivers/ata/pata_parport/pata_parport.c |   4 +-
- drivers/ata/pata_pcmcia.c               |   4 +-
- drivers/ata/pata_pdc2027x.c             |   4 +-
- drivers/ata/pata_rdc.c                  |   6 +-
- drivers/ata/pata_sis.c                  |   2 +-
- drivers/ata/pata_sl82c105.c             |   2 +-
- drivers/ata/pata_triflex.c              |   2 +-
- drivers/ata/pata_via.c                  |   2 +-
- drivers/ata/pdc_adma.c                  |   2 +-
- drivers/ata/sata_dwc_460ex.c            |   2 +-
- drivers/ata/sata_fsl.c                  |   6 +-
- drivers/ata/sata_highbank.c             |   2 +-
- drivers/ata/sata_inic162x.c             |   2 +-
- drivers/ata/sata_mv.c                   |  10 +-
- drivers/ata/sata_nv.c                   |   2 +-
- drivers/ata/sata_promise.c              |   4 +-
- drivers/ata/sata_qstor.c                |   4 +-
- drivers/ata/sata_rcar.c                 |   2 +-
- drivers/ata/sata_sil.c                  |   2 +-
- drivers/ata/sata_sil24.c                |   8 +-
- drivers/ata/sata_svw.c                  |   4 +-
- drivers/ata/sata_sx4.c                  |   2 +-
- drivers/ata/sata_uli.c                  |   2 +-
- drivers/ata/sata_via.c                  |   4 +-
- drivers/scsi/libsas/sas_ata.c           |   4 +-
- include/linux/libata.h                  |  54 ++--
- 64 files changed, 565 insertions(+), 444 deletions(-)
