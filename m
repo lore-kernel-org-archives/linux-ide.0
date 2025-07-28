@@ -1,34 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E46CB2153D2
-	for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2025 04:14:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64EAF38F9C
+	for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2025 05:33:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753676051; cv=none; b=OZoI2UVKcbeu9kp99UpGfVK4a2T1FUsDNmnrJ01plcr99GMJdMl10WiAc4L2k9vim9n/5Dy5SRnzNvR5pf6IjV6k/8nm4tzlxd+qkZOyBaYLXAJrXuVt0VLvaDRg4vztCDm8D+1MMuD6+qOIv7+IBBiIjsALOgSoRDD50qsRo4A=
+	t=1753680829; cv=none; b=cIq1tYCOIFSN4+YXgZhsw9IBEDbnuAOjV3xYu2DoP3GzVIbh/oX2xKV1z91H9zdHFohJ/JzW442NrrueSXaWO6GqwuhbuMaceM+vSKWv17c8dVBO8dluoGO4leJ7Ig+nZ+6A1l5XmV0Y6cMAqQdGAXkYSUl2Px4C9V9gKm3zv+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753676051; c=relaxed/simple;
-	bh=icdK9UZhHwudcxk2XYqruHbGN8wX/pzhgMNyjCP2DlE=;
-	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To; b=qbBy09aOm9mEcYcAwArbJ4bW+AX/7Pk5yBNaqBpxGjy1EovRUts1fltEB5Z2koT2D20JjuY6jtpyLAN85lB34jCxPVXwpM4du05+gaCh1fUz7KtTiskoh/atlOye6CGKRHqh45x5eMIYbkq7S+ARvna4ONg5BzLNSPVzajZP7bs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BDTxZ2gb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753680829; c=relaxed/simple;
+	bh=u6ERUNOOEzSBij/Uojzy5/MsKeWwSjrvHTW6EgVbPQI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=T7cckhb1Uzf9cnAhUqTWNXoRPtLGGvtnVSAjXyxf21ty35CHrle78AywqVhm7jxawDk/Wfg37NgDJKo+86Pt8MYfjxbEyOFDmwxNYH5qPZgiSshSUCk4IXsAqpD9/QSTLx7kryX+QEgLHQsF7x3euk4+zg0QzX/jxCvf+E+4WXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eZBRFXqG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BDTxZ2gb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00423C4CEE7;
-	Mon, 28 Jul 2025 04:14:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eZBRFXqG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79101C4CEE7;
+	Mon, 28 Jul 2025 05:33:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753676050;
-	bh=icdK9UZhHwudcxk2XYqruHbGN8wX/pzhgMNyjCP2DlE=;
+	s=k20201202; t=1753680828;
+	bh=u6ERUNOOEzSBij/Uojzy5/MsKeWwSjrvHTW6EgVbPQI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=BDTxZ2gbrhwQYwhsJR96QEIIioWeagwFcV9QjzBq9U+kgbHvy5wa8/70A+BeYsVci
-	 sAa2vOduXK6res64vp9Z7hFvUe4gWpWSyrllDXhf5hpMdDPkn3/Qkn7pEGwAJofJCV
-	 Ki+PBI2Br8XuWhPpt9UA2+6GC59WpZxnOK9LIqyuqyKTJ7fONV1lsJLmatyhSMtUsT
-	 +vjXf9hxJDRiuHZiXarAptucyYboZev++U8HQAZKDuIDnytCbm0VE9QxL623P6fZS5
-	 zwaYxm3NnKNd6ws4OHwEw3Wqk3KsvhXKGriB/HXVltWeP0KIrRT1B8LVvUJ1+m5NX3
-	 OT9uyMxKv0l4g==
-Content-Type: multipart/mixed; boundary="------------8PspsMq80uB7NlP91NHAb0Yt"
-Message-ID: <f3f779e3-e269-4ac9-9bed-042859d98a83@kernel.org>
-Date: Mon, 28 Jul 2025 13:11:38 +0900
+	b=eZBRFXqGmSa0uoG2YegRuFgCnx/Q4jEVLwmjYc5FsrSXgnbIe+K4CG2ICeotCssIY
+	 hjRYPGlWciyD8PnomqYkdaqEnnNmMpNPAf0aHyH7XDqgjt1JVK6Ls1U4sSOvaJhcU0
+	 ZMpPaL9aGAWUIzvlO1OoSljFHEABVf/cBg3EqXTdL9vqV0nCEQS4OqaV461GU4BMtF
+	 mgFJQ7rAjeA1kmJNr7o0TFCHiW9so5wHsI9TO9O+AfhDLRBKt66UK0GPy0xoaJ0iGk
+	 AkKM3uP7vz9tr/en1mzAz5pnEWAQIF2+hpXB1A3bEouEv7uuYnkYtkz+Y1TEzhJr5x
+	 m+1Csc9hDAlKw==
+Message-ID: <f4f147cd-5847-4efd-8dd3-9a00e129e133@kernel.org>
+Date: Mon, 28 Jul 2025 14:31:17 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -49,9 +48,6 @@ From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
 In-Reply-To: <07563042-6576-41cd-9a95-de83cfc95de1@intel.com>
-
-This is a multi-part message in MIME format.
---------------8PspsMq80uB7NlP91NHAb0Yt
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
@@ -72,143 +68,17 @@ On 7/25/25 3:43 PM, Borah, Chaitanya Kumar wrote:
 > Also, are there other ways to detect a port is external other than receiving
 > EOPNOTSUPP on the sysfs write?
 
-The attached patch adds the "link_power_management_supported" sysfs device
-attribute for drives connected to AHCI. Would that work for you ?
+I completely forgot to mention one important thing: please check your test
+machine BIOS settings and see if you have "hotplug support" set to enable for
+SATA ports. If it is, set that BIOS setting to disable and you will see the
+SATA port as a regular one, not as an external port. So LPM support will be
+back and your test program will not need changes.
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 229429ba5027..495fa096dd65 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1089,6 +1089,7 @@ static struct ata_port_operations ich_pata_ops = {
- };
-
- static struct attribute *piix_sidpr_shost_attrs[] = {
-+       &dev_attr_link_power_management_supported.attr,
-        &dev_attr_link_power_management_policy.attr,
-        NULL
- };
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index b335fb7e5cb4..c79abdfcd7a9 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -111,6 +111,7 @@ static DEVICE_ATTR(em_buffer, S_IWUSR | S_IRUGO,
- static DEVICE_ATTR(em_message_supported, S_IRUGO, ahci_show_em_supported, NULL);
-
- static struct attribute *ahci_shost_attrs[] = {
-+       &dev_attr_link_power_management_supported.attr,
-        &dev_attr_link_power_management_policy.attr,
-        &dev_attr_em_message_type.attr,
-        &dev_attr_em_message.attr,
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 0708686ca58a..82a1a72e47bf 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -900,6 +900,18 @@ static const char *ata_lpm_policy_names[] = {
-        [ATA_LPM_MIN_POWER]             = "min_power",
- };
-
-+static ssize_t ata_scsi_lpm_supported_show(struct device *dev,
-+                                struct device_attribute *attr, char *buf)
-+{
-+       struct Scsi_Host *shost = class_to_shost(dev);
-+       struct ata_port *ap = ata_shost_to_port(shost);
-+
-+       return sysfs_emit(buf, "%d\n", !(ap->flags & ATA_FLAG_NO_LPM));
-+}
-+DEVICE_ATTR(link_power_management_supported, S_IRUGO,
-+           ata_scsi_lpm_supported_show, NULL);
-+EXPORT_SYMBOL_GPL(dev_attr_link_power_management_supported);
-+
- static ssize_t ata_scsi_lpm_store(struct device *device,
-                                  struct device_attribute *attr,
-                                  const char *buf, size_t count)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 1c0580627dbb..e9a6f37bd7f9 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -547,6 +547,7 @@ typedef void (*ata_postreset_fn_t)(struct ata_link *link,
-unsigned int *classes)
-
- extern struct device_attribute dev_attr_unload_heads;
- #ifdef CONFIG_SATA_HOST
-+extern struct device_attribute dev_attr_link_power_management_supported;
- extern struct device_attribute dev_attr_link_power_management_policy;
- extern struct device_attribute dev_attr_ncq_prio_supported;
- extern struct device_attribute dev_attr_ncq_prio_enable;
+Not all BIOSes have such setting though. Most of the machine I have do have it
+though and I checked that it does affect how the ahci driver sees the port
+(external or regular with LPM).
 
 
 -- 
 Damien Le Moal
 Western Digital Research
---------------8PspsMq80uB7NlP91NHAb0Yt
-Content-Type: text/x-patch; charset=UTF-8;
- name="0001-ata-libata-sata-Add-link_power_management_supported-.patch"
-Content-Disposition: attachment;
- filename*0="0001-ata-libata-sata-Add-link_power_management_supported-.pa";
- filename*1="tch"
-Content-Transfer-Encoding: base64
-
-RnJvbSBlOTkzN2Q4NmQzN2E2YzFhOTU4NGVmMjMyNjEzZDVhOGE1YTNiNmExIE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBEYW1pZW4gTGUgTW9hbCA8ZGxlbW9hbEBrZXJuZWwu
-b3JnPgpEYXRlOiBNb24sIDI4IEp1bCAyMDI1IDEzOjA0OjI5ICswOTAwClN1YmplY3Q6IFtQ
-QVRDSF0gYXRhOiBsaWJhdGEtc2F0YTogQWRkIGxpbmtfcG93ZXJfbWFuYWdlbWVudF9zdXBw
-b3J0ZWQKIGF0dHJpYnV0ZQoKQSBwb3J0IGxpbmsgcG93ZXIgbWFuYWdlbWVudCBwb2xpY3kg
-Y2FuIGJlIGNvbnRyb2xsZWQgdXNpbmcgdGhlCmxpbmtfcG93ZXJfbWFuYWdlbWVudF9wb2xp
-Y3kgc3lzZnMgZGV2aWNlIGF0dHJpYnV0ZS4gSG93ZXZlciwgdGhpcwphdHRyaWJ1dGUgZXhp
-c3QgYWxzbyBmb3IgZGV2aWNlIGFuZCBwb3J0cyB0aGF0IGRvIG5vdCBzdXBwb3J0IExQTSBh
-bmQgaW4Kc3VjaCBjYXNlLCBhdHRlbXB0aW5nIHRvIGNoYW5nZSB0aGUgTFBNIHBvbGljeSB3
-aWxsIGZhaWwgd2l0aAotRU9QTk9UU1VQUC4KCkludHJvZHVjZSB0aGUgbmV3IHN5c2ZzIGxp
-bmtfcG93ZXJfbWFuYWdlbWVudF9zdXBwb3J0ZWQgZGV2aWNlIGF0dHJpYnV0ZQp0byBpbmRp
-Y2F0ZSB0byB0aGUgdXNlciBpZiBhIHBvcnQvZGV2aWNlIHN1cHBvcnRzIExQTSBhbmQgdGhl
-IGF0dHJpYnV0ZQpsaW5rX3Bvd2VyX21hbmFnZW1lbnRfcG9saWN5IGNhbiBiZSB1c2VkLgoK
-U2lnbmVkLW9mZi1ieTogRGFtaWVuIExlIE1vYWwgPGRsZW1vYWxAa2VybmVsLm9yZz4KLS0t
-CiBkcml2ZXJzL2F0YS9hdGFfcGlpeC5jICAgIHwgIDEgKwogZHJpdmVycy9hdGEvbGliYWhj
-aS5jICAgICB8ICAxICsKIGRyaXZlcnMvYXRhL2xpYmF0YS1zYXRhLmMgfCAxMiArKysrKysr
-KysrKysKIGluY2x1ZGUvbGludXgvbGliYXRhLmggICAgfCAgMSArCiA0IGZpbGVzIGNoYW5n
-ZWQsIDE1IGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9hdGFfcGlp
-eC5jIGIvZHJpdmVycy9hdGEvYXRhX3BpaXguYwppbmRleCAyMjk0MjliYTUwMjcuLjQ5NWZh
-MDk2ZGQ2NSAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvYXRhX3BpaXguYworKysgYi9kcml2
-ZXJzL2F0YS9hdGFfcGlpeC5jCkBAIC0xMDg5LDYgKzEwODksNyBAQCBzdGF0aWMgc3RydWN0
-IGF0YV9wb3J0X29wZXJhdGlvbnMgaWNoX3BhdGFfb3BzID0gewogfTsKIAogc3RhdGljIHN0
-cnVjdCBhdHRyaWJ1dGUgKnBpaXhfc2lkcHJfc2hvc3RfYXR0cnNbXSA9IHsKKwkmZGV2X2F0
-dHJfbGlua19wb3dlcl9tYW5hZ2VtZW50X3N1cHBvcnRlZC5hdHRyLAogCSZkZXZfYXR0cl9s
-aW5rX3Bvd2VyX21hbmFnZW1lbnRfcG9saWN5LmF0dHIsCiAJTlVMTAogfTsKZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvYXRhL2xpYmFoY2kuYyBiL2RyaXZlcnMvYXRhL2xpYmFoY2kuYwppbmRl
-eCBiMzM1ZmI3ZTVjYjQuLmM3OWFiZGZjZDdhOSAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEv
-bGliYWhjaS5jCisrKyBiL2RyaXZlcnMvYXRhL2xpYmFoY2kuYwpAQCAtMTExLDYgKzExMSw3
-IEBAIHN0YXRpYyBERVZJQ0VfQVRUUihlbV9idWZmZXIsIFNfSVdVU1IgfCBTX0lSVUdPLAog
-c3RhdGljIERFVklDRV9BVFRSKGVtX21lc3NhZ2Vfc3VwcG9ydGVkLCBTX0lSVUdPLCBhaGNp
-X3Nob3dfZW1fc3VwcG9ydGVkLCBOVUxMKTsKIAogc3RhdGljIHN0cnVjdCBhdHRyaWJ1dGUg
-KmFoY2lfc2hvc3RfYXR0cnNbXSA9IHsKKwkmZGV2X2F0dHJfbGlua19wb3dlcl9tYW5hZ2Vt
-ZW50X3N1cHBvcnRlZC5hdHRyLAogCSZkZXZfYXR0cl9saW5rX3Bvd2VyX21hbmFnZW1lbnRf
-cG9saWN5LmF0dHIsCiAJJmRldl9hdHRyX2VtX21lc3NhZ2VfdHlwZS5hdHRyLAogCSZkZXZf
-YXR0cl9lbV9tZXNzYWdlLmF0dHIsCmRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9saWJhdGEt
-c2F0YS5jIGIvZHJpdmVycy9hdGEvbGliYXRhLXNhdGEuYwppbmRleCAwNzA4Njg2Y2E1OGEu
-LjgyYTFhNzJlNDdiZiAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvbGliYXRhLXNhdGEuYwor
-KysgYi9kcml2ZXJzL2F0YS9saWJhdGEtc2F0YS5jCkBAIC05MDAsNiArOTAwLDE4IEBAIHN0
-YXRpYyBjb25zdCBjaGFyICphdGFfbHBtX3BvbGljeV9uYW1lc1tdID0gewogCVtBVEFfTFBN
-X01JTl9QT1dFUl0JCT0gIm1pbl9wb3dlciIsCiB9OwogCitzdGF0aWMgc3NpemVfdCBhdGFf
-c2NzaV9scG1fc3VwcG9ydGVkX3Nob3coc3RydWN0IGRldmljZSAqZGV2LAorCQkJCSBzdHJ1
-Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwgY2hhciAqYnVmKQoreworCXN0cnVjdCBTY3Np
-X0hvc3QgKnNob3N0ID0gY2xhc3NfdG9fc2hvc3QoZGV2KTsKKwlzdHJ1Y3QgYXRhX3BvcnQg
-KmFwID0gYXRhX3Nob3N0X3RvX3BvcnQoc2hvc3QpOworCisJcmV0dXJuIHN5c2ZzX2VtaXQo
-YnVmLCAiJWRcbiIsICEoYXAtPmZsYWdzICYgQVRBX0ZMQUdfTk9fTFBNKSk7Cit9CitERVZJ
-Q0VfQVRUUihsaW5rX3Bvd2VyX21hbmFnZW1lbnRfc3VwcG9ydGVkLCBTX0lSVUdPLAorCSAg
-ICBhdGFfc2NzaV9scG1fc3VwcG9ydGVkX3Nob3csIE5VTEwpOworRVhQT1JUX1NZTUJPTF9H
-UEwoZGV2X2F0dHJfbGlua19wb3dlcl9tYW5hZ2VtZW50X3N1cHBvcnRlZCk7CisKIHN0YXRp
-YyBzc2l6ZV90IGF0YV9zY3NpX2xwbV9zdG9yZShzdHJ1Y3QgZGV2aWNlICpkZXZpY2UsCiAJ
-CQkJICBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwKIAkJCQkgIGNvbnN0IGNoYXIg
-KmJ1Ziwgc2l6ZV90IGNvdW50KQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9saWJhdGEu
-aCBiL2luY2x1ZGUvbGludXgvbGliYXRhLmgKaW5kZXggMWMwNTgwNjI3ZGJiLi5lOWE2ZjM3
-YmQ3ZjkgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvbGliYXRhLmgKKysrIGIvaW5jbHVk
-ZS9saW51eC9saWJhdGEuaApAQCAtNTQ3LDYgKzU0Nyw3IEBAIHR5cGVkZWYgdm9pZCAoKmF0
-YV9wb3N0cmVzZXRfZm5fdCkoc3RydWN0IGF0YV9saW5rICpsaW5rLCB1bnNpZ25lZCBpbnQg
-KmNsYXNzZXMpCiAKIGV4dGVybiBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSBkZXZfYXR0cl91
-bmxvYWRfaGVhZHM7CiAjaWZkZWYgQ09ORklHX1NBVEFfSE9TVAorZXh0ZXJuIHN0cnVjdCBk
-ZXZpY2VfYXR0cmlidXRlIGRldl9hdHRyX2xpbmtfcG93ZXJfbWFuYWdlbWVudF9zdXBwb3J0
-ZWQ7CiBleHRlcm4gc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgZGV2X2F0dHJfbGlua19wb3dl
-cl9tYW5hZ2VtZW50X3BvbGljeTsKIGV4dGVybiBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSBk
-ZXZfYXR0cl9uY3FfcHJpb19zdXBwb3J0ZWQ7CiBleHRlcm4gc3RydWN0IGRldmljZV9hdHRy
-aWJ1dGUgZGV2X2F0dHJfbmNxX3ByaW9fZW5hYmxlOwotLSAKMi41MC4xCgo=
-
---------------8PspsMq80uB7NlP91NHAb0Yt--
