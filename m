@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A426111A8
-	for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2025 22:30:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31E3821348
+	for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2025 22:34:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753741855; cv=none; b=bKlR0KVd8EZ50c1LPo0kJIonUgDUFUlcDt1uEY46MsZv9nMYj3f9H4vHMdp/G1PjP1W6IIBxAvq59LSTw5SB59zZSLE3scbS87k932s6XVMImlqAAlXI0rCoJmRIQKNGBTPKRPwlP7iu73wU2oRWbAHxvQ2kKp79eIkjSM27GuQ=
+	t=1753742043; cv=none; b=shDu14tsMfzhf+x1kcSpq8BLqI9ccvbL9LLNVE8SW03nk70XER7fvE/BKDMPHn3j1Umo6uUoCEYFACkhF+vqSm/Pb4O1L4BdmzG8ATwT/MKcuZTiGZUhpYACcTFRPyvyf2SavhYrGAB00rQmhybhZmML11S57pfpO0opGdJQ5iU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753741855; c=relaxed/simple;
-	bh=/1BrXD3fQpF72mx1DAPNnhXyTgXhonfo60wpkCRVIQs=;
+	s=arc-20240116; t=1753742043; c=relaxed/simple;
+	bh=8a2Y93oHH/OSh9XjEyyBAAxmZiTUjcXf/ZOnnwUBTK8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ViKH82KkrvZtEK50hwx2o9jlKqOunPK+kUmZ08k3sXO6nGpi3DA8pijv9zyJCdeBbmHwBIkSBjQ7ExHNZ7VeSC5yl15baFvokMdD1cPY2lNewcnI9CqZF58qe25l9WIG4yEFZSJxvLaGeWYsLE8cqtMtnLJr0L+5apEHQGW3zdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WddkmhIi; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=GoJyknb0l/SnR/UsjfI22UxarRTsA/ImJO0IxpQREm9e7jd4jEUPxz5exuq1oZZNz8+XqA/ZA8Pna1CKyUMRAD6/s9E4q5NFD/QFaD4gpBzHywMgDNwWwCm5Q4nrIDvczoXPh263oWSvKaK+LBiVtqyZ5btaTFnWZukFkPTxqW0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l4vpMbvS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WddkmhIi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE6C3C4CEE7;
-	Mon, 28 Jul 2025 22:30:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l4vpMbvS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A3BAC4CEE7;
+	Mon, 28 Jul 2025 22:34:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753741855;
-	bh=/1BrXD3fQpF72mx1DAPNnhXyTgXhonfo60wpkCRVIQs=;
+	s=k20201202; t=1753742042;
+	bh=8a2Y93oHH/OSh9XjEyyBAAxmZiTUjcXf/ZOnnwUBTK8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=WddkmhIiirYBbUFWseRESmZgrRbCwSthhaBBDth9rJ55+FB/gYGyGHHL+bnMuzDlH
-	 Xu2nrKeP8a+hnJElRD2eXKNWOs7Gp42vNYvniz6QtLUaHKJY21q8dwHUP7l9t765lg
-	 fhfGrY9y/SQm6g36wgoQj1mtg4wEfrPnSarKq/NRFnflMkLYG/JP3Oidjpwok9B7WX
-	 IQg3Zw5WuBDoxC6zDOkXYNw1Ry1VJq2Xh0KlOLNoVtP5eWM+ROPkIvoBucb8jqoOCI
-	 iJt7hd36BJYHT89eh5N395JoNDAPhHZoExTw9fl48H+147P+k4mGtl5TRuNwRooDow
-	 2FpV9LVgRGE8Q==
-Message-ID: <d47b06b4-d2e6-4c0a-8721-5df15aa46378@kernel.org>
-Date: Tue, 29 Jul 2025 07:30:52 +0900
+	b=l4vpMbvS9ikuZ3UxCF1E2fplBB7lTBaFvxF04UZnb8npMgZ6CDkTwGH6Mw0CMt0Jb
+	 BPvxvtUPzvpuzQBXIH3ezEGi2YY8mSDQcc9KXjvbujM0biQZH+ryS0FFyppuxGL3u0
+	 q9xEqQyBWgbKkSvPIQ98H0LQq3kpFEx+DPTy9cU6ce/AOfZaHtoWBaFljzfn8PFdOx
+	 +tgeeiCvA9DkZb7NgneuBhPdXg5nBpIEbmBc/+LGpgGlFrikUaSLjIwSjzz2pZKiV0
+	 uxX9Bdexq33rMTQMtnJQJDPpJNLGXcGJhAD6D4D1Iy6oWSaEnzSECCckFwJT5jVzCk
+	 GiBrw4lxiFzHw==
+Message-ID: <5143bbee-697b-4357-9645-10f38296b561@kernel.org>
+Date: Tue, 29 Jul 2025 07:33:59 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -44,19 +44,19 @@ Cc: "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
  <suresh.kumar.kurmi@intel.com>, "Saarinen, Jani" <jani.saarinen@intel.com>,
  lucas.demarchi@intel.com
 References: <07563042-6576-41cd-9a95-de83cfc95de1@intel.com>
- <f4f147cd-5847-4efd-8dd3-9a00e129e133@kernel.org>
- <8f37fcfd-300c-42df-a65b-57c10f185287@intel.com>
+ <f3f779e3-e269-4ac9-9bed-042859d98a83@kernel.org>
+ <d34d122f-2ef8-44f1-83c9-92c7b9e83b6e@intel.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <8f37fcfd-300c-42df-a65b-57c10f185287@intel.com>
+In-Reply-To: <d34d122f-2ef8-44f1-83c9-92c7b9e83b6e@intel.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 7/29/25 01:33, Borah, Chaitanya Kumar wrote:
+On 7/29/25 01:24, Borah, Chaitanya Kumar wrote:
 > 
 > 
-> On 7/28/2025 11:01 AM, Damien Le Moal wrote:
+> On 7/28/2025 9:41 AM, Damien Le Moal wrote:
 >> On 7/25/25 3:43 PM, Borah, Chaitanya Kumar wrote:
 >>> For some context in our kms_pm_rpm tests, we enable min_power policy for SATA
 >>> so that we can reach deep runtime power states and restore the original policy
@@ -74,55 +74,31 @@ On 7/29/25 01:33, Borah, Chaitanya Kumar wrote:
 >>> Also, are there other ways to detect a port is external other than receiving
 >>> EOPNOTSUPP on the sysfs write?
 >>
->> I completely forgot to mention one important thing: please check your test
->> machine BIOS settings and see if you have "hotplug support" set to enable for
->> SATA ports. If it is, set that BIOS setting to disable and you will see the
->> SATA port as a regular one, not as an external port. So LPM support will be
->> back and your test program will not need changes.
->>
->> Not all BIOSes have such setting though. Most of the machine I have do have it
->> though and I checked that it does affect how the ahci driver sees the port
->> (external or regular with LPM).
->>
+>> The attached patch adds the "link_power_management_supported" sysfs device
+>> attribute for drives connected to AHCI. Would that work for you ?
 >>
 > 
-> Found a "Hot Plug" setting (thanks to Mika!) in our testing device's 
-> BIOS but it does not seem to have any effect.
+> Yes this could work. I quickly hacked the test to ignore writing policy 
+> if this file returns 0.
 > 
-> We also have an option called "External", toggling that did not help either.
+> Here is the state of the machine I am testing on.
 > 
-> There is another configuration which was *readonly*.
-> 
-> "Configured as eSATA" -> "Hot Plug supported"
-> 
-> Not sure if it is relevant to our discussion.
+> /sys/class/scsi_host/host0/link_power_management_supported: 0
+> /sys/class/scsi_host/host1/link_power_management_supported: 0
+> /sys/class/scsi_host/host2/link_power_management_supported: 0
+> /sys/class/scsi_host/host3/link_power_management_supported: 0
+> /sys/class/scsi_host/host4/link_power_management_supported: 1
+> /sys/class/scsi_host/host5/link_power_management_supported: 1
+> /sys/class/scsi_host/host6/link_power_management_supported: 1
+> /sys/class/scsi_host/host7/link_power_management_supported: 1
 
-It is and that probably is the reason why disabling hotplug does nothing on the
-port external characteristic. Does this machine really have eSata ports ? Do
-they correspond to the 4 ports (out of 8) that you see as external
-(link_power_management_supported = 0 ports) ?
+Looks good. My test machine looks exactly like this too.
+I will send out this patch as it is useful anyway regardless of external/hotplug
+ports since not all adapters/drives support LPM.
 
-Likely, you have the SXS host capability set for this machine because of this
-BIOS setup. From the AHCI specifications:
+When posting this, can I tag it as a solution to the regression ?
 
-Supports External SATA (SXS): When set to ‘1’, indicates that the HBA has one or
-more Serial ATA ports that has a signal only connector that is externally
-accessible (e.g. eSATA connector).
-
-Hotplug is reported as a separate bit, but handled in the same way as an
-external port as we cannot (easily) support LPM if we want to preserve the
-hotplug capability (LPM changes the PHY state constantly, which clashes with hot
-plug/unplug PHY changes and is hard to differentiate).
-
-Note that you can see if a port is external in dmesg. Look for:
-
-ata4: SATA max UDMA/133 abar m524288@0xaa500000 port 0xaa500280 irq 112 lpm-pol
-1 ext
-
-A regular port will not have the "ext" at the end:
-
-ata5: SATA max UDMA/133 abar m524288@0xaa500000 port 0xaa500300 irq 112 lpm-pol 1
-
+And in addition to this patch, I will work on a flexible way of ignoring hotplug.
 
 
 -- 
