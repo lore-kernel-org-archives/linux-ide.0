@@ -1,316 +1,192 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F552857CD
-	for <linux-ide@vger.kernel.org>; Tue, 29 Jul 2025 08:58:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.11
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753779521; cv=fail; b=alr9Bzj7KS2fi4569DbcddV8dXinWDZ4vJy7Yzp0UdgrE4gb6AsjXaakevN4nBnFv/PAkGRscUm1WEJqRyGdLkVN8PCAm+++EZGOCK0CEiATlCmCR2SBOMC6Kom/n5eOV4+u202/Rw0EPl6llzPEstxDP6Vv0rVUBu9wbApvI3A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753779521; c=relaxed/simple;
-	bh=PnKrjs4bKEBbIf+c4P1LgEQfctqALavwDG7XCo1d9Y4=;
-	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=KhAPznrrLThtSPsnx1Ses1nxthADs6bOtJ9wnbO19diMkuYW0Ug9Ofor7uelMVPabDHYP6UclTHxPZecYj/q/Y25ZMLtYFC81w6LPj1hPcHycowO6kNXidpFy+QGiVGOYd78Pbo3ZcMy+wEWciiDw3+JXJAZwILi7jscMhV9/5g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AV7v+vVE; arc=fail smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD997A921
+	for <linux-ide@vger.kernel.org>; Wed, 30 Jul 2025 00:22:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1753834938; cv=none; b=d57Yaj0Ymi2i2j8V8XkxvwKdf3sC4f3aywhT3rx6n9U2177xlWhod+WZRu6bLeH3ZLKJ/MFNlUEu1PoBkp5H+JX4HhdlJHwJk93NM9StQ0rHk2Vrn7CkeVh8+yi0IHIFf57XdhKzw+HmVmBjeuVIQAtjfP7KzCFeEKr9qCVwQC0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1753834938; c=relaxed/simple;
+	bh=VAuRFtDcLeEuntyEuefnoHUteJAVZke/j3cTCVW4cnw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RHrBTgToX7Kc4avoUphkr7AgijgqjpsGigMKED8SDJJizsn/Y6xnajRyOufVACy37ffCzSG3CZM8CjsftMhqIacUu3U7uGv4EWILK/UMM7PVHdboyHcCMRjJS6xYw+TKpkWL8/Zw2FsraFry+SA6lEVFFbw0zjq+o0dVLugBq+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h/myK7LN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AV7v+vVE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1753779519; x=1785315519;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=PnKrjs4bKEBbIf+c4P1LgEQfctqALavwDG7XCo1d9Y4=;
-  b=AV7v+vVE2C7up+bWc5pwVyryinFbBEMhuugsjQg1VqyjncNMif2q9Yvr
-   Mwc96kD5MFA5UjrVyXsboOsoNuPZ6/vVtN6bsDhGruut4pxBRN/xxIQlK
-   aL9HBBjOwkUGwLa3xMkukd7abLY+3EvnEmetLR1/9GsPNqRMSZRt2TD1p
-   7zZuEGaQb/Y1LcFjnMClgisyAMG2s4Uts0zHbzZsBrLo2/oC+rq8sEKys
-   LYX0hSZVUeZ/Rx4JxyqY7bjpzuooTEX5xv9VW3GI6Qm8c/xtjY1GIKthy
-   Ale2rousd+jL6zegmgIB7BgQLXTu81xVUKunWhno4yLS9gzIhJgqF3Pu2
-   A==;
-X-CSE-ConnectionGUID: fhusL7lIQV+TqOyhgxFl/Q==
-X-CSE-MsgGUID: k1Ajzk+8ScSempXbJSII0A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11505"; a="66313273"
-X-IronPort-AV: E=Sophos;i="6.16,348,1744095600"; 
-   d="scan'208";a="66313273"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jul 2025 01:58:39 -0700
-X-CSE-ConnectionGUID: +V7jGfLxTfq+Trn+fQ5PQQ==
-X-CSE-MsgGUID: 5tMuyqoUTtuqUaIyaR2/GQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,348,1744095600"; 
-   d="scan'208";a="186300248"
-Received: from orsmsx901.amr.corp.intel.com ([10.22.229.23])
-  by fmviesa002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jul 2025 01:58:38 -0700
-Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
- ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Tue, 29 Jul 2025 01:58:37 -0700
-Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
- ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26 via Frontend Transport; Tue, 29 Jul 2025 01:58:37 -0700
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (40.107.223.48)
- by edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Tue, 29 Jul 2025 01:58:37 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rSWOHiY2/4wJRyYrDdOOT3ZtX2ZYiTBc+CBp82a0t8v6c0mjSNtgyN/HWNCAifLdOb2SjVuq8u6xEHqPeE0Pw/bc1Wu0onR6z83Yvl707bLRe9c9q/3bl6smQF+Y8pyYAb5llLpsEGE2GzhQc/3Bw9mefhCiBliALf7Lrpplt+Uxrr/7JUUtGKP7WnheX6Bf3BON/Jp8OCFe7G/TE3i8DujuXk0YasVMaiqtLRNMSuZldbnVlRzdNVx8UCqvyNfkEWzReH7lDsEcHMsQZ25VmWxEHaoYJswTiypDTalx/GAoCrJBdEC1sVwDxVJQjfdwXq2ZvaeY9qykY8aYHv3z4g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=D8fx3U3IaIYsarvKnLUPB+Brj3MVuq/csJykXdqCSRY=;
- b=YfZYtUz4uvRz9ob7dMV3f2oWgRE0jG0QE7LWNprj/W0hYGaS8a6XS24ZteL+9JdEcaYyX1r662cDyguecASqzjayZPTijFZz2wgLvlT1X6sHsFsnXwJxBSf4t4HuMUPXq3NsIRILTKpoFrid6JQHa/0Bpba+51Owl/S4XP8IfgHlLbeGVkMQyxaIj5CXfhSG10goVvfyw0ZomgzqHKy511SyRpgYkv/6/uvAbs8LdH/qXtaSteSQMqXi6TvcoCY/xB+LPLmOQN4m0KW+kZtDsyef+PtGSXrD/ku/FPG/j/w19NsUQtUspc+xv5Iaoa9wmD1RfYXj3uazIRDsHUdG8g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from SJ1PR11MB6129.namprd11.prod.outlook.com (2603:10b6:a03:488::12)
- by MN2PR11MB4551.namprd11.prod.outlook.com (2603:10b6:208:269::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8964.27; Tue, 29 Jul
- 2025 08:58:30 +0000
-Received: from SJ1PR11MB6129.namprd11.prod.outlook.com
- ([fe80::21c3:4b36:8cc5:b525]) by SJ1PR11MB6129.namprd11.prod.outlook.com
- ([fe80::21c3:4b36:8cc5:b525%6]) with mapi id 15.20.8964.025; Tue, 29 Jul 2025
- 08:58:29 +0000
-Message-ID: <5902b8f0-970f-479c-b665-3a55a41f3915@intel.com>
-Date: Tue, 29 Jul 2025 14:28:22 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: Regression on linux-next (next-20250708)
-Content-Language: en-GB
-To: Damien Le Moal <dlemoal@kernel.org>
-CC: "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
-	"intel-xe@lists.freedesktop.org" <intel-xe@lists.freedesktop.org>,
-	<linux-ide@vger.kernel.org>, <mika.westerberg@intel.com>,
-	<anshuman.gupta@intel.com>, "Kurmi, Suresh Kumar"
-	<suresh.kumar.kurmi@intel.com>, "Saarinen, Jani" <jani.saarinen@intel.com>,
-	<lucas.demarchi@intel.com>
-References: <07563042-6576-41cd-9a95-de83cfc95de1@intel.com>
- <f4f147cd-5847-4efd-8dd3-9a00e129e133@kernel.org>
- <8f37fcfd-300c-42df-a65b-57c10f185287@intel.com>
- <d47b06b4-d2e6-4c0a-8721-5df15aa46378@kernel.org>
-From: "Borah, Chaitanya Kumar" <chaitanya.kumar.borah@intel.com>
-In-Reply-To: <d47b06b4-d2e6-4c0a-8721-5df15aa46378@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: MA5P287CA0013.INDP287.PROD.OUTLOOK.COM
- (2603:1096:a01:179::11) To SJ1PR11MB6129.namprd11.prod.outlook.com
- (2603:10b6:a03:488::12)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h/myK7LN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADD23C4CEEF;
+	Wed, 30 Jul 2025 00:22:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753834938;
+	bh=VAuRFtDcLeEuntyEuefnoHUteJAVZke/j3cTCVW4cnw=;
+	h=From:To:Cc:Subject:Date:From;
+	b=h/myK7LNX1HBMWxvKpJ6JqBSq49I5R6tnJAwW3ydfaQ/rethB37fco7QnD9f+gJ5y
+	 snMzWLYTGyepb/CeEK0ynjcEXX5FkX7/X6sXz3qRYqWUHrUkpdLUSGZqEOtzBPAKSy
+	 KsOkWnR5y9jpsm6GG2oHJWzDlNt4pFjtid5sQXsCms0pNPS+IrWs+DZMK2nBlQYmXP
+	 1gAl8aXckLA+T4gLUoXEVqMWrNgzCSx53IGk3XmYkYDqgSlchXF9Tp8TDdgCePB7hy
+	 wVwaG9OAighwHj+xkMm/zrvQGHQeecNG3+UI9ZISPG/wrIy3awAB56AFGUNIiz9aHV
+	 UM3T0FBukoGvQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Borah,
+	Chaitanya Kumar <chaitanya.kumar.borah@intel.com>
+Subject: [PATCH] ata: libata-sata: Add link_power_management_supported sysfs attribute
+Date: Wed, 30 Jul 2025 09:19:47 +0900
+Message-ID: <20250730001947.332661-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PR11MB6129:EE_|MN2PR11MB4551:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2391d6dc-91f5-48bb-f5a6-08ddce7e160a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014;
-X-Microsoft-Antispam-Message-Info: =?utf-8?B?dkFsQjI3aXlDaU1zQm1aSWtPcW9XTDBVd3cyVWc0MnBPYzBxYjBjZ1grYTR1?=
- =?utf-8?B?YVMyclMyWjNjNWZlZDJYdGVJcDVSY0ZBMGMwRENaZjFwWnZyenpUYTVsMlV3?=
- =?utf-8?B?VWxFdzBYZlRkbndNMEZ3eXVHUS9MbkY4TGFxWmRKSHdzaGowWEVzcFNCTWZn?=
- =?utf-8?B?bkN1Kzc0T21INFZ5L2hXMktBWSt1NWNMYWxaMit3dnpoaGZRQ245dzgrZXpM?=
- =?utf-8?B?anl5d2dIZ2grVFBCd2thN2ozZTlxQWJ0dEl6Q05sQVhRMVVhRTI5d3R1d1Fa?=
- =?utf-8?B?bGNERjZ1K1V4S2laTUR6eHZwN3l5WE1Zd0laV2xWZng3M21rOUxlenJMdFNY?=
- =?utf-8?B?TUhYcWI1aWZ4dnV5Skhua3gveVhWZjN3bnRyeW84M3NRclhRdEhZRXQ0SEk2?=
- =?utf-8?B?aktYS2VDWS93Wlp5K0IzTjZPdDB3K3VJRHI4dkMxYnVoaU0rZEtiQ3VBR2VJ?=
- =?utf-8?B?aXg4all0UzBIOTVKaUFMY1FtU3oxYTR5dXRKc2RuVFlmbmpWV1RvdEJESjlu?=
- =?utf-8?B?YTVxR3dHNWtBVCtjdjhCdWx4YTNJcTFqMVdISkt1aG50eDJTZlJMc3k4Z0p1?=
- =?utf-8?B?bVcyaUxMQzlHYkZoaWRNZG9FYVprSktGbmpoaE9sc2lBUGczSnh5ejBaejVt?=
- =?utf-8?B?eXJvVWxMajhGMzRPQm1qT3RVYXdnSXVZdWw3WjVNWkVCU2Jma0JHU2kyZEh2?=
- =?utf-8?B?UEVBT2kwZ3ZGTXhKb0V1OWhGLzkwR0FrZ2hTOXpyaEg3WEdnZnhqUmMxa3pU?=
- =?utf-8?B?aFVuOUR5cHlySHRRb20zd2FhdGNNSFRPQXlGR1ZnMmdmbTBTazhHK0ljZ1RU?=
- =?utf-8?B?VUswYUxWVyt1V3JaMUpFZHQrRmN1azRnODZBVDUyMG1IdVFOMVpVOUk4Y1Iv?=
- =?utf-8?B?MUJjYzBsdWVJU1ZsS2FZZjg1aWw3UVh5OTEySmdvekF6dGFPQ2RkUnJOQjZx?=
- =?utf-8?B?TFAyUHRXUThBRXR2eWtrUU1tNVdJNVFFM3JSSk9RMnh0a3FaUXkvb29KalV5?=
- =?utf-8?B?d1hoVlZrYmV6YkY2WCtvVXluNU55ZzJQRWdFdEpqcGpHZFNkLytoYlNiOHor?=
- =?utf-8?B?YTRhaTY0bVFiZTVYRUxIWDBJTitXV1laRDFyMGNjelZWcm1tTXY3N0lsOTU5?=
- =?utf-8?B?VDZ3M2wzMWlkdi9URVZVS3lLQkNhSTBINUc5NlZ4dkRTM3FxOWFOREUrY0NO?=
- =?utf-8?B?ZkNiNE9GYlEwSzhCbFVxdnJ5TEt5aFlmeFd5M2ZUQWkvd2sxMXFRNGFaemw3?=
- =?utf-8?B?ZTlKdmZEcjZOanhIRC9xUC9MNmtnSEdkSGp0c3FQR2hUVmdXUWxQRDZpTWxh?=
- =?utf-8?B?SWhHMmZIMW1RM25KZUk4Tis4bU10S1VpZVB3VlpmY1NudTMvcnU4NEJVekVV?=
- =?utf-8?B?MFZKeVFFZ2pJRTdmcVY3dzV0Q2hXUVQwb3JIdjRxOWxVS2FSQ0F4RFhqMTFK?=
- =?utf-8?B?S1hsakF1MkIxOHB0MXZkZjZPQm1sdHhqRVBtVnVEb3o1TkVjSDc4NHBFVEJB?=
- =?utf-8?B?MU80V0s0S0VqN1U4TmdGRFcxNmtzL3BHZVJpTVk5QmNxT2ZIeUhVN2RDaGl2?=
- =?utf-8?B?L1l3Zk1BTVhyR1pGNHFRMW4zamNRSUNsRndsWStqbTRBSTVDODdXVGozOVRU?=
- =?utf-8?B?NTM2WUg1UnJva2FTYWp3ZDkreFRleTl2RlJvK083U0FrSThuNEgxTTNVclpu?=
- =?utf-8?B?RWh5REh0WE1JbzVveTlsZ3YwOXNNVGRQN3dLWjBzS1FZQXVTRGVIMkJ2alZ6?=
- =?utf-8?B?eXZyelc2a25HUVJOS3RXZFdmYzF1OWp6bXZ0Mlk3RU9tdXMyVGtCcW5kdmJI?=
- =?utf-8?B?bkttZERCdmJINHI5b0pBM2x5Y3F3V1lFbGVPazkyYzN6bXY1U0k1NW9MZEg5?=
- =?utf-8?B?c1ZMbktkWWdIc1VQcTVKV0xOb2NET1I2cjM3K1ZPTmNyc3RNMmFzUERPZjVr?=
- =?utf-8?Q?ThdkrLLwxP8=3D?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ1PR11MB6129.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MXVKU1FNS2d6UjFHR08wWWFzWEFwWWN2NjhTMWpoYlFpU3M2R1B6eHlscVhp?=
- =?utf-8?B?Wld0Y0o3V0g5b1kwWFFUZ2UyNDdMdlBsUGN4T0twN1YrZDltQzZEWG9vNnNK?=
- =?utf-8?B?b1hpL0tyWWEyQWJYeFdEeE0yMWU1U1RhdWlRWkFQbHBIMHFweXNGUzhWZkF3?=
- =?utf-8?B?emsyNE12ZGZreGJXSExqY1Q3ZmxFWFRBQ05lTnJONnFPdUdmOGpIV3l4Y1BU?=
- =?utf-8?B?YUpBWkVERzNhbGd2dmJkb1UzR1kxL1orWnVXOEZjSDdIeW9VQ0ljMWd0R2xO?=
- =?utf-8?B?ZG8rVHJoNzdhN2RPdk9udzllOU5rdnVJK3hjUkVjeURpYVhiRXBsMUsxbEt2?=
- =?utf-8?B?aWxrdG0xV2FUaWN0bDJmSWVNdkFIbkxNeWV1QTcyVnZjNXNOVGloa2JEWDE0?=
- =?utf-8?B?T09CaVNtUTB5ano4VTdOUFR2S042Y3lmdzJpT1lBelVVNUpacnprVUw2cVRY?=
- =?utf-8?B?dWw1S1cwZjBUQm5hVEFrSlUxektnMktvOVA2b0tXVDBVdHFKNkVJL1NXQ0dw?=
- =?utf-8?B?TkhYVXhIc1dGekhOSmZGaURReUdhL3h1WVU5dDNQQmp1WjhUZHdjYXRnTHpn?=
- =?utf-8?B?MUFpQ1VYNzZwOXkvQ3pkT1B0SXpVSW13Z3ZWVTdaWU9WWG5xQ05lK0hSMjE3?=
- =?utf-8?B?VnRLOTVpVlNYYTJ3b1Z0aEtxZXZ1RnlZU3oweGE5MDUyTWxRWXFnUkxZVXFo?=
- =?utf-8?B?Yk1ZeitkK09Nc2gxaVg4OUNBVWZFcXRJWHZJR3I4b1RLOTJWdy9xVGJ0YVVs?=
- =?utf-8?B?RTdKc2NxUC9qdWJFanZyeHY0dmw1cEl4aDJzTzVJMHRGUmQwUy9Yb2NKU05Q?=
- =?utf-8?B?cW5LbmZDRlhZcktRU0NRbHZhVWQrQ1RrYTB5MktnL1RmampCakxyZ09FRDA1?=
- =?utf-8?B?c1YweTIzVjM2ejVjOWZwUnMzdHUwdGQrRUovdWxORFlyOUpHNjhEMVZhbitV?=
- =?utf-8?B?NVBtblRINkhZcWxHUk4yQ0J2RlRpd2VuS0VFQUloTXI1MjRvdGtTbkpseFZy?=
- =?utf-8?B?V2ZraUxYbWJPbXdMamxlUnY2Q29ORDNhT3JxWU1Sd1BDZUZYOEc0VUpsRjlH?=
- =?utf-8?B?S0V0RTVWSFZyRk1qSmgzODdja3pWNFJaaUdvZVZGZDhUMWsyVUQvR2toQTdH?=
- =?utf-8?B?d3dqdFZRSm0ydG5XQ2NjRnRtVDgza3NHbndYdVczbEl5MS92eFRGVENDVVFk?=
- =?utf-8?B?VEVMOC9qNDhrYWlYdGFZTFVqV1ljTk45aGFUVXZHQkdiSWdGU3FGNWd0Tm1s?=
- =?utf-8?B?TWRlSEkwQmkva0dVSUJOYjBFWTR3RlgyYUFaKzRKK1dRWnZhcTcvai9Mdjl3?=
- =?utf-8?B?UVJnNG5BT1czREdWRzhWcmhyK1hWdm9POWxhNEN1Yy9yTXlJeHdKVGFmRDhI?=
- =?utf-8?B?MlRwSHU2emN0aC9ieEU0c3A1cFErVm9GaDJwMjhiMzYzT1lOcWtJWXNhRjVx?=
- =?utf-8?B?dTNqcnM4RzJ5blJlME92VFMzNG5wNWplOWhORHZaMzdJbzUzOE9jRlR6eGJi?=
- =?utf-8?B?UG55MmIvKzc2aURqczB1cEpYa2tlbkpnRGNKbmxzRkZ2MTdyNEY0Y093UDYz?=
- =?utf-8?B?NzIzN2h6TFRhVitCaEx3RU5xOElobGZSc2NaRFk4VHhNcTlHeXVENWRZSldo?=
- =?utf-8?B?WUsrL2FIbnBoMk95S2t6TExJK212SC93TFFRUTVlSitQYVpqWTc2OTFZTmVJ?=
- =?utf-8?B?RklzbjhDZmM0cktEQkpMblowNXAwTEZRK0dzNUFnem0yLzVMTlBnZlFMa1B0?=
- =?utf-8?B?VXVqN3AzMEhkVGdQS052anJ0WmpCdm5mU1V2VW5XY0dMRGRxazMxVnpZWjdM?=
- =?utf-8?B?OUErVHpqTDZ3VEwyM2FsUzAxVDZaakFjTFF5K3p2djJzVi9GRFpPMzM2VGVj?=
- =?utf-8?B?V293MmN0NXFoRlk4M2toUmVoNDFZRElicDNzTFNNT0dMOVJBbHcybFUvNVVh?=
- =?utf-8?B?OFJCazl0eHRmK3JpemMzVTJ1bFpERXhKeFFnb2lhQmNLbXRZWU5uY0xHejdU?=
- =?utf-8?B?NlhhQVFXaTdqbUY0QW9kWGdFRlpNYnF4b3JWc2JCdjVHM2FMSklxU2FQMnMx?=
- =?utf-8?B?OHBzR1J5Sys2SDdSMWxRSzM4SUwyNG9ZQ0V6QmRkOG5pZkhoZk5XUW4wRXV2?=
- =?utf-8?B?UzdnVWpZRCtCMlZQQkZVcUZrWmVFTy9xUzRxOWtxVUVJbEI2c1c4b0hBZFl0?=
- =?utf-8?Q?womEVCSLevXHc4kl+XFj5iw=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2391d6dc-91f5-48bb-f5a6-08ddce7e160a
-X-MS-Exchange-CrossTenant-AuthSource: SJ1PR11MB6129.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jul 2025 08:58:29.0454
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /h2NBCUgWj3PExJcfeA0x97sLPs0Qk3I2yEbclPKFXZcu4GWfKleGeCSvxc8CDL5a1KWdHTT7s0OLGqCshPeRJs7FdStIg05+S3TYmxcx34=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR11MB4551
-X-OriginatorOrg: intel.com
+Content-Transfer-Encoding: 8bit
 
+A port link power management (LPM) policy can be controlled using the
+link_power_management_policy sysfs host attribute. However, this
+attribute exists also for hosts that do not support LPM and in such
+case, attempting to change the LPM policy for the host (port) will fail
+with -EOPNOTSUPP.
 
+Introduce the new sysfs link_power_management_supported host attribute
+to indicate to the user if a the port and the devices connected to the
+port for the host support LPM, which implies that the
+link_power_management_policy attribute can be used.
 
-On 7/29/2025 4:00 AM, Damien Le Moal wrote:
-> On 7/29/25 01:33, Borah, Chaitanya Kumar wrote:
->>
->>
->> On 7/28/2025 11:01 AM, Damien Le Moal wrote:
->>> On 7/25/25 3:43 PM, Borah, Chaitanya Kumar wrote:
->>>> For some context in our kms_pm_rpm tests, we enable min_power policy for SATA
->>>> so that we can reach deep runtime power states and restore the original policy
->>>> after finishing. [5][6]
->>>>
->>>> IIUC, the above change is based on spec and not something which can be
->>>> reverted. So as I see it, we have to drop this code path for external ports.
->>>> However I am not sure if we can achieve deep power states without enforcing it
->>>> through the sysfs entry.
->>>>
->>>> Atleast for the basic-rte subtest, the test passes if we comment out the
->>>> functions controlling the SATA ports. We will need more testing to determine if
->>>> this approach work. Any thoughts on it?
->>>>
->>>> Also, are there other ways to detect a port is external other than receiving
->>>> EOPNOTSUPP on the sysfs write?
->>>
->>> I completely forgot to mention one important thing: please check your test
->>> machine BIOS settings and see if you have "hotplug support" set to enable for
->>> SATA ports. If it is, set that BIOS setting to disable and you will see the
->>> SATA port as a regular one, not as an external port. So LPM support will be
->>> back and your test program will not need changes.
->>>
->>> Not all BIOSes have such setting though. Most of the machine I have do have it
->>> though and I checked that it does affect how the ahci driver sees the port
->>> (external or regular with LPM).
->>>
->>>
->>
->> Found a "Hot Plug" setting (thanks to Mika!) in our testing device's
->> BIOS but it does not seem to have any effect.
->>
->> We also have an option called "External", toggling that did not help either.
->>
->> There is another configuration which was *readonly*.
->>
->> "Configured as eSATA" -> "Hot Plug supported"
->>
->> Not sure if it is relevant to our discussion.
-> 
-> It is and that probably is the reason why disabling hotplug does nothing on the
-> port external characteristic. Does this machine really have eSata ports ? Do
-> they correspond to the 4 ports (out of 8) that you see as external
-> (link_power_management_supported = 0 ports) ?
-> 
+Since checking that a port and its devices support LPM is common between
+the new ata_scsi_lpm_supported_show() function and the existing
+ata_scsi_lpm_store() function, the new helper ata_scsi_lpm_supported()
+is introduced.
 
-I can see the BIOS setting available for all 8 ports.
+Fixes: 413e800cadbf ("ata: libata-sata: Disallow changing LPM state if not supported")
+Reported-by: Borah, Chaitanya Kumar <chaitanya.kumar.borah@intel.com>
+Reported-by: kernel test robot <oliver.sang@intel.com>
+Closes: https://lore.kernel.org/oe-lkp/202507251014.a5becc3b-lkp@intel.com
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/ata_piix.c    |  1 +
+ drivers/ata/libahci.c     |  1 +
+ drivers/ata/libata-sata.c | 53 ++++++++++++++++++++++++++++++---------
+ include/linux/libata.h    |  1 +
+ 4 files changed, 44 insertions(+), 12 deletions(-)
 
-> Likely, you have the SXS host capability set for this machine because of this
-> BIOS setup. From the AHCI specifications:
-> 
-> Supports External SATA (SXS): When set to ‘1’, indicates that the HBA has one or
-> more Serial ATA ports that has a signal only connector that is externally
-> accessible (e.g. eSATA connector).
-> 
-> Hotplug is reported as a separate bit, but handled in the same way as an
-> external port as we cannot (easily) support LPM if we want to preserve the
-> hotplug capability (LPM changes the PHY state constantly, which clashes with hot
-> plug/unplug PHY changes and is hard to differentiate).
-> 
-> Note that you can see if a port is external in dmesg. Look for:
-> 
-> ata4: SATA max UDMA/133 abar m524288@0xaa500000 port 0xaa500280 irq 112 lpm-pol
-> 1 ext
-> 
-> A regular port will not have the "ext" at the end:
-> 
-> ata5: SATA max UDMA/133 abar m524288@0xaa500000 port 0xaa500300 irq 112 lpm-pol 1
-
-Thanks for the hint. I see the following logs with our default BIOS 
-configuration.
-
-[    6.125670] ata1: DUMMY
-[    6.125673] ata2: DUMMY
-[    6.125676] ata3: DUMMY
-[    6.125678] ata4: DUMMY
-[    6.125683] ata5: SATA max UDMA/133 abar m2048@0xb8263000 port 
-0xb8263300 irq 128 lpm-pol 4
-[    6.125693] ata6: SATA max UDMA/133 abar m2048@0xb8263000 port 
-0xb8263380 irq 128 lpm-pol 4
-[    6.125702] ata7: SATA max UDMA/133 abar m2048@0xb8263000 port 
-0xb8263400 irq 128 lpm-pol 4
-[    6.125711] ata8: SATA max UDMA/133 abar m2048@0xb8263000 port 
-0xb8263480 irq 128 lpm-pol 4
-
-Enabling the "External" option in BIOS has impact on the "non-DUMMY" 
-ports but has no affect on the DUMMY ones.
-
-After enabling the External option on port 1 and 7, the dmesg becomes.
-
-[    6.366145] ata1: DUMMY
-[    6.366148] ata2: DUMMY
-[    6.366151] ata3: DUMMY
-[    6.366153] ata4: DUMMY
-[    6.366160] ata5: SATA max UDMA/133 abar m2048@0xb8263000 port 
-0xb8263300 irq 128 lpm-pol 4
-[    6.366168] ata6: SATA max UDMA/133 abar m2048@0xb8263000 port 
-0xb8263380 irq 128 lpm-pol 4
-[    6.366174] ata7: SATA max UDMA/133 abar m2048@0xb8263000 port 
-0xb8263400 irq 128 lpm-pol 1 ext
-[    6.366182] ata8: SATA max UDMA/133 abar m2048@0xb8263000 port 
-0xb8263480 irq 128 lpm-pol 4
-
-Also enabling "External" hides the "Configured as eSATA" option.
-
--Chaitanya
-
-
-
-
-
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 229429ba5027..495fa096dd65 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1089,6 +1089,7 @@ static struct ata_port_operations ich_pata_ops = {
+ };
+ 
+ static struct attribute *piix_sidpr_shost_attrs[] = {
++	&dev_attr_link_power_management_supported.attr,
+ 	&dev_attr_link_power_management_policy.attr,
+ 	NULL
+ };
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b335fb7e5cb4..c79abdfcd7a9 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -111,6 +111,7 @@ static DEVICE_ATTR(em_buffer, S_IWUSR | S_IRUGO,
+ static DEVICE_ATTR(em_message_supported, S_IRUGO, ahci_show_em_supported, NULL);
+ 
+ static struct attribute *ahci_shost_attrs[] = {
++	&dev_attr_link_power_management_supported.attr,
+ 	&dev_attr_link_power_management_policy.attr,
+ 	&dev_attr_em_message_type.attr,
+ 	&dev_attr_em_message.attr,
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 0708686ca58a..2391589d38d1 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -900,14 +900,52 @@ static const char *ata_lpm_policy_names[] = {
+ 	[ATA_LPM_MIN_POWER]		= "min_power",
+ };
+ 
++/*
++ * Check if a port supports link power management.
++ * Must be called with the port locked.
++ */
++static bool ata_scsi_lpm_supported(struct ata_port *ap)
++{
++	struct ata_link *link;
++	struct ata_device *dev;
++
++	if (ap->flags & ATA_FLAG_NO_LPM)
++		return false;
++
++	ata_for_each_link(link, ap, EDGE) {
++		ata_for_each_dev(dev, &ap->link, ENABLED) {
++			if (dev->quirks & ATA_QUIRK_NOLPM)
++				return false;
++		}
++	}
++
++	return true;
++}
++
++static ssize_t ata_scsi_lpm_supported_show(struct device *dev,
++				 struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	unsigned long flags;
++	bool supported;
++
++	spin_lock_irqsave(ap->lock, flags);
++	supported = ata_scsi_lpm_supported(ap);
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	return sysfs_emit(buf, "%d\n", supported);
++}
++DEVICE_ATTR(link_power_management_supported, S_IRUGO,
++	    ata_scsi_lpm_supported_show, NULL);
++EXPORT_SYMBOL_GPL(dev_attr_link_power_management_supported);
++
+ static ssize_t ata_scsi_lpm_store(struct device *device,
+ 				  struct device_attribute *attr,
+ 				  const char *buf, size_t count)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(device);
+ 	struct ata_port *ap = ata_shost_to_port(shost);
+-	struct ata_link *link;
+-	struct ata_device *dev;
+ 	enum ata_lpm_policy policy;
+ 	unsigned long flags;
+ 
+@@ -924,20 +962,11 @@ static ssize_t ata_scsi_lpm_store(struct device *device,
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+-	if (ap->flags & ATA_FLAG_NO_LPM) {
++	if (!ata_scsi_lpm_supported(ap)) {
+ 		count = -EOPNOTSUPP;
+ 		goto out_unlock;
+ 	}
+ 
+-	ata_for_each_link(link, ap, EDGE) {
+-		ata_for_each_dev(dev, &ap->link, ENABLED) {
+-			if (dev->quirks & ATA_QUIRK_NOLPM) {
+-				count = -EOPNOTSUPP;
+-				goto out_unlock;
+-			}
+-		}
+-	}
+-
+ 	ap->target_lpm_policy = policy;
+ 	ata_port_schedule_eh(ap);
+ out_unlock:
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 1c0580627dbb..e9a6f37bd7f9 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -547,6 +547,7 @@ typedef void (*ata_postreset_fn_t)(struct ata_link *link, unsigned int *classes)
+ 
+ extern struct device_attribute dev_attr_unload_heads;
+ #ifdef CONFIG_SATA_HOST
++extern struct device_attribute dev_attr_link_power_management_supported;
+ extern struct device_attribute dev_attr_link_power_management_policy;
+ extern struct device_attribute dev_attr_ncq_prio_supported;
+ extern struct device_attribute dev_attr_ncq_prio_enable;
+-- 
+2.50.1
 
