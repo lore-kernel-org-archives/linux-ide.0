@@ -1,70 +1,70 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4928E2110E;
-	Wed, 30 Jul 2025 11:00:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68DDC284B41;
+	Wed, 30 Jul 2025 11:05:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753873239; cv=none; b=ROfqWGbQw4Fb1nHKbntpnrCalUOBtgGfisJtm+hElHLC96Pr1isWR3Cnmg4EJ2UM8UzGykGpO/VCSx2B98jtdc/W4J167m0ijOmZHW2Jk8EedaBrW29vOXZNLOkXjyJxx2oMwk4hUKbQdTL8bxb9FBT+L/KQaON4THnKOP5P8zI=
+	t=1753873521; cv=none; b=Zuu6uaN0JQo0zij9Br9mf1JdyZHbstiTkQWsVw09lIbFL0xb8MyWoB8lW/c9u3tiOzugNUvQi0WdZ3Zo88JRx007+jFtWirEetrCZDDk58uSOLlAUw/kbB7jyJ5XPdmPE/EJM2WhCNWcsIY64Sn9yLJQCnpm/w9pj22tsT2YaFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753873239; c=relaxed/simple;
-	bh=HaZMMuKZQZcg6lQ9hU9TY59/UTNMhl0PQFmNQNiY2yo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Ir3dzEO33qmwJXUGvGqs1oU45488DYbQm9O0WIoZf8kFR+h9Q+Q9DbQ4rdWJ+RH/PXDrEmndmZkf8g6gjdKBe/TBJMz/r4QJMaX4CXmKnvMEcMGkRZJKeKO8JQGBMzLOzBnX3B25CKhrZ3bPicE4A2y7O0vvnhP57nnwc2wwExs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RSxtUr+z; arc=none smtp.client-ip=209.85.128.44
+	s=arc-20240116; t=1753873521; c=relaxed/simple;
+	bh=ZfP+G/ZvV75Byc+EUdeEQxcNfw6I2EE/Dec9sK0mFxI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ISqdKA9oBAjGrl6ed2oOSXCBdUsoiwL7jQexs9Ku3zLN849aHsTls8I5e1ebB1VNFB9ERIHfqal2TzHWn8a90DYg5XwJsJyv8WOYlbElafR5B+EtvKs84Eho74XXGPrZQt8mJUfE67arrfxdA1i5sfcmFC93w3uS5P1b0AnMikc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a4qVj7LW; arc=none smtp.client-ip=209.85.221.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RSxtUr+z"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-45611a6a706so30950435e9.1;
-        Wed, 30 Jul 2025 04:00:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a4qVj7LW"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-3b790dbb112so1057839f8f.3;
+        Wed, 30 Jul 2025 04:05:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753873234; x=1754478034; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1753873517; x=1754478317; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=SbLm+cLzm8h/ctscYb3BMVYRqSGLoFptIrggVe0rnsU=;
-        b=RSxtUr+zok94JKSJQp7VoE3lEVVyGI7bI9fPU5tYUbvHVLNS5SKeYo02vX1zSOGhVv
-         +Fob7OacWa5a1EWB+C65FjnzksV5vtrh4qPjU9GdYQ+08lNcwAzyU3KXXmKGf7It76OG
-         6b3G/aqrsWm87UDTmAuIO/aqedrBqvg0/4FxVnsjfQr7y58++gCZgekX7Fdh0t4AOBOU
-         qgV4VXAyL55aZ3+Xq1rX7uQAk3nlpZTeKJKHuWaPTmIB9fUstxB4/Y1h9/2m0VNDW4ex
-         rIIKrKvVrYr6uAFInqCSAXHHrX6eJ/NaQVuojSJ3UlN/Ub7GqRIBxbUQE/s9nK6mmYRf
-         90yQ==
+        bh=54AIPyJy1uCtqZ7NGhSPeutHe5R23DZ/fm+drMb1lCs=;
+        b=a4qVj7LWRC3+KqatnGRnGBamFVYM+huh8P6AXRpv1kRT2q+qx2Q2mMKicKML4gpYQH
+         XJQ84sAnte8JvNSi+xhJaGayEWHXy2V3l1DMjyDs9OWBLD8ZQ/lS+osvDJqyItnxZcyj
+         h6f3V2vTRFd2ZVLzSEziQspvA4QDqoGKurYBEg7pyw68RiAi2jotWviWh2JxxTonfcYr
+         HLOhPpTQWf65qfdMy0U1U+ofyKdcuLta3auTr2gehcRfVC7dtQat+U8nH39sNmENVhSx
+         FpXl3ju1qIgbtZdcVOuDRRpBqgY1IddH0IQr7b51IgijWRkyKoLUjndrTj+NlaWK5lyM
+         LqMA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753873234; x=1754478034;
+        d=1e100.net; s=20230601; t=1753873517; x=1754478317;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=SbLm+cLzm8h/ctscYb3BMVYRqSGLoFptIrggVe0rnsU=;
-        b=qSVeqwMCfRRPazaUduHDXOrYAnOWLzT5Gf5VKZ5gFqlausUfz3QFiclQELcFpX9TFP
-         erTG2XNWsKMW47xKFTiZcwQq/P2lBS62apsq+kP6HFRafWDe0xj9eggAYENDyKg7fN0h
-         Gzzv8ixLpLAYGudzyx2FbD0uE8dH4xQw+shrvmxmKBahsqO2gHNkKEzISReeukhnQc2N
-         0RQZLCKFP7Yh9LTRPNLn2GSGsP/5Dc7comKd9/ba+wpVGVMRIsSCtrqQPBSqWrJIfuzn
-         X/IrNUZHLslNTQ/yvLtjXbTFYrpqACqDaDCaP120is6/ouCRqGtqgeN9tdufYIFBVeoL
-         +vvw==
-X-Forwarded-Encrypted: i=1; AJvYcCUBjibCvgqgL5IdBJGxtzusjQI1OIMFUcSquUzSYJ8Dy6DCX7pzHPgQ1lVG2B+f90D3pSbhlUz9XSPg6epd@vger.kernel.org, AJvYcCWog98TqzHr7cJQHkFt5u35Q/hFUBtpszJiPWPPxOImS+ZhgY8gDUsDT8bYUOOlb15NkZcJMJ/pmNc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIK2PjiKoVxUxFMN0fgmt7i4KHyAbb862ZzqoCLVI4+p3BoGT3
-	X8rTgf9UDmnAJV20zfgyZIEAjZDD77RW/KoVNSrnxfSh14kGx6IwXT2t
-X-Gm-Gg: ASbGncsr1+R+0RPI24lv/uObKPP20pRJmPoafRcprQNhkmaZ6yO9ML74dLMYgRk3KSJ
-	YlBO8jsi31tCuHjbKQN6gOZnyB0ONaFTrPOZoAKo85OCsH+f63L2aVAeoudVJyoudOfbWZM1vY5
-	KOrUyhVSPu0y3rKIGspWAHDrEfAscbGzWp9ilOxEHa6mgmUbS1ZI0/Ysx7zy2SlEEY/UpHPIFt+
-	G1OUfN6lqrLpZzvrM2azDKPgcS4ZThrLEQChwsV3gzKoDVihiiVTN6a9FU7L/gT2XzXt3VNTBND
-	mX/TcWhv9NJA91cdgKDevADThysE1LljIY5JRqsaPpMad1X9OpHHkQ3vc3ZrDXwTG+YNrMq0L/W
-	t6p5iGp+2esi5Bad+YUY+
-X-Google-Smtp-Source: AGHT+IHL6le99e4dQvuL6ZyO5dMlJdlnJwbY2lLiTZCb+XxxAi5luS5/iEhxQDi0lFJnLlF8pRBcbw==
-X-Received: by 2002:a05:600c:358b:b0:450:d4a6:79ad with SMTP id 5b1f17b1804b1-45892bcc5f2mr19847925e9.23.1753873234274;
-        Wed, 30 Jul 2025 04:00:34 -0700 (PDT)
+        bh=54AIPyJy1uCtqZ7NGhSPeutHe5R23DZ/fm+drMb1lCs=;
+        b=f/T60UGAourk1jEb+UF5S+DgN5FfmfefGMTWtN56ikpM2kLjYA54uVoFsOh1hlx+uS
+         8eY3MLkY/XhUGa1c/mWNepDALwKAReDMqvkzb6lfNAFC5VOQjj8EFXXm0/UsHcyR0eHK
+         f/V+OJA3qRc1n6Z+gingDnbz/yfXa5Kovdd1RVzcTNfNzEUAaC+h35ueewy6PxERIey8
+         /O86/wwYmQJR5kaer/WsQ4a5G8kbxbksNVe5qYuN8ie9VSJEmd+tI28swTv3vMNawn1S
+         CBoLVXM62zUIVdFl8lucDYuG9hbNYKzBbNe9UvStKSNEgbp8HeXU8qoe718++B+sjcEj
+         pYRw==
+X-Forwarded-Encrypted: i=1; AJvYcCXCP4B6DkHVNNRJ0qu36TwXmwXNHxdbLIS9aMSNTFYTbcwDmNNPbB9Cj5422EsoqVtUPZ+1kuw60kEohVR1@vger.kernel.org, AJvYcCXSHSdVEd03FUH1fqfdwNJmqoBLdyhQKaad+ueSFH5UQ78cqmBh5d9rRWns7yhyjgxhDFVcKZTOQLo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwoqpquVGCPpR7uI93VE7sL28cs8+Bewi6P7jkW7g/MA2AMMzvz
+	xRQzmXi1t86RY3rg++7sMDYsLbCzIXJ8WlDRPUaSEZjnAbF0Bi8f1n65
+X-Gm-Gg: ASbGnctcC99KzLWcf5zGTv2Li34GwD7POl0jQB9jf/nQdUzRRb0LUP7z2GFTarnbpG6
+	ZcqLYuvmvuyRR1fkC705/uLsEGl6EIAdis0i5TkmR69CwbaDhAJD0WLGr6VPpTqDg0TCSe+kMKY
+	zpPvQdnG2KYNnEa0dPdrVKb2BgxZayTSlqTeOPjqgZa2D/llcSRRi3MZx0bQ3ktGZ07/gkNoitl
+	ijwSyAm/1qcXUAbU1Uciqhj9bcIxR0znfb12imxvVXrSt0Wn2fXLHwuN6i5DqrkJiuqxgbXztTp
+	vYDauLi6cS858zAf6Pyp6Ja0yqhROFaxCg7SF1wDyS3mY3pATN1k6J6wzCiX669SSUoG/iRaTXL
+	gSk4yKC35YTk4HvwTYf3dWFi87qQWGEU=
+X-Google-Smtp-Source: AGHT+IHNkjb7RgoRXtTFkL5ICG4Uho4Y4jKD4r50o8pxtcFYUvIysyolnX0sizkUEgmucDNp8pv8Sw==
+X-Received: by 2002:adf:a297:0:b0:3b7:970d:a565 with SMTP id ffacd0b85a97d-3b7970da81bmr918250f8f.46.1753873516536;
+        Wed, 30 Jul 2025 04:05:16 -0700 (PDT)
 Received: from localhost ([87.254.0.133])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-458953865dfsm22547585e9.18.2025.07.30.04.00.33
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3b778f104ffsm14990170f8f.66.2025.07.30.04.05.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Jul 2025 04:00:33 -0700 (PDT)
+        Wed, 30 Jul 2025 04:05:16 -0700 (PDT)
 From: Colin Ian King <colin.i.king@gmail.com>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-ide@vger.kernel.org
 Cc: kernel-janitors@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH][next] ata: libata-core: Remove space before newline
-Date: Wed, 30 Jul 2025 11:59:59 +0100
-Message-ID: <20250730105959.2058765-1-colin.i.king@gmail.com>
+Subject: [PATCH][next] ata: pata_macio: Remove space before newline
+Date: Wed, 30 Jul 2025 12:04:42 +0100
+Message-ID: <20250730110442.2059004-1-colin.i.king@gmail.com>
 X-Mailer: git-send-email 2.50.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -75,27 +75,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-There is a extraneous space before a newline in a ata_dev_dbg message.
+There is a extraneous space before a newline in a dev_dbg message.
 Remove the space.
 
 Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
 ---
- drivers/ata/libata-core.c | 2 +-
+ drivers/ata/pata_macio.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 97d9f0488cc1..ff53f5f029b4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4602,7 +4602,7 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
- 		return AC_ERR_INVALID;
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index f7a933eefe05..9eefdc5df5df 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -758,7 +758,7 @@ static void pata_macio_irq_clear(struct ata_port *ap)
  
- 	/* set up init dev params taskfile */
--	ata_dev_dbg(dev, "init dev params \n");
-+	ata_dev_dbg(dev, "init dev params\n");
+ static void pata_macio_reset_hw(struct pata_macio_priv *priv, int resume)
+ {
+-	dev_dbg(priv->dev, "Enabling & resetting... \n");
++	dev_dbg(priv->dev, "Enabling & resetting...\n");
  
- 	ata_tf_init(dev, &tf);
- 	tf.command = ATA_CMD_INIT_DEV_PARAMS;
+ 	if (priv->mediabay)
+ 		return;
 -- 
 2.50.0
 
