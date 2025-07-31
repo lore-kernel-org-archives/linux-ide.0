@@ -1,150 +1,272 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4C0A18C933;
-	Thu, 31 Jul 2025 08:02:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3642BEC24
+	for <linux-ide@vger.kernel.org>; Thu, 31 Jul 2025 11:38:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753948962; cv=none; b=Yyh0zHfgjLEYnPod3AwGFDoxtHPcWQ5C4L6+gUUhEOCLZ7bX/bT39UEKG85hP40bOHKzxuvIklXcEXnJ6732wrFV/DxE2kBKaCM9rCxI6VBoa5sdpuZsaumVhh3qzmy7S2Z2IcZ+Nj6E9uzmw8fMriM3jmaLkq9HxPuan6hTSnE=
+	t=1753961897; cv=none; b=ftxk4cYPu1tto3RPBRXcufTTDlP1arcrj8jlkt0UZojj1smWkNJlRzh8I9ooyKYg/Z1057aW67PDZk9KQ64RePB5OgI2k16bI212u9RleKOQDYyzmcSHOI/OwvLkRtNDh/Zmk8G8yFsSx/f7BzlEGixU2P8FvTYfPFpDl7xzm0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753948962; c=relaxed/simple;
-	bh=PlGHV2FaRjELuf7o65hmJb8XBrnL3PXiqC/Y2oDVAr8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KMTlFNAUYoDd45YpWGtxtt+S/9GNmnN44knPjLfct9tpCiKFflWyXdjkqa8CM+90XpqIk24Dh4/uw0I3TTyZlGTJTqiwp9o3IHA0Yo81UFa+5xH70u+ZSftVrnJu+7LBmhzs2biRbSaGiCPjg9VA2C51EWyyc4YB3MZnR2ZxXN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JWl09WZY; arc=none smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753961897; c=relaxed/simple;
+	bh=La6ASoKbnM7gCONd6Jles0Bbr1D1puW7YQESsVGvuNA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EkH3dG7jR4Q+DKW38d3nGZ/R6ILfvRGavCO+W8zsL535aBBLuymTax2j1WKVWky4R85IxlmiR0YPZIEpSasQbkdbjzTriiPRFLN28NswhUEbHpxIbrGsi3a7BTLOdCKlv6VQ6UXOFKfN09vehzCClSyyEl00M9eDgMn5wmWv9p8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=gOIO+gTb; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JWl09WZY"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-3b77673fd78so68725f8f.0;
-        Thu, 31 Jul 2025 01:02:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="gOIO+gTb"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-23fe2be6061so6010655ad.0
+        for <linux-ide@vger.kernel.org>; Thu, 31 Jul 2025 04:38:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753948959; x=1754553759; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8/t3e+x49wtPkWQFIoIWG71R3Sa9zVUVooSjuWeuz04=;
-        b=JWl09WZY+3GS/hLxiQnB40ebIPuyyA4CixF8moWEXqtN7pd/FCn+ImmhwxgT3vz/1S
-         KLcv19scCNxHJL5ot9oMZopN8+OnfEzD08Js5tOcodLQBc9bCZTKCUoGt8L9euvqC9Je
-         JWbvMwVGbnvhM0j1RZ1b0a0Ns2qPvh9bfPYq6i731/DLi4tljx8UWk915p/FbIkozFFI
-         +d4V5fNYnSbzkzszIqnr/Bx13C78gzks//CgRnVumYSImuLO+OS1VratRhTKohFRbwbg
-         74aSJTMsADfo66tJG3Is6P53DapBNSMH9la6/0HG0chra5tFEMlvhCnScG7CA6Ukf+SY
-         9DKQ==
+        d=bytedance.com; s=google; t=1753961894; x=1754566694; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=QfpXHN/rRfW/b/OZlccdPUXGnOVSsrqDdFA3CD40bmg=;
+        b=gOIO+gTb+WAjnAA6Z3Uph6/H/LFMW1sfTly7dojpSUEXQ0ytJarGOqixfLkjZQB61z
+         EL6aAFOkskMZwezzRxCB3WG8oYiVPGkWijnvJW089AW8dF4B0k8Lf7SymdrgI5O2dX8Z
+         ysrPEgr8lG87hO+wBAtJbulfhRxdzJV5XFlcyYuQDGo5FG509cqCTH6fnWZicQzRoFdJ
+         jwWh9dVz62MA/EU31q32Gzbjh2Ep3r2/El8OqL/Ta0fB+SleQhUkGfTc3yceJvkDOqYx
+         4JwZkqH9QDc5xMpGVMpCGqeAvFsava5MD50TWFoLm3eHBiVBZKzYAG8dtGOCU5wG9MTH
+         iMIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753948959; x=1754553759;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8/t3e+x49wtPkWQFIoIWG71R3Sa9zVUVooSjuWeuz04=;
-        b=GR0MBkUYFUCI8hV58ZW8R9dSggsVbc3DrJxD/BevK13IPkIjDFCggUHICXEoC3lkpD
-         yN5zgO48jdU72ly8lKJwTt2qR/dNv3YWvxLH78Is4R5m2Ery0Gy3ebD7gGpgnGch/qEd
-         NFQD/uuHChQWvugh4bK6Elk0GQScw4ou+ysAFZ5ZnaGOZPorZoxcbZTCdZ52q+hgsUjl
-         aIckB11wJudu1ucJSOBfYnyiUFT9Ju5GqTfHswIyXGDDAHLD105+VNHQdlWcjWyMCn6f
-         MFEPV4B3SNtNP294zOzx8YLm7ivnuRT1vLPc053XbivOcboO4+BYJn6yVL54vXPYmS58
-         IzjQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUyRLwWizOzDvRoMh1w09PvU6rSP/usB/Vlu3wq9+oT65ph8+ar/S/6hFoLsNL+0kcTgKDl5X7vkErz3cdR@vger.kernel.org, AJvYcCXB1UIF5Fv5cycG4z5HfxDPbnigiVgeifxZBqDsmI89VdLtsy8sTH5DQthnYa6d9zwp4+4WhuiCl4k=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw3XR7zi75MRILRmAimtctQ/r+6nFkzsgAClQgmcWu5s6GI9ktz
-	NtKYJP3tUIqm41Jz0WK2Bq8IcxzjSk3wFYeKkn0krTltkNmFrX3NzEt+Cm0TB9kLQ9Tc+A==
-X-Gm-Gg: ASbGncuzq36LzMNgV29vdndRFdhXkbiUZdxiVT7TZa+SDRBuezXubWs2yph4Y8LkQ0D
-	TyFJMFlnCzJxY2g8ooPkedccg3iESBiu5OvueB5CtKYuPghnmkJGZ7VyR1ZY0If4cA5KpqYbXQW
-	JirvXer2fPAK20bW1iyxvRkGD4JUcryLM8Od9JP1FZaIfuRA5ctglXYPFdq8gWSI2r/GuOwfHyv
-	CM+XV1B9LHuffwob6kXQzqhXHsdVt1grvesqXYH3r2JBG9PJqA2fW/FoL2wp39PN49XiY9kmWiH
-	dGnmfljTR3gBi8J/JyKSPw6Y5v6bBniMj/Pk06RzL/TqUgAyc6egJ15OLq3bDiGIaNeaHqixeyj
-	n/+iQDHQ+x8GFi5QHSyDQ
-X-Google-Smtp-Source: AGHT+IGbGg2iGs3EXQeEyvQHMksthS8sLUBenVO0pV8N/V9V2SA84vP4SZAFTfECw7Qjzs78F/6clg==
-X-Received: by 2002:a05:6000:1788:b0:3b7:9af4:9c75 with SMTP id ffacd0b85a97d-3b79af49ce5mr2004852f8f.30.1753948958834;
-        Thu, 31 Jul 2025 01:02:38 -0700 (PDT)
-Received: from localhost ([87.254.0.133])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-45895377708sm53368065e9.8.2025.07.31.01.02.37
+        d=1e100.net; s=20230601; t=1753961894; x=1754566694;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QfpXHN/rRfW/b/OZlccdPUXGnOVSsrqDdFA3CD40bmg=;
+        b=mW8PhEFaNIf3buFsjp1eUcCZ+gLiy6NAKuY1dhCHcFBomHG3W+Z4R/1GDpQxEdmMFx
+         RY3FUE8DBmBQ9Lgdk6kDi6N8fiz+c9Lpnc2onj0be9orskj8otZF62yoNC3OK9Xv3yrN
+         2zdoWDACKQwGgOqqoXN/b5jZSrMYa8OboslZFhN66RgJeFJ/ZY54fQFK7oNukqPCOoDg
+         B6j/rqVQAiJtfixRMudkgiSm2rRF1zl3hqsbTNjhW1JMobG4Uv2+tCf3bNbayohgrs+9
+         TCb33A7bsLePvy02RxjToEx6kdotWz4lHXdcmVaYuzQxnHi4jKYsmi2aO83RG6hAOkvw
+         r9cQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX1RIcVJS7Qhz+F5teK+ZVW9rVHgdHjLznku5rTqtzljg3LXyN/YwYKNUraXq5kPSfJVoIiRBkkF0M=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzi1xBDzzkzuQeTY3XNBJnHilNNHlsEHAf8mnJV328d381UVNJO
+	JlFErAGGO7VFe20lC7mIGHYDysN1j7susHLnqMUVZgfE/C4ZiDZ6iiaGky8LaGYHUYM=
+X-Gm-Gg: ASbGncuHPOTkP9pbZ2sEE/dW8rKqBvOc5xYFbV4IzYsxINyvSxW/VPIcl6Ui7bnKE07
+	YlAxnXSfxoExstGwHaSaeeNulWohEr4jmNYp+Lg9AZaXp23cJDSuX6Yo5zROr6BQ8H67jEIJN7h
+	keIH9qa1OiqB6/rW1GLMbDE5kEX2p5mENvOCqqMQO3HJaPoDFImH7FwSNMzKA1LKmfYR1HFFvS0
+	4PU44nizfNVRIlS5tyMeu4kmyPxucyEj6ZjtarxXlt/OlSJk6fkNgnG4NkPCh5CB1aBIMPGnlVS
+	lg78JMuCDW6LRrNbqD6zbt+t9kc3QyIu0I6Vybm1UFu/xCDRfSyNL/Yl9lnY7rLl//lBR9Ti8Z/
+	LTed8HYTpvL7XuRBoFe+IrMoS3azwL9j974tBjBxktMri
+X-Google-Smtp-Source: AGHT+IFjag3lKOQ5jbjPM5jDtQ9uzMkIfjGq19I+XWX/cE5onrXQT76qV6SFNNV75XpseJSHBmS/Ug==
+X-Received: by 2002:a17:902:d486:b0:23f:f39b:eae4 with SMTP id d9443c01a7336-24200a7e75bmr28121135ad.9.1753961894094;
+        Thu, 31 Jul 2025 04:38:14 -0700 (PDT)
+Received: from H7GWF0W104 ([139.177.225.230])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-241e8ab38b4sm15662515ad.181.2025.07.31.04.38.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Jul 2025 01:02:38 -0700 (PDT)
-From: Colin Ian King <colin.i.king@gmail.com>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-ide@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH][next][V2] ata: pata_pdc2027x: Remove space before newline and abbreviations
-Date: Thu, 31 Jul 2025 09:02:03 +0100
-Message-ID: <20250731080203.2119000-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.50.0
+        Thu, 31 Jul 2025 04:38:13 -0700 (PDT)
+Date: Thu, 31 Jul 2025 19:38:06 +0800
+From: Diangang Li <lidiangang@bytedance.com>
+To: Friedrich Weber <f.weber@proxmox.com>
+Cc: Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
+	Niklas Cassel <niklas.cassel@wdc.com>,
+	Mira Limbeck <m.limbeck@proxmox.com>
+Subject: Re: [PATCH v7 08/19] scsi: detect support for command duration limits
+Message-ID: <20250731113806.GA93929@bytedance.com>
+References: <20230511011356.227789-1-nks@flawful.org>
+ <20230511011356.227789-9-nks@flawful.org>
+ <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
 
-There is a extraneous space before a newline in handful of ata_port_dbg
-messages. Remove the spaces. Capitalize pio, udma, mdma.
+On Wed, Apr 30, 2025 at 02:13:53PM +0200, Friedrich Weber wrote:
+> Hi,
+> 
+> One of our users reports that, in their setup, hotplugging new disks doesn't
+> work anymore with recent kernels (details below). The issue appeared somewhere
+> between kernels 6.4 and 6.5, and they bisected the change to this patch:
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
----
+Hi Friedrich,
 
-V2: As per Damien Le Moal's suggestion, capitalize pio, udma, mdma.
+I would like to confirm the hotplugging method used here. Is it the logical operation using the following commands:
 
----
+- echo 1 > /sys/block/sdX/device/delete
+- echo - - - > /sys/class/scsi_host/host5/scan
 
- drivers/ata/pata_pdc2027x.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+or does it refer to physical hotplugging (physically removing and reinserting the drive)?
 
-diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
-index d792ce6d97bf..021b38ed794d 100644
---- a/drivers/ata/pata_pdc2027x.c
-+++ b/drivers/ata/pata_pdc2027x.c
-@@ -295,7 +295,7 @@ static void pdc2027x_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 	}
- 
- 	/* Set the PIO timing registers using value table for 133MHz */
--	ata_port_dbg(ap, "Set pio regs... \n");
-+	ata_port_dbg(ap, "Set PIO regs...\n");
- 
- 	ctcr0 = ioread32(dev_mmio(ap, adev, PDC_CTCR0));
- 	ctcr0 &= 0xffff0000;
-@@ -308,7 +308,7 @@ static void pdc2027x_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 	ctcr1 |= (pdc2027x_pio_timing_tbl[pio].value2 << 24);
- 	iowrite32(ctcr1, dev_mmio(ap, adev, PDC_CTCR1));
- 
--	ata_port_dbg(ap, "Set to pio mode[%u] \n", pio);
-+	ata_port_dbg(ap, "Set to PIO mode[%u]\n", pio);
- }
- 
- /**
-@@ -341,7 +341,7 @@ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 			iowrite32(ctcr1 & ~(1 << 7), dev_mmio(ap, adev, PDC_CTCR1));
- 		}
- 
--		ata_port_dbg(ap, "Set udma regs... \n");
-+		ata_port_dbg(ap, "Set UDMA regs...\n");
- 
- 		ctcr1 = ioread32(dev_mmio(ap, adev, PDC_CTCR1));
- 		ctcr1 &= 0xff000000;
-@@ -350,14 +350,14 @@ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 			(pdc2027x_udma_timing_tbl[udma_mode].value2 << 16);
- 		iowrite32(ctcr1, dev_mmio(ap, adev, PDC_CTCR1));
- 
--		ata_port_dbg(ap, "Set to udma mode[%u] \n", udma_mode);
-+		ata_port_dbg(ap, "Set to UDMA mode[%u]\n", udma_mode);
- 
- 	} else  if ((dma_mode >= XFER_MW_DMA_0) &&
- 		   (dma_mode <= XFER_MW_DMA_2)) {
- 		/* Set the MDMA timing registers with value table for 133MHz */
- 		unsigned int mdma_mode = dma_mode & 0x07;
- 
--		ata_port_dbg(ap, "Set mdma regs... \n");
-+		ata_port_dbg(ap, "Set MDMA regs...\n");
- 		ctcr0 = ioread32(dev_mmio(ap, adev, PDC_CTCR0));
- 
- 		ctcr0 &= 0x0000ffff;
-@@ -366,7 +366,7 @@ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 
- 		iowrite32(ctcr0, dev_mmio(ap, adev, PDC_CTCR0));
- 
--		ata_port_dbg(ap, "Set to mdma mode[%u] \n", mdma_mode);
-+		ata_port_dbg(ap, "Set to MDMA mode[%u]\n", mdma_mode);
- 	} else {
- 		ata_port_err(ap, "Unknown dma mode [%u] ignored\n", dma_mode);
- 	}
--- 
-2.50.0
+I have tested both the 3008 and 9500 HBAs using the delete and scan method, and both worked fine.
 
+> 
+>   624885209f31 (scsi: core: Detect support for command duration limits)
+> 
+> The issue is also reproducible on a mainline kernel 6.14.4 build from [1]. When
+> hotplugging a disk under 6.14.4, the following is logged (I've redacted some
+> identifiers, let me know in case I've been too overzealous with that):
+> 
+> Apr 28 16:41:13 pbs-disklab kernel: mpt3sas_cm0: handle(0xa) sas_address(0xREDACTED_SAS_ADDR) port_type(0x1)
+> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: Direct-Access     WDC      REDACTED_SN  C5C0 PQ: 0 ANSI: 7
+> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: SSP: handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR), phy(2), device_name(REDACTED_DEVICE_NAME)
+> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: enclosure logical id (REDACTED_LOGICAL_ID), slot(0) 
+> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: enclosure level(0x0000), connector name(     )
+> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: qdepth(254), tagged(1), scsi_level(8), cmd_que(1)
+> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: Power-on or device reset occurred
+> Apr 28 16:41:16 pbs-disklab kernel: mpt3sas_cm0: log_info(0x31110e05): originator(PL), code(0x11), sub_code(0x0e05)
+> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: log_info(0x31130000): originator(PL), code(0x13), sub_code(0x0000)
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: Attached scsi generic sg1 type 0
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Test Unit Ready failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Read Capacity(16) failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Sense not available.
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Sense not available.
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] 0 512-byte logical blocks: (0 B/0 B)
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] 0-byte physical blocks
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Test WP failed, assume Write Enabled
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Asking for cache data failed
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Assuming drive cache: write through
+> Apr 28 16:41:18 pbs-disklab kernel:  end_device-5:1: add: handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR)
+> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: handle(0x000a), ioc_status(0x0022) failure at drivers/scsi/mpt3sas/mpt3sas_transport.c:225/_transport_set_identify()!
+> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Attached SCSI disk
+> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: mpt3sas_transport_port_remove: removed: sas_addr(0xREDACTED_SAS_ADDR)
+> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: removing handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR)
+> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: enclosure logical id(REDACTED_LOGICAL_ID), slot(0)
+> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: enclosure level(0x0000), connector name(     )
+> 
+> and the block device isn't accessible afterwards. It does seem to be visible
+> after a reboot.
+> 
+> lspci on this host shows:
+> 
+> 02:00.0 Serial Attached SCSI controller [0107]: Broadcom / LSI SAS3008 PCI-Express Fusion-MPT SAS-3 [1000:0097] (rev 02)
+> 	Subsystem: Broadcom / LSI SAS9300-8i [1000:30e0]
+> 	Kernel driver in use: mpt3sas
+> 	Kernel modules: mpt3sas
+> 
+> The HBA is placed on a PCIe 3.0 x8 slot (not bifurcated) and connected via
+> SFF-8643 to a simple 2U 12xLFF SAS3 Supermicro box. The user can also reproduce
+> the issue with other HBAs with e.g. the SAS3108 and SAS3816 chipsets.
+> 
+> The device doesn't seem to support CDL. So if I see correctly, the only
+> effective change introduced by the patch are the four scsi_cdl_check_cmd (and
+> thus scsi_report_opcode) calls to check for CDL support. Hence we wondered
+> whether may be the cause of the issue. We ran a few tests to verify:
+> 
+> - disabling "REPORT SUPPORTED OPERATION CODES" by passing
+>   `scsi_mod.dev_flags=WDC:REDACTED_SN:536870912` (the flag being
+>   BLIST_NO_RSOC) resolves the issue (hotplug works again), but I imagine
+>   disabling RSOC altogether isn't a good workaround. This test was not done
+>   on a mainline kernel, but I don't think it would make a difference.
+> 
+> - we patched out the four calls to scsi_cdl_check_cmd and unconditionally set
+>   cdl_supported to 0, see [2] for the patch (on top of 6.14.4). This resolves
+>   the issue.
+> 
+> - I suspected that particularly the two latter scsi_cdl_check_cmd calls with a
+>   nonzero service action might be problematic, so we patched them out
+>   specifically but kept the other two calls without a service action, see [3]
+>   for the patch (on top of 6.14.4). But with this patch, hotplug still does
+>   not work.
+> 
+> - the RSOC commands themselves don't seem to be problematic per se. We asked
+>   the user to boot a (non-mainline) kernel with the `scsi_mod.dev_flags`
+>   parameter to disable RSOC as above, hotplug the disk (this succeeds), and
+>   then query the four opcodes/service actions using `sg_opcodes`, and this
+>   looks okay [4] (reporting that CDL is not supported).
+> 
+> I wonder whether these results might suggest the RSOC queries are problematic
+> not in general, but at this particular point (during device initialization) in
+> this particular hardware setup? If this turns out to be the case -- would it be
+> feasible to suppress these RSOC queries if CDL is not enabled via sysfs?
+> 
+> If you have any ideas for further troubleshooting, we're happy to gather more
+> data. I'll be AFK for a few weeks, but Mira (in CC) will take over in the
+> meantime.
+> 
+> Thanks!
+> 
+> Friedrich
+> 
+> [1] https://kernel.ubuntu.com/mainline/v6.14.4/
+> 
+> [2]
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index a77e0499b738..022b2f9706a4 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -658,11 +658,7 @@ void scsi_cdl_check(struct scsi_device *sdev)
+>         }
+> 
+>         /* Check support for READ_16, WRITE_16, READ_32 and WRITE_32 commands */
+> -       cdl_supported =
+> -               scsi_cdl_check_cmd(sdev, READ_16, 0, buf) ||
+> -               scsi_cdl_check_cmd(sdev, WRITE_16, 0, buf) ||
+> -               scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, READ_32, buf) ||
+> -               scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, WRITE_32, buf);
+> +       cdl_supported = 0;
+>         if (cdl_supported) {
+>                 /*
+>                  * We have CDL support: force the use of READ16/WRITE16.
+> 
+> [3]
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index a77e0499b738..6b0f36f5415e 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -660,9 +660,8 @@ void scsi_cdl_check(struct scsi_device *sdev)
+>         /* Check support for READ_16, WRITE_16, READ_32 and WRITE_32 commands */
+>         cdl_supported =
+>                 scsi_cdl_check_cmd(sdev, READ_16, 0, buf) ||
+> -               scsi_cdl_check_cmd(sdev, WRITE_16, 0, buf) ||
+> -               scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, READ_32, buf) ||
+> -               scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, WRITE_32, buf);
+> +               scsi_cdl_check_cmd(sdev, WRITE_16, 0, buf);
+> +       cdl_supported = 0;
+>         if (cdl_supported) {
+>                 /*
+>                  * We have CDL support: force the use of READ16/WRITE16.
+> 
+> [4]
+> 
+> root@pbs-disklab:~# sg_opcodes -o 0x88 /dev/sdb
+> 
+> Opcode=0x88
+> Command_name: Read(16)
+> Command is supported [conforming to SCSI standard]
+> No command duration limit mode page
+> Multiple Logical Units (MLU): not reported
+> Usage data: 88 fe ff ff ff ff ff ff ff ff ff ff ff ff 00 00
+> 
+> root@pbs-disklab:~# sg_opcodes -o 0x8a /dev/sdb
+> 
+> Opcode=0x8a
+> Command_name: Write(16)
+> Command is supported [conforming to SCSI standard]
+> No command duration limit mode page
+> Multiple Logical Units (MLU): not reported
+> Usage data: 8a fa ff ff ff ff ff ff ff ff ff ff ff ff 00 00
+> 
+> root@pbs-disklab:~# sg_opcodes -o 0x7f,0x9 /dev/sdb
+> 
+> Opcode=0x7f  Service_action=0x0009
+> Command_name: Read(32)
+> Command is supported [conforming to SCSI standard]
+> No command duration limit mode page
+> Multiple Logical Units (MLU): not reported
+> Usage data: 7f 00 00 00 00 00 00 ff 00 09 fe 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 
+> root@pbs-disklab:~# sg_opcodes -o 0x7f,0xb /dev/sdb
+> 
+> Opcode=0x7f  Service_action=0x000b
+> Command_name: Write(32)
+> Command is supported [conforming to SCSI standard]
+> No command duration limit mode page
+> Multiple Logical Units (MLU): not reported
+> Usage data: 7f 00 00 00 00 00 00 ff 00 0b fa 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 
