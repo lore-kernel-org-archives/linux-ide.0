@@ -1,83 +1,48 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 112021DA5F
-	for <linux-ide@vger.kernel.org>; Thu, 31 Jul 2025 11:48:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 400122E3716;
+	Thu, 31 Jul 2025 12:06:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753962526; cv=none; b=qVboU70xen+2f0KLeL+rB0On5dDNefC0e3s5/GLrJLW2+8dx+iz7RSA6HxPmT3mA0bqmbc65PjM4R4JmkbFg2NTjNgXXuNupCSUiHRxpLnfX8g9V/K3qXMjOsAOUTepzBQo8jjkJhM6RnqsiU5NzYfAN4HbdgNVLCGOzRO7QPmk=
+	t=1753963593; cv=none; b=SIIw/FMM/Ueq6Xup+LYyQ/0lO/wXlf+laqDo9sF+WvNI/f7EVho9UpFQkF+RsRejtJ3RDSvnBgH4ZAPmmcBmi+dTSY4ZdhTT5uSlPcRuJhEgmmUoqW2uL9opPpDRHtqEHtB4asq/aTzlRqTcBwP3lo6bcZske4ZxGjO2XSbkDnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753962526; c=relaxed/simple;
-	bh=Xqu63g49oubRpsWjwsnfClI07X5l6m7msQPsWmmgxC0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WL5+hSNe0xK2wwbAU9S5kHYg9gyOo8Vjc7Yvsm2dWygiAv8/hN0f6xwI+B3sLI8Sa0vItznQAIhXhU8ainM3iWZidbbB8UxV7ik7TbN2z4hKALGUFxELuSDTLH+m5hdoDl1kaWnBUV9WInaTb13Fa6WpDMjtd0Kpf6AjPPWZ3TE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=dE51/9ZE; arc=none smtp.client-ip=209.85.215.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="dE51/9ZE"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-b3f7404710aso684777a12.0
-        for <linux-ide@vger.kernel.org>; Thu, 31 Jul 2025 04:48:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1753962524; x=1754567324; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hkN0tI9B20gWFLyUHNfhvSFfOgY2x76YeStrLafG1M0=;
-        b=dE51/9ZEucG1sLW0XyvpfYNMcuGl1NmqsceW7DOSnTkj7s0DQQrG39ywJhyBlJp+4N
-         2M25APBOsD9kivcSG/+Gzlkl+wnJcWG6QRgKDPTH4sPBqn9VKnA5hQoHI0f1w4TpbTP/
-         EGv08vu1Ivk2DJLDALwGmuHhysPxcrFBoe6euwpnzmjljTf9uwHqCJcwZGtts1RrKA+E
-         T9+FpJ3AEP0pqi9iOCNO/7b/9D40wBlfSoNVp1KOqaGATzsWwZMLFiHd5t2M0I1+pTYb
-         K6L9Dnmh3Ecd4GFCofD9vk1d7SWMKhhO8RGT2htxKIBrVHR/QCjpGjNMV67G0ZyjEPjf
-         sFNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753962524; x=1754567324;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hkN0tI9B20gWFLyUHNfhvSFfOgY2x76YeStrLafG1M0=;
-        b=utXoJ7AMXG5ZGpwfpw1oXOUGAklE9jOHVnqNumdrxP7fRyk+eGFV1dwKDuPt6rHgEJ
-         apfed5OtlhH008DS+9LMRlG6WWifaBbdA7nvA4AfBrVV+TRA5HN8q4dvJ9FdYzpKvwan
-         2Ddf4NiqYDe8ApIkJmCXrsBvYdovqiTWAmAMuEirUF5yq6FAsE6JOuL0XNvNo+EB7MRa
-         pDljYoZptKBWmQX5TOKi1Z9CQH4uuikCiYJOB4u5NxSFOfzwGzBKJ5l2Zja/uevaw+Z1
-         //xZNE/FTMOCCB7LTHfA0KjnO7y5oO6+rRJLvgnhcnilUsN0mF//D7jrzsTl/3AXBDhT
-         C/GQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX+bZby+4X/aBSTNYDS5KE+uR0OcKyw+n+FoqLPfBRXcZOUyaRNOGa+MnH0+lnpsuKye60rqpo/LE8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3vr04YPgoKwU/Yk6toxom4EY987PxUyebqtrH/tQvfl6b9Toh
-	bCstZeCejmCgUUUlBY6DI9ERzuigLQwUnCeq5n9Wasfa7VjK+XprTjG2QeY4Lh1eCO4=
-X-Gm-Gg: ASbGncuVqFpYgKKtg21sB5COJ4vSYhnZjh/RO3paGumfyCoz+lDM9So5oE88ImdVTtZ
-	DocQfxr6cdd64VPBhlBp3hZRKuKg3FsFyuZ9WMoK5L1laHv1DCpd+Z6JR5RvwLIQTby8Ta2sfuB
-	EqDQR8sApO4VI6RKr1lqP4sYjKyPAutrtx/MVl0WYBp6lewq+gUJWWSb9vmu0/GfgHdWEE1NK65
-	uzaPURDHylBG9J/54jF+QgRPz3eg/Z1/nPo1Iu16KHGE9bPq8NVwqcly2QPaB8RsT7VAmP54JC7
-	c44rIj/TUzE1ABU2zo9+sPYQgUCVzs74udrfU9+tGDwrxNP7GwiUaXAwGGR58C6j+GA+CBY/txf
-	hN/t+T2/8d3zHQU1wiMAh4dz5LfbdYEuwTyKWsMVgYXTs
-X-Google-Smtp-Source: AGHT+IGrG4jwWLL+fMJTai+FsxthmxLYiFBUGHsgwdEYcHLxx+ldiinVCD17Tcs33DG72yK/NKzseg==
-X-Received: by 2002:a17:90b:57c5:b0:31f:12d:ee4f with SMTP id 98e67ed59e1d1-31f5de6b9b2mr10171787a91.23.1753962524306;
-        Thu, 31 Jul 2025 04:48:44 -0700 (PDT)
-Received: from H7GWF0W104 ([139.177.225.230])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31f63da565bsm4597298a91.4.2025.07.31.04.48.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Jul 2025 04:48:42 -0700 (PDT)
-Date: Thu, 31 Jul 2025 19:48:32 +0800
-From: Diangang Li <lidiangang@bytedance.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Friedrich Weber <f.weber@proxmox.com>,
-	Mira Limbeck <m.limbeck@proxmox.com>,
-	Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-	Bart Van Assche <bvanassche@acm.org>,
-	Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+	s=arc-20240116; t=1753963593; c=relaxed/simple;
+	bh=uJE7eqPcm9UN43lGyVjIORKLatwubUvuqXTRg8oyBSw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=U+kQ0+cQUOmRCXZGNl/CUAiH3fcgH5AJa8m40MEo0cYnp6Qynus5ZuKoK/gPEH6pCAnVFAblrXNE4u8nj5DVtUJbRCeGYLXLV5jP64tiHZEMTZ1mxcR+Onke0ScIjRrK1K6vaMIb8n7BMHVF8K6rBKUZUs/CeSFq7pOSvV7T9eQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
+Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
+	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id EF9A6470F6;
+	Thu, 31 Jul 2025 14:06:28 +0200 (CEST)
+Message-ID: <93bcd3a7-8054-4a40-8b19-83b30e4ce84e@proxmox.com>
+Date: Thu, 31 Jul 2025 14:06:28 +0200
+Precedence: bulk
+X-Mailing-List: linux-ide@vger.kernel.org
+List-Id: <linux-ide.vger.kernel.org>
+List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v7 08/19] scsi: detect support for command duration limits
-Message-ID: <20250731114832.GA97414@bytedance.com>
+To: Diangang Li <lidiangang@bytedance.com>,
+ Damien Le Moal <dlemoal@kernel.org>
+Cc: Mira Limbeck <m.limbeck@proxmox.com>, Niklas Cassel <nks@flawful.org>,
+ Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+ Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>,
+ Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
+ Niklas Cassel <niklas.cassel@wdc.com>
 References: <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
  <6fb8499a-b5bc-4d41-bf37-32ebdea43e9a@kernel.org>
  <2e7d6a7e-4a82-4da5-ab39-267a7400ca49@proxmox.com>
@@ -88,49 +53,57 @@ References: <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
  <3b2a6cfe-5bf3-4818-8633-c200d8e6f122@kernel.org>
  <4cb58e56-d9e2-4868-84ad-8b7253148228@proxmox.com>
  <75412b1b-3f39-4f6a-93ce-823c15a19bf3@kernel.org>
-Precedence: bulk
-X-Mailing-List: linux-ide@vger.kernel.org
-List-Id: <linux-ide.vger.kernel.org>
-List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <75412b1b-3f39-4f6a-93ce-823c15a19bf3@kernel.org>
+ <20250731114832.GA97414@bytedance.com>
+Content-Language: en-US
+From: Friedrich Weber <f.weber@proxmox.com>
+In-Reply-To: <20250731114832.GA97414@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Bm-Milter-Handled: 55990f41-d878-4baa-be0a-ee34c49e34d2
+X-Bm-Transport-Timestamp: 1753963575858
 
-On Tue, Jul 22, 2025 at 06:37:50PM +0900, Damien Le Moal wrote:
-> On 7/22/25 6:32 PM, Friedrich Weber wrote:
-> > On 14/07/2025 04:48, Damien Le Moal wrote:
-> >> On 7/10/25 5:41 PM, Friedrich Weber wrote:
-> >>> Thanks for looking into this, it is definitely a strange problem.
-> >>>
-> >>> Considering these drives don't support CDL anyway: Do you think it would
-> >>> be possible to provide an "escape hatch" to disable only the CDL checks
-> >>> (a module parameter?) so hotplug can work for the user again for their
-> >>> device? If I see correctly, disabling just the CDL checks is not
-> >>> possible (without recompiling the kernel) -- scsi_mod.dev_flags can be
-> >>> used to disable RSOC, but I guess that has other unintended consequences
-> >>> too, so a more "targeted" escape hatch would be nice.
-> >>
-> >> Could you test the attached patch ? That should solve the issue.
-> >>
-> > 
-> > Thanks for the patch! The user tested it on top of a 6.15.6 kernel and
-> > with the SAS3008 HBA, and indeed:
-> > 
-> > - under 6.15.6, hotplug fails with the log messages mentioned in my
-> > first message,
-> > - with your patch on top, hotplug works again.
+On 31/07/2025 13:48, Diangang Li wrote:
+> On Tue, Jul 22, 2025 at 06:37:50PM +0900, Damien Le Moal wrote:
+>> On 7/22/25 6:32 PM, Friedrich Weber wrote:
+>>> On 14/07/2025 04:48, Damien Le Moal wrote:
+>>>> On 7/10/25 5:41 PM, Friedrich Weber wrote:
+>>>>> Thanks for looking into this, it is definitely a strange problem.
+>>>>>
+>>>>> Considering these drives don't support CDL anyway: Do you think it would
+>>>>> be possible to provide an "escape hatch" to disable only the CDL checks
+>>>>> (a module parameter?) so hotplug can work for the user again for their
+>>>>> device? If I see correctly, disabling just the CDL checks is not
+>>>>> possible (without recompiling the kernel) -- scsi_mod.dev_flags can be
+>>>>> used to disable RSOC, but I guess that has other unintended consequences
+>>>>> too, so a more "targeted" escape hatch would be nice.
+>>>>
+>>>> Could you test the attached patch ? That should solve the issue.
+>>>>
+>>>
+>>> Thanks for the patch! The user tested it on top of a 6.15.6 kernel and
+>>> with the SAS3008 HBA, and indeed:
+>>>
+>>> - under 6.15.6, hotplug fails with the log messages mentioned in my
+>>> first message,
+>>> - with your patch on top, hotplug works again.
+>>
+>> OK. Will post a proper patch then (tomorrow).
+>> Thanks for testing.
+>>
 > 
-> OK. Will post a proper patch then (tomorrow).
-> Thanks for testing.
->
-
-Hi Damien,
-
-Are you planning to post a formal patch to upstream?
- 
+> Hi Damien,
 > 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+> Are you planning to post a formal patch to upstream?
+
+Damien did post a patch [1], but as discussed there [2], it was not
+effective in our case because it was targeted at SATA drives, and we
+realized all tests were actually done using SAS drives. Sorry for the
+confusion, it might have been better if I had posted my follow-up
+yesterday [3] in the other thread instead.
+
+[1] https://lore.kernel.org/all/20250723052334.32298-1-dlemoal@kernel.org/
+[2]
+https://lore.kernel.org/all/a345c99d-864b-4dde-b755-b61a085508a8@proxmox.com/#t
+[3]
+https://lore.kernel.org/all/eb3778e5-dfdb-4382-8cc6-da6459f14a46@proxmox.com/
+
