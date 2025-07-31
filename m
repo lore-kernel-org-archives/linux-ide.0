@@ -1,24 +1,33 @@
-Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 400122E3716;
-	Thu, 31 Jul 2025 12:06:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7848F27F16C;
+	Thu, 31 Jul 2025 23:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753963593; cv=none; b=SIIw/FMM/Ueq6Xup+LYyQ/0lO/wXlf+laqDo9sF+WvNI/f7EVho9UpFQkF+RsRejtJ3RDSvnBgH4ZAPmmcBmi+dTSY4ZdhTT5uSlPcRuJhEgmmUoqW2uL9opPpDRHtqEHtB4asq/aTzlRqTcBwP3lo6bcZske4ZxGjO2XSbkDnQ=
+	t=1754004103; cv=none; b=t9QXBAEAlvUi2FE6XdVo1lC0b7U0EKJm5yWClyLvmnlAEuByft9OIYtpLYXs4zRqPCY2oYFmEnV2HG6uQ+Wv9wjCh9JhM/HhgvXEsC9AK1vV/aq9uSrxPBQV4CL4vhLJTts6lDc/QKT5zUL8siEioZKdJFo1tkoOdOEVTsJBI9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753963593; c=relaxed/simple;
-	bh=uJE7eqPcm9UN43lGyVjIORKLatwubUvuqXTRg8oyBSw=;
+	s=arc-20240116; t=1754004103; c=relaxed/simple;
+	bh=Co+hWowkbbzPPbt8dWbu3Q+G4ZrGp4O6TjcsY/Swk1E=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U+kQ0+cQUOmRCXZGNl/CUAiH3fcgH5AJa8m40MEo0cYnp6Qynus5ZuKoK/gPEH6pCAnVFAblrXNE4u8nj5DVtUJbRCeGYLXLV5jP64tiHZEMTZ1mxcR+Onke0ScIjRrK1K6vaMIb8n7BMHVF8K6rBKUZUs/CeSFq7pOSvV7T9eQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
-Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
-	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id EF9A6470F6;
-	Thu, 31 Jul 2025 14:06:28 +0200 (CEST)
-Message-ID: <93bcd3a7-8054-4a40-8b19-83b30e4ce84e@proxmox.com>
-Date: Thu, 31 Jul 2025 14:06:28 +0200
+	 In-Reply-To:Content-Type; b=tn7mLAzdmSYBaifKuE/PbsrkSgDnttcxZZ+Pm+r+57oah0GPGRQlzQWbOx3xVGbm3csYbDFxHwlYUZNmfNXGQjA/nrPq7zq+OsJnI2KDLlT3yIn9j/G3aRx+N6gFveRBgHx4NcinAJW3eZmUlu8StUrbvluLNG4TD2maCHj2B90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=al9jCCJ/; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="al9jCCJ/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAC54C4CEEF;
+	Thu, 31 Jul 2025 23:21:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1754004102;
+	bh=Co+hWowkbbzPPbt8dWbu3Q+G4ZrGp4O6TjcsY/Swk1E=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=al9jCCJ/2aNrWa0aSZtjnPVel6mWKlP31/9faXs3UmEawdWwFZLkexwJG/0AvtDkK
+	 qB4wbZfKLOhirzjnJOUeqCc5XuEuJk+qzAk0hAa/ndZ8KA6TjVXQTfIaAiTPLGnuLY
+	 HxQuqW5EvWs1NIbUt7YmKei619SvaovkB2SnV2bPIgU3o7GseRHh+u4sw4PeDhDTqd
+	 bPZZK1Hu68wKWzeT2suQb0M9aAzzqMFNjpSSrC9mVPj+1VRtYDYY4zmJEAOq2OnZuh
+	 8qkr4zW30NOkj3ZZ1x37Y48Fmek5lJ2tBL7unOU+2nwEv++GPHlXfgUKPqOIwfiPNy
+	 1VKSGFA/WWBEg==
+Message-ID: <856aa232-701f-40bf-bae9-1aff8886f473@kernel.org>
+Date: Fri, 1 Aug 2025 08:21:37 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -27,9 +36,9 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v7 08/19] scsi: detect support for command duration limits
-To: Diangang Li <lidiangang@bytedance.com>,
- Damien Le Moal <dlemoal@kernel.org>
-Cc: Mira Limbeck <m.limbeck@proxmox.com>, Niklas Cassel <nks@flawful.org>,
+To: Diangang Li <lidiangang@bytedance.com>
+Cc: Friedrich Weber <f.weber@proxmox.com>,
+ Mira Limbeck <m.limbeck@proxmox.com>, Niklas Cassel <nks@flawful.org>,
  Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen"
  <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
  Kashyap Desai <kashyap.desai@broadcom.com>,
@@ -55,14 +64,13 @@ References: <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
  <75412b1b-3f39-4f6a-93ce-823c15a19bf3@kernel.org>
  <20250731114832.GA97414@bytedance.com>
 Content-Language: en-US
-From: Friedrich Weber <f.weber@proxmox.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
 In-Reply-To: <20250731114832.GA97414@bytedance.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Bm-Milter-Handled: 55990f41-d878-4baa-be0a-ee34c49e34d2
-X-Bm-Transport-Timestamp: 1753963575858
 
-On 31/07/2025 13:48, Diangang Li wrote:
+On 7/31/25 20:48, Diangang Li wrote:
 > On Tue, Jul 22, 2025 at 06:37:50PM +0900, Damien Le Moal wrote:
 >> On 7/22/25 6:32 PM, Friedrich Weber wrote:
 >>> On 14/07/2025 04:48, Damien Le Moal wrote:
@@ -95,15 +103,16 @@ On 31/07/2025 13:48, Diangang Li wrote:
 > 
 > Are you planning to post a formal patch to upstream?
 
-Damien did post a patch [1], but as discussed there [2], it was not
-effective in our case because it was targeted at SATA drives, and we
-realized all tests were actually done using SAS drives. Sorry for the
-confusion, it might have been better if I had posted my follow-up
-yesterday [3] in the other thread instead.
+I initially thought that the issue was due to some problem with the HBA SAT
+(SCSI to ATA translation). However, the drives that trigger the issue are SAS
+drives, so there is no command translation and it is much less likely that the
+issue is related to the HBA. So I am relunctant to take a big hammer and disable
+CDL for mpt3sas for SAS drive. HBAs driven by that driver do *not* support CDL
+for ATA, so disabling CDL would not be an issue for SATA disks. But there is no
+good reasons to disable CDL for SAS drives.
 
-[1] https://lore.kernel.org/all/20250723052334.32298-1-dlemoal@kernel.org/
-[2]
-https://lore.kernel.org/all/a345c99d-864b-4dde-b755-b61a085508a8@proxmox.com/#t
-[3]
-https://lore.kernel.org/all/eb3778e5-dfdb-4382-8cc6-da6459f14a46@proxmox.com/
+This is being handled as a drive issue now, off-list.
 
+-- 
+Damien Le Moal
+Western Digital Research
