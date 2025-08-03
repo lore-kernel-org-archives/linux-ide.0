@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45DE32063FD;
-	Sun,  3 Aug 2025 21:21:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BED9205502;
+	Sun,  3 Aug 2025 21:21:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754256070; cv=none; b=WF98AjfHv5L2NLgBJQ23qQgSQCDehtXEDcCoN+r8DPKBE3KJK1wOSko2xmplQcOJgbEbkZd0gkruWby9ISni3oa4pM9Ffjpoc/rJLlFjaSnt1u3m6m1DsYrkqVn7gxHXsFvv1+0evJWA7q9Wa2rkaNlE39Zhy/62+6yuKR0B7pk=
+	t=1754256114; cv=none; b=hvVBkvgiLwjSHCYey6uMSSrjEs3k98jqvYNsPVX0d40euEaVP7vb+To174spFpGTEI9cV5vqxz3FoOCobJlo4dqNRPZNAEhcMl9Ptp+/SBnomoVuTHzuQcmX9OjKjCOcv6U9lzMVBN/19ojcH9NPR3SKBjHedF+K7LZpu9kzOcw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754256070; c=relaxed/simple;
-	bh=KkDLhHi0fI+glXGVi4pwz7Y7bzQYNf6ZLbw1ruplX98=;
+	s=arc-20240116; t=1754256114; c=relaxed/simple;
+	bh=C3R2GvoYlKG0pm99Ic72UuGigtxqIM3fXUCHSMtmoKI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=k5Vt4dNnynIkqe3Y8/6EtlinUWTqW3XSEf/Mij/PTjPOEXFa2L/23VIhz+e65PEG9ycQ2aJxdvNFbOuycQ5pQo+Mhm9XZ7BvDWiQ+UfJuREdPzvqkU1X1FILhpFshT3pKlF0fmFVPSu2NrsZ89wGU7xPhWjCq3Zl2eLKkw4f3zk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A8VR5pBV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=ML/MSLdT3OHtoVaRg+107vNvBDNSpDxVPnQxS6bfzmYWZ2KPlpcDMItYwS5t1bQkGMiGEAtF4YLdzswNnNkYrSJmJ3wu+For3xUFKXWW75TTjetHrzhKyoB7LhFKHhtWwVL2SNVwAocFVzwQs26v3AcYT7PmeRUtFcnUkRP25w0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zi6su7G8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A8VR5pBV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8502AC4CEEB;
-	Sun,  3 Aug 2025 21:21:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zi6su7G8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E046C4CEF0;
+	Sun,  3 Aug 2025 21:21:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754256070;
-	bh=KkDLhHi0fI+glXGVi4pwz7Y7bzQYNf6ZLbw1ruplX98=;
+	s=k20201202; t=1754256113;
+	bh=C3R2GvoYlKG0pm99Ic72UuGigtxqIM3fXUCHSMtmoKI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=A8VR5pBVSHBHCvM4IG+S2C1UwwBEMlZg6kMaQasAVAt3DI/x7uUS8TnImKvPG5/Sb
-	 znhVXcG6/0oqaWzgD4985J/4uvriB1GmCK/km0YxiPZEaZ3H53hhnT1LVHtefnA4po
-	 JNj29PIijIhwhcp6ffM3Y+4PSSxWSVmD6qxCafQnhTItHXOIvvFPsTNoV/UVUi6e2G
-	 JJ/ijBaR4mV6vz2ACpTLDIlAHZTL3Dh6b4CszUCXAdFTLSyos+Qz0m9pM5SVzhS4xG
-	 CXGeQvbfwPen9hYYjJkCE7iQ/GJW9701WrGlAhlM22vfs/iwRRWp7ugc+rlLLAE6Sx
-	 Q3K9kXKEVg82g==
+	b=Zi6su7G8Uhb1hE2KECmw6bDRBYgHbCOdGsdKhe/BYIIRbo+PTjIExfhh8rn7XC3CE
+	 n4CVp+EMrvWJChjIjYjPyMUZ8LaX0RiNWzsQfSSGIPbLDVLwB9NBfTo7qgf0yfinVq
+	 xJXvsNZvoXG9k8JgDQlEDB9zO8wUPOhbptaIsA3otFgGGWIe41Gq0cf91AmseyETs8
+	 8S765FbQIl/NW1Euaa394nrSDuwjlQwtRaHZRot53Fan/yUwbtsFtKCfScheQpQsSM
+	 9fFJneS7RQ8WYeVgt/mEJM0dkNqkhIOnVFngLGyMUdbDOzhDCvsWVbu0gU0vcidn2D
+	 PW8rjFViDGotw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -34,12 +34,12 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Hannes Reinecke <hare@suse.de>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 16/23] ata: libata-sata: Disallow changing LPM state if not supported
-Date: Sun,  3 Aug 2025 17:20:23 -0400
-Message-Id: <20250803212031.3547641-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 11/16] ata: libata-sata: Disallow changing LPM state if not supported
+Date: Sun,  3 Aug 2025 17:21:21 -0400
+Message-Id: <20250803212127.3548367-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250803212031.3547641-1-sashal@kernel.org>
-References: <20250803212031.3547641-1-sashal@kernel.org>
+In-Reply-To: <20250803212127.3548367-1-sashal@kernel.org>
+References: <20250803212127.3548367-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -48,7 +48,7 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.101
+X-stable-base: Linux 6.1.147
 Content-Transfer-Encoding: 8bit
 
 From: Damien Le Moal <dlemoal@kernel.org>
@@ -117,10 +117,10 @@ with an appropriate error code.
  1 file changed, 5 insertions(+)
 
 diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index be72030a500d..9e0a820d6961 100644
+index 71a00842eb5e..b75999388bf0 100644
 --- a/drivers/ata/libata-sata.c
 +++ b/drivers/ata/libata-sata.c
-@@ -817,6 +817,11 @@ static ssize_t ata_scsi_lpm_store(struct device *device,
+@@ -812,6 +812,11 @@ static ssize_t ata_scsi_lpm_store(struct device *device,
  
  	spin_lock_irqsave(ap->lock, flags);
  
