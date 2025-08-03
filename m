@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63526205502;
-	Sun,  3 Aug 2025 21:20:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45DE32063FD;
+	Sun,  3 Aug 2025 21:21:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754256029; cv=none; b=uKoiI8m/bJYNUsCxf0Kmw67wOHYq3DG34zvIb74x1ziGUrWtJ1w/CO9M2o9JywiB6gZy2s7DCf71RL/vMDG1KbOUF6alR7FDNnzGqLTK0oOy/LSheHbUa+NZOBq2qesnoHLmWiMyWpTNLWkpCKb+nNRVdLDNVj3dkUODL6DoV+Y=
+	t=1754256070; cv=none; b=WF98AjfHv5L2NLgBJQ23qQgSQCDehtXEDcCoN+r8DPKBE3KJK1wOSko2xmplQcOJgbEbkZd0gkruWby9ISni3oa4pM9Ffjpoc/rJLlFjaSnt1u3m6m1DsYrkqVn7gxHXsFvv1+0evJWA7q9Wa2rkaNlE39Zhy/62+6yuKR0B7pk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754256029; c=relaxed/simple;
-	bh=pi6y2uykWyEKUJRcAkDOw0T2/GwlygvHzAiGCHiBKM0=;
+	s=arc-20240116; t=1754256070; c=relaxed/simple;
+	bh=KkDLhHi0fI+glXGVi4pwz7Y7bzQYNf6ZLbw1ruplX98=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=X40jhWt7B5t0PGJbkPEMG8ZfuqB7C8t8KcZFJTFEfHoVtgR2On3YhvmKlv2mqwfw0nH3N+Wkve6rrhP46nMRNJbN5BDPjI8JYexwVgJpESaeT54QrlYAnlmPdmbafiX3UrRpQOKHaC6+uszq37AvCKH9mMhBmX8Yn5MDeshVKAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nS2E/NO3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=k5Vt4dNnynIkqe3Y8/6EtlinUWTqW3XSEf/Mij/PTjPOEXFa2L/23VIhz+e65PEG9ycQ2aJxdvNFbOuycQ5pQo+Mhm9XZ7BvDWiQ+UfJuREdPzvqkU1X1FILhpFshT3pKlF0fmFVPSu2NrsZ89wGU7xPhWjCq3Zl2eLKkw4f3zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A8VR5pBV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nS2E/NO3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6629C4CEEB;
-	Sun,  3 Aug 2025 21:20:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A8VR5pBV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8502AC4CEEB;
+	Sun,  3 Aug 2025 21:21:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754256029;
-	bh=pi6y2uykWyEKUJRcAkDOw0T2/GwlygvHzAiGCHiBKM0=;
+	s=k20201202; t=1754256070;
+	bh=KkDLhHi0fI+glXGVi4pwz7Y7bzQYNf6ZLbw1ruplX98=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=nS2E/NO3O2WqpY9EAQiOb37HjD0/+j+nggn048Lm5t1mBNJZkGIYp2SdIjLFOKBhN
-	 6C0SPjDEh84Vpu/YVItcAfZ/nSZFUZ4OKEM+nyQRz/WelHdZMHXJgrZ4L/4BAQXn+M
-	 2bUAE7pFsjTXla37b86lyVTRtH0z0GSRbThHkEC/aisDjasClnzFey5Jup470cF5ts
-	 m+ka0g97tjBKkuderf3zgSJ0sLpNBzWbswVPSi1YcSVIEkMqDsbBNI890HGj7w1yQg
-	 tNkBIgJ2Rp7Vw379MQiVek227PaUNkNW8glmUa8Q7vEQLds/QbFBjs28OZylD8JJtT
-	 uijsm6GVGQ7kg==
+	b=A8VR5pBVSHBHCvM4IG+S2C1UwwBEMlZg6kMaQasAVAt3DI/x7uUS8TnImKvPG5/Sb
+	 znhVXcG6/0oqaWzgD4985J/4uvriB1GmCK/km0YxiPZEaZ3H53hhnT1LVHtefnA4po
+	 JNj29PIijIhwhcp6ffM3Y+4PSSxWSVmD6qxCafQnhTItHXOIvvFPsTNoV/UVUi6e2G
+	 JJ/ijBaR4mV6vz2ACpTLDIlAHZTL3Dh6b4CszUCXAdFTLSyos+Qz0m9pM5SVzhS4xG
+	 CXGeQvbfwPen9hYYjJkCE7iQ/GJW9701WrGlAhlM22vfs/iwRRWp7ugc+rlLLAE6Sx
+	 Q3K9kXKEVg82g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Hannes Reinecke <hare@suse.de>,
 	Niklas Cassel <cassel@kernel.org>,
+	Hannes Reinecke <hare@suse.de>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 21/31] ata: ahci: Disallow LPM policy control if not supported
-Date: Sun,  3 Aug 2025 17:19:24 -0400
-Message-Id: <20250803211935.3547048-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 16/23] ata: libata-sata: Disallow changing LPM state if not supported
+Date: Sun,  3 Aug 2025 17:20:23 -0400
+Message-Id: <20250803212031.3547641-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250803211935.3547048-1-sashal@kernel.org>
-References: <20250803211935.3547048-1-sashal@kernel.org>
+In-Reply-To: <20250803212031.3547641-1-sashal@kernel.org>
+References: <20250803212031.3547641-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -48,111 +48,90 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.12.41
+X-stable-base: Linux 6.6.101
 Content-Transfer-Encoding: 8bit
 
 From: Damien Le Moal <dlemoal@kernel.org>
 
-[ Upstream commit 65b2c92f69d3df81422d27e5be012e357e733241 ]
+[ Upstream commit 413e800cadbf67550d76c77c230b2ecd96bce83a ]
 
-Commit fa997b0576c9 ("ata: ahci: Do not enable LPM if no LPM states are
-supported by the HBA") introduced an early return in
-ahci_update_initial_lpm_policy() to ensure that the target_lpm_policy
-of ports belonging to a host that does not support the Partial, Slumber
-and DevSleep power states is unchanged and remains set to
-ATA_LPM_UNKNOWN and thus prevents the execution of
-ata_eh_link_set_lpm().
-
-However, a user or a system daemon (e.g. systemd-udevd) may still
-attempt changing the LPM policy through the sysfs
-link_power_management_policy of the host.
-
-Improve this to prevent sysfs LPM policy changes by setting the flag
-ATA_FLAG_NO_LPM for the port of such host, and initialize the port
-target_lpm_policy to ATA_LPM_MAX_POWER to guarantee that no unsupported
-low power state is being used on the port and its link.
+Modify ata_scsi_lpm_store() to return an error if a user attempts to set
+a link power management policy for a port that does not support LPM,
+that is, ports flagged with ATA_FLAG_NO_LPM.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Niklas Cassel <cassel@kernel.org>
-Link: https://lore.kernel.org/r/20250701125321.69496-9-dlemoal@kernel.org
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Link: https://lore.kernel.org/r/20250701125321.69496-6-dlemoal@kernel.org
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Based on my analysis of the commit message, code changes, and
-examination of the kernel repository context, I can provide the
-following assessment:
+Based on my analysis of the commit and the surrounding code context,
+here's my determination:
 
 **Backport Status: YES**
 
 This commit should be backported to stable kernel trees for the
 following reasons:
 
-1. **Bug Fix Nature**: This commit fixes a real bug where users could
-   still change LPM (Link Power Management) policy through sysfs even
-   when the hardware doesn't support any LPM states. The original commit
-   fa997b0576c9 only prevented automatic LPM enablement but didn't block
-   manual sysfs changes.
+1. **Fixes a clear bug**: Without this check, users can attempt to
+   change LPM policy on ports that don't support LPM (flagged with
+   ATA_FLAG_NO_LPM), which could lead to undefined behavior or system
+   issues. The code already prevents setting the policy but doesn't
+   inform the user that the operation failed.
 
-2. **User-Visible Issue**: The commit message explicitly mentions that
-   "a user or a system daemon (e.g. systemd-udevd) may still attempt
-   changing the LPM policy through the sysfs
-   link_power_management_policy". This is a user-visible issue that
-   could lead to unexpected behavior or system instability.
+2. **User-visible issue**: The bug allows sysfs writes to succeed
+   silently when they should fail with an error. This violates the
+   principle of least surprise - users expect operations to either
+   succeed or return an error, not silently fail.
 
-3. **Small and Contained Fix**: The code changes are minimal and well-
-   contained:
-   - Only adds 2 lines setting `ATA_FLAG_NO_LPM` flag and
-     `target_lpm_policy = ATA_LPM_MAX_POWER`
-   - Changes one debug message from "not enabling LPM" to "forcing LPM
-     max_power"
-   - The fix is localized to the `ahci_update_initial_lpm_policy()`
-     function
+3. **Small and contained fix**: The patch adds just 5 lines of code
+   (lines 927-930) that perform a simple flag check and return
+   -EOPNOTSUPP if the port doesn't support LPM. This is a minimal change
+   with low risk of regression.
 
-4. **Follows Established Pattern**: The code already uses this exact
-   same pattern for external ports (lines above show `ap->flags |=
-   ATA_FLAG_NO_LPM; ap->target_lpm_policy = ATA_LPM_MAX_POWER;`), so
-   this is extending an existing, proven approach.
+4. **Consistency with existing checks**: The function already has
+   similar validation for device-level quirks (ATA_QUIRK_NOLPM at lines
+   934-937). This patch adds the missing port-level validation, making
+   the code more consistent and complete.
 
-5. **Prevents Invalid Configuration**: Looking at the sysfs handler
-   `ata_scsi_lpm_store()` in libata-sata.c, it checks for
-   `ATA_FLAG_NO_LPM` and returns `-EOPNOTSUPP`, which is the correct
-   behavior this patch enables for unsupported hardware.
+5. **Related to recent fixes**: Looking at recent commits (65b2c92f69d3,
+   4edf1505b76d), there's been work to properly handle ports that don't
+   support LPM. This patch completes that work by ensuring the sysfs
+   interface properly rejects invalid operations.
 
-6. **Builds on Previous Stable Fix**: The referenced commit fa997b0576c9
-   was already marked for stable ("Cc: stable@vger.kernel.org"), and
-   this commit completes that fix by closing the remaining gap.
+6. **Prevents potential hardware issues**: Attempting to set LPM
+   policies on hardware that doesn't support them could potentially
+   cause hardware malfunctions or unexpected behavior. This fix prevents
+   such attempts at the sysfs interface level.
 
-7. **Low Risk**: The change has minimal risk of regression since it only
-   affects hardware that doesn't support any LPM states, and for such
-   hardware, preventing LPM policy changes is the correct behavior.
+The fix follows stable kernel rules: it's a clear bug fix, minimal in
+scope, doesn't introduce new features, and addresses a real user-facing
+issue where invalid operations appear to succeed when they should fail
+with an appropriate error code.
 
-The commit follows stable kernel rules by fixing an important bug with
-minimal changes and low regression risk, making it an ideal candidate
-for stable backporting.
+ drivers/ata/libata-sata.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
- drivers/ata/ahci.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a6a66d794763..61d34ca0d9f4 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1785,7 +1785,10 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
- 	if ((ap->host->flags & ATA_HOST_NO_PART) &&
- 	    (ap->host->flags & ATA_HOST_NO_SSC) &&
- 	    (ap->host->flags & ATA_HOST_NO_DEVSLP)) {
--		ata_port_dbg(ap, "no LPM states supported, not enabling LPM\n");
-+		ata_port_dbg(ap,
-+			"No LPM states supported, forcing LPM max_power\n");
-+		ap->flags |= ATA_FLAG_NO_LPM;
-+		ap->target_lpm_policy = ATA_LPM_MAX_POWER;
- 		return;
- 	}
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index be72030a500d..9e0a820d6961 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -817,6 +817,11 @@ static ssize_t ata_scsi_lpm_store(struct device *device,
  
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
++	if (ap->flags & ATA_FLAG_NO_LPM) {
++		count = -EOPNOTSUPP;
++		goto out_unlock;
++	}
++
+ 	ata_for_each_link(link, ap, EDGE) {
+ 		ata_for_each_dev(dev, &ap->link, ENABLED) {
+ 			if (dev->horkage & ATA_HORKAGE_NOLPM) {
 -- 
 2.39.5
 
