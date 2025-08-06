@@ -1,75 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5651817D2
-	for <linux-ide@vger.kernel.org>; Mon,  4 Aug 2025 00:07:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C884B5CDF1
+	for <linux-ide@vger.kernel.org>; Wed,  6 Aug 2025 04:54:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754266036; cv=none; b=d7OT9mwL+e5+avp9+bpAlgpwvY6a+0eO34PjkFoAmkpNx4gRnqCCr3KI3DC72bss6Ct4I2RvdcZ7QPDEFe0nh8QafT6Bvt7PflZ49TmMFNmrmwp/YK7AG5sDc21OQK/tK02FkET1nWlKAAmCl01kej/OHxOC68AyhotzeZOYyHA=
+	t=1754456051; cv=none; b=oAV6/XLRTg6DWf8XJYuoLzkXmxQ8mtx+N9mT9KoON8Pka30e8TJvhlAxF9vMo77gWK/X3aHPVP6gfpAgIdXrOf9tB/z43Q20+mXiF3AWVZqPaDiW+umX6OnPXTfDfG2Tx2KkfGjQUjEVqlhvp60tsFKfZIwIgefxNnRfgZOFK2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754266036; c=relaxed/simple;
-	bh=HU7qrwAhpaf4DmPrsZFCQKGZPQhc7h+U4eOeE/Lf+U4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HZsV5uxRaUoVnZAJlqjP1QzUUvPWkO+HXBUTQm+ssizCAoFWvlgx8f6Vy4LPVUvScSO1rVA86chkAOLjUG31blQ/VcO0bpBJ3SQOOkqQAKpB1EZK22sVpZ3r6ylZI7/W2Ip7CeR5VklwxkObuXq73RNrhxuF0FWTGizujPiv5D0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hFdynBbX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1754456051; c=relaxed/simple;
+	bh=r3XZDxvgv7Q0g/utrcCwBZBvJ0C7rjQ8cbxlxUEQZI0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bCR5FZj16Qb+KO1+CNjcFOlI817Ag9FfX4+e1eaX8yv30kQYTzHGdhnOzszJaht2qIl1ISRCW+fIH0niEmaT5J3VnEWH9CEHqRYqmKoYT4Fgpfg0jA6MnLvvfdo0gM0xX0C+qGD0n6YUGB/nMNzhEd7IbxADy9WswdInMlsxB/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FZFwP5Um; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hFdynBbX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7833C4CEF0;
-	Mon,  4 Aug 2025 00:07:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FZFwP5Um"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 168D8C4CEE7;
+	Wed,  6 Aug 2025 04:54:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754266033;
-	bh=HU7qrwAhpaf4DmPrsZFCQKGZPQhc7h+U4eOeE/Lf+U4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=hFdynBbXKKdgxyWfsoGTpx3DehC7ednPWdQMB5Jv+iAIvilPXe85l6TtrdL21wK1/
-	 IX2XY1rGQFe/PQi+oOqSqKVhHDI6gwUDxrg5HhGTah4pYpUo97WmyjTW/4E7vZQZZ+
-	 m7vcMcN1Sol7VSk1jZnVZiShGWF0EJQ2ZaCMDHqnIs5MmzDvSgG451qM5yLWfnaRRh
-	 ZeSC3Fya20EfqC5oXHshzc4LPfWde4/b762VS8EjuYJ5LVp0JctnbkEIYu71fHnJU0
-	 X6e4vaL6fjWE15fB5x9vMzUG/SutKg985xPjbLD/A8nAsPAB4y5ttNuRdD/zCtsAe1
-	 M1NwsQCJncsOw==
-Message-ID: <7c7e3d9a-ecf6-4bcf-b9d8-6db699b53e0a@kernel.org>
-Date: Mon, 4 Aug 2025 09:04:40 +0900
+	s=k20201202; t=1754456050;
+	bh=r3XZDxvgv7Q0g/utrcCwBZBvJ0C7rjQ8cbxlxUEQZI0=;
+	h=From:To:Cc:Subject:Date:From;
+	b=FZFwP5Um5gn6vena3LVu+CfvjCcOF4i5qxgdIB4YJCyXyY4VFSFBGG4PoxRq+wyVQ
+	 hvFC2rTPonvKyhI0+GGKzWqC3whaYKFZSNSaaqXfHoFaqR/C/v3KLa7YE4SEEqN33f
+	 aSKzQd8FwqR/XMLPT7cLAaxR4L5dvvlIdMkBOpRBDTtTox7zKlkLFjxFt++JNOHHZ6
+	 dnvTJX3VnGQnExfBOVH5VnrnU9Q3nRa7+mwB/pBusRdEesqpTAB9PfmStnuablsw27
+	 DlFaxiX0r+KN+zR7ts/CkwGsNylymA9Ta0b7RutA8yoxuP1CPUsg2Zvj6mk6izhXeK
+	 0ub60NFen12hg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 6.17-rc1-fixes
+Date: Wed,  6 Aug 2025 13:51:37 +0900
+Message-ID: <20250806045137.729300-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] ata: libata-scsi: Return aborted command when missing
- sense and result TF
-To: Igor Pylypiv <ipylypiv@google.com>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
- Hannes Reinecke <hare@suse.de>, Lorenz Brun <lorenz@brun.one>,
- Brandon Schwartz <Brandon.Schwartz@wdc.com>
-References: <20250730002441.332816-1-dlemoal@kernel.org>
- <20250730002441.332816-3-dlemoal@kernel.org> <aI0jVxj7GoHMkncK@google.com>
- <822c1251-d3fe-4dfe-ba26-63128d9ea3f1@kernel.org>
- <aI5PpnFUDXfMnvbC@google.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <aI5PpnFUDXfMnvbC@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 8/3/25 2:49 AM, Igor Pylypiv wrote:
->>> There is a redundant check in ata_gen_ata_sense(). qc->err_mask (is_error) is
->>> already checked in ata_scsi_qc_complete() before it calls ata_gen_ata_sense().
->>>  
->>> 	if (qc->err_mask ||
->>> 	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
->>>
->>> The function will be much cleaner once we remove this check. 
->>
->> Yep, we can remove the err_mask check.
->>
-> 
-> To clarify, I mean that both conditions can be removed, not just the err_mask
-> check. In the current code the err_mask check always evaluates to true so
-> the right part of the OR expression is skipped due to lazy evaluation.
+Linus,
 
-Yes, we can simplify this.
+The following changes since commit 260f6f4fda93c8485c8037865c941b42b9cba5d2:
 
--- 
-Damien Le Moal
-Western Digital Research
+  Merge tag 'drm-next-2025-07-30' of https://gitlab.freedesktop.org/drm/kernel (2025-07-30 19:26:49 -0700)
+
+are available in the Git repository at:
+
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.17-rc1-fixes
+
+for you to fetch changes up to 6cb43739b93c64c4a2148222bd606e6920257752:
+
+  ata: pata_pdc2027x: Remove space before newline and abbreviations (2025-08-01 08:43:11 +0900)
+
+----------------------------------------------------------------
+ata fixes for 6.17-rc1
+
+ - Cleanup whitespace in messages in libata-core and the pata_pdc2027x,
+   pata_macio drivers (Colin).
+
+ - Fix ata_to_sense_error() to avoid seeing nonsensical sense data for
+   rare cases where we fail to get sense data from the drive. The
+   complementary fix to this is to ensure that we always return the
+   generic "ABORTED COMMAND" sense data for a failed command for which
+   we have no status or error fields.
+
+ - The recent changes to link power management (LPM) which now prevent
+   the user from attempting to set an LPM policy through the
+   link_power_management_policy caused some regressions in test
+   environments because of the error that is now returned when writing
+   to that attribute when LPM is not supported. To allow users to not
+   trip on this, introduce the new link_power_management_supported
+   attribute to allow simple testing of a port/device LPM support (me).
+
+----------------------------------------------------------------
+Colin Ian King (3):
+      ata: libata-core: Remove space before newline
+      ata: pata_macio: Remove space before newline
+      ata: pata_pdc2027x: Remove space before newline and abbreviations
+
+Damien Le Moal (3):
+      ata: libata-scsi: Fix ata_to_sense_error() status handling
+      ata: libata-scsi: Return aborted command when missing sense and result TF
+      ata: libata-sata: Add link_power_management_supported sysfs attribute
+
+ drivers/ata/ata_piix.c      |  1 +
+ drivers/ata/libahci.c       |  1 +
+ drivers/ata/libata-core.c   |  2 +-
+ drivers/ata/libata-sata.c   | 53 +++++++++++++++++++++++++++++++++++----------
+ drivers/ata/libata-scsi.c   | 38 ++++++++++++++++----------------
+ drivers/ata/pata_macio.c    |  2 +-
+ drivers/ata/pata_pdc2027x.c | 12 +++++-----
+ include/linux/libata.h      |  1 +
+ 8 files changed, 71 insertions(+), 39 deletions(-)
