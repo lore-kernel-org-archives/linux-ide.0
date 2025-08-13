@@ -1,133 +1,125 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
+Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39301283FC8
-	for <linux-ide@vger.kernel.org>; Wed, 13 Aug 2025 15:45:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9A0F1373
+	for <linux-ide@vger.kernel.org>; Wed, 13 Aug 2025 20:46:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755099954; cv=none; b=CnlpCsFqC4zPr8y9fvrBRGsteypQ0vDULalP9UKMybbdgwRi+4u3D5/S0EjPAzuBrXNuzNlJFwuUfJoO42uXgjhIGOXfEUdZmDurzH+K17wMkMO7xKk5xwT/zdFIzoUSn+ASZvoXSHXWhk7MEZY1Ry1KTV4CUgrsIs0Sgcff44c=
+	t=1755118015; cv=none; b=iMLeUKlZWdjft0zdzILdUrHHpIVPZqR6oCYV0udGz0KMzkhUqG3zHZ2G4Nff+tDFtjxukg6gTZvL2ttJR86QW9MEYmAgs/EyLwOJxQPm6VIkWiUHYcfxnSbIHF53xcsBWTUOB5WUweMRw2lCMUbpXAUKRdkezCs0RivCIOoPcHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755099954; c=relaxed/simple;
-	bh=CyjKM3FAGIcarIfEVSPRWFUSruBznu/jL9+iu5VyYWE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sE09ZR+63PwwMy0/MSFspkwNoxPVmf4py25AAqYfkrVzjQ8ng1pe2avEVWTUN1dohZspqFLkBIf7d+D7nj+HhaIiieCpa1hH1RJ7IEwk4dxEUGCvzYBe4hUq9T+c0UPHLWH8/9SFvexL3py90VEvukWRCGYHqXAPEMBay7xVwWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nGN7CU03; arc=none smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1755118015; c=relaxed/simple;
+	bh=3msZVg0HRJb3iRLBV25DLd2/0IRJKa8M5nKvdTDwsE0=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=n3A+n6G1DD9YzAq6JcCS0PSBsFrx6U1ty4oOKsF74dIKb0tBIuShyvloTVyb12xnpT5YUDsHCiqkFIhq7fpcPrDPw/EW6r1jq2Ncysmqlp6eweb+l73VEEYlsm+hJlaTSmgDSvXfuWwtEYPXxMzD53VjY1gmwNvO2S1eXOO/OTk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UF7LKToI; arc=none smtp.client-ip=209.85.215.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nGN7CU03"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-5561ab55c4dso6953894e87.2
-        for <linux-ide@vger.kernel.org>; Wed, 13 Aug 2025 08:45:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UF7LKToI"
+Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-b47174b3427so108834a12.2
+        for <linux-ide@vger.kernel.org>; Wed, 13 Aug 2025 13:46:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1755099951; x=1755704751; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=e9T6ss3lClm8rmsy51ZMwH+Js8ZJsClejp2NgssssVQ=;
-        b=nGN7CU03pcw/h1YhVQE3sGAEQqLPc9pFp9egKKjPEtt3aLuu0gdkdf0Leirj3hJQ0X
-         1eue2kgicJuMnppa8jAW2O46tfT79/3u3oJwqXAip2yP3AZ9D0xETLfUX4tdfGMT6cZi
-         kls+zD6FgIJGoAhYorWx9KylzWKJO+dtugntWD3iHiL9MLDFbLGYn9nX5WhWOnrPMDez
-         si5C58vXU3lyKDd+153pxxEzwGQDOneV/cNaOSsIkL07tkY2+NlJExVoZMTaDiy5mZLR
-         G/vlozvAKDMZzP6U+MNs1hr5/wCQWSk7OlwdmofhBZEHecj6UiJO+GrzQzBzabXqiRAG
-         4Yvg==
+        d=google.com; s=20230601; t=1755118012; x=1755722812; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=BPb4y3nft44GjGTyIn5iIw4m7Onuiy/xdmv1KPATuDs=;
+        b=UF7LKToIVZ7xYboQiRYz8R76SyqYGi2/7uiX4XUzFqggwEKoMwS3Aszi2Z1gL/r4cT
+         Kb8vxzsP5s99yXkXi/LwhRJlnZCxFIKTlmfzMtZrfCP5iCBLl6Udf+HPseulj7HdA02y
+         XM+obMDv6fSP/V/rRykDR1+aLbWmc9Gto/r7gRMW8UrsV36vILX59fIUNzTF0oAHnXq9
+         pIHoxIS8EXksHliSoNiiSbAmex0W08e6+/+12yy0394GjmmHo9+iI+11V9NKK5EmV0Mx
+         GzO5JIaS1je/M8mLvb2H0ZhsBmbvBI/wEkXRX+bCZePvjIhcy8zzj9pZCnwb1WHQaS+H
+         fyIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755099951; x=1755704751;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=e9T6ss3lClm8rmsy51ZMwH+Js8ZJsClejp2NgssssVQ=;
-        b=awesnhJtn9rH26myBMWXBYdP4glX6u2tNSXhfZ/SSmhm7R2x/bp5rVY3Hgf8VXTMoT
-         VniCDlyJZr6GY1/A8atfBuDDx3fdqcrqbeIbBMJtF+dfvh+kGKJcSJd0NTurcoKBaHU+
-         QoNLwHRbrnpSoOISNraloVOUojN0StjtMeq0yf1aEj8DCa0zAdrE8J4AHh6u7JJt+PPf
-         E55LccmFiKGdf0V0dVh0we0lbtIN230nbRv9oI4pLt83vMh9s4XK/LZeP6CE+/0a2CID
-         AFAIr8pHWYkKsHA8bqucX2mSici5IVX8bCAdkxJ+/ULGPCqULiyirTF+GGGnZG/jyjao
-         8yBw==
-X-Forwarded-Encrypted: i=1; AJvYcCUFBHuADZm8+Z4ebQ9t/lOKa4USQ/R2oOAnv2Qn/5aQZOJnkffJXn0zprm49f0DdgPR3Pw+7JSYLCs=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw0J3hiFteR50bH5gLe3aajPqrgmi84dLPFi+mkAJaQpQb4rG9F
-	hIMupW3X8leA5z9aTmVmy8S0PLJ3EFQ4KiII/P7VR4hWpvm4f/B5wSHo
-X-Gm-Gg: ASbGncsou7UkIjr+OgS/3X7bOFR5sIsp+UmStPTzv0TZro/UiZ/bSrnK3CPjeoa5jTp
-	FA/fyNoOSSiiagguis7f8VHLXH9gyF9S5IGvIatM+siJKLsJoEVi8kMxNd8w9hmBTJknJJ6GGtd
-	QQhMQ+aOnjPvg3JL2RMkNX//1uTvzO7ZefCIsAKGOygeljVTds9s53Ag2xIil4x2JkDB3cE5s5e
-	7IatYP2aiuXqcnMfEvq4iIr/YqPJc3dFCZ7qUlpZFytaWlpx7fyKoFNu4F8flN02DmeQhKYbMU3
-	vM50BzYGQVIXUXhsEyD+6sMJo8WAIg+QQWOa4Ae9IWrWMNwhQlhTpFI8m28+pN7WU/Wh5+UB6Vm
-	pQ/tTufTa/OUVj34fx9H7FpwR1QO39KLReSWmDlZssSKABwcCekiaun+Q+5eT+iolxogRkzt1Iv
-	wPtG16
-X-Google-Smtp-Source: AGHT+IGKRcAmMXidUxd/7yF+CNyaGtLOi9Ntwslj0/5ITde40SaD8L1RcxBwCoFhQm72Cx7EJO1fEA==
-X-Received: by 2002:a05:6512:3091:b0:55b:8a71:db1d with SMTP id 2adb3069b0e04-55ce012f67cmr1246733e87.14.1755099951005;
-        Wed, 13 Aug 2025 08:45:51 -0700 (PDT)
-Received: from ?IPV6:2a00:1fa0:44ba:180f:564e:6201:fd15:9c38? ([2a00:1fa0:44ba:180f:564e:6201:fd15:9c38])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-55b8898beb4sm5395603e87.30.2025.08.13.08.45.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Aug 2025 08:45:50 -0700 (PDT)
-Message-ID: <1dfed1b7-3686-4e9a-a276-f53d3ebf1146@gmail.com>
-Date: Wed, 13 Aug 2025 18:45:49 +0300
+        d=1e100.net; s=20230601; t=1755118012; x=1755722812;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=BPb4y3nft44GjGTyIn5iIw4m7Onuiy/xdmv1KPATuDs=;
+        b=YDnKvznX3HTI3sx8LYbkj8fnnMPDvxM8EeP08t3x8+jr85uSFe0u7IVuh+j9izSbQY
+         bbw9abmFM9Q7rsj0juRx+fkCS/JDBf+rmTygB8filkCT+Q5Hv76ZnqQu1B8EZLGXJX+R
+         a2J7YcnkXnYPTpAlmY676vdPuwORO8gqZQoKCFdM8KFgjuDutkuDTWi8iTJO4Ra7sdWG
+         /AcHXLRIM4QLZm90pihOy2FHdyVwUrs0fgsyHTcxNC04TQfBQDKXt1tfNRs2Vsw8w5h5
+         B5HWdQlgHaFWH7zag4ie3zoPVxK9FJvUrUntiVsTA22hgU3ddI8oLTJ66qrLWbvaoGnI
+         bMbQ==
+X-Gm-Message-State: AOJu0Yz/l+H/yuEd5gjwlPoApyH7cOiW9kIaP17/AiG4z2DHC1nkG+MV
+	qLil7LemE2EpFk//idL2tQ3Taze1VzHepa01Gxe+lsN5EfIPDzSPSaCAbBvZbZPXBWjOVY9afiH
+	XqI0cFB+6BDAn+w==
+X-Google-Smtp-Source: AGHT+IFgXz7gVJeHrHVNI0YMYiBrpI1xtsujBpCmTgabA3qV1nDHzl4U4ZVxCdNm8xMf+diL2uY2q6ZIW6eh1g==
+X-Received: from plbp6.prod.google.com ([2002:a17:903:1746:b0:23c:7695:dcc5])
+ (user=ipylypiv job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:902:db12:b0:240:417d:8115 with SMTP id d9443c01a7336-244584ee7a2mr6975095ad.16.1755118012159;
+ Wed, 13 Aug 2025 13:46:52 -0700 (PDT)
+Date: Wed, 13 Aug 2025 13:46:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-eh: Fix link state check for IDE/PATA ports
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-Cc: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-References: <20250813092707.447479-1-dlemoal@kernel.org>
-Content-Language: en-US
-From: Sergey Shtylyov <sergei.shtylyov@gmail.com>
-In-Reply-To: <20250813092707.447479-1-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.51.0.rc0.215.g125493bb4a-goog
+Message-ID: <20250813204648.1285197-1-ipylypiv@google.com>
+Subject: [PATCH] Revert "ata: libata-scsi: Improve CDL control"
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 8/13/25 12:27 PM, Damien Le Moal wrote:
+This reverts commit 17e897a456752ec9c2d7afb3d9baf268b442451b.
 
-> Commit 4371fe1ba400 ("ata: libata-eh: Avoid unnecessary resets when
-> revalidating devices") replaced the call to ata_phys_link_offline() in
-> ata_eh_revalidate_and_attach() with the new function
-> ata_eh_link_established() which relaxes the checks on a device link
-> state to account for low power mode transitions. However, this changed
-> assumed that the device port has a valid scr_read method to obstain the
-> SSTATUS register for the port. This is not always the case, especially
+The extra checks for the ATA_DFLAG_CDL_ENABLED flag prevent SET FEATURES
+command from being issued to a drive when NCQ commands are active.
 
-   Hum, another nit... Don't the SATA specs call this register SStatus?
+ata_mselect_control_ata_feature() sets / clears the ATA_DFLAG_CDL_ENABLED
+flag during the translation of MODE SELECT to SET FEATURES. If SET FEATURES
+gets deferred due to outstanding NCQ commands, the original MODE SELECT
+command will be re-queued. When the re-queued MODE SELECT goes through
+the ata_mselect_control_ata_feature() translation again, SET FEATURES
+will not be issued because ATA_DFLAG_CDL_ENABLED has been already set or
+cleared by the initial translation of MODE SELECT.
 
-> with older IDE/PATA adapters (e.g. as emulated with qemu). For such
-> adapter, ata_eh_link_established() will always return false, causing
-> ata_eh_revalidate_and_attach() to go into its error path and ultimately
-> to the device being disabled.
-> 
-> Avoid this by restoring the previous behavior, which is to assume that
-> the link is online if reading the port SSTATUS register fails.
-> 
-> Reported-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> Fixes: 4371fe1ba400 ("ata: libata-eh: Avoid unnecessary resets when revalidating devices")
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  drivers/ata/libata-eh.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 2946ae6d4b2c..354d2c0abcf3 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -2089,8 +2089,13 @@ static bool ata_eh_link_established(struct ata_link *link)
->  	u32 sstatus;
->  	u8 det, ipm;
->  
-> +	/*
-> +	 * For old IDE/PATA adapters that do not have a valid scr_read method,
-> +	 * or if reading the SSTATUS register fails, assume that the device is
+The ATA_DFLAG_CDL_ENABLED checks in ata_mselect_control_ata_feature()
+are safe to remove because scsi_cdl_enable() implements a similar logic
+that avoids enabling CDL if it has been already enabled.
 
-   Same comment here... 
+Cc: stable@vger.kernel.org
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+---
+ drivers/ata/libata-scsi.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-> +	 * present. Device probe will determine if that is really the case.
-> +	 */
->  	if (sata_scr_read(link, SCR_STATUS, &sstatus))
-> -		return false;
-> +		return true;
->  
->  	det = sstatus & 0x0f;
->  	ipm = (sstatus >> 8) & 0x0f;
-
-MBR, Sergey
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 57f674f51b0c..856eabfd5a17 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3904,27 +3904,17 @@ static int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
+ 	/* Check cdl_ctrl */
+ 	switch (buf[0] & 0x03) {
+ 	case 0:
+-		/* Disable CDL if it is enabled */
+-		if (!(dev->flags & ATA_DFLAG_CDL_ENABLED))
+-			return 0;
+-		ata_dev_dbg(dev, "Disabling CDL\n");
++		/* Disable CDL */
+ 		cdl_action = 0;
+ 		dev->flags &= ~ATA_DFLAG_CDL_ENABLED;
+ 		break;
+ 	case 0x02:
+-		/*
+-		 * Enable CDL if not already enabled. Since this is mutually
+-		 * exclusive with NCQ priority, allow this only if NCQ priority
+-		 * is disabled.
+-		 */
+-		if (dev->flags & ATA_DFLAG_CDL_ENABLED)
+-			return 0;
++		/* Enable CDL T2A/T2B: NCQ priority must be disabled */
+ 		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED) {
+ 			ata_dev_err(dev,
+ 				"NCQ priority must be disabled to enable CDL\n");
+ 			return -EINVAL;
+ 		}
+-		ata_dev_dbg(dev, "Enabling CDL\n");
+ 		cdl_action = 1;
+ 		dev->flags |= ATA_DFLAG_CDL_ENABLED;
+ 		break;
+-- 
+2.51.0.rc0.215.g125493bb4a-goog
 
