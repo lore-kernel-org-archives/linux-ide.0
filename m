@@ -1,74 +1,110 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DE071367;
-	Thu, 14 Aug 2025 10:05:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B3A1E8335;
+	Thu, 14 Aug 2025 14:32:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755165900; cv=none; b=XMPjCCqxkw1AXugvtxlEYGTQiXcLCvVTqw4xYo2ZaSRNT0OFD8LaErbLYx54L/0pFxdtWfnHUYSBskg3ZCpSz0nX+kqhjOtExjWmtq8V5IXKGZ7JyDFwCi1yt6jVWUUTqCje9qJj6qtHUEGrHv5X2ttYAFVVnX4wWuYjMCzUBsI=
+	t=1755181966; cv=none; b=gBodVNu7hbHsTQd+z7JU9cqWbZxTmRI88ybj+ygQxjsopr+4ww3BWxLCI0WalDK+9SH7tltOFR2ObicMBrTuItRvXf+Q23QbfUzyHpQo24hoVndF+xI2+GDBfU8VhuNqQncCNeSLOZ31Aaj6nub+a/cPFBS5o2W8EbjpMdXT7os=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755165900; c=relaxed/simple;
-	bh=6eRZO0hVVKBcFC6WevqoMpTtS47SzqKF5hosBSUpqTc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=S8iHuPaU+p3zgZfUkGXBQ4yYVkgIGmWVcIKbORxwkuyVhNuwMCY2b95FpQ1Gq/ygqV7IVShWSPbKKplAcXvXIeO7YbiyfL2ekDoOme7ifG/g7Bb6seA5zZaCHbFFqBoqPQMPxewouau1yfqfFUInvZE1lgTljRDUrE05jXfZ+X8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QSoJ18vp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755181966; c=relaxed/simple;
+	bh=2YgBYu0tho6+NwLlDqBIcjwF8u4K+m2ays0gRmPyQKg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NdP5lvkK9sBa73M4EIR3vYtCjd9KFB9TJyAo7ehET+gYVQQywo7k/ucRkcZZB8a0ghwPzkBCuiWlUxNsvAIDYRIBNiv8alhWjRRdPzw1gAna3PekxOnUb7LzA+rKjFQFfGUMfjkvScK4JAghBRSU9CtfuTXPAv7DBqG+QT7yx7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gnl9jsm6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QSoJ18vp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 454F5C4CEED;
-	Thu, 14 Aug 2025 10:04:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gnl9jsm6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D273AC4CEED;
+	Thu, 14 Aug 2025 14:32:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755165899;
-	bh=6eRZO0hVVKBcFC6WevqoMpTtS47SzqKF5hosBSUpqTc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=QSoJ18vp0C6FZp+lzZ+OyZvhdBa1xT20JuHn6ccLkD4OBB4EEHC0MHrjmY2+9YIXN
-	 tZhLw8OWZJtdpXRENLUQoInpQPkelUb2mPKdkbgNKeKLWsOuDJ5Bl1eWOtm0ie/BgN
-	 0EC2eqeZHHDwaeHVKxSbpf9AgSJq9lYuaKG9OQTjmYaYhbctFF14472eNWp4+CNmlU
-	 WUL0k7sZBafyv5XRN7dXo7S4eCDVYwIl+yReoHx5JQ9TsqcK63X3GBYSuGjHOun5sT
-	 O0wpEyEMQjFpfyxsVYM4pRUe9eNc5FCOYjQBIxXm7eJKExf65m9EAPTdYWOpqJbqeP
-	 hTk0x7Af+lU8g==
-Message-ID: <790fe2ae-e750-4095-a716-f3dbb02e0570@kernel.org>
-Date: Thu, 14 Aug 2025 19:02:17 +0900
+	s=k20201202; t=1755181965;
+	bh=2YgBYu0tho6+NwLlDqBIcjwF8u4K+m2ays0gRmPyQKg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Gnl9jsm6Xus63Y0SCB/oxV5NkcCTq9ft8Fuo/O44twup8m1YNTvdAUVXmssbIpeOh
+	 gg7Y15u+IFfCrDD4kNWuEwEdy5WAPxsMeabPJsRhoJlsmDgeq/hTOH/YkZByslv7dJ
+	 KLCTtVP8faTK8IGCCsYYNgSTw9zyZI8uS9t2BMpVWlgeDDxFAM21jiEnxHUj7GlYCb
+	 qKXPXQT5e3BgdAuiksK4gqWzCFAg8POUedn5Lb2cyLJxGuNl/XyvUwwN3FJwogPK0W
+	 Jx7ly2bnvImgiMeMvjzyGpOqpj92VZZYGKqXDfWGOoIv8YoE7nnuesWte46Qqh41pk
+	 HVen4J/VvZoDw==
+Date: Thu, 14 Aug 2025 16:32:40 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: luyulin@eswincomputing.com
+Cc: hehuan1@eswincomputing.com, dlemoal@kernel.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	p.zabel@pengutronix.de, ningyu@eswincomputing.com,
+	linmin@eswincomputing.com, Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: Re: [PATCH v1 1/2] dt-bindings: sata: eswin: Document for
+ EIC7700 SoC
+Message-ID: <aJ3ziEwmGF-KLPuT@ryzen>
+References: <20250515085114.1692-1-hehuan1@eswincomputing.com>
+ <20250515085723.1706-1-hehuan1@eswincomputing.com>
+ <aCXPL8m0OjEOI_q9@ryzen>
+ <2630d08e.133.198a7fe5583.Coremail.luyulin@eswincomputing.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: libata-scsi: Fix CDL control
-To: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250814022256.1663314-1-ipylypiv@google.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250814022256.1663314-1-ipylypiv@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2630d08e.133.198a7fe5583.Coremail.luyulin@eswincomputing.com>
 
-On 8/14/25 11:22 AM, Igor Pylypiv wrote:
-> Delete extra checks for the ATA_DFLAG_CDL_ENABLED flag that prevent
-> SET FEATURES command from being issued to a drive when NCQ commands
-> are active.
-> 
-> ata_mselect_control_ata_feature() sets / clears the ATA_DFLAG_CDL_ENABLED
-> flag during the translation of MODE SELECT to SET FEATURES. If SET FEATURES
-> gets deferred due to outstanding NCQ commands, the original MODE SELECT
-> command will be re-queued. When the re-queued MODE SELECT goes through
-> the ata_mselect_control_ata_feature() translation again, SET FEATURES
-> will not be issued because ATA_DFLAG_CDL_ENABLED has been already set or
-> cleared by the initial translation of MODE SELECT.
-> 
-> The ATA_DFLAG_CDL_ENABLED checks in ata_mselect_control_ata_feature()
-> are safe to remove because scsi_cdl_enable() implements a similar logic
-> that avoids enabling CDL if it has been enabled already.
-> 
-> Fixes: 17e897a45675 ("ata: libata-scsi: Improve CDL control")
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+Hello Yulin,
 
-Applied to for-6.17-fixes. Thanks !
-(Note: I added Cc: stable@vger.kernel.org)
+On Thu, Aug 14, 2025 at 05:51:59PM +0800, luyulin@eswincomputing.com wrote:
+> Thank you very much for your constructive suggestions. Based on your advice,
+> I have optimized both the driver and the YAML program.
+> I sincerely apologize for the delayed response to your suggestions.
 
--- 
-Damien Le Moal
-Western Digital Research
+No need to apologize for anything :)
+
+
+> > The good news is that snps,dwc-ahci-common.yaml has defined and documented
+> > all the SATA clocks and resets for your board already (a lot of them which
+> > you missed to include in this binding).
+> > 
+> > 
+> > Looking quickly at:
+> > eswin,hsp_sp_csr = <&hsp_sp_csr 0x1050>;
+> > 
+> > I can't help to wonder if these regs shouldn't be in a SATA PHY binding
+> > instead.
+> > 
+> > Do e.g. a
+> > $ git grep -A 20 snps,dwc-ahci arch/
+> > 
+> > There are multiple examples that use a PHY driver.
+> > 
+> > If you were to implement a PHY driver, it is possible that you would
+> > not need to create a new (AHCI) DT binding at all, you could probably
+> > just add your compatible string to snps,dwc-ahci.yaml, as (from a quick)
+> > glance, all the only platform specific things appear to be PHY related.
+> > 
+> Thank you very much for your expert advice. I have already implemented a 
+> independent PHY driver, while the controller driver utilizes ahci_dwc.c.
+> Due to our hardware platform's SATA controller has specific constraints on clock, reset
+> and port resources, I think adding these to snps,dwc-ahci.yaml might compromise its readability.
+> Following reference implementations from other vendors in the Linux kernel, 
+> such as rockchip,dwc-ahci.yaml, amlogic,axg-pcie.yaml and others, I plan to create 
+> a new eswin,eic7700-ahci.yaml to describe these specifications.
+> Based on your professional experience, would you consider this approach acceptable?
+
+That sounds like a good approach.
+
+When you create your device tree binding, make sure to reference
+snps,dwc-ahci-common.yaml, like the other DWC based bindings:
+
+$ git grep snps,dwc-ahci-common.yaml
+baikal,bt1-ahci.yaml:  - $ref: snps,dwc-ahci-common.yaml#
+baikal,bt1-ahci.yaml:    $ref: /schemas/ata/snps,dwc-ahci-common.yaml#/$defs/dwc-ahci-port
+rockchip,dwc-ahci.yaml:    $ref: /schemas/ata/snps,dwc-ahci-common.yaml#/$defs/dwc-ahci-port
+rockchip,dwc-ahci.yaml:  - $ref: snps,dwc-ahci-common.yaml#
+snps,dwc-ahci.yaml:  - $ref: snps,dwc-ahci-common.yaml#
+snps,dwc-ahci.yaml:    $ref: /schemas/ata/snps,dwc-ahci-common.yaml#/$defs/dwc-ahci-port
+
+
+Kind regards,
+Niklas
