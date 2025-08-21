@@ -1,70 +1,70 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A041634A30C
-	for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 20:07:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11FC835206F
+	for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 20:07:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755806867; cv=none; b=H0tS/RDemScp8bF+nUAxEBk5sl7UNNmyX8vpyopLohJSG+96kxtDkKjwT3gwEpSaHpulNFyXGQVDygba9Llqyz85s481/K2SlZTTqA5prmZsaS9cZLfO4YxLQilkQicA52zllsx4YiQjpU/0Y5y/xzVrQuidvJZi36ngoFCWmjY=
+	t=1755806871; cv=none; b=oRyEIq2x28Lapq0G5GMRbVLKrFmYjqqazGyqjM3FHcDBPggCSJDrH5e7r2nK5FITmBGyzIW+E8INSWhOomGPXHzn8xHNNPFWRj1UhdP61mNV/R2HCJNMAlGmKG5erpGIUyF0/M7cH8AMWJh94JY1n1FyUWZUfbR3Jr6+0eJcLP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755806867; c=relaxed/simple;
-	bh=EbcdXL10oBVSBHmjJHKvKh3MpEtOuUSNb7Ges4yPKyE=;
+	s=arc-20240116; t=1755806871; c=relaxed/simple;
+	bh=KQhGj4yMV2JJyYTphSuwtYusktgVAWzYxv4GDdmnyDY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hpbKoNyjAywUa5Myv03CS+cndkkF5yB44UicEhcGCMZez3iS2ywCOTDeX2P1WdbqD5qS/qOYgirikK6vC9JaHoIfSi3mMxFDkLi6fWimXx8N7zYNCmBqVcf2mNH34C50rmEgRBe3QcDOAMXprGXUklTuNfP9ThsZosSOCqw3YOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Q1/E+adV; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=nxPHkbhXTip9t5t8LUT+yrhC5Ms31P9+fci1wLCPX7OPMwCDrPlC7v568BpfwFm7DDD/W3SUN4bN/QkYDZcXjk5YfgPJTi2/W5DxEaoWdJoL7D01+DeUkiGS34oFtyV8xhYbQqbM/YqhX4PrL1IBdWKtrpFpnVVqjwNVYA5528s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TQgtOEQX; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q1/E+adV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TQgtOEQX"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1755806863;
+	s=mimecast20190719; t=1755806866;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=S+ehuLujhp6/6Ui8/ETipqTmnVB5w2txW2o3jJCUzuY=;
-	b=Q1/E+adVuYX8JC6nYgeVB8Co1OcJGSTX8sUUSbsngZ+Kelsz7Cg/w2rq3awMe1NECnRqqO
-	p8HnNG+spMUhqyjsvz2fqBoqH4Oy3OdDQBZoNqsWLlY0TC+W/dDyEZfGRqNLx/oCxrcgyx
-	w8AooxSq2F2gaUn1JzljIx7zFagxlaE=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=PkrXh5PHMEq3NY5i+0892fbAshOERsmwyMLhbVIa0Cc=;
+	b=TQgtOEQXAd+ZqMtryRdclu2CWcywwWPcGCzMrZFbaM2gO/NUWiE9zbd6emxjpl4PAaRcmX
+	Ja8dVAi+Ww3YWP2K5jdURjRGATicOACA0zIstYunElZfkqNE3+Qa+89Se5oMOlM8Yy0tDq
+	RsY7hoM2zfwfOUwYF+6vwfncgXNx/+E=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-297-vOsSTYaTNUCYXjEvxkvzWQ-1; Thu, 21 Aug 2025 16:07:41 -0400
-X-MC-Unique: vOsSTYaTNUCYXjEvxkvzWQ-1
-X-Mimecast-MFC-AGG-ID: vOsSTYaTNUCYXjEvxkvzWQ_1755806861
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-45a1b00149cso6294575e9.0
-        for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 13:07:41 -0700 (PDT)
+ us-mta-541-4H5NrVdeMXGt4j4WwJxliQ-1; Thu, 21 Aug 2025 16:07:44 -0400
+X-MC-Unique: 4H5NrVdeMXGt4j4WwJxliQ-1
+X-Mimecast-MFC-AGG-ID: 4H5NrVdeMXGt4j4WwJxliQ_1755806863
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-3b9d41b88ffso837900f8f.0
+        for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 13:07:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755806860; x=1756411660;
+        d=1e100.net; s=20230601; t=1755806863; x=1756411663;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=S+ehuLujhp6/6Ui8/ETipqTmnVB5w2txW2o3jJCUzuY=;
-        b=l5QpFJgCvFlZr1rMU2svqYkmOcYrGaon0ogai1v5tOFpydet+PRlc1wVuKbUqNXcDO
-         mBLijDMM9KpErCNdHkpvgr1qJx4bCX+JcShPZ5WDESFKsWlO1dZrPkxZW7IBDKceHAEz
-         KFlDBAv75u1O5tFcsiIsmOW+Pg1dOCY1D/tUmbapIPRtPS6IgtYK280J4dl/llJXm08Z
-         SGTfNGxUfyzCQ2thFaRy2ZH0EjVCr8MNJ8iZR8m9sj6zz9eDP+S+NhRQS6cmdvSLeZnC
-         1iQI8H8B5S0G9e5FqBrayX5MhQ8A8rjhjcyHnqvzquoQE5I1c2nCPWKvtr5PUugrRIWf
-         lZDg==
-X-Forwarded-Encrypted: i=1; AJvYcCXytWSSXV4bfvBRCaL4g8xtEBSBVDRAIqkC15bJcdjQWeIWWQlJ5KCSUKQXebq8cPcsxsEtiT4VbAU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxkWHQjoHliua9I662YxWGlynQpLRo1rFLcEvrIYhSjTncZpjcI
-	EwxYoRzFRRJPS2qldyhe0cGHvMMT9DmhqMe4AamW1Sa3w5G8v/jXoG5Hq6qNXv+gETn1tc//nou
-	Ac6zfHcSiNaW4ePCRci+AepHlI48gEcpH6KbeD56fSAO54VLk6G0jORil6XWfxw==
-X-Gm-Gg: ASbGncsX4Sgakt5pfpzUFsphKycLB4kXhjCr2gy26iEbO286gg4jCklWxNJhjY6dhgv
-	k82jFpxZDAdi8BtMLdp/1Ci36i59vdz8BljRwgkFRHANa5FGatcOVrk6iI51yMFwayTR6gT8ByC
-	GYoaFQgVHDgvZldE2I1k7q8oqreU8U2VtufQ1xvbg+g8TqkKGCPSC4IvxzC8qTJzuvm47uARJBY
-	dwJ2XrxEI403/JJApUxevFksIMBtdkjcpNXMESz61ew5JgftdJoujWTd/aW5gHyA2/4Z3OJyLyY
-	3Iy7KX9tbezvjiuw329lAkCVhqJxGk3T/FmOwyqpHQtLpYPJKdHPDB1pYq63C5BLRhwhf3Wzcp9
-	i2hh/3KsfAg1cP0Is7097Ng==
-X-Received: by 2002:a05:600c:19cd:b0:458:be62:dcd3 with SMTP id 5b1f17b1804b1-45b517c2fc0mr3573125e9.17.1755806860566;
-        Thu, 21 Aug 2025 13:07:40 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGrtwXyk8M0MMGhBsDq6sn2/zjKB5pcui5JGSP2GUX5VAX4EhNVsrp5ZVJRMStvpa9W7AdEeg==
-X-Received: by 2002:a05:600c:19cd:b0:458:be62:dcd3 with SMTP id 5b1f17b1804b1-45b517c2fc0mr3572545e9.17.1755806860106;
-        Thu, 21 Aug 2025 13:07:40 -0700 (PDT)
+        bh=PkrXh5PHMEq3NY5i+0892fbAshOERsmwyMLhbVIa0Cc=;
+        b=tKXUIMY4boV/p80bmlvP6IWACRWZnsX8gvpEBu6gNaSUnaC1a6vFCr7jdUE5I68iy+
+         9CDlhNWisUSJzEyRnyfbWLUURkXgoMy0JEE+4kSKGONFa6brmidwJhqW9VcgI6p6wMtL
+         PjsXlCY+FRAJ1wSFaAdtINCHFTmIv+UtofFqA9Q6djlAnLnqifHgsPufPvAhpYd30t7B
+         1BM+3k6NQLnL/7IuLm22zxR+PzrUyuoe5FzHL6Y0D5In5Jcnbpf3w9kFZYRTjz9WUhnO
+         fcwaRYNvcyZeFt1eIMzpgFnwzR+7YyK/Xwu1k8nuqvnLPd0iplXICRlrGcwJriNNx5YN
+         PbfQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU4+bu0MKRRAuoX3/l5PmOMQYuV/Pcdmkz8g6JPKs7IbU1qAFRPO5r3qnQz3FJYv3KLopksuJGvIZI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxvPadWbZONLE5q0AzB4WHJ8Twn9BOrj1ilmnKAe/H4JwXgmUuh
+	nV4+d/0GjgUutLm+cTRrq69GWVcNGQmFVrXDoIwPg60qzTAwWEhaVE2GPEONoxXC713Gt7ezfbZ
+	QEkqmyNPuP/A2iBKA7Ir9pe0zJUBLK7qzEx6Rq4KT1AeU35BUpz88CUvDKqMMIw==
+X-Gm-Gg: ASbGncvTPSCfMD+l9H8IOQ7NuZHJoV5a8UNSgQiiVaHa0jOBDRyZFS0/uLqIDY8RtCF
+	SXCDbBQuUwo7F+r2PFmO0RFT1ji/MxGTbEOhF+EECitHvW8itRJfsFEGhMExKufdyPAMJkrA5LF
+	+V4uoBaZjSAKSpJCNpVD2MvtSHm85Gs7Zg/XbW4BsFHEfX+BM6AZQDX8bMDDoXQCYA9hTDM9ynY
+	uyJOU1X0L+JCks1GBTSy6Atkr3dCuhTr5Bg3qvasYFAYhcyT8DhtcTmQeslvXMRyXYfolEZ5g6M
+	BYZ6y1Y9oVrI+64oUwKi9HCbUBDxI1qZTngTa9EJ2mKSNBDCYbcPhg5pR5b165Qymy3vldw6dJw
+	rZyY67taXoTcaNBWhJWWMjg==
+X-Received: by 2002:a5d:5d0a:0:b0:3b9:14f2:7eea with SMTP id ffacd0b85a97d-3c5daefc2a3mr192567f8f.18.1755806863495;
+        Thu, 21 Aug 2025 13:07:43 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFB28V/U3gI+p1afMr2c1HujEN1g59N1A45YIj+RBO5vrtdOMlsNhrN6BtrkE7YShkW7nBB8Q==
+X-Received: by 2002:a5d:5d0a:0:b0:3b9:14f2:7eea with SMTP id ffacd0b85a97d-3c5daefc2a3mr192518f8f.18.1755806862961;
+        Thu, 21 Aug 2025 13:07:42 -0700 (PDT)
 Received: from localhost (p200300d82f26ba0008036ec5991806fd.dip0.t-ipconnect.de. [2003:d8:2f26:ba00:803:6ec5:9918:6fd])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-45b50e3a52bsm8600375e9.21.2025.08.21.13.07.38
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-45b51b61256sm1742995e9.3.2025.08.21.13.07.40
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Aug 2025 13:07:39 -0700 (PDT)
+        Thu, 21 Aug 2025 13:07:42 -0700 (PDT)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: David Hildenbrand <david@redhat.com>,
@@ -114,9 +114,9 @@ Cc: David Hildenbrand <david@redhat.com>,
 	wireguard@lists.zx2c4.com,
 	x86@kernel.org,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH RFC 12/35] mm: limit folio/compound page sizes in problematic kernel configs
-Date: Thu, 21 Aug 2025 22:06:38 +0200
-Message-ID: <20250821200701.1329277-13-david@redhat.com>
+Subject: [PATCH RFC 13/35] mm: simplify folio_page() and folio_page_idx()
+Date: Thu, 21 Aug 2025 22:06:39 +0200
+Message-ID: <20250821200701.1329277-14-david@redhat.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250821200701.1329277-1-david@redhat.com>
 References: <20250821200701.1329277-1-david@redhat.com>
@@ -128,63 +128,70 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Let's limit the maximum folio size in problematic kernel config where
-the memmap is allocated per memory section (SPARSEMEM without
-SPARSEMEM_VMEMMAP) to a single memory section.
+Now that a single folio/compound page can no longer span memory sections
+in problematic kernel configurations, we can stop using nth_page().
 
-Currently, only a single architectures supports ARCH_HAS_GIGANTIC_PAGE
-but not SPARSEMEM_VMEMMAP: sh.
-
-Fortunately, the biggest hugetlb size sh supports is 64 MiB
-(HUGETLB_PAGE_SIZE_64MB) and the section size is at least 64 MiB
-(SECTION_SIZE_BITS == 26), so their use case is not degraded.
-
-As folios and memory sections are naturally aligned to their order-2 size
-in memory, consequently a single folio can no longer span multiple memory
-sections on these problematic kernel configs.
-
-nth_page() is no longer required when operating within a single compound
-page / folio.
+While at it, turn both macros into static inline functions and add
+kernel doc for folio_page_idx().
 
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- include/linux/mm.h | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+ include/linux/mm.h         | 16 ++++++++++++++--
+ include/linux/page-flags.h |  5 ++++-
+ 2 files changed, 18 insertions(+), 3 deletions(-)
 
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 77737cbf2216a..48a985e17ef4e 100644
+index 48a985e17ef4e..ef360b72cb05c 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
-@@ -2053,11 +2053,25 @@ static inline long folio_nr_pages(const struct folio *folio)
- 	return folio_large_nr_pages(folio);
- }
+@@ -210,10 +210,8 @@ extern unsigned long sysctl_admin_reserve_kbytes;
  
--/* Only hugetlbfs can allocate folios larger than MAX_ORDER */
--#ifdef CONFIG_ARCH_HAS_GIGANTIC_PAGE
--#define MAX_FOLIO_ORDER		PUD_ORDER
--#else
-+#if !defined(CONFIG_ARCH_HAS_GIGANTIC_PAGE)
-+/*
-+ * We don't expect any folios that exceed buddy sizes (and consequently
-+ * memory sections).
-+ */
- #define MAX_FOLIO_ORDER		MAX_PAGE_ORDER
-+#elif defined(CONFIG_SPARSEMEM) && !defined(CONFIG_SPARSEMEM_VMEMMAP)
-+/*
-+ * Only pages within a single memory section are guaranteed to be
-+ * contiguous. By limiting folios to a single memory section, all folio
-+ * pages are guaranteed to be contiguous.
-+ */
-+#define MAX_FOLIO_ORDER		PFN_SECTION_SHIFT
-+#else
-+/*
-+ * There is no real limit on the folio size. We limit them to the maximum we
-+ * currently expect.
-+ */
-+#define MAX_FOLIO_ORDER		PUD_ORDER
+ #if defined(CONFIG_SPARSEMEM) && !defined(CONFIG_SPARSEMEM_VMEMMAP)
+ #define nth_page(page,n) pfn_to_page(page_to_pfn((page)) + (n))
+-#define folio_page_idx(folio, p)	(page_to_pfn(p) - folio_pfn(folio))
+ #else
+ #define nth_page(page,n) ((page) + (n))
+-#define folio_page_idx(folio, p)	((p) - &(folio)->page)
  #endif
  
- #define MAX_FOLIO_NR_PAGES	(1UL << MAX_FOLIO_ORDER)
+ /* to align the pointer to the (next) page boundary */
+@@ -225,6 +223,20 @@ extern unsigned long sysctl_admin_reserve_kbytes;
+ /* test whether an address (unsigned long or pointer) is aligned to PAGE_SIZE */
+ #define PAGE_ALIGNED(addr)	IS_ALIGNED((unsigned long)(addr), PAGE_SIZE)
+ 
++/**
++ * folio_page_idx - Return the number of a page in a folio.
++ * @folio: The folio.
++ * @page: The folio page.
++ *
++ * This function expects that the page is actually part of the folio.
++ * The returned number is relative to the start of the folio.
++ */
++static inline unsigned long folio_page_idx(const struct folio *folio,
++		const struct page *page)
++{
++	return page - &folio->page;
++}
++
+ static inline struct folio *lru_to_folio(struct list_head *head)
+ {
+ 	return list_entry((head)->prev, struct folio, lru);
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+index d53a86e68c89b..080ad10c0defc 100644
+--- a/include/linux/page-flags.h
++++ b/include/linux/page-flags.h
+@@ -316,7 +316,10 @@ static __always_inline unsigned long _compound_head(const struct page *page)
+  * check that the page number lies within @folio; the caller is presumed
+  * to have a reference to the page.
+  */
+-#define folio_page(folio, n)	nth_page(&(folio)->page, n)
++static inline struct page *folio_page(struct folio *folio, unsigned long nr)
++{
++	return &folio->page + nr;
++}
+ 
+ static __always_inline int PageTail(const struct page *page)
+ {
 -- 
 2.50.1
 
