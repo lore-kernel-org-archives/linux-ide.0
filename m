@@ -1,70 +1,70 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 944E737FBF6
-	for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 20:08:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33762381038
+	for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 20:08:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755806929; cv=none; b=cZ3V1cN3AZ81onv3JcsPFTmz35/up8LMk12s8eTqavuKepRcQZfanq6n2NfDMmQbfzMWMkId5eb+vhs3I87Xj0NavOy8T7SHDMLdrB27gwyE8Yapf5+0LLLi/Uv77Y0G39bCy5LO4E/3Uq6w/wDMaHqwR74zmx1HTQmRHtZQX3k=
+	t=1755806933; cv=none; b=bfiHBlYuNyi/3njoW0tqLnYPZhhtPF6pXa6cf/Qgh8kBXj2Li4Gy3buvw/5z/aAR9lB5KBys4K81AiFRe2mLbQiUE70G8LZhxGDtQurP5V363z8bLTNnXvrxfSZkQtdpqQo50VrZDXPrFAF4QfWjs2HcHDdx7hhHK70nvYw8hcA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755806929; c=relaxed/simple;
-	bh=izYuZWtM9expuJ4aw1W3JEFW5k9djBINp3Pti4HydYU=;
+	s=arc-20240116; t=1755806933; c=relaxed/simple;
+	bh=ncGz2ZUizfxPtBenqYCMYHXawyPm3K75je3+1YWzFIk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SNAGz+dyRl/Dth80sbTSD58wezNH2x5H1kCcOTwq/HZ5Y+Ow9MUDybTINaAuDbieXD1Y9KTdsLoGgG5WJdPBoxy+IFRldg10UO7gV5hWknloJIGI9Tt9CQbK1S9Qwpaouz+IiAym/IPioEbFC/IiveggEqKke5jIuMiAiLsHXdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gfRnDWql; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=RreSzuUcwwodBN1I9LFGZnOg4uC7P3M5jUzbcHo6g7qek18zv2co7uSeMngWWzsDfxaN805swuyOdBJdrI9LZQp9qyysBqOO4UMIRDQJTfcPxAyLcE1fliLz6udFEnYHQqEMqKS+rp9OnxN6w91GuaKTBz8WKTYFQS3skZmzbvA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=T8Ob/AIN; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gfRnDWql"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T8Ob/AIN"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1755806925;
+	s=mimecast20190719; t=1755806929;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Z7iPpUiW3LrFM0W3XrB+Z82uodwKTsefoCzXwhLbLUo=;
-	b=gfRnDWqleQo/tZ4QAtrPQMKR/aUg3yes98cmHPGjoTSRneXIVL//IQrG0SWTbax/+5Iz/9
-	ozw1hgbIbhMaJIcm3hzSqiWVfzGZ7WLufLzSMczJFDkBKFPEMw5zlWpb1ZFHB2I2YPlnlr
-	vg9CY6UzsMjU9WGLhao23urW1yfcuAI=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=G9hzYOZv6YXUN4v1wicJ53nqMhopJDezqYU76J2buLg=;
+	b=T8Ob/AINvKh2RMkvW8+Zscd2y/k2+hoddH/iyMn3TQiRpL98bEcpfvhxmPvye/lXnlf08k
+	xjeLp9SQAhX/gr2cW3znJB36481icKrm95jcpJB1M8rzERwo2uJz9HZjhGCbGgJo1MU0s4
+	EwSLWJmkkmVqW3radK9d79DA1dzcAMg=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-644-o9m5l2IHO1SCifL7LIXlqQ-1; Thu, 21 Aug 2025 16:08:44 -0400
-X-MC-Unique: o9m5l2IHO1SCifL7LIXlqQ-1
-X-Mimecast-MFC-AGG-ID: o9m5l2IHO1SCifL7LIXlqQ_1755806923
-Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-3b9edf80ddcso517663f8f.3
-        for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 13:08:44 -0700 (PDT)
+ us-mta-32-N1aY94Z2N0-oakDEg0z4lg-1; Thu, 21 Aug 2025 16:07:31 -0400
+X-MC-Unique: N1aY94Z2N0-oakDEg0z4lg-1
+X-Mimecast-MFC-AGG-ID: N1aY94Z2N0-oakDEg0z4lg_1755806850
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-45a1b0045a0so8434395e9.0
+        for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 13:07:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755806923; x=1756411723;
+        d=1e100.net; s=20230601; t=1755806850; x=1756411650;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Z7iPpUiW3LrFM0W3XrB+Z82uodwKTsefoCzXwhLbLUo=;
-        b=k2AAe8Di+GyXFnd+z8K7BqDcLcaauvgkMKyGk78BTXqw4bfO33czNEwQKJVOEtHKJK
-         4tovvrKWqNL0nzmEwTAGa1FJKWANAfdAcYNnWl6MwSM9MalXSLFUgaJrckv36Tk6sVro
-         qJTC1y8Lkwn4TYffIe6t+XfJuyVc5+C+p/Nabu6i8M5UJp2ezRvWnAUQuQ/Bwa7WNz5R
-         1/P2sN0dzUIuwg46F/p5OPvGGcizIl3r5XpuMpv1W4mcY1Lg/UMQUUDlnUJ44YnyDWga
-         oIJooTHLJcYdr2vrwb7ow8n9yuvtn0tFsSpfFSPLXp8V7CT6t5CAehXrUAAwg/jstsDl
-         UGNw==
-X-Forwarded-Encrypted: i=1; AJvYcCUobPv4nw3Gzeb8ixz7zJGr50wMTXBKuXHac/BgPxQHZNDOUHzD/1WsdZ2CvUWtlLRq9EE4bSEtkyU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxoSG13ezyqQ/W8GXfKxq4TwO6v5OaoHvvpgSIuQr4x3Lcf5Kyj
-	h7O2l4Ez1ocuZHaLNQCN1YtgZw1FRVId15DrzFXUhW4DKi5/zr/+oQLkiyXKkDyQBy3/w0aX/9m
-	KAfweqUxEBqi9gHuzlh4cNxk3DmYr9gE0TnVdeYodv2GVjkZxOor/wfIn9H/jqw==
-X-Gm-Gg: ASbGnct0LB5HLg8kiUs0mABHyQ63W5qEL9PGhEF6iHcoCbNpHm5fc6weiBPsp4cG9nQ
-	WtSjMW4R5hdJDepGDX/ibDsE54AvvuG7K4Pt4by1cNRMMj/zSX9kbDW6AezrncqAN27dZNl6gpt
-	4pwNu/hW/XqG/kKxI/tU4wUYKYXuHg7rc6XXhX+0og38bCdfP6nLUjTm1+/yAuKpwj/9GUo5zxd
-	nOgkiMUZLYQkZaMbOuprC8OoR8VMSYhOp2L5mq/BYNzrx+AR6o0+cpssOYOToXa6FbuxDVyldma
-	6GyM8TwBcy/u/Wz23cZtgO2ZLmrxwuCYwArNxJYL50XeHucZzCyDJzQmLjNjes6STnMvMYs1aNm
-	pk163GjvELlrpBLPRT85XUQ==
-X-Received: by 2002:a5d:64ed:0:b0:3b5:dafc:1525 with SMTP id ffacd0b85a97d-3c5dc7313famr204682f8f.33.1755806922954;
-        Thu, 21 Aug 2025 13:08:42 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHnHzRKC08dohUKQD/XdldMc6IWYVddiLtTh8Yidep5vx+5++gzVG23SiimMwYZ+HldR36Zkg==
-X-Received: by 2002:a5d:64ed:0:b0:3b5:dafc:1525 with SMTP id ffacd0b85a97d-3c5dc7313famr204645f8f.33.1755806922505;
-        Thu, 21 Aug 2025 13:08:42 -0700 (PDT)
+        bh=G9hzYOZv6YXUN4v1wicJ53nqMhopJDezqYU76J2buLg=;
+        b=n1sytrWn2EDKvHfflbAVi9pTM53KOTuQbzd38+7hU40flD/ULFp2vZnXQs+9IGAL/D
+         /fBVg/JrcEUBubzmwJCPxklo9KGWwzub8u/t5kTl9m2OvSkVuUKwlvfzeu6q9fP+opog
+         I9x7+oQiWu3s1O+2bRxxpxjpDnHerRldhmjEbMyKaLBT0odVq4E3P6YCEsipKlR/TIcj
+         0c+hbVxqIPoJdV6yB3NTnVgcPH3z7wVkg0FAZd+sodEoCDPyfrDqJDLUbKUjjuDeMqqb
+         RleHqr6PKS40Y7qEPPI0MkXPnjxWyvpZOqF+y/1haHXscuwJATTZEbAIekhgSlVcG3cA
+         R5MQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUyHbfus5oSGPAcCcc4VCz702bZVX0CX7MVOPHiqb1kS3F6zHLPG/B3pf7JQbpHlSbt3ChGFFbEsSw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxfa+YHsXs2wpQtUBVu4jwu5IpGqQ9KmRy4xdCi2NGLbGfGehZo
+	1dCOpxs0lMFd/fywNYJbHi7yXhfRgizssZdXID5EuZV7vfCJJ/3uKNpO+jBdnBBPx1OQA/xhkt3
+	G/BcRLwZNZ2YuKcU7TtBHa9bMRAwTJOjeMM0Rb2cXv1zG4C4a55y+7SRZSlxcqg==
+X-Gm-Gg: ASbGncsKiP/C34SdoCHUzw6X7ndTfPP0AKe4q7y0D7itAcD/v3TMWEuHRaowZvdSLC5
+	yND7uPCVrHeoRI/CVjdlryc7wpSM/2qil7zulDk1HHEJ57zm4s9qqQ/3erA8CDbQ3CcexJz/FHq
+	xTsOwfgko808nbXDZdT9HJmHgnJpVjaE0sKUrq5EN5lemJorPGZbcyiOhsW+bYuUIjmBHVl2v2o
+	CDYS63xVmbmNEaHpn7ylDZmw9SNzojrhZncconlb473jPcazY2xFMQP4XEUAzlFf0qGxQho+Pd2
+	wu9k9mMDbTTvp1bFgw1sTDXAulIZyb0iZAK3mERccttWdKCASx2TwkcGa5vnIJEyGnJnPlKPnqQ
+	a23/5jyHBHzxE1zzFQv/5Dw==
+X-Received: by 2002:a05:600c:1548:b0:459:dfde:3329 with SMTP id 5b1f17b1804b1-45b517ddbe2mr2956165e9.31.1755806850064;
+        Thu, 21 Aug 2025 13:07:30 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHPNoTdvVqQJqQwQf/z0aFpcDb/7HunF1Y6KwbAqmFFF4D3cnAaKEmAnoGbjwE6N5eIepmoyw==
+X-Received: by 2002:a05:600c:1548:b0:459:dfde:3329 with SMTP id 5b1f17b1804b1-45b517ddbe2mr2955545e9.31.1755806849496;
+        Thu, 21 Aug 2025 13:07:29 -0700 (PDT)
 Received: from localhost (p200300d82f26ba0008036ec5991806fd.dip0.t-ipconnect.de. [2003:d8:2f26:ba00:803:6ec5:9918:6fd])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-45b50e3a587sm10028205e9.18.2025.08.21.13.08.40
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3c3a8980ed5sm7242256f8f.16.2025.08.21.13.07.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Aug 2025 13:08:42 -0700 (PDT)
+        Thu, 21 Aug 2025 13:07:29 -0700 (PDT)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: David Hildenbrand <david@redhat.com>,
@@ -114,9 +114,9 @@ Cc: David Hildenbrand <david@redhat.com>,
 	wireguard@lists.zx2c4.com,
 	x86@kernel.org,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH RFC 34/35] block: update comment of "struct bio_vec" regarding nth_page()
-Date: Thu, 21 Aug 2025 22:07:00 +0200
-Message-ID: <20250821200701.1329277-35-david@redhat.com>
+Subject: [PATCH RFC 08/35] mm/hugetlb: check for unreasonable folio sizes when registering hstate
+Date: Thu, 21 Aug 2025 22:06:34 +0200
+Message-ID: <20250821200701.1329277-9-david@redhat.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250821200701.1329277-1-david@redhat.com>
 References: <20250821200701.1329277-1-david@redhat.com>
@@ -128,34 +128,43 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Ever since commit 858c708d9efb ("block: move the bi_size update out of
-__bio_try_merge_page"), page_is_mergeable() no longer exists, and the
-logic in bvec_try_merge_page() is now a simple page pointer
-comparison.
+Let's check that no hstate that corresponds to an unreasonable folio size
+is registered by an architecture. If we were to succeed registering, we
+could later try allocating an unsupported gigantic folio size.
+
+Further, let's add a BUILD_BUG_ON() for checking that HUGETLB_PAGE_ORDER
+is sane at build time. As HUGETLB_PAGE_ORDER is dynamic on powerpc, we have
+to use a BUILD_BUG_ON_INVALID() to make it compile.
+
+No existing kernel configuration should be able to trigger this check:
+either SPARSEMEM without SPARSEMEM_VMEMMAP cannot be configured or
+gigantic folios will not exceed a memory section (the case on sparse).
 
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- include/linux/bvec.h | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ mm/hugetlb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index 0a80e1f9aa201..3fc0efa0825b1 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -22,11 +22,8 @@ struct page;
-  * @bv_len:    Number of bytes in the address range.
-  * @bv_offset: Start of the address range relative to the start of @bv_page.
-  *
-- * The following holds for a bvec if n * PAGE_SIZE < bv_offset + bv_len:
-- *
-- *   nth_page(@bv_page, n) == @bv_page + n
-- *
-- * This holds because page_is_mergeable() checks the above property.
-+ * All pages within a bio_vec starting from @bv_page are contiguous and
-+ * can simply be iterated (see bvec_advance()).
-  */
- struct bio_vec {
- 	struct page	*bv_page;
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 514fab5a20ef8..d12a9d5146af4 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -4657,6 +4657,7 @@ static int __init hugetlb_init(void)
+ 
+ 	BUILD_BUG_ON(sizeof_field(struct page, private) * BITS_PER_BYTE <
+ 			__NR_HPAGEFLAGS);
++	BUILD_BUG_ON_INVALID(HUGETLB_PAGE_ORDER > MAX_FOLIO_ORDER);
+ 
+ 	if (!hugepages_supported()) {
+ 		if (hugetlb_max_hstate || default_hstate_max_huge_pages)
+@@ -4740,6 +4741,7 @@ void __init hugetlb_add_hstate(unsigned int order)
+ 	}
+ 	BUG_ON(hugetlb_max_hstate >= HUGE_MAX_HSTATE);
+ 	BUG_ON(order < order_base_2(__NR_USED_SUBPAGE));
++	WARN_ON(order > MAX_FOLIO_ORDER);
+ 	h = &hstates[hugetlb_max_hstate++];
+ 	__mutex_init(&h->resize_lock, "resize mutex", &h->resize_key);
+ 	h->order = order;
 -- 
 2.50.1
 
