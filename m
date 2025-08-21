@@ -1,74 +1,202 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0ED622D3A9E;
-	Thu, 21 Aug 2025 09:22:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F695258EF1
+	for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 20:07:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755768168; cv=none; b=I/hLmM4AGylIvrYweabby7NLD7LZWuN6ewP/Qa8rNPnJZ/W7MX29kKhgWQ4pUNYOMMkxMe6o/OY9atGtmjniSOZsa7SCSxLjV/1K3IvDzWaK8BXeTCDZQdJREs5yS3/hLk4j2GMU73BE6Vpjg6mVg72eMd7bglPfnqMVoyPixpM=
+	t=1755806835; cv=none; b=mRj5lxj0M+fdMEnIxFQjYOCQfkUwjbLfIey+W0G/lyJclh4J1DGjFvWgGqgFspwT4Y9l3AlDx/jpxIXhPdVQe3+EUym429kAnQfOuC9LGzgOIkMn5kV5TBh7PTcf+4W2IA18f7xgCuagXNwpCznY1JiXvN3LG+9kdwM/PFKPtKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755768168; c=relaxed/simple;
-	bh=pNjuviuiA7HK8pyx2K/S+jSNV8oUtA4ctJGXF7XGnwo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WeEZOPFYC/oYYGfhy2+qfcnI7Vp9AkmdCkMBGQOXmE9p2aTCxBmFW/UsY+f3ro1exCcl5RxtSvcm9KpfkI05ZZC3woVHpa01ggQZo5TmXmhO6nD9Ybxla2rl5JDDa4ISNhNtuyDS48ws4+TTaJK9HUOa95KnTlWAOfSpw7j4kIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 051901515;
-	Thu, 21 Aug 2025 02:22:37 -0700 (PDT)
-Received: from donnerap.manchester.arm.com (usa-sjc-imap-foss1.foss.arm.com [10.121.207.14])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B4EFC3F58B;
-	Thu, 21 Aug 2025 02:22:43 -0700 (PDT)
-Date: Thu, 21 Aug 2025 10:22:40 +0100
-From: Andre Przywara <andre.przywara@arm.com>
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, linux-ide@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: ata: highbank: Minor whitespace cleanup in
- example
-Message-ID: <20250821102240.02a5721c@donnerap.manchester.arm.com>
-In-Reply-To: <20250821083239.46726-2-krzysztof.kozlowski@linaro.org>
-References: <20250821083239.46726-2-krzysztof.kozlowski@linaro.org>
-Organization: ARM
-X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.32; aarch64-unknown-linux-gnu)
+	s=arc-20240116; t=1755806835; c=relaxed/simple;
+	bh=6nSseGe+74q2JGOSoz3zO112Eo1zTQLz4H2FdYfsyUE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=U2c0W8BCJFXJiZOCNoIlKuodR/USJs4mxlLy33OAO7pZfSlUoA+Wy9voLtB00NAmUIzWV81p4Gb3WKqyhtpGIVyXL78RdP/4we6DHYRhRy9hchJNv9zncPKuq0KYw6/62SPNZ3GsqWjRp4XHvZZpSu7NK34E4FPwAEh7nFmCIn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AoiZpf04; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AoiZpf04"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1755806832;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XmvTcrL5C0dM7rPtm73IEcsYc8PUVzmaMdzwCc2EnvI=;
+	b=AoiZpf04JRoY9yaAqdpk3I+O4M+2+WbOriQ4y23dozlDLpW5qPiLh7Y5wIbHz0YA4cB8bL
+	AdghLJoLP8R5Ltjc85RZQRqccMcKZfn5ZRQMtBCTtpDtwp6wwVKQRfMdlKzV5tGLBCEfvd
+	oM5xBuLMtyWaUMt+8I/eBll0Uy6+k5s=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-251-SJhgRJKjOj64MxWduQ6vEw-1; Thu, 21 Aug 2025 16:07:10 -0400
+X-MC-Unique: SJhgRJKjOj64MxWduQ6vEw-1
+X-Mimecast-MFC-AGG-ID: SJhgRJKjOj64MxWduQ6vEw_1755806830
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-45b467f5173so9411995e9.3
+        for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2025 13:07:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755806829; x=1756411629;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=XmvTcrL5C0dM7rPtm73IEcsYc8PUVzmaMdzwCc2EnvI=;
+        b=LpzqZw4+9QaOy0dpD+/0qCbTUgl+Nwey8+1oJ9PAroZJC2Qu8z8dGHoBZMvSd4OcIK
+         TTzh3dY+WwCJKUJS7zA0hYj7t2ENWQLJRbyod+kZ7X2WERU7ap7khLiUM3ELc1UjR7su
+         MQjc7JhwMMOLtE0A+8tbMRCXqO5lnlqQylYO24WqmwkfGskwM0+6IxJt4hMXS0O9UgeI
+         Hld4e/1s2IL+AlpHjkAeL0CiKt6z01u+6Dgw+WpaotBAwtxVVqyZ9FNTJ9H6mKaFclDJ
+         l0q0si+YDpltJ8mKOBFAOPLQSXM99PvwIv7NsLm7MkKK5TcI3zqTVhD7x9q6dAUXyecH
+         ffCw==
+X-Forwarded-Encrypted: i=1; AJvYcCUEjWTRdI3WikPGTq1XepdCoy7OVs4cec37r5hb0Qa551StGcfEn2IoZbf+XvY8++lXzmbmXyfMvqI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzz7S17fUWWLKxaj+vkob04idyQdB31YqYitgL2CL7Slr+9rreH
+	g8Vt2FqT8iKSM5nSZn0DVOKQlxPn55W6X07KKURwqKN+hSqLet4FvmYEkk9SIC9poNAdTnWN6nw
+	m7DTG6slmGF/alf0x1i5s962bj4tb89w0qN6e+F27d4OOc82MSRVKBuhX5LP0lw==
+X-Gm-Gg: ASbGncuTD5S2+LVgO2p8ODrJ80vxwkI8ob67YJ0u2ucslTPQ65pdReu5ZJ0HwryELye
+	ncBSxs2PKG3RxLiJsRCEh8K5OYtsVShyuhzduFjNBL5kTtxGhskMTXJTlseu4ICtg7B8ZjhMGOu
+	l5qTA7Qty/rCbJln+6y+jZft0MbcrX5FY+dxu5Lky0LFMzQXqNTQGbZmH6rMc2ovzNRs2IswdWc
+	Aj72+FGf35AfxWJpWFEb89aEDFt6e+GMrRvA/r9LwTDXPB1fp6rf6OIGYicSd6eiHwbG0KZKZVr
+	o6Tz1KtJJ19ZS/izn5SARQcztWf4n+eAsejo0kaaKuFzC04EoKlg72QWWIuVnXTLw8UOAlY88tO
+	ldyG+edK8Az+mxI3PadMFGg==
+X-Received: by 2002:a05:600c:4506:b0:456:eab:633e with SMTP id 5b1f17b1804b1-45b517c5f34mr3673825e9.17.1755806829517;
+        Thu, 21 Aug 2025 13:07:09 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGvYkVaGxfZdplMxnR9eu9+L8mDJqjqWM2enq3Cze2cE8zEp05huuco+bDpuuERUQ/1xaOAqQ==
+X-Received: by 2002:a05:600c:4506:b0:456:eab:633e with SMTP id 5b1f17b1804b1-45b517c5f34mr3673145e9.17.1755806828996;
+        Thu, 21 Aug 2025 13:07:08 -0700 (PDT)
+Received: from localhost (p200300d82f26ba0008036ec5991806fd.dip0.t-ipconnect.de. [2003:d8:2f26:ba00:803:6ec5:9918:6fd])
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-45b50e1852asm8722665e9.25.2025.08.21.13.07.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Aug 2025 13:07:08 -0700 (PDT)
+From: David Hildenbrand <david@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: David Hildenbrand <david@redhat.com>,
+	Huacai Chen <chenhuacai@kernel.org>,
+	WANG Xuerui <kernel@xen0n.name>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	Paul Walmsley <paul.walmsley@sifive.com>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>,
+	Alexandre Ghiti <alex@ghiti.fr>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andreas Larsson <andreas@gaisler.com>,
+	Alexander Potapenko <glider@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Brendan Jackman <jackmanb@google.com>,
+	Christoph Lameter <cl@gentwo.org>,
+	Dennis Zhou <dennis@kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>,
+	dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org,
+	iommu@lists.linux.dev,
+	io-uring@vger.kernel.org,
+	Jason Gunthorpe <jgg@nvidia.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	John Hubbard <jhubbard@nvidia.com>,
+	kasan-dev@googlegroups.com,
+	kvm@vger.kernel.org,
+	"Liam R. Howlett" <Liam.Howlett@oracle.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-arm-kernel@axis.com,
+	linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-mips@vger.kernel.org,
+	linux-mmc@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-riscv@lists.infradead.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	Marco Elver <elver@google.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Mike Rapoport <rppt@kernel.org>,
+	Muchun Song <muchun.song@linux.dev>,
+	netdev@vger.kernel.org,
+	Oscar Salvador <osalvador@suse.de>,
+	Peter Xu <peterx@redhat.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Tejun Heo <tj@kernel.org>,
+	virtualization@lists.linux.dev,
+	Vlastimil Babka <vbabka@suse.cz>,
+	wireguard@lists.zx2c4.com,
+	x86@kernel.org,
+	Zi Yan <ziy@nvidia.com>
+Subject: [PATCH RFC 01/35] mm: stop making SPARSEMEM_VMEMMAP user-selectable
+Date: Thu, 21 Aug 2025 22:06:27 +0200
+Message-ID: <20250821200701.1329277-2-david@redhat.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250821200701.1329277-1-david@redhat.com>
+References: <20250821200701.1329277-1-david@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On Thu, 21 Aug 2025 10:32:40 +0200
-Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org> wrote:
+In an ideal world, we wouldn't have to deal with SPARSEMEM without
+SPARSEMEM_VMEMMAP, but in particular for 32bit SPARSEMEM_VMEMMAP is
+considered too costly and consequently not supported.
 
-> The DTS code coding style expects exactly one space around '='
-> character.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+However, if an architecture does support SPARSEMEM with
+SPARSEMEM_VMEMMAP, let's forbid the user to disable VMEMMAP: just
+like we already do for arm64, s390 and x86.
 
-Acked-by: Andre Przywara <andre.przywara@arm.com>
+So if SPARSEMEM_VMEMMAP is supported, don't allow to use SPARSEMEM without
+SPARSEMEM_VMEMMAP.
 
-Thanks,
-Andre
+This implies that the option to not use SPARSEMEM_VMEMMAP will now be
+gone for loongarch, powerpc, riscv and sparc. All architectures only
+enable SPARSEMEM_VMEMMAP with 64bit support, so there should not really
+be a big downside to using the VMEMMAP (quite the contrary).
 
-> ---
->  Documentation/devicetree/bindings/ata/sata_highbank.yaml | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/sata_highbank.yaml b/Documentation/devicetree/bindings/ata/sata_highbank.yaml
-> index f23f26a8f21c..48bdca0f5577 100644
-> --- a/Documentation/devicetree/bindings/ata/sata_highbank.yaml
-> +++ b/Documentation/devicetree/bindings/ata/sata_highbank.yaml
-> @@ -85,7 +85,7 @@ examples:
->          dma-coherent;
->          calxeda,port-phys = <&combophy5 0>, <&combophy0 0>, <&combophy0 1>,
->                               <&combophy0 2>, <&combophy0 3>;
-> -        calxeda,sgpio-gpio =<&gpioh 5 1>, <&gpioh 6 1>, <&gpioh 7 1>;
-> +        calxeda,sgpio-gpio = <&gpioh 5 1>, <&gpioh 6 1>, <&gpioh 7 1>;
->          calxeda,led-order = <4 0 1 2 3>;
->          calxeda,tx-atten = <0xff 22 0xff 0xff 23>;
->          calxeda,pre-clocks = <10>;
+This is a preparation for not supporting
+
+(1) folio sizes that exceed a single memory section
+(2) CMA allocations of non-contiguous page ranges
+
+in SPARSEMEM without SPARSEMEM_VMEMMAP configs, whereby we
+want to limit possible impact as much as possible (e.g., gigantic hugetlb
+page allocations suddenly fails).
+
+Cc: Huacai Chen <chenhuacai@kernel.org>
+Cc: WANG Xuerui <kernel@xen0n.name>
+Cc: Madhavan Srinivasan <maddy@linux.ibm.com>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Nicholas Piggin <npiggin@gmail.com>
+Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
+Cc: Paul Walmsley <paul.walmsley@sifive.com>
+Cc: Palmer Dabbelt <palmer@dabbelt.com>
+Cc: Albert Ou <aou@eecs.berkeley.edu>
+Cc: Alexandre Ghiti <alex@ghiti.fr>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Andreas Larsson <andreas@gaisler.com>
+Signed-off-by: David Hildenbrand <david@redhat.com>
+---
+ mm/Kconfig | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/mm/Kconfig b/mm/Kconfig
+index 4108bcd967848..330d0e698ef96 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -439,9 +439,8 @@ config SPARSEMEM_VMEMMAP_ENABLE
+ 	bool
+ 
+ config SPARSEMEM_VMEMMAP
+-	bool "Sparse Memory virtual memmap"
++	def_bool y
+ 	depends on SPARSEMEM && SPARSEMEM_VMEMMAP_ENABLE
+-	default y
+ 	help
+ 	  SPARSEMEM_VMEMMAP uses a virtually mapped memmap to optimise
+ 	  pfn_to_page and page_to_pfn operations.  This is the most
+-- 
+2.50.1
 
