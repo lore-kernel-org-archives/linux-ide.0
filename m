@@ -1,117 +1,96 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAF7329993A;
-	Fri, 22 Aug 2025 17:59:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 713AF28A72F;
+	Fri, 22 Aug 2025 18:02:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755885569; cv=none; b=mi1WcZVnoV1AHUSqwXmU7VgfhXD9HEk5X65Mvm1aF2AkM8nZE1TV5nHuQrwcttgKVAK/waaAHg0d8Uy72tedznQJYJjsTUuJ+EOG99hZaEVxvEBcKsjXZhsjDE3M9HtXqc7WtgCX3crbOvqHq8w5B+Hqo2DbnnoPDpc9rHjDGxI=
+	t=1755885760; cv=none; b=lo84IMJG4/CyKEnibvFcRQva2lwac9/JqzvVILWH7h24qBzIbe6tz75+ydcAo0OPRAIhGfNdPeyX22MHHPv9qquOxQ3eXKoqnQtdiha8KSZXoZHZ6QPabeKBWwWOGHIb6Nq1zSUfhBJUKusqmfD1paZ/+N56w7nNEUkf25RRp/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755885569; c=relaxed/simple;
-	bh=7AXb6D8zIILrgdU6FDSFiqmilW2h/3kHCLZws9Dtjjc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uRZqU/gLgoTFqoI5GfLPTuZgJKLMgS1dvENHf210p5ooO1oHpbwlrxLl3drhoZOhbr4DPTsjSz4TyRa/2pDuolxpqjKkvJkbzzmqQZzhEhDJU3biZnVv44ONtb9zrD0OqmUwjEYtW9Qr4BRlKu6aBkHYW8ek3RsnAwAsQ9VkgOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V9qmlLot; arc=none smtp.client-ip=209.85.215.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1755885760; c=relaxed/simple;
+	bh=lOWWilxxOW7+2VFeqILToF3FfKlMIiqdFUMj7Kr1eMs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=W8yFCvN0uaNymrPWaBemLUa6EQ2kFZeGCSKlhd+xLiQmm7OgKLHM1Oas8clj2Lb4tikjBaGrkst8kOwz0/22QwG6qIBokc9pqfZ4htLkDfvvfp1QcZhDHzsKxu7KJ+xSco+rP+azHDSb5oSwMqQfAIe2aoWz1xjyqwYgoNUv3AQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jIHiaXUZ; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V9qmlLot"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-b47174c8e45so2232217a12.2;
-        Fri, 22 Aug 2025 10:59:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1755885567; x=1756490367; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=5S0VnWVEsWUOlbF2JNExqMbPEHI34IpKB3N4D9KWu/w=;
-        b=V9qmlLotJTd8jI9TQco/ZkdGn8WIrPZFRtYOtDGzaMUt3QTYaP9f1AKArp6jJJ2rL+
-         /VDx++DReWAKDqCj7FUjziJlja7jtzwIOoTxkhXg5KOX3HAKQxqMoWwuJoKNjSxT5oUV
-         OqHixvy/4YQf4R/ybBb2EJsZ90fU/LjhROI3JuyDcQIR0A9xEer+BSvV5iNV2RqcIvgs
-         lR+dFQr600/CTmcw0jIJyRIeioD7Q6cb5y5xwjgWRGYP4A4h35vHU4P185bLHycLjzD7
-         rFHbyt9C+t80O2cTOPJkoTSAUW+pUaH0h1TFt8VvE3cYAa3KjCkPEjZR7Spt9D/UcMCu
-         jfVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755885567; x=1756490367;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5S0VnWVEsWUOlbF2JNExqMbPEHI34IpKB3N4D9KWu/w=;
-        b=pFMosN5F7IjpXm1TvhDi0cJxSeFwQjjlGJC629iaghV2QGE+FUU8m4xVmwgvEoXATi
-         T+neB7fvHzy/8Yhylup9WzXTb5ni0duPV8wEI2upW/lvqDoihBDd1FqdFAlvFFVp7qJV
-         EqxsAcixiG9J8x5kmAREbNCK/qQW6RvSBOfRDeLOs2G72+nIed+jQypA+VhgWqBz8G8b
-         zOAkXvGKdtu+FYVRUEZSnq0C6WDrkx2Ebhuupa6MYPKFtwREhPMxTYuM0fsp+z5TQkWk
-         joFBEbz2NzbXvLZ0cgIh3rGvs1Z31dY5y0jlzvllLK4Q5vMl52rDMVs/W8X41JgThXjr
-         Nl0g==
-X-Forwarded-Encrypted: i=1; AJvYcCVZMz2FOADegCeuo86UfcOnm59yjAS47f231db8ghECNrpkfLzCp5H3K2At35h8EzadHlAgSOavzhB/@vger.kernel.org, AJvYcCXcMcCPl2pceqDoUX3nRZug43HBC/e1axHs+Stx8/1Tg7uoX/PH9S4edDXKmoB5m2nAJy2gFXY7CCMi@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3nhwMJed7PSgp09gcHn42Kr9ynNdE1+T8bRFVgZPdu/sjtZNL
-	ZE5AyxaIXE8d31VuUck3beDDixk96q/zJK0uDYGSLyWPFdCVii9FU2NM
-X-Gm-Gg: ASbGncvRDQaYyINL1kqyWAVuOTmB3Br/U7un+EQAFMLmP0Gm1kdWWmqvJsuyzpVisCo
-	kUFPv+jkLI0PpoPyhkcV13SZYR0bvRlA4mEQQCSDTIzVv5PlJqC5CEmE3TyFzANYBnmGF70+A3a
-	W0++n05kBWARNmCwMuxGluIIastcxgfyb5eMMsNRNkQ/kzWwjavADVbNsLdTE/+tKz2LfI7NfSS
-	z2lCxYPwD19IlKJDUk0xXfTZQO8s7wcK1wn0R+oURLUXC7sy0DyO1nQGklztWorwDWXLaH98yQc
-	c2K2wuDThxm10NNobnQ0ZY//0Q7aT++3Gr/51uwuA/HcQ5+/Nl6GYBfJVRTQRHa0/AoqRF52UqO
-	D/v73zZFursZr8uI8b9SI3ckRNEDhbt9arcp0
-X-Google-Smtp-Source: AGHT+IFPwieLOBgTuINcc+wKmOGc1Gww2KUqVQUwLOKZFRGimkYw5WrBP3+FtGEluZJwMaIuC4sfwQ==
-X-Received: by 2002:a17:902:cccd:b0:246:4fd8:1983 with SMTP id d9443c01a7336-2464fd81ceemr27178775ad.17.1755885567198;
-        Fri, 22 Aug 2025 10:59:27 -0700 (PDT)
-Received: from fabio-Precision-3551.. ([2804:14c:485:4b61:5ae1:41a6:4f22:1c64])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2466c2ac55bsm1231955ad.119.2025.08.22.10.59.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Aug 2025 10:59:26 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: cassel@kernel.org
-Cc: dlemoal@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	imx@lists.linux.dev,
-	Fabio Estevam <festevam@gmail.com>
-Subject: [PATCH] dt-bindings: ata: imx: Add a reference to ahci-common.yaml
-Date: Fri, 22 Aug 2025 14:58:30 -0300
-Message-Id: <20250822175830.91682-1-festevam@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jIHiaXUZ"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c7p1l0sq5zm0jvk;
+	Fri, 22 Aug 2025 18:02:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1755885747; x=1758477748; bh=lOWWilxxOW7+2VFeqILToF3F
+	fKlMIiqdFUMj7Kr1eMs=; b=jIHiaXUZ4a593YVAmQUji/OXI8ZOHuy4KoDqdDsN
+	58VfzQCide0+H5Soq0lOaHim7utGBp85yd4TVec/He8eSJaEr0S2QMbIL/R/v50G
+	REy9REjBcUkTJuBw3HHmfYoLlR1WNAs0/AuKPOafAhc+qcEkQgAYy7xjbaBw1u1g
+	U/z1nX2JBLXLQyO/89G55vSyN53ByvfYmVd1rVmU9cGfu9CmFM1RmYCGRPWih361
+	3SEND/VGUpbDsbMpeaiIGxU559aePIaIJvP6dzsdyNy+XOIvcQerQoCWbkkZ0+iv
+	zE2zZ/+N2HfKRFU0le6ozhjHgt3LcQW5vt0XTPzWIir5yw==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id TWskR_z3NWFT; Fri, 22 Aug 2025 18:02:27 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c7p0l0k1mzm1756;
+	Fri, 22 Aug 2025 18:01:41 +0000 (UTC)
+Message-ID: <58816f2c-d4a7-4ec0-a48e-66a876ea1168@acm.org>
+Date: Fri, 22 Aug 2025 11:01:40 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 29/35] scsi: core: drop nth_page() usage within SG
+ entry
+To: David Hildenbrand <david@redhat.com>, linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Doug Gilbert <dgilbert@interlog.com>, Alexander Potapenko
+ <glider@google.com>, Andrew Morton <akpm@linux-foundation.org>,
+ Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
+ Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
+ dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+ iommu@lists.linux.dev, io-uring@vger.kernel.org,
+ Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
+ Johannes Weiner <hannes@cmpxchg.org>, John Hubbard <jhubbard@nvidia.com>,
+ kasan-dev@googlegroups.com, kvm@vger.kernel.org,
+ "Liam R. Howlett" <Liam.Howlett@oracle.com>,
+ Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
+ linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+ linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+ Marco Elver <elver@google.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
+ Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
+ Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
+ Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
+ Robin Murphy <robin.murphy@arm.com>, Suren Baghdasaryan <surenb@google.com>,
+ Tejun Heo <tj@kernel.org>, virtualization@lists.linux.dev,
+ Vlastimil Babka <vbabka@suse.cz>, wireguard@lists.zx2c4.com, x86@kernel.org,
+ Zi Yan <ziy@nvidia.com>
+References: <20250821200701.1329277-1-david@redhat.com>
+ <20250821200701.1329277-30-david@redhat.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250821200701.1329277-30-david@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The 'target-supply' property is documented in ahci-common.yaml.
+On 8/21/25 1:06 PM, David Hildenbrand wrote:
+> It's no longer required to use nth_page() when iterating pages within a
+> single SG entry, so let's drop the nth_page() usage.
+Usually the SCSI core and the SG I/O driver are updated separately.
+Anyway:
 
-Add a reference to ahci-common.yaml to fix the following dt-schema
-warning: 
-
-'target-supply' does not match any of the regexes: '^pinctrl-[0-9]+$'
-
-Signed-off-by: Fabio Estevam <festevam@gmail.com>
----
- Documentation/devicetree/bindings/ata/imx-sata.yaml | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/devicetree/bindings/ata/imx-sata.yaml b/Documentation/devicetree/bindings/ata/imx-sata.yaml
-index f4eb3550a096..c60866544a53 100644
---- a/Documentation/devicetree/bindings/ata/imx-sata.yaml
-+++ b/Documentation/devicetree/bindings/ata/imx-sata.yaml
-@@ -88,6 +88,8 @@ required:
-   - clock-names
- 
- allOf:
-+  - $ref: ahci-common.yaml#
-+
-   - if:
-       properties:
-         compatible:
-@@ -112,7 +114,7 @@ allOf:
-         clock-names:
-           minItems: 2
- 
--additionalProperties: false
-+unevaluatedProperties: false
- 
- examples:
-   - |
--- 
-2.34.1
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
