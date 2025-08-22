@@ -1,73 +1,73 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09F772BE03C
-	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2025 18:10:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 248112BEFF8
+	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2025 18:11:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755886205; cv=none; b=GnX9/gZh6T7y74Wj+8HtFdwlhGDqhQD5rBd645yeHI/+SSjPnpFQksiryG0ItEjicwmhIF4mP24FqPpuXR9plTn0swoHJEKTbAMnSQhrhCkEV84cd/f+u3w7XOeSh636voY9ZzaJ+HDfi2Wt8w3uip9JdHWbpWxZHvcaE+1S7gQ=
+	t=1755886263; cv=none; b=HZGqZycxzsu8Oxkuy6JKxpX4Uhv2OH/ojx3vhrTol9yOVxiKPbvNmvauRt8FPzTH36+fFAIMJP92qUjTTYZFlUkTC4h+Tbu7PuhNbEtCgGfB8j5GXZ3yW7gjrvQhjL03dmAjavy6sQzavYUcf+w8TcH0eviyTgD6iJGfaRAt2ok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755886205; c=relaxed/simple;
-	bh=zK8pF8aK+jklAJeqG0PrEjqoY+YHkla9jsDYNWkvT68=;
+	s=arc-20240116; t=1755886263; c=relaxed/simple;
+	bh=zx8MvH5t85eVRYN60js9SAsxgYkD1auMlyzP4cjVgeQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nOsmFZoMRRyxnV4Ot3lybTW+IFCQ7dpZtcPOlbAfXBXcFECUdrsnYWogNTVPllyFusY3oNsZXq14Ve42Ryh3e4etspYPptawB1DBrg4v9YFWWAYNdpwrKKj6BkzVmdrttgPmWFsNJUncBiNpb8fGla7nci8SSHCwg3QNm5Ge5nU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NIdGcyDJ; arc=none smtp.client-ip=170.10.133.124
+	 In-Reply-To:Content-Type; b=O1RNFRIbyp1vySgVaJzhiCj3F+4YRtl/9MOU1s2oj8AJ/5sIun0/+Vvw7hZKn3YYvhZQ0QQLqN6Pf8TtbRrU+XQb9dzFoK4hTuVH2Bcco0JwCf0IGUGW8Icgox3udloAbtDTEPelVs1Wa0c00ogPAndMmeepPxs4bIrxAjsXo1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HViKVOtY; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NIdGcyDJ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HViKVOtY"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1755886200;
+	s=mimecast20190719; t=1755886261;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=4Qgw45kgIvklypQIdjW4WKJClwzbVj1vFIwI4+ABCxY=;
-	b=NIdGcyDJgCcIFOcCzDrWMG+Isy+eVOFGZlpWnHftHr9DTyZMBLOHWnOft93ylUKPFqFAM5
-	+CSHQoTv92HH2FDkPU0dyWHPZ+W/G+TLfNnaNP+Q7+A7kJy/C+6mID4KuHMFwyV3SgQQki
-	GQmUhnfwGWTjNMXI9Rjo9WSt9aF4TSY=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=Cs65i5/BwS5INh2iU3PXL6F11yYfHDlCfNAhWqRXwfw=;
+	b=HViKVOtYVIYeVtj3EYr7bWt/rRNHeN/GgdaldkjNKnJhiP0dM7FC3zMw8OovwWQxQ7ZZcl
+	K7MUaJAEGYlh+XJFd1iGQ82PGwjjOmY4BN9cMC1Va1SWvlDN7Blv6X5jVUDr4tRaBe+AOc
+	fZkl4SALuXUN/bN+VeTdK/vr3LoGyPE=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-462-dbxJvCZfMQerG4tDSPgkIw-1; Fri, 22 Aug 2025 14:09:59 -0400
-X-MC-Unique: dbxJvCZfMQerG4tDSPgkIw-1
-X-Mimecast-MFC-AGG-ID: dbxJvCZfMQerG4tDSPgkIw_1755886198
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-45a1b0b46bbso11561755e9.2
-        for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2025 11:09:58 -0700 (PDT)
+ us-mta-312-GNmCXiRhONWWqwzUU77Tkg-1; Fri, 22 Aug 2025 14:10:55 -0400
+X-MC-Unique: GNmCXiRhONWWqwzUU77Tkg-1
+X-Mimecast-MFC-AGG-ID: GNmCXiRhONWWqwzUU77Tkg_1755886254
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-3b9dc566cb4so1528458f8f.1
+        for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2025 11:10:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755886198; x=1756490998;
+        d=1e100.net; s=20230601; t=1755886254; x=1756491054;
         h=content-transfer-encoding:in-reply-to:autocrypt:content-language
          :from:references:cc:to:subject:user-agent:mime-version:date
          :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=4Qgw45kgIvklypQIdjW4WKJClwzbVj1vFIwI4+ABCxY=;
-        b=okZGhI0OvF00b129jkRXxUuE6YAb54DSNONWNJoB8g67AVw8Gtks5qJvxCnMu7wwVg
-         U2ZgIFQYGaYIPblVSJSD/8ewUK89iTQWbKdDxjigx8XWzY9mdpp+x3JsoMFnDbDuZ1B5
-         21eQ3I83AIw5ReKzs3moUW8meks8tJvzclNG8TStbga+ztRhpCiGh/zBmsI6+qmYSs2T
-         FyDBWzFFuFTSp3VDaU9ZKx3dQwWdQWdeBqCgzde6gbCH2Mhqk2+xevrR6Du86DIQsmRv
-         5BTWRp/hXkBU8TvPIpbzo/iD31yyMODYF7BDOWxmNNwoSWPwEEzuzRFxpEYArMKEK0Q7
-         zfBg==
-X-Forwarded-Encrypted: i=1; AJvYcCUtCgXN6icoXrAncW6hGQ5F1fkz/SFr1e7lQCFGOyJntMPypP1Urdq5VJkIdGCTwOf7WjDfNsKxgss=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxG/Aw6heGfuutQs7I6xp4NkOtvO3LdYD+A8E940EXHpwEEkUTm
-	HcXoHxITvVY0lHG2EzxHCci+pfJCWywLMhsLiPWubKLiT0LqnDVCoLVyH/r7qOohVfa/jG9tIXm
-	i2MAP4LRycqSruIfZbjbCm2faQtOfv8kh8jkn5cCoCHthjQyTK9uN60AhvIFzYw==
-X-Gm-Gg: ASbGncugJ5DBZVNRW2E4ag55eIEou3aHKEBKXBcc98/xdSHOJD8w8VwWkfBLv9fc4Ur
-	bSIn0vC/H82aW/NkrwdU5ACfIcoprW/5JcsWoZi3PypIA3iOv2PnT4+w1kVyx+8O5SV7j1lrg9W
-	urKypBnykJht74pnPfuElrsQ1SQQrwK9DBZLCWHITRfeOxTjigihV7yyi8HQbAi3G/qfBCvOmAl
-	fVUdnJwW8Gly7PfQj1grZnWxJyA3KYXYEdH1/PGN4NUqp/HJWI8I4UfzW9QjIDFtFaZSFe+e1L2
-	Mte7VzV3kUBPb3yOE6cnc9woNXikokuSURp53F57ogPFc+dZoKW7dDbevR3UOat96U4eVKoxpWB
-	zlPOnNh2X15YsiuYU1v1Bq8wxXBT8GDxDw/u4pBxotdM8WYb7DQLd3us3HBMr68iYvfg=
-X-Received: by 2002:a05:6000:4011:b0:3a4:f50b:ca2 with SMTP id ffacd0b85a97d-3c5da83bbdfmr2672650f8f.8.1755886197900;
-        Fri, 22 Aug 2025 11:09:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGihO/MfCjEADxWF8Q8DVVHHoqn0Rg/Ikr9pZDPhG5cKysecyGKSziAj6ohTWcg7Hwh15RzFg==
-X-Received: by 2002:a05:6000:4011:b0:3a4:f50b:ca2 with SMTP id ffacd0b85a97d-3c5da83bbdfmr2672603f8f.8.1755886197412;
-        Fri, 22 Aug 2025 11:09:57 -0700 (PDT)
+        bh=Cs65i5/BwS5INh2iU3PXL6F11yYfHDlCfNAhWqRXwfw=;
+        b=HKDsyHe3UEDZn3AgNC4qvcKEG62sdoJ+nzPLQuCDFXyF7ssyEExXcziAiE2oefb2U0
+         eaAVwpZOnoR9+lswzV8tGBQiUrndSwHYZc2JHddBGuWKhDlfUTuqERYb2FBFwGcDPe5J
+         JMcYwOaNNs6PC0JLjiNDTvjJrFT+Cs2Zpo0kfV7BFP72nkNRdsnSuCOwXVu+uiOvm7KR
+         wamk/OawkU5pA+8MbWB2iqsztnCg51Q1wvaBmEU0p8zmka+74H5lrGZwE9bF9kJ+d89J
+         uFI4if2zJZS2Ve9KnAIRgSu0rnKMAapMpGguSzEnTSe2lEBGeL9vM2lSy7SIN0ut+T9y
+         L0eA==
+X-Forwarded-Encrypted: i=1; AJvYcCUL14xb2sMtTcK89X33QNba1W5Ze3nDVnsDNm8sBtFRBBbzm0BPIw6pnLMNo/WjbA812c7uIAcYo4k=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyto9QSmgwOeTDbnwT4FMB0CDaDugCcHTK7CfmBFR/yusGDS19y
+	cGJNDwH3enqcnvGyh+F3QYo3qqVbDUQjW6pJTiJx9q16pyx1zQodNQ9VcZFts7nejzD+HjXWcPi
+	VmfXlwDjKwTQHQ6LhbhRXLtEhlLw802LYPUD3okzxUxFHqbL1WfT1cz4HDcSGaA==
+X-Gm-Gg: ASbGncsw3qozsJ9zQYZtTr2BtVyTWhOv+Yv/VJjYp3k7YYtwNNSgh/h1x0bfShl3EU8
+	nDtDuatxQrV17UQWPxXzB3cdSsWfnMUiQUAK3PRRQbCFY0cy3Z5UKhARS8orLHAMRYMOe+hjcGu
+	CL/NAF8K7dWTvJqcGsBLv4a3ydlFGlw1NkL5t94AQGFUxQS0GutiIiPsnat78PF6EYZhMqVA3mU
+	+Wzt0DgkyaRxyh+cHT6RMSSXSlPCYO9KR0boM0QVrBJLiAp7oTZeF9NBl5w/F7Rehtgo9oPZjE1
+	Tm7rDVBY33T+Gb+X4P/zAq5P9LGfMR33zQ7FBFaJ03jLtYW7RZ0amwUr8uDEeT4wG8IDF7w4g1P
+	hQr9hdex8khgjRMUL47dU4zQk5Z6UBGFTuBW/WyPsyGA/yL/cA17yFYpsKi87BiL2leg=
+X-Received: by 2002:a05:6000:26ce:b0:3b7:83c0:a9e0 with SMTP id ffacd0b85a97d-3c5daefc76amr3207794f8f.25.1755886254479;
+        Fri, 22 Aug 2025 11:10:54 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFruF/9yLWC9qQiiSeqlnaZybt0y1Lc6OlpmYaNOwlaf7dspYYth5O1iwJEpGlFoX5TNvjMRA==
+X-Received: by 2002:a05:6000:26ce:b0:3b7:83c0:a9e0 with SMTP id ffacd0b85a97d-3c5daefc76amr3207779f8f.25.1755886254021;
+        Fri, 22 Aug 2025 11:10:54 -0700 (PDT)
 Received: from ?IPV6:2003:d8:2f2e:6100:d9da:ae87:764c:a77e? (p200300d82f2e6100d9daae87764ca77e.dip0.t-ipconnect.de. [2003:d8:2f2e:6100:d9da:ae87:764c:a77e])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b5753ac36sm7608875e9.6.2025.08.22.11.09.55
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3c70f238640sm404818f8f.26.2025.08.22.11.10.51
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Aug 2025 11:09:56 -0700 (PDT)
-Message-ID: <1a3ca0c5-0720-4882-b425-031297c1abb7@redhat.com>
-Date: Fri, 22 Aug 2025 20:09:54 +0200
+        Fri, 22 Aug 2025 11:10:53 -0700 (PDT)
+Message-ID: <9a9eb9ca-a5ae-4230-8921-fd0e0a79ccbb@redhat.com>
+Date: Fri, 22 Aug 2025 20:10:51 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -75,11 +75,13 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 09/35] mm/mm_init: make memmap_init_compound() look
- more like prep_compound_page()
-To: Mike Rapoport <rppt@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
- Andrew Morton <akpm@linux-foundation.org>,
+Subject: Re: [PATCH RFC 29/35] scsi: core: drop nth_page() usage within SG
+ entry
+To: Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Doug Gilbert <dgilbert@interlog.com>, Alexander Potapenko
+ <glider@google.com>, Andrew Morton <akpm@linux-foundation.org>,
  Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
  Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
  dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
@@ -95,14 +97,16 @@ Cc: linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
  linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
  linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
  Marco Elver <elver@google.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
- netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
- Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
- virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
- wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
+ Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
+ Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
+ Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
+ Robin Murphy <robin.murphy@arm.com>, Suren Baghdasaryan <surenb@google.com>,
+ Tejun Heo <tj@kernel.org>, virtualization@lists.linux.dev,
+ Vlastimil Babka <vbabka@suse.cz>, wireguard@lists.zx2c4.com, x86@kernel.org,
+ Zi Yan <ziy@nvidia.com>
 References: <20250821200701.1329277-1-david@redhat.com>
- <20250821200701.1329277-10-david@redhat.com> <aKiMWoZMyXYTAPJj@kernel.org>
+ <20250821200701.1329277-30-david@redhat.com>
+ <58816f2c-d4a7-4ec0-a48e-66a876ea1168@acm.org>
 From: David Hildenbrand <david@redhat.com>
 Content-Language: en-US
 Autocrypt: addr=david@redhat.com; keydata=
@@ -149,55 +153,19 @@ Autocrypt: addr=david@redhat.com; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <aKiMWoZMyXYTAPJj@kernel.org>
+In-Reply-To: <58816f2c-d4a7-4ec0-a48e-66a876ea1168@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 22.08.25 17:27, Mike Rapoport wrote:
-> On Thu, Aug 21, 2025 at 10:06:35PM +0200, David Hildenbrand wrote:
->> Grepping for "prep_compound_page" leaves on clueless how devdax gets its
->> compound pages initialized.
->>
->> Let's add a comment that might help finding this open-coded
->> prep_compound_page() initialization more easily.
->>
->> Further, let's be less smart about the ordering of initialization and just
->> perform the prep_compound_head() call after all tail pages were
->> initialized: just like prep_compound_page() does.
->>
->> No need for a lengthy comment then: again, just like prep_compound_page().
->>
->> Note that prep_compound_head() already does initialize stuff in page[2]
->> through prep_compound_head() that successive tail page initialization
->> will overwrite: _deferred_list, and on 32bit _entire_mapcount and
->> _pincount. Very likely 32bit does not apply, and likely nobody ever ends
->> up testing whether the _deferred_list is empty.
->>
->> So it shouldn't be a fix at this point, but certainly something to clean
->> up.
->>
->> Signed-off-by: David Hildenbrand <david@redhat.com>
->> ---
->>   mm/mm_init.c | 13 +++++--------
->>   1 file changed, 5 insertions(+), 8 deletions(-)
->>
->> diff --git a/mm/mm_init.c b/mm/mm_init.c
->> index 5c21b3af216b2..708466c5b2cc9 100644
->> --- a/mm/mm_init.c
->> +++ b/mm/mm_init.c
->> @@ -1091,6 +1091,10 @@ static void __ref memmap_init_compound(struct page *head,
->>   	unsigned long pfn, end_pfn = head_pfn + nr_pages;
->>   	unsigned int order = pgmap->vmemmap_shift;
->>   
->> +	/*
->> +	 * This is an open-coded prep_compound_page() whereby we avoid
->> +	 * walking pages twice by initializing them in the same go.
->> +	 */
-> 
-> While on it, can you also mention that prep_compound_page() is not used to
-> properly set page zone link?
+On 22.08.25 20:01, Bart Van Assche wrote:
+> On 8/21/25 1:06 PM, David Hildenbrand wrote:
+>> It's no longer required to use nth_page() when iterating pages within a
+>> single SG entry, so let's drop the nth_page() usage.
+> Usually the SCSI core and the SG I/O driver are updated separately.
+> Anyway:
 
-Sure, thanks!
+Thanks, I had it separately but decided to merge per broader subsystem 
+before sending. I can split it up in the next version.
 
 -- 
 Cheers
