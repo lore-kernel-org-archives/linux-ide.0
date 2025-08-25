@@ -1,330 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E1B84C92
-	for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2025 02:39:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.75.44.102])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 977D61FB3;
+	Mon, 25 Aug 2025 08:19:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.75.44.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756089547; cv=none; b=XEXZgPxuTO4LYEKjgQeREU9xDBK7GpFYlrlLT3/LuTpdVm32MirS9ZPWW9jNqcms2EMFMH9DInPE0S3zpJbkPO/8X5cmdeKvBgoY3Pa5gVio4JXd8v9gsJ8CEyaTfiYGfU8mplZySWOdQ46EH+rMPO/vvbZqcyDJ0tV6S80/dSU=
+	t=1756110003; cv=none; b=lO0UbPomXTBXiC0mduSSPwjCa11F8fn0udCOy65oR0+FejLcmaPTkrn2jcvIs09v9/MSOXzzRxqjksIy7eG/2g8kl9ry2WoTsFDKFiRXsWOhJIWhMk4+sdkdXOJayr4IvVGoLt4mA9PwN9QjfxsF9O2mzHfD2T15oJ+pwJw2QQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756089547; c=relaxed/simple;
-	bh=7olmRwGfGhdUS0j34d72rHzMD5uWkBPVSoR1m5y5dw0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qOKJHEp5bU9ydv0X4J3XT9yyBmyExv9sBSpLVvsg0aB5iKbGeAH5c5DnpWel5STAtQ3hm6P/z6q24SSprNQX/bs2ur8qH7nGEUbun4wjYnN4DvkDyZvWL/kUzyy+jNEIaT+aYBAEtTmqsHv3QnITU76eU2rdodtAxvjR8ETIQko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gPYua9PO; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gPYua9PO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 594EDC4CEF4;
-	Mon, 25 Aug 2025 02:39:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756089546;
-	bh=7olmRwGfGhdUS0j34d72rHzMD5uWkBPVSoR1m5y5dw0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gPYua9POHcV597OgXUO2nSF6k9LvdDWgjTIBF1Ep+5fpOi2OHmdtLDkzPKHo++/EV
-	 x4sovz/KVoYBdXFA/cvuWmY+R27izr7AW5d5K7Ldr9r7bzDDq/NLCHie1HOPf0vs/m
-	 NgoHG490QXGTIbcIYPpWJIRfms2nwGAhO3nQjkYgVV2jeVECo1A3nNZykxtkxggt9A
-	 0mplz16YqL2MnGC5mHa8pPWWC4R3c56sMcntLFFJhhO/aa/ZRZxt1GkD7LLewKujOX
-	 k5Crj+XT3w39ta/dK2Zeuj6kpVmAs61VEPTnq1js2bucTfAR67yMz9lbNf7SB/Qd7J
-	 /J9sc386QuDtA==
-Message-ID: <b3b3feba-4198-45bc-85fe-59dc9ceb5e0f@kernel.org>
-Date: Mon, 25 Aug 2025 11:36:18 +0900
+	s=arc-20240116; t=1756110003; c=relaxed/simple;
+	bh=Ps9QhjWK6CZ95OsvA3fjPfEAqHGjUB74wOhHgsUF5oQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=FTaldE2ZxuoawPnbW4V8sX72cGjBgpRYMDHS2PIwNUR7OJXyPtFGR9otsZv8SGvDKOKdVCHoexdLLw09a1KB38VYEkM3JjVHvRlPtEy087SVwRaFzoSvrKqqdxEs3WXglPypG2jCMkWfIGYi6TIc8/nMm+eMR6ON4w55Givka0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=13.75.44.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from luyulin$eswincomputing.com ( [10.12.96.77] ) by
+ ajax-webmail-app2 (Coremail) ; Mon, 25 Aug 2025 16:19:44 +0800 (GMT+08:00)
+Date: Mon, 25 Aug 2025 16:19:44 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: luyulin@eswincomputing.com
+To: "Rob Herring" <robh@kernel.org>
+Cc: dlemoal@kernel.org, cassel@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vkoul@kernel.org, kishon@kernel.org, linux-phy@lists.infradead.org,
+	ningyu@eswincomputing.com, zhengyu@eswincomputing.com,
+	linmin@eswincomputing.com, huangyifeng@eswincomputing.com,
+	fenglin@eswincomputing.com, lianghujun@eswincomputing.com
+Subject: Re: Re: [PATCH v2 1/3] dt-bindings: ata: eswin: Document for
+ EIC7700 SoC ahci
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <CAL_JsqKFotNLZZXwiy7S6K8qXLdGRAnsa-1zvZRDQBE39Gf5kg@mail.gmail.com>
+References: <20250819134722.220-1-luyulin@eswincomputing.com>
+ <20250819135413.386-1-luyulin@eswincomputing.com>
+ <CAL_JsqKFotNLZZXwiy7S6K8qXLdGRAnsa-1zvZRDQBE39Gf5kg@mail.gmail.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: ahci: Allow ignoring the external/hotplug
- capability of ports
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Dieter Mummenschanz <dmummenschanz@web.de>
-References: <20250821080651.65800-1-dlemoal@kernel.org>
- <aKhj7prAFmQ9U95z@ryzen>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <aKhj7prAFmQ9U95z@ryzen>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Message-ID: <2cc9f2ff.6a2.198e04fd36e.Coremail.luyulin@eswincomputing.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:TQJkCgA31pSgHKxoBmbDAA--.22942W
+X-CM-SenderInfo: pox13z1lq6v25zlqu0xpsx3x1qjou0bp/1tbiAQEFA2irPnUklgAA
+	s8
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VW3Jw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On 8/22/25 9:34 PM, Niklas Cassel wrote:
-> On Thu, Aug 21, 2025 at 05:06:51PM +0900, Damien Le Moal wrote:
->> Commit 4edf1505b76d ("ata: ahci: Disallow LPM policy control for
->> external ports") introduced disabling link power management (LPM) for
->> ports that are advertized as external/hotplug capable. This is necessary
->> to force the maximum power policy (ATA_LPM_MAX_POWER) onto the port link
->> to ensure that the hotplug capability of the port is functional.
->>
->> However, doing so blindly for all ports can prevent systems from going
->> into a low power state, even if the external/hotplug ports on the system
->> are unused. E.g., a laptop may see the internal SATA slot of a docking
->> station as an external hotplug capable port, and in such case, the user
->> may prefer to not use the port and to privilege instead enabling LPM
-> 
-> s/to privilege instead enabling/to instead favor enabling/
-> or
-> s/to privilege instead enabling/to instead prioritize enabling/
-> 
-> 
->> to allow the laptop to transition to low power states.
->>
->> Since there is no easy method to automatically detect such choice,
->> introduce the new mask_port_ext module parameter to allow a user to
->> ignore the external/hotplug capability of a port. The format for this
->> parameter value is identical to the format used for the mask_port_map
->> parameter: a mask can be defined for all AHCI adapters of a system or
->> for a particular adapters identified with their PCI IDs (bus:dev.func
->> format).
->>
->> The function ahci_get_port_map_mask() is renamed to ahci_get_port_mask()
->> and modified to return a mask, either for the port map maks of an
-> 
-> s/maks/
-> 
-> 
->> adapter (to ignore ports) or for the external/hotplug capability of an
-> 
->> adapter ports. Differentiation between map_port_mask and
-> 
-> s/adapter/adapter (to ignore ports)/
-> 
-> 
->> map_port_ext_mask is done by passing the parameter string to
->> ahci_get_port_mask() as a second argument.
->>
->> To be consistent with this change, the function
->> ahci_apply_port_map_mask() is renamed ahci_port_mask() and changed to
->> return a mask value.
->>
->> The mask for the external/hotplug capability for an adapter, if defined
->> by the map_port_ext_mask parameter, is stored in the new field
->> mask_port_ext of struct ahci_host_priv. ahci_mark_external_port() is
->> modified to not set the ATA_PFLAG_EXTERNAL flag for a port if
->> hpriv->mask_port_ext includes the number of the port. In such case,
->> an information message is printed to notify that the external/hotplug
->> capability is being ignored.
->>
->> Reported-by: Dieter Mummenschanz <dmummenschanz@web.de>
->> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220465
->> Fixes: 4edf1505b76d ("ata: ahci: Disallow LPM policy control for external ports")
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> ---
->> Changes from v1:
->>  - v1 was the wrong patch... v2 uses the correct name "mask_port_ext"
->>    instead of "mask_port_ext_map"
->>
->>  drivers/ata/ahci.c | 57 ++++++++++++++++++++++++++++++++--------------
->>  drivers/ata/ahci.h |  1 +
->>  2 files changed, 41 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index e1c24bbacf64..7a7f88b3fa2b 100644
->> --- a/drivers/ata/ahci.c
->> +++ b/drivers/ata/ahci.c
->> @@ -689,40 +689,50 @@ MODULE_PARM_DESC(mask_port_map,
->>  		 "where <pci_dev> is the PCI ID of an AHCI controller in the "
->>  		 "form \"domain:bus:dev.func\"");
->>  
->> -static void ahci_apply_port_map_mask(struct device *dev,
->> -				     struct ahci_host_priv *hpriv, char *mask_s)
->> +static char *ahci_mask_port_ext;
->> +module_param_named(mask_port_ext, ahci_mask_port_ext, charp, 0444);
->> +MODULE_PARM_DESC(mask_port_ext,
->> +		 "32-bits mask to ignore the external/hotplug capability of ports. "
->> +		 "Valid values are: "
->> +		 "\"<mask>\" to apply the same mask to all AHCI controller "
->> +		 "devices, and \"<pci_dev>=<mask>,<pci_dev>=<mask>,...\" to "
->> +		 "specify different masks for the controllers specified, "
->> +		 "where <pci_dev> is the PCI ID of an AHCI controller in the "
->> +		 "form \"domain:bus:dev.func\"");
->> +
->> +static u32 ahci_port_mask(struct device *dev, char *mask_s)
->>  {
->>  	unsigned int mask;
->>  
->>  	if (kstrtouint(mask_s, 0, &mask)) {
->>  		dev_err(dev, "Invalid port map mask\n");
->> -		return;
->> +		return 0;
->>  	}
->>  
->> -	hpriv->mask_port_map = mask;
->> +	return mask;
->>  }
->>  
->> -static void ahci_get_port_map_mask(struct device *dev,
->> -				   struct ahci_host_priv *hpriv)
->> +static u32 ahci_get_port_mask(struct device *dev, char *mask_p)
->>  {
->>  	char *param, *end, *str, *mask_s;
->>  	char *name;
->> +	u32 mask = 0;
->>  
->> -	if (!strlen(ahci_mask_port_map))
->> -		return;
->> +	if (!mask_p || !strlen(mask_p))
->> +		return 0;
->>  
->> -	str = kstrdup(ahci_mask_port_map, GFP_KERNEL);
->> +	str = kstrdup(mask_p, GFP_KERNEL);
->>  	if (!str)
->> -		return;
->> +		return 0;
->>  
->>  	/* Handle single mask case */
->>  	if (!strchr(str, '=')) {
->> -		ahci_apply_port_map_mask(dev, hpriv, str);
->> +		mask = ahci_port_mask(dev, str);
->>  		goto free;
->>  	}
->>  
->>  	/*
->> -	 * Mask list case: parse the parameter to apply the mask only if
->> +	 * Mask list case: parse the parameter to get the mask only if
->>  	 * the device name matches.
->>  	 */
->>  	param = str;
->> @@ -752,11 +762,13 @@ static void ahci_get_port_map_mask(struct device *dev,
->>  			param++;
->>  		}
->>  
->> -		ahci_apply_port_map_mask(dev, hpriv, mask_s);
->> +		mask = ahci_port_mask(dev, mask_s);
->>  	}
->>  
->>  free:
->>  	kfree(str);
->> +
->> +	return mask;
->>  }
->>  
->>  static void ahci_pci_save_initial_config(struct pci_dev *pdev,
->> @@ -782,8 +794,10 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
->>  	}
->>  
->>  	/* Handle port map masks passed as module parameter. */
->> -	if (ahci_mask_port_map)
->> -		ahci_get_port_map_mask(&pdev->dev, hpriv);
->> +	hpriv->mask_port_map =
->> +		ahci_get_port_mask(&pdev->dev, ahci_mask_port_map);
->> +	hpriv->mask_port_ext =
->> +		ahci_get_port_mask(&pdev->dev, ahci_mask_port_ext);
->>  
->>  	ahci_save_initial_config(&pdev->dev, hpriv);
->>  }
->> @@ -1757,11 +1771,20 @@ static void ahci_mark_external_port(struct ata_port *ap)
->>  	void __iomem *port_mmio = ahci_port_base(ap);
->>  	u32 tmp;
->>  
->> -	/* mark external ports (hotplug-capable, eSATA) */
->> +	/*
->> +	 * Mark external ports (hotplug-capable, eSATA), unless we were asked to
->> +	 * ignore this feature.
->> +	 */
-> 
-> Hm.. we also have libata.force=<port>:external
-> which marks a port as external.
-> 
-> I think it makes most sense for mask_port_ext, since it defines a whole mask
-> for all ports, to take precedence over properties enabled for individual port.
-> 
-> I.e. I think that mask_port_ext should ignore external, regardless if the port
-> was marked as external using firmware, or using libata.force=<port>:external.
-> 
-> 
->>  	tmp = readl(port_mmio + PORT_CMD);
->>  	if (((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS)) ||
->> -	    (tmp & PORT_CMD_HPCP))
->> +	    (tmp & PORT_CMD_HPCP)) {
->> +		if (hpriv->mask_port_ext & (1U << ap->port_no)) {
->> +			ata_port_info(ap,
->> +				"Ignoring external/hotplug capability\n");
->> +			return;
->> +		}
->>  		ap->pflags |= ATA_PFLAG_EXTERNAL;
->> +	}
-> 
-> Perhaps something like:
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index e1c24bbacf64..bd68373efc24 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1762,6 +1762,12 @@ static void ahci_mark_external_port(struct ata_port *ap)
->  	if (((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS)) ||
->  	   (tmp & PORT_CMD_HPCP))
->  		ap->pflags |= ATA_PFLAG_EXTERNAL;
-> +
-> +	/* mask_port_ext clears ATA_PFLAG_EXTERNAL no matter how it was set. */
-> +	if (hpriv->mask_port_ext & (1U << ap->port_no)) {
-> +		ata_port_info(ap, "Ignoring external/hotplug capability\n");
-> +		ap->pflags &= ~ATA_PFLAG_EXTERNAL;
-
-I can add this, but I do not think this is useful since libata.force is applied
-*after* probing the adapter, which is is the one that will call the above. So
-when this runs, libata has not yet touched the ports and not forced any flags.
-
-
-> +	}
->  }
->  
-> 
-> 
-> 
-> But do we really want a introduce a module parameter for this?
-> I know that commit 4edf1505b76d ("ata: ahci: Disallow LPM policy control for
-> external ports")
-> if external, both:
-> 1) sets initial lpm policy to MAX_POWER (so that hot plug works by default)
-> 2) sets ATA_FLAG_NO_LPM, so that you cannot change the LPM policy using sysfs
-> 
-> I think that 1) is good.
-> 
-> However, why should we forbid the user to override to policy via sysfs just
-> because the port is external?
-> If a system admin has installed a udev rule or similar to set a lpm policy,
-> why should we not respect that?
-> 
-> Yes, I know that many distros supply a rule that just enables LPM
-> unconditionally for all disks...
-> 
-> But... instead of forbidding the user to change to policy using sysfs, perhaps
-> a better way would be for the system admin/distros to improve their udev rules?
-
-Sure, but that is something do be done with the distro. Because from
-libata-sata sysfs handling, we do not know if the sysfs
-link_power_management_policy is being changed by the distro systemd rules or
-manually by the user.
-
-Since most distro systemd try to favor power savings, without 4edf1505b76d,
-hotplug never works because systemd changes max_power to some lower policy, and
-that make hotplug non-functional.
-
-> We have a sysfs property that says if the port supports LPM.
-> Perhaps we should have a sysfs attribute that says if the port is external.
-
-Yes, but see my comment on your other patch. Problem is that we need an
-extensive cleanup of the port, link and device flags to differentiate between
-"X is supported" and "X is enabled/disabled". Right now, we can't, which makes
-any runtime change unreliable and potentially dangerous.
-
-> The udev rules can then be smarter and just set the LPM policy if the port is
-> not external. But the user would still have the option to set a LPM policy
-> (using the same interface), if they don't care about hotplug.
-> 
-> It seems more user friendly for a user that has a laptop with a docking
-> station with hotplug capable ports, to install a udev rule to set an LPM
-> policy, than to set a kernel module param.
-> 
-> What do you think?
-
-I completely agree. We should not rely on module parameters that force things.
-But as mentioned above, that's the only solution to fix issues for now. We need
-to do some more cleanup of the flags. It is a mess and long overdue anyway :)
-
-
-
--- 
-Damien Le Moal
-Western Digital Research
+SGksIFJvYgpUaGFuayB5b3UgdmVyeSBtdWNoIGZvciB5b3VyIHByb2Zlc3Npb25hbCByZXNwb25z
+ZSBhbmQgc3VnZ2VzdGlvbnMuCkFtb25nIHRoZSBzdWdnZXN0aW9ucyB5b3UgbWVudGlvbmVkLCAK
+b25lIHBvaW50IGlzIG5vdCBlbnRpcmVseSBjbGVhciwgYW5kIEkgd291bGQgbGlrZSB0byBzZWVr
+IHlvdXIgYWR2aWNlIG9uIGl0Lgo+IAo+IE9uIFR1ZSwgQXVnIDE5LCAyMDI1IGF0IDg6NTTigK9B
+TSBZdWxpbiBMdSA8bHV5dWxpbkBlc3dpbmNvbXB1dGluZy5jb20+IHdyb3RlOgo+ID4KPiA+IEZy
+b206IGx1eXVsaW4gPGx1eXVsaW5AZXN3aW5jb21wdXRpbmcuY29tPgo+IAo+IFBsZWFzZSBmaXgg
+eW91ciBuYW1lLgo+IAo+ID4KPiA+IEFkZCBkb2N1bWVudCBmb3IgdGhlIFNBVEEgQUhDSSBjb250
+cm9sbGVyIG9uIHRoZSBFSUM3NzAwIFNvQyBwbGF0Zm9ybSwKPiA+IGluY2x1ZGluZyBkZXNjcmlw
+dGlvbnMgb2YgaXRzIGhhcmR3YXJlIGNvbmZpZ3VyYXRpb25zLgo+ID4KPiA+IFNpZ25lZC1vZmYt
+Ynk6IGx1eXVsaW4gPGx1eXVsaW5AZXN3aW5jb21wdXRpbmcuY29tPgo+IAo+IEFuZCBoZXJlLgo+
+IAo+ID4gLS0tCj4gPiAgLi4uL2JpbmRpbmdzL2F0YS9lc3dpbixlaWM3NzAwLWFoY2kueWFtbCAg
+ICAgIHwgOTIgKysrKysrKysrKysrKysrKysrKwo+ID4gIDEgZmlsZSBjaGFuZ2VkLCA5MiBpbnNl
+cnRpb25zKCspCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNldHJl
+ZS9iaW5kaW5ncy9hdGEvZXN3aW4sZWljNzcwMC1haGNpLnlhbWwKPiA+Cj4gPiBkaWZmIC0tZ2l0
+IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2F0YS9lc3dpbixlaWM3NzAwLWFo
+Y2kueWFtbCBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hdGEvZXN3aW4sZWlj
+NzcwMC1haGNpLnlhbWwKPiA+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0Cj4gPiBpbmRleCAwMDAwMDAw
+MDAwMDAuLjllZjU4YzljMmYyOAo+ID4gLS0tIC9kZXYvbnVsbAo+ID4gKysrIGIvRG9jdW1lbnRh
+dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2F0YS9lc3dpbixlaWM3NzAwLWFoY2kueWFtbAo+ID4g
+QEAgLTAsMCArMSw5MiBAQAo+ID4gKyMgU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IChHUEwtMi4w
+LW9ubHkgT1IgQlNELTItQ2xhdXNlKQo+ID4gKyVZQU1MIDEuMgo+ID4gKy0tLQo+ID4gKyRpZDog
+aHR0cDovL2RldmljZXRyZWUub3JnL3NjaGVtYXMvYXRhL2Vzd2luLGVpYzc3MDAtYWhjaS55YW1s
+Iwo+ID4gKyRzY2hlbWE6IGh0dHA6Ly9kZXZpY2V0cmVlLm9yZy9tZXRhLXNjaGVtYXMvY29yZS55
+YW1sIwo+ID4gKwo+ID4gK3RpdGxlOiBFc3dpbiBFSUM3NzAwIFNvQyBTQVRBIENvbnRyb2xsZXIK
+PiA+ICsKPiA+ICttYWludGFpbmVyczoKPiA+ICsgIC0gWXVsaW4gTHUgPGx1eXVsaW5AZXN3aW5j
+b21wdXRpbmcuY29tPgo+ID4gKyAgLSBIdWFuIEhlIDxoZWh1YW4xQGVzd2luY29tcHV0aW5nLmNv
+bT4KPiA+ICsKPiA+ICtkZXNjcmlwdGlvbjoKPiA+ICsgIFRoaXMgZG9jdW1lbnQgZGVmaW5lcyBk
+ZXZpY2UgdHJlZSBiaW5kaW5ncyBmb3IgdGhlIFN5bm9wc3lzIERXQwo+ID4gKyAgaW1wbGVtZW50
+YXRpb24gb2YgdGhlIEFIQ0kgU0FUQSBjb250cm9sbGVyIGZvdW5kIGluIEVzd2luJ3MKPiA+ICsg
+IEVpYzc3MDAgU29DIHBsYXRmb3JtLgo+ID4gKwo+ID4gK3NlbGVjdDoKPiA+ICsgIHByb3BlcnRp
+ZXM6Cj4gPiArICAgIGNvbXBhdGlibGU6Cj4gPiArICAgICAgY29uc3Q6IGVzd2luLGVpYzc3MDAt
+YWhjaQo+ID4gKyAgcmVxdWlyZWQ6Cj4gPiArICAgIC0gY29tcGF0aWJsZQo+ID4gKwo+ID4gK2Fs
+bE9mOgo+ID4gKyAgLSAkcmVmOiBzbnBzLGR3Yy1haGNpLWNvbW1vbi55YW1sIwo+ID4gKwo+ID4g
+K3Byb3BlcnRpZXM6Cj4gPiArICBjb21wYXRpYmxlOgo+ID4gKyAgICBpdGVtczoKPiA+ICsgICAg
+ICAtIGNvbnN0OiBlc3dpbixlaWM3NzAwLWFoY2kKPiA+ICsgICAgICAtIGNvbnN0OiBzbnBzLGR3
+Yy1haGNpCj4gPiArCj4gPiArICByZWc6Cj4gPiArICAgIG1heEl0ZW1zOiAxCj4gCj4gRHJvcC4g
+c25wcyxkd2MtYWhjaS1jb21tb24ueWFtbCBhbHJlYWR5IGRlZmluZXMgdGhpcy4KPiAKPiA+ICsK
+PiA+ICsgIGludGVycnVwdHM6Cj4gPiArICAgIG1heEl0ZW1zOiAxCj4gCj4gRHJvcC4gc25wcyxk
+d2MtYWhjaS1jb21tb24ueWFtbCBhbHJlYWR5IGRlZmluZXMgdGhpcy4KPiAKPiA+ICsKPiA+ICsg
+IHBvcnRzLWltcGxlbWVudGVkOgo+ID4gKyAgICBjb25zdDogMQo+IAo+IFJlYWxseSwgeW91ciBm
+aXJtd2FyZSBzaG91bGQgaW5pdGlhbGl6ZSB0aGUgRFdDIHNwZWNpZmljIHJlZ2lzdGVyIHRoYXQK
+PiBzZXRzIHRoaXMgYW5kIGlzIGRpc2NvdmVyYWJsZSB2aWEgYSBzdGFuZGFyZCBBSENJIHJlZ2lz
+dGVyLgo+IApZZXMsIEkgaW5pdGlhbGl6ZWQgdGhlIHJlbGV2YW50IHJlZ2lzdGVycyBkdXJpbmcg
+dGhlIHVib290IHN0YWdlLAphbmQgdGhleSB3b3JrZWQgY29ycmVjdGx5IGFmdGVyIGVudGVyaW5n
+IHRoZSBMaW51eCBzeXN0ZW0uCkhvd2V2ZXIsIGFmdGVyIHVubG9hZGluZyBhbmQgdGhlbiByZWxv
+YWRpbmcgdGhlIGtvIGRyaXZlciwKYSByZXNldCBvcGVyYXRpb24gY2F1c2VzIHRoZXNlIHJlZ2lz
+dGVycyB0byBiZSBpbml0aWFsaXplZCB0byAwLApsZWFkaW5nIHRvIGluaXRpYWxpemF0aW9uIGVy
+cm9ycyB3aGVuIHJlbG9hZGluZyB0aGUga28gZHJpdmVyLgpJZiBJIHdhbnQgdG8gaW1wbGVtZW50
+IGl0IHRoaXMgd2F5LCBJIG5lZWQgdG8gbW9kaWZ5IHRoZSBhaGNpX2R3Yy5jIGRyaXZlcgphbmQg
+YWRkIHByb2dyYW0gaGFuZGxpbmcgdGFpbG9yZWQgdG8gb3VyIFNvQyBkZXNpZ24uCgpJIHNlYXJj
+aGVkIHRoZSBrZXJuZWwgZm9yICJzbnBzLGR3Yy1haGNpIiBhbmQgZm91bmQgdGhhdAppbiBtYW51
+ZmFjdHVyZXJzJyBkdHMgZmlsZXMsIHN1Y2ggYXMgcmszNTg4LWJhc2UuZHRzaSwgZHJhNy1sNC5k
+dHNpLApleHlub3M1MjUwLmR0c2ksIGV0Yy4sIGFsbCBpbmNsdWRlIHRoZSBwb3J0cy1pbXBsZW1l
+bnRlZCBmaWVsZCBpbiB0aGVpciBzYXRhIG5vZGVzLiAKb25seSB0aGUgc2F0YSBub2RlIGluIGFt
+ZC1zZWF0dGxlLXNvYy5kdHNpIGxhY2tzIHRoZSBwb3J0cy1pbXBsZW1lbnRlZCBmaWVsZAphbmQg
+ZG9lcyBub3QgaGF2ZSByZXNldCByZXNvdXJjZXMuCkFkZGl0aW9uYWxseSwgaW4gdGhlIFlBTUwg
+ZmlsZXMgdW5kZXIgdGhlwqAvRG9jdW1lbnRhdGlvbi9hdGHCoGRpcmVjdG9yeSB0aGF0CmludGVn
+cmF0ZSB0aGUgRFdDIEFIQ0kgY29udHJvbGxlciwgdGhlwqBwb3J0cy1pbXBsZW1lbnRlZMKgZmll
+bGQgaGFzIGJlZW4gaW1wbGVtZW50ZWQsCmFzIHNlZW4gaW4gZXhhbXBsZXMgc3VjaCBhc8Kgcm9j
+a2NoaXAsZHdjLWFoY2kueWFtbMKgYW5kwqBiYWlrYWwsYnQxLWFoY2kueWFtbC4KClRoZXJlZm9y
+ZSwgSSBoYXZlIHF1ZXN0aW9ucyBJIHdvdWxkIGxpa2UgdG8gY29uZmlybSB3aXRoIHlvdToKMS4g
+SW4geW91ciBwcmV2aW91cyBmZWVkYmFjaywgd2VyZSB5b3Ugc3VnZ2VzdGluZyB0aGF0IEkgcmVt
+b3ZlIHRoZcKgcG9ydHMtaW1wbGVtZW50ZWTCoGZpZWxkPwpBbmQgd2hhdCBpcyB0aGUgcmVhc29u
+IGZvciBkb2luZyBzbz8KQmFzZWQgb24geW91ciBwcm9mZXNzaW9uYWwgYWR2aWNlIGFuZCBjb25z
+aWRlcmluZyBvdXIgU29DIGRlc2lnbiwgZG8geW91IHRoaW5rCml0IGlzIGFjY2VwdGFibGUgdG8g
+cmV0YWluIHRoZcKgcG9ydHMtaW1wbGVtZW50ZWTCoGZpZWxkIGluIHRoZSBkdHMgaW5zdGVhZCBv
+ZgpyZW1vdmluZyBpdCBhbmQgbW9kaWZ5aW5nIHRoZcKgYWhjaV9kd2MuY8KgZHJpdmVyPwoyLiBJ
+IG5vdGljZWQgdGhhdCBpbiB0aGUgYXJjaC8gZGlyZWN0b3J5LCBjaGlwcyBsaWtlIGRyYTctbDQu
+ZHRzaSBhbmQKZXh5bm9zNTI1MC5kdHNpIGludGVncmF0ZSB0aGUgRFdDIEFIQ0kgY29udHJvbGxl
+ciBhbmQgaW5jbHVkZSBjb3JyZXNwb25kaW5nCmhhcmR3YXJlIHJlc291cmNlIGRlc2lnbnMgc3Vj
+aCBhcyBjbG9ja3MgYW5kIHJlc2V0cy4KV2h5IGRvIHRoZXkgbm90IGhhdmUgaW5kZXBlbmRlbnQg
+eWFtbCBmaWxlcyBpbXBsZW1lbnRlZCBpbiB0aGUga2VybmVsPwoKQmVzdCByZWdhcmRzLApZdWxp
+biBMdQo=
