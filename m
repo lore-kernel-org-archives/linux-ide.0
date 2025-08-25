@@ -1,73 +1,27 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA8FD30F813
-	for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2025 18:32:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED50D286435
+	for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2025 19:52:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756146762; cv=none; b=H9YXkv4/sbnmHJzf915d4at4JxS/qcXK5bG5GaH4nGxnFaY8K7d9P/yNrddPSjoJk0OLrD7ZdcNmqXGs1mdAYU5Pfv/WxFes3P8+BF9QZoZSPMcewf8sjdEsBOIEV7ygQW1W243C3h4bJpj0LfVz6e0WPpL5Zmi9eglCR1dRw4o=
+	t=1756151548; cv=none; b=tpcmkFI7CvXSupa0Y+9KuwEuqTu+UhmIoij41wXXcYA+R2zphwL7uQE+Xjy36TX2doysZbBR6QiZEqlGBmxg3UnbDsSN7nhYmnQLFgwfbvkMk1YWW6bfPxUI+D++Lg7KYG8iLiJjk84AUFGPRJM6eV0nBSOOcKPXyo3cC4ZlWCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756146762; c=relaxed/simple;
-	bh=5gSbG4LawMNJ/PWjEAWfSVGPawomJWAQkNEyrTBhXtk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LtxahCMX2J/SucOnsObvu7e+eg1wrwTzvz19jD1eH+KBzRqKRkg4W0hF7bQYfwfQ5c6hDNcPAqWR/fpUBlREiWCzekSrBxnQCIfdmikE0fc7PyjFx/0yr0y1LiHyWD7HTWc62COZMu7GSGXEnlADsXX09F7YVgqClK2GT2yy5ho=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=df2kU/IF; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="df2kU/IF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756146759;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=bluti57k39MttADONVHVsAxBvXyqb5R7ZWo2ok70EgM=;
-	b=df2kU/IFTwio7/3VNnxaaQgYPVPRHJ/ZBWEqxlohhQmADyqMFhb8ooLdy2hIKFB+4vfed0
-	OTGzTytoj7Nki0sKaJiULxGwfZbUwmCZjA25UcgGzDebP94pvEYKI/h8h8qyFuL14fAbWp
-	kI+K9UxkxkqGhIu0OT+028mbNMDHT7Q=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-224-8YK14KsjPOSRe3o7jYJ1GQ-1; Mon, 25 Aug 2025 14:32:33 -0400
-X-MC-Unique: 8YK14KsjPOSRe3o7jYJ1GQ-1
-X-Mimecast-MFC-AGG-ID: 8YK14KsjPOSRe3o7jYJ1GQ_1756146752
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-45a1b0b46bbso21329535e9.2
-        for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2025 11:32:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756146752; x=1756751552;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bluti57k39MttADONVHVsAxBvXyqb5R7ZWo2ok70EgM=;
-        b=I7KFTZEwTW+y8N0Ys+uT/V68q0+B9vyOu13FxJ8rC87CS6MP53VqNNKE42twp0i0zq
-         iteosAIZjVhR1ISst4mj/VgqKo9F5MIMk/vXwN3m3wlOjDdR1HjNVG0UzpylNruAXvJc
-         HLk7vfHqin5EBIZ6yWwCuxDOsbjIOz/Hm3klxxEESaEdm4hUNJm3UlFlxASJLw6qmTTl
-         AzvcK4qEthVq7L4rlJAI/BtvxzIFBR7M6LJyiPqMl2LBDATUZeWHGjK5wdwMz87OuboW
-         sVGiGT7Mv8yB2Yss9i+DerUjWRiJVG37Ngu6JarnYEFpWhvaYJfHBx9n1jUOpzoRwNFN
-         KqLA==
-X-Forwarded-Encrypted: i=1; AJvYcCVlXinaOsKDeIXjx+K80Xbaaqmlr6BPkhrXX4OxmdcPSROhldgYGR2UBQTinPUMWbONkZmrQM+EaCA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzwfPrzx66JBnCf1dWuce2Rwq4jScIi2P9O/e6kY9TQ6zSadUwz
-	oHEORzZc4jmL/TO0Fmh//PVjqWFfT7rYOP9uK1kmrSNZLVCshiVJoQB6YypeBFryZWk0gnksx3v
-	RSc0/I8He7tLy9F9YoRxP5fuCHUTlu7DxNycWbSpoOZ55CZqJe53SBNLCj64T+w==
-X-Gm-Gg: ASbGncvsVhfGaGNZeGRRyBL1altpHmJUlockVO0vFOERpURqzEbsDfDY+jhe6KicWoC
-	UqAVGPHjTptTxVN9K8suClQ7UwPxd+WCb+DSioJiiCN17jPTNmfJA4Q8spJk4bkl6rhZti74N5t
-	egwAsbtrb1F0Qvkm8SZ+t6/MiEA81Jte9qhy2BN5qsGwEw6xDl7yt9Sday7HvQLE34PLuteNvXr
-	yLy3ZHPpwIfyPX30xMGhbY9gsGl8pQcF0921Hd0xZQp6e32Gj8VWALn2TFjKA5LsRWBgQ9zh/ak
-	wedADOqTBhWQW6M0hjQTaOZ1gLngw5aPOzwTY3p2OtZF/SLjFPLQmdzkSeHdtMqbmV55hUuT5FE
-	l+Gv0K/K4XZe6PgwwYoB84ar2V72+68VazwTRkhat42095JR9d0rrIv1JlZFRDWKzLQY=
-X-Received: by 2002:a05:600c:4e90:b0:458:a559:a693 with SMTP id 5b1f17b1804b1-45b517b957emr126710755e9.18.1756146752237;
-        Mon, 25 Aug 2025 11:32:32 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFxuQzAylX90vNEmmjxyPSaWFpv8tCbOTWCm8WazHqaDOnMAPM4HK8CKvM3oYkR/BEIZaOMIA==
-X-Received: by 2002:a05:600c:4e90:b0:458:a559:a693 with SMTP id 5b1f17b1804b1-45b517b957emr126710235e9.18.1756146751795;
-        Mon, 25 Aug 2025 11:32:31 -0700 (PDT)
-Received: from ?IPV6:2003:d8:2f4f:1300:42f1:98e5:ddf8:3a76? (p200300d82f4f130042f198e5ddf83a76.dip0.t-ipconnect.de. [2003:d8:2f4f:1300:42f1:98e5:ddf8:3a76])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3c7119c4200sm12481975f8f.53.2025.08.25.11.32.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Aug 2025 11:32:31 -0700 (PDT)
-Message-ID: <7ffd0abd-27a1-40a8-b538-9a01e21abb29@redhat.com>
-Date: Mon, 25 Aug 2025 20:32:27 +0200
+	s=arc-20240116; t=1756151548; c=relaxed/simple;
+	bh=KiwQ4PSdBWaFQAPMQ4xnKtth6TTqkcKvVgNhLhTcs00=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=XiKZnzYUbjTxUSUJD9PU+JDLa4v8WlocvFdl8ZnWyO768gXsapxGvJQEBAWzJXek5xorzSisC44onOoLy4OU1HFcAMAwCFIJIbXupaXcIGZ1UyNEj2aKlv6cO5/J2Irx0dT9Pe3mAE7HgBJNFKj/9cpM9vtAm4j1sX3ks38f2nE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [192.168.0.5] (ip5f5af7f1.dynamic.kabel-deutschland.de [95.90.247.241])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 8A1126028826D;
+	Mon, 25 Aug 2025 21:51:59 +0200 (CEST)
+Message-ID: <a9a7e87a-d41b-43fb-9e46-ed10ac6ee961@molgen.mpg.de>
+Date: Mon, 25 Aug 2025 21:51:58 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -75,157 +29,74 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: update kernel-doc for MEMBLOCK_RSRV_NOINIT
-To: Mike Rapoport <rppt@kernel.org>
-Cc: =?UTF-8?Q?Mika_Penttil=C3=A4?= <mpenttil@redhat.com>,
- linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
- Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
- iommu@lists.linux.dev, io-uring@vger.kernel.org,
- Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
- Johannes Weiner <hannes@cmpxchg.org>, John Hubbard <jhubbard@nvidia.com>,
- kasan-dev@googlegroups.com, kvm@vger.kernel.org,
- "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
- linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
- Marco Elver <elver@google.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
- netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
- Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
- virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
- wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
-References: <9156d191-9ec4-4422-bae9-2e8ce66f9d5e@redhat.com>
- <7077e09f-6ce9-43ba-8f87-47a290680141@redhat.com>
- <aKmDBobyvEX7ZUWL@kernel.org>
- <a90cf9a3-d662-4239-ad54-7ea917c802a5@redhat.com>
- <aKxz9HLQTflFNYEu@kernel.org>
- <a72080b4-5156-4add-ac7c-1160b44e0dfe@redhat.com>
- <aKx6SlYrj_hiPXBB@kernel.org>
- <f8140a17-c4ec-489b-b314-d45abe48bf36@redhat.com>
- <aKyMfvWe8JetkbRL@kernel.org>
- <dbd2ec55-0e7f-407a-a8bd-e1ac83ac2a0a@redhat.com>
- <aKyWIriZ1bmnIrBW@kernel.org>
-From: David Hildenbrand <david@redhat.com>
 Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- qIws/H2t
-In-Reply-To: <aKyWIriZ1bmnIrBW@kernel.org>
+To: Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Warning about DRM functions support logged twice and lpm-pol
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 25.08.25 18:58, Mike Rapoport wrote:
-> On Mon, Aug 25, 2025 at 06:23:48PM +0200, David Hildenbrand wrote:
->>
->> I don't quite understand the interaction with PG_Reserved and why anybody
->> using this function should care.
->>
->> So maybe you can rephrase in a way that is easier to digest, and rather
->> focuses on what callers of this function are supposed to do vs. have the
->> liberty of not doing?
-> 
-> How about
->   
-> diff --git a/include/linux/memblock.h b/include/linux/memblock.h
-> index b96746376e17..fcda8481de9a 100644
-> --- a/include/linux/memblock.h
-> +++ b/include/linux/memblock.h
-> @@ -40,8 +40,9 @@ extern unsigned long long max_possible_pfn;
->    * via a driver, and never indicated in the firmware-provided memory map as
->    * system RAM. This corresponds to IORESOURCE_SYSRAM_DRIVER_MANAGED in the
->    * kernel resource tree.
-> - * @MEMBLOCK_RSRV_NOINIT: memory region for which struct pages are
-> - * not initialized (only for reserved regions).
-> + * @MEMBLOCK_RSRV_NOINIT: reserved memory region for which struct pages are not
-> + * fully initialized. Users of this flag are responsible to properly initialize
-> + * struct pages of this region
->    * @MEMBLOCK_RSRV_KERN: memory region that is reserved for kernel use,
->    * either explictitly with memblock_reserve_kern() or via memblock
->    * allocation APIs. All memblock allocations set this flag.
-> diff --git a/mm/memblock.c b/mm/memblock.c
-> index 154f1d73b61f..46b411fb3630 100644
-> --- a/mm/memblock.c
-> +++ b/mm/memblock.c
-> @@ -1091,13 +1091,20 @@ int __init_memblock memblock_clear_nomap(phys_addr_t base, phys_addr_t size)
->   
->   /**
->    * memblock_reserved_mark_noinit - Mark a reserved memory region with flag
-> - * MEMBLOCK_RSRV_NOINIT which results in the struct pages not being initialized
-> - * for this region.
-> + * MEMBLOCK_RSRV_NOINIT
-> + *
->    * @base: the base phys addr of the region
->    * @size: the size of the region
->    *
-> - * struct pages will not be initialized for reserved memory regions marked with
-> - * %MEMBLOCK_RSRV_NOINIT.
-> + * The struct pages for the reserved regions marked %MEMBLOCK_RSRV_NOINIT will
-> + * not be fully initialized to allow the caller optimize their initialization.
-> + *
-> + * When %CONFIG_DEFERRED_STRUCT_PAGE_INIT is enabled, setting this flag
-> + * completely bypasses the initialization of struct pages for such region.
-> + *
-> + * When %CONFIG_DEFERRED_STRUCT_PAGE_INIT is disabled, struct pages in this
-> + * region will be initialized with default values but won't be marked as
-> + * reserved.
-
-Sounds good.
-
-I am surprised regarding "reserved", but I guess that's because we don't 
-end up calling "reserve_bootmem_region()" on these regions in 
-memmap_init_reserved_pages().
+Dear Linux folks,
 
 
--- 
-Cheers
+On a Dell Precision 3620 with
 
-David / dhildenb
+     $ lspci -nn -s 00:17.0
+     00:17.0 SATA controller [0106]: Intel Corporation 
+Q170/Q150/B150/H170/H110/Z170/CM236 Chipset SATA Controller [AHCI Mode] 
+[8086:a102] (rev 31)
 
+Linux warns about the ATA device and Samsung SSD 870 EVO 1TB.
+
+     $ lsblk -o name,model,serial,rev -S
+     NAME MODEL                   SERIAL           REV
+     sda  Samsung SSD 870 EVO 1TB S6PUNL0T600648F 2B6Q
+     $ dmesg --level warn
+     [    1.688558] Transient Scheduler Attacks: MDS CPU bug present and 
+SMT on, data leak possible. See 
+https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/mds.html for 
+more details.
+     [    1.690195] Transient Scheduler Attacks: MMIO Stale Data CPU bug 
+present and SMT on, data leak possible. See 
+https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/processor_mmio_stale_data.html 
+for more details.
+     [    3.165214] ENERGY_PERF_BIAS: Set to 'normal', was 'performance'
+     [    3.254639] ata1.00: Model 'Samsung SSD 870 EVO 1TB', rev 
+'SVT02B6Q', applying quirks: noncqtrim zeroaftertrim noncqonati nolpmonati
+     [    3.266623] ata1.00: supports DRM functions and may not be fully 
+accessible
+     [    3.304432] ata1.00: supports DRM functions and may not be fully 
+accessible
+     [    4.195869] wmi_bus wmi_bus-PNP0C14:01: [Firmware Bug]: WQBC 
+data block query control method not found
+     [  651.061135] systemd-journald[164]: File 
+/var/log/journal/95790226b8d0779f4b4797314ca986d4/user-8578.journal 
+corrupted or uncleanly shut down, renaming and replacing.
+     $ dmesg | grep -e 'Linux version' -e 'DMI: Dell' -e lpm
+     [    0.000000] Linux version 6.12.40.mx64.484 
+(root@mehrlametta.molgen.mpg.de) (gcc (GCC) 12.5.0, GNU ld (GNU 
+Binutils) 2.41) #1 SMP PREEMPT_DYNAMIC Thu Jul 24 15:14:16 CEST 2025
+     [    0.000000] DMI: Dell Inc. Precision Tower 3620/0MWYPT, BIOS 
+2.23.0 09/14/2022
+     [    2.892973] ata1: SATA max UDMA/133 abar m2048@0xef14b000 port 
+0xef14b100 irq 124 lpm-pol 0
+     [    2.901327] ata2: SATA max UDMA/133 abar m2048@0xef14b000 port 
+0xef14b180 irq 124 lpm-pol 0
+     [    2.909685] ata3: SATA max UDMA/133 abar m2048@0xef14b000 port 
+0xef14b200 irq 124 lpm-pol 0
+     [    2.918042] ata4: SATA max UDMA/133 abar m2048@0xef14b000 port 
+0xef14b280 irq 124 lpm-pol 0
+     [    3.254639] ata1.00: Model 'Samsung SSD 870 EVO 1TB', rev 
+'SVT02B6Q', applying quirks: noncqtrim zeroaftertrim noncqonati nolpmonati
+
+I wonder why the DRM warning is logged twice, and why the LPM policy is 
+0. (It’s a desktop system, but still.)
+
+Is there anything I can do about this?
+
+
+Kind regards,
+
+Paul
