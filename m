@@ -1,83 +1,148 @@
-Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E0632FE05F;
-	Mon, 25 Aug 2025 16:51:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C68651DBB2E;
+	Mon, 25 Aug 2025 16:58:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756140688; cv=none; b=PqThsgRIpGYwp1L7O2LbJz2YtvrAftYAWeFLhhcqBc9sKV9wL/Y9g0wghSk8Z4MpsCfmKwAlWVIwRw0qXjjnVvNidaGjdt5n8j9yyZLMPVq1gqSuwlMpOj371tzmZFJXjdr7N7d4RFjNxsIEhASVIk0wMLr/wf+KtzmcO+dX8x0=
+	t=1756141108; cv=none; b=R8UNt0Gtt5Qur9wDRPBQgiUGucLXVycA+kb6Eiw1bJjkMH50XYLypMN+kWmkZ6WdgCecCYQDloTqP1CZ2zLOrFGsLOU7Z4lwhZfk2YwKPUff5H4xCUorV1v3pDHOO2VZZgFNs5j0dZcBDZBdmD7U07aCCynib2F3FpQ5V7anG2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756140688; c=relaxed/simple;
-	bh=0tTqNLSeao+s8mHkbv3mY8oW1cUtNZAz5tqBv3Mc/lM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IRW+w24AdAb8r0Lyju6tPLgLLjEP3rhpvspJzZXfsy6Ld7U5nLlvSTUkzLT1KUQ2GgARtUl3LUMVvEu7N72yUXHt2SSJhsV4rKgzTmFUA9lieQJPf2jVAL6C/fQYwrDGHNSMxvMO5ViMOphKr4+R2hFKX1Dn96ks0smjLKHu0RM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HX7iCid3; arc=none smtp.client-ip=209.85.167.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1756141108; c=relaxed/simple;
+	bh=5Xs4ClQrBNPUK24yQ8tvJo62CGzQ+OUCbyk/7pv7K6g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QgQWpbJWBzKj1a7SGWEa7yiJVbyEsh6QfFcjr6FB5I1pwO1WfiT8/uFaFVx6gWLTFQRkxS+wNhE7g6Fyui1pXkyyXnYAxEYOOZzOjKauT+7dz50o0FGODdFKhMUV1kmI3JjzzXBcFOZPuunyhfYRHFDPIaVNZWvqRyS3rrMc/xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K8EPeL9r; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HX7iCid3"
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-55f42523658so1561907e87.0;
-        Mon, 25 Aug 2025 09:51:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756140685; x=1756745485; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0tTqNLSeao+s8mHkbv3mY8oW1cUtNZAz5tqBv3Mc/lM=;
-        b=HX7iCid3lwAAQlYCeZLLVKAlZajhb1EljNmGfZT22ag/Sjccpbm2o866IKga/tMZuM
-         AFXESCC6gn+XhvcolfDgE0oWFX7UmS/g7qRbUyOyHU9y5jlWH3PjguABCKb7Fm1k5RAs
-         h432E7SmhqoDDDeoN/5VPUJ1ksuMykBYneLrBATa6mMV3bLiAG0hopCUBeX3Jyxp7DXE
-         v+fW1/h5RC0RDs893gTn2pAMJ2UFTHmKVxU5uWn9um5M2oCXohTYMDD+Je4cd/TxEshk
-         urR1vsDllF/m/N0txU6FGMx26GVjPLUIpGgukvf+0OHTGw9UC70TcWt3xG8jgaCKZk0G
-         Kbdg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756140685; x=1756745485;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0tTqNLSeao+s8mHkbv3mY8oW1cUtNZAz5tqBv3Mc/lM=;
-        b=QkRg6QaDJ8Eh8BMpMyasP+7dc67AmPPA+WD3eAMycj4tujEcWY1w6vyQpH1y1+OGZS
-         G7RtaTG5hO/d/EJzDJoOgJ03NEyqufY/2YpKI5FyNA4VF6bSdAQ/vxFGxAR8d7iiRBZX
-         juuc57G/2l3apBUbdtiXXLGyApSjqRltZ61xER68GPtxVOMC8MOxCXCYQ4q37YIzDmvb
-         NK+JeRvfwfbowlpCxJ6atqH0dqj++TtYOIcICRlmya+rGGKGa5ixP3XQYvqO9BZw1X6Z
-         u1FE1Eu7i7VxMgeQJKueSKcjRkCyPk/lA92M1mOs1T+CzpBwUSGZ1kHJlIavNoQo86T5
-         m/DA==
-X-Forwarded-Encrypted: i=1; AJvYcCUlD6wNkBK4hzeBUYZazRMY6+wZj3r30TkRUX2Bcn8apACuyGGAp6mJDottYPsAixIBZXChrAX31sM4@vger.kernel.org, AJvYcCXm6Y+Ya4GvwmB+Z5MM+Q6C9PCG8665Ke8339+pUS7opXUJa/GIIPaR1GcL2iNcrT+T/rjmEBQ0g+MY@vger.kernel.org
-X-Gm-Message-State: AOJu0YxHE8BzaCyg9t/w0yWzXUvjpt2NQRmacoCRtKKViQin9YhNNBYc
-	vMnPk7lBwDR8mnLXLtMl78sjaXBKGomohae7SyC/rAriAzRajbxpiURk19gG8bDDL5ldvQexTQq
-	WI4YOD3scXefpO3r+C+Lea21BA0JttPU=
-X-Gm-Gg: ASbGncvsWt/1S4iVLZCmfIEf1HvxmzMvYXtJQajjdJKLcLCBo3OhXQkZkb+JiPLRoCs
-	L9C0vyefqETLEcjkwCLeQu6j4J44cG59W8FBkJjW0WUlq98AzDOliHNs7dhp1lCdA//2FZaFoVm
-	mVIegWBrhatyOkWvkZ6Hidbvx6gqrMvm5OssBJbU6Gxbf57QomdntJ73u2xWEGWU1+vTiy1QqXP
-	nXQJSk++MhJygaf+MtD1NvLjP5YkjuVBrZAKaY=
-X-Google-Smtp-Source: AGHT+IF9AcnmQTwHB7f9i+IjOXrfbReqAaZHjQ80ix4RMz3zii0UdN/zvwmeNYYBaRHC6CBXSEDaMMebrpxJR7iyPQI=
-X-Received: by 2002:a05:6512:448b:b0:55c:d751:fc77 with SMTP id
- 2adb3069b0e04-55f0d3bee4bmr3356491e87.44.1756140684335; Mon, 25 Aug 2025
- 09:51:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K8EPeL9r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF37AC4CEED;
+	Mon, 25 Aug 2025 16:58:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756141107;
+	bh=5Xs4ClQrBNPUK24yQ8tvJo62CGzQ+OUCbyk/7pv7K6g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=K8EPeL9rFMK2+nBscZ78BHN9AXOnwLlio8wCQA9T4HPI2M7JTseek460vnzI7LqJC
+	 TDu4NzXeMpXS8jhUa/iSAcIvRfHFDSrWxcvq7/PwB+bucaEQsHAodSxeBqU3oHbYQw
+	 JfnmUaXpTgDVr5GNOQRbyvPuO31dhRIGQUncZS3uv95CJi5KIRjBjS37ASsfqMbjJV
+	 FaVoAzebuKQA21fTHdob2rVKAkh6oJNsI5NIl49si6OGRBanVCOrvFPYRUxz3E2h7U
+	 H5t70EO0n4A9bkEljsMG6VtFtoS+dKBxf5ZFl9Bmc3Iax0SvbwLHZzXF+Oj3qlKigt
+	 vsahqKXPodl2Q==
+Date: Mon, 25 Aug 2025 19:58:10 +0300
+From: Mike Rapoport <rppt@kernel.org>
+To: David Hildenbrand <david@redhat.com>
+Cc: Mika =?iso-8859-1?Q?Penttil=E4?= <mpenttil@redhat.com>,
+	linux-kernel@vger.kernel.org,
+	Alexander Potapenko <glider@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Brendan Jackman <jackmanb@google.com>,
+	Christoph Lameter <cl@gentwo.org>, Dennis Zhou <dennis@kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>, dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org, iommu@lists.linux.dev,
+	io-uring@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>,
+	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+	John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com,
+	kvm@vger.kernel.org, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-mips@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	Marco Elver <elver@google.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
+	netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
+	Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
+	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
+	virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
+	wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
+Subject: update kernel-doc for MEMBLOCK_RSRV_NOINIT (was: Re: [PATCH RFC
+ 10/35] mm/hugetlb: cleanup hugetlb_folio_init_tail_vmemmap())
+Message-ID: <aKyWIriZ1bmnIrBW@kernel.org>
+References: <9156d191-9ec4-4422-bae9-2e8ce66f9d5e@redhat.com>
+ <7077e09f-6ce9-43ba-8f87-47a290680141@redhat.com>
+ <aKmDBobyvEX7ZUWL@kernel.org>
+ <a90cf9a3-d662-4239-ad54-7ea917c802a5@redhat.com>
+ <aKxz9HLQTflFNYEu@kernel.org>
+ <a72080b4-5156-4add-ac7c-1160b44e0dfe@redhat.com>
+ <aKx6SlYrj_hiPXBB@kernel.org>
+ <f8140a17-c4ec-489b-b314-d45abe48bf36@redhat.com>
+ <aKyMfvWe8JetkbRL@kernel.org>
+ <dbd2ec55-0e7f-407a-a8bd-e1ac83ac2a0a@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250822181749.94232-1-festevam@gmail.com> <20250823-bulgur-query-612ab1ddb4f0@spud>
- <20250825-aptly-slicer-41ae905f49bb@spud>
-In-Reply-To: <20250825-aptly-slicer-41ae905f49bb@spud>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Mon, 25 Aug 2025 13:51:12 -0300
-X-Gm-Features: Ac12FXxaSyHGkt5S3ufDr5q-cirSVzxOlcj9jbe1RDFvC6dEGCmpFlDfLS3p02Y
-Message-ID: <CAOMZO5DpBr3FWf7UD4REBrV6YUczi4p4=w=z3ShaAFdk23EuRQ@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: ata: sun4i-a10: Add a reference to ahci-common.yaml
-To: Conor Dooley <conor@kernel.org>
-Cc: cassel@kernel.org, dlemoal@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
-	conor+dt@kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, 
-	wens@csie.org, jernej.skrabec@gmail.com, samuel@sholland.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dbd2ec55-0e7f-407a-a8bd-e1ac83ac2a0a@redhat.com>
 
-On Mon, Aug 25, 2025 at 1:46=E2=80=AFPM Conor Dooley <conor@kernel.org> wro=
-te:
+On Mon, Aug 25, 2025 at 06:23:48PM +0200, David Hildenbrand wrote:
+> 
+> I don't quite understand the interaction with PG_Reserved and why anybody
+> using this function should care.
+> 
+> So maybe you can rephrase in a way that is easier to digest, and rather
+> focuses on what callers of this function are supposed to do vs. have the
+> liberty of not doing?
 
-> Given the imx patch, are you still pursuing this change?
+How about
+ 
+diff --git a/include/linux/memblock.h b/include/linux/memblock.h
+index b96746376e17..fcda8481de9a 100644
+--- a/include/linux/memblock.h
++++ b/include/linux/memblock.h
+@@ -40,8 +40,9 @@ extern unsigned long long max_possible_pfn;
+  * via a driver, and never indicated in the firmware-provided memory map as
+  * system RAM. This corresponds to IORESOURCE_SYSRAM_DRIVER_MANAGED in the
+  * kernel resource tree.
+- * @MEMBLOCK_RSRV_NOINIT: memory region for which struct pages are
+- * not initialized (only for reserved regions).
++ * @MEMBLOCK_RSRV_NOINIT: reserved memory region for which struct pages are not
++ * fully initialized. Users of this flag are responsible to properly initialize
++ * struct pages of this region
+  * @MEMBLOCK_RSRV_KERN: memory region that is reserved for kernel use,
+  * either explictitly with memblock_reserve_kern() or via memblock
+  * allocation APIs. All memblock allocations set this flag.
+diff --git a/mm/memblock.c b/mm/memblock.c
+index 154f1d73b61f..46b411fb3630 100644
+--- a/mm/memblock.c
++++ b/mm/memblock.c
+@@ -1091,13 +1091,20 @@ int __init_memblock memblock_clear_nomap(phys_addr_t base, phys_addr_t size)
+ 
+ /**
+  * memblock_reserved_mark_noinit - Mark a reserved memory region with flag
+- * MEMBLOCK_RSRV_NOINIT which results in the struct pages not being initialized
+- * for this region.
++ * MEMBLOCK_RSRV_NOINIT
++ *
+  * @base: the base phys addr of the region
+  * @size: the size of the region
+  *
+- * struct pages will not be initialized for reserved memory regions marked with
+- * %MEMBLOCK_RSRV_NOINIT.
++ * The struct pages for the reserved regions marked %MEMBLOCK_RSRV_NOINIT will
++ * not be fully initialized to allow the caller optimize their initialization.
++ *
++ * When %CONFIG_DEFERRED_STRUCT_PAGE_INIT is enabled, setting this flag
++ * completely bypasses the initialization of struct pages for such region.
++ *
++ * When %CONFIG_DEFERRED_STRUCT_PAGE_INIT is disabled, struct pages in this
++ * region will be initialized with default values but won't be marked as
++ * reserved.
+  *
+  * Return: 0 on success, -errno on failure.
+  */
 
-Let's discard this one, thanks.
+> -- 
+> Cheers
+> 
+> David / dhildenb
+> 
+
+-- 
+Sincerely yours,
+Mike.
