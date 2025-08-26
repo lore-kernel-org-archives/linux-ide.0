@@ -1,136 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF1AC1A256B
-	for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2025 22:58:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from sgoci-sdnproxy-4.icoremail.net (sgoci-sdnproxy-4.icoremail.net [129.150.39.64])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4BDB5393DD1;
+	Tue, 26 Aug 2025 03:24:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.150.39.64
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756162729; cv=none; b=OEv1JTfkmv/yCpKu+llM88Ft1KG+GROGM9f9tJyfG8rF3SUQqLuDQh14AeFtB+/pNe+2Zn1MVkG8AVsXTr0+Z2aPpxOBggrrUmadW2c6uJpmdYK3ZA0Y+l3bdOQKP97BUlZpWZgdaZH+GLOPUakqlKm9TZXj5sF40V/Glv7sKgQ=
+	t=1756178655; cv=none; b=RwwtoJGQY6m0UICOxU3d18YznMNI2b+dQAVu0ADGQVsbbDCfzFJrw+XeXUfq403TSvT+T19Lqxlz1F3k+pdkvYheL/1nSkffMSgOmTuV19PW4U3pkXpTmzb0IBAjb9mzQ/KAdud3Kb2Ojzw564CLZamiEaqn+/yNNHkz0qTg9mY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756162729; c=relaxed/simple;
-	bh=vb/sD4wDd2FDpwrv7M5UPp30254YqQCI58p97q+A+Ho=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uybZ/YbOflI9XoKstwjsVwDoPI/EWZDCTnFXKvmTGSQZWmGGgMHN+wDaa9k2LoMDnYiGkf6YcaeBLyGQ/NRi4+OloKtkGKn5prAqWNobNA/QkaiPYxzRhG5ZKo0l6Z2v8etm9/AM45IAPNNESWMy8vAwYNaEon/r6uZVG8WD3Lc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pi2VlrSM; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pi2VlrSM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26DD7C4CEED;
-	Mon, 25 Aug 2025 22:58:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756162728;
-	bh=vb/sD4wDd2FDpwrv7M5UPp30254YqQCI58p97q+A+Ho=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=pi2VlrSMfYHB7yH/6YOZHtY9JxO/A3/nUGJOGGeSQxx/qdEBqfvDvWtgni0pHZEUN
-	 pVHJBJjziu1zTFF5cPviuAjSJvyamkUVDV5V1ICufgN+X4oiFphzkr7nCcIhYLDhdS
-	 nOg6PsHpUm0y9eETIoBCE+sI7RU1GG2nbzBIT80e+lZgcyG+AXWUk/FNTBp/QjQoD5
-	 6V4TVvoeobQE1/evM46f9p2ybeT4UE3j26+yRnnZFZCV2F3Vl6Ffd85ZQXdbqGs6b/
-	 O/TY2BJyxT8ERndPyK+hztYcRlU2mNi9cTdZNNBKcjX3nqA3l4V5nuyFWe3M0DkaDN
-	 Fj9eHlSS99yNg==
-Message-ID: <5ce0b020-30ba-4d04-a139-55cfdbba871a@kernel.org>
-Date: Tue, 26 Aug 2025 07:58:46 +0900
+	s=arc-20240116; t=1756178655; c=relaxed/simple;
+	bh=aXzpDQbc0d3NKnBRl7lRsprIHKBsoXUaHwCtoysIoIU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=iMknVbblep8SIeflGHV1HWc1qWCGh8oTXV5EkDaOgShbVE7fxl1R34Us4pDuaJQykBqI475/pL0dHD18HXZDCGA6APPiuyaQ9CuDTpuYMtlvfjZtXIKfodmdkznheBbrcmBDjk5/H5gh9Gk/rGtJlMkIY4QsgmlXAzTCtQxfTiw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=129.150.39.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from luyulin$eswincomputing.com ( [10.12.96.77] ) by
+ ajax-webmail-app2 (Coremail) ; Tue, 26 Aug 2025 11:23:57 +0800 (GMT+08:00)
+Date: Tue, 26 Aug 2025 11:23:57 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: luyulin@eswincomputing.com
+To: "Krzysztof Kozlowski" <krzk@kernel.org>
+Cc: dlemoal@kernel.org, cassel@kernel.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vkoul@kernel.org, kishon@kernel.org, linux-phy@lists.infradead.org,
+	ningyu@eswincomputing.com, zhengyu@eswincomputing.com,
+	linmin@eswincomputing.com, huangyifeng@eswincomputing.com,
+	fenglin@eswincomputing.com, lianghujun@eswincomputing.com
+Subject: Re: Re: [PATCH v2 2/3] dt-bindings: phy: eswin: Document for
+ EIC7700 SoC SATA PHY
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <20250821-precise-delightful-lyrebird-6b4275@kuoka>
+References: <20250819134722.220-1-luyulin@eswincomputing.com>
+ <20250820092758.803-1-luyulin@eswincomputing.com>
+ <20250821-precise-delightful-lyrebird-6b4275@kuoka>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Warning about DRM functions support logged twice and lpm-pol
-To: Paul Menzel <pmenzel@molgen.mpg.de>, Niklas Cassel <cassel@kernel.org>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc: linux-ide@vger.kernel.org
-References: <a9a7e87a-d41b-43fb-9e46-ed10ac6ee961@molgen.mpg.de>
- <6D8A123A-27CD-419C-8ACF-E3B2209B7872@kernel.org>
- <3348a75a-2054-4457-840a-d0af6dd437e1@molgen.mpg.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <3348a75a-2054-4457-840a-d0af6dd437e1@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Message-ID: <3fd6740d.6d3.198e4676278.Coremail.luyulin@eswincomputing.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:TQJkCgDHZpXNKK1oArvDAA--.23274W
+X-CM-SenderInfo: pox13z1lq6v25zlqu0xpsx3x1qjou0bp/1tbiAQEGA2isj-USPQAA
+	sU
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On 8/26/25 05:58, Paul Menzel wrote:
-> Dear Niklas,
-> 
-> 
-> Thank you for your instant reply.
-> 
-> Am 25.08.25 um 22:42 schrieb Niklas Cassel:
->> On 25 August 2025 21:51:58 CEST, Paul Menzel wrote:
-> 
->>> On a Dell Precision 3620 with
->>>
->>>     $ lspci -nn -s 00:17.0
->>>     00:17.0 SATA controller [0106]: Intel Corporation Q170/Q150/B150/H170/H110/Z170/CM236 Chipset SATA Controller [AHCI Mode] [8086:a102] (rev 31)
->>>
->>> Linux warns about the ATA device and Samsung SSD 870 EVO 1TB.
->>>
->>>     $ lsblk -o name,model,serial,rev -S
->>>     NAME MODEL                   SERIAL           REV
->>>     sda  Samsung SSD 870 EVO 1TB S6PUNL0T600648F 2B6Q
->>>     $ dmesg --level warn
->>>     [    1.688558] Transient Scheduler Attacks: MDS CPU bug present and SMT on, data leak possible. See https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/mds.html for more details.
->>>     [    1.690195] Transient Scheduler Attacks: MMIO Stale Data CPU bug present and SMT on, data leak possible. See https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/processor_mmio_stale_data.html for more details.
->>>     [    3.165214] ENERGY_PERF_BIAS: Set to 'normal', was 'performance'
->>>     [    3.254639] ata1.00: Model 'Samsung SSD 870 EVO 1TB', rev 'SVT02B6Q', applying quirks: noncqtrim zeroaftertrim noncqonati nolpmonati
->>>     [    3.266623] ata1.00: supports DRM functions and may not be fully accessible
->>>     [    3.304432] ata1.00: supports DRM functions and may not be fully accessible
->>>     [    4.195869] wmi_bus wmi_bus-PNP0C14:01: [Firmware Bug]: WQBC data block query control method not found
->>>     [  651.061135] systemd-journald[164]: File /var/log/journal/95790226b8d0779f4b4797314ca986d4/user-8578.journal corrupted or uncleanly shut down, renaming and replacing.
->>>     $ dmesg | grep -e 'Linux version' -e 'DMI: Dell' -e lpm
->>>     [    0.000000] Linux version 6.12.40.mx64.484 (root@mehrlametta.molgen.mpg.de) (gcc (GCC) 12.5.0, GNU ld (GNU Binutils) 2.41) #1 SMP PREEMPT_DYNAMIC Thu Jul 24 15:14:16 CEST 2025
->>>     [    0.000000] DMI: Dell Inc. Precision Tower 3620/0MWYPT, BIOS 2.23.0 09/14/2022
->>>     [    2.892973] ata1: SATA max UDMA/133 abar m2048@0xef14b000 port 0xef14b100 irq 124 lpm-pol 0
->>>     [    2.901327] ata2: SATA max UDMA/133 abar m2048@0xef14b000 port 0xef14b180 irq 124 lpm-pol 0
->>>     [    2.909685] ata3: SATA max UDMA/133 abar m2048@0xef14b000 port 0xef14b200 irq 124 lpm-pol 0
->>>     [    2.918042] ata4: SATA max UDMA/133 abar m2048@0xef14b000 port 0xef14b280 irq 124 lpm-pol 0
->>>     [    3.254639] ata1.00: Model 'Samsung SSD 870 EVO 1TB', rev 'SVT02B6Q', applying quirks: noncqtrim zeroaftertrim noncqonati nolpmonati
->>>
->>> I wonder why the DRM warning is logged twice, and why the LPM policy is 0. (It’s a desktop system, but still.)
->>>
->>> Is there anything I can do about this?
->>
->> Hello Paul,
->>
->> What is your Kconfig CONFIG_SATA_MOBILE_LPM_POLICY
->> set to?
->>
->> If it is 0, try building with CONFIG_SATA_MOBILE_LPM_POLICY set to 3,
->> which is nowadays the default, see:
->> https://github.com/torvalds/linux/blob/v6.17-rc3/drivers/ata/Kconfig#L121
-> 
-> Indeed, it’s set to 0, probably for historical reasons. The change to 3 
-> was in v6.11-rc1 (5433f0e7427a (ata: Kconfig: Update 
-> SATA_MOBILE_LPM_POLICY default to med_power_with_dipm)). We use the same 
-> Linux kernel across the board on desktops and servers with a lot of 
-> software RAIDs on disks in enclosures. I am going to discuss it with the 
-> colleagues.
-> 
-> How can I check, what the firmware has set?
-
-There is no easy way with the kernel/sysfs right now. You essentially need to
-look at all the LPM related capabilities and see how they are initialized.
-
->> Didn't check about the double prints yet, a bit late here right now.
-> 
-> No problem. Same here. ;-)
-
-The print showing up twice is due to the fact that disk revalidation by the scsi
-layer is always done 2 times when scanning a disk.
-
-The print itself means that the device has "Trusted Computing feature set
-options" and so may not be fully accessible if that is in used and some LBA
-range of the drive is locked.
-If you are not using this feature, you can safely ignore the message.
-
-> 
-> 
-> Kind regards and good night,
-> 
-> Paul
-> 
-
-
--- 
-Damien Le Moal
-Western Digital Research
+SGksCktyenlzenRvZgoKSSBhcG9sb2dpemUgZm9yIGluY29ycmVjdGx5IGZpbGxpbmcgaW4gdGhl
+ICJJbi1SZXBseS1UbyIgZmllbGQKd2hlbiBJIGZpcnN0IHNlbnQgdGhpcyBwYXRjaCwgd2hpY2gg
+Y2F1c2VkIGl0IHRvIGxvc2UgYXNzb2NpYXRpb24Kd2l0aCB0aGUgb3RoZXIgcGF0Y2hlcy4KQXMg
+YSByZXN1bHQsIEkgaGF2ZSByZXNlbnQgdGhpcyBwYXRjaC4KQ291bGQgeW91IHBsZWFzZSBoZWxw
+IHJldmlldyB0aGUgb3RoZXIgcGF0Y2hlcyBpbiB0aGlzIHBhdGNoIHNlcmllcyBhZ2Fpbj8KVGhl
+IGxpbmsgdG8gdGhlIGNvdmVyIGxldHRlciBmb3IgdGhpcyBwYXRjaCBzZXJpZXMgaXM6Cmh0dHBz
+Oi8vbG9yZS5rZXJuZWwub3JnL2xrbWwvMjAyNTA4MTkxMzQ3MjIuMjIwLTEtbHV5dWxpbkBlc3dp
+bmNvbXB1dGluZy5jb20vClRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHlvdXIgcmV2aWV3IHN1Z2dl
+c3Rpb25zIQo+IAo+IE9uIFdlZCwgQXVnIDIwLCAyMDI1IGF0IDA1OjI3OjU4UE0gKzA4MDAsIFl1
+bGluIEx1IHdyb3RlOgo+ID4gQWRkIGRvY3VtZW50IGZvciB0aGUgU0FUQSBwaHkgb24gdGhlIEVJ
+Qzc3MDAgU29DIHBsYXRmb3JtLAo+ID4gZGVzY3JpYmluZyBpdHMgdXNhZ2UuCj4gPiAKPiA+IFNp
+Z25lZC1vZmYtYnk6IFl1bGluIEx1IDxsdXl1bGluQGVzd2luY29tcHV0aW5nLmNvbT4KPiAKPiBZ
+b3UgYWxyZWFkeSBzZW50IHRoaXMgcGF0Y2ggc2VwYXJhdGVseSAoISEhKSBhbmQgcmVjZWl2ZWQg
+cmV2aWV3Lgo+IAo+IEJlc3QgcmVnYXJkcywKPiBLcnp5c3p0b2YKCkJlc3QgcmVnYXJkcywKWXVs
+aW4K
