@@ -1,52 +1,50 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C89430F952
-	for <linux-ide@vger.kernel.org>; Wed, 27 Aug 2025 22:04:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 216E03101C0
+	for <linux-ide@vger.kernel.org>; Wed, 27 Aug 2025 22:04:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756332254; cv=none; b=n5tqDk6JFq9DbtOV7Dcn/DbcxaOGcB5WTKFYLuTwMZ1Ewo6s1ZQCB387NqIYk05XgIT8y9KlDk4+kM//o1meb63J9awyEffgyxFJggPLHdHG+EFc2DXKll6+Xspg5tRclutw1A0DVvO3nL31sm2f2p3xQmxDD+4ODF6U49mwYbY=
+	t=1756332286; cv=none; b=C9dsM/iO+qIwJVi9zWH5t8mf3n1MMzMvG9n3A2DvSbAZZUQhGu3VSbLEahQslakyCCNczf8Bo8Fesn+SKBKCO5kE0J68e0yd+FA/89F4rukSZpPfB5ME1o6C/Z6hD4yywEgPpFipJqNZX1bpp3PngY+iWZiU4zaUBV5z0ysObZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756332254; c=relaxed/simple;
-	bh=tyoRMYDWBSa5XPSJ42tmm0weFalBdTTRzCQncyfPKfQ=;
+	s=arc-20240116; t=1756332286; c=relaxed/simple;
+	bh=LJdSWq7ZMA/9PGTpjg58NMxZaGscxaRcONVzXV+YWtc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Qlg9gCHaUR2UnDd2GuwlSgk4C7AfE82AsvZbXSrOst51HU5b5F/K/50aaIJbWyIf9g1lyY4Xz7mJ1dxGtZNW4q+yDOSNeL8Qolu7O3Qqxihe6O+gADPZfxpPZ0J+1CNzZ+h/C1kcdVJr2NnECgmIuYgwhRLn+HXlMis0e4EjKY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dPOAzf+g; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=arn8uoRjI9pssqCc4LSc+eyuj5o540BLMHM9D1JHqs1lb99JBiQWWi9Q2L30xFPIHAF/qCCQb58ZRj+L/mz0AJpFYIFDITDrt8IQL2PSr793qKeAR430QoIkzSa5G+Kc/OjKBQfk0AS2BPJcOzfhFPYiRUXEpMWXYPb5+rC5ScM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RXbo7jlo; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dPOAzf+g"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RXbo7jlo"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756332251;
+	s=mimecast20190719; t=1756332284;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=eNV0RLrXImII8MTHVic+30uUi4HjChlJ3z+rf2azYps=;
-	b=dPOAzf+gL0v/DVYKsfukv3X8XUfwsV6qveVjuknh8S77iO1hMDxce9ViW09LjfZZlASkk2
-	pr0G0718lSYwnuYvAy29nDdkfPI+O+7kjwOWBhpYH7CaC4EEErFkt3R5kIUKNhr97CL8BW
-	R27YOtRvhz3fcRlLEPKbAaHN5gTP0nM=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+	bh=IPdRkz39C6GEGewoqOPx6e5B77yZ10PZ9TzgCgWDUu8=;
+	b=RXbo7jloDqD6rJfmfSxHdq7ICOTO4EncjNN6NSnwYcfOAcMwpCYeBxwsT2Jx8BudPfxyxv
+	8zskoMpajFuLltu1TTZius8qkUk7J7tVdTzexl2ma9WDVlHR/EQ2CTZadlRv7NhVkF+B/A
+	qIusWWUfHqXNBrYA78WlHx6pp8CB6ic=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-41-stGls3aeOcqifozns1n-DA-1; Wed,
- 27 Aug 2025 18:04:08 -0400
-X-MC-Unique: stGls3aeOcqifozns1n-DA-1
-X-Mimecast-MFC-AGG-ID: stGls3aeOcqifozns1n-DA_1756332243
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-140-ejq5WAESPvyYJNhJ8vcpMw-1; Wed,
+ 27 Aug 2025 18:04:41 -0400
+X-MC-Unique: ejq5WAESPvyYJNhJ8vcpMw-1
+X-Mimecast-MFC-AGG-ID: ejq5WAESPvyYJNhJ8vcpMw_1756332276
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1021B19560B8;
-	Wed, 27 Aug 2025 22:04:03 +0000 (UTC)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C407195608E;
+	Wed, 27 Aug 2025 22:04:36 +0000 (UTC)
 Received: from t14s.redhat.com (unknown [10.22.80.195])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 14DAD30001A1;
-	Wed, 27 Aug 2025 22:03:47 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9EB3E30001A1;
+	Wed, 27 Aug 2025 22:04:20 +0000 (UTC)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: David Hildenbrand <david@redhat.com>,
-	Zi Yan <ziy@nvidia.com>,
-	SeongJae Park <sj@kernel.org>,
 	Alexander Potapenko <glider@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Brendan Jackman <jackmanb@google.com>,
@@ -91,10 +89,11 @@ Cc: David Hildenbrand <david@redhat.com>,
 	virtualization@lists.linux.dev,
 	Vlastimil Babka <vbabka@suse.cz>,
 	wireguard@lists.zx2c4.com,
-	x86@kernel.org
-Subject: [PATCH v1 06/36] mm/page_alloc: reject unreasonable folio/compound page sizes in alloc_contig_range_noprof()
-Date: Thu, 28 Aug 2025 00:01:10 +0200
-Message-ID: <20250827220141.262669-7-david@redhat.com>
+	x86@kernel.org,
+	Zi Yan <ziy@nvidia.com>
+Subject: [PATCH v1 08/36] mm/hugetlb: check for unreasonable folio sizes when registering hstate
+Date: Thu, 28 Aug 2025 00:01:12 +0200
+Message-ID: <20250827220141.262669-9-david@redhat.com>
 In-Reply-To: <20250827220141.262669-1-david@redhat.com>
 References: <20250827220141.262669-1-david@redhat.com>
 Precedence: bulk
@@ -106,70 +105,43 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Let's reject them early, which in turn makes folio_alloc_gigantic() reject
-them properly.
+Let's check that no hstate that corresponds to an unreasonable folio size
+is registered by an architecture. If we were to succeed registering, we
+could later try allocating an unsupported gigantic folio size.
 
-To avoid converting from order to nr_pages, let's just add MAX_FOLIO_ORDER
-and calculate MAX_FOLIO_NR_PAGES based on that.
+Further, let's add a BUILD_BUG_ON() for checking that HUGETLB_PAGE_ORDER
+is sane at build time. As HUGETLB_PAGE_ORDER is dynamic on powerpc, we have
+to use a BUILD_BUG_ON_INVALID() to make it compile.
 
-Reviewed-by: Zi Yan <ziy@nvidia.com>
-Acked-by: SeongJae Park <sj@kernel.org>
+No existing kernel configuration should be able to trigger this check:
+either SPARSEMEM without SPARSEMEM_VMEMMAP cannot be configured or
+gigantic folios will not exceed a memory section (the case on sparse).
+
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- include/linux/mm.h | 6 ++++--
- mm/page_alloc.c    | 5 ++++-
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ mm/hugetlb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 00c8a54127d37..77737cbf2216a 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -2055,11 +2055,13 @@ static inline long folio_nr_pages(const struct folio *folio)
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 572b6f7772841..4a97e4f14c0dc 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -4657,6 +4657,7 @@ static int __init hugetlb_init(void)
  
- /* Only hugetlbfs can allocate folios larger than MAX_ORDER */
- #ifdef CONFIG_ARCH_HAS_GIGANTIC_PAGE
--#define MAX_FOLIO_NR_PAGES	(1UL << PUD_ORDER)
-+#define MAX_FOLIO_ORDER		PUD_ORDER
- #else
--#define MAX_FOLIO_NR_PAGES	MAX_ORDER_NR_PAGES
-+#define MAX_FOLIO_ORDER		MAX_PAGE_ORDER
- #endif
+ 	BUILD_BUG_ON(sizeof_field(struct page, private) * BITS_PER_BYTE <
+ 			__NR_HPAGEFLAGS);
++	BUILD_BUG_ON_INVALID(HUGETLB_PAGE_ORDER > MAX_FOLIO_ORDER);
  
-+#define MAX_FOLIO_NR_PAGES	(1UL << MAX_FOLIO_ORDER)
-+
- /*
-  * compound_nr() returns the number of pages in this potentially compound
-  * page.  compound_nr() can be called on a tail page, and is defined to
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index baead29b3e67b..426bc404b80cc 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -6833,6 +6833,7 @@ static int __alloc_contig_verify_gfp_mask(gfp_t gfp_mask, gfp_t *gfp_cc_mask)
- int alloc_contig_range_noprof(unsigned long start, unsigned long end,
- 			      acr_flags_t alloc_flags, gfp_t gfp_mask)
- {
-+	const unsigned int order = ilog2(end - start);
- 	unsigned long outer_start, outer_end;
- 	int ret = 0;
- 
-@@ -6850,6 +6851,9 @@ int alloc_contig_range_noprof(unsigned long start, unsigned long end,
- 					    PB_ISOLATE_MODE_CMA_ALLOC :
- 					    PB_ISOLATE_MODE_OTHER;
- 
-+	if (WARN_ON_ONCE((gfp_mask & __GFP_COMP) && order > MAX_FOLIO_ORDER))
-+		return -EINVAL;
-+
- 	gfp_mask = current_gfp_context(gfp_mask);
- 	if (__alloc_contig_verify_gfp_mask(gfp_mask, (gfp_t *)&cc.gfp_mask))
- 		return -EINVAL;
-@@ -6947,7 +6951,6 @@ int alloc_contig_range_noprof(unsigned long start, unsigned long end,
- 			free_contig_range(end, outer_end - end);
- 	} else if (start == outer_start && end == outer_end && is_power_of_2(end - start)) {
- 		struct page *head = pfn_to_page(start);
--		int order = ilog2(end - start);
- 
- 		check_new_pages(head, order);
- 		prep_new_page(head, order, gfp_mask, 0);
+ 	if (!hugepages_supported()) {
+ 		if (hugetlb_max_hstate || default_hstate_max_huge_pages)
+@@ -4740,6 +4741,7 @@ void __init hugetlb_add_hstate(unsigned int order)
+ 	}
+ 	BUG_ON(hugetlb_max_hstate >= HUGE_MAX_HSTATE);
+ 	BUG_ON(order < order_base_2(__NR_USED_SUBPAGE));
++	WARN_ON(order > MAX_FOLIO_ORDER);
+ 	h = &hstates[hugetlb_max_hstate++];
+ 	__mutex_init(&h->resize_lock, "resize mutex", &h->resize_key);
+ 	h->order = order;
 -- 
 2.50.1
 
