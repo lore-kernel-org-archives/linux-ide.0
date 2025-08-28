@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A6830CD97;
-	Thu, 28 Aug 2025 04:27:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FA3C4C6C;
+	Thu, 28 Aug 2025 04:31:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756355265; cv=none; b=r2UIBl3fzj8XOTo2LGZrcrtlQ5xoTTX7n40oXyt42m/Zre12gLcN2OxXDNg11r+Y0obdizIwa7c9u9+4SQ9FXexUpr9XRdZGx6WpdXThBMzhcHJv4LFnIDAfueEeW2sR3hJT+KYvNGuP4KzVUqnWV0n2HJtFT86pabw6Aq8El+8=
+	t=1756355494; cv=none; b=IkjEDJ1EMwZWrygG2Sj5BCEGVmiaDUBtZwBilmY/p2QNr6QM2h64MVdGjiGPTMDou5LoHuOUDwV/djvn9YOeJEzXtrqujEAuUYj/pLC2zsIbXzlbzSlTTSzRcYCEaxtWPPDD2vtCTLs1Sowsa86+9VnXyPm4Qz41Y1/pu1S+utY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756355265; c=relaxed/simple;
-	bh=hUnNfjGCPEWmiNNGGLZKDOsScYWj511icwVWbnrMbSE=;
+	s=arc-20240116; t=1756355494; c=relaxed/simple;
+	bh=SBVM7xEfTU5B6hQu/DT+Zt/qKN9nEG0w1/uxuvhRoAA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gE86G8YGZBmkIG9k7GPXf1bScrcjGn4WEPmcPw/M1D9uGUWwf3Ghr3OEmcgTmCtyC0BhnkTHq05Wiou0SvFFyZLlbkdajwARCMNLB9eqW+I76kO7xduMb1y64kHuctDWVi/bnJ63PN+jjUz85QjUFYtwE37hqwKAmHR8nU0AS4k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MDOpy7Q7; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=aqqLNmuHXGviMAZokPa/TFjEsN92RdjxeFebDqQCo6reZhUn61hUDFLAM7RQMfJwDJQERXaLyIn/Br7cPjFpdb5thWQ0e/8qnnK7TiVoxNKtBIjE1/wUtmtLysRjB8MREalPJtXTPmFfKwLNGRDMcIe9ke1puzdGJZ90Ytb62Ak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WbX47mnK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MDOpy7Q7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33984C4CEEB;
-	Thu, 28 Aug 2025 04:27:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WbX47mnK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 732FAC4CEEB;
+	Thu, 28 Aug 2025 04:31:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756355264;
-	bh=hUnNfjGCPEWmiNNGGLZKDOsScYWj511icwVWbnrMbSE=;
+	s=k20201202; t=1756355493;
+	bh=SBVM7xEfTU5B6hQu/DT+Zt/qKN9nEG0w1/uxuvhRoAA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=MDOpy7Q7+PtjV9ZnI/+71mkZCJrWQwTtFvdW0afXONz8h7wR9ImGTrV4WCC7mXn2B
-	 7EbOn3HGpIWLqjjSjwF8rGcKZhPtc4Gfky+zbxOUAt8Kl+cAXdXSfuUaya8Zvy1ya1
-	 F1mYHsgG9WcnDg0zKq2bACZzcl/UPORrd7FsCsy3qdsnuRy8wAbqlzxL98joSNwLF6
-	 w9WMn87Hpnp8f8IF6pk5vnsO7wQiX+Ib8XV+pManWrp62VQ4CdQPenZjvMUQSDERoQ
-	 eOJ33fQuGDSZ49Qcix6/vKNOIhOhF/f6epJTEq5OJkbiyKYIE1xM/FteX3oGbk+Ymp
-	 Up7jZQPpsB0CA==
-Message-ID: <c39104cf-f066-45d8-a13c-cad558312b6e@kernel.org>
-Date: Thu, 28 Aug 2025 13:24:45 +0900
+	b=WbX47mnKPXD63aDs0+/CSE/yw1VJVPTGdav2eTfel/pf+hu9J8jgL7dhfMf6tE2dh
+	 JzU7MQDqyPaWQFvrDJze/IR8YA0EsCWXYcu0ld0PUaZgZjW0dZsBhF8c8C7BW/+XbR
+	 SP+GIpgUQjLl6at6PXV2Rqu0EAgyHApH3O0E+Jv6TN4S+RVjO5fXBI4ZXfeE8Oyoct
+	 s0i/Gu3pNrx9xMB5JcFbJ1piXd3BybLSchWu/iUvHk2yUnVS8r09eJTR99NA2+ugSH
+	 9KERjvrEvc+HSMgeF0HnwkYM6+HqB3B+GdKGNfA23AqVMGHqhOngPnmfC41AZBE7xo
+	 0gQvwWBv//EfA==
+Message-ID: <36415f84-4441-4457-bccf-d5abd3d69cb3@kernel.org>
+Date: Thu, 28 Aug 2025 13:28:40 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,51 +35,30 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 24/36] ata: libata-eh: drop nth_page() usage within SG
- entry
-To: David Hildenbrand <david@redhat.com>, linux-kernel@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>, Alexander Potapenko
- <glider@google.com>, Andrew Morton <akpm@linux-foundation.org>,
- Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
- Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
- iommu@lists.linux.dev, io-uring@vger.kernel.org,
- Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
- Johannes Weiner <hannes@cmpxchg.org>, John Hubbard <jhubbard@nvidia.com>,
- kasan-dev@googlegroups.com, kvm@vger.kernel.org,
- "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
- linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
- Marco Elver <elver@google.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
- Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
- Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
- Robin Murphy <robin.murphy@arm.com>, Suren Baghdasaryan <surenb@google.com>,
- Tejun Heo <tj@kernel.org>, virtualization@lists.linux.dev,
- Vlastimil Babka <vbabka@suse.cz>, wireguard@lists.zx2c4.com, x86@kernel.org,
- Zi Yan <ziy@nvidia.com>
-References: <20250827220141.262669-1-david@redhat.com>
- <20250827220141.262669-25-david@redhat.com>
+Subject: Re: [PATCH v2] dt-bindings: ata: imx: Document 'target-supply'
+To: Fabio Estevam <festevam@gmail.com>, cassel@kernel.org
+Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ linux-ide@vger.kernel.org, devicetree@vger.kernel.org, wens@csie.org,
+ jernej.skrabec@gmail.com, samuel@sholland.org
+References: <20250823195021.300488-1-festevam@gmail.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20250827220141.262669-25-david@redhat.com>
+In-Reply-To: <20250823195021.300488-1-festevam@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 8/28/25 7:01 AM, David Hildenbrand wrote:
-> It's no longer required to use nth_page() when iterating pages within a
-> single SG entry, so let's drop the nth_page() usage.
+On 8/24/25 4:50 AM, Fabio Estevam wrote:
+> The 'target-supply' property is used by some i.MX devicetree files.
 > 
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: David Hildenbrand <david@redhat.com>
+> Document it to fix the following dt-schema warning:
+> 
+> 'target-supply' does not match any of the regexes: '^pinctrl-[0-9]+$'
+> 
+> Signed-off-by: Fabio Estevam <festevam@gmail.com>
 
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
+Applied to for-6.18. Thanks !
+
 
 -- 
 Damien Le Moal
