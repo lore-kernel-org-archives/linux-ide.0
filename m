@@ -1,177 +1,105 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1632EBDD6
-	for <linux-ide@vger.kernel.org>; Thu, 28 Aug 2025 08:43:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.75.44.102])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id D95C130F949;
+	Thu, 28 Aug 2025 10:22:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.75.44.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756370636; cv=none; b=hCfbpOHs+n7R9enbt9Ed3N9BdpDOZWuyzi2FFtL/K+Hi3cv5bBvjfi3mybH/ccC5jend1zj7xBzOkfE/JHMRAIL+340CdtgfCZ0Gsyo8VOMhyUVqybpq8298TcEqB96WKkKytrpGGSUncDlVE6sHpYnsw6Q2jD+bjQo3FpUEV24=
+	t=1756376584; cv=none; b=TwIUE43KpmDd2ZHjGEo41VK6d06JWS+TPCe7giP2sfhCytzpCsyYABzVO9nF+ZEoCHqyCE7pyJ7NBFQZXvxLNB8SfI9+o6gndssOF7qRDC4P90Eox39C46W78KSCiI1FyRnuqQuRf74BPzmyZJI9Lbl7E8pKnVpd0yS2QKukwgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756370636; c=relaxed/simple;
-	bh=dtF3GY0txqUlnrqvH6O65DtDqS/OwB3kNXWzpcWqR1E=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=MD4RRZvDqRu/Hvyg8OrdIdPFOz1IOxRRDPrRqgwHkHjpf4aTnvGhabEpahvWLUTJdzm4tK7neIUjZw5CDH7i8O6+8bW09sfxspLv2zPHU/PqAGYAldqodyHzNElp9B3w2X+bk59SyL16bH7TsQa7q7r1mVAgpyooak26avXjwsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=p29dZu8R; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="p29dZu8R"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-248d5074ff7so3596665ad.0
-        for <linux-ide@vger.kernel.org>; Thu, 28 Aug 2025 01:43:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1756370633; x=1756975433; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=jLT2osl3N94HJBBJWKPAk2avCo16Lo88yw1WJjz/wsM=;
-        b=p29dZu8RbOb7kdgd3ZtBE+clhKPFI9QwXvom3vRpu7v7a1BNfOf04PU5L6eIb+0FBr
-         ZJ7mWZfZ2mcXw1UHzo0Vs9d33gwzevLkpSu0YJr2E2fKiWCrzULRqrXnPXb5kSTJ3ER1
-         lekjoGVJMRclMo/7IcBNF97sqSiEiVAty0uAbdjvDiroutPRgdOc+q//92w7WV45D9pi
-         e1UtjxHBW+qEvW8peS4A2hkdOiciAuwA9wtJGZwCluOTwVwjbKgf5e+TmJfJSwogxt8I
-         /2BnHGYkw7OpFqwTxwo1VxGML77arPgfw3R+ucnsXcN4AJBKvuEX402Rpp+gQpculFrr
-         AiKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756370633; x=1756975433;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=jLT2osl3N94HJBBJWKPAk2avCo16Lo88yw1WJjz/wsM=;
-        b=DhjooiMmPzObdqw8dVKf212hbUPalSVyBiM73a4nMq2pshCXt74wVMBCU0AaxbylzC
-         9kFe1ZXCdaZpWbPc4sUArpf4S0pirIgB0227dN9Jy7DCd2uLbp9UIi52LPJKzkuqcx1J
-         DpO1AuI7dscqCRGCxPn7PikZ2ahp/9BWLXW/MH15hVoiIQZKXy482eOkxoCzKdRNAwUF
-         nxNqBw4RpUhCTkeGqxhXmidURurziG9ywndM0Z4tV0B8t4EyooCaYshpc+61fIEwvTJk
-         BnQ2jsqoy4rjSl6U1f0Vsvnk4DzViPVZwv5yZdbmwsEJX/c2fjertyf75UFdyHmsima2
-         H+MA==
-X-Forwarded-Encrypted: i=1; AJvYcCW5eopFRMfU81igmBVu8/BLhwWY+MEwLJuP80CLQzyTG84pro3szyWSVOGfeLOs0HVI13rfnGTqorw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy5v5eQKFBJR6n1uaYJKbDl51IyuWJiYjvqEzMEeT3lEaBbHWvT
-	Dt32QXQORQjoqhniux4ezYUMLJ2AlJNPhHQM11h2H955MR/+tI2Y/J/pVWypfU/P2D+pBj46Q89
-	ZCaUZ4WHYgYmoRVn0UiN5+pb46taYz4h61wM35B8p
-X-Gm-Gg: ASbGncuR65qo6aPofmnWUYe0jHfMXWXbw4KcxwUke8p29W+bXFLXdwsQ9tYbUnh45yf
-	/Z3z4D45Sfb/f/Qm/3tIE7SCVXxZ+SE4ku2jL4VITGpy1ztug9m6eNq6HXHW68ZDE8jD3F03N8F
-	nukW9C85yLg0rlTkfhcplbB2ufFMhmVMWWlV/xRMKdm+rYoz/fRzgLRK097c19E3MUSW4jI0TFk
-	QIMHf7wI+lNZ8LrXgSQ8AbZRTc=
-X-Google-Smtp-Source: AGHT+IGJmjz+YHPyNxr90AMhiQNNDQu9deq8PWwNfyq+zFWi/YcgUyPYkmS3VX3aACMgtkUmoKeOvBcyBRDmMb3NDeE=
-X-Received: by 2002:a17:903:3d06:b0:248:8063:a8b4 with SMTP id
- d9443c01a7336-2488063abcbmr89508125ad.22.1756370632768; Thu, 28 Aug 2025
- 01:43:52 -0700 (PDT)
+	s=arc-20240116; t=1756376584; c=relaxed/simple;
+	bh=n9rQG0HiH4n+CJwGltmwSRUQaAp3/3Waf/KiyeFfQF4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=lX5d56qpeDKxFT6YbPX7d5EcAT5vmaJ9i+fekbkQo8kk+LdMuCEzl7bzKKVvawzXPOs4YHIS5dLIuzYK1tSXZYU8Y99A/M8GXVMUb1EjAI/U9ZOEw4ztkc9hIz+OuUb79SgBr9FpG4EOLkUjWzdSZPbBXqnMM+FRw2pYCOJGVUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=13.75.44.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from luyulin$eswincomputing.com ( [10.12.96.77] ) by
+ ajax-webmail-app2 (Coremail) ; Thu, 28 Aug 2025 18:22:40 +0800 (GMT+08:00)
+Date: Thu, 28 Aug 2025 18:22:40 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: luyulin@eswincomputing.com
+To: "Rob Herring" <robh@kernel.org>
+Cc: dlemoal@kernel.org, cassel@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vkoul@kernel.org, kishon@kernel.org, linux-phy@lists.infradead.org,
+	ningyu@eswincomputing.com, zhengyu@eswincomputing.com,
+	linmin@eswincomputing.com, huangyifeng@eswincomputing.com,
+	fenglin@eswincomputing.com, lianghujun@eswincomputing.com
+Subject: Re: Re: [PATCH v2 1/3] dt-bindings: ata: eswin: Document for
+ EIC7700 SoC ahci
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <CAL_JsqKFotNLZZXwiy7S6K8qXLdGRAnsa-1zvZRDQBE39Gf5kg@mail.gmail.com>
+References: <20250819134722.220-1-luyulin@eswincomputing.com>
+ <20250819135413.386-1-luyulin@eswincomputing.com>
+ <CAL_JsqKFotNLZZXwiy7S6K8qXLdGRAnsa-1zvZRDQBE39Gf5kg@mail.gmail.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250827220141.262669-1-david@redhat.com> <20250827220141.262669-35-david@redhat.com>
-In-Reply-To: <20250827220141.262669-35-david@redhat.com>
-From: Marco Elver <elver@google.com>
-Date: Thu, 28 Aug 2025 10:43:16 +0200
-X-Gm-Features: Ac12FXwMzUnIHp_v7uH0kV3Hu6ram9vqgPmCMZ3TyuNNAlhDfe6K8rTgx1FpO8k
-Message-ID: <CANpmjNP8-dM-cizCfsVOUNDS2jBaY6d=0Wx8OGen5RbXgaqcfQ@mail.gmail.com>
-Subject: Re: [PATCH v1 34/36] kfence: drop nth_page() usage
-To: David Hildenbrand <david@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>, 
-	Dmitry Vyukov <dvyukov@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>, Dennis Zhou <dennis@kernel.org>, 
-	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
-	iommu@lists.linux.dev, io-uring@vger.kernel.org, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>, 
-	John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com, kvm@vger.kernel.org, 
-	"Liam R. Howlett" <Liam.Howlett@oracle.com>, Linus Torvalds <torvalds@linux-foundation.org>, 
-	linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org, 
-	linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-mips@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, linux-mm@kvack.org, 
-	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
-	Marek Szyprowski <m.szyprowski@samsung.com>, Michal Hocko <mhocko@suse.com>, 
-	Mike Rapoport <rppt@kernel.org>, Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org, 
-	Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>, 
-	Robin Murphy <robin.murphy@arm.com>, Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, 
-	virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>, wireguard@lists.zx2c4.com, 
-	x86@kernel.org, Zi Yan <ziy@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
+Message-ID: <692e11ca.843.198f0337528.Coremail.luyulin@eswincomputing.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:TQJkCgA31pTwLbBo7avEAA--.23472W
+X-CM-SenderInfo: pox13z1lq6v25zlqu0xpsx3x1qjou0bp/1tbiAQEIA2ivMvYgfwAB
+	sW
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On Thu, 28 Aug 2025 at 00:11, 'David Hildenbrand' via kasan-dev
-<kasan-dev@googlegroups.com> wrote:
->
-> We want to get rid of nth_page(), and kfence init code is the last user.
->
-> Unfortunately, we might actually walk a PFN range where the pages are
-> not contiguous, because we might be allocating an area from memblock
-> that could span memory sections in problematic kernel configs (SPARSEMEM
-> without SPARSEMEM_VMEMMAP).
->
-> We could check whether the page range is contiguous
-> using page_range_contiguous() and failing kfence init, or making kfence
-> incompatible these problemtic kernel configs.
->
-> Let's keep it simple and simply use pfn_to_page() by iterating PFNs.
->
-> Cc: Alexander Potapenko <glider@google.com>
-> Cc: Marco Elver <elver@google.com>
-> Cc: Dmitry Vyukov <dvyukov@google.com>
-> Signed-off-by: David Hildenbrand <david@redhat.com>
-
-Reviewed-by: Marco Elver <elver@google.com>
-
-Thanks.
-
-> ---
->  mm/kfence/core.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
->
-> diff --git a/mm/kfence/core.c b/mm/kfence/core.c
-> index 0ed3be100963a..727c20c94ac59 100644
-> --- a/mm/kfence/core.c
-> +++ b/mm/kfence/core.c
-> @@ -594,15 +594,14 @@ static void rcu_guarded_free(struct rcu_head *h)
->   */
->  static unsigned long kfence_init_pool(void)
->  {
-> -       unsigned long addr;
-> -       struct page *pages;
-> +       unsigned long addr, start_pfn;
->         int i;
->
->         if (!arch_kfence_init_pool())
->                 return (unsigned long)__kfence_pool;
->
->         addr = (unsigned long)__kfence_pool;
-> -       pages = virt_to_page(__kfence_pool);
-> +       start_pfn = PHYS_PFN(virt_to_phys(__kfence_pool));
->
->         /*
->          * Set up object pages: they must have PGTY_slab set to avoid freeing
-> @@ -613,11 +612,12 @@ static unsigned long kfence_init_pool(void)
->          * enters __slab_free() slow-path.
->          */
->         for (i = 0; i < KFENCE_POOL_SIZE / PAGE_SIZE; i++) {
-> -               struct slab *slab = page_slab(nth_page(pages, i));
-> +               struct slab *slab;
->
->                 if (!i || (i % 2))
->                         continue;
->
-> +               slab = page_slab(pfn_to_page(start_pfn + i));
->                 __folio_set_slab(slab_folio(slab));
->  #ifdef CONFIG_MEMCG
->                 slab->obj_exts = (unsigned long)&kfence_metadata_init[i / 2 - 1].obj_exts |
-> @@ -665,10 +665,12 @@ static unsigned long kfence_init_pool(void)
->
->  reset_slab:
->         for (i = 0; i < KFENCE_POOL_SIZE / PAGE_SIZE; i++) {
-> -               struct slab *slab = page_slab(nth_page(pages, i));
-> +               struct slab *slab;
->
->                 if (!i || (i % 2))
->                         continue;
-> +
-> +               slab = page_slab(pfn_to_page(start_pfn + i));
->  #ifdef CONFIG_MEMCG
->                 slab->obj_exts = 0;
->  #endif
-> --
-> 2.50.1
->
-> --
-> You received this message because you are subscribed to the Google Groups "kasan-dev" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to kasan-dev+unsubscribe@googlegroups.com.
-> To view this discussion visit https://groups.google.com/d/msgid/kasan-dev/20250827220141.262669-35-david%40redhat.com.
+SGVsbG8sIFJvYgoKVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgeW91ciByZXBseS4KSSBoYXZlIGEg
+cXVlc3Rpb24gdGhhdCBJIHdvdWxkIGxpa2UgdG8gc2VlayB5b3VyIGFkdmljZSBvbiBhbmQgY2xh
+cmlmeS4KCj4gCj4gT24gVHVlLCBBdWcgMTksIDIwMjUgYXQgODo1NOKAr0FNIFl1bGluIEx1IDxs
+dXl1bGluQGVzd2luY29tcHV0aW5nLmNvbT4gd3JvdGU6Cj4gPgo+ID4gRnJvbTogbHV5dWxpbiA8
+bHV5dWxpbkBlc3dpbmNvbXB1dGluZy5jb20+Cj4gCj4gUGxlYXNlIGZpeCB5b3VyIG5hbWUuCj4g
+Cj4gPgo+ID4gQWRkIGRvY3VtZW50IGZvciB0aGUgU0FUQSBBSENJIGNvbnRyb2xsZXIgb24gdGhl
+IEVJQzc3MDAgU29DIHBsYXRmb3JtLAo+ID4gaW5jbHVkaW5nIGRlc2NyaXB0aW9ucyBvZiBpdHMg
+aGFyZHdhcmUgY29uZmlndXJhdGlvbnMuCj4gPgo+ID4gU2lnbmVkLW9mZi1ieTogbHV5dWxpbiA8
+bHV5dWxpbkBlc3dpbmNvbXB1dGluZy5jb20+Cj4gCj4gQW5kIGhlcmUuCj4gCj4gPiAtLS0KPiA+
+ICAuLi4vYmluZGluZ3MvYXRhL2Vzd2luLGVpYzc3MDAtYWhjaS55YW1sICAgICAgfCA5MiArKysr
+KysrKysrKysrKysrKysrCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDkyIGluc2VydGlvbnMoKykKPiA+
+ICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2F0
+YS9lc3dpbixlaWM3NzAwLWFoY2kueWFtbAo+ID4KPiA+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0
+aW9uL2RldmljZXRyZWUvYmluZGluZ3MvYXRhL2Vzd2luLGVpYzc3MDAtYWhjaS55YW1sIGIvRG9j
+dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2F0YS9lc3dpbixlaWM3NzAwLWFoY2kueWFt
+bAo+ID4gbmV3IGZpbGUgbW9kZSAxMDA2NDQKPiA+IGluZGV4IDAwMDAwMDAwMDAwMC4uOWVmNThj
+OWMyZjI4Cj4gPiAtLS0gL2Rldi9udWxsCj4gPiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
+ZWUvYmluZGluZ3MvYXRhL2Vzd2luLGVpYzc3MDAtYWhjaS55YW1sCj4gPiBAQCAtMCwwICsxLDky
+IEBACj4gPiArIyBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogKEdQTC0yLjAtb25seSBPUiBCU0Qt
+Mi1DbGF1c2UpCj4gPiArJVlBTUwgMS4yCj4gPiArLS0tCj4gPiArJGlkOiBodHRwOi8vZGV2aWNl
+dHJlZS5vcmcvc2NoZW1hcy9hdGEvZXN3aW4sZWljNzcwMC1haGNpLnlhbWwjCj4gPiArJHNjaGVt
+YTogaHR0cDovL2RldmljZXRyZWUub3JnL21ldGEtc2NoZW1hcy9jb3JlLnlhbWwjCj4gPiArCj4g
+PiArdGl0bGU6IEVzd2luIEVJQzc3MDAgU29DIFNBVEEgQ29udHJvbGxlcgo+ID4gKwo+ID4gK21h
+aW50YWluZXJzOgo+ID4gKyAgLSBZdWxpbiBMdSA8bHV5dWxpbkBlc3dpbmNvbXB1dGluZy5jb20+
+Cj4gPiArICAtIEh1YW4gSGUgPGhlaHVhbjFAZXN3aW5jb21wdXRpbmcuY29tPgo+ID4gKwo+ID4g
+K2Rlc2NyaXB0aW9uOgo+ID4gKyAgVGhpcyBkb2N1bWVudCBkZWZpbmVzIGRldmljZSB0cmVlIGJp
+bmRpbmdzIGZvciB0aGUgU3lub3BzeXMgRFdDCj4gPiArICBpbXBsZW1lbnRhdGlvbiBvZiB0aGUg
+QUhDSSBTQVRBIGNvbnRyb2xsZXIgZm91bmQgaW4gRXN3aW4ncwo+ID4gKyAgRWljNzcwMCBTb0Mg
+cGxhdGZvcm0uCj4gPiArCj4gPiArc2VsZWN0Ogo+ID4gKyAgcHJvcGVydGllczoKPiA+ICsgICAg
+Y29tcGF0aWJsZToKPiA+ICsgICAgICBjb25zdDogZXN3aW4sZWljNzcwMC1haGNpCj4gPiArICBy
+ZXF1aXJlZDoKPiA+ICsgICAgLSBjb21wYXRpYmxlCj4gPiArCj4gPiArYWxsT2Y6Cj4gPiArICAt
+ICRyZWY6IHNucHMsZHdjLWFoY2ktY29tbW9uLnlhbWwjCj4gPiArCj4gPiArcHJvcGVydGllczoK
+PiA+ICsgIGNvbXBhdGlibGU6Cj4gPiArICAgIGl0ZW1zOgo+ID4gKyAgICAgIC0gY29uc3Q6IGVz
+d2luLGVpYzc3MDAtYWhjaQo+ID4gKyAgICAgIC0gY29uc3Q6IHNucHMsZHdjLWFoY2kKPiA+ICsK
+PiA+ICsgIHJlZzoKPiA+ICsgICAgbWF4SXRlbXM6IDEKPiAKPiBEcm9wLiBzbnBzLGR3Yy1haGNp
+LWNvbW1vbi55YW1sIGFscmVhZHkgZGVmaW5lcyB0aGlzLgo+IAo+ID4gKwo+ID4gKyAgaW50ZXJy
+dXB0czoKPiA+ICsgICAgbWF4SXRlbXM6IDEKPiAKPiBEcm9wLiBzbnBzLGR3Yy1haGNpLWNvbW1v
+bi55YW1sIGFscmVhZHkgZGVmaW5lcyB0aGlzLgo+IAo+ID4gKwo+ID4gKyAgcG9ydHMtaW1wbGVt
+ZW50ZWQ6Cj4gPiArICAgIGNvbnN0OiAxCj4gCj4gUmVhbGx5LCB5b3VyIGZpcm13YXJlIHNob3Vs
+ZCBpbml0aWFsaXplIHRoZSBEV0Mgc3BlY2lmaWMgcmVnaXN0ZXIgdGhhdAo+IHNldHMgdGhpcyBh
+bmQgaXMgZGlzY292ZXJhYmxlIHZpYSBhIHN0YW5kYXJkIEFIQ0kgcmVnaXN0ZXIuCj4gCgpBY2Nv
+cmQgdG8gbXkgdW5kZXJzdGFuZGluZywgaWYgcG9ydHMtaW1wbGVtZW50ZWQgaXMgY29uZmlndXJl
+ZCBpbiB0aGUgZHRzLAp0aGlzIHJlZ2lzdGVyIHdpbGwgYmUgc2V0IGJ5IHRoZSBwbGF0Zm9ybSBk
+cml2ZXIgaW4gbGliYWhjaV9wbGF0Zm9ybS5jLgoKRG8geW91IG1lYW4gdGhhdCBwb3J0cy1pbXBs
+ZW1lbnRlZCBzaG91bGQgYmUgcmVtb3ZlZCBmcm9tIHRoZSBkdHMsCmFuZCB0aGUgY29ycmVzcG9u
+ZGluZyByZWdpc3RlciBzaG91bGQgYmUgY29uZmlndXJlZCBieSB0aGUgZmlybXdhcmUKKHdoaWNo
+IGlzIFUtQm9vdCBvbiB0aGUgSGlGaXZlIFByZW1pZXIgUDU1MCBib2FyZCk/IElzIHRoaXMgdW5k
+ZXJzdGFuZGluZyBjb3JyZWN0PwpJZiBzbywgd2hlbiB0aGUgZHJpdmVyIGlzIHJlbW92ZWQsIGEg
+cmVzZXQgd2lsbCBiZSB0cmlnZ2VyZWQsCmNhdXNpbmcgdGhlIGNvbmZpZ3VyYXRpb24gb2YgdGhp
+cyByZWdpc3RlciB0byBiZSBsb3N0LAp3aGljaCB3aWxsIHJlc3VsdCBpbiBhbiBlcnJvciB3aGVu
+IGluc21vZCB0aGUgZHJpdmVyIGFnYWluLgoKQmVzdCByZWdhcmRzLApZdWxpbgo=
