@@ -1,111 +1,82 @@
-Received: from azure-sdnproxy.icoremail.net (l-sdnproxy.icoremail.net [20.188.111.126])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1086C239E8B;
-	Fri, 29 Aug 2025 06:22:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=20.188.111.126
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D49B4274649
+	for <linux-ide@vger.kernel.org>; Fri, 29 Aug 2025 08:05:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756448560; cv=none; b=u0dZdMhVSYK+60loNLKo2u/nrxE4Xl0wn7tiREnIpxtlBs9rirHJbZ7fAJsCrUUgfAWATDyBTQ6hOOU2K/kvvX8pSrd5UCYUkkncJwYsnvLRPwWQBoh/O5zi/c95lqYWYMRrZEE9xPx6Qxozv9zJ8mJm477Gr3WPfUbDN5lCTrA=
+	t=1756454742; cv=none; b=f6Nvfhd1xDYFP01ISyElRr8kStjFcpvq0DOzTSsT3b0VDzueOWPCXykx5mW15oWqn5xYLegpDatKx1Z8c5kDVUoKT3vMW7dpwInyGUShvla+kKp007fNgPWc8zS7QRZB8wzQ/M2fnbU51I/Z1pQ2+LRPfSagQoM8VDx8BSebeTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756448560; c=relaxed/simple;
-	bh=lWKeDfUs6UcJqhbuIh8nb+LFfX5MhFTkvtJkcRl9h9o=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=Gwm71nGIOO1ErURK1pyJQlFe8Tn5va6soY1HKxUNSgw63L5O9p9w42GeAfqdH1QSGv2uTbQVeXB9i4c+19crDtvY3X8brE6/kMZDHKz2zxElDz1S6hLvxQWo93ojs4wZSCwN1diy2nhwDn5mt4rK9I2xIcBOyRnx7+jBFN4bwA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=20.188.111.126
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from luyulin$eswincomputing.com ( [10.12.96.77] ) by
- ajax-webmail-app2 (Coremail) ; Fri, 29 Aug 2025 14:22:11 +0800 (GMT+08:00)
-Date: Fri, 29 Aug 2025 14:22:11 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: luyulin@eswincomputing.com
-To: "Niklas Cassel" <cassel@kernel.org>
-Cc: "Rob Herring" <robh@kernel.org>, dlemoal@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vkoul@kernel.org, kishon@kernel.org, linux-phy@lists.infradead.org,
-	ningyu@eswincomputing.com, zhengyu@eswincomputing.com,
-	linmin@eswincomputing.com, huangyifeng@eswincomputing.com,
-	fenglin@eswincomputing.com, lianghujun@eswincomputing.com
-Subject: Re: Re: Re: [PATCH v2 1/3] dt-bindings: ata: eswin: Document for
- EIC7700 SoC ahci
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <aLBUC116MdJqDGIJ@flawful.org>
-References: <20250819134722.220-1-luyulin@eswincomputing.com>
- <20250819135413.386-1-luyulin@eswincomputing.com>
- <CAL_JsqKFotNLZZXwiy7S6K8qXLdGRAnsa-1zvZRDQBE39Gf5kg@mail.gmail.com>
- <692e11ca.843.198f0337528.Coremail.luyulin@eswincomputing.com>
- <aLBUC116MdJqDGIJ@flawful.org>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1756454742; c=relaxed/simple;
+	bh=rNMOnKby+sZHsR+49Ik0Y2ZWwtLXfKtG/JD6dKZ6Z5g=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=o2jl3bqnbvTnYPAtM6QgIHCHv+eAzvK9S7OuyEE9lyXoEmxDPjCVxbFkjED8BllxV79vg5h4kBeqyjjvMtPLejVoCTxIxHV4X5AqlYxHKtjTaimPJUMRcCOPbIv/ch7YkWE/Sam5ouqTjCEZqghOkJCbIcqv4ruk1Y7FQ3VGkWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MJ48uGbI; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MJ48uGbI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C257BC4CEF0;
+	Fri, 29 Aug 2025 08:05:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756454742;
+	bh=rNMOnKby+sZHsR+49Ik0Y2ZWwtLXfKtG/JD6dKZ6Z5g=;
+	h=From:To:Cc:Subject:Date:From;
+	b=MJ48uGbIlpjrN8vu10or7l9JO5lHNetr/q169B102JyZI2OFyYj8nrvQGQTOeg+DG
+	 4Kx9N/QoP/smNcjYyEnsSdvRN7FhyVAfQ1incJUH73/GhE2YoVnu48E9uOiumq4xdM
+	 TOONMyhyUtrh6u/O1khTIyac6vrsY3CvQ7v+bQzlnuW08looMP08Dsu18Uy8ghRT8D
+	 BrAKiHKynzmcHVLElyu+fZVg0nZUtpfoRrn2z8NyCDbIt7jMp0ypve51q0r/JvQkQm
+	 vXqXI1jbBCpXNriBWVylNuqg/nqo/tN/lp0F94rkmDv6E02uCXQqS5eyPYQwWxdeNQ
+	 nCQROdOO8VwLg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 6.17-rc4
+Date: Fri, 29 Aug 2025 17:02:47 +0900
+Message-ID: <20250829080247.32183-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <4ab70c6a.8be.198f47da494.Coremail.luyulin@eswincomputing.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:TQJkCgDHZpUTR7Foff_EAA--.23769W
-X-CM-SenderInfo: pox13z1lq6v25zlqu0xpsx3x1qjou0bp/1tbiAgEJA2iwhNAS7QAA
-	s6
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+Content-Transfer-Encoding: 8bit
 
-Cj4gT24gVGh1LCBBdWcgMjgsIDIwMjUgYXQgMDY6MjI6NDBQTSArMDgwMCwgbHV5dWxpbkBlc3dp
-bmNvbXB1dGluZy5jb20gd3JvdGU6Cj4gPiAKPiA+IERvIHlvdSBtZWFuIHRoYXQgcG9ydHMtaW1w
-bGVtZW50ZWQgc2hvdWxkIGJlIHJlbW92ZWQgZnJvbSB0aGUgZHRzLAo+ID4gYW5kIHRoZSBjb3Jy
-ZXNwb25kaW5nIHJlZ2lzdGVyIHNob3VsZCBiZSBjb25maWd1cmVkIGJ5IHRoZSBmaXJtd2FyZQo+
-ID4gKHdoaWNoIGlzIFUtQm9vdCBvbiB0aGUgSGlGaXZlIFByZW1pZXIgUDU1MCBib2FyZCk/IElz
-IHRoaXMgdW5kZXJzdGFuZGluZyBjb3JyZWN0Pwo+ID4gSWYgc28sIHdoZW4gdGhlIGRyaXZlciBp
-cyByZW1vdmVkLCBhIHJlc2V0IHdpbGwgYmUgdHJpZ2dlcmVkLAo+ID4gY2F1c2luZyB0aGUgY29u
-ZmlndXJhdGlvbiBvZiB0aGlzIHJlZ2lzdGVyIHRvIGJlIGxvc3QsCj4gPiB3aGljaCB3aWxsIHJl
-c3VsdCBpbiBhbiBlcnJvciB3aGVuIGluc21vZCB0aGUgZHJpdmVyIGFnYWluLgo+IAo+IE15IDUw
-IGNlbnRzLAo+IAo+IGlmIHRoZSBwb3J0cyBpbXBsZW1lbnRlZCByZWdpc3RlciBnZXRzIHJlc2V0
-IGZyb20gdGhlIHJlc2V0X2NvbnRyb2xfcmVzZXQoKQo+IGluIGFoY2lfcGxhdGZvcm1fYXNzZXJ0
-X3JzdHMoKSwgdGhlbiBpdCBzZWVtcyBsaWtlIGhhdmluZyBwb3J0cy1pbXBsZW1lbnRlZAo+IGlu
-IGRldmljZSB0cmVlIGlzIGFjY2VwdGFibGUuCj4gCgpJbiBvdXIgZGVzaWduLCB0aGUgcG9ydHMg
-aW1wbGVtZW50ZWQgcmVnaXN0ZXIgZ2V0cyByZXNldCBmcm9tIHRoZSBhaGNpX3BsYXRmb3JtX2Fz
-c2VydF9yc3RzKCkuCgo+IFRoZXJlIGFyZSBhIGJ1bmNoIG9mIGRldmljZSB0cmVlcyB0aGF0IGhh
-dmUgdGhpcyBhbHJlYWR5Ogo+IGFyY2gvYXJtL2Jvb3QvZHRzL3Fjb20vcWNvbS1hcHE4MDY0LmR0
-c2k6ICAgICAgICAgICAgICAgICAgICAgICBwb3J0cy1pbXBsZW1lbnRlZCA9IDwweDE+Owo+IGFy
-Y2gvYXJtL2Jvb3QvZHRzL3Fjb20vcWNvbS1pcHE4MDY0LXYxLjAuZHRzaTogICAgICAgICAgICAg
-ICAgICBwb3J0cy1pbXBsZW1lbnRlZCA9IDwweDE+Owo+IGFyY2gvYXJtL2Jvb3QvZHRzL3Fjb20v
-cWNvbS1pcHE4MDY0LXYyLjAuZHRzaTogIHBvcnRzLWltcGxlbWVudGVkID0gPDB4MT47Cj4gYXJj
-aC9hcm0vYm9vdC9kdHMvc2Ftc3VuZy9leHlub3M1MjUwLmR0c2k6ICAgICAgICAgICAgICAgICAg
-ICAgIHBvcnRzLWltcGxlbWVudGVkID0gPDB4MT47Cj4gYXJjaC9hcm0vYm9vdC9kdHMvc29jaW9u
-ZXh0L3VuaXBoaWVyLXBybzQuZHRzaTogICAgICAgICAgICAgICAgIHBvcnRzLWltcGxlbWVudGVk
-ID0gPDE+Owo+IGFyY2gvYXJtL2Jvb3QvZHRzL3NvY2lvbmV4dC91bmlwaGllci1wcm80LmR0c2k6
-ICAgICAgICAgICAgICAgICBwb3J0cy1pbXBsZW1lbnRlZCA9IDwxPjsKPiBhcmNoL2FybS9ib290
-L2R0cy9zb2Npb25leHQvdW5pcGhpZXItcHhzMi5kdHNpOiAgICAgICAgICAgICAgICAgcG9ydHMt
-aW1wbGVtZW50ZWQgPSA8MT47Cj4gYXJjaC9hcm0vYm9vdC9kdHMvc3Qvc3RpaDQwNy1mYW1pbHku
-ZHRzaTogICAgICAgICAgICAgICAgICAgICAgIHBvcnRzLWltcGxlbWVudGVkID0gPDB4MT47Cj4g
-YXJjaC9hcm0vYm9vdC9kdHMvc3Qvc3RpaDQwNy1mYW1pbHkuZHRzaTogICAgICAgICAgICAgICAg
-ICAgICAgIHBvcnRzLWltcGxlbWVudGVkID0gPDB4MT47Cj4gYXJjaC9hcm0vYm9vdC9kdHMvdGkv
-b21hcC9kcmE3LWw0LmR0c2k6ICAgICAgICAgICAgICAgICAgICAgICAgIHBvcnRzLWltcGxlbWVu
-dGVkID0gPDB4MT47Cj4gYXJjaC9hcm0vYm9vdC9kdHMvdGkvb21hcC9vbWFwNS1sNC5kdHNpOiAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcG9ydHMtaW1wbGVtZW50ZWQgPSA8MHgxPjsK
-PiBhcmNoL2FybTY0L2Jvb3QvZHRzL21lZGlhdGVrL210NzYyMi5kdHNpOiAgICAgICAgICAgICAg
-IHBvcnRzLWltcGxlbWVudGVkID0gPDB4MT47Cj4gYXJjaC9hcm02NC9ib290L2R0cy9yb2NrY2hp
-cC9yazM1NjguZHRzaTogICAgICAgICAgICAgICBwb3J0cy1pbXBsZW1lbnRlZCA9IDwweDE+Owo+
-IGFyY2gvYXJtNjQvYm9vdC9kdHMvcm9ja2NoaXAvcmszNTZ4LWJhc2UuZHRzaTogICAgICAgICAg
-cG9ydHMtaW1wbGVtZW50ZWQgPSA8MHgxPjsKPiBhcmNoL2FybTY0L2Jvb3QvZHRzL3JvY2tjaGlw
-L3JrMzU2eC1iYXNlLmR0c2k6ICAgICAgICAgIHBvcnRzLWltcGxlbWVudGVkID0gPDB4MT47Cj4g
-YXJjaC9hcm02NC9ib290L2R0cy9yb2NrY2hpcC9yazM1NzYuZHRzaTogICAgICAgICAgICAgICAg
-ICAgICAgIHBvcnRzLWltcGxlbWVudGVkID0gPDB4MT47Cj4gYXJjaC9hcm02NC9ib290L2R0cy9y
-b2NrY2hpcC9yazM1NzYuZHRzaTogICAgICAgICAgICAgICAgICAgICAgIHBvcnRzLWltcGxlbWVu
-dGVkID0gPDB4MT47Cj4gYXJjaC9hcm02NC9ib290L2R0cy9yb2NrY2hpcC9yazM1ODgtYmFzZS5k
-dHNpOiAgICAgICAgICBwb3J0cy1pbXBsZW1lbnRlZCA9IDwweDE+Owo+IGFyY2gvYXJtNjQvYm9v
-dC9kdHMvcm9ja2NoaXAvcmszNTg4LWJhc2UuZHRzaTogICAgICAgICAgcG9ydHMtaW1wbGVtZW50
-ZWQgPSA8MHgxPjsKPiBhcmNoL2FybTY0L2Jvb3QvZHRzL3JvY2tjaGlwL3JrMzU4OC1leHRyYS5k
-dHNpOiAgICAgICAgIHBvcnRzLWltcGxlbWVudGVkID0gPDB4MT47Cj4gYXJjaC9hcm02NC9ib290
-L2R0cy9zb2Npb25leHQvdW5pcGhpZXItcHhzMy5kdHNpOiAgICAgICAgICAgICAgICAgICAgICAg
-cG9ydHMtaW1wbGVtZW50ZWQgPSA8MT47Cj4gYXJjaC9hcm02NC9ib290L2R0cy9zb2Npb25leHQv
-dW5pcGhpZXItcHhzMy5kdHNpOiAgICAgICAgICAgICAgICAgICAgICAgcG9ydHMtaW1wbGVtZW50
-ZWQgPSA8MT47Cj4gCj4gCj4gU3VyZSwgaWYgdGhlIHBvcnRzIGltcGxlbWVudGVkIHJlZ2lzdGVy
-IHdhcyBzdGlja3kgKGtlcHQgaXRzIHZhbHVlIGFmdGVyIGEKPiByZXNldCksIHRoZW4gSSB0aGlu
-ayBSb2IncyBzdWdnZXN0aW9uIHdvdWxkIG1ha2Ugc2Vuc2UuCj4gCj4gCgpUaGFuayB5b3UgdmVy
-eSBtdWNoIGZvciB0aGUgY2xhcmlmaWNhdGlvbi4KCj4gCj4gS2luZCByZWdhcmRzLAo+IE5pa2xh
-cwoKQmVzdCByZWdhcmRzLApZdWxpbgo=
+Linus,
+
+The following changes since commit 58768b0563916ddcb73d8ed26ede664915f8df31:
+
+  ata: libata-scsi: Fix CDL control (2025-08-14 18:58:12 +0900)
+
+are available in the Git repository at:
+
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.17-rc4
+
+for you to fetch changes up to 82b8166171bdebbc74717e4a0cfb4b89cd0510aa:
+
+  ata: ahci_xgene: Use int type for 'rc' to store error codes (2025-08-28 13:36:14 +0900)
+
+----------------------------------------------------------------
+ata fixes for 6.17-rc4
+
+ - Fix the type of return values to be signed in the ahci_xgen driver
+   (Qianfeng).
+
+ - Add the mask_port_ext module parameter to the ahci driver. This is to
+   allow a user to ignore ports that are advertized as external (hotplug
+   capable) in favor of lower link power management policies instead of
+   the default max_performance for these ports. This is useful to allow
+   e.g. laptops to go into low power states when hooked up to docking
+   station with sata slots, connected with an external port for hotplug
+   (me).
+
+----------------------------------------------------------------
+Damien Le Moal (1):
+      ata: ahci: Allow ignoring the external/hotplug capability of ports
+
+Qianfeng Rong (1):
+      ata: ahci_xgene: Use int type for 'rc' to store error codes
+
+ drivers/ata/ahci.c       | 57 +++++++++++++++++++++++++++++++++---------------
+ drivers/ata/ahci.h       |  1 +
+ drivers/ata/ahci_xgene.c |  7 ++----
+ 3 files changed, 43 insertions(+), 22 deletions(-)
