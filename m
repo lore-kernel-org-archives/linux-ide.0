@@ -1,174 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C0143043C8;
-	Tue,  2 Sep 2025 12:08:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [207.46.229.174])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B845A274FE3;
+	Thu,  4 Sep 2025 06:34:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.46.229.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756814926; cv=none; b=j+oe6TPmnZ33iZnHTYKDY9FAYlNzgSKuAK5F/AHc7/dzo/wAOt815Y3MU2skbh48UE9oNLjRoNpPHUZ/ZAp4htow7/V3wf5JqcIZfU7v20QT3wypv/SylmmsTy5LDecAwu1coiBmpOx9o39/KNDR5ZwwCiQkcKJ3aJ8/n+ZweFo=
+	t=1756967702; cv=none; b=c+tsiA+RO61ejDPgy1NbEFdKi7eRHUHv2nDWrQLqW0iUiywdJ9uaGW+i+TzE5CqjxzEMTX8/nWtVuOX03HzT60KeI2xfykfwWaF+xABsucjIwSwudz0RnwrDY0DV12UaK0HivxddN0DibEkfrvSrsngOr4b5UWMf7AIjflgSBg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756814926; c=relaxed/simple;
-	bh=K6LA3sIluvDzetCjz4FlpzQ/PJntZvlt7F2Ni8jRWqc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=P+x/lRW6QTkCJGm2GnVoKkXrducKQNjEnkl50YRkqR8VG7WpsrjVSLoowJyCDNYHDjgLfqQvFdv/cavBB/h5yLuMrhWGuxqOeAsaxvvTBVvdyF+1kNPa0rW0KtkN7UC/lMxICXJoJKksk1CV31TQlorUVgrBXRst/TMdBM4MkZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XWmzAeKp; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XWmzAeKp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E51FAC4CEED;
-	Tue,  2 Sep 2025 12:08:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756814925;
-	bh=K6LA3sIluvDzetCjz4FlpzQ/PJntZvlt7F2Ni8jRWqc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=XWmzAeKp/o/o3Al9udnUMKlsaWE/am1HtPlhPAMG+gLOvQ7QlXqvucCMhM2C80cjv
-	 WAwO2+1pIgAO1UDH9s36r38ZN+kGtt1E3QGil/I9DMhFHYVVSrxfQpUWiI9sRXa79j
-	 OUngq4k8lotJNurnCIvPCNpYNTpqoWVBejmc/Th+nRbM8eZQE/2Hau8YMqwVxTknOz
-	 yLCiDhLS9N9KmD/l5agqc2KpeI0dlmuuKlIviHQGTP5Vl9AkRbmJa/m7Gz1kbP4Dtx
-	 NdRHOBRbnzQkTf3BJLc++jYAVnYDLzSYAKACT46f8PtlOcpdFUmSSdmvoHbHZ0WEzU
-	 yGE8j0u2/d1jA==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Qianfeng Rong <rongqianfeng@vivo.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
+	s=arc-20240116; t=1756967702; c=relaxed/simple;
+	bh=Tkri1JDAFjCg+7BznGdB8556T/CQsfaj0b90N8OAIGs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=V0AaeduXY8rDLXW/1CSnzeI20pRkbdnvGOZ+ziJPH/w0Gb0lrro1ZLPCb829JaqdiCSCNVJxY+7qldUsiG2FtQeMNPE2sN/JggV+oMPRW0Fm1tJX8RB6XWukv3GaNMnYhGcXiEnGBPf73uNf0a6Yk7YuyFJWCGfShj2dED8CWas=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=207.46.229.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from E0006800LT.eswin.cn (unknown [10.12.96.77])
+	by app1 (Coremail) with SMTP id TAJkCgAHHxALM7lokE_IAA--.20421S2;
+	Thu, 04 Sep 2025 14:34:53 +0800 (CST)
+From: Yulin Lu <luyulin@eswincomputing.com>
+To: dlemoal@kernel.org,
 	cassel@kernel.org,
-	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.16-6.1] ata: ahci_xgene: Use int type for 'rc' to store error codes
-Date: Tue,  2 Sep 2025 08:08:17 -0400
-Message-ID: <20250902120833.1342615-6-sashal@kernel.org>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250902120833.1342615-1-sashal@kernel.org>
-References: <20250902120833.1342615-1-sashal@kernel.org>
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	vkoul@kernel.org,
+	kishon@kernel.org,
+	linux-phy@lists.infradead.org
+Cc: ningyu@eswincomputing.com,
+	zhengyu@eswincomputing.com,
+	linmin@eswincomputing.com,
+	huangyifeng@eswincomputing.com,
+	fenglin@eswincomputing.com,
+	lianghujun@eswincomputing.com,
+	Yulin Lu <luyulin@eswincomputing.com>
+Subject: [PATCH v3 0/3] Add driver support for Eswin EIC7700 SoC SATA Controller and PHY
+Date: Thu,  4 Sep 2025 14:34:27 +0800
+Message-Id: <20250904063427.1954-1-luyulin@eswincomputing.com>
+X-Mailer: git-send-email 2.31.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.16.4
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:TAJkCgAHHxALM7lokE_IAA--.20421S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF4DZryDXF1rAr4xWFW5trb_yoW5Xryfpa
+	1kCryYyr1ktryxJan7Ja10kFy3Aan7GFWakrZrXw15X39I93yvqa1fK3WYyF97Cw1kXr1Y
+	vF4aga45CFy5ArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9G14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wrylc2xSY4AK6svPMxAIw28IcxkI7VAKI48JMx
+	C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
+	wI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
+	vE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v2
+	0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxV
+	W8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRidbbtUUUUU==
+X-CM-SenderInfo: pox13z1lq6v25zlqu0xpsx3x1qjou0bp/
 
-From: Qianfeng Rong <rongqianfeng@vivo.com>
+This series depends on the config option patch [1].
 
-[ Upstream commit 82b8166171bdebbc74717e4a0cfb4b89cd0510aa ]
+[1] https://lore.kernel.org/all/20250825132427.1618089-3-pinkesh.vaghela@einfochips.com/
 
-Use int instead of u32 for the 'rc' variable in xgene_ahci_softreset()
-to store negative error codes returned by ahci_do_softreset().
+Updates:
+  v2 -> v3:
+    - Use full name in "From" and "Signed-off-by" fields information.
+    - eswin,eic7700-ahci.yaml
+      - Remove the introduction to the reg, interrupts, phys, and phy-names fields.
+      - Modify the usage of the clocks field in the examples.
+      - Corrected the order of dt properties.
+    - phy-eic7700-sata.c
+      - Register operations use the GENMASK macro and FIELD_PREP instead of
+        the original bit offset method, and add "#include <linux/bitfield.h>".
+      - Modified some macro definition names.
+      - Remove the redundant initialization assignments for "ret" and "val".
+      - Delete ".suppress_bind_attrs = true".
+      - Modify the driver name.
+      - Add "#include <linux/io.h>" to fix the robot test issue.
+    - Link to v2: https://lore.kernel.org/lkml/20250819134722.220-1-luyulin@eswincomputing.com/
 
-In xgene_ahci_pmp_softreset(), remove the redundant 'rc' variable and
-directly return the result of the ahci_do_softreset() call instead.
+  v2 -> v1:
+    - Delete the original controller driver and use ahci_dwc.c instead.
+    - Add eswin,eic7700-ahci.yaml
+      - Correct the descriptions of reset, interrupt and other
+        hardware resources for the sata controller on EIC7700 SoC.
+      - The clocks for both sata controller and sata PHY are controlled
+        via a register bit in the HSP bus and are not registered in the
+        clock tree. Clock are managed within the PHY driver, therefore
+        it is not described in this document.
+      - Add $ref: snps,dwc-ahci-common.yaml#.
+    - Add eswin,eic7700-sata-phy.yaml
+      - Add this file to include the description of the PHY on EIC7700 SoC.
+    - Add an eswin directory under the PHY driver path, and include the SATA
+      PHY driver code for EIC7700 SoC.
+    - Link to v1: https://lore.kernel.org/all/20250515085114.1692-1-hehuan1@eswincomputing.com/
 
-Signed-off-by: Qianfeng Rong <rongqianfeng@vivo.com>
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
+Yulin Lu (3):
+  dt-bindings: ata: eswin: Document for EIC7700 SoC ahci
+  dt-bindings: phy: eswin: Document for EIC7700 SoC SATA PHY
+  phy: eswin: Create eswin directory and add EIC7700 SATA PHY driver
 
-LLM Generated explanations, may be completely bogus:
+ .../bindings/ata/eswin,eic7700-ahci.yaml      |  80 +++++++
+ .../bindings/phy/eswin,eic7700-sata-phy.yaml  |  36 +++
+ drivers/phy/Kconfig                           |   1 +
+ drivers/phy/Makefile                          |   1 +
+ drivers/phy/eswin/Kconfig                     |  14 ++
+ drivers/phy/eswin/Makefile                    |   2 +
+ drivers/phy/eswin/phy-eic7700-sata.c          | 205 ++++++++++++++++++
+ 7 files changed, 339 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/eswin,eic7700-ahci.yaml
+ create mode 100644 Documentation/devicetree/bindings/phy/eswin,eic7700-sata-phy.yaml
+ create mode 100644 drivers/phy/eswin/Kconfig
+ create mode 100644 drivers/phy/eswin/Makefile
+ create mode 100644 drivers/phy/eswin/phy-eic7700-sata.c
 
-**Backport Status: YES**
-
-This commit should be backported to stable kernel trees. Here's my
-extensive analysis:
-
-## Bug Type and Impact
-
-This commit fixes a **type mismatch bug** where a signed integer return
-value from `ahci_do_softreset()` was being stored in an unsigned `u32`
-variable. This is a genuine bug that can affect error handling
-correctness in production systems.
-
-### Specific Code Analysis:
-
-1. **In `xgene_ahci_softreset()` (line 500 in the diff)**:
-   - The variable `rc` was declared as `u32` but `ahci_do_softreset()`
-     returns `int`
-   - When `ahci_do_softreset()` returns negative error codes (like
-     -EBUSY, -ETIMEDOUT, etc.), storing them in `u32` causes sign
-     extension issues
-   - The value would be interpreted as a large positive number instead
-     of a negative error
-
-2. **In `xgene_ahci_pmp_softreset()` (lines 450-465)**:
-   - Had an unnecessary intermediate `u32 rc` variable that was removed
-   - This was a minor cleanup but also eliminated the same type mismatch
-     issue
-
-## Why This Qualifies for Stable Backport:
-
-1. **Fixes a Real Bug**: The type mismatch can cause incorrect error
-   handling. When negative error codes are cast to `u32`, subsequent
-   error checking code may fail to detect the error condition properly.
-
-2. **Small and Contained**: The fix is minimal - just changing `u32` to
-   `int` in one place and removing redundant code in another. Total diff
-   is only 7 lines (2 insertions, 5 deletions).
-
-3. **No Architectural Changes**: This is purely a type correction, not
-   introducing any new functionality or changing the driver's behavior
-   beyond fixing error handling.
-
-4. **Low Risk**: The change is trivial and cannot introduce regressions.
-   It simply ensures error codes are properly preserved and propagated.
-
-5. **Affects Real Hardware**: The X-Gene AHCI controller is used in real
-   production systems (AppliedMicro X-Gene ARM64 servers), so proper
-   error handling is important for system stability.
-
-6. **Clear Bug Pattern**: This is a common programming error pattern
-   (signed/unsigned mismatch) that the kernel community consistently
-   fixes when found.
-
-## Stable Tree Rules Compliance:
-
-Per the stable kernel rules, this commit qualifies because:
-- It fixes a bug that users could encounter (incorrect error handling)
-- The fix is obviously correct and well-tested
-- It's small (under 100 lines)
-- It doesn't add new features
-- It fixes a real issue (type safety/error handling)
-
-The commit has already been marked with "Upstream commit" hash in the
-git log output, indicating it's already been picked up for stable
-backporting, which validates this assessment.
-
- drivers/ata/ahci_xgene.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index dfbd8c53abcbd..5be3358ddd410 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -450,7 +450,6 @@ static int xgene_ahci_pmp_softreset(struct ata_link *link, unsigned int *class,
- {
- 	int pmp = sata_srst_pmp(link);
- 	struct ata_port *ap = link->ap;
--	u32 rc;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	u32 port_fbs;
- 
-@@ -463,9 +462,7 @@ static int xgene_ahci_pmp_softreset(struct ata_link *link, unsigned int *class,
- 	port_fbs |= pmp << PORT_FBS_DEV_OFFSET;
- 	writel(port_fbs, port_mmio + PORT_FBS);
- 
--	rc = ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
--
--	return rc;
-+	return ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
- }
- 
- /**
-@@ -500,7 +497,7 @@ static int xgene_ahci_softreset(struct ata_link *link, unsigned int *class,
- 	u32 port_fbs;
- 	u32 port_fbs_save;
- 	u32 retry = 1;
--	u32 rc;
-+	int rc;
- 
- 	port_fbs_save = readl(port_mmio + PORT_FBS);
- 
 -- 
-2.50.1
+2.25.1
 
