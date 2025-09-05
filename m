@@ -1,95 +1,213 @@
-Received: from zg8tmja2lje4os4yms4ymjma.icoremail.net (zg8tmja2lje4os4yms4ymjma.icoremail.net [206.189.21.223])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 496BD258CE9;
-	Fri,  5 Sep 2025 07:23:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.21.223
+Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com [209.85.219.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C665342CB0
+	for <linux-ide@vger.kernel.org>; Fri,  5 Sep 2025 11:26:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757057021; cv=none; b=Lc0HfWHTIj48PBUoCVNGuC7PLjCyt9Gg7hDuTL2MMwJ0/ZMX4fyMtNo2YSBS9XP4PtBsRj0rSNicBhfPxmMTG5j8mIQ69u1hPtces+0NVmD7LRXPHgoBDDtaZXuVzy/CnIVB1oxlkNFgKQqraiAd4oXd9UH52BFzK/kR8gbAmiM=
+	t=1757071620; cv=none; b=nqkqR9/AdaG4HNJgo4OTuqGpySdASMx1u6/M6W/P4ESbBTKpKXRrQkjGLCyMBtY9sxOd5y/XXikQF/f/Zx6RdP3RHXUZz3NyCsH+RlYNFFkFzELwTTA3y/azVS6nxD8vLQz+tYbazXO5G3YRfPdM3emeIczs1JPQMtzmW/3DWzY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757057021; c=relaxed/simple;
-	bh=G03JThKW//Mso9KiVsolwbOmJ/ab7j3QoS6w0nXIjLA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=CvQxkt8+95UglgY+xkmx+xiitEIoxJDRDZwinc2Fy46WW9NdIScYisWrZgkoMUOmMYI5mrcErzAbIAcZIOnjxzrsTrPdbGdKlkwVe0QCtZ8JjH2lPiVAs7p1Xkl7tbjCXM22Tfes6T/xicP0QoHzRD6F5i1qGJDjYq46Uh2dh3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=206.189.21.223
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from luyulin$eswincomputing.com ( [10.12.96.77] ) by
- ajax-webmail-app2 (Coremail) ; Fri, 5 Sep 2025 15:23:20 +0800 (GMT+08:00)
-Date: Fri, 5 Sep 2025 15:23:20 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: luyulin@eswincomputing.com
-To: "Krzysztof Kozlowski" <krzk@kernel.org>, cassel@kernel.org,
-	robh@kernel.org
-Cc: "Niklas Cassel" <cassel@kernel.org>, dlemoal@kernel.org, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vkoul@kernel.org, kishon@kernel.org, linux-phy@lists.infradead.org,
-	ningyu@eswincomputing.com, zhengyu@eswincomputing.com,
-	linmin@eswincomputing.com, huangyifeng@eswincomputing.com,
-	fenglin@eswincomputing.com, lianghujun@eswincomputing.com
-Subject: Re: Re: [PATCH v3 1/3] dt-bindings: ata: eswin: Document for
- EIC7700 SoC ahci
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <5f6bc8da-ac78-4f21-8f9f-c84f213f60a9@kernel.org>
-References: <20250904063427.1954-1-luyulin@eswincomputing.com>
- <20250904063718.421-1-luyulin@eswincomputing.com>
- <8489c13b-6810-480c-9894-bb5c80cfbde0@kernel.org> <aLlYkZWBaI5Yz6fo@ryzen>
- <5f6bc8da-ac78-4f21-8f9f-c84f213f60a9@kernel.org>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1757071620; c=relaxed/simple;
+	bh=izaO1BR35Fqya77sIICkCHEPey84lEeqJmCseg1mS9I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=niiDnBTxNFArUL3VIMnVGddEZCU+GJuAmCcc0uZPgE+3hdvCdVImi4RjyxE88YH4DnibUGK7hv2pxiwVLNux/73wxWLFAlW7XkctqaCYy51eE1RkuZmScaVfW4JjUIponRqhduIa2OnT6PtLxWd7K2eHGewOpXK6f2c8O3OBE3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=CnmtDgbf; arc=none smtp.client-ip=209.85.219.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="CnmtDgbf"
+Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-e96d8722c6eso2224073276.3
+        for <linux-ide@vger.kernel.org>; Fri, 05 Sep 2025 04:26:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1757071615; x=1757676415; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=yNzF16PbnrymzXw8XwNj1X2cjJHo1hQQnEraT/RlzJM=;
+        b=CnmtDgbfe5tx1THODz/ci1n4In1WFrcRusjah2wZs+jf2hB56JQjXfJ7ATtpVom76c
+         61hqjlMZi1VFPhasNBrwfMHh9u/meMHuv3TN01wxweWG/qm/nxbbiEwDD5AOCKb+8F1J
+         kqf3SLR5bFzPbJ66alN0+i5bf3paHUZgZnveUXtd/dKpZA89r+cvj5GhEPawFzrOqIGe
+         BFTrneTpqHaT3P0E8di18lRVlobqmkBYoANZyLpCHBsruQuELWugu9BuisPtgQT3CPKc
+         ldGSg6HF51kNkdeuhoPWeW/TZrB5OLZSUJIMA+AXIAsWJ5Cw+nfCxuAyZ2Y68HdN8Sjs
+         o/QA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757071615; x=1757676415;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=yNzF16PbnrymzXw8XwNj1X2cjJHo1hQQnEraT/RlzJM=;
+        b=NSHrAKTkgMXqqTJxfc9AQ9q1WythIj3No+fzursuzX73cW11y1GMYtnObm56fUy7rg
+         5zxHI6ecwlmC+IV43vXkEIItirYPv9AgHME4nrqNUoR985UsfiRlbrHkF+sRb+XzApjC
+         PJKiPCK9b0oLRiRyClrZc/VZkqfVKTjk6540dHmoPeSALDIFvdBcCCgC71/Z532Ls3OH
+         wvCwyJlhuAlXpFTIuch03heFIxp/YQlYXh93c06Y+U1B11oapGXT6/CXyiAke7AfnVOG
+         sUi1Xfa48i1CXTSRu8uPzMOO25SGHkH/hwnXR2gJ6rk4WGKvvCJ1nwKAy3eZyEpChDz0
+         HFpA==
+X-Forwarded-Encrypted: i=1; AJvYcCWHmsvcIVq+HvcQqOajcL9pEVxTxJAsIoyImCrppSCVwBpukCo0yDOcxkPPpccLjwqTrntFdHvXySc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwDjuXC4MYR8nu+42ybKfaUBmdoq0isc0Oj4IyPjW+FJSXrbZs6
+	Xb6nvEYW2fQT6LlUPqiHG3tcuXYUVvuLXTGxUR3zroEwxPraQcyJ288zVwlJXGKDEy0=
+X-Gm-Gg: ASbGnctpPnmzSdz1R04wJMWfRYv2F4hCxIKGVzwVBvpJjNbGZqxNioyc6nQFgyJ2ETU
+	PfosJ7bCEtiXmBLrXyzrwm0vfyZNwlKO69OgpSVoqo70eZEWM3zN4alFXi3+a+jER79BRvZdrns
+	ux/PSoEiDRvsI7aeAFhJqzElSd4MJjksHrxDcrp2NoNPOizBgfKJY5FiSdHUUImYM60vGJ2elum
+	7xTAsIvt/QZlvskEnvSfjRUOOBd8jOjXMqHVBQsufvw54bsae2bs4EkbZcr7m8WUyXXwS1DgJq4
+	ckNGSLPT9RsmwKOihMLb61xFsYn/2uNmAuvZkFighdi+GwjiPG326WLx832qFxN6EbeeFHSwGs2
+	RoRNCBtiYV+flYoij4A==
+X-Google-Smtp-Source: AGHT+IEXVquWXmj0Yd3oyr4uhZoLxM2opNHaeihf8Xp8KBtnXc2guOYW42U1nSR+kmrTjCZ7Op/enQ==
+X-Received: by 2002:a05:6902:18ce:b0:e96:fac0:60bc with SMTP id 3f1490d57ef6-e98a58455f2mr22114649276.41.1757071615282;
+        Fri, 05 Sep 2025 04:26:55 -0700 (PDT)
+Received: from [10.0.3.24] ([50.227.229.138])
+        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e9bbdf504e0sm3031724276.11.2025.09.05.04.26.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 05 Sep 2025 04:26:54 -0700 (PDT)
+Message-ID: <1513d5fd-14ef-4cd0-a9a5-1016e9be6540@kernel.dk>
+Date: Fri, 5 Sep 2025 05:26:53 -0600
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <7206383a.d98.19918c22570.Coremail.luyulin@eswincomputing.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:TQJkCgAXt5Xoj7poDeXIAA--.24640W
-X-CM-SenderInfo: pox13z1lq6v25zlqu0xpsx3x1qjou0bp/1tbiAgEQA2i5v1ESawAB
-	sX
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 19/37] mm/gup: remove record_subpages()
+To: David Hildenbrand <david@redhat.com>, linux-kernel@vger.kernel.org
+Cc: Alexander Potapenko <glider@google.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
+ Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
+ dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+ iommu@lists.linux.dev, io-uring@vger.kernel.org,
+ Jason Gunthorpe <jgg@nvidia.com>, Johannes Weiner <hannes@cmpxchg.org>,
+ John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com,
+ kvm@vger.kernel.org, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
+ Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
+ linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+ linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+ Marco Elver <elver@google.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
+ Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
+ Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
+ Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
+ Robin Murphy <robin.murphy@arm.com>, Suren Baghdasaryan <surenb@google.com>,
+ Tejun Heo <tj@kernel.org>, virtualization@lists.linux.dev,
+ Vlastimil Babka <vbabka@suse.cz>, wireguard@lists.zx2c4.com, x86@kernel.org,
+ Zi Yan <ziy@nvidia.com>
+References: <20250901150359.867252-1-david@redhat.com>
+ <20250901150359.867252-20-david@redhat.com>
+ <5090355d-546a-4d06-99e1-064354d156b5@redhat.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <5090355d-546a-4d06-99e1-064354d156b5@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-SGVsbG8gS3J6eXN6dG9mLCBOaWtsYXMsIFJvYiwKClRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHlv
-dXIgc3VnZ2VzdGlvbnMgYW5kIHJlcGx5LgoKPiAKPiBPbiAwNC8wOS8yMDI1IDExOjE0LCBOaWts
-YXMgQ2Fzc2VsIHdyb3RlOgo+ID4gSGVsbG8gS3J6eXN6dG9mLCBSb2IsCj4gPiAKPiA+IE9uIFRo
-dSwgU2VwIDA0LCAyMDI1IGF0IDA5OjEwOjM0QU0gKzAyMDAsIEtyenlzenRvZiBLb3psb3dza2kg
-d3JvdGU6Cj4gPj4+ICsKPiA+Pj4gKyAgcG9ydHMtaW1wbGVtZW50ZWQ6Cj4gPj4+ICsgICAgY29u
-c3Q6IDEKPiA+Pgo+ID4+IEkgZG8gbm90IHNlZSBob3cgeW91IGFkZHJlc3NlZCByZXF1ZXN0IGFi
-b3V0IGZpcm13YXJlLiBOb3RoaW5nIGNoYW5nZWQKPiA+PiBoZXJlLCBubyBleHBsYW5hdGlvbiBp
-biB0aGUgY29tbWl0IG1zZy4KPiA+IAoKLi4uCgo+ID4gCj4gPiBBbnl3YXksIEkgcHJvdmlkZWQg
-bXkgNTAgY2VudHMgaGVyZToKPiA+IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LWlkZS9h
-TEJVQzExNk1kSnFER0lKQGZsYXdmdWwub3JnLwo+ID4gCj4gPiAoSSB3b3VsZCBsaWtlIHRvIGFk
-ZCB0aGF0IEkgdGhpbmsgaXQgaXMgdGhlIGRpc2FibGluZyBvZiBjbG9ja3MgYW5kCj4gPiByZWd1
-bGF0b3JzIHRoYXQgY2F1c2VzIHRoZSByZWdpc3RlciB0byBiZSBjbGVhcmVkLCBzaW5jZSB3ZSBk
-byBjYWxsCj4gPiBhaGNpX3BsYXRmb3JtX2Fzc2VydF9yc3RzKCkgZHVyaW5nIHRoZSBmaXJzdCBw
-cm9iZSwgc28gaWYgaXQgd2FzIHRoZSByZXNldAo+ID4gdGhhdCBjbGVhcmVkIHRoZSByZWdpc3Rl
-ciwgdGhlIGZpcnN0IHByb2JlIHNob3VsZCBhbHNvIG5vdCBoYXZlIHdvcmtlZC4pCj4gPiAKClRo
-YW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHlvdXIgZXhwbGFuYXRpb24uIFRvIGFkZCBzb21lIGNvbnRl
-eHQ6CkluIG91ciBzeXN0ZW0sIHRoZcKgcG9ydHMtaW1wbGVtZW50ZWTCoHJlZ2lzdGVyIGhhcyBh
-bHJlYWR5IGJlZW4gY29uZmlndXJlZCBieSB0aGUgZmlybXdhcmUKKHdoaWNoIGlzIFUtQm9vdCBv
-biB0aGUgSGlGaXZlIFByZW1pZXIgUDU1MCBib2FyZCkuClRoZXJlZm9yZSwgd2hlbiBlbnRlcmlu
-Z8KgdGhlIGtlcm5lbCwgdGhlIHZhbHVlIG9mIHRoaXMgcmVnaXN0ZXIgaXMgY29ycmVjdGx5IHNl
-dCB0byAweDEuCgpEdXJpbmcgcHJvYmUswqBhaGNpX3BsYXRmb3JtX2VuYWJsZV9yZXNvdXJjZXPC
-oOKGksKgYWhjaV9wbGF0Zm9ybV9kZWFzc2VydF9yc3RzwqBpcyBjYWxsZWQuCkFuZCB3aGVuIHRo
-ZSBkcml2ZXIgaXMgcmVtb3ZlZCzCoGFoY2lfcGxhdGZvcm1fZGlzYWJsZV9yZXNvdXJjZXMK4oaS
-wqBhaGNpX3BsYXRmb3JtX2Fzc2VydF9yc3RzwqBpcyB0cmlnZ2VyZWQuClRoaXMgcmVzZXQgb3Bl
-cmF0aW9uIGNhdXNlcyB0aGUgcmVnaXN0ZXIgdG8gYmUgcmVzdG9yZWQgdG8gMC4KQWNjb3JkaW5n
-IHRvIHRoZSBJUCBkYXRhYm9vaywgdGhpcyByZWdpc3RlciBpcyBpbmRlZWQgc2V0IHRvIDAgYWZ0
-ZXIgcmVzZXQuCgpUaGlzIGlzIG15IHVuZGVyc3RhbmRpbmcuIEknZCBncmVhdGx5IGFwcHJlY2lh
-dGUgaXQgaWYgeW91IHBvaW50IG91dCBhbnkgaXNzdWVzLgoKPiA+IAo+ID4gTm90IHN1cmUgaWYg
-aXQgcmVsZXZhbnQgdG8gbWVudGlvbiB0aGlzIHJlcGx5IHRvIFJvYidzIHJldmlldyBjb21tZW50
-IGluIHRoZQo+ID4gY29tbWl0IG1lc3NhZ2UsIGJ1dCBwZXJoYXBzIGl0IHNob3VsZCBoYXZlIGJl
-ZW4gbWVudGlvbmVkIGluIHRoZSBjaGFuZ2UgbG9nLgo+IAo+IFJldmlld2VyIHF1ZXN0aW9ucyBm
-b3IgbW9yZSBzZXJpb3VzIHN0dWZmIGhhcHBlbiBmb3IgYSByZWFzb24sIHNvIHdoZW4KPiBkaXNj
-dXNzaW9uIGlzIHJlc29sdmVkIHNvbWVob3cgZGlmZmVyZW50bHkgdGhhbiByZXZpZXdlciBzdWdn
-ZXN0ZWQsIGl0Cj4gcHJldHR5IG9mdGVuIGRlc2VydmVzIGV4cGxhbmF0aW9uIGluIGNvbW1pdCBt
-c2cuCj4gCj4gV2VsbCwgaW4gY2hhbmdlbG9nIGFzIGFic29sdXRlIG1pbmltdW0uIE5vIGV4cGxh
-bmF0aW9uIGhhcHBlbmVkIGhlcmUgaW4KPiB0aGUgY2hhbmdlbG9nLCBub3IgaW4gdGhlIGNvbW1p
-dCBtc2cuCgpUaGFuayB5b3UgdmVyeSBtdWNoIGZvciB5b3VyIHN1Z2dlc3Rpb24uCkknbGwgYWRk
-IGV4cGxhbmF0aW9ucyBpbiB0aGUgY29tbWl0IG1lc3NhZ2UgYW5kIGNoYW5nZWxvZ3MgZm9yIHRo
-ZSBuZXh0IHBhdGNoLgoKQmVzdCByZWdhcmRzLApZdWxpbgo=
+On 9/5/25 12:41 AM, David Hildenbrand wrote:
+> On 01.09.25 17:03, David Hildenbrand wrote:
+>> We can just cleanup the code by calculating the #refs earlier,
+>> so we can just inline what remains of record_subpages().
+>>
+>> Calculate the number of references/pages ahead of times, and record them
+>> only once all our tests passed.
+>>
+>> Signed-off-by: David Hildenbrand <david@redhat.com>
+>> ---
+>>   mm/gup.c | 25 ++++++++-----------------
+>>   1 file changed, 8 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/mm/gup.c b/mm/gup.c
+>> index c10cd969c1a3b..f0f4d1a68e094 100644
+>> --- a/mm/gup.c
+>> +++ b/mm/gup.c
+>> @@ -484,19 +484,6 @@ static inline void mm_set_has_pinned_flag(struct mm_struct *mm)
+>>   #ifdef CONFIG_MMU
+>>     #ifdef CONFIG_HAVE_GUP_FAST
+>> -static int record_subpages(struct page *page, unsigned long sz,
+>> -               unsigned long addr, unsigned long end,
+>> -               struct page **pages)
+>> -{
+>> -    int nr;
+>> -
+>> -    page += (addr & (sz - 1)) >> PAGE_SHIFT;
+>> -    for (nr = 0; addr != end; nr++, addr += PAGE_SIZE)
+>> -        pages[nr] = page++;
+>> -
+>> -    return nr;
+>> -}
+>> -
+>>   /**
+>>    * try_grab_folio_fast() - Attempt to get or pin a folio in fast path.
+>>    * @page:  pointer to page to be grabbed
+>> @@ -2967,8 +2954,8 @@ static int gup_fast_pmd_leaf(pmd_t orig, pmd_t *pmdp, unsigned long addr,
+>>       if (pmd_special(orig))
+>>           return 0;
+>>   -    page = pmd_page(orig);
+>> -    refs = record_subpages(page, PMD_SIZE, addr, end, pages + *nr);
+>> +    refs = (end - addr) >> PAGE_SHIFT;
+>> +    page = pmd_page(orig) + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
+>>         folio = try_grab_folio_fast(page, refs, flags);
+>>       if (!folio)
+>> @@ -2989,6 +2976,8 @@ static int gup_fast_pmd_leaf(pmd_t orig, pmd_t *pmdp, unsigned long addr,
+>>       }
+>>         *nr += refs;
+>> +    for (; refs; refs--)
+>> +        *(pages++) = page++;
+>>       folio_set_referenced(folio);
+>>       return 1;
+>>   }
+>> @@ -3007,8 +2996,8 @@ static int gup_fast_pud_leaf(pud_t orig, pud_t *pudp, unsigned long addr,
+>>       if (pud_special(orig))
+>>           return 0;
+>>   -    page = pud_page(orig);
+>> -    refs = record_subpages(page, PUD_SIZE, addr, end, pages + *nr);
+>> +    refs = (end - addr) >> PAGE_SHIFT;
+>> +    page = pud_page(orig) + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
+>>         folio = try_grab_folio_fast(page, refs, flags);
+>>       if (!folio)
+>> @@ -3030,6 +3019,8 @@ static int gup_fast_pud_leaf(pud_t orig, pud_t *pudp, unsigned long addr,
+>>       }
+>>         *nr += refs;
+>> +    for (; refs; refs--)
+>> +        *(pages++) = page++;
+>>       folio_set_referenced(folio);
+>>       return 1;
+>>   }
+> 
+> Okay, this code is nasty. We should rework this code to just return the nr and receive a the proper
+> pages pointer, getting rid of the "*nr" parameter.
+> 
+> For the time being, the following should do the trick:
+> 
+> commit bfd07c995814354f6b66c5b6a72e96a7aa9fb73b (HEAD -> nth_page)
+> Author: David Hildenbrand <david@redhat.com>
+> Date:   Fri Sep 5 08:38:43 2025 +0200
+> 
+>     fixup: mm/gup: remove record_subpages()
+>         pages is not adjusted by the caller, but idnexed by existing *nr.
+>         Signed-off-by: David Hildenbrand <david@redhat.com>
+> 
+> diff --git a/mm/gup.c b/mm/gup.c
+> index 010fe56f6e132..22420f2069ee1 100644
+> --- a/mm/gup.c
+> +++ b/mm/gup.c
+> @@ -2981,6 +2981,7 @@ static int gup_fast_pmd_leaf(pmd_t orig, pmd_t *pmdp, unsigned long addr,
+>                 return 0;
+>         }
+>  
+> +       pages += *nr;
+>         *nr += refs;
+>         for (; refs; refs--)
+>                 *(pages++) = page++;
+> @@ -3024,6 +3025,7 @@ static int gup_fast_pud_leaf(pud_t orig, pud_t *pudp, unsigned long addr,
+>                 return 0;
+>         }
+>  
+> +       pages += *nr;
+>         *nr += refs;
+>         for (; refs; refs--)
+>                 *(pages++) = page++;
+> 
+
+Tested as fixing the issue for me, thanks.
+
+-- 
+Jens Axboe
