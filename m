@@ -1,34 +1,23 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7463D305E10;
-	Mon, 22 Sep 2025 16:11:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from zg8tmty1ljiyny4xntuumtyw.icoremail.net (zg8tmty1ljiyny4xntuumtyw.icoremail.net [165.227.155.160])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1F5BD1DDA09;
+	Tue, 23 Sep 2025 03:08:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=165.227.155.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758557501; cv=none; b=svLuv7SsPYha2SGhIpOAVu8c9d2+/ziLHMFrsr9Pc4BAMDW82CSFaaYHseBJDrExBubJ8Rsjg4VC/swU+AheDYaQVFo/G0fVtOYVvZgmF6BOoVbehLfvZgyxLdFpzr/VYDTiOoOoyHXHBlrWYqNMsskv7pX3ZD6gkKV3VdMv2BI=
+	t=1758596941; cv=none; b=nVh6BKzJenooXh/zKF0iOYHd8G+PfA/JHhiBYhhvP4xS9g+sjtToVBmpqJ4h6uv66EIZDcF/uKIY72fAU/a8ibKrBoPjNcbn6vvjw2ZmBN7qYGrObc004NG8Wogz64ZCebC3EFGGkZIL7umdFyedrYdcvKhXVd1PPpdb0jWrAvU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758557501; c=relaxed/simple;
-	bh=Y4dexsKXHeZk//jfbzy1vNcOZEXCwdx3La8z6nNKwJY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g6Xnnub+T20EeLW+Lgc/BD8PJr+gwORyEdX7jzVWob5PeoA/YF7+UmFTHIAHeMABbznj/dLyCngmM5xUTEdvJwGrUG2+OFGum8SxHifcKJx2WSbHZF9lZbLDWCUxEuBSwNMi7aM19cTEFLN5rpvelzkf7Fo7/hH/HpEcynZ6RNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=svBdbWtE; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="svBdbWtE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C796BC4CEF0;
-	Mon, 22 Sep 2025 16:11:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758557501;
-	bh=Y4dexsKXHeZk//jfbzy1vNcOZEXCwdx3La8z6nNKwJY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=svBdbWtEwjtojsDy0C1kWGJQszMlj2jH0sgM1mMyVwDa5OsQD0H33HzwybTdErCJG
-	 rd6an1Ed4ucvaB5lNn3KWy8u9IMr5kTwOYDYtI8Ka1yf/BbcIlk98eyeGIfBtXx7mc
-	 8I5EvQ4Go2uJ6P/JNtdiGPMpVMEk95RtIZiC0iseMd7fdJar+RWenXmTYvEOWUEXNg
-	 eFevYjCvM2kz2YA4QQZx1ZqsK2y7dfV5Xbjg+5E0dwGSjBRcRQoZ2ANbVzELDC9j9N
-	 fm+hN8urMOx0V79vPzer8q8havNkrk945eYN2Yuz1tOFL5oJnrLS7qHlJ6FMVtlIlM
-	 yfVwRjk3XVSsQ==
-Date: Mon, 22 Sep 2025 11:11:40 -0500
-From: Rob Herring <robh@kernel.org>
-To: Yulin Lu <luyulin@eswincomputing.com>
+	s=arc-20240116; t=1758596941; c=relaxed/simple;
+	bh=XVWhz4F8cmF1+0bnKhnlPRE2MY7x3XEFc8K9dNdbvtA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=rirCPgXDbkpZIk8jJu+W2FJp2pdTQ+mUaE4LHYHwnx9TZ92vaAmCBZjQnQiTxr/B/7o5zQPP0piseW670vuV+RMFf7QuBehc8nUUxdGcJluByDYiL0qLqdbpZysHXt0RgqCh0x7pAp+mEPdyoyoMIsz1UiX2Jkq7pw1Qs/BJX2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=165.227.155.160
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from luyulin$eswincomputing.com ( [10.12.96.77] ) by
+ ajax-webmail-app2 (Coremail) ; Tue, 23 Sep 2025 11:08:48 +0800 (GMT+08:00)
+Date: Tue, 23 Sep 2025 11:08:48 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: luyulin@eswincomputing.com
+To: "Rob Herring" <robh@kernel.org>
 Cc: dlemoal@kernel.org, cassel@kernel.org, krzk+dt@kernel.org,
 	conor+dt@kernel.org, linux-ide@vger.kernel.org,
 	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -36,137 +25,43 @@ Cc: dlemoal@kernel.org, cassel@kernel.org, krzk+dt@kernel.org,
 	ningyu@eswincomputing.com, zhengyu@eswincomputing.com,
 	linmin@eswincomputing.com, huangyifeng@eswincomputing.com,
 	fenglin@eswincomputing.com, lianghujun@eswincomputing.com
-Subject: Re: [PATCH v4 1/3] Document the EIC7700 SoC sata ahci
-Message-ID: <20250922161140.GA150852-robh@kernel.org>
+Subject: Re: Re: [PATCH v4 1/3] Document the EIC7700 SoC sata ahci
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <20250922161140.GA150852-robh@kernel.org>
 References: <20250915125902.375-1-luyulin@eswincomputing.com>
  <20250915130135.1497-1-luyulin@eswincomputing.com>
+ <20250922161140.GA150852-robh@kernel.org>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250915130135.1497-1-luyulin@eswincomputing.com>
+Message-ID: <42166db3.16e4.199748b931d.Coremail.luyulin@eswincomputing.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:TQJkCgA31pRAD9Jo0tvXAA--.25586W
+X-CM-SenderInfo: pox13z1lq6v25zlqu0xpsx3x1qjou0bp/1tbiAgEOA2jRelQTUQAA
+	sb
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On Mon, Sep 15, 2025 at 09:01:35PM +0800, Yulin Lu wrote:
-> Document the SATA AHCI controller on the EIC7700 SoC platform,
-> including descriptions of its hardware configurations.
-
-Please fix the subject: "dt-bindings: ata: ..."
-
-> 
-> Retains the "ports-implemented" property in the DTS, because
-> removing it and relying only on the firmware register causes
-> problems. If the property is not present and we remove the
-> module using `rmmod`, a reset is triggered that clears the
-> register. As a result, inserting module again using `insmod`
-> will lead to errors.
-> 
-> The detailed reasons are that the ports-implemented register is
-> configured by the firmware (U-Boot on the HiFive Premier P550 board)
-> before kernel entry and correctly set to 0x1. During probe,
-> ahci_platform_enable_resources() -> ahci_platform_deassert_rsts() is
-> called, and when the driver is removed,
-> ahci_platform_disable_resources() -> ahci_platform_assert_rsts() is
-> called. This reset clears the register, which is defined by the IP
-> databook to reset to 0.
-> 
-> Signed-off-by: Yulin Lu <luyulin@eswincomputing.com>
-> ---
->  .../bindings/ata/eswin,eic7700-ahci.yaml      | 79 +++++++++++++++++++
->  1 file changed, 79 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/eswin,eic7700-ahci.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/eswin,eic7700-ahci.yaml b/Documentation/devicetree/bindings/ata/eswin,eic7700-ahci.yaml
-> new file mode 100644
-> index 000000000000..40c44f0705ba
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/eswin,eic7700-ahci.yaml
-> @@ -0,0 +1,79 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/eswin,eic7700-ahci.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Eswin EIC7700 SoC SATA Controller
-> +
-> +maintainers:
-> +  - Yulin Lu <luyulin@eswincomputing.com>
-> +  - Huan He <hehuan1@eswincomputing.com>
-> +
-> +description:
-> +  AHCI SATA controller embedded into the EIC7700 SoC
-> +  is based on the DWC AHCI SATA v5.00a IP core.
-
-Wrap at 80 chars.
-
-> +
-> +select:
-> +  properties:
-> +    compatible:
-> +      const: eswin,eic7700-ahci
-> +  required:
-> +    - compatible
-> +
-> +allOf:
-> +  - $ref: snps,dwc-ahci-common.yaml#
-> +
-> +properties:
-> +  compatible:
-> +    items:
-> +      - const: eswin,eic7700-ahci
-> +      - const: snps,dwc-ahci
-> +
-> +  clocks:
-> +    minItems: 2
-> +    maxItems: 2
-> +
-> +  clock-names:
-> +    items:
-> +      - const: pclk
-> +      - const: aclk
-> +
-> +  resets:
-> +    maxItems: 1
-> +
-> +  reset-names:
-> +    const: arst
-> +
-> +  ports-implemented:
-> +    const: 1
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +  - clocks
-> +  - clock-names
-> +  - resets
-> +  - reset-names
-> +  - phys
-> +  - phy-names
-> +  - ports-implemented
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    sata@50420000 {
-> +        compatible = "eswin,eic7700-ahci", "snps,dwc-ahci";
-> +        reg = <0x50420000 0x10000>;
-> +        interrupt-parent = <&plic>;
-> +        interrupts = <58>;
-> +        clocks = <&clock 171>, <&clock 186>;
-> +        clock-names = "pclk", "aclk";
-> +        phys = <&sata_phy>;
-> +        phy-names = "sata-phy";
-> +        ports-implemented = <0x1>;
-> +        resets = <&reset 96>;
-> +        reset-names = "arst";
-> +    };
-> -- 
-> 2.25.1
-> 
+SGksIFJvYiBIZXJyaW5nCgpUaGFuayB5b3UgZm9yIHlvdXIgcmV2aWV3IGFuZCBjb21tZW50cy4K
+PiAKPiBPbiBNb24sIFNlcCAxNSwgMjAyNSBhdCAwOTowMTozNVBNICswODAwLCBZdWxpbiBMdSB3
+cm90ZToKPiA+IERvY3VtZW50IHRoZSBTQVRBIEFIQ0kgY29udHJvbGxlciBvbiB0aGUgRUlDNzcw
+MCBTb0MgcGxhdGZvcm0sCj4gPiBpbmNsdWRpbmcgZGVzY3JpcHRpb25zIG9mIGl0cyBoYXJkd2Fy
+ZSBjb25maWd1cmF0aW9ucy4KPiAKPiBQbGVhc2UgZml4IHRoZSBzdWJqZWN0OiAiZHQtYmluZGlu
+Z3M6IGF0YTogLi4uIgo+IAoKSSBwcmV2aW91c2x5IG5vdGljZWQgdGhpcyBzdWJqZWN0IGlzc3Vl
+LCB0aGVuIHJlc3VibWl0dGVkIHY0CmFuZCBleHBsYWluZWQgdGhlIHJlYXNvbiBpbiB0aGUgY292
+ZXIgbGV0dGVyLgpUaGUgbGlua3MgdG8gdGhlc2UgcGF0Y2hlcyBhcmU6Cmh0dHBzOi8vbG9yZS5r
+ZXJuZWwub3JnL2xrbWwvMjAyNTA5MTUxMzUxMzguODc3LTEtbHV5dWxpbkBlc3dpbmNvbXB1dGlu
+Zy5jb20vCgo+ID4gCi4uLgo+ID4gK2Rlc2NyaXB0aW9uOgo+ID4gKyAgQUhDSSBTQVRBIGNvbnRy
+b2xsZXIgZW1iZWRkZWQgaW50byB0aGUgRUlDNzcwMCBTb0MKPiA+ICsgIGlzIGJhc2VkIG9uIHRo
+ZSBEV0MgQUhDSSBTQVRBIHY1LjAwYSBJUCBjb3JlLgo+IAo+IFdyYXAgYXQgODAgY2hhcnMuCj4g
+CgpUaGFua3MsIEkgd2lsbCBmaXggaXQgaW4gdGhlIG5leHQgcGF0Y2guCgo+ID4gKwouLi4KPiA+
+IC0tIAo+ID4gMi4yNS4xCj4gPiAKQmVzdCByZWdhcmRzLApZdWxpbiBMdQo=
