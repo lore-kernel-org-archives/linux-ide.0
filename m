@@ -1,163 +1,98 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCEE3192B90
-	for <linux-ide@vger.kernel.org>; Sun, 28 Sep 2025 08:28:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+Received: from zg8tmja2lje4os4yms4ymjma.icoremail.net (zg8tmja2lje4os4yms4ymjma.icoremail.net [206.189.21.223])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E5AC52BB17;
+	Tue, 30 Sep 2025 08:41:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.21.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759048132; cv=none; b=sUMjgiQ7eVXtdz+fMBRHDzi2vpe6pE1z2aTOJ3B7lLypWff6stOag7zd1iLIP8piffSZr4JTRC5K9JkfE2oxs8Av5l4XgAWVme7Lqzd+wntON2lFWpX8y7OZteubR72jQdvguRy83KNU1UK5qQ4b+0BDC+UO09uvSotRluNkUWo=
+	t=1759221666; cv=none; b=OhiapAFB1py1W5+bVXqrwld6mAVH8AhkypC/eExnT3MkE7Gv1G3h+4VCMYKgsSLErpUh/Cy2e5AQS63MbkmrEdypqgVPf1ZoZQ1LFNOcNHYdcoTzk5Q492xPlxCgYX85+OM8DuxUwEkBEFaD64nZlqsCsFbk+WYPN6nKjjKVwYk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759048132; c=relaxed/simple;
-	bh=dO+lyfuDoJJhAUtCu6ZyLFaFoPTmi7zSZcZBL2z/1Zg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Q4sccK8BPAJosBzCUtwoyRSgMTqmivZKkLbUOPR1OcPBvsBRrDttU0cWZXlT687YAPk8GokxW4knHRKBeajus+5dcKjKepWSvE3TV6hyTj9/BXTyljiUglb7iHfYXGfSQnhDLwO8NIo3hpS9BuJEaMPa6uAYsSUHeuOQZvMZZ2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=TI5L8nRo; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="TI5L8nRo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1759046943;
-	bh=dO+lyfuDoJJhAUtCu6ZyLFaFoPTmi7zSZcZBL2z/1Zg=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=TI5L8nRoNs/9ub8xq2Cf0jbSRfW/McRidJ4p/A0Xh6Dm/T+dicTQHYxdRjFqSlYDp
-	 O+06mcYReHTreZSgZYp2rYYH7DpL/yXtwcjdrBlpFrFQSCdj0bdWXkfjssur4grlrK
-	 IaTYXeN+fXgizK9eFhTludjVBlhMirGt9t3FWRT8=
-Received: from wolf.philpem.me.uk (148.163.187.81.in-addr.arpa [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 781A1BD680;
-	Sun, 28 Sep 2025 08:09:03 +0000 (UTC)
-Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id D1B485FCE8;
-	Sun, 28 Sep 2025 09:09:02 +0100 (BST)
-Message-ID: <bbaa3a8e-3461-4e5c-bab4-e8fba1b73eec@philpem.me.uk>
-Date: Sun, 28 Sep 2025 09:09:02 +0100
+	s=arc-20240116; t=1759221666; c=relaxed/simple;
+	bh=P0nKWbEHMrgOZ4JSKRzhCVw23WuFsWlYjcj+MEtCpDw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=IIGYtP5UwjXre3rcCy8H+W3E2nTQ2M+ZB2kSUXeRneyaVIg5/upKJTQ7r0DlS3Pkn21JqJTFc+9KBQQbcHsiQCue2Yv/HtPhcvP6We218e7MvsUS2guCZf7u9C8imyG5VIQzQATniP3IV/uJtoUM0UywYDVq1y59zuPRLnyQVYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=206.189.21.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from E0006800LT.eswin.cn (unknown [10.12.96.77])
+	by app1 (Coremail) with SMTP id TAJkCgAnSxGCl9towa_uAA--.16344S2;
+	Tue, 30 Sep 2025 16:40:40 +0800 (CST)
+From: Yulin Lu <luyulin@eswincomputing.com>
+To: dlemoal@kernel.org,
+	cassel@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	vkoul@kernel.org,
+	kishon@kernel.org,
+	linux-phy@lists.infradead.org
+Cc: ningyu@eswincomputing.com,
+	zhengyu@eswincomputing.com,
+	linmin@eswincomputing.com,
+	huangyifeng@eswincomputing.com,
+	fenglin@eswincomputing.com,
+	lianghujun@eswincomputing.com,
+	Yulin Lu <luyulin@eswincomputing.com>
+Subject: [PATCH v5 0/3] Add driver support for Eswin EIC7700 SoC SATA Controller and PHY
+Date: Tue, 30 Sep 2025 16:37:54 +0800
+Message-Id: <20250930083754.15-1-luyulin@eswincomputing.com>
+X-Mailer: git-send-email 2.31.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Multi-LUN ATAPI devices (Panasonic PD)
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-References: <398bda0b-6eaf-4a4f-8f46-0b0befd3aa89@philpem.me.uk>
- <66e16c3d-d7b1-4d53-a1b2-c1568e1ad585@kernel.org>
-Content-Language: en-US
-From: Phil Pemberton <philpem@philpem.me.uk>
-In-Reply-To: <66e16c3d-d7b1-4d53-a1b2-c1568e1ad585@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:TAJkCgAnSxGCl9towa_uAA--.16344S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ww1DGry7Ar13KFWUZry3CFg_yoW8GF48pa
+	1DGryftr1vqry7JayfJ3W0kFyfJ3Z3GryakrZrJ3Z8XFWYvas5Xanaya4YvFn7Cw4kXr43
+	XFn8Ka4akFyUArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9G14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wrylc2xSY4AK6svPMxAIw28IcxkI7VAKI48JMx
+	C20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAF
+	wI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20x
+	vE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v2
+	0xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxV
+	W8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRidbbtUUUUU==
+X-CM-SenderInfo: pox13z1lq6v25zlqu0xpsx3x1qjou0bp/
 
-Hi Damien,
+This series depends on the config option patch [1].
 
-Apologies for the delay in replying, I've been busy with other things.
+[1] Https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?h=next-20250929&id=ce2d00c6e192b588ddc3d1efb72b0ea00ab5538f
 
-On 08/05/2025 05:33, Damien Le Moal wrote:
-> Is this a new issue with 6.12.9 or was it working before ?
+Updates:
+  v5 -> v4:
+    - eswin,eic7700-ahci.yaml
+      - Add "dt-bindings: ata:" prefix to the subject.
+      - Wrap at 80 characters in the YAML description field.
+    - Link to v4: https://lore.kernel.org/lkml/20250915125902.375-1-luyulin@eswincomputing.com/
 
-I can't say when it was new by, but it certainly worked in the 3.0 
-kernel tree, see:
-   https://lkml.indiana.edu/hypermail/linux/kernel/9903.2/0109.html
+Yulin Lu (3):
+  dt-bindings: ata: eswin: Document for EIC7700 SoC ahci
+  dt-bindings: phy: eswin: Document the EIC7700 SoC SATA PHY
+  phy: eswin: Create eswin directory and add EIC7700 SATA PHY driver
 
-  
-https://grumpyoldme.de/2023/08/19/ide-device-with-lun-1-in-linux-easy-in-2000-howto-in-2023-followerpower/
+ .../bindings/ata/eswin,eic7700-ahci.yaml      |  79 +++++++
+ .../bindings/phy/eswin,eic7700-sata-phy.yaml  |  36 ++++
+ drivers/phy/Kconfig                           |   1 +
+ drivers/phy/Makefile                          |   1 +
+ drivers/phy/eswin/Kconfig                     |  14 ++
+ drivers/phy/eswin/Makefile                    |   2 +
+ drivers/phy/eswin/phy-eic7700-sata.c          | 192 ++++++++++++++++++
+ 7 files changed, 325 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/eswin,eic7700-ahci.yaml
+ create mode 100644 Documentation/devicetree/bindings/phy/eswin,eic7700-sata-phy.yaml
+ create mode 100644 drivers/phy/eswin/Kconfig
+ create mode 100644 drivers/phy/eswin/Makefile
+ create mode 100644 drivers/phy/eswin/phy-eic7700-sata.c
 
-  
-https://www.abclinuxu.cz/hardware/ukladani-dat/ide/opticke-mechaniky/pd-cd-rom/teac-pd-518e 
-(translate from Czech to English)
-
-It seems like the kernel configuration option they mention (
-
-
-> There is no concept of Logical unit/LUN in ATA/ATAPI. That simply does not
-> exist at all.
-
-I think you might be mistaken -- pure ATA has only a master and slave 
-for each channel, sure. But ATAPI wraps SCSI commands to pass over the 
-ATA bus -- in fact, you can see here that it supports LUNs:
-
-   https://wiki.osdev.org/ATAPI
-
-See "Detecting a medium's capacity"
-
-
- > Likely, Windows has a special driver for that second PD drive and> 
-exposes both drives as 2 LUNs of the same device.
-
-I've reverse-engineered the driver. All it does is detect the SCSI 
-device, enumerate as two drives to Windows, then
-
-The DOS driver works by sitting an ASPI SCSI driver on top of ATAPI, 
-then putting a SCSI Mass Storage and a SCSI CD-ROM driver on top of the 
-ASPI driver.
-
-> Unless that PD drive thinggy uses a standard ATA/ATAPI interface, I do not see
-> how to make this work.
-
-It's ATAPI - see above.
-
-The drive is a combination of a CD-ROM drive and a phase-change 
-rewritable optical disc drive.
-If you access LUN 0, you get a CD subdevice which only works if a CD is 
-in the drive.
-If you access LUN 1, you see a mass storage device which only works with 
-a PD disk in the drive.
-
-It acts like some of Panasonic's later DVD-RAM drives.
-
-> But just in case, please share an output of dmesg for this system probe of the
-> AHCI adapter and ATA/ATAPI devices so that we can see what's going on.
-
-I'll get an AHCI adapter and a PD drive set up later today and report 
-back. This would be on Kernel 6.14.0.
-
-In the meantime the Czech link above has some of the device identity data:
-
-ide: i82371 PIIX (Triton) on PCI bus 0 function 33
-ide0: BM-DMA at 0xd800-0xd807
-ide1: BM-DMA at 0xd808-0xd80f
-hda: WDC AC26400B, 6149MB w/512kB Cache, CHS=784/255/63, UDMA
-hdb: TEAC PD-1 PD-518E, ATAPI CDROM drive - enabling SCSI emulation
-ATAPI overlap supported: No
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-Floppy drive(s): fd0 is 1.44M
-FDC 0 is a post-1991 82077
-md driver 0.36.3 MAX_MD_DEV=4, MAX_REAL=8
-scsi0 : SCSI host adapter emulation for IDE ATAPI devices
-scsi : 1 host.
-Vendor: TEAC Model: PD-1 PD-518E Rev: 1.0E
-Type: CD-ROM ANSI SCSI revision: 02
-Detected scsi CD-ROM sr0 at scsi0, channel 0, id 0, lun 0
-Vendor: TEAC Model: PD-1 PD-518E Rev: 1.0E
-Type: Optical Device ANSI SCSI revision: 02
-Detected scsi removable disk sda at scsi0, channel 0, id 0, lun 1
-scsi : detected 1 SCSI cdrom 1 SCSI disk total.
-sda : READ CAPACITY failed.
-sda : status = 0, message = 00, host = 0, driver = 28
-sda : extended sense code = 2
-sda : block size assumed to be 512 bytes, disk size 1GB.
-
-/proc/scsi:
-Attached devices:
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-Vendor: TEAC Model: PD-1 PD-518E Rev: 1.0E
-Type: CD-ROM ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 00 Lun: 01
-Vendor: TEAC Model: PD-1 PD-518E Rev: 1.0E
-Type: Optical Device ANSI SCSI revision: 02
-
-
-The kernel patch on indiana.edu forces BLIST_FORCELUN and 
-BLIST_SINGLELUN which would force all 8 LUNs to be probed, and only 
-allow I/O to one LUN at a time.
-
-Thanks.
 -- 
-Phil.
-philpem@philpem.me.uk
-https://www.philpem.me.uk/
+2.25.1
+
