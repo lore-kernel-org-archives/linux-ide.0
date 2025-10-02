@@ -1,17 +1,17 @@
-Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 62BBD30F954;
-	Thu,  2 Oct 2025 08:14:04 +0000 (UTC)
+Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C8F6E311C2A;
+	Thu,  2 Oct 2025 08:14:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759392851; cv=none; b=ikRPIwnkT8ZGTq2chzo7lrtwErlcCXvxG4J5Z3U2GXNh3HaDL9BSwOI3kvqQv1guWqEISVcpJKHOhPtwS5OLHdRoiBlFvBCoKz6dNOHBBSFa4Ot74CsFzXOnMvp79a9vvzEF9ymxRCCug5GPUfZo6iYj2XyOJYJNwwAonHJIfzw=
+	t=1759392854; cv=none; b=WZPeOKkIotPpFX+3kR8D6L1N9/kwJ21d7xSrYdu/huG9Kf/K9sKBGFuJRL7e+BpTLexgkJ9WpY6Vil0VvozC+QClZazkZLtMP/zCEFKp8I5Z7eu9ZT8pd4n5Mn3oXQjHSETVrNpuqQVwtO++sECpsIPuZp2ZHznmdKepgYMDfeI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759392851; c=relaxed/simple;
-	bh=aUyn6kbD13lpyrV+9RVcwjxIaUKLCg4/lG2fnS/j5oM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=JGeivPWdahEVpei4EdCZOuzuM806927bVwTo09PTuAdgT0P0kst4ZRYG2W14SMHzl6svTKxUyN/qnmWSIih79V30POi+EYiV3/tgg5VSlIwaoqjYspP7xbkCSGWuivbH66vlK5VhHQCdrNMkLSc+cO4oOHeVjCE+RtRg0i1EOho=
+	s=arc-20240116; t=1759392854; c=relaxed/simple;
+	bh=Maxqvp8M2/Mbhj5qDNZmaX54vuIa2E/KjRgY0LGmkyY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=eOF9Tvpu/qb2IGaios3YBkQ1qO5xIoLYommvyVhc2n3fs9D3/PHnboOSUkxUHNxHuMe+nUrnm7uTgbK1c0JQetwMBgU7uUysXkIS5Hz29yNv+dcCSfVAZA0WL5DIjzajl3lihKD3Yz8GForrNkh5EY6OpNsq3MVY7b+BsQsfvYc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
-X-AuditID: a67dfc5b-c2dff70000001609-dd-68de3413fc51
+X-AuditID: a67dfc5b-c45ff70000001609-96-68de34150086
 From: Byungchul Park <byungchul@sk.com>
 To: linux-kernel@vger.kernel.org
 Cc: kernel_team@skhynix.com,
@@ -162,44 +162,43 @@ Cc: kernel_team@skhynix.com,
 	rcu@vger.kernel.org,
 	linux-nfs@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev
-Subject: [PATCH v17 36/47] dept: assign unique dept_key to each distinct wait_for_completion() caller
-Date: Thu,  2 Oct 2025 17:12:36 +0900
-Message-Id: <20251002081247.51255-37-byungchul@sk.com>
+Subject: [PATCH v17 42/47] dept: call dept_hardirqs_off() in local_irq_*() regardless of irq state
+Date: Thu,  2 Oct 2025 17:12:42 +0900
+Message-Id: <20251002081247.51255-43-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20251002081247.51255-1-byungchul@sk.com>
 References: <20251002081247.51255-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxTHee597m3pqLupLF5lCVsjYSooGtyOi9F925MtCxr95D7Mzt7Y
-	RiimvCgkS6gCokRkaCFYWKgKQVoZFDZ5KyJqFauxFcYIFrCsAxUKRimM1+4W9cvJ77z9T87J
-	kdKKQWaDVKtLF/Q6VbKSlWGZP8IcH5k4rEmwXlwD/YYuDBW/W1kosJUz4Kq3IJhbNNGwXOKQ
-	wMz8MwkE7Q4E1mYDBW8bVliYuPMGgdHrY6HspQHDy3vfgn+knYHg0DgFf89OIqjxrVDg6zqD
-	YLn0GJQZXQjM3iEamh3DCP4t/oOGXt8a6AtMs9BjLGTB766gYKqBhapTdgYqTSUISittGNwT
-	SxSUNq4DU9lpSjQvKDDeaKfg0VUPhpqcGBitvSyBJe92qPc/YaBnuJ+BibESFkbu5zMw0+el
-	oKAtgMH2j5iwD24Bc/41DB32HgwFyzMIHC2jFPS2VbAwbA0ykGOaEw/Q5WTgqcWFwel4gMH7
-	fICBpsePaLgxdYWFi1Nj4nqBack3ajKXV4RJXdOfFMl7uswS629WRBYXShCZqT5Nk7xi0a12
-	TrJkIfAXS+yzVZg8vMKTXx/Hk9bLQxKS2zkoIVW2DJJ718/sizsk260WkrWZgn7bnsMyjbnt
-	EnPcoDtZ0Pgc5aALh86hcCnPJfJlk52SD+wuDFIhZrlYfmBgng5xJPcZ33R+jAkxzTk/5fvd
-	cSFeywn8iPHMai/mYvjW15dWWc59yXteWN9rRvOWhq5VnXAx3ut14hAruJ183nSuOEsm1pjC
-	+Yq6euZdw3r+du0ALkbyKhRWhxRaXWaKSpucuFWTpdOe3HokNcWGxI+r+WXpxxb0xnWgG3FS
-	pIyQu2KGNApGlZmWldKNeCmtjJQfrvVoFHK1Kitb0Kf+pM9IFtK6UZQUK9fJd8yeUCu4o6p0
-	4ZggHBf0H7KUNHxDDtIXFW0MxgbOP4seTbJ80ZRv/j5AAnHxndlhiUfCyt++/vpJpmrSo3Nv
-	vuV6tePnPbuuWkz79t+O/a7RcNPX0NFz/ZPSz/PnvjKWxyyQH/aO7/1I0ZtaWR31X3b67tyJ
-	g3rP/k1nmyOkNv6CT9tXvJAQFTiVtI18bLKdGPcnRavd3KASp2lU2zfT+jTV/0hLqeVtAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAAzXSa0hTcRQA8P73OUer2xK8aGStJIishIpD7wfULUr6ElIUOfLSlrrFVqZW
-	4NKlZKWNTcm1WprLdNmaVmpMZKGSS3LZW6cZuixn9tCWqa2t6Mvhdx4czocjwMX3yUiBXHGM
-	VymkKRJKSAjj12THzl7RI1ue65gDLzVNBIyN5hFw5Y6Vgjz7ZRI6qqsQ9I7lIfBPGHHQ1gcI
-	mNK10DA63kVDwNGCoMitw8Faq8Hgu+03BUOPviEw9PVTUPxRQ8CI5TyCEq+Rho/N22C49yEJ
-	Ac8HDF798CGw9P/GoL8pF8FUUTJcK62hYKL9KQ7Fhg4E1/s8OAzags3alh4EjoozFAwU3sOh
-	s38GPB8boeCxIZ+CYfcVDD7bKDCfcZBgMuoQZJfdoaDIZCeg/l0DDe6hSQy6i3QYVNl3Qa/F
-	S4CrsBQL3hecuhsBxuJsLBgGMTDcfojBuKWShidl3QRYsmLA2N5JwvuKEhom++IgYFZCS9UH
-	GjwFBgKqh5+SGw2I82svElxlzX2M0z6bojjrVSviJn7pEDdano1z2sJg+sg3gnM5NSe4cpeP
-	4n6NvaA4xw8zwbWVstyl9liuvsRDczmNb+ndq/cJ1ybxKfI0XrVsfaJQdr1BTx7VKNLz7r5D
-	Wahg3zkUJmCZFaw7P4CFTDGL2Nevx/GQw5l5bM0FLxkyzrjmsC/dS0KezfBsryGXDplgYtj6
-	L/q/FjGr2O5BK/1vZzRbZWv6uycsWO/scxEhi5mVrHYkBytEQjOaVonC5Yq0VKk8ZeVSdbIs
-	QyFPX3pImWpHwW+ynJ68VIdGO7c5ESNAkukid4xHJialaeqMVCdiBbgkXJRY0S0Ti5KkGZm8
-	SnlQdTyFVztRlICQRIh2JPCJYuaw9BifzPNHedX/LiYIi8xCHfbGhhvbb70wK8PFWzfvzleX
-	zVJ98iREHah74z0yV5k5uTP+pr4gPrLdpvnqLO/SrjM1D7SOi2rTWz/z/q2nMs8uJOfqM/fP
-	r047fRLrcm3wzYxe7RyYFhGt3rJzaEHUiQTbga/+W+t6mD1tsRL/Xu+Dn/pNel+jyZQwf/H+
-	BlonIdQyadxiXKWW/gFyd5nfSQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSXVBMcRjG/c/5n7OnZaczq3TI55qmEaKs5mUMbsycCxfowqgLls60O7aV
+	7ZthdkfRxyhlqiE1W+m7yMaoVFMhTDQbqWU69J2GPqx2iyJbxt1vfs/zvFcvQ8qTqDWMRhcp
+	6HUqrYKWYun4ivzt7spP6p2GxtVgn07EkGi+RUFm/xAN2WNGDAviKAE9jm8IsjMtCPL7RRK6
+	7JM0vMpMoSE3JwNBVq4ZQ11fvcS5oOF1YS+GtopRCYhpmRi+jmTQkFhvx9D4cSvkX73rDGsH
+	CLg/aiWgve0lhqKeTgIcqZ5gSb9OgfXGMIKqiQIavjqKSSi2T0qgzbQKMkZsErDddWB4k9NB
+	QVNiHwE335po+CXWUmDL/UNBRSeGHGMqgpSELAzV30toMP74jGBu9g4Ns9WDFORO+0HV7250
+	cCdfmVeJ+OmiKyQfXxPD/7K/p/lGhwnz6W+283W3RQkf3/RRwpvMUXz8s3GKryn14Qsbxgje
+	XJ5E8xMdHRJ+qCub4PNeHT3iESTdFyJoNdGCfsf+U1L1QvNDKtzoGpvwxIYNaHx5MnJhOFbJ
+	Fd0zUv85r2RyiWnWm7Naf5KL7MZu5Gqujyx5km1fy3V3bktGDLOSPc2V96sXNWa9uMKq8aW6
+	jA3gnr0YJP6d3MBVVDcveRenf9ffjhdZzu7mEibjnR2ps1Piwg33ppH/Bqu5llIrvoFkJrSs
+	HMk1uugwlUar9FXH6TSxvmfOhZmR80GKL80H1yKbJbAVsQxSrJBZvES1nFJFR8SFtSKOIRVu
+	slOlvWq5LEQVd0HQnzupj9IKEa3Ik8EKD5m/IyZEzoaqIoWzghAu6P+nBOOyxoDcNu/VBko4
+	Nr1JNeCuXNvSIU5pGq/h34FbfA5tCjjruq7BkpXnfnJCGNxQZR9IL9MX2MUHX2a6jp/+cGxz
+	SPDR8uGkE+GGWDHUloYHlakG/+m5y31ljxMupjoC1jsip2bEoOcHakYeHTZMnV/vdWJqYpf3
+	nqf59x95NT88gs8kzStwhFrl50PqI1R/ARPICcEcAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSW0xTaRSF/c/5z4WOlTMdMp4oidqEkMwgagJmZ2qMzosnRo0ao4kvUvA4
+	rdxMiwwYTbg1EEaUNrZEqlghFqSACGjEWiSg9YIItSPgQGWqHbxArVGQIIVOwfiys/a3VnbW
+	w2ZJ2Q1qBavOyBI1Gco0OS3Bkl2KwrVRCS9V659bEmEgvxPD1GQJhgvXGmgoaTlPQX+TDcHo
+	VAmC6VkzCbr2EIY5g5OByZlhBkIOJwKTy0BCQ1s+AZ+b52kY7/6EwOj10VDxLh9DwHoaQeWY
+	mYF397eBf9ROQcjzhoDBLxMIrL55AnydxQjmTKlwqbqVhtnePhIqjP0ILns9JLxtDpttzpcI
+	HHUFNPxXfoMEt28Z/D0VoOGR8S8a/K4LBHxopsFS4KDgotmAoLDmGg2miy0Y2v+9zYBrPEjA
+	iMlAgK1lJ4xaxzD0lFcT4X7h1PXlYK4oJMLjLQHGRjsBM9Z6Bp7UjGCw5sWAuddNwau6SgaC
+	3g0QsmSC0/aGAc9ZI4Ymfx+1xYiEad0ZLNS33iQE3bM5WmioakDC7FcDEiavFJKCrjy8dk8E
+	SKGo9U/hSs8ELXydek4Lji8WLDyu5gV971qhvdLDCEUd/zC7fzso2XRYTFNni5p1m5MkqlBn
+	G3UsPzJHZ/+E85D/h1IUwfJcAl9VG6AWNM3F8kNDM+SCjuJW861lY4uc5Hqi+QFXXCli2Z+4
+	ZL7eq1rAmIvhaxr9i3Ept5G/9+A18e3kKt7W3LnII8Lc7e3BC1rGJfK6QBFRjiQWtKQeRakz
+	stOV6rTEeG2qKjdDnROfkpnegsLPZD0V1N9Ck+5tXYhjkXyp1BXjUckoZbY2N70L8Swpj5Im
+	1Y2oZNLDytwToibzkOZ4mqjtQitZLF8u3X5ATJJxfyizxFRRPCZqvrsEG7EiD+XK++ePDA25
+	dt8sS0k5nfJsP467e3lHxL41YvKDvuBt51XFj47pO9EF9u2xOabk8TNPi4cteved4sFh/b5V
+	8ZEKf+T10ljS1ntu696f4371lH2kqjpifFxAR++piHcpqj+4DO83js09VKjHT9b+3mTX9ye8
+	aHwaLe4J7tVlzcQelWOtSrnhF1KjVf4P8xIkJkgDAAA=
 X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -207,367 +206,63 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-wait_for_completion() can be used at various points in the code and it's
-very hard to distinguish wait_for_completion()s between different usages.
-Using a single dept_key for all the wait_for_completion()s could trigger
-false positive reports.
+For dept to function properly, dept_task()->hardirqs_enabled must be set
+correctly.  If it fails to set this value to false, for example, dept
+may mistakenly think irq is still enabled even when it's not.
 
-Assign unique dept_key to each distinct wait_for_completion() caller to
-avoid false positive reports.
+Do dept_hardirqs_off() regardless of irq state not to miss any
+unexpected cases by any chance e.g. changes of the state by asm code.
 
 Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- include/linux/completion.h | 100 +++++++++++++++++++++++++++++++------
- kernel/sched/completion.c  |  60 +++++++++++-----------
- 2 files changed, 115 insertions(+), 45 deletions(-)
+ include/linux/irqflags.h | 14 ++++++++++++++
+ kernel/dependency/dept.c |  1 +
+ 2 files changed, 15 insertions(+)
 
-diff --git a/include/linux/completion.h b/include/linux/completion.h
-index 3200b741de28..4d8fb1d95c0a 100644
---- a/include/linux/completion.h
-+++ b/include/linux/completion.h
-@@ -27,12 +27,10 @@
- struct completion {
- 	unsigned int done;
- 	struct swait_queue_head wait;
--	struct dept_map dmap;
- };
+diff --git a/include/linux/irqflags.h b/include/linux/irqflags.h
+index d8b9cf093f83..586f5bad4da7 100644
+--- a/include/linux/irqflags.h
++++ b/include/linux/irqflags.h
+@@ -214,6 +214,13 @@ extern void warn_bogus_irq_restore(void);
+ 		raw_local_irq_disable();		\
+ 		if (!was_disabled)			\
+ 			trace_hardirqs_off();		\
++		/*					\
++		 * Just in case that C code has missed	\
++		 * trace_hardirqs_off() at the first	\
++		 * place e.g. disabling irq at asm code.\
++		 */					\
++		else					\
++			dept_hardirqs_off();		\
+ 	} while (0)
  
- #define init_completion(x)				\
- do {							\
--	sdt_map_init(&(x)->dmap);			\
- 	__init_completion(x);				\
- } while (0)
+ #define local_irq_save(flags)				\
+@@ -221,6 +228,13 @@ extern void warn_bogus_irq_restore(void);
+ 		raw_local_irq_save(flags);		\
+ 		if (!raw_irqs_disabled_flags(flags))	\
+ 			trace_hardirqs_off();		\
++		/*					\
++		 * Just in case that C code has missed	\
++		 * trace_hardirqs_off() at the first	\
++		 * place e.g. disabling irq at asm code.\
++		 */					\
++		else					\
++			dept_hardirqs_off();		\
+ 	} while (0)
  
-@@ -43,17 +41,14 @@ do {							\
+ #define local_irq_restore(flags)			\
+diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+index 0f4464657288..a17b185d6a6a 100644
+--- a/kernel/dependency/dept.c
++++ b/kernel/dependency/dept.c
+@@ -2248,6 +2248,7 @@ void noinstr dept_hardirqs_off(void)
+ 	 */
+ 	dept_task()->hardirqs_enabled = false;
+ }
++EXPORT_SYMBOL_GPL(dept_hardirqs_off);
  
- static inline void complete_acquire(struct completion *x, long timeout)
+ void noinstr dept_update_cxt(void)
  {
--	sdt_might_sleep_start_timeout(&x->dmap, timeout);
- }
- 
- static inline void complete_release(struct completion *x)
- {
--	sdt_might_sleep_end();
- }
- 
- #define COMPLETION_INITIALIZER(work) \
--	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait), \
--	  .dmap = DEPT_MAP_INITIALIZER(work, NULL), }
-+	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait), }
- 
- #define COMPLETION_INITIALIZER_ONSTACK_MAP(work, map) \
- 	(*({ init_completion_map(&(work), &(map)); &(work); }))
-@@ -119,18 +114,18 @@ static inline void reinit_completion(struct completion *x)
- 	x->done = 0;
- }
- 
--extern void wait_for_completion(struct completion *);
--extern void wait_for_completion_io(struct completion *);
--extern int wait_for_completion_interruptible(struct completion *x);
--extern int wait_for_completion_killable(struct completion *x);
--extern int wait_for_completion_state(struct completion *x, unsigned int state);
--extern unsigned long wait_for_completion_timeout(struct completion *x,
-+extern void __wait_for_completion(struct completion *);
-+extern void __wait_for_completion_io(struct completion *);
-+extern int __wait_for_completion_interruptible(struct completion *x);
-+extern int __wait_for_completion_killable(struct completion *x);
-+extern int __wait_for_completion_state(struct completion *x, unsigned int state);
-+extern unsigned long __wait_for_completion_timeout(struct completion *x,
- 						   unsigned long timeout);
--extern unsigned long wait_for_completion_io_timeout(struct completion *x,
-+extern unsigned long __wait_for_completion_io_timeout(struct completion *x,
- 						    unsigned long timeout);
--extern long wait_for_completion_interruptible_timeout(
-+extern long __wait_for_completion_interruptible_timeout(
- 	struct completion *x, unsigned long timeout);
--extern long wait_for_completion_killable_timeout(
-+extern long __wait_for_completion_killable_timeout(
- 	struct completion *x, unsigned long timeout);
- extern bool try_wait_for_completion(struct completion *x);
- extern bool completion_done(struct completion *x);
-@@ -139,4 +134,79 @@ extern void complete(struct completion *);
- extern void complete_on_current_cpu(struct completion *x);
- extern void complete_all(struct completion *);
- 
-+#define wait_for_completion(x)						\
-+({									\
-+	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	__wait_for_completion(x);					\
-+	sdt_might_sleep_end();						\
-+})
-+#define wait_for_completion_io(x)					\
-+({									\
-+	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	__wait_for_completion_io(x);					\
-+	sdt_might_sleep_end();						\
-+})
-+#define wait_for_completion_interruptible(x)				\
-+({									\
-+	int __ret;							\
-+									\
-+	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	__ret = __wait_for_completion_interruptible(x);			\
-+	sdt_might_sleep_end();						\
-+	__ret;								\
-+})
-+#define wait_for_completion_killable(x)					\
-+({									\
-+	int __ret;							\
-+									\
-+	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	__ret = __wait_for_completion_killable(x);			\
-+	sdt_might_sleep_end();						\
-+	__ret;								\
-+})
-+#define wait_for_completion_state(x, s)					\
-+({									\
-+	int __ret;							\
-+									\
-+	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	__ret = __wait_for_completion_state(x, s);			\
-+	sdt_might_sleep_end();						\
-+	__ret;								\
-+})
-+#define wait_for_completion_timeout(x, t)				\
-+({									\
-+	unsigned long __ret;						\
-+									\
-+	sdt_might_sleep_start_timeout(NULL, t);				\
-+	__ret = __wait_for_completion_timeout(x, t);			\
-+	sdt_might_sleep_end();						\
-+	__ret;								\
-+})
-+#define wait_for_completion_io_timeout(x, t)				\
-+({									\
-+	unsigned long __ret;						\
-+									\
-+	sdt_might_sleep_start_timeout(NULL, t);				\
-+	__ret = __wait_for_completion_io_timeout(x, t);			\
-+	sdt_might_sleep_end();						\
-+	__ret;								\
-+})
-+#define wait_for_completion_interruptible_timeout(x, t)			\
-+({									\
-+	long __ret;							\
-+									\
-+	sdt_might_sleep_start_timeout(NULL, t);				\
-+	__ret = __wait_for_completion_interruptible_timeout(x, t);	\
-+	sdt_might_sleep_end();						\
-+	__ret;								\
-+})
-+#define wait_for_completion_killable_timeout(x, t)			\
-+({									\
-+	long __ret;							\
-+									\
-+	sdt_might_sleep_start_timeout(NULL, t);				\
-+	__ret = __wait_for_completion_killable_timeout(x, t);		\
-+	sdt_might_sleep_end();						\
-+	__ret;								\
-+})
- #endif
-diff --git a/kernel/sched/completion.c b/kernel/sched/completion.c
-index 5e45a60ff7b3..7262000db114 100644
---- a/kernel/sched/completion.c
-+++ b/kernel/sched/completion.c
-@@ -4,7 +4,7 @@
-  * Generic wait-for-completion handler;
-  *
-  * It differs from semaphores in that their default case is the opposite,
-- * wait_for_completion default blocks whereas semaphore default non-block. The
-+ * __wait_for_completion default blocks whereas semaphore default non-block. The
-  * interface also makes it easy to 'complete' multiple waiting threads,
-  * something which isn't entirely natural for semaphores.
-  *
-@@ -42,7 +42,7 @@ void complete_on_current_cpu(struct completion *x)
-  * This will wake up a single thread waiting on this completion. Threads will be
-  * awakened in the same order in which they were queued.
-  *
-- * See also complete_all(), wait_for_completion() and related routines.
-+ * See also complete_all(), __wait_for_completion() and related routines.
-  *
-  * If this function wakes up a task, it executes a full memory barrier before
-  * accessing the task state.
-@@ -139,23 +139,23 @@ wait_for_common_io(struct completion *x, long timeout, int state)
- }
- 
- /**
-- * wait_for_completion: - waits for completion of a task
-+ * __wait_for_completion: - waits for completion of a task
-  * @x:  holds the state of this particular completion
-  *
-  * This waits to be signaled for completion of a specific task. It is NOT
-  * interruptible and there is no timeout.
-  *
-- * See also similar routines (i.e. wait_for_completion_timeout()) with timeout
-+ * See also similar routines (i.e. __wait_for_completion_timeout()) with timeout
-  * and interrupt capability. Also see complete().
-  */
--void __sched wait_for_completion(struct completion *x)
-+void __sched __wait_for_completion(struct completion *x)
- {
- 	wait_for_common(x, MAX_SCHEDULE_TIMEOUT, TASK_UNINTERRUPTIBLE);
- }
--EXPORT_SYMBOL(wait_for_completion);
-+EXPORT_SYMBOL(__wait_for_completion);
- 
- /**
-- * wait_for_completion_timeout: - waits for completion of a task (w/timeout)
-+ * __wait_for_completion_timeout: - waits for completion of a task (w/timeout)
-  * @x:  holds the state of this particular completion
-  * @timeout:  timeout value in jiffies
-  *
-@@ -167,28 +167,28 @@ EXPORT_SYMBOL(wait_for_completion);
-  * till timeout) if completed.
-  */
- unsigned long __sched
--wait_for_completion_timeout(struct completion *x, unsigned long timeout)
-+__wait_for_completion_timeout(struct completion *x, unsigned long timeout)
- {
- 	return wait_for_common(x, timeout, TASK_UNINTERRUPTIBLE);
- }
--EXPORT_SYMBOL(wait_for_completion_timeout);
-+EXPORT_SYMBOL(__wait_for_completion_timeout);
- 
- /**
-- * wait_for_completion_io: - waits for completion of a task
-+ * __wait_for_completion_io: - waits for completion of a task
-  * @x:  holds the state of this particular completion
-  *
-  * This waits to be signaled for completion of a specific task. It is NOT
-  * interruptible and there is no timeout. The caller is accounted as waiting
-  * for IO (which traditionally means blkio only).
-  */
--void __sched wait_for_completion_io(struct completion *x)
-+void __sched __wait_for_completion_io(struct completion *x)
- {
- 	wait_for_common_io(x, MAX_SCHEDULE_TIMEOUT, TASK_UNINTERRUPTIBLE);
- }
--EXPORT_SYMBOL(wait_for_completion_io);
-+EXPORT_SYMBOL(__wait_for_completion_io);
- 
- /**
-- * wait_for_completion_io_timeout: - waits for completion of a task (w/timeout)
-+ * __wait_for_completion_io_timeout: - waits for completion of a task (w/timeout)
-  * @x:  holds the state of this particular completion
-  * @timeout:  timeout value in jiffies
-  *
-@@ -201,14 +201,14 @@ EXPORT_SYMBOL(wait_for_completion_io);
-  * till timeout) if completed.
-  */
- unsigned long __sched
--wait_for_completion_io_timeout(struct completion *x, unsigned long timeout)
-+__wait_for_completion_io_timeout(struct completion *x, unsigned long timeout)
- {
- 	return wait_for_common_io(x, timeout, TASK_UNINTERRUPTIBLE);
- }
--EXPORT_SYMBOL(wait_for_completion_io_timeout);
-+EXPORT_SYMBOL(__wait_for_completion_io_timeout);
- 
- /**
-- * wait_for_completion_interruptible: - waits for completion of a task (w/intr)
-+ * __wait_for_completion_interruptible: - waits for completion of a task (w/intr)
-  * @x:  holds the state of this particular completion
-  *
-  * This waits for completion of a specific task to be signaled. It is
-@@ -216,7 +216,7 @@ EXPORT_SYMBOL(wait_for_completion_io_timeout);
-  *
-  * Return: -ERESTARTSYS if interrupted, 0 if completed.
-  */
--int __sched wait_for_completion_interruptible(struct completion *x)
-+int __sched __wait_for_completion_interruptible(struct completion *x)
- {
- 	long t = wait_for_common(x, MAX_SCHEDULE_TIMEOUT, TASK_INTERRUPTIBLE);
- 
-@@ -224,10 +224,10 @@ int __sched wait_for_completion_interruptible(struct completion *x)
- 		return t;
- 	return 0;
- }
--EXPORT_SYMBOL(wait_for_completion_interruptible);
-+EXPORT_SYMBOL(__wait_for_completion_interruptible);
- 
- /**
-- * wait_for_completion_interruptible_timeout: - waits for completion (w/(to,intr))
-+ * __wait_for_completion_interruptible_timeout: - waits for completion (w/(to,intr))
-  * @x:  holds the state of this particular completion
-  * @timeout:  timeout value in jiffies
-  *
-@@ -238,15 +238,15 @@ EXPORT_SYMBOL(wait_for_completion_interruptible);
-  * or number of jiffies left till timeout) if completed.
-  */
- long __sched
--wait_for_completion_interruptible_timeout(struct completion *x,
-+__wait_for_completion_interruptible_timeout(struct completion *x,
- 					  unsigned long timeout)
- {
- 	return wait_for_common(x, timeout, TASK_INTERRUPTIBLE);
- }
--EXPORT_SYMBOL(wait_for_completion_interruptible_timeout);
-+EXPORT_SYMBOL(__wait_for_completion_interruptible_timeout);
- 
- /**
-- * wait_for_completion_killable: - waits for completion of a task (killable)
-+ * __wait_for_completion_killable: - waits for completion of a task (killable)
-  * @x:  holds the state of this particular completion
-  *
-  * This waits to be signaled for completion of a specific task. It can be
-@@ -254,7 +254,7 @@ EXPORT_SYMBOL(wait_for_completion_interruptible_timeout);
-  *
-  * Return: -ERESTARTSYS if interrupted, 0 if completed.
-  */
--int __sched wait_for_completion_killable(struct completion *x)
-+int __sched __wait_for_completion_killable(struct completion *x)
- {
- 	long t = wait_for_common(x, MAX_SCHEDULE_TIMEOUT, TASK_KILLABLE);
- 
-@@ -262,9 +262,9 @@ int __sched wait_for_completion_killable(struct completion *x)
- 		return t;
- 	return 0;
- }
--EXPORT_SYMBOL(wait_for_completion_killable);
-+EXPORT_SYMBOL(__wait_for_completion_killable);
- 
--int __sched wait_for_completion_state(struct completion *x, unsigned int state)
-+int __sched __wait_for_completion_state(struct completion *x, unsigned int state)
- {
- 	long t = wait_for_common(x, MAX_SCHEDULE_TIMEOUT, state);
- 
-@@ -272,10 +272,10 @@ int __sched wait_for_completion_state(struct completion *x, unsigned int state)
- 		return t;
- 	return 0;
- }
--EXPORT_SYMBOL(wait_for_completion_state);
-+EXPORT_SYMBOL(__wait_for_completion_state);
- 
- /**
-- * wait_for_completion_killable_timeout: - waits for completion of a task (w/(to,killable))
-+ * __wait_for_completion_killable_timeout: - waits for completion of a task (w/(to,killable))
-  * @x:  holds the state of this particular completion
-  * @timeout:  timeout value in jiffies
-  *
-@@ -287,12 +287,12 @@ EXPORT_SYMBOL(wait_for_completion_state);
-  * or number of jiffies left till timeout) if completed.
-  */
- long __sched
--wait_for_completion_killable_timeout(struct completion *x,
-+__wait_for_completion_killable_timeout(struct completion *x,
- 				     unsigned long timeout)
- {
- 	return wait_for_common(x, timeout, TASK_KILLABLE);
- }
--EXPORT_SYMBOL(wait_for_completion_killable_timeout);
-+EXPORT_SYMBOL(__wait_for_completion_killable_timeout);
- 
- /**
-  *	try_wait_for_completion - try to decrement a completion without blocking
-@@ -334,7 +334,7 @@ EXPORT_SYMBOL(try_wait_for_completion);
-  *	completion_done - Test to see if a completion has any waiters
-  *	@x:	completion structure
-  *
-- *	Return: 0 if there are waiters (wait_for_completion() in progress)
-+ *	Return: 0 if there are waiters (__wait_for_completion() in progress)
-  *		 1 if there are no waiters.
-  *
-  *	Note, this will always return true if complete_all() was called on @X.
 -- 
 2.17.1
 
