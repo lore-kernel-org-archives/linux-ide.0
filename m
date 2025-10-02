@@ -1,17 +1,17 @@
 Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 876C92DC780;
-	Thu,  2 Oct 2025 08:14:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C691131079B;
+	Thu,  2 Oct 2025 08:14:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759392849; cv=none; b=ex+QB8Iw8G1zQrcW3Y0Sw1RxIbewGjS/K26AyjWm1Pv7dtESUjLTdbwYygpvjVQcHikh9iBXqOMyJ3EQLMzo8Z3zw79reiQtWU08LSmwiwoy3aZoMei8A4xldzQQDBUcQRpE8y32s11c8pp2n0HbuNYTfAdJCUC2Rf7betQ5VLM=
+	t=1759392849; cv=none; b=tNTR/p9NYdS5BQif2G13dDmzNhzEpAx6tSdoZVQ/x+yyc8jpbwDF7c+AU5EWjOqzFq9VrUfxmV6xdqIwQIBUS9l2i6lLh7532gIWIeNcTU7RPJxUOED64bqZkTvlgORRtwUBU/kQ1VdXpoNFfX18FW3cUgmcq/hm8skPav8apiY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1759392849; c=relaxed/simple;
-	bh=wPgCGFth3sUpJztlYzWQSwfpstbJ+L/W/hvoYDKPCvA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=qUvI2P5esdgB4ic+bq+OH6bWT5XqhhNMl+BmowQS+Z8JqB8deFpKUNpnfQ8tWc/Sc4zfquJJ9Zo2+5gRsIvA7GBZDQgMfBK6Rz2antpFZz5t64RXpMm5HH5ve15UCaPofGhsflfucLXdDj5Ois7NN3cBTuQPcIUHTzQGKJk/Bjw=
+	bh=maf1QCGEx8ZicvuvjSO5P8pPxIBgYfqjp+uEFuf+J5I=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=UTXj9PIG0/OKL8Rif48Jxu7p5K5ZPWJklxVktmKXgRrco1R3ub/8LjI3mZvq11CjyXFOGUhfUrVIkhY1RrMNuCl+zGrAis5QcDKDfo193F+Dd/0xrXSIrW3jaiLXPNcKypiLteTBJZbdULItVyADA5tZT+QaVYYP9yo+aTQVxaw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
-X-AuditID: a67dfc5b-c2dff70000001609-bf-68de341359ca
+X-AuditID: a67dfc5b-c45ff70000001609-5a-68de34147d81
 From: Byungchul Park <byungchul@sk.com>
 To: linux-kernel@vger.kernel.org
 Cc: kernel_team@skhynix.com,
@@ -162,44 +162,43 @@ Cc: kernel_team@skhynix.com,
 	rcu@vger.kernel.org,
 	linux-nfs@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev
-Subject: [PATCH v17 35/47] i2c: rename wait_for_completion callback to wait_for_completion_cb
-Date: Thu,  2 Oct 2025 17:12:35 +0900
-Message-Id: <20251002081247.51255-36-byungchul@sk.com>
+Subject: [PATCH v17 40/47] dept: introduce event_site() to disable event tracking if it's recoverable
+Date: Thu,  2 Oct 2025 17:12:40 +0900
+Message-Id: <20251002081247.51255-41-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20251002081247.51255-1-byungchul@sk.com>
 References: <20251002081247.51255-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzXSf1CLcRwHcN/n+T7P1hiPyfX4ccftxEkhwucOHf/w4B93ft3VoZ2es51a
-	binFYX5Efk9aXS3ZJjNZP2xCTXcJpSaWkaEtS0bXdU4qFyUb55/vve77/vz45yMkJW+pqUKF
-	ch+vUsqSpLQIi3rHGaJCY7zyhU+rxkLb0ToMRRUWGrKtBRR0DGQjyKoexdA/9F4A3yt/09Dz
-	qA+B1tdFQ373UQyFfp0Aup+shd4OOwWjns8EmLp+E9BVdwrBVaONhl8tL0jI1zoRGHweEr5U
-	BoI7DV4EteZjNHzSVJHg6hoPTdqzNPS2FhGgP1ZLwRVdDoK8K1YM1R9qBNDaM0xAh8mPwaEx
-	EoHVNOTdDgNd/nEi8HwhQFtmJ+DZtXYMJnU46FpcFHSaCwUw7IuGUX0KeC5qMTR52yjo8efQ
-	cE/9QQD9r3wEWM75SbB+DASGkyUYCorbaXhQ24Qhe6QfQcP9TgJcNUU0nKusosBrGaXAWeeg
-	4OUtJ4aKz24CHA1P8apE7kfWBcyV2u4SXNbLEZqzFFsQ13/9OMn9HHhNc7WDesw1G1nuUksU
-	V13oEXB6axp34nEvxdnMEdy1B90EZ+gboLh3PSs3zo0TrUjkkxTpvGpBbIJI3mktF+wtYzMM
-	JjepRr7QMyhEyDIxbF5xqeC/b2oaUdA0M4d1u4fIoEOZmaztvJ8KmmQc09m21sigJzHbWWPj
-	m7+9mAlnPxoriKDFzFLW21xA/ps5g71VWffXIYF/l8+Bg5YwS9isrycC9aJAjS6EfT40RPxr
-	mMI+NLuxBon1aEwpkiiU6ckyRVLMfHmmUpExf1dKshUFDs50aDj+PupzbqpHjBBJx4md4R65
-	hJKlp2Ym1yNWSEpDxQnmdrlEnCjLPMCrUnaq0pL41Ho0TYilYeJFg/sTJcxu2T5+D8/v5VX/
-	U0IYMlWNcpehbbAmsiR3/4ix/TlSTjEUFRTWnHZV25sbP3UO2u25Fza0KZrWpGSE6ezRmSe3
-	bimed/HGOs3inXHl2WNKm9+pIOGFZvbkg2SaZ+E3/eUjcZZVByJO2SSb49cvmUl2l+TMis1b
-	tCBy7eG7Zyc2mNXLp884qP25ekJ81KPH1/fsiJXiVLksOoJUpcr+AL/KANRsAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAAzXSa0hTcRQA8P733t07V4vrHHgxoRjZi+wBGgezJ1G3oEgixCBy5aUNNx+b
-	rUwLTUf2nqMpuR66cJjvtrTMVqK4HlN0WTbKaatlVppUWphT24q+HH7nweF8OHxc1MgL48tT
-	MjhVilQhIQWEYNfavMiQqH7ZKlf7XOjNbSFgfKyAgKt11SQUWK7woLu2CsHAeAGCX5NGHLRN
-	MwRM6e0UjE28oWDGZkdQ5NTjUH0nF4Mf9dMkfGn7jsDg8ZJQ/CmXgFHzeQQlg0YKPrVvg5GB
-	Zh7MuD9i8OrnMAKzdxoDb8tpBFNFyXDDZCVhsrMLh2JDN4IyjxuHoXp/8469H4Gt4hQJH3QN
-	OPR458KL8VESnhrOkTDivIrB13oSSk/ZeHDNqEeQd7OOhKJrFgKa3t6nwPnFh0FfkR6DKstO
-	GDAPEuDQmTD/ff6p26FgLM7D/GEIA0NNMwYT5koKOm72EWDOiQBjZw8P3lWUUODzrIaZ0lSw
-	V32kwH3JQEDtSBdvowGxv7QXCbbS2oix2udTJFt9vRqxk7/1iB0rz8NZrc6ftg2P4my+9Shb
-	7hgm2d/jL0nW9rOUYJ+ZGLawM5JtKnFTbP7D19TumH2C2CROIddwqpXrEwWyd5ZaKq2GOVZm
-	duE5yCM+i4L4DB3F3NI9RgGT9GLG5ZrAAxbTCxjrhUFewDjtCGd6ncsDDqH3M6bHr6iACTqC
-	eW+qwwIW0muY/mdX8H875zNV9S1/HeSv93gcRMAiOprRjuZjOiQoRbMqkVieolFK5YroFepk
-	WWaK/NiKQ6lKC/J/k/mEr/AeGuvZ1opoPpLMEToj3DIRT6pRZypbEcPHJWJhYkWfTCRMkmYe
-	51SpB1RHFJy6Fc3jE5JQ4Y54LlFEH5ZmcMkcl8ap/ncxflBYDtpZ+UBhrwl7szDjQqEuoW3V
-	7KwnCYetrnXB3opZn38sQXHlJxuncgyPjp9Nt/E7CtKn4+bE6kuUxGnN8uy4lqyt2d2HOnzf
-	Y4bD1WKlJnRffNumzdtj1jr2Nmhysy4HBy2at6U3+q4eZYcEx5dtWPrNW5t817cnITz24LkO
-	VdKZ5nYJoZZJVy/DVWrpH7oHRxxJAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0iTcRTG+7+3XWjwsgxfLVRGWmmlicqhMvoQ8RbRBb91oVa+tJWbNtM0
+	qGZ5KSOzwixN2RyusS3NBVnUcpmaOappZTZdTivdygq0i7dmm9KXw4/nPOd5vhw+Li4iQ/ly
+	5TFOpZSmSSghIfw2X7syKOGDLM7gAOjOsxHQ/+scghnXMAb6Tz4M/l47AlMvXuFQXuZAoB1w
+	4eC5U4SgqvIKgrO6egr69UME2EtrMLjWEAyV5R4Mym4/xGBCb+SBXh0Jg4YKHkwPrIYZTTq0
+	mYZ54LpU5i96VkhCo9rNA8v7VgRWZwy03R/EQF35hwR7WzsBte86MeiyaTDIe6IjYOhtIQaF
+	Yz4S+kq+EPDm/UMELfWNGFjM3RR0uMZ4cLVLQ8HkLX9cx2QHBqNVfnPeWD+CqfGbFPw0GSn4
+	XvqT3BDHmqvNiC0o9Q/rbw3BXn6xkn1Q4eKxGksWm9/yjWTvGqJZ3SMvxmpHf5Gs82syazGe
+	p1jtlAdn+7ofUWz1851sU5WZt4PZJVyXyqXJszlV7Pr9Qllrh4bI+BiW87QpWY1qmWIk4DN0
+	AlPlqMOKEX+Wv04mB2SKXsr09EzgAQ6iI5i7F4fIAOO0fTHT3bkiYF9Ac8zw7dMBmaAjGZ37
+	Dy/AIjqJmTnTgObSwxnTHdtsjMCvvx6wEwEW04lMwY98f6vQ7zEJGO14CzF3EMI8MfQQpUik
+	QfOMSCxXZiuk8rSEVbJcpTxn1cF0hQX530N/cnr3fTTqSGlGNB9J5osckS6ZmJRmZ+YqmhHD
+	xyVBov2GPplYlCrNPcGp0vepstK4zGa0iE9IgkXxv4+niulD0mPcEY7L4FT/txhfEKpG5uLB
+	8S0FirfidXvcR/e1LxcX9U1PKGu39x6Ob31qjV8RDLFZ28LqFHutzkS5QB1lPDVZYhgZ2HSw
+	uKhgDd5kWxijvhEW4fN8shO9yUucipTH4z6ft+bAyJWkENPLey1bw3MbF0t0xDLv2uuxn6c2
+	untbG6M2X3jsVli9Tu1IjITIlElXR+OqTOk/rw9gMRoDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTdxTG/d/7772Xxuq14rgRM0kX2MJENFE58YVs2QdujJvTL25LjDRy
+	Y5tCMa1DWDKFvkSGm4MmLYHyUiE0DQWsFM3QgAQCySgMuwq+UZHZFZCXJgISKFDbJfty8jvP
+	8+Tk+XAYUuoW7WaU6iuCRi3PlVFiLP7mmD4t/tArxYG6hQQYK+nBsLxUiqHmTgsFpe1VInjc
+	5kQwsVyKYCVsJcHYGcGwYRqgYWn1JQ2RrgEEFq+JhJaOEgIWXZsUzPa9Q2CeDFBQOVOCIWT/
+	FUF10ErDTH8WzE88FEHEP0XA0/dzCOyBTQICPTcQbFhUUN/gpiA8PEJCpfkxgtuTfhKmXVGz
+	Y+AVgi6HjoJ/y++R4AtsgyfLIQr+NN+kYN5bQ8CCiwKbrksEtVYTAn3jHQoste0YOl8/oME7
+	u07AuMVEgLP9a5iwBzF4yhuIaL9o6m4CWCv1RHRME2BufUjAqr2ZhqHGcQz24mSwDvtE8I+j
+	mob1yYMQseXDgHOKBv/vZgxt8yOiL8yIXzHewnyz+z7BG//eoPiWuhbEh9dMiF9q0pO8sTy6
+	9s2FSN7gvso3eeYofm15lOK73tswP9jA8RXDaXxntZ/mDd0v6G+P/iA+niPkKgsETXpmtljR
+	P2jDl998XNj36EQxauLKEMNw7CFudu1EGYpjKPZT7tmzVTLG8WwS5/4tKIoxyXr2cGPefbH4
+	Tlbgplqvx2TMJnONr1foGEvYI1xEdxfFmGP3ck5Xz39n4qK6b9KDYyxlD3PGkIEoR2Ib2tKM
+	4pXqgjy5Mvfwfq1KUaRWFu6/mJ/XjqKvZP95veIPtOTL6kUsg2RbJd5kv0Iqkhdoi/J6EceQ
+	snhJtmNcIZXkyIt+EjT5FzQ/5graXpTIYFmC5OQ5IVvKXpJfEVSCcFnQ/O8STNzuYnQmaHIl
+	ln1lw4spnYmXVMeqrB69z7Bz1InSdYHztpyZNPXp9GFLpa6wP/Xi8+/eyk9Vf57RzagyPurY
+	1fxL6WY4tcOxHQ2V/SXOHEtZufXZl63mPTsMfFKv4hNjf2Zove7q0LUKV1ZBd73j+9GEpH3o
+	rP6cgkg/EBbejAzm3zwvw1qF/GAqqdHKPwDtVNImRgMAAA==
 X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -207,77 +206,128 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Functionally no change.  This patch is a preparation for DEPT(DEPendency
-Tracker) to track dependencies related to a scheduler API,
-wait_for_completion().
+With multi event sites for a single wait, dept allows to skip tracking
+an event that is recoverable by other recover paths.
 
-Unfortunately, struct i2c_algo_pca_data has a callback member named
-wait_for_completion, that is the same as the scheduler API, which makes
-it hard to change the scheduler API to a macro form because of the
-ambiguity.
-
-Add a postfix _cb to the callback member to remove the ambiguity.
+Introduce an API, event_site(), to skip tracking the event in the case.
 
 Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- drivers/i2c/algos/i2c-algo-pca.c      | 2 +-
- drivers/i2c/busses/i2c-pca-isa.c      | 2 +-
- drivers/i2c/busses/i2c-pca-platform.c | 2 +-
- include/linux/i2c-algo-pca.h          | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ include/linux/dept.h     | 30 ++++++++++++++++++++++++++++++
+ include/linux/sched.h    |  6 ++++++
+ kernel/dependency/dept.c | 20 ++++++++++++++++++++
+ 3 files changed, 56 insertions(+)
 
-diff --git a/drivers/i2c/algos/i2c-algo-pca.c b/drivers/i2c/algos/i2c-algo-pca.c
-index 74b66aec33d4..ee86df4cff4b 100644
---- a/drivers/i2c/algos/i2c-algo-pca.c
-+++ b/drivers/i2c/algos/i2c-algo-pca.c
-@@ -30,7 +30,7 @@ static int i2c_debug;
- #define pca_clock(adap) adap->i2c_clock
- #define pca_set_con(adap, val) pca_outw(adap, I2C_PCA_CON, val)
- #define pca_get_con(adap) pca_inw(adap, I2C_PCA_CON)
--#define pca_wait(adap) adap->wait_for_completion(adap->data)
-+#define pca_wait(adap) adap->wait_for_completion_cb(adap->data)
+diff --git a/include/linux/dept.h b/include/linux/dept.h
+index 25fdd324614a..0ac13129f308 100644
+--- a/include/linux/dept.h
++++ b/include/linux/dept.h
+@@ -487,6 +487,31 @@ extern void dept_task_exit(struct task_struct *t);
+ extern void dept_free_range(void *start, unsigned int sz);
+ extern void dept_mark_event_site_used(void *start, void *end);
  
- static void pca_reset(struct i2c_algo_pca_data *adap)
- {
-diff --git a/drivers/i2c/busses/i2c-pca-isa.c b/drivers/i2c/busses/i2c-pca-isa.c
-index 85e8cf58e8bf..0cbf2f509527 100644
---- a/drivers/i2c/busses/i2c-pca-isa.c
-+++ b/drivers/i2c/busses/i2c-pca-isa.c
-@@ -95,7 +95,7 @@ static struct i2c_algo_pca_data pca_isa_data = {
- 	/* .data intentionally left NULL, not needed with ISA */
- 	.write_byte		= pca_isa_writebyte,
- 	.read_byte		= pca_isa_readbyte,
--	.wait_for_completion	= pca_isa_waitforcompletion,
-+	.wait_for_completion_cb	= pca_isa_waitforcompletion,
- 	.reset_chip		= pca_isa_resetchip,
- };
++extern void disable_event_track(void);
++extern void enable_event_track(void);
++
++#define event_site(es, evt_func, ...)					\
++do {									\
++	unsigned long _flags;						\
++	bool _disable;							\
++									\
++	local_irq_save(_flags);						\
++	dept_event_site_used(es);					\
++	/*								\
++	 * If !list_empty(&(es)->dept_head), the event site can be	\
++	 * recovered by others.  Do not track event dependency if so.	\
++	 */								\
++	_disable = !list_empty(&(es)->dep_head);			\
++	if (_disable)							\
++		disable_event_track();					\
++									\
++	evt_func(__VA_ARGS__);						\
++									\
++	if (_disable)							\
++		enable_event_track();					\
++	local_irq_restore(_flags);					\
++} while (0)
++
+ extern void dept_map_init(struct dept_map *m, struct dept_key *k, int sub_u, const char *n);
+ extern void dept_map_reinit(struct dept_map *m, struct dept_key *k, int sub_u, const char *n);
+ extern void dept_ext_wgen_init(struct dept_ext_wgen *ewg);
+@@ -550,6 +575,11 @@ struct dept_event_site { };
+ #define dept_task_exit(t)				do { } while (0)
+ #define dept_free_range(s, sz)				do { } while (0)
+ #define dept_mark_event_site_used(s, e)			do { } while (0)
++#define event_site(es, evt_func, ...)					\
++do {									\
++	(void)(es);							\
++	evt_func(__VA_ARGS__);						\
++} while (0)
  
-diff --git a/drivers/i2c/busses/i2c-pca-platform.c b/drivers/i2c/busses/i2c-pca-platform.c
-index 87da8241b927..c0f35ebbe37d 100644
---- a/drivers/i2c/busses/i2c-pca-platform.c
-+++ b/drivers/i2c/busses/i2c-pca-platform.c
-@@ -180,7 +180,7 @@ static int i2c_pca_pf_probe(struct platform_device *pdev)
+ #define dept_map_init(m, k, su, n)			do { (void)(n); (void)(k); } while (0)
+ #define dept_map_reinit(m, k, su, n)			do { (void)(n); (void)(k); } while (0)
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index a01c10f28dfd..24a9dc9d6f5f 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -876,6 +876,11 @@ struct dept_task {
+ 	 */
+ 	int				missing_ecxt;
+ 
++	/*
++	 * not to track events
++	 */
++	int				disable_event_track_cnt;
++
+ 	/*
+ 	 * for tracking IRQ-enable state
+ 	 */
+@@ -913,6 +918,7 @@ struct dept_task {
+ 	.stage_wait_stack = NULL,				\
+ 	.stage_lock = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED,\
+ 	.missing_ecxt = 0,					\
++	.disable_event_track_cnt = 0,				\
+ 	.hardirqs_enabled = false,				\
+ 	.softirqs_enabled = false,				\
+ 	.task_exit = false,					\
+diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+index 07d883579269..3c3ec2701bd6 100644
+--- a/kernel/dependency/dept.c
++++ b/kernel/dependency/dept.c
+@@ -2573,6 +2573,23 @@ static void __dept_wait(struct dept_map *m, unsigned long w_f,
  	}
+ }
  
- 	i2c->algo_data.data = i2c;
--	i2c->algo_data.wait_for_completion = i2c_pca_pf_waitforcompletion;
-+	i2c->algo_data.wait_for_completion_cb = i2c_pca_pf_waitforcompletion;
- 	if (i2c->gpio)
- 		i2c->algo_data.reset_chip = i2c_pca_pf_resetchip;
- 	else
-diff --git a/include/linux/i2c-algo-pca.h b/include/linux/i2c-algo-pca.h
-index 7c522fdd9ea7..e305bf32e40a 100644
---- a/include/linux/i2c-algo-pca.h
-+++ b/include/linux/i2c-algo-pca.h
-@@ -71,7 +71,7 @@ struct i2c_algo_pca_data {
- 	void 				*data;	/* private low level data */
- 	void (*write_byte)		(void *data, int reg, int val);
- 	int  (*read_byte)		(void *data, int reg);
--	int  (*wait_for_completion)	(void *data);
-+	int  (*wait_for_completion_cb)	(void *data);
- 	void (*reset_chip)		(void *data);
- 	/* For PCA9564, use one of the predefined frequencies:
- 	 * 330000, 288000, 217000, 146000, 88000, 59000, 44000, 36000
++void disable_event_track(void)
++{
++	dept_task()->disable_event_track_cnt++;
++}
++EXPORT_SYMBOL_GPL(disable_event_track);
++
++void enable_event_track(void)
++{
++	dept_task()->disable_event_track_cnt--;
++}
++EXPORT_SYMBOL_GPL(enable_event_track);
++
++static bool event_track_disabled(void)
++{
++	return !!dept_task()->disable_event_track_cnt;
++}
++
+ /*
+  * Called between dept_enter() and dept_exit().
+  */
+@@ -2585,6 +2602,9 @@ static void __dept_event(struct dept_map *m, struct dept_map *real_m,
+ 	struct dept_key *k;
+ 	int e;
+ 
++	if (event_track_disabled())
++		return;
++
+ 	e = find_first_bit(&e_f, DEPT_MAX_SUBCLASSES_EVT);
+ 
+ 	if (DEPT_WARN_ON(e >= DEPT_MAX_SUBCLASSES_EVT))
 -- 
 2.17.1
 
