@@ -1,281 +1,161 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB1A81DE3C7
-	for <linux-ide@vger.kernel.org>; Sun,  5 Oct 2025 19:06:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE3F6181BB8;
+	Mon,  6 Oct 2025 00:58:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759691172; cv=none; b=gJbbKGGJVqhobvsHSp80/h/5scfCiPeqbo+afLIKYs5QMIjTygCVP6LVz3e+9mNFAT/W2d98k10njf1zLs8MS+g3gnU7qXcRa6Hfi11IFMkYDxJ9pgmrTUVkiUpOME6qdX8OqWFiPgovCHJ+C+2WCUcCqoVUh3JuEtzxmkJ5oI4=
+	t=1759712300; cv=none; b=Mekjk3AePtpe4MZcJrh7VrIheKH5SAqOfLaheLO0TPhpyB8itw9bYsgiHmBsT693ZbKylr7vswSoWMqPOZt7+Z5FMFWNKt7Z1RfyD5OWkwkbIPRM0cgy7Dr2jx2jXP9eiusHFvI3oAP3VSnfM9jhJjCQqrxh10m+EdrdeegT0BI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759691172; c=relaxed/simple;
-	bh=EKt1fHoKmILVRWaVPU0zfxrWGRWt3ZKHxPM2f8AtEN0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=G4jgEjyXe5EGPCgruAjudBZOeM9A1knnsab+by2Yq+6vBBtAGyQ8ROUfBiIOPP0nZzewEygf96kmqA+wxeSyCOfji5arEsxI6gs1gYLRXS7xXSqIDZRe1ac+kKup+vsLdYIlepZ9dU9r872ObItHDGqB9SpGj47df/g8cMJqZfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=QWOchw9r; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1759712300; c=relaxed/simple;
+	bh=EcMDDLdW7ZJUGptFXlXKYTC6Z5rOAWfwRAkcrxXK2kA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rkVjHd9t+Wtb07jppbBxr06X7f2Qogxj8qV+jvBiDhOPX2hFaJjEmhbcDvcMRvan1awKOZD6q2+xeKqjD+8U8OHLemUCA6uXD+z9HlwxZJjPGEQIa4E9p6sUZzfuuKc8CxN0LofC2R47FFGehAduid733IZckbQ4oQLKQYLi0RI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YZbyDNjm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="QWOchw9r"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 2EC03240103
-	for <linux-ide@vger.kernel.org>; Sun,  5 Oct 2025 21:06:08 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1759691168; bh=b8JRyvvgoYPi6SHn/BleoYI91JZ0LX+UG4+W95ocuHU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
-	b=QWOchw9rdEDNq9OLuNo93ifTbO1+yOL4fpqr5wzZwY/KaFJOlCnPEzILR8bYg1MYV
-	 puu8VdyWvCH3cmQAohTfsLX03nQmNBJawtvcYkG4qWEY0HbQy4GjrCGiGq0CzTZCHv
-	 kxfAQDzc3I5XGxvsGua/c0zA1wozvzwEKWeLtqQ/pcHh8hxrHFOcjdqBFwk8OivjpB
-	 YgHdRlB1vSri6Q+XOKHofBRLPPk/JmEY9NaXixCvlBZ3Tam8DjuuJz5nKbGQF87GPX
-	 EPklJIgrDJB59dbNKgPYFtlvLZkFNt4I5UyvMw/8daPqcfp2fdqGwQtwGm/9sP9P55
-	 xq1/HVBsLKeDg==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4cfsLl2Rs0z9rxG;
-	Sun,  5 Oct 2025 21:06:07 +0200 (CEST)
-From: Markus Probst <markus.probst@posteo.de>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Markus Probst <markus.probst@posteo.de>
-Subject: [PATCH 2/2] Power on ata ports defined in ACPI before probing ports
-Date: Sun, 05 Oct 2025 19:06:07 +0000
-Message-ID: <20251005190559.1472308-2-markus.probst@posteo.de>
-In-Reply-To: <20251005190559.1472308-1-markus.probst@posteo.de>
-References: <8c3cb28c57462f9665b08fdaa022e6abc57fcd9e.camel@posteo.de>
- <20251005190559.1472308-1-markus.probst@posteo.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YZbyDNjm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DF87C4CEF4;
+	Mon,  6 Oct 2025 00:58:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759712300;
+	bh=EcMDDLdW7ZJUGptFXlXKYTC6Z5rOAWfwRAkcrxXK2kA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=YZbyDNjmmCtMsu/JP1EcJrFJAGo1+z8fHFHFptutLOH4+1xvin8C5nAKZVe7RxUCW
+	 v641GOQFoBs+A3hN+O0nF9JEf2z7QFGXDh6nvpTJg8MHxX/pPT+Ewj7F12JY7y7Lsb
+	 HP9TIVL3kw+LlkUM43DSC24LcsweqSRBFc9bnSn99Tpi808gMqcUEGccPT8tLFYipI
+	 F7MFMnZAcQsTiYx8Qm9wWIZTYRVBQEQVnQ3YZhTF245nzMgGBhjDzfczg8qu5wmbd/
+	 1yVuVm8T0cc/dguVADTN29H6Lqj3uwDvV6BGKwLSdE4VGnVxbhSixRHzHf6aXHMOb7
+	 dWmYokK8o7w6Q==
+Message-ID: <524f67bf-f4df-41bf-bf1b-5cd0a79649eb@kernel.org>
+Date: Mon, 6 Oct 2025 09:58:17 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] Add manage_restart device attribute to scsi_disk
+To: Markus Probst <markus.probst@posteo.de>, Niklas Cassel
+ <cassel@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <8c3cb28c57462f9665b08fdaa022e6abc57fcd9e.camel@posteo.de>
+ <20251005190559.1472308-1-markus.probst@posteo.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20251005190559.1472308-1-markus.probst@posteo.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-some devices (for example every synology nas with "deep sleep" support)
-have the ability to power on and off each ata port individually. This
-turns the specific port on, if power manageable in acpi, before probing
-it.
+On 10/6/25 04:06, Markus Probst wrote:
+> there is already manage_shutdown, manage_system_start_stop and
+> manage_runtime_start_stop device attributes that allows the high-level
+> device driver (sd) manage the device power state, expect for the
+> system_state SYSTEM_RESTART. With this device attribute, it is possible to
+> let the high-level device driver (sd) manage the device power state for
+> SYSTEM_RESTART too.
+> 
+> Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> ---
+>  drivers/scsi/sd.c          | 35 ++++++++++++++++++++++++++++++++++-
+>  include/scsi/scsi_device.h |  6 ++++++
+>  2 files changed, 40 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 5b8668accf8e..a3e9c2e9d9f4 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -318,6 +318,36 @@ static ssize_t manage_shutdown_store(struct device *dev,
+>  }
+>  static DEVICE_ATTR_RW(manage_shutdown);
+>  
+> +static ssize_t manage_restart_show(struct device *dev,
+> +				   struct device_attribute *attr, char *buf)
+> +{
+> +	struct scsi_disk *sdkp = to_scsi_disk(dev);
+> +	struct scsi_device *sdp = sdkp->device;
 
-This can later be extended to power down the ata ports (removing power
-from a disk) while the disk is spin down.
+sdp is not really needed.
 
-Signed-off-by: Markus Probst <markus.probst@posteo.de>
----
- drivers/ata/libata-acpi.c | 68 +++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-core.c | 21 ++++++++++++
- drivers/ata/libata-scsi.c |  1 +
- drivers/ata/libata.h      |  4 +++
- include/linux/libata.h    |  1 +
- 5 files changed, 95 insertions(+)
+> +
+> +	return sysfs_emit(buf, "%u\n", sdp->manage_restart);
+> +}
+> +
+> +
+> +static ssize_t manage_restart_store(struct device *dev,
+> +				    struct device_attribute *attr,
+> +				    const char *buf, size_t count)
+> +{
+> +	struct scsi_disk *sdkp = to_scsi_disk(dev);
+> +	struct scsi_device *sdp = sdkp->device;
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index f2140fc06ba0..891b59bfe29f 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -245,6 +245,74 @@ void ata_acpi_bind_dev(struct ata_device *dev)
- 				   ata_acpi_dev_uevent);
- }
- 
-+/**
-+ * ata_acpi_dev_manage_restart - if the disk should be stopped (spin down) on system restart.
-+ * @dev: target ATA device
-+ *
-+ * RETURNS:
-+ * true if the disk should be stopped, otherwise false
-+ */
-+bool ata_acpi_dev_manage_restart(struct ata_device *dev)
-+{
-+	// If the device is power manageable and we assume the disk loses power on reboot.
-+	if (dev->link->ap->flags & ATA_FLAG_ACPI_SATA) {
-+		if (!is_acpi_device_node(dev->tdev.fwnode))
-+			return false;
-+		return acpi_bus_power_manageable(ACPI_HANDLE(&dev->tdev));
-+	}
-+
-+	if (!is_acpi_device_node(dev->link->ap->tdev.fwnode))
-+		return false;
-+	return acpi_bus_power_manageable(ACPI_HANDLE(&dev->link->ap->tdev));
-+}
-+
-+/**
-+ * ata_acpi_port_set_power_state - set the power state of the ata port
-+ * @ap: target ATA port
-+ *
-+ * This function is called at the begin of ata_port_probe.
-+ */
-+void ata_acpi_port_set_power_state(struct ata_port *ap, bool enable)
-+{
-+	acpi_handle handle;
-+	unsigned char state;
-+	int i;
-+
-+	if (libata_noacpi)
-+		return;
-+
-+	if (enable)
-+		state = ACPI_STATE_D0;
-+	else
-+		state = ACPI_STATE_D3_COLD;
-+
-+	if (ap->flags & ATA_FLAG_ACPI_SATA) {
-+		for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+			if (!is_acpi_device_node(ap->link.device[i].tdev.fwnode))
-+				continue;
-+			handle = ACPI_HANDLE(&ap->link.device[i].tdev);
-+			if (!acpi_bus_power_manageable(handle))
-+				continue;
-+			if (!acpi_bus_set_power(handle, state))
-+				ata_dev_info(&ap->link.device[i], "acpi: power was set to %d\n",
-+					     enable);
-+			else
-+				ata_dev_info(&ap->link.device[i], "acpi: power failed to be set\n");
-+		}
-+	} else {
-+		if (!is_acpi_device_node(ap->tdev.fwnode))
-+			return;
-+		handle = ACPI_HANDLE(&ap->tdev);
-+		if (!acpi_bus_power_manageable(handle))
-+			return;
-+
-+		if (!acpi_bus_set_power(handle, state))
-+			ata_port_info(ap, "acpi: power was set to %d\n", enable);
-+		else
-+			ata_port_info(ap, "acpi: power failed to be set\n");
-+	}
-+}
-+
- /**
-  * ata_acpi_dissociate - dissociate ATA host from ACPI objects
-  * @host: target ATA host
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ff53f5f029b4..a52b916af14c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5899,11 +5899,32 @@ void ata_host_init(struct ata_host *host, struct device *dev,
- }
- EXPORT_SYMBOL_GPL(ata_host_init);
- 
-+static inline void ata_port_set_power_state(struct ata_port *ap, bool enable)
-+{
-+	ata_acpi_port_set_power_state(ap, enable);
-+	// Maybe add a way with device tree and regulators too?
-+}
-+
-+/**
-+ * ata_dev_manage_restart - if the disk should be stopped (spin down) on system restart.
-+ * @dev: target ATA device
-+ *
-+ * RETURNS:
-+ * true if the disk should be stopped, otherwise false
-+ */
-+bool ata_dev_manage_restart(struct ata_device *dev)
-+{
-+	return ata_acpi_dev_manage_restart(dev);
-+}
-+EXPORT_SYMBOL_GPL(ata_dev_manage_restart);
-+
- void ata_port_probe(struct ata_port *ap)
- {
- 	struct ata_eh_info *ehi = &ap->link.eh_info;
- 	unsigned long flags;
- 
-+	ata_port_set_power_state(ap, true);
-+
- 	/* kick EH for boot probing */
- 	spin_lock_irqsave(ap->lock, flags);
- 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2ded5e476d6e..52297d9e3dc2 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1095,6 +1095,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct queue_limits *lim,
- 		 */
- 		sdev->manage_runtime_start_stop = 1;
- 		sdev->manage_shutdown = 1;
-+		sdev->manage_restart = ata_dev_manage_restart(dev);
- 		sdev->force_runtime_start_on_system_start = 1;
- 	}
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index e5b977a8d3e1..28cb652d99bc 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -130,6 +130,8 @@ extern void ata_acpi_on_disable(struct ata_device *dev);
- extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
- extern void ata_acpi_bind_port(struct ata_port *ap);
- extern void ata_acpi_bind_dev(struct ata_device *dev);
-+extern void ata_acpi_port_set_power_state(struct ata_port *ap, bool enable);
-+extern bool ata_acpi_dev_manage_restart(struct ata_device *dev);
- extern acpi_handle ata_dev_acpi_handle(struct ata_device *dev);
- #else
- static inline void ata_acpi_dissociate(struct ata_host *host) { }
-@@ -140,6 +142,8 @@ static inline void ata_acpi_set_state(struct ata_port *ap,
- 				      pm_message_t state) { }
- static inline void ata_acpi_bind_port(struct ata_port *ap) {}
- static inline void ata_acpi_bind_dev(struct ata_device *dev) {}
-+static inline void ata_acpi_port_set_power_state(struct ata_port *ap, bool enable) {}
-+static inline bool ata_acpi_dev_manage_restart(struct ata_device *dev) { return false; }
- #endif
- 
- /* libata-scsi.c */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0620dd67369f..af5974e91e1d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1302,6 +1302,7 @@ extern int sata_link_debounce(struct ata_link *link,
- extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 			     bool spm_wakeup);
- extern int ata_slave_link_init(struct ata_port *ap);
-+extern bool ata_dev_manage_restart(struct ata_device *dev);
- extern void ata_port_probe(struct ata_port *ap);
- extern struct ata_port *ata_port_alloc(struct ata_host *host);
- extern void ata_port_free(struct ata_port *ap);
+Same here.
+
+> +	bool v;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EACCES;
+> +
+> +	if (kstrtobool(buf, &v))
+> +		return -EINVAL;
+> +
+> +	sdp->manage_restart = v;
+> +
+> +	return count;
+> +}
+> +static DEVICE_ATTR_RW(manage_restart);
+> +
+>  static ssize_t
+>  allow_restart_show(struct device *dev, struct device_attribute *attr, char *buf)
+>  {
+> @@ -654,6 +684,7 @@ static struct attribute *sd_disk_attrs[] = {
+>  	&dev_attr_manage_system_start_stop.attr,
+>  	&dev_attr_manage_runtime_start_stop.attr,
+>  	&dev_attr_manage_shutdown.attr,
+> +	&dev_attr_manage_restart.attr,
+>  	&dev_attr_protection_type.attr,
+>  	&dev_attr_protection_mode.attr,
+>  	&dev_attr_app_tag_own.attr,
+> @@ -4175,7 +4206,9 @@ static void sd_shutdown(struct device *dev)
+>  	    (system_state == SYSTEM_POWER_OFF &&
+>  	     sdkp->device->manage_shutdown) ||
+>  	    (system_state == SYSTEM_RUNNING &&
+> -	     sdkp->device->manage_runtime_start_stop)) {
+> +	     sdkp->device->manage_runtime_start_stop) ||
+> +	    (system_state == SYSTEM_RESTART &&
+> +	     sdkp->device->manage_restart)) {
+>  		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+>  		sd_start_stop_device(sdkp, 0);
+>  	}
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 6d6500148c4b..c7e657ac8b6d 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -178,6 +178,12 @@ struct scsi_device {
+>  	 */
+>  	unsigned manage_shutdown:1;
+>  
+> +	/*
+> +	 * If true, let the high-level device driver (sd) manage the device
+> +	 * power state for system restart (reboot) operations.
+
+What about cold boot ? Same is needed, no ? The name "manage_restart" is a bit
+confusing since we already have manage_system_start_stop,
+manage_runtime_start_stop and manage_shutdown. I do not have a better suggestion
+though.
+
+> +	 */
+> +	unsigned manage_restart:1;
+> +
+>  	/*
+>  	 * If set and if the device is runtime suspended, ask the high-level
+>  	 * device driver (sd) to force a runtime resume of the device.
+
+
 -- 
-2.49.1
-
+Damien Le Moal
+Western Digital Research
