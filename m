@@ -1,66 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83FE92D5C97;
-	Tue,  7 Oct 2025 12:06:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AD2D155C82;
+	Thu,  9 Oct 2025 01:07:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759838810; cv=none; b=XDXBg7//e3tRkZXaDtmL43eM7k7sxAnSbdG46hHVCeADeobTqrp6ZZfS76LYH5NNsHNYe/D2TtJl7VAWLJBBpNT21jtra/ovxdFM6sIBDKv8hPOv2u/Fjqe3xjyCLlMAwQSu3CWKD3BLy+mSUiDq/y1OYdSpF318+lQURJcjSD8=
+	t=1759972042; cv=none; b=LNZAwBhNqjUC2gcQFKkdHAG2AGPMGiW1IaIIhcOZOJNC5FVFpxn1wKQocITFfucHzBFDTzLmxA0QHQwjQdXWeenoOpN1doDMNrqH0JYdkJTpr/6cW9K223PDXHImlEh0Zx579kUs5sU4E2gEMyu6f4k5nQxuDqZyNCucZfN/fW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759838810; c=relaxed/simple;
-	bh=HK8+YNzdJqtVk+JdmSNsEKCE8a3KoVYY3eqqBNJgtTo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MpFeTUgu0w1WH3RrUy0U/zXJ2Jf80iyhad7zTr+ueR8W9RHpDVD+EBMYEt9xdLHN5VdwfkPCeyTi65CV2FHUmRJ1C3hdVm5cpzv9oR3kn7ipFKXBUwKAs1slZxFm76HirOfa9V8UnWi9OM36xSQnCVLwNCz78D7xTZ3n3wdYiB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l9HnFugs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1759972042; c=relaxed/simple;
+	bh=gOZMzGofq4mPMi4a6FfMrSXrrYqWnEJSEe2U4H+HIxI=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=VNRVrwE8YDMhefRAzP72LLs9XrHatPRPhbae+zcBfVI1fXzjEkhr99sZpyHVwOIKOZCbN33K9xaeJwFDLu5bA9QsWxQQrnS9JdfHZvdUlZhFCznwgLQTIEtgdV7KBokaCrY71szTQKfcmCy8aAMGyIrySdBz7Bu6Ljn+GWqDVDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rIX5UnrQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l9HnFugs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32F3DC4CEF1;
-	Tue,  7 Oct 2025 12:06:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rIX5UnrQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EFE9C4CEE7;
+	Thu,  9 Oct 2025 01:07:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759838810;
-	bh=HK8+YNzdJqtVk+JdmSNsEKCE8a3KoVYY3eqqBNJgtTo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=l9HnFugsgsjSf3qUmvnoQj2IC9dFLMdTNCyuLC/hdH0xpOMu58PGWx4xwGWlkafFD
-	 et07c9zU6eADVC8Cm0zTzOVhnljLuj3BUKBQ+9knTULdrEdRgKvwT5RFMpSjzuL7HE
-	 PZ8F9oBjuRAsQZgk1FwlJOEJ1PM2cEhYr2THdDsZwW0HLwfDWb1I+MckT1xFwDfkPo
-	 zanwSU8mnynqbvZcfsprdkiuEhF0HHIZePnHCbgt9cmaWv+Lzako025zNankT3Vd2n
-	 pY8csCg0sQ2wt+QOFwAUU0yHL0qexRPtlKo7CWExFnxLc8j03cm4vxrqDiay2cx3aO
-	 SMsLFZwvlMr6A==
-Date: Tue, 7 Oct 2025 14:06:43 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Yulin Lu <luyulin@eswincomputing.com>
-Cc: dlemoal@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vkoul@kernel.org, kishon@kernel.org, linux-phy@lists.infradead.org,
-	ningyu@eswincomputing.com, zhengyu@eswincomputing.com,
-	linmin@eswincomputing.com, huangyifeng@eswincomputing.com,
-	fenglin@eswincomputing.com, lianghujun@eswincomputing.com
-Subject: Re: [PATCH v5 1/3] dt-bindings: ata: eswin: Document for EIC7700 SoC
- ahci
-Message-ID: <aOUCU28Jjfnk2bYm@ryzen>
-References: <20250930083754.15-1-luyulin@eswincomputing.com>
- <20250930084348.100-1-luyulin@eswincomputing.com>
+	s=k20201202; t=1759972041;
+	bh=gOZMzGofq4mPMi4a6FfMrSXrrYqWnEJSEe2U4H+HIxI=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=rIX5UnrQuVtPUja4Kq/zNxiwyTbf5s+hCzHT8aH9/VUdnNlKWh8D4mSKFL/eXwlaD
+	 7z8+SEmVkcAfo9fmiSSyJ11EAUKKRJcwMVTb9iuWDWBwheam1F4EfrpnDWIzUjmitV
+	 mpUbtUtSbqOH/UnhpYe9i14SkLmyq3I1gfKlnnkK+sqgEdkc4pLZ6mWhV/a0ryPI+M
+	 cnqFIsiLX5CDpbNJvCwTuxPNZCjZR+B1mOV2TKr1ssRJwK/PuLD12JWWzuO1dLp+oX
+	 6de792lhNHw6SaLSFK1kZpeE0QJJFPFLV/HILKfJuySwcXVffLr7XVkoyczsYsHHIo
+	 /dSAJt7cVsj/Q==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id ADDA93A41017;
+	Thu,  9 Oct 2025 01:07:10 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250930084348.100-1-luyulin@eswincomputing.com>
+Content-Transfer-Encoding: 8bit
+Subject: Re: update kernel-doc for MEMBLOCK_RSRV_NOINIT (was: Re: [PATCH RFC
+ 10/35] mm/hugetlb: cleanup hugetlb_folio_init_tail_vmemmap())
+From: patchwork-bot+linux-riscv@kernel.org
+Message-Id: 
+ <175997202925.3661959.5694356441030280085.git-patchwork-notify@kernel.org>
+Date: Thu, 09 Oct 2025 01:07:09 +0000
+References: <aKyWIriZ1bmnIrBW@kernel.org>
+In-Reply-To: <aKyWIriZ1bmnIrBW@kernel.org>
+To: Mike Rapoport <rppt@kernel.org>
+Cc: linux-riscv@lists.infradead.org, david@redhat.com, mpenttil@redhat.com,
+ linux-kernel@vger.kernel.org, glider@google.com, akpm@linux-foundation.org,
+ jackmanb@google.com, cl@gentwo.org, dennis@kernel.org, dvyukov@google.com,
+ dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+ iommu@lists.linux.dev, io-uring@vger.kernel.org, jgg@nvidia.com,
+ axboe@kernel.dk, hannes@cmpxchg.org, jhubbard@nvidia.com,
+ kasan-dev@googlegroups.com, kvm@vger.kernel.org, Liam.Howlett@oracle.com,
+ torvalds@linux-foundation.org, linux-arm-kernel@axis.com,
+ linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+ lorenzo.stoakes@oracle.com, elver@google.com, m.szyprowski@samsung.com,
+ mhocko@suse.com, muchun.song@linux.dev, netdev@vger.kernel.org,
+ osalvador@suse.de, peterx@redhat.com, robin.murphy@arm.com,
+ surenb@google.com, tj@kernel.org, virtualization@lists.linux.dev,
+ vbabka@suse.cz, wireguard@lists.zx2c4.com, x86@kernel.org, ziy@nvidia.com
 
-On Tue, Sep 30, 2025 at 04:43:48PM +0800, Yulin Lu wrote:
-> Document the SATA AHCI controller on the EIC7700 SoC platform,
-> including descriptions of its hardware configurations.
+Hello:
+
+This patch was applied to riscv/linux.git (for-next)
+by Mike Rapoport (Microsoft) <rppt@kernel.org>:
+
+On Mon, 25 Aug 2025 19:58:10 +0300 you wrote:
+> On Mon, Aug 25, 2025 at 06:23:48PM +0200, David Hildenbrand wrote:
+> >
+> > I don't quite understand the interaction with PG_Reserved and why anybody
+> > using this function should care.
+> >
+> > So maybe you can rephrase in a way that is easier to digest, and rather
+> > focuses on what callers of this function are supposed to do vs. have the
+> > liberty of not doing?
 > 
-> Signed-off-by: Yulin Lu <luyulin@eswincomputing.com>
+> [...]
 
-I will queue up patch 1/3 once v6.18-rc1 is out.
+Here is the summary with links:
+  - update kernel-doc for MEMBLOCK_RSRV_NOINIT (was: Re: [PATCH RFC 10/35] mm/hugetlb: cleanup hugetlb_folio_init_tail_vmemmap())
+    https://git.kernel.org/riscv/c/b3dcc9d1d806
 
-I expect patch 2/3 and patch 3/3 to go via the phy tree.
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
 
-Kind regards,
-Niklas
