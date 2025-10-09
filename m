@@ -1,47 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C54452D3EEE;
-	Thu,  9 Oct 2025 11:41:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A0331E1E12;
+	Thu,  9 Oct 2025 11:59:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760010113; cv=none; b=RYqPJZNXUa8KrS4ynqWdHLYN967W0W0eQTrBfkciu6D6sUXUja1an8YbgFiIIoKTwow2CkyppGtQvUUZdkLrPgPZBLcFJPhh698cRzC7Oni0JWBbO9tTMgj6jTrMT5QGiDBiMBdueMekCrWH79zwqJVFcCWwG+YXqrhFEAm7urw=
+	t=1760011175; cv=none; b=HKrW6jkhkzjrR2knfSJXCtUDbdWzfKSKrCT6xNLN0GvrCe2WdBr1//l8xV5HDj7VFtd4C2q69jzhvkCanUt0fhLandqYUPPdn75px9OfgkjRX9+Jx+SBhaWCMeGbAAG14uXelkhyyOjOnUf5roRbtSovsoiayZBgIZ7edioVHZo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760010113; c=relaxed/simple;
-	bh=AcffB+LSP0u+aqjYrWd41zf5HBiFGbQxA/z5xaGx4PI=;
+	s=arc-20240116; t=1760011175; c=relaxed/simple;
+	bh=5Mvef/DdaBxamtyhas+4duS0BHXlqranUz6aaOC1nzM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RE6SH6Lr9oHSuH9Uu55G6P+8RoQXoO6xdaPeUUsQA/DigvDR7W93n1UeK5Od4CzSSDXWGnqXDuhcA71BuPJFtcnDL1oZdgSqQ6amjpQio12RlFcPTY9cU8HpkWTq3ywKbL2B/PUE+CCaer6rDzoTVPlzs5BfWrUU3grWoJpIbUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WtnkCy1b; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bXDVVP2ASFOtFRALz2p6gQ9bjxrk++4B6gNRZn0OoqeF34faOgUECc5LiU/0Ary6vK7phowBLD+GyU8a49ERilvk7AxKBAGP35jQmdGxK0nvl2y/No4Av5aiGMEX4R9gIbPz31fxXgpLBbbylqvWF8QHB5XQ5MKrgONVNyrn2AQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KssFZgDs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WtnkCy1b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2D3EC4CEE7;
-	Thu,  9 Oct 2025 11:41:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KssFZgDs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46499C4CEF5;
+	Thu,  9 Oct 2025 11:59:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760010113;
-	bh=AcffB+LSP0u+aqjYrWd41zf5HBiFGbQxA/z5xaGx4PI=;
+	s=k20201202; t=1760011175;
+	bh=5Mvef/DdaBxamtyhas+4duS0BHXlqranUz6aaOC1nzM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WtnkCy1brH6oMLrE167uUvmCNjIOZ+Wfu6ev2XoMTqCnoIZ53WISyzzaRj3nisg9X
-	 cozGRshYoRk1wrPjZe0Wsh6JVsfax80NFOcqQBatyus2Edapric7W1VHFd2ioMrvlT
-	 UoG7Nnf6OxJh3cs8LD3GyUxIXkN1iHjzZaIbWMC1GniceHbnWG5BGxZwZ5XYLA00ON
-	 PXUm7TYInmj57MVYAzalAmVvBt5CVG68jzEDVcWE/60bSjukxsosC78H5WXhuWimJ9
-	 3ZQTBGrNHEffFT0cIIs4F5qaJnGJcF54+GNsVhSFux4dbncKDBYoI0z1YuZ5iqysuo
-	 J9D+IKyYYL9Mw==
-Date: Thu, 9 Oct 2025 13:41:49 +0200
+	b=KssFZgDsZCV2Ys1nIDByjcOd1F8DyiOkN6PMwceer++FQGrBYnwZaixHTYwiDhXFT
+	 Gng5Udq34G1unrCfrPHzEeIFhSr92ZzzJMrUirXmRLltZcJ4CBbzOf67UIPoxgRDR3
+	 vOJevgyjdwJr1DLXwpLnnLinhIbVqCraNR2pim7a379PdXDSOUB0M1nDnvphwe3hJx
+	 XczveJE93gGcc+f8931mrKkuO4cKeQHf3/wxvTck6bQlgafVXATnSTgpA2dvL74qPX
+	 omw4SesB7DX+BygNpOvZOKvNrUJwX6cX1L8U8h4Qsa/VDwxph8QsPCEuM43Kltmbs8
+	 EPoshdGzEZ9Ig==
+Date: Thu, 9 Oct 2025 13:59:30 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Markus Probst <markus.probst@posteo.de>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] Power on ata ports defined in ACPI before probing
- ports
-Message-ID: <aOeffbuAIxeuimHC@ryzen>
+Subject: Re: [PATCH v2 2/2] ata: Use ACPI methods to power on ata ports
+Message-ID: <aOejov5d_TlVkueH@ryzen>
 References: <8c3cb28c57462f9665b08fdaa022e6abc57fcd9e.camel@posteo.de>
- <20251005190559.1472308-1-markus.probst@posteo.de>
- <20251005190559.1472308-2-markus.probst@posteo.de>
- <aOPbLlvbfFadVQsV@ryzen>
- <64a9f3b1d96ac90efbf5879b7663e0152f38b167.camel@posteo.de>
+ <20251009112433.108643-1-markus.probst@posteo.de>
+ <20251009112433.108643-3-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -50,56 +47,62 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <64a9f3b1d96ac90efbf5879b7663e0152f38b167.camel@posteo.de>
+In-Reply-To: <20251009112433.108643-3-markus.probst@posteo.de>
 
-On Mon, Oct 06, 2025 at 03:50:35PM +0000, Markus Probst wrote:
-> On Mon, 2025-10-06 at 17:07 +0200, Niklas Cassel wrote:
-> > On Sun, Oct 05, 2025 at 07:06:07PM +0000, Markus Probst wrote:
-> > > some devices (for example every synology nas with "deep sleep"
-> > > support)
-> > 
-> > Some devices?
-> > I assume you mean the HBA and not the devices connected to the HBA.
-> Embedded devices. There are 2 connectors to a sata disk. One for the
-> data connection to the sata controller. Another one to the power supply
-> (so the disk gets the power). This patch tells the power supply for the
-> disk to give the disk power (if one is defined in acpi).
+On Thu, Oct 09, 2025 at 11:24:49AM +0000, Markus Probst wrote:
+> Some embedded devices, including many Synology NAS devices, have the
+> ability to control whether a ATA port has power or not.
 
-Ok, please add this to the commit message.
+In V1, you mentioned that it was to control the SATA power supply,
+now you mention the ATA port. I am confused.
+
+If it is for the ATA port, then SATA already has support for this,
+using PxSCTL.
+
+How does this ACPI way to control power interact with the regular
+way to control power for a port using PxSCTL?
 
 
-> Synology produces NAS devices. Some of those devices have something
-> they call "deep sleep". In this case, if a sata disk gets power is
-> controlled by a gpio and is *off by default*.
+> 
+> Add a new function, ata_acpi_dev_manage_restart(), that will be used to
+> determine if a disk should be stopped before restarting the system. If a
+> usable ACPI power resource has been found, it is assumed that the disk
+> will lose power after a restart and should be stopped to avoid a power
+> failure. Also add a new function, ata_acpi_port_set_power_state(), that
+> will be used to power on an ata port if usable ACPI power resources are
+> found. It will be called right before probing the port, therefore the port
+> will be powered on just in time.
+> 
+> Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> ---
+>  drivers/ata/libata-acpi.c | 70 +++++++++++++++++++++++++++++++++++++++
+>  drivers/ata/libata-core.c |  2 ++
+>  drivers/ata/libata-scsi.c |  1 +
+>  drivers/ata/libata.h      |  4 +++
+>  4 files changed, 77 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index f2140fc06ba0..bba5ef49f055 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -245,6 +245,76 @@ void ata_acpi_bind_dev(struct ata_device *dev)
+>  				   ata_acpi_dev_uevent);
+>  }
+>  
+> +/**
+> + * ata_acpi_dev_manage_restart - if the disk should be stopped (spin down) on
+> + * system restart.
+> + * @dev: target ATA device
+> + *
+> + * RETURNS:
+> + * true if the disk should be stopped, otherwise false
+> + */
+> +bool ata_acpi_dev_manage_restart(struct ata_device *dev)
+> +{
+> +	// If the device is power manageable and we assume the disk loses power
+> +	// on reboot.
 
-Please add this to the commit message.
-
-We already have DevSleep, which is a feature implemented in the SATA
-specification, where the HBA asserts a signal (DEVSLP, which on some
-boards is just a GPIO), while this signal is asserted the device may
-completely power down its PHY, and it may also choose to power down
-other subsystems, as long as it can meet the exit latency requirements.
-(The device should exit DevSleep when the DEVSLP signal is deasserted.)
-
-For more info see e.g.
-https://sata-io.org/sites/default/files/documents/SATADevSleep-and-RTD3-WP-037-20120102-2_final.pdf
-
-Since this patch implements something similar to DevSleep, but rather,
-IIUC, for the SATA power itself?
-
-How is SATA power supplied tied to a port in ACPI? If you have a desktop
-you have a PSU, and don't really know which supply is for which port.
-
-
-In SATA, we also have PxSCTL (SRC2: SControl) where we can completely
-disable a port and port the PHY in offline mode, see:
-https://github.com/torvalds/linux/blob/v6.17/drivers/ata/libata-sata.c#L415-L419
-
-
-So, considering how many ways we already have to disable/power off a port,
-you might understand why I think it is extra important that you document
-exactly how, and why we need yet another way to disable/power on/off a port.
-
+Like Damien mentioned earlier, please no C++ style comments.
 
 
 Kind regards,
