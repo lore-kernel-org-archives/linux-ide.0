@@ -1,74 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BEAD27F01E;
-	Mon, 13 Oct 2025 07:35:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E3B52E0B5F;
+	Mon, 13 Oct 2025 07:45:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760340942; cv=none; b=ThPuNbomnujLXFDHB89wEhdweP4tS8PbJVDrtg3oPXt8ucw7SE9/khQqxN6SbKyrfxHWq2qjn4yk4qdsSfRpw4n5vK3fFhwsw8pY3/7kxEAi7YP/3EJiwDwL6gGvhamrxax4AgkVlyXLTbSxlPtl8w4Gu7Br0NHZhL4XUcVm7fM=
+	t=1760341553; cv=none; b=dCr6Vu1rAuEFQUMv0tSvqOAUYTt4q3JoInJv7NOP5vqF4NODZCIB7H4U46mmtj2Y9/ewgloxrKtYG0IFO5TWS0KdoG+/Ym/ChocoY6bTG9lb+dOLCbJPTdRfEXKNP1RZAt5/f/PG5Fr5n5wWQFHgsB6eDVmY0UpcINbQDbcV3Co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760340942; c=relaxed/simple;
-	bh=iEUdbvJi3pvRf67skvtGxBMrtqXcvV211k+jm08OGhU=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=O40XBN8LabfGVijzAh83ca6ssqJPF1VOJsmR/ftkPr67ZH/59GgObXDKDfuutGbyVQo840I4VHJ6wxAMQgZuyvSmr0AZRl2BZyHDVKO2Wb6hCa15vz3h64aB4J9PqM0EV+CH5DJhl/wqTuxen198/BrHxUXVD7yc1HWeMnh/V+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dONLhkKO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760341553; c=relaxed/simple;
+	bh=L9JV7fQgZkyT5akfcPN+oJ4PhIkfXdiyw9XSCV7QzCA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hxMqNBL9Pslxk3yHT1cywUQSstHZyEFpuavSjF3wi3O0qqSd//vVLnmZb9r/KPYhVepYSFAsd9tRAWXsJr4ENoY+dNQRHBTB9VESp+7whoNlWNxUlEJ4tb8fUimyA9Q+JasVR1FfATqwzThGtVMbj1W4V2feYOIskGJSlGcZEUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XUgNQzAw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dONLhkKO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 821B8C4CEE7;
-	Mon, 13 Oct 2025 07:35:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XUgNQzAw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7ED5EC4CEE7;
+	Mon, 13 Oct 2025 07:45:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760340941;
-	bh=iEUdbvJi3pvRf67skvtGxBMrtqXcvV211k+jm08OGhU=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=dONLhkKOkRfQ1gfZWRMsLMyO+WZ55No0e2fE/1IaDDXtWKE0bVuZEH5nEx0Q7qLhZ
-	 hL4ylUxEic8jlcihASCKXPZwhYeSOwA+v0mbsE1C6w8srDGqpqIU9JZBn7ysVJrToH
-	 XJxJ7guXu7obEE1UUR24KabvyEjIXYT3NiHjW3RJ/Pc3T4QaiSjAILHSZUlHzo9ub/
-	 m1G5v4bkhuxV3zJoX7LvYjCbXYTZiq/LUTZEjmt7MwjwAarBvKxrAWuT14Hz4TveT3
-	 gnzNw7Wo4dXxmvnjb5vLovYWukW18YYWn7FYjP09qSMpz33jDZUNLi2+gJB/chkRCO
-	 uHsmVds/S9Brg==
+	s=k20201202; t=1760341553;
+	bh=L9JV7fQgZkyT5akfcPN+oJ4PhIkfXdiyw9XSCV7QzCA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XUgNQzAwIuBEb71+WMCsaM1S1OQ0t1C7M1cv3E+mSGpNfcO4j4Uld4s/QRSXLoixE
+	 ROpTAPYJosf5G7r3IY0N2SQ4XKDgRs2Y4q9CnvLAa7X3PCkaa0EydLnrIMXrFTyG6/
+	 NdHUkhLdcO8dFSGyLTX6yjhqegq26Ri4OF7nbso7OlP5Ys9Bi3Go6Iec78kD1oncmI
+	 DOFTOzOKOphX3rkEujiTtjOZi27E84rjv1BJK682IGjZcJi18U8dlPxlMpRyN9XHK1
+	 WvIv98beOGjc1ZOWgKrRvtlKWjNizAwiQ0uGtHWl0pXF+C+PNE+1Sq9VaHSw4ZxDFo
+	 9OtljQ9dRn77A==
+Date: Mon, 13 Oct 2025 09:45:48 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: dlemoal@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
- conor+dt@kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, vkoul@kernel.org, kishon@kernel.org, 
- linux-phy@lists.infradead.org, Yulin Lu <luyulin@eswincomputing.com>
-Cc: ningyu@eswincomputing.com, zhengyu@eswincomputing.com, 
- linmin@eswincomputing.com, huangyifeng@eswincomputing.com, 
- fenglin@eswincomputing.com, lianghujun@eswincomputing.com
-In-Reply-To: <20250930083754.15-1-luyulin@eswincomputing.com>
-References: <20250930083754.15-1-luyulin@eswincomputing.com>
-Subject: Re: (subset) [PATCH v5 0/3] Add driver support for Eswin EIC7700
- SoC SATA Controller and PHY
-Message-Id: <176034093826.2889433.376970186266993861.b4-ty@kernel.org>
-Date: Mon, 13 Oct 2025 09:35:38 +0200
+To: Markus Probst <markus.probst@posteo.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] scsi: sd: Add manage_restart device attribute to
+ scsi_disk
+Message-ID: <aOyuLCEDJxJS76nN@ryzen>
+References: <20251010223817.729490-1-markus.probst@posteo.de>
+ <20251010223817.729490-2-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251010223817.729490-2-markus.probst@posteo.de>
 
-On Tue, 30 Sep 2025 16:37:54 +0800, Yulin Lu wrote:
-> This series depends on the config option patch [1].
-> 
-> [1] Https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?h=next-20250929&id=ce2d00c6e192b588ddc3d1efb72b0ea00ab5538f
-> 
-> Updates:
->   v5 -> v4:
->     - eswin,eic7700-ahci.yaml
->       - Add "dt-bindings: ata:" prefix to the subject.
->       - Wrap at 80 characters in the YAML description field.
->     - Link to v4: https://lore.kernel.org/lkml/20250915125902.375-1-luyulin@eswincomputing.com/
-> 
-> [...]
+On Fri, Oct 10, 2025 at 10:38:34PM +0000, Markus Probst wrote:
+> In addition to the already existing manage_shutdown,
+> manage_system_start_stop and manage_runtime_start_stop device
+> scsi_disk attributes, add manage_restart, which allows the high-level
+> device driver (sd) to manage the device power state for SYSTEM_RESTART if set to 1.
 
-Applied to libata/linux.git (for-6.19), thanks!
+The commit message explains what is done, but does not answer the question:
+"why?"
 
-[1/3] dt-bindings: ata: eswin: Document for EIC7700 SoC ahci
-      https://git.kernel.org/libata/linux/c/c9d869fb
+I can read patch 2/2 and understand why, but considering that this is a patch
+for SCSI and not ATA, I think that you need to provide some context here, so
+that someone doing a git log drivers/scsi/ will actually have any idea of why
+this was done.
+
 
 Kind regards,
 Niklas
-
