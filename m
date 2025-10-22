@@ -1,70 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 038F6354AFF;
-	Sun, 19 Oct 2025 03:44:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1BBD26B08F;
+	Wed, 22 Oct 2025 23:04:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760845475; cv=none; b=ItbqOhuziULzISf2MNF90ky0f9hoVDGg2L5ol4IyQVyoWfwZAmZ6cRwsmepPQWyOU/v9AMCt31VHie3U8MXPpC8pwkbMnbLlaC0jWGo0Ig0I1PSUvlLe+8qjXvwZ6lNI07XnnpMVEjwdFUy346NQKVSrSE3jEmq8qTQpzNkH6hY=
+	t=1761174272; cv=none; b=gzNGkbAxEmwK6+qnaxZenw0XT6AFNx1vGPP/aWtU/MLG7lMQf9Kw/nmknOulUm5GXqpBNqqXura0lOUUz/NJ0rXbk0SdDtajWd7ICgdKAUZec3hi/ZZCGoB+zfsdkKT2sB0ekX1wTPoBwbQxHIRNYKjoMBZlkX4rTuMezqo8GAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760845475; c=relaxed/simple;
-	bh=USUFDGGqIwzjtisEmi5el5bWKI/V7ivepGgn/YYe28s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sFeAEf+FTvsoX55rNbFff2EB+okhDmqI6b6GJz+OnVIpUmHL/ov3H4bCyD0i3pgFfZG/PJweZOxO7RIq/hxKSCXEFfOvJESeQZQqTMMdXCLB+6xWruzmHuGO5hf1/zF7lO2rE+MeCZHlEUEYY5l75Tsjo3NI+lEztI2bFYkyQW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Idb0yPdn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761174272; c=relaxed/simple;
+	bh=7w/ZxsXTzQxxcfAjoetuQStQP2bHZ/+KT1DPSQY/Qic=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=O7uEfJ6KFSp6JBFiwwrVyxC/XZZDOVBvJc2IrU1iEeCOB6NiblRy6qsrHaASu63GDdoBmgwSAyN3OoH6PsYuas6ywDWu9dqqYmLyLeHgqnZHqmqKjjv0ZqGuE5Elw1Nxc4xyVxdowlhnTouXUcKsJ5LLdpk2nDC+TpX2nelhOzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iWDTSCqg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Idb0yPdn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEFFCC4CEE7;
-	Sun, 19 Oct 2025 03:44:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iWDTSCqg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58B92C4CEE7;
+	Wed, 22 Oct 2025 23:04:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760845474;
-	bh=USUFDGGqIwzjtisEmi5el5bWKI/V7ivepGgn/YYe28s=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Idb0yPdnYY/JA/jhcSUmHVoTgj6qDo8ALWCRDQvk8qJ4uaK9wtmLLbVoEVklaWsqd
-	 wxnsuRIIBmczfmIjWDqcVqO+3fLSgfvNzg+NmQPfOWI1FjyMCUmplJOLnWdtCgssQU
-	 c/w3//NiZnpRwbQd+Fe004WQjNnGMxDvaxpZhSfprZa/Gi/+E7Yoe1daatQkRejcrP
-	 MbSIus1r+C/OVrrIuZS64JZnqcKH5c4kxF/Lzc8tjceeBxI9m3CCXhSRXvCTF8M/DJ
-	 wl67Qyhel7oi5ENHoo81AqP96sMn6rQqjwf+uAQQTXMk5xZ1p71TYgE0ygmP4xopLO
-	 18P4PQ6tI/Z5A==
-Message-ID: <f6fa3655-c0e3-4c49-a970-22b3c68a0555@kernel.org>
-Date: Sun, 19 Oct 2025 12:44:32 +0900
+	s=k20201202; t=1761174271;
+	bh=7w/ZxsXTzQxxcfAjoetuQStQP2bHZ/+KT1DPSQY/Qic=;
+	h=From:To:Cc:Subject:Date:From;
+	b=iWDTSCqg6MCNdlWH+DfN/IbQcvo9qYaMlkqso9av5hFO3pcNRbzY/3ZZobiq3Coe5
+	 PDZVpKVpG0nRTGC/D/4lfa08O8f9yMPOLDVpUeGB25e3EYmIWSQWbad4Hy/fUR3gOI
+	 WixrYywzV3+HVdQS3gWjI3XdWWBclTH1K1Rmh0qbhW2KuLGXeVG7vIC35WEKhRG8WB
+	 MY7TpURwiw77Oe5no90nlV4fPS4qqkmLDBbI5csqRW8K+46UVKCn2S4OnHsLBOJ7RB
+	 eflCzxtNaWpPD/dRKsaqnNWV2euM3upg85o9gw+WYSc82eC5SCAscepC8cu9ioY5ir
+	 UPtIyJBqZEqPQ==
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Serge Semin <fancer.lancer@gmail.com>
+Cc: linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] dt-bindings: ata: snps,dwc-ahci: Allow 'iommus' property
+Date: Wed, 22 Oct 2025 18:04:21 -0500
+Message-ID: <20251022230422.423230-1-robh@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: Replace deprecated strcpy with strscpy in
- it821x_display_disk
-To: Thorsten Blum <thorsten.blum@linux.dev>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-hardening@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20251018105146.29808-1-thorsten.blum@linux.dev>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20251018105146.29808-1-thorsten.blum@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 10/18/25 19:51, Thorsten Blum wrote:
-> strcpy() is deprecated; use strscpy() instead.
-> 
-> Replace the hard-coded buffer size 8 with sizeof(mbuf) when using
-> snprintf() while we're at it.
-> 
-> Link: https://github.com/KSPP/linux/issues/88
-> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+The AMD Seattle DWC AHCI is behind an IOMMU and has 1-3 entries, so add
+the 'iommus' property. There's not a specific compatible, so we can't
+limit it to Seattle.
 
-Note: the patch title should be:
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-ata: pata_it821x: Replace deprecated strcpy with strscpy in it821x_display_disk
-
-Niklas can fix that when applying I think.
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
+diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+index 4c848fcb5a5d..7707cbed2260 100644
+--- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
++++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+@@ -33,6 +33,10 @@ properties:
+       - description: SPEAr1340 AHCI SATA device
+         const: snps,spear-ahci
+ 
++  iommus:
++    minItems: 1
++    maxItems: 3
++
+ patternProperties:
+   "^sata-port@[0-9a-e]$":
+     $ref: /schemas/ata/snps,dwc-ahci-common.yaml#/$defs/dwc-ahci-port
 -- 
-Damien Le Moal
-Western Digital Research
+2.51.0
+
