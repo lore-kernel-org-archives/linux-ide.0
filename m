@@ -1,36 +1,37 @@
 Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74156342C95
-	for <linux-ide@vger.kernel.org>; Thu, 23 Oct 2025 16:52:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3DC3431F6
+	for <linux-ide@vger.kernel.org>; Thu, 23 Oct 2025 16:52:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761238341; cv=none; b=GpDGD+USSNS4c1uu1P2bcjawnrXaHKAsjEw4Vq8VNv6+dah03k95EGIS4sTVbQZcRqLP/9ICry6g8XMr/hzr6adt5pALZ4u2OF4JbD1mKJQmjZh8XH7a2oZ79gWoHNb6HjZT6anfwvJZrCeTE21bt+Wlmd7d14uIB1CTezk3+rE=
+	t=1761238341; cv=none; b=NKT5395rMsGF3OZCJsDOd4OVTPD47ClOl20KrKJ6fRxWUFdx2j1GF7yzuogTEBf/yGq49HUwB6q57gxdqtjq+D4iEz/m5xLLJnesmg69cbTN4JWQTP/NyyZqydCHD4lP2hbuqG+w6JGVEhyARLlT9oGkQzZtyHPqgbS1blZRRto=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1761238341; c=relaxed/simple;
-	bh=MYsya6k0FMklTFgFGtkWPwZqZmzcxJGmInqsfxkrVak=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tGZEKMwTb9g7lWX83/sNKNkayRx57wCsG3IWgWpRWf2U2iNESuBTB5ns+8XT56L6/MLtl/OjEpxZc+43z1mn3+mte/KioClwESyKtFL5ZVkjni1Y01pI3G/3pUdqx/FsbhhHWObabIIgA6RvpNwBXS1Ge5UW+H0UIzxJlHC2NH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=iPjebUd6; arc=none smtp.client-ip=185.67.36.65
+	bh=Gp3Z46oMJW5wJmVUpYAQFQ5ink55foZjx/j52yWoCw0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=pLFB4xxXjwqWLZovA+AUb5HvLxAS09W+C9Wt5Hj3zI4Az3ahEsDnBekbG7hs2etTrUsZcJ4cSQ1Ecou6EevDH7OD/V5K0zfjctfjecHtrcwPevD6et0osIpobCcWZsI0G8FKjPdRf6ItdJg8o/ElWwrpOXNr1MWLk/QxoFv5IjY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=egeA8ZFu; arc=none smtp.client-ip=185.67.36.65
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="iPjebUd6"
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="egeA8ZFu"
 Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 15530240028
-	for <linux-ide@vger.kernel.org>; Thu, 23 Oct 2025 18:52:10 +0200 (CEST)
+	by mout01.posteo.de (Postfix) with ESMTPS id ABDB9240027
+	for <linux-ide@vger.kernel.org>; Thu, 23 Oct 2025 18:52:11 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1761238331; bh=MLW5rBsuGqMhA8MEStZdhjex6YP9gBN8fGUV0QHuBzI=;
+	t=1761238331; bh=Xa0tPVH4r6qVP2RUIJbHINvMsQotWWFqJSOXO3yrRIA=;
 	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
 	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
-	b=iPjebUd60ANeTmiFaEpG3FQKh9dGVEvG/6fhT2G0wk70wzI9snXWJSgScnn76MPkt
-	 4cd0HpSmHgMMhbuaGTJBFiUXtiOGmrD91H0x8cCKj8622wu3vZ2m0B4ku06dtGEWbJ
-	 P68SVTwOhN9GDo8GOCaapPTEa5tfWnyorxpfVIa1klQxgXHK3c/s9/ZUD7pvoi+GBz
-	 b9jN97uqCnBBp6IIRTxEhdupBuywCbkoQWN2QmcX24e28HTO8u/JeH6UAVETs3In89
-	 IKzI2GRJVYE2kmrrfFhcNXQE3qO7xtyrXpZ+PLl47qVYIkgw24MvFbxWrUBWJqW/OS
-	 rsBIPc630Efgg==
+	b=egeA8ZFuKPEN5ak5UJFlLrQYoPaZLuqAcCcWVBoETzr0avIkGI+sCCpVhJKUdSLxl
+	 isTUsL4BIDiv2pCKv2l1OZrG1TfIKhWf7xFRAj0+0bvCm8GFWh8r11ARDH7VHMYiUy
+	 t2o/drFBKF1qzEQpD3/M10ntbLKu0tOrLGGYkbGy47VOPPC0kKDb0BlGFPFbniDrZz
+	 8KH47LEQ9B+/wIOTYm/HEhXZ51W+4EXbog+gYZopr0Z/4yaamEtpIlph8dSBMRA7a9
+	 8fAoPSapqGYgZ+QqTa55uwskx+SSi8Kx9ME7O7H/iK8tB1pJHzcBI/BU13dRu+rwlY
+	 +EpPp+hdL76aA==
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4cssWs6016z9rxD;
-	Thu, 23 Oct 2025 18:52:09 +0200 (CEST)
+	by submission (posteo.de) with ESMTPSA id 4cssWt5LzBz9rxB;
+	Thu, 23 Oct 2025 18:52:10 +0200 (CEST)
 From: Markus Probst <markus.probst@posteo.de>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
@@ -40,9 +41,11 @@ Cc: linux-ide@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Markus Probst <markus.probst@posteo.de>
-Subject: [PATCH v4 0/3] Support power resources defined in acpi on ata
-Date: Thu, 23 Oct 2025 16:52:10 +0000
-Message-ID: <20251023165151.722252-1-markus.probst@posteo.de>
+Subject: [PATCH v4 1/3] scsi: sd: Add manage_restart device attribute to scsi_disk
+Date: Thu, 23 Oct 2025 16:52:11 +0000
+Message-ID: <20251023165151.722252-2-markus.probst@posteo.de>
+In-Reply-To: <20251023165151.722252-1-markus.probst@posteo.de>
+References: <20251023165151.722252-1-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -93,48 +96,100 @@ Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
   aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
 OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-This series adds support for power resources defined in acpi on ata
-ports/devices. A device can define a power resource in an ata port/device,
-which then gets powered on right before the port is probed. This can be
-useful for devices, which have sata power connectors that are:
-  a: powered down by default
-  b: can be individually powered on
-like in some synology nas devices. If thats the case it will be assumed,
-that the power resource won't survive reboots and therefore the disk will
-be stopped.
+In addition to the already existing manage_shutdown,
+manage_system_start_stop and manage_runtime_start_stop device
+scsi_disk attributes, add manage_restart, which allows the high-level
+device driver (sd) to manage the device power state for SYSTEM_RESTART if
+set to 1.
 
-Changes since v3:
-- rename function from "ata_port_set_power_state"
-  to "ata_acpi_port_power_on" and remove enable argument
-- split "ata_acpi_port_power_on" and "ata_acpi_dev_manage_restart" into
-  two commits
-- improved commit messages
-- improved comments (style and new comments)
+This attribute is necessary for the following commit "ata: stop disk on
+restart if ACPI power resources are found" to avoid a potential disk power
+failure in the case the SATA power connector does not retain the power
+state after a restart.
 
-Changes since v2:
-- improved commit messages
-- addressed warning from kernel test robot
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+ drivers/scsi/sd.c          | 35 ++++++++++++++++++++++++++++++++++-
+ include/scsi/scsi_device.h |  6 ++++++
+ 2 files changed, 40 insertions(+), 1 deletion(-)
 
-Changes since v1:
-- improved commit messages
-- addressed style issues (too long lines and docs)
-- removed ata_dev_manage_restart() and ata_port_set_power_state()
-  methods
-- improved log messages in ata_acpi_port_set_power_state
-
-Markus Probst (3):
-  scsi: sd: Add manage_restart device attribute to scsi_disk
-  ata: stop disk on restart if ACPI power resources are found
-  ata: Use ACPI methods to power on disks
-
- drivers/ata/libata-acpi.c  | 68 ++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-core.c  |  2 ++
- drivers/ata/libata-scsi.c  |  1 +
- drivers/ata/libata.h       |  4 +++
- drivers/scsi/sd.c          | 35 +++++++++++++++++++-
- include/scsi/scsi_device.h |  6 ++++
- 6 files changed, 115 insertions(+), 1 deletion(-)
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 0252d3f6bed1..2ea244d6f998 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -318,6 +318,36 @@ static ssize_t manage_shutdown_store(struct device *dev,
+ }
+ static DEVICE_ATTR_RW(manage_shutdown);
+ 
++static ssize_t manage_restart_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++
++	return sysfs_emit(buf, "%u\n", sdp->manage_restart);
++}
++
++
++static ssize_t manage_restart_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++	bool v;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	if (kstrtobool(buf, &v))
++		return -EINVAL;
++
++	sdp->manage_restart = v;
++
++	return count;
++}
++static DEVICE_ATTR_RW(manage_restart);
++
+ static ssize_t
+ allow_restart_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+@@ -654,6 +684,7 @@ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_manage_system_start_stop.attr,
+ 	&dev_attr_manage_runtime_start_stop.attr,
+ 	&dev_attr_manage_shutdown.attr,
++	&dev_attr_manage_restart.attr,
+ 	&dev_attr_protection_type.attr,
+ 	&dev_attr_protection_mode.attr,
+ 	&dev_attr_app_tag_own.attr,
+@@ -4177,7 +4208,9 @@ static void sd_shutdown(struct device *dev)
+ 	    (system_state == SYSTEM_POWER_OFF &&
+ 	     sdkp->device->manage_shutdown) ||
+ 	    (system_state == SYSTEM_RUNNING &&
+-	     sdkp->device->manage_runtime_start_stop)) {
++	     sdkp->device->manage_runtime_start_stop) ||
++	    (system_state == SYSTEM_RESTART &&
++	     sdkp->device->manage_restart)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 6d6500148c4b..c7e657ac8b6d 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -178,6 +178,12 @@ struct scsi_device {
+ 	 */
+ 	unsigned manage_shutdown:1;
+ 
++	/*
++	 * If true, let the high-level device driver (sd) manage the device
++	 * power state for system restart (reboot) operations.
++	 */
++	unsigned manage_restart:1;
++
+ 	/*
+ 	 * If set and if the device is runtime suspended, ask the high-level
+ 	 * device driver (sd) to force a runtime resume of the device.
 -- 
 2.51.0
 
