@@ -1,36 +1,37 @@
 Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BB00322DCB
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9561E3787
 	for <linux-ide@vger.kernel.org>; Tue,  4 Nov 2025 14:24:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762266282; cv=none; b=EegHoaryKYMXdytwTh3tvikf16wb0R7s18gQYV2kfqj5LvGU+vuky+J+Cdna9UYTAVTnS9wpNALWn6Qi/jlcwS8ImZyExEZUU9LI7nL94c63PyVwiK3vUAzNetTAZnmM8ckD8lmOE5/fH7SdRlpntcH+nZ7VhUpwp8VmwAQDeEk=
+	t=1762266282; cv=none; b=C/VZpMO7RXI0SEnU9CtfWbk0vD6x1t/aFgEApWYUWPPDSlrPd7KyeHNyO22p56YlcGO1XtfU6Xif0Yd8Otx1H0WKQNfcRSDEWTquoLvMK8O32u7N449OTi537+oU7MXgiuusoethptqew8OFXOv5vgMHvTl/lWA+W6rzGM+DLog=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762266282; c=relaxed/simple;
-	bh=OY5wEvwgVeL3r6GNSetT0cUgtozIs72Cvt3mLOdSOY4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XYBJKUSMPmr3wBpZEfTAcrcZWunNut9jKEqcV0YSdlv8/A51zCFk8rGD8kVcIg7z2goOGOq/RCwq3SAnEzxKsmwMOOHNA/WbQmJ6YSMv2DgEjV0ss7jLR2w0E6cHu7ZYshu9xqZ/AjGGxeMWzg6Ad/ykia2Pjp/2BbiY5hYBKQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=IF2X+lWM; arc=none smtp.client-ip=185.67.36.65
+	bh=Ao5+boMmfZWYAtK2haO2ddMrlZWRsE6a0fglGAS3vZA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=krpPEPRAiCBDg8/flfhFiYWW6wSjWMW8mp/CntiSeNmGuEkbsxTftA/d8IFYPozoD3pGMmImarwDTnfBCDDUOOeMcidHjlmlhyzPeIQQtm+zKNgwV2etGpi+3XmIMbnFNOQF7X6l7K+KcpybCX6ke3NhtXAaUIKdDQRk+U7I5cc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=WCxBK5EQ; arc=none smtp.client-ip=185.67.36.65
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="IF2X+lWM"
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="WCxBK5EQ"
 Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 248B624002A
+	by mout01.posteo.de (Postfix) with ESMTPS id 9340E240027
 	for <linux-ide@vger.kernel.org>; Tue,  4 Nov 2025 15:24:32 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1762266272; bh=ZHCQeat6IS2jLdt6GOgOtaif4BAwBys5jtZvERfyYSA=;
+	t=1762266272; bh=gd4HjZCWAk8CsNmoKEWEKdOMY5aCf6WYxuALDZmp8eQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
 	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
-	b=IF2X+lWMRaeW8uhAKhkLm1Y0mQrP1Q+UyOIutedI4ae1ZhHb4lVIKa9DrubhdXAF5
-	 gwsaq9QlN/uIJy1rY3pgpj56vtRgNdMGLUl4/k+b/WJ3+YOW8XQoUkY9Ur6s9WFXIY
-	 AoTuPnBGSZ5AVwREz0t1Jrd1OreOqeFZAyxxYYCmTchFKcuz0y2iTCYlmG+RRRvob7
-	 2Kb7vcPEukP+0EjXlElN9DAMzVd5TXZZEna6gwoHV/Bz97gTNCwIu6e1paaVW6K8F1
-	 FTPRUeHCPMN63/yN6GTSSbGLtULebANH/aKSDg972t0UfMgdpB3iZGuyW3I8uqV1Tu
-	 vdUKdd5/+eY3w==
+	b=WCxBK5EQ/Y1lY7uHd9iUh2UyweOGOGYUvefC+PNYmCxy9APX+E2g9iB7DYULCdFel
+	 E09BleMZG9eU+5CvAyA5W5JNDx82X2E3nx8g+BzFSsYJTkh+2mZ62VQElzDb0Ibbtf
+	 llzHLgpGrYdD9kFuJSLrlXH3E5U7u9oD6jkD4fgebUQyg22VQ3cNUd4zfyaBxcO7Qo
+	 Ptt2pCBXNh+jtsbOR6HVsoo4xCehxkHnzhNUA1IvDPaB/MAG1/tUMHzuTNuSFOZWw3
+	 Is7mhvsyeqUzUUI7agLdVLs+wpqGUeW2rcUMM1ifv+qvk1thWmqVOQVr1pQCwAim1b
+	 tvImkGmARMdmg==
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4d19gy3gzLz6v14;
-	Tue,  4 Nov 2025 15:24:30 +0100 (CET)
+	by submission (posteo.de) with ESMTPSA id 4d19gz3b5nz6tw2;
+	Tue,  4 Nov 2025 15:24:31 +0100 (CET)
 From: Markus Probst <markus.probst@posteo.de>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
@@ -40,9 +41,11 @@ Cc: linux-ide@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Markus Probst <markus.probst@posteo.de>
-Subject: [PATCH v6 0/3] Support power resources defined in acpi on ata
-Date: Tue, 04 Nov 2025 14:24:31 +0000
-Message-ID: <20251104142413.322347-1-markus.probst@posteo.de>
+Subject: [PATCH v6 1/3] scsi: sd: Add manage_restart device attribute to scsi_disk
+Date: Tue, 04 Nov 2025 14:24:32 +0000
+Message-ID: <20251104142413.322347-2-markus.probst@posteo.de>
+In-Reply-To: <20251104142413.322347-1-markus.probst@posteo.de>
+References: <20251104142413.322347-1-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -93,63 +96,100 @@ Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
   aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
 OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-This series adds support for power resources defined in acpi on ata
-ports/devices. A device can define a power resource in an ata port/device,
-which then gets powered on right before the port is probed. This can be
-useful for devices, which have sata power connectors that are:
-  a: powered down by default
-  b: can be individually powered on
-like in some synology nas devices. If thats the case it will be assumed,
-that the power resource won't survive reboots and therefore the disk will
-be stopped.
+In addition to the already existing manage_shutdown,
+manage_system_start_stop and manage_runtime_start_stop device
+scsi_disk attributes, add manage_restart, which allows the high-level
+device driver (sd) to manage the device power state for SYSTEM_RESTART if
+set to 1.
 
-Changes since v5:
-- moved the 3. patch before the 2. patch
-- removed unnecessary blank line
-- improved commit messages
-- improved documentation
-- fixed typo in error message
+This attribute is necessary for the following commit "ata: stop disk on
+restart if ACPI power resources are found" to avoid a potential disk power
+failure in the case the SATA power connector does not retain the power
+state after a restart.
 
-Changes since v4:
-- improved documentation
-- use false/true instead of 0/1
-- removed repeating code in ata_acpi_dev_manage_restart
-- split long lines
-- removed debug message
-- improved error message
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+ drivers/scsi/sd.c          | 34 +++++++++++++++++++++++++++++++++-
+ include/scsi/scsi_device.h |  6 ++++++
+ 2 files changed, 39 insertions(+), 1 deletion(-)
 
-Changes since v3:
-- rename function from "ata_port_set_power_state"
-  to "ata_acpi_port_power_on" and remove enable argument
-- split "ata_acpi_port_power_on" and "ata_acpi_dev_manage_restart" into
-  two commits
-- improved commit messages
-- improved comments (style and new comments)
-
-Changes since v2:
-- improved commit messages
-- addressed warning from kernel test robot
-
-Changes since v1:
-- improved commit messages
-- addressed style issues (too long lines and docs)
-- removed ata_dev_manage_restart() and ata_port_set_power_state()
-  methods
-- improved log messages in ata_acpi_port_set_power_state
-
-Markus Probst (3):
-  scsi: sd: Add manage_restart device attribute to scsi_disk
-  ata: Use ACPI methods to power on disks
-  ata: stop disk on restart if ACPI power resources are found
-
- drivers/ata/libata-acpi.c  | 67 ++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-core.c  |  2 ++
- drivers/ata/libata-scsi.c  |  1 +
- drivers/ata/libata.h       |  4 +++
- drivers/scsi/sd.c          | 34 ++++++++++++++++++-
- include/scsi/scsi_device.h |  6 ++++
- 6 files changed, 113 insertions(+), 1 deletion(-)
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 0252d3f6bed1..f2c0744b4480 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -318,6 +318,35 @@ static ssize_t manage_shutdown_store(struct device *dev,
+ }
+ static DEVICE_ATTR_RW(manage_shutdown);
+ 
++static ssize_t manage_restart_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++
++	return sysfs_emit(buf, "%u\n", sdp->manage_restart);
++}
++
++static ssize_t manage_restart_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++	bool v;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	if (kstrtobool(buf, &v))
++		return -EINVAL;
++
++	sdp->manage_restart = v;
++
++	return count;
++}
++static DEVICE_ATTR_RW(manage_restart);
++
+ static ssize_t
+ allow_restart_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+@@ -654,6 +683,7 @@ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_manage_system_start_stop.attr,
+ 	&dev_attr_manage_runtime_start_stop.attr,
+ 	&dev_attr_manage_shutdown.attr,
++	&dev_attr_manage_restart.attr,
+ 	&dev_attr_protection_type.attr,
+ 	&dev_attr_protection_mode.attr,
+ 	&dev_attr_app_tag_own.attr,
+@@ -4177,7 +4207,9 @@ static void sd_shutdown(struct device *dev)
+ 	    (system_state == SYSTEM_POWER_OFF &&
+ 	     sdkp->device->manage_shutdown) ||
+ 	    (system_state == SYSTEM_RUNNING &&
+-	     sdkp->device->manage_runtime_start_stop)) {
++	     sdkp->device->manage_runtime_start_stop) ||
++	    (system_state == SYSTEM_RESTART &&
++	     sdkp->device->manage_restart)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 993008cdea65..fd484d48df77 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -178,6 +178,12 @@ struct scsi_device {
+ 	 */
+ 	unsigned manage_shutdown:1;
+ 
++	/*
++	 * If true, let the high-level device driver (sd) manage the device
++	 * power state for system restart (reboot) operations.
++	 */
++	unsigned manage_restart:1;
++
+ 	/*
+ 	 * If set and if the device is runtime suspended, ask the high-level
+ 	 * device driver (sd) to force a runtime resume of the device.
 -- 
 2.51.0
 
