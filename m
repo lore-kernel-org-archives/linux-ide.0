@@ -1,192 +1,79 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B504032E739
-	for <linux-ide@vger.kernel.org>; Tue,  4 Nov 2025 14:24:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D06A7FBA2;
+	Thu,  6 Nov 2025 07:16:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762266284; cv=none; b=NtUa5VY30xt02QVb1wo1FBLIORt3V8AjJGizfjsUpHc4pua7sKZ0lx4SUM01yPSpPBNtTXDEq1vl3s6GM/AfKQBi69RW6ZNPc8+U60hd5/Lh/mGuqJ87HnyxqqdwnE7SlWfvkQ2LZ0Ccv/clerBMuIqvNDaVWcrVECdERiPeGP8=
+	t=1762413367; cv=none; b=H2OjtLIdgK9swziWHMJIm37mY4QkWnfW8PlozPF6bF9ryqcEpwRF9+uxq42vxB88UI9+4ccmHCSB9+oC5ukYjMG74HGDG09oXOcHh7bHETS2e+7MoFDU7PgvERDRiLOz6OglnOvYKuRzWojnX/ocnTppqqTmHuJmJBd99p2VEn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762266284; c=relaxed/simple;
-	bh=vWgnkaNAeKEq0vQp0UwcEMQJQyKclEImElkKB/VLY0c=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XOyZ1icIkHGXWRmZe651r++8eVlYxgJcXLYjUGXVFAw4ad/bqGmluq6InvMzw+VMjP+10YTTGRapzqeGFaF6STziWeBFHLOjHn7WcjK27CSxtFAw+41Kqy2ihpU5GNiUYg0p4DLyhF4tugmUKawdrZcgEiA6FURkgnGvnxGA90Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=rnctoS15; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1762413367; c=relaxed/simple;
+	bh=Twy8mmHy7U2wj3bLY/1A4yl68N/dIj9GkGpmlchk0Ds=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Vr4wCJab7Hu4PP4+z0yEe6T+D7b0M+8HfWdSNz/4czXahrZYp/Sie/TSPmOKEMSicKLs9DNmpZVWqE9sqNI7KZIbqbrAEdUgEC9xsWlzRtRrYVGrtuyEXdz9vpe6tx2vrpTpQoG4xLRw+iFuMZoFAAV4oe6QAZsv1e2B6j7pxJg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EwIBjoPq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="rnctoS15"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 5CAA9240103
-	for <linux-ide@vger.kernel.org>; Tue,  4 Nov 2025 15:24:35 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1762266275; bh=rUtqlSZS/SNOoEJkSSPQTgciFJ8CEUiEH7X/3AsdH3U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
-	b=rnctoS15LlqFRbVtsOrvzygcWLqh0Ql9u8U3DNHykzfim5jC9radt9H5GUV57ncBD
-	 klY7KI5XfrgNuuO3bn1ySF+QIKa+1EKvjTknwc2OfrIo63loYR8htk1zNymrMnSSPm
-	 +AAKO5nSR8CDH6ho3Fm/vHFmvzre2WJqT/V6VMPgMoWQSJKjKcQhdh49e405i1k10o
-	 AvMFZHH1R1Sozan6U2sgg12xdN24s7mGepTfYJpXoYnPO4bgkI2k4SU0YRiPrMH6gZ
-	 JCvAe+38Tz8yQpPRQwm0hnaosJdQ3jrlfGzk+jnmflWjAbFkw8NXTRZjIKGMQDhyjZ
-	 3yfTQjLBPBLZQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4d19h126z2z6twf;
-	Tue,  4 Nov 2025 15:24:33 +0100 (CET)
-From: Markus Probst <markus.probst@posteo.de>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Markus Probst <markus.probst@posteo.de>
-Subject: [PATCH v6 3/3] ata: stop disk on restart if ACPI power resources are found
-Date: Tue, 04 Nov 2025 14:24:34 +0000
-Message-ID: <20251104142413.322347-4-markus.probst@posteo.de>
-In-Reply-To: <20251104142413.322347-1-markus.probst@posteo.de>
-References: <20251104142413.322347-1-markus.probst@posteo.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EwIBjoPq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2897C4CEF7;
+	Thu,  6 Nov 2025 07:16:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762413367;
+	bh=Twy8mmHy7U2wj3bLY/1A4yl68N/dIj9GkGpmlchk0Ds=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=EwIBjoPqIA7xofTl5ZFh9mi0WVBnMao457CaooQfiyxu9AOprWRrY8UmbDTGiTCco
+	 R1bLM7BdZ7Mt4mTFUBoeQ4OI0MWBybpty+bwAaSrtby1b+CRBZXNXlxpTMBHUJAd38
+	 3CJfPDQxm71qtCXb8A14VTP/bnNbfEmUt1WLMcXAGIDsO7tXmI+2X2ZdUnhge1qVhf
+	 zlKDzM92D+o+8wAKbTLKHm9JYJLsg+9FfYlHytffoqVXNVZOvLcCAk+BqDgJpoAaJP
+	 8V5PYs1AzkGGQYnhhNAsgUzFMXM5fF7LbhT3nG4uV0CpXBqI35WmFcyiBdd2CVzQuu
+	 CaXCYSCcLPV9w==
+Message-ID: <9724fc14-c362-4f70-b14b-718049737895@kernel.org>
+Date: Thu, 6 Nov 2025 16:12:12 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 2/3] ata: Use ACPI methods to power on disks
+To: Markus Probst <markus.probst@posteo.de>, Niklas Cassel
+ <cassel@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20251104142413.322347-1-markus.probst@posteo.de>
+ <20251104142413.322347-3-markus.probst@posteo.de>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20251104142413.322347-3-markus.probst@posteo.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Some embedded devices have the ability to control whether power is
-provided to the disks via the SATA power connector or not. ACPI power
-resources are usually off by default, thus making it unclear if the
-specific power resource will retain its state after a restart. If power
-resources are defined on ATA ports / devices in ACPI, we should stop the
-disk on SYSTEM_RESTART, to ensure the disk will not lose power while
-active.
+On 11/4/25 11:24 PM, Markus Probst wrote:
+> Some embedded devices have the ability to control whether power is
+> provided to the disks via the SATA power connector or not. If power
+> resources are defined on ATA ports / devices in ACPI, we should try to set
+> the power state to D0 before probing the disk to ensure that any power
+> supply or power gate that may exist is providing power to the disk.
+> 
+> An example for such devices would be newer synology NAS devices. Every
+> disk slot has its own SATA power connector. Whether the connector is
+> providing power is controlled via an gpio, which is *off by default*.
+> Also the disk loses power on reboots.
+> 
+> Add a new function, ata_acpi_port_power_on(), that will be used to power
+> on the SATA power connector if usable ACPI power resources on the
+> associated ATA port / device are found. It will be called right before
+> probing the port, therefore the disk will be powered on just in time.
+> 
+> Signed-off-by: Markus Probst <markus.probst@posteo.de>
 
-Add a new function, ata_acpi_dev_manage_restart(), that will be used to
-determine if a disk should be stopped before restarting the system. If a
-usable ACPI power resource has been found, it is assumed that the disk
-will lose power after a restart and should be stopped to avoid unclean
-shutdown due to power loss.
+Looks good to me.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Markus Probst <markus.probst@posteo.de>
----
- drivers/ata/libata-acpi.c | 26 ++++++++++++++++++++++++++
- drivers/ata/libata-scsi.c |  1 +
- drivers/ata/libata.h      |  2 ++
- 3 files changed, 29 insertions(+)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 4782e0f22d7f..15e18d50dcc6 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -245,6 +245,32 @@ void ata_acpi_bind_dev(struct ata_device *dev)
- 				   ata_acpi_dev_uevent);
- }
- 
-+/**
-+ * ata_acpi_dev_manage_restart - if the disk should be stopped (spun down) on
-+ *                               system restart.
-+ * @dev: target ATA device
-+ *
-+ * RETURNS:
-+ * true if the disk should be stopped, otherwise false.
-+ */
-+bool ata_acpi_dev_manage_restart(struct ata_device *dev)
-+{
-+	struct device *tdev;
-+
-+	/*
-+	 * If ATA_FLAG_ACPI_SATA is set, the acpi fwnode is attached to the
-+	 * ata_device instead of the ata_port.
-+	 */
-+	if (dev->link->ap->flags & ATA_FLAG_ACPI_SATA)
-+		tdev = &dev->tdev;
-+	else
-+		tdev = &dev->link->ap->tdev;
-+
-+	if (!is_acpi_device_node(tdev->fwnode))
-+		return false;
-+	return acpi_bus_power_manageable(ACPI_HANDLE(tdev));
-+}
-+
- /**
-  * ata_acpi_port_power_on - set the power state of the ata port to D0
-  * @ap: target ATA port
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b43a3196e2be..026122bb6f2f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1095,6 +1095,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct queue_limits *lim,
- 		 */
- 		sdev->manage_runtime_start_stop = 1;
- 		sdev->manage_shutdown = 1;
-+		sdev->manage_restart = ata_acpi_dev_manage_restart(dev);
- 		sdev->force_runtime_start_on_system_start = 1;
- 	}
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 8cc7227f2d94..0e7ecac73680 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -131,6 +131,7 @@ extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
- extern void ata_acpi_bind_port(struct ata_port *ap);
- extern void ata_acpi_bind_dev(struct ata_device *dev);
- extern void ata_acpi_port_power_on(struct ata_port *ap);
-+extern bool ata_acpi_dev_manage_restart(struct ata_device *dev);
- extern acpi_handle ata_dev_acpi_handle(struct ata_device *dev);
- #else
- static inline void ata_acpi_dissociate(struct ata_host *host) { }
-@@ -142,6 +143,7 @@ static inline void ata_acpi_set_state(struct ata_port *ap,
- static inline void ata_acpi_bind_port(struct ata_port *ap) {}
- static inline void ata_acpi_bind_dev(struct ata_device *dev) {}
- static inline void ata_acpi_port_power_on(struct ata_port *ap) {}
-+static inline bool ata_acpi_dev_manage_restart(struct ata_device *dev) { return 0; }
- #endif
- 
- /* libata-scsi.c */
 -- 
-2.51.0
-
+Damien Le Moal
+Western Digital Research
