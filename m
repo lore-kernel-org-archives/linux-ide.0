@@ -1,92 +1,116 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F23A2FCC12
-	for <linux-ide@vger.kernel.org>; Mon, 10 Nov 2025 13:11:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7994246333;
+	Thu, 13 Nov 2025 02:47:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762780282; cv=none; b=Mydz7RKLJ8ySTCQuq/cOJlgDZEj1Sh7JEb42KHRaopnB2xt/tHBTvonxDPqdv4FQKklrLVe3BplV700bfMcddeCbw0uGVBsiYXfYPJ75Ijl1Hjp1QDd30Fe2KGBF2kYuHoFFHVBsyn+ZKPrsS0IMOwvUFzHfl1RPT9u5MjYii3Q=
+	t=1763002043; cv=none; b=Wlr5qzeLCvTZuxt7E7SyuRTLxFYkofZ8T3VKsmoYWK2sb8LX0fn/6ixybBJYR89raYBBPqp/o/uVUKPCbkL1Cdfrpp0gdbPFoegmFbX4rRBWY+4mOYfjxeMcH0p3JvK8dMSWcbuE5unRRhGchvdyaCfbPj47Wwq79qhORC7CfX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762780282; c=relaxed/simple;
-	bh=g3am2ReR6DyB5DiKFT3//FiPS+woKcoZOc46rQ6rerg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=smybxz6REFbvPJUxnu2d0R6noTA1pwDgCL1tQTxwvqN0IeQ89FvBIkRhu9+A+NmWGQUcstOijlimSPqGuKh8A6IVCIqWnLLGD5tuDzcRhs+7A5udTUffiI0/SiYQedXO4l81ffU6t6ONW5T+HwtlZtsRJ9c0Uwvvp2FALTwckqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=paKkFBQ/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763002043; c=relaxed/simple;
+	bh=7TG16jts3HrD1hpIz+SdCBGZsmsniurVExjce6yyTVM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=r5eO/yrIDtq3zxtLiPkCyokohenPkF9R94x+syya3+gmLW5jlOAtYb+/FNtTBK6Mo7NTabUtho0XkaQnjDRMBD/FZ+qSkC+xVE11QTzFDUdg3n5K+Zeo0eU8R5D1wtqagTgoSh3ZtQYGAYqphGKfLwarEypy7Pn3rFItsVwt8Gs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=BHECX7KE; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="paKkFBQ/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EE03C116B1;
-	Mon, 10 Nov 2025 13:11:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762780281;
-	bh=g3am2ReR6DyB5DiKFT3//FiPS+woKcoZOc46rQ6rerg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=paKkFBQ/3j4rzAKDbwv5Z/elOM5rrCX4irZo+ojYfg2MbRQxS9+T38pBkX/m/ChL4
-	 vp4oii0RMJ9rPzeLe2xU/3IUdC2I2LT9JyDzJC9bCHyuYPg5rn6zYAuptS2a8b++sI
-	 lwsHha0y2y9ElTfhqxtN1X9DTqSmBDK0ZH6ugIJUjP46avv7ggPIF6V0uxNieKAsH+
-	 ZNlmSkaflRbLHPRFXA32nvCqBpb/xLA7H9DbSRJHgYTuKDp0ZrEh3apd1ffbBeX4yR
-	 odnVtPJt3RacZb1J/O19pxsz71o4Xlq+9oPUhtSdW+gyhOPrmGcRm5j7Tse+E47Eyv
-	 nzEY0UiHpum/g==
-Date: Mon, 10 Nov 2025 14:11:17 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: list linux-ide <linux-ide@vger.kernel.org>
-Subject: Re: ata timeout exceptions
-Message-ID: <aRHkdW6q94QVylVX@ryzen>
-References: <acf2fa9f-f98d-4eb0-b18b-a04aa123201b@eyal.emu.id.au>
- <aRD8OoDwE2fyP_JM@ryzen>
- <1d86c6d3-a944-422a-9b96-7a768d7e89d8@eyal.emu.id.au>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BHECX7KE"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5AD1gejG023286;
+	Thu, 13 Nov 2025 02:47:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=fTE2ui0ZWFw+GHvsee6pfdSEQ86xGOf84pLW2R1Onxw=; b=
+	BHECX7KEYYjDljiFL72b11PzgL3sVOmUNDzQSfrFiYIAw4guFav7R8hCpDuJ4h7S
+	2wa0xCWJnZkltV8e2CMJnPknjFW1xUmC0Ur7vMZfChLRDmIs475EmPVpgXFVw6Lg
+	c65EwiMrJpR+aB1dJ1I8mC2gOY665tbAjlnFUc2L470/XG4nwueVCYKBCEMS5lNc
+	tAjT8vvnLwIWMqSUqVNcAAo1gcqMbKQ94tcB0C3vCAdN9i0dhwwAAEc/6T9kufsm
+	+87DI+pdVEPohlu6No1EsteIsUN/j9K9cMM5Bal2XhyqA0O+6U0zH/maLcLdJP88
+	bgqn129aaJ64rc6crZcpEg==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4acybqrscn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 13 Nov 2025 02:47:13 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5AD0OLjN032518;
+	Thu, 13 Nov 2025 02:47:13 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4a9van9qbv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 13 Nov 2025 02:47:13 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5AD2lB8L038323;
+	Thu, 13 Nov 2025 02:47:12 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4a9van9qab-5;
+	Thu, 13 Nov 2025 02:47:12 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Markus Probst <markus.probst@posteo.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 0/3] Support power resources defined in acpi on ata
+Date: Wed, 12 Nov 2025 21:46:54 -0500
+Message-ID: <176298170747.2933492.1138307568642008557.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.51.1
+In-Reply-To: <20251104142413.322347-1-markus.probst@posteo.de>
+References: <20251104142413.322347-1-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1d86c6d3-a944-422a-9b96-7a768d7e89d8@eyal.emu.id.au>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-11-12_06,2025-11-12_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 mlxscore=0
+ phishscore=0 mlxlogscore=837 spamscore=0 bulkscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
+ definitions=main-2511130017
+X-Proofpoint-GUID: tCSgM7zqdqWUM03A24EvGtKiBepTVcVQ
+X-Proofpoint-ORIG-GUID: tCSgM7zqdqWUM03A24EvGtKiBepTVcVQ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTEyMDE0NyBTYWx0ZWRfXyp4CJlRJ51Yi
+ 3W4MaNr/8JWPc+/bvvapYG+/Z49NZuq1t4V6P9kK0Gil5nk+EJWtz7URGY2MmGJ+Q16X4HqHLv7
+ hNFDS/LuegVHU+t9u/lvH3Oz7r9/UlKOtXqBAmnTv7QGUQIOwGUhjYPyzqTtowk1dRBP3Ftr8fb
+ wagf5/5cggvjKdupe4/zb+dfmCWrtG4YapPBYaHyT/F72f3DD925tkOqaWUoGZwkzZga3hya6bZ
+ 38d1gBRnsFv85CWSl8W+CT6EWjKicV3MRHNpMtdePQ/l0ttO10oJouN+1+14ZUpeA11ITj9aveS
+ Tl9KvzmtxROZXuVDwHldCYb2RLct0AYm3NjylRUb+MC+c2vXA0uufdOIxHalJCeIf/RnRk2A+sv
+ ceGJms4m6Sz1FCifKs3lLSUQUX0sDy4GTq52ceR4nZAkH0PtTe4=
+X-Authority-Analysis: v=2.4 cv=X7hf6WTe c=1 sm=1 tr=0 ts=691546b1 b=1 cx=c_pps
+ a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
+ a=IkcTkHD0fZMA:10 a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=VwQbUJbxAAAA:8 a=KwMgZv5xIcckdayViMQA:9 a=QEXdDO2ut3YA:10 cc=ntf
+ awl=host:12100
 
-On Mon, Nov 10, 2025 at 09:41:29AM +1100, Eyal Lebedinsky wrote:
-> > > 2) Why do I get only one command_timeout counted (originally, with ncq active) and none when ncq is disabled?
-> > 
-> > You are right that even if it is only a single command that times out,
-> > the whole queue will be drained and retried.
-> > (Because we always do a hard reset after a command timeout.)
-> > 
-> > command_timeout is most likely increased only by one because it was
-> > only a single command that timed out. (The other commands might have
-> > been queued but were never executed/finished.)
-> > 
-> > I have no idea why a command timeout, when NCQ has been disabled,
-> > does not increase the command_timeout counter. My expectation would
-> > have been for the counter to still be increased by one.
-> This is an older SMA disk, and I will not be surprised if the disk was not even executing the command yet
-> but was doing some housekeeping when it was reset. After raising the timeout 30s to 180s I still had one
-> case where a reset was invoked. I see (iostat was running) that there was no activity on the disk that whole time.
+On Tue, 04 Nov 2025 14:24:31 +0000, Markus Probst wrote:
+
+> This series adds support for power resources defined in acpi on ata
+> ports/devices. A device can define a power resource in an ata port/device,
+> which then gets powered on right before the port is probed. This can be
+> useful for devices, which have sata power connectors that are:
+>   a: powered down by default
+>   b: can be individually powered on
+> like in some synology nas devices. If thats the case it will be assumed,
+> that the power resource won't survive reboots and therefore the disk will
+> be stopped.
 > 
-> Or maybe it is just a fw bug in the disk (ST8000AS0002-1NA17Z from 2016)?
-> Is it possible that a reset when a command is pending is not counted in the smart log?
-> 
-> Interestingly, after repeated consecutive resets the link speed was downshifted 6.0->3.0->1.5g.
-> Now it boots at 3.0g when it used to always boot at 6.0g.
-> There must be a real issue there which is why the disk will be replaced anyway.
-> 
-> Regardless, I now have a better understanding of the i/o path.
+> [...]
 
-I'm not sure how the command_timeout counter in the smart log works.
+Applied to 6.19/scsi-queue, thanks!
 
-But from the Linux driver perspective, if an I/O has not completed within the
-timeout, we will reset the controller, and retry the outstanding commands.
+[1/3] scsi: sd: Add manage_restart device attribute to scsi_disk
+      https://git.kernel.org/mkp/scsi/c/8fdfdb148816
+[2/3] ata: Use ACPI methods to power on disks
+      https://git.kernel.org/mkp/scsi/c/ce6d26b5330c
+[3/3] ata: stop disk on restart if ACPI power resources are found
+      https://git.kernel.org/mkp/scsi/c/8c59fc1c90df
 
-This timeout is defined by Linux, and is by default 30 seconds, like you
-mentioned.
-
-Not sure how the drive FW counts a command_timeout, but it is possible that
-this internal counter has a timeout that is different from 30 seconds.
-
-For AHCI, performing a hardreset is done by writing a register, so it is not
-actually a command that is sent down to the drive. (For a softreset on the
-other hand, a command is actually sent down to the drive.)
-
-
-Kind regards,
-Niklas
+-- 
+Martin K. Petersen
