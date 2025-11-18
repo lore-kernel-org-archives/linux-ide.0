@@ -1,114 +1,85 @@
-Received: from exactco.de (exactco.de [176.9.10.151])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1153D322DAF
-	for <linux-ide@vger.kernel.org>; Tue, 18 Nov 2025 15:12:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.10.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A351F2F1FE6
+	for <linux-ide@vger.kernel.org>; Tue, 18 Nov 2025 15:17:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763478779; cv=none; b=os8WxHvH+lram0QNf9y0onSIFvtkkf2a/2PbDN7daMz3UTyouUQY5emKoO3gV0T7qyezs0k7jF49z9O0nUhbm59DJGWMlii7/8ja18rEEdifVb9H1fnNavah2q4+tuKXezvFp6g2ci2+yBH871SsPTINoglCroMnllsTMzma8jk=
+	t=1763479065; cv=none; b=XUWfPbx9eQlGDlTVjiLXlgmEaTOC2KIeV+wJBfMpcqsjvUPJNwb9PYprnWLNb4UqXhdC13rtSy3tBcBynzY/t1CElmBPuOH2k5L3C4APVDBU7D6ZymssPNpolzD+tgQCEWVlEJCXn6DJP5iN5AoQskmZmTfkF/QIyA9A9g3D9pY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763478779; c=relaxed/simple;
-	bh=GqVsyjgz9WTOsR7HTxufMlHGUJnUnGy+rFjXcfWDQ1o=;
-	h=Date:Message-Id:To:Cc:Subject:From:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=T9HxyozegPtOw9tIDTe/4KebcGpHOUqiNgYoNyLYiCMAAhdh7a8KznUItly0B2SCw1zJ6gxVUqKe06484aY47q71u5+vSyuZXXRX024OuVlfQpC2Uzq+mHPM9vcPswIw5ZvEuflj7/KFlz8/066MNX2FRZMvdRKp0GK4trKL8XY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=exactco.de; spf=pass smtp.mailfrom=exactco.de; dkim=pass (2048-bit key) header.d=exactco.de header.i=@exactco.de header.b=CopaHvdw; arc=none smtp.client-ip=176.9.10.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=exactco.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=exactco.de
+	s=arc-20240116; t=1763479065; c=relaxed/simple;
+	bh=xgjJcpN8wyC5rx6EYo6xQMrPJ1gHGATDSKPD8u/XGwA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dkam6l7hI1Tc3tH2CQMvEfBPklPHnWou4fu6HVaMJIjdEt4vsXjArTX6gJ0+K6hR9sJ2vFIk6lit3e8wK+k0fPAkY6Ag4tdv0qRWypRQv3hUqc3aeKr7c55TQyk+fspuGIEC4+e7Ab1yfG1RqlXC3GWO7OSGnSXEyfiCC/4EJlk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=muQbPCR+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=exactco.de header.i=@exactco.de header.b="CopaHvdw"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=exactco.de;
-	s=x; h=Content-Transfer-Encoding:Content-Type:Mime-Version:References:
-	In-Reply-To:From:Subject:Cc:To:Message-Id:Date:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=KMokZP+fDNsZ2IgczkDdY4s45umUpfkK2lK9EFRVbTk=; b=CopaHvdwLFWuxsRhHvDexoYbWc
-	Z+ZaBqOaykYu1iV3l1rJvIYQC6kRWnE5wDztG9wi4CfwVb4kDiWJwS1tpm6gHYmQSkN+QgMiJMZ5g
-	aQjbnHQJcviIp/2Beu9eGLRHADu5V99alxU4dYypXXmHPeXD+E2u8uPYC377w+dYlnVoMTcXs33Lc
-	sJDbvlo6B1CIPC7tBZjz1o3PmSJ5gzUFuh5lWnAxfxHMdcJGtuCvqeCq9OQBy/88F5GZMyg05/z4c
-	pxtgdzHTl7+FVmGjcNXIhstGZCY/mPu8hCfkTKKKJAIWnvNeTppTiGMlXRGlhxAgMy4HFRhWqAQV6
-	uxrIppnw==;
-Date: Tue, 18 Nov 2025 16:13:05 +0100 (CET)
-Message-Id: <20251118.161305.959866833545078228.rene@exactco.de>
-To: cassel@kernel.org
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org
-Subject: Re: [PATCH] fix PCMCIA Iomega Clik!
-From: =?iso-8859-1?Q?Ren=E9?= Rebe <rene@exactco.de>
-In-Reply-To: <aRyJB2j4MDNIARIM@ryzen>
-References: <20251117.134321.1327313572065130952.rene@exactco.de>
-	<aRyJB2j4MDNIARIM@ryzen>
-X-Mailer: Mew version 6.10 on Emacs 30.2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="muQbPCR+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19701C19421;
+	Tue, 18 Nov 2025 15:17:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763479065;
+	bh=xgjJcpN8wyC5rx6EYo6xQMrPJ1gHGATDSKPD8u/XGwA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=muQbPCR+iKkpChjCmWuFC+GG7VkUTP9fO0HizqQ3oHjYqqCf92zfEJbG/pwPVTdmU
+	 9Uuo9O7tIG4pRrMMgRtK4f54ZPTzj/cmT9rG4su9syOmkS1HJucqx520NgWLQ0jiWs
+	 iIk5QGoW4YDuy/Mr1/Eqo7zhweFYlVxGU5delDXukd2eyZQd6EYPd2NsbVXi1vbty1
+	 qW6owpPr7JZCzAbyMzKNdlmxIoh+EkBj3rn+rAf9tIqZ+SVfF4f/yteYcb5JWgH5RU
+	 71ycjzAKaULq0ZCidfaLFaQdx3jEMIlPi+RozPKyEDEZtXUZIkM1dJ5B3lRburqmox
+	 dmUxyuIhO3y7g==
+Date: Tue, 18 Nov 2025 16:17:41 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: list linux-ide <linux-ide@vger.kernel.org>, dlemoal@kernel.org
+Subject: Re: ata timeout exceptions
+Message-ID: <aRyOFRCQ_nSWtmsh@ryzen>
+References: <acf2fa9f-f98d-4eb0-b18b-a04aa123201b@eyal.emu.id.au>
+ <4f0fa70c-b259-4998-bf94-c6c6fd8c733c@eyal.emu.id.au>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4f0fa70c-b259-4998-bf94-c6c6fd8c733c@eyal.emu.id.au>
 
-On Tue, 18 Nov 2025 15:56:07 +0100, Niklas Cassel <cassel@kernel.org> wrote:
+On Fri, Nov 14, 2025 at 03:32:20PM +1100, Eyal Lebedinsky wrote:
+> > For the last few weeks it started to log timeout errors (not always) like this:
+> 
+> For the last two weeks I was monitoring the activity on the disk and here is what I did:
+> 
+> - added to boot command line:	libata.force=2.00:noncq
+> 	now smartmon sees no more Command_Timeout errors since
 
-> Hello René,
-> 
-> On Mon, Nov 17, 2025 at 01:43:21PM +0100, René Rebe wrote:
-> 
-> Please change the subject to include: "ata: pata_pcmcia: " prefix.
-> 
-> I.e. something like:
-> 
-> ata: pata_pcmcia: Add Iomega Clik! PCMCIA ATA/ATAPI Adapter
+To be honest, I don't think you should need to disable NCQ.
 
-sure, will resend.
 
-> Looking at:
-> https://en.wikipedia.org/wiki/PocketZip
-> 
-> It seems like this device was renamed to PocketZip.
+> This disk was used for a few years without such errors. The first report is recent (from 25/Oct this year).
 
-My devices have all stickers with Clik! I don't have a PocketZip to
-test.
+Which kernel version are you running?
 
-> So perhaps:
-> ata: pata_pcmcia: Add Iomega PocketZip Drive
-> 
-> 
-> > Add PCMCIA Iomega Clik! ID to pata_pcmcia.
-> 
-> Perhaps:
-> Add Iomega PocketZip Drive ID to pata_pcmcia.
-> 
-> 
-> > 
-> > -- Signed-off-by: René Rebe <rene@exactco.de>
-> 
-> There should be no "-- " before the Signed-off-by, see:
-> https://docs.kernel.org/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+> 12:15:14+11:00 kernel: ata2.00: failed command: WRITE DMA EXT
+> 12:15:14+11:00 kernel: ata2.00: cmd 35/00:00:00:68:4e/00:20:77:00:00/e0 tag 28 dma 4194304 out
+>                                 res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
+> 12:15:14+11:00 kernel: ata2.00: status: { DRDY }
+> 12:15:14+11:00 kernel: ata2: hard resetting link
+> 12:15:15+11:00 kernel: ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> 12:15:15+11:00 kernel: ata2.00: configured for UDMA/133
+> 12:15:15+11:00 kernel: ata2: EH complete
 
-Yes, of course.
+It is a 4194304 byte write that is failing, i.e. 4 MiB write.
 
-> > 
-> > --- a/drivers/ata/pata_pcmcia.c	2025-02-27 18:51:20.641993816 +0100
-> > +++ b/drivers/ata/pata_pcmcia.c	2025-02-27 18:56:22.022992807 +0100
-> > @@ -362,6 +362,7 @@
-> >  	PCMCIA_DEVICE_PROD_ID12("STI", "Flash 5.0", 0xbf2df18d, 0x8cb57a0e),
-> >  	PCMCIA_MFC_DEVICE_PROD_ID12(1, "SanDisk", "ConnectPlus", 0x7a954bd9, 0x74be00c6),
-> >  	PCMCIA_DEVICE_PROD_ID2("Flash Card", 0x5a362506),
-> > +	PCMCIA_DEVICE_PROD_ID2("PCMCIA ATA/ATAPI Adapter", 0x888D7B73),
-> 
-> I think this should be something like:
-> PCMCIA_DEVICE_PROD_ID2("Iomega PocketZip Drive", 0x888D7B73),
-> 
-> Also, make sure that you add this entry at the correct place, i.e. in
-> alphabetical order (Iomega, before IBM), please also make the hex ID
-> string in lower case letters to match the existing entries.
+This sounds very much like a recent bug report we have received:
+https://bugzilla.kernel.org/show_bug.cgi?id=220693
 
-Did not notice the list was fully ordered, the hex probabbly pasted
-from some pcmcia tools output. But happy to reformat for v2 ;-)
+In fact, a lot of the failing commands in that bug report is also a read
+or write of size 4 MiB.
 
-Thanks,
-	René
+I guess you could try reverting 459779d04ae8 ("block: Improve read ahead
+size for rotational devices") and see if that improves things for you
+(while keeping NCQ enabled).
 
--- 
-René Rebe, ExactCODE GmbH, Berlin, Germany
-https://exactco.de • https://t2linux.com • https://patreon.com/renerebe
+
+Kind regards,
+Niklas
