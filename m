@@ -1,113 +1,119 @@
-Received: from pasta.tip.net.au (mx1.tip.net.au [203.10.76.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD44350A0C
-	for <linux-ide@vger.kernel.org>; Wed, 19 Nov 2025 13:37:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.10.76.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9819F34DCCE;
+	Wed, 19 Nov 2025 14:13:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763559469; cv=none; b=o/Qzfo+eLVnSGnnBgLu5qUihxDvB1mwvA4gIMUmaonHU0sDT6gy7Zf9L0KwXRQvXl2IuwY3SN5pw0ssIslQZ9KyvZlvzBc7FQ4z5keR6B7gOH4MkE+lDrDbNJnDKQ1fbBaNemn35KVInG9G6z+Pt2UUx3JMiojwj/SbQ22QtlM0=
+	t=1763561603; cv=none; b=qjJdbzWCNYKSx8BIYd8U11sG3M27tYeaLbJBjH82o4vil5a3Uk5tNdnW/0gsjuw6WAMh3VqfCIjTWgyL092ukktV6EtxlGjMshM40oaSkQAkHI1ni3PReYq+4jzNqcE3pMvZes8n1XuXml06BY0HSBgANxqp950JkLTxcIzKamU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763559469; c=relaxed/simple;
-	bh=G7FeoML7CZjp4+O3lUX5qgwiPVq720p/vSmirpoxwUk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=M/dO8+zN7v8JjVlTsjM8OXku6VQ7t78killoQJXiRzwH6FOjw5DOp+jb8sR5z585xKY+0lX4NN6UOQ6Ao2I6fxUTviJ6o6lAWN6ABB2wZxO0PPnfYzCN94wCIZNQypk5h8mSOtqiM3jZKJyVLKIQBcE3yVM1oEEK9t4EPvq0wgA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au; spf=pass smtp.mailfrom=eyal.emu.id.au; arc=none smtp.client-ip=203.10.76.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eyal.emu.id.au
-Received: from [192.168.2.7] (unknown [101.115.72.242])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mailhost.tip.net.au (Postfix) with ESMTPSA id 4dBMx24RDKz8v25;
-	Thu, 20 Nov 2025 00:37:41 +1100 (AEDT)
-Message-ID: <5f690ea7-5e10-4129-87be-ba4b618e65b8@eyal.emu.id.au>
-Date: Thu, 20 Nov 2025 00:37:39 +1100
+	s=arc-20240116; t=1763561603; c=relaxed/simple;
+	bh=nae6qsLFLDMdnEE17YXfp84fUPXLIf5WWvAocXs9fJ8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s6exIxA+jLMU9qhCiPPR+K41frTWBXsaB9U/EYENPRibw4w3mCpKPhXvfFh6X6Bh4+niHi1ksyeDirErZFI+6lv1AtBaunxDbtd0Sko0ZaWxdhLimhik2EGBXSU1VGfSut/y7Z6EZ8q+PAkBJe1ylvGipxMQw96ykzx6w4XwoD8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Veoae62b; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Veoae62b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E30B0C19425;
+	Wed, 19 Nov 2025 14:13:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763561603;
+	bh=nae6qsLFLDMdnEE17YXfp84fUPXLIf5WWvAocXs9fJ8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Veoae62b4FMwWPAaUVkOUDe4ZXgXXHvBktpxLFbrURy20ibV7IvWeOxiIi9Y8rchh
+	 8sJPQW9ptDkOTaVjyCUt042A2rE7ububclBlxf5Uu5qn42438w/YeekhAVvEGHJ1m4
+	 WZ96vg9cOQj9hTS9zTEdCpB96bIjPSHfBwXy0c5GPfjxqzCMPCA1TF+i9sQycoFb8w
+	 XGfZdpB7mmN2iS58n3Jt5kDF/D4qeUgnQc6LTmrI7xGIDL+pUJ1WBOKTbdvayxGuhF
+	 fWWppT8oA/WGCUgSQaodfdU2PpU6/3SVWCme2wO7cV6Gv7E80ukoqqeSjrGoqfwgs4
+	 YXZEE7rtMMk8Q==
+From: Niklas Cassel <cassel@kernel.org>
+To: Hannes Reinecke <hare@suse.de>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Ilia Baryshnikov <qwelias@gmail.com>,
+	stable@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: [PATCH 1/2] ata: libata-scsi: Fix system suspend for a security locked drive
+Date: Wed, 19 Nov 2025 15:13:14 +0100
+Message-ID: <20251119141313.2220084-3-cassel@kernel.org>
+X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Reply-To: eyal@eyal.emu.id.au
-Subject: Re: ata timeout exceptions
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: list linux-ide <linux-ide@vger.kernel.org>
-References: <acf2fa9f-f98d-4eb0-b18b-a04aa123201b@eyal.emu.id.au>
- <4f0fa70c-b259-4998-bf94-c6c6fd8c733c@eyal.emu.id.au>
- <aRyOFRCQ_nSWtmsh@ryzen>
- <f8eebba8-176b-44b8-877c-75de8b00db38@eyal.emu.id.au>
- <7cf8b035-c884-4691-a35b-ee8a2e149e03@kernel.org>
-Content-Language: en-US
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-In-Reply-To: <7cf8b035-c884-4691-a35b-ee8a2e149e03@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3028; i=cassel@kernel.org; h=from:subject; bh=nae6qsLFLDMdnEE17YXfp84fUPXLIf5WWvAocXs9fJ8=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJlL1Su+XSV3fbc9q+LbTpiL2VYdHI07P9mamgb9Zl96 /mHs1d+6ChlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBE9rUx/K8yqopalsAnMVHx emBhYLmdKPdGsXUsrc2uklnXfk237WBkeNp6TaW6/F1D+pPUzecb5TKOR6yTlljxcGVy4dV1IWc fsAAA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Thanks Damien,
+Commit cf3fc037623c ("ata: libata-scsi: Fix ata_to_sense_error() status
+handling") fixed ata_to_sense_error() to properly generate sense key
+ABORTED COMMAND (without any additional sense code), instead of the
+previous bogus sense key ILLEGAL REQUEST with the additional sense code
+UNALIGNED WRITE COMMAND, for a failed command.
 
-On 19/11/25 16:41, Damien Le Moal wrote:
-> On 11/19/25 08:05, Eyal Lebedinsky wrote:
->> I still suspect the disk itself it at fault (I have a replacement synced and
->> ready). >> 12:15:14+11:00 kernel: ata2.00: failed command: WRITE DMA EXT
->>>> 12:15:14+11:00 kernel: ata2.00: cmd 35/00:00:00:68:4e/00:20:77:00:00/e0
->>>> tag 28 dma 4194304 out res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4
->>>> (timeout) 12:15:14+11:00 kernel: ata2.00: status: { DRDY }
->>>> 12:15:14+11:00 kernel: ata2: hard resetting link 12:15:15+11:00 kernel:
->>>> ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300) 12:15:15+11:00
->>>> kernel: ata2.00: configured for UDMA/133 12:15:15+11:00 kernel: ata2: EH
->>>> complete
->>>
->>> It is a 4194304 byte write that is failing, i.e. 4 MiB write.
->>
->> Yes, this is the size of almost all commands. With NCQ enabled the sizes are
->> very variable and often less that 1 MiB.
-> 
-> Yes, because there will be more requests queued in the block layer, which
-> increases the chances of merging sequential requests. That's why the average
-> command size goes up.
-> 
->>
->>> This sounds very much like a recent bug report we have received: https://
->>> bugzilla.kernel.org/show_bug.cgi?id=220693
->>>
->>> In fact, a lot of the failing commands in that bug report is also a read
->>> or write of size 4 MiB.
->>>
->>> I guess you could try reverting 459779d04ae8 ("block: Improve read ahead
->>> size for rotational devices") and see if that improves things for you
->>> (while keeping NCQ enabled).I read it. I never had I/O errors reported for
->>> this disk so it looks different to me.
->>
->> Regardless, I am not set up to build a kernel (I used to), and being my main
->> server I hesitate to fiddle with it. I will keep this disk active and
->> observe the situation.
-> 
-> No, reverting this commit will not do anything to the max command size that a
-> disk can see. But you could try this:
-> 
-> echo 1280 > /sys/block/sdX/queue/max_sectors_kb
-> 
-> to reduce the maximum command size that the disk will receive.
+However, this broke suspend for Security locked drives (drives that have
+Security enabled, and have not been Security unlocked by boot firmware).
 
-I will try this.
+The reason for this is that the SCSI disk driver, for the Synchronize
+Cache command only, treats any sense data with sense key ILLEGAL REQUEST
+as a successful command (regardless of ASC / ASCQ).
 
-> On the other hand, if all drives in your RAID6 array are the same and only this
-> drive is misbehaving, then I would be tempted to say the same you are: that the
-> disk is turning bad and replacing it is the best solution.
+After commit cf3fc037623c ("ata: libata-scsi: Fix ata_to_sense_error()
+status handling") the code that treats any sense data with sense key
+ILLEGAL REQUEST as a successful command is no longer applicable, so the
+command fails, which causes the system suspend to be aborted:
 
-"this drive" is NOT part of the RAID, it is just a scratch disk used when space is
-needed or for some local backups. It is old and it will not be any drama if it fails.
-This is why I am comfortable trying more options before replacing it.
+  sd 1:0:0:0: PM: dpm_run_callback(): scsi_bus_suspend returns -5
+  sd 1:0:0:0: PM: failed to suspend async: error -5
+  PM: Some devices failed to suspend, or early wake event detected
 
-My main interest is to understand what actually is happening inside the disk.
-I assume that copying the data from the CRM part to the SMR part is going on.
+To make suspend work once again, for a Security locked device only,
+return sense data LOGICAL UNIT ACCESS NOT AUTHORIZED, the actual sense
+data which a real SCSI device would have returned if locked.
+The SCSI disk driver treats this sense data as a successful command.
 
-The two hourly job that at times triggers a timeout (1 or 2 times a day) is rsyncing 20GB
-into the drive, so this much is updated. It takes just 4 minutes on a good day.
+Cc: stable@vger.kernel.org
+Reported-by: Ilia Baryshnikov <qwelias@gmail.com>
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220704
+Fixes: cf3fc037623c ("ata: libata-scsi: Fix ata_to_sense_error() status handling")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libata-scsi.c | 7 +++++++
+ include/linux/ata.h       | 1 +
+ 2 files changed, 8 insertions(+)
 
-Anyway, thanks everyone,
-	Eyal
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index b43a3196e2be..58efa88e4882 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -992,6 +992,13 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
+ 		return;
+ 	}
+ 
++	if (ata_id_is_locked(dev->id)) {
++		/* Security locked */
++		/* LOGICAL UNIT ACCESS NOT AUTHORIZED */
++		ata_scsi_set_sense(dev, cmd, DATA_PROTECT, 0x74, 0x71);
++		return;
++	}
++
+ 	if (!(qc->flags & ATA_QCFLAG_RTF_FILLED)) {
+ 		ata_dev_dbg(dev,
+ 			    "Missing result TF: reporting aborted command\n");
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 792e10a09787..c9013e472aa3 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -566,6 +566,7 @@ struct ata_bmdma_prd {
+ #define ata_id_has_ncq(id)	((id)[ATA_ID_SATA_CAPABILITY] & (1 << 8))
+ #define ata_id_queue_depth(id)	(((id)[ATA_ID_QUEUE_DEPTH] & 0x1f) + 1)
+ #define ata_id_removable(id)	((id)[ATA_ID_CONFIG] & (1 << 7))
++#define ata_id_is_locked(id)	(((id)[ATA_ID_DLF] & 0x7) == 0x7)
+ #define ata_id_has_atapi_AN(id)	\
+ 	((((id)[ATA_ID_SATA_CAPABILITY] != 0x0000) && \
+ 	  ((id)[ATA_ID_SATA_CAPABILITY] != 0xffff)) && \
 -- 
-Eyal at Home (eyal@eyal.emu.id.au)
+2.51.1
+
