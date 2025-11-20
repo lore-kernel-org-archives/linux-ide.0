@@ -1,81 +1,81 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A46E72BE051
-	for <linux-ide@vger.kernel.org>; Thu, 20 Nov 2025 07:24:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5034C2BE051
+	for <linux-ide@vger.kernel.org>; Thu, 20 Nov 2025 07:24:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763623461; cv=none; b=N3yF/l2w0Oe296ccm0Dsfkax6HU+FTs9IH7ZAoz+EPIwQ9k8RPsIP/EIh22iUr2p5th0QcwSS/8qn8qMVybFHYa6kOPI9s84YZLo2R9Uqw4fca7Klvz1FpZTdgwJGIlyMInEG7uW9v6b0NpDTW/mzM6sQIc5txZCUp5VdTWKyOg=
+	t=1763623500; cv=none; b=DqJ7Yhva3+7GET5DfnKi9YDG+D2qMgp5QTqgI7rOd7KjCMCRzxig4T78kTI83q+pkhAEcMbF3s5TmoiS9zyaVLGsBxP03QjqGoCkiltn5twcMYmwFDxivaMc/bVHXve4rbvHbeCrtQLAzrBcviELW2r2YxueVk2ENmv1D5AEhVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763623461; c=relaxed/simple;
-	bh=0SeQZzeaIU8gmBSQ1IytuvsxLqEm8+RCJJ8WznubkNA=;
+	s=arc-20240116; t=1763623500; c=relaxed/simple;
+	bh=a/5KjtR6Sz+vxOpfLdTWkuRow3sGA/2jQqH2da+5bFA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CP7OdoZttus8tS8Foi0g00hsYc/dCiPWC3N7he3rTWmko5FicqMxNvDiBf5vCa2vxwvxdLt6y+XLr7T6vDP9n5+qm0bT2WCbYL8zpEqGbZh+NGOcG4yHI5X3OI3Y1rgG8TKPxNdm0dhGb+3JXYuZ2Ei/fksWtP5cwBv0rt57+Kc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=tHKKggg7; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=aHVyoi6T; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Q01t0840; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=u7bSIMeG; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=parvlnHfqaDep7mU35Q2X4EBUfEp3fN/Ab5JUEF+jRsmZ2HfuI+oGDbVvO8PliRRsppwglFohTJ7wUDvlaUosEA1zFpzNXJ73zzvioWdDEm4MKRzB0IQ/lw/wZSu5+98gUzN2HnVDdHEcahSWw9y3ZuR9ZZvaTVLgofi7FRjsSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=IkuIgbbm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QyWXbMgX; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=IkuIgbbm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QyWXbMgX; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="tHKKggg7";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="aHVyoi6T";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Q01t0840";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="u7bSIMeG"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="IkuIgbbm";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QyWXbMgX";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="IkuIgbbm";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QyWXbMgX"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7CAB521278;
-	Thu, 20 Nov 2025 07:24:16 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 5E319208DE;
+	Thu, 20 Nov 2025 07:24:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1763623457; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1763623496; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=t35grRHi9H+MFIcJYZ6KGp9wOmKAiFmDReWxNMQjZCk=;
-	b=tHKKggg7h/fb1YEeqUdk50wbPzJtCaEn8sN405flhnGYGa2ok+My+TsO71g5lDZ8shCB72
-	DbztzuN+lMUFVNGfZXWjtgs2TsYt2YabOwgsy36S9PRyWEv1w4xcJKBSkhgcoGqtz4oOzB
-	peW1s/QfyAKwhwvjaZYZ/D5ispAW2SU=
+	bh=oiCbIrx27f6rMVSsZUylyJ9kgI1lk9zKh6ILNLG0VlE=;
+	b=IkuIgbbmU3XttPKVlrSohoC0QniFWhccVPG50HqtErgQ4bipjlcLceupEJZfOxON9C6jfo
+	Z7z+4AQhZCNYl2uQP70cu++7+qWq5+ErTi9UQsGeN4K5euZrrIOSKybfCeNWnc6nbFCUqS
+	Y+2d2W2yl6fAN8W2QMTpZBWsHJ1uaxY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1763623457;
+	s=susede2_ed25519; t=1763623496;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=t35grRHi9H+MFIcJYZ6KGp9wOmKAiFmDReWxNMQjZCk=;
-	b=aHVyoi6T7hJHWh2YSmUjQ1vGsE1AMBkPuEduK7lDi4BGe0WnR0NIkYD54cb5rJfAtZYFPv
-	7y7jRT6cVCCF+UBw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=Q01t0840;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=u7bSIMeG
+	bh=oiCbIrx27f6rMVSsZUylyJ9kgI1lk9zKh6ILNLG0VlE=;
+	b=QyWXbMgXj699aXoL1yzmRVsFaVZl1ZG/gW9RGOtLHr8LLUZnKYp7pgKyNpCf/d0xU+bHAi
+	ImdT/lIhs0sxQLBA==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=IkuIgbbm;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=QyWXbMgX
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1763623456; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1763623496; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=t35grRHi9H+MFIcJYZ6KGp9wOmKAiFmDReWxNMQjZCk=;
-	b=Q01t0840+PqPTPs7GyCve1BK3ixZ1CqMiEVz5eHsw7uxgV6TClL5TFmyqzN5YSV70TNfRa
-	kzUeNHp0y7oY2mrjt1+jD0IjT4AgY/p5Z44vSw0DASgDSTVvYOqXTXD6JuVLqwslhZD2uY
-	NigSMh73oxymjL+cnqtNy79kjs25rTU=
+	bh=oiCbIrx27f6rMVSsZUylyJ9kgI1lk9zKh6ILNLG0VlE=;
+	b=IkuIgbbmU3XttPKVlrSohoC0QniFWhccVPG50HqtErgQ4bipjlcLceupEJZfOxON9C6jfo
+	Z7z+4AQhZCNYl2uQP70cu++7+qWq5+ErTi9UQsGeN4K5euZrrIOSKybfCeNWnc6nbFCUqS
+	Y+2d2W2yl6fAN8W2QMTpZBWsHJ1uaxY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1763623456;
+	s=susede2_ed25519; t=1763623496;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=t35grRHi9H+MFIcJYZ6KGp9wOmKAiFmDReWxNMQjZCk=;
-	b=u7bSIMeGCr2fvxOgjnyW0FczhkC4LWoW0ga5nAoHoVi0tVYD38S+WvKtrOCxEg4k6lhdQ6
-	CX8EshP+u0t/vKDg==
+	bh=oiCbIrx27f6rMVSsZUylyJ9kgI1lk9zKh6ILNLG0VlE=;
+	b=QyWXbMgXj699aXoL1yzmRVsFaVZl1ZG/gW9RGOtLHr8LLUZnKYp7pgKyNpCf/d0xU+bHAi
+	ImdT/lIhs0sxQLBA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 31D823EA61;
-	Thu, 20 Nov 2025 07:24:16 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 210D23EA61;
+	Thu, 20 Nov 2025 07:24:56 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id jTfLCSDCHmk6KAAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 20 Nov 2025 07:24:16 +0000
-Message-ID: <282f7d53-bec9-47b7-8ba8-4efe3248a94f@suse.de>
-Date: Thu, 20 Nov 2025 08:24:15 +0100
+	id pA/gBUjCHmmdKQAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 20 Nov 2025 07:24:56 +0000
+Message-ID: <dd977220-710d-4c8b-af89-b8de1a49c408@suse.de>
+Date: Thu, 20 Nov 2025 08:24:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -83,22 +83,22 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] ata: libata-scsi: Fix system suspend for a security
+Subject: Re: [PATCH 2/2] ata: libata-core: Set capacity to zero for a security
  locked drive
 To: Niklas Cassel <cassel@kernel.org>,
  "Martin K. Petersen" <martin.petersen@oracle.com>,
  Damien Le Moal <dlemoal@kernel.org>
-Cc: Ilia Baryshnikov <qwelias@gmail.com>, stable@vger.kernel.org,
- linux-ide@vger.kernel.org
+Cc: Ilia Baryshnikov <qwelias@gmail.com>, linux-ide@vger.kernel.org
 References: <20251119141313.2220084-3-cassel@kernel.org>
+ <20251119141313.2220084-4-cassel@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20251119141313.2220084-3-cassel@kernel.org>
+In-Reply-To: <20251119141313.2220084-4-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Spam-Level: 
 X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 7CAB521278
+X-Rspamd-Queue-Id: 5E319208DE
 X-Rspamd-Action: no action
 X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 X-Spamd-Result: default: False [-4.51 / 50.00];
@@ -108,64 +108,77 @@ X-Spamd-Result: default: False [-4.51 / 50.00];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
 	MX_GOOD(-0.01)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
 	ARC_NA(0.00)[];
 	TO_DN_SOME(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
 	MIME_TRACE(0.00)[0:+];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
 	RCVD_TLS_ALL(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
 	MID_RHS_MATCH_FROM(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
 	FREEMAIL_CC(0.00)[gmail.com,vger.kernel.org];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:mid,suse.de:email];
+	RCPT_COUNT_FIVE(0.00)[5];
 	RCVD_COUNT_TWO(0.00)[2];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	DKIM_TRACE(0.00)[suse.de:+]
 X-Spam-Score: -4.51
 
 On 11/19/25 15:13, Niklas Cassel wrote:
-> Commit cf3fc037623c ("ata: libata-scsi: Fix ata_to_sense_error() status
-> handling") fixed ata_to_sense_error() to properly generate sense key
-> ABORTED COMMAND (without any additional sense code), instead of the
-> previous bogus sense key ILLEGAL REQUEST with the additional sense code
-> UNALIGNED WRITE COMMAND, for a failed command.
+> For Security locked drives (drives that have Security enabled, and have
+> not been Security unlocked by boot firmware), the automatic partition
+> scanning will result in the user being spammed with errors such as:
 > 
-> However, this broke suspend for Security locked drives (drives that have
-> Security enabled, and have not been Security unlocked by boot firmware).
+>    ata5.00: failed command: READ DMA
+>    ata5.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 7 dma 4096 in
+>             res 51/04:08:00:00:00/00:00:00:00:00/e0 Emask 0x1 (device error)
+>    ata5.00: status: { DRDY ERR }
+>    ata5.00: error: { ABRT }
+>    sd 4:0:0:0: [sda] tag#7 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=0s
+>    sd 4:0:0:0: [sda] tag#7 Sense Key : Aborted Command [current]
+>    sd 4:0:0:0: [sda] tag#7 Add. Sense: No additional sense information
 > 
-> The reason for this is that the SCSI disk driver, for the Synchronize
-> Cache command only, treats any sense data with sense key ILLEGAL REQUEST
-> as a successful command (regardless of ASC / ASCQ).
+> during boot, because most commands except for IDENTIFY will be aborted by
+> a Security locked drive.
 > 
-> After commit cf3fc037623c ("ata: libata-scsi: Fix ata_to_sense_error()
-> status handling") the code that treats any sense data with sense key
-> ILLEGAL REQUEST as a successful command is no longer applicable, so the
-> command fails, which causes the system suspend to be aborted:
+> For a Security locked drive, set capacity to zero, so that no automatic
+> partition scanning will happen.
 > 
->    sd 1:0:0:0: PM: dpm_run_callback(): scsi_bus_suspend returns -5
->    sd 1:0:0:0: PM: failed to suspend async: error -5
->    PM: Some devices failed to suspend, or early wake event detected
+> If the user later unlocks the drive using e.g. hdparm, the close() by the
+> user space application should trigger a revalidation of the drive.
 > 
-> To make suspend work once again, for a Security locked device only,
-> return sense data LOGICAL UNIT ACCESS NOT AUTHORIZED, the actual sense
-> data which a real SCSI device would have returned if locked.
-> The SCSI disk driver treats this sense data as a successful command.
-> 
-> Cc: stable@vger.kernel.org
-> Reported-by: Ilia Baryshnikov <qwelias@gmail.com>
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220704
-> Fixes: cf3fc037623c ("ata: libata-scsi: Fix ata_to_sense_error() status handling")
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 > ---
->   drivers/ata/libata-scsi.c | 7 +++++++
->   include/linux/ata.h       | 1 +
->   2 files changed, 8 insertions(+)
+>   drivers/ata/libata-core.c | 10 ++++++++++
+>   1 file changed, 10 insertions(+)
 > 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 2a210719c4ce..f48fb63d7e85 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3006,6 +3006,16 @@ int ata_dev_configure(struct ata_device *dev)
+>   		}
+>   
+>   		dev->n_sectors = ata_id_n_sectors(id);
+> +		if (ata_id_is_locked(id)) {
+> +			/*
+> +			 * If Security locked, set capacity to zero to prevent
+> +			 * any I/O, e.g. partition scanning, as any I/O to a
+> +			 * locked drive will result in user visible errors.
+> +			 */
+> +			ata_dev_info(dev,
+> +				"Security locked, setting capacity to zero\n");
+> +			dev->n_sectors = 0;
+> +		}
+>   
+>   		/* get current R/W Multiple count setting */
+>   		if ((dev->id[47] >> 8) == 0x80 && (dev->id[59] & 0x100)) {
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
