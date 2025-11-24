@@ -1,63 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5189F2BEFFF
-	for <linux-ide@vger.kernel.org>; Fri, 21 Nov 2025 19:20:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD0A67260D
+	for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 09:06:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763752817; cv=none; b=WKsZcF3U2ECIt5nS8deqpNId4i22vcg5OjZDsOwk2KJvUD95vazuiG1e9m/iplVwzAExQzzcKPxwRu/sO7DRI9rneSKcb2h/4JQcpVEU4SkacG1dfNoP2e/WcbRnX9bL+AJIa7tgn8KbVF0eG62TFAVVgL5lVAuc4eMhcLiWdhU=
+	t=1763975222; cv=none; b=GO8Aotx74QiVZ4WW0idS5tQstvqwy+0tsEPD127fDof0pqQH5TZa29z8lUhU6IZnNbDevK7yMtK/87eErALYX7WPkPy5M29y1yk3GGP63KpcJSNyygjHXcxDSnIgWESwym3z3B8Y8y7H5hS3IaAMUaXhy8bWANEN7wOA/u/D7qM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763752817; c=relaxed/simple;
-	bh=CM9jW74lQBwtSbqikzLRI3bNIgmLBeV1ArZpPQYQ/Jw=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=LH39nwpVN9l1eCTjglQOSKd/fpQZR+SZFYD+BLA9IrxIdKeHJAzNtQep0JZGhY7d00qbBYK495qFQeH8aZqse6V1rTzV5yjEUP19lthLL3vDKktmPjC0/UwRhbsvDhnYLhN2JJucxi8xRsOEKaoFkXB2iyk90Zqvwb898tHeTVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LQoWr7PU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763975222; c=relaxed/simple;
+	bh=bB7DyzQeCt8Drz2m9dGKV+1YpUkNtql7D3wdZ7t1RAc=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=OwQydvRh7I7ilf4iDcFC9tX2xj2thNQkhV+GXhX+C5xtaWoa4pocaVpx3nQ+gDrn01IS4QLnIEaolMLZW5NvWbl976U4c682YVlHnKorS4Dwf8t3SMcWc4NCO+UYpyfon1nUVl981vwkIypKZkht48jyOvfKncafYI9vcQCWkX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=O8c3kG7U; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LQoWr7PU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7B4DC4CEF1;
-	Fri, 21 Nov 2025 19:20:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763752816;
-	bh=CM9jW74lQBwtSbqikzLRI3bNIgmLBeV1ArZpPQYQ/Jw=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=LQoWr7PUHTY5pXFCBs4Is0RvAAb2oNR50q/ZM1Oedm4AFGcW6G65YhhEm9N9O19mv
-	 RKEf9xTpxNhRd+eF39h3fystpjkzc9GbhHpsA5CnwN3vqzwWB0Dr8qX1Uhz6rqpQ+s
-	 qbsvedxB0h05osJJ6uXdfrlimzOxZSw9WvL+Fyv1o7iTKZOiAgZKqbgLY1HBcMqaAP
-	 zryahegJj5lMyjHEuTYkvzw23go+Fr1ZSbV9virb2CMawD9YAjWJ/BIfqVIZvJdzvB
-	 /KC4OsnZq7D5yy4XqqvqOf/MiR+ryBIxCawMnXZQBZbfTjaCPQ0eLcucGRUCkEPR/1
-	 mOoDWPpqUUrNg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id AE0163A78A5F;
-	Fri, 21 Nov 2025 19:19:42 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 6.18-rc7
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20251121151104.2645094-1-cassel@kernel.org>
-References: <20251121151104.2645094-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20251121151104.2645094-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.18-rc7
-X-PR-Tracked-Commit-Id: 91842ed844a068a41a38f97a1ac5535b909279cd
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 317c4d8a2a320a58997f30a5b2a8eca57e0990fc
-Message-Id: <176375278122.2554018.13828079635474020698.pr-tracker-bot@kernel.org>
-Date: Fri, 21 Nov 2025 19:19:41 +0000
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="O8c3kG7U"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=tur1euxp9S9cXqgvFeM02PxEeq2/Vaaamf5kszZRwoc=;
+	b=O8c3kG7UFGUHjIcBjhu5+numVuvvePnRm4C2jXAonsL6UAU6/kkmAYLb/cO9bLvk9J1mEL4Is
+	s9Qfl7YCGTYDcfLs9RwxhT5vmbu/wqVqOjbrk6ZfcoXCD1VHvyVo+wOGs8ieo2HBg6YLm/CL7hE
+	XXAI3l+6dDKcf8lqImbpFm0=
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4dFKf80WtXzLlTK;
+	Mon, 24 Nov 2025 17:05:04 +0800 (CST)
+Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7622C1A0174;
+	Mon, 24 Nov 2025 17:06:50 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 24 Nov 2025 17:06:49 +0800
+Subject: Re: [bug report] ata: ahci: IO error with the default
+ med_power_with_dipm
 To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+References: <20251121073502.3388239-1-liyihang9@h-partners.com>
+ <aSB0ilF_cI5PS8M0@ryzen>
+CC: <mario.limonciello@amd.com>, <dlemoal@kernel.org>,
+	<linux-ide@vger.kernel.org>, <linuxarm@huawei.com>, <liuyonglong@huawei.com>,
+	Yihang Li <liyihang9@h-partners.com>
+From: Yihang Li <liyihang9@h-partners.com>
+Message-ID: <53fad0bf-007e-d658-755e-455dc1838284@h-partners.com>
+Date: Mon, 24 Nov 2025 17:06:49 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <aSB0ilF_cI5PS8M0@ryzen>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemh200005.china.huawei.com (7.202.181.112)
 
-The pull request you sent on Fri, 21 Nov 2025 16:11:04 +0100:
+Hi Niklas,
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.18-rc7
+On 2025/11/21 22:17, Niklas Cassel wrote:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/317c4d8a2a320a58997f30a5b2a8eca57e0990fc
+> Please tell us which the model of your drive:
+> 
+> $ lsblk -o MODEL /dev/sdX
+> 
+> and the firmware version
+> $ lsblk -o REV /dev/sdX
+> 
+> So we can create a quirk.
 
-Thank you!
+Thank you for your reply. On my machine, the model information is as follows:
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+# lsblk -o MODEL /dev/sda
+MODEL
+MD619HXCLDE3TC
+
+# lsblk -o REV /dev/sda
+ REV
+ID
+
+> 
+> It would also be helpful if you could share which AHCI adapter you are using:
+> $ lspci -nn | grep -i ahci
+> $ lspci -nn | grep -i sata
+> 
+
+# lspci -nn | grep -i ahci
+38:05.0 SATA controller [0106]: Huawei Technologies Co., Ltd. HiSilicon AHCI HBA [19e5:a235] (rev 30)
+
+
+> 
+> If you want to verify that disabling LPM works for your drive, you can add:
+> 
+> libata.force=nolpm on the kernel command line.
+> 
+
+Thanks!
+I will try this method to verify whether it can prevent this problem from occurring.
+
+Thanks,
+Yihang
+
