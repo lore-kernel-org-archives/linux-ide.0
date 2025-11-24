@@ -1,39 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4670306D5E
-	for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 13:44:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09DA7306D5E
+	for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 13:44:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763991860; cv=none; b=JVuE85W+gG3GnL2X3y52R5NuzOUI6wKHHs75+oYYBTJyLrDyrajFxCuxyUNpy8tSL6eZXKHOdykzqOMNPyANf69LXWmAAGgzf4cdtLNjE4jINdlfZeyqKWxedbHmQLX07qmaM4GtonaPWYkQp1kCWZlcNxqCVvbxYvLmi/vRydY=
+	t=1763991862; cv=none; b=pckiS551Ydlp6TwzgW8O2n8ivZujQEYv4gvQrM13qIOaf7QSfZN+9np6k6uWTTE+uLNxX7W3dgd91hC/b+wM1Qg/zOscf2fQzES4owLHTuLBv7rvSSwqKHdh8Y7ExKT6Ah2WIKLJwTAUCAQ8ABPi5/c9AlPgUkxSUREJr53P09A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763991860; c=relaxed/simple;
-	bh=rai9lz/EjIl2+w9W0WsUsWwpVIvCKeTvObbGECTmuLo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UK+N6HqpvC/Se/0CLvALK2UTcwRwoyynB6KHvS7+Z6DigIaDY0n+/cSVCbDWqwPp72EuBQOcBQpuAPgmBveoeetPQNbF/ebxrZvjhaot4qxu59eBezTXdtjk1z4DS4m9WcnH0S4hgcJTnpymdqJfDn9WIMsHhWv0O28pPiVe1XU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cZDvO8aS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763991862; c=relaxed/simple;
+	bh=OePhxhIFCitfPwhph5ci0/DYKGWPpGgoOMh8zz3DzRg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=RHYiD4L3DLowUI3o/ghF6UI0dGD17qyg6LU+q29Dz4v10flDRIJlpkklyZcgjs6DpnhoI7m5wpfleIUyckPcMbDkaWF+1mDLHqXLKLwkKk3Ejf1ziSckyBrNWMLJT1HEjE8ZZ4UMB5UGLNNe2JOiC3LJlpBI8t4LHDfnQZtN0cQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=COIFtR6f; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cZDvO8aS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A099C4CEF1;
-	Mon, 24 Nov 2025 13:44:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="COIFtR6f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CD9EC116C6;
+	Mon, 24 Nov 2025 13:44:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763991860;
-	bh=rai9lz/EjIl2+w9W0WsUsWwpVIvCKeTvObbGECTmuLo=;
-	h=From:To:Cc:Subject:Date:From;
-	b=cZDvO8aS9+sk2SkZ6/z+EUamdgK78BlhoSu4LQd03bD2IEzEn5gQmpZAfoUZPErSU
-	 jN2KI+uTGIT+nxMF35EAMSeRWOSF6YPIgnWoj7uSx2FU9SPV9pg/mMq9vZw3MPEBz/
-	 ut+0AhHDEyNujABkvhxV7saFilaYYoipeWgJQA3CDqHyyOHCTxIWfNDXUfDDH4wF1z
-	 Z7kqXM3AuY7biv8N21rezTPNrrAlQ2GMPIp/o5ZKDqW/QphDQjjSmHRHWKKRSC6he3
-	 hxonhNpS5pW36aFGT+9EdsNWU/pYh2MZ6WrDPwOqMW9ykZyLOaKyOLh2rMbHlBDoS0
-	 T7/TZyvemXi5g==
+	s=k20201202; t=1763991861;
+	bh=OePhxhIFCitfPwhph5ci0/DYKGWPpGgoOMh8zz3DzRg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=COIFtR6f5higVYHYX6uSPSqSvNsOJoMVdVAdZj8q4nONQ5Oe9L2tEK+uQW8sBR7Or
+	 PmtyTfCo3wmOhDnSFSesLgaA3iPaKOXDyP4WXXGHgVesUMYVuT9S66AjxZPlxVITag
+	 uAPSo9+4ZiZaHx3V7eA1pVxcHhg3dtB2iXcVq+jfUi5ZSgw3aHWODnfT23fC0/Evx/
+	 JdhpvZqvyDsajby+gYoW8XNH2LD9uZvfZzr8ZO7tssT+8RLwOXmjCGPhN3boC6YKja
+	 lIoq3y8tUM9I0ArIfUzApTVXQw1UNBTlRgfiQvOnzXg3HmksTOusbCvMTZB8IKGVjP
+	 sCBeQJuagjQRg==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org,
 	xxjack12xx@gmail.com,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH 0/3] ata: libata: Quirk DELLBOSS VD MV.R00-0 max_sectors
-Date: Mon, 24 Nov 2025 14:44:15 +0100
-Message-ID: <20251124134414.3057512-5-cassel@kernel.org>
+Subject: [PATCH 1/3] ata: libata: Move quirk flags to their own enum
+Date: Mon, 24 Nov 2025 14:44:16 +0100
+Message-ID: <20251124134414.3057512-6-cassel@kernel.org>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20251124134414.3057512-5-cassel@kernel.org>
+References: <20251124134414.3057512-5-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -41,36 +44,134 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=879; i=cassel@kernel.org; h=from:subject; bh=rai9lz/EjIl2+w9W0WsUsWwpVIvCKeTvObbGECTmuLo=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJVEvU+bp37WvuTXEr//8umkzyWbltnUa9+6Nua/oed8 +/9l9T43FHKwiDGxSArpsji+8Nlf3G3+5TjindsYOawMoEMYeDiFICJrIth+O819U/tkqfLP9TP lNNI8Qx1yfq/wUj32oGOMz2Ly3w5xZcz/LPraWO6xqrX67rR9/6C0LfP5DK+bpvmt/ZfjcrHX8n vkvgB
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5855; i=cassel@kernel.org; h=from:subject; bh=OePhxhIFCitfPwhph5ci0/DYKGWPpGgoOMh8zz3DzRg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJVEvVuXJ12wmXW3sinVp+mr4oQ8HnS6eZT6Wu19o9v4 Tm9v9u8O0pZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCR910M/92q/DdV9i9++Fn+ 7w2Z6bd03hw8e1TpmfX8X/NPuKyc4ubFyHCo10s4TrbdyX/2Ssbbjlw31Qp9MqfO4L31s2/FxyU F2YwA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-Hello there,
+The anonymous enum in include/linux/libata.h that is used to store various
+global constants can currently be backed by type int.
+(It contains both negative and positive constants.)
 
-a recent change:
-9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
+__ATA_QUIRK_MAX is currently 31.
+The quirk flags in the various global constants enum are defined as
+"1U << quirk_flag_bit".
 
-bumped the default max_sectors_kb from 1280 to 4096.
+Thus if we simply add an additional quirk, the quirk flag will be 1 << 31,
+which is a value that is too large to be represented by a signed int.
+The various global constants enum will thus therefore be backed by type
+long.
 
-It seems like a lot for SATA controllers are buggy and don't really like
-this, see:
-https://bugzilla.kernel.org/show_bug.cgi?id=220693
+This will lead to error prints like e.g.:
+ata_port_err(ap, "EH pending after %d tries, giving up\n",
+	     ATA_EH_MAX_TRIES);
 
-For now, we only add a DELLBOSS VD MV.R00-0 max_sectors quirk, but surely
-more quirks are coming, so change libata-core to allow for more quirks,
-since after this change, all quirks bits are used.
+now failing to build, with build error:
+error: format ‘%d’ expects argument of type ‘int’, but argument 4 has type ‘long int’ [-Werror=format=]
 
+This is because all other constants in the various global constants enum
+now has to be printed as a long.
 
-Niklas Cassel (3):
-  ata: libata: Move quirk flags to their own enum
-  ata: libata-core: Quirk DELLBOSS VD MV.R00-0 max_sectors
-  ata: libata: Allow more quirks
+Move the quirk flags to a separate enum, so that we don't need to change
+the printf specifier for all other constants in the "various global
+constants" enum when adding an additional quirk.
 
- drivers/ata/libata-core.c | 16 +++++++-
- include/linux/ata.h       |  1 +
- include/linux/libata.h    | 81 +++++++++++++++++++++------------------
- 3 files changed, 58 insertions(+), 40 deletions(-)
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ include/linux/libata.h | 74 ++++++++++++++++++++++--------------------
+ 1 file changed, 38 insertions(+), 36 deletions(-)
 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 7a98de1cc995..171268d65169 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -85,6 +85,44 @@ enum ata_quirks {
+ 	__ATA_QUIRK_MAX,
+ };
+ 
++/*
++ * Quirk flags: may be set by libata or controller drivers on drives.
++ * Some quirks may be drive/controller pair dependent.
++ */
++enum {
++	ATA_QUIRK_DIAGNOSTIC		= (1U << __ATA_QUIRK_DIAGNOSTIC),
++	ATA_QUIRK_NODMA			= (1U << __ATA_QUIRK_NODMA),
++	ATA_QUIRK_NONCQ			= (1U << __ATA_QUIRK_NONCQ),
++	ATA_QUIRK_MAX_SEC_128		= (1U << __ATA_QUIRK_MAX_SEC_128),
++	ATA_QUIRK_BROKEN_HPA		= (1U << __ATA_QUIRK_BROKEN_HPA),
++	ATA_QUIRK_DISABLE		= (1U << __ATA_QUIRK_DISABLE),
++	ATA_QUIRK_HPA_SIZE		= (1U << __ATA_QUIRK_HPA_SIZE),
++	ATA_QUIRK_IVB			= (1U << __ATA_QUIRK_IVB),
++	ATA_QUIRK_STUCK_ERR		= (1U << __ATA_QUIRK_STUCK_ERR),
++	ATA_QUIRK_BRIDGE_OK		= (1U << __ATA_QUIRK_BRIDGE_OK),
++	ATA_QUIRK_ATAPI_MOD16_DMA	= (1U << __ATA_QUIRK_ATAPI_MOD16_DMA),
++	ATA_QUIRK_FIRMWARE_WARN		= (1U << __ATA_QUIRK_FIRMWARE_WARN),
++	ATA_QUIRK_1_5_GBPS		= (1U << __ATA_QUIRK_1_5_GBPS),
++	ATA_QUIRK_NOSETXFER		= (1U << __ATA_QUIRK_NOSETXFER),
++	ATA_QUIRK_BROKEN_FPDMA_AA	= (1U << __ATA_QUIRK_BROKEN_FPDMA_AA),
++	ATA_QUIRK_DUMP_ID		= (1U << __ATA_QUIRK_DUMP_ID),
++	ATA_QUIRK_MAX_SEC_LBA48		= (1U << __ATA_QUIRK_MAX_SEC_LBA48),
++	ATA_QUIRK_ATAPI_DMADIR		= (1U << __ATA_QUIRK_ATAPI_DMADIR),
++	ATA_QUIRK_NO_NCQ_TRIM		= (1U << __ATA_QUIRK_NO_NCQ_TRIM),
++	ATA_QUIRK_NOLPM			= (1U << __ATA_QUIRK_NOLPM),
++	ATA_QUIRK_WD_BROKEN_LPM		= (1U << __ATA_QUIRK_WD_BROKEN_LPM),
++	ATA_QUIRK_ZERO_AFTER_TRIM	= (1U << __ATA_QUIRK_ZERO_AFTER_TRIM),
++	ATA_QUIRK_NO_DMA_LOG		= (1U << __ATA_QUIRK_NO_DMA_LOG),
++	ATA_QUIRK_NOTRIM		= (1U << __ATA_QUIRK_NOTRIM),
++	ATA_QUIRK_MAX_SEC_1024		= (1U << __ATA_QUIRK_MAX_SEC_1024),
++	ATA_QUIRK_MAX_TRIM_128M		= (1U << __ATA_QUIRK_MAX_TRIM_128M),
++	ATA_QUIRK_NO_NCQ_ON_ATI		= (1U << __ATA_QUIRK_NO_NCQ_ON_ATI),
++	ATA_QUIRK_NO_LPM_ON_ATI		= (1U << __ATA_QUIRK_NO_LPM_ON_ATI),
++	ATA_QUIRK_NO_ID_DEV_LOG		= (1U << __ATA_QUIRK_NO_ID_DEV_LOG),
++	ATA_QUIRK_NO_LOG_DIR		= (1U << __ATA_QUIRK_NO_LOG_DIR),
++	ATA_QUIRK_NO_FUA		= (1U << __ATA_QUIRK_NO_FUA),
++};
++
+ enum {
+ 	/* various global constants */
+ 	LIBATA_MAX_PRD		= ATA_MAX_PRD / 2,
+@@ -390,42 +428,6 @@ enum {
+ 	 */
+ 	ATA_EH_CMD_TIMEOUT_TABLE_SIZE = 8,
+ 
+-	/*
+-	 * Quirk flags: may be set by libata or controller drivers on drives.
+-	 * Some quirks may be drive/controller pair dependent.
+-	 */
+-	ATA_QUIRK_DIAGNOSTIC		= (1U << __ATA_QUIRK_DIAGNOSTIC),
+-	ATA_QUIRK_NODMA			= (1U << __ATA_QUIRK_NODMA),
+-	ATA_QUIRK_NONCQ			= (1U << __ATA_QUIRK_NONCQ),
+-	ATA_QUIRK_MAX_SEC_128		= (1U << __ATA_QUIRK_MAX_SEC_128),
+-	ATA_QUIRK_BROKEN_HPA		= (1U << __ATA_QUIRK_BROKEN_HPA),
+-	ATA_QUIRK_DISABLE		= (1U << __ATA_QUIRK_DISABLE),
+-	ATA_QUIRK_HPA_SIZE		= (1U << __ATA_QUIRK_HPA_SIZE),
+-	ATA_QUIRK_IVB			= (1U << __ATA_QUIRK_IVB),
+-	ATA_QUIRK_STUCK_ERR		= (1U << __ATA_QUIRK_STUCK_ERR),
+-	ATA_QUIRK_BRIDGE_OK		= (1U << __ATA_QUIRK_BRIDGE_OK),
+-	ATA_QUIRK_ATAPI_MOD16_DMA	= (1U << __ATA_QUIRK_ATAPI_MOD16_DMA),
+-	ATA_QUIRK_FIRMWARE_WARN		= (1U << __ATA_QUIRK_FIRMWARE_WARN),
+-	ATA_QUIRK_1_5_GBPS		= (1U << __ATA_QUIRK_1_5_GBPS),
+-	ATA_QUIRK_NOSETXFER		= (1U << __ATA_QUIRK_NOSETXFER),
+-	ATA_QUIRK_BROKEN_FPDMA_AA	= (1U << __ATA_QUIRK_BROKEN_FPDMA_AA),
+-	ATA_QUIRK_DUMP_ID		= (1U << __ATA_QUIRK_DUMP_ID),
+-	ATA_QUIRK_MAX_SEC_LBA48		= (1U << __ATA_QUIRK_MAX_SEC_LBA48),
+-	ATA_QUIRK_ATAPI_DMADIR		= (1U << __ATA_QUIRK_ATAPI_DMADIR),
+-	ATA_QUIRK_NO_NCQ_TRIM		= (1U << __ATA_QUIRK_NO_NCQ_TRIM),
+-	ATA_QUIRK_NOLPM			= (1U << __ATA_QUIRK_NOLPM),
+-	ATA_QUIRK_WD_BROKEN_LPM		= (1U << __ATA_QUIRK_WD_BROKEN_LPM),
+-	ATA_QUIRK_ZERO_AFTER_TRIM	= (1U << __ATA_QUIRK_ZERO_AFTER_TRIM),
+-	ATA_QUIRK_NO_DMA_LOG		= (1U << __ATA_QUIRK_NO_DMA_LOG),
+-	ATA_QUIRK_NOTRIM		= (1U << __ATA_QUIRK_NOTRIM),
+-	ATA_QUIRK_MAX_SEC_1024		= (1U << __ATA_QUIRK_MAX_SEC_1024),
+-	ATA_QUIRK_MAX_TRIM_128M		= (1U << __ATA_QUIRK_MAX_TRIM_128M),
+-	ATA_QUIRK_NO_NCQ_ON_ATI		= (1U << __ATA_QUIRK_NO_NCQ_ON_ATI),
+-	ATA_QUIRK_NO_LPM_ON_ATI		= (1U << __ATA_QUIRK_NO_LPM_ON_ATI),
+-	ATA_QUIRK_NO_ID_DEV_LOG		= (1U << __ATA_QUIRK_NO_ID_DEV_LOG),
+-	ATA_QUIRK_NO_LOG_DIR		= (1U << __ATA_QUIRK_NO_LOG_DIR),
+-	ATA_QUIRK_NO_FUA		= (1U << __ATA_QUIRK_NO_FUA),
+-
+ 	/* User visible DMA mask for DMA control. DO NOT renumber. */
+ 	ATA_DMA_MASK_ATA	= (1 << 0),	/* DMA on ATA Disk */
+ 	ATA_DMA_MASK_ATAPI	= (1 << 1),	/* DMA on ATAPI */
 -- 
 2.52.0
 
