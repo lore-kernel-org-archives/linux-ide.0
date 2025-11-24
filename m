@@ -1,78 +1,76 @@
-Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 223F12F617D
-	for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 09:13:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4670306D5E
+	for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 13:44:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763975616; cv=none; b=pw0cERROfZs5X8REzXAoux5/dJCsnq2FSgKvPCcQTkNNbIoStgqKcwxG+2EI7rkwHzIyyeXjPYRHpQeuZl2Df9G+c9uwxE6GuEm3qmgXOY5YU8FBrZmcd3Y4QT2OZDuzDYeIfDPkgSnOa4JyxpoVCIL1DEFZ0k3bWv89uuH2n+k=
+	t=1763991860; cv=none; b=JVuE85W+gG3GnL2X3y52R5NuzOUI6wKHHs75+oYYBTJyLrDyrajFxCuxyUNpy8tSL6eZXKHOdykzqOMNPyANf69LXWmAAGgzf4cdtLNjE4jINdlfZeyqKWxedbHmQLX07qmaM4GtonaPWYkQp1kCWZlcNxqCVvbxYvLmi/vRydY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763975616; c=relaxed/simple;
-	bh=BhJWl1lvmlsycxKq3a504/hVmZ96s5ywQgvm19C1+/w=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=JH0AAxn1U7Apt5e7cdd7ZpqHTxpoj7RW87TCyAD3CJnQ6MC0WxjTzhCG6P4Tnl4v5Kklp3IEwbOCcEw7TYJwL0oc74POd3x2dnIJ6yNpv/B8eXIfF+dy92JpBuHYL4OjO1v/lLP458DsiEjWMnq9lxsp/XHgK/SXqLiwFxFSIkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=VkzeN/3s; arc=none smtp.client-ip=113.46.200.221
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1763991860; c=relaxed/simple;
+	bh=rai9lz/EjIl2+w9W0WsUsWwpVIvCKeTvObbGECTmuLo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UK+N6HqpvC/Se/0CLvALK2UTcwRwoyynB6KHvS7+Z6DigIaDY0n+/cSVCbDWqwPp72EuBQOcBQpuAPgmBveoeetPQNbF/ebxrZvjhaot4qxu59eBezTXdtjk1z4DS4m9WcnH0S4hgcJTnpymdqJfDn9WIMsHhWv0O28pPiVe1XU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cZDvO8aS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="VkzeN/3s"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=Y6jOaMHRJj/PZKQdO3z8YNNSVYVnOAEmpWZauj86tZQ=;
-	b=VkzeN/3sSRCf0Fl6c8DGX8OD2xYb1ShO0GcpHuHf072GNvmYJe/bqPdzJGE5O1We42Ge8RPXM
-	2ZosZcni/ctObI/kfu9zBxscCWrDj7XL9k/0guS61H2sNEc16zeOoTkvyIwbhzceb0eLXG9e6hx
-	Jgn9YhLPvaIp+B6lICV1Cao=
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4dFKnk0yCrzRhR7;
-	Mon, 24 Nov 2025 17:11:38 +0800 (CST)
-Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
-	by mail.maildlp.com (Postfix) with ESMTPS id C0234180484;
-	Mon, 24 Nov 2025 17:13:24 +0800 (CST)
-Received: from [10.67.120.126] (10.67.120.126) by
- kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Mon, 24 Nov 2025 17:13:24 +0800
-Subject: Re: [bug report] ata: ahci: IO error with the default
- med_power_with_dipm
-To: "Mario Limonciello (AMD) (kernel.org)" <superm1@kernel.org>, Niklas Cassel
-	<cassel@kernel.org>
-References: <20251121073502.3388239-1-liyihang9@h-partners.com>
- <aSB0ilF_cI5PS8M0@ryzen> <eb6411bf-141f-47a8-bf73-a9f669399c6a@kernel.org>
-CC: <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>, <linuxarm@huawei.com>,
-	<liuyonglong@huawei.com>, Yihang Li <liyihang9@h-partners.com>
-From: Yihang Li <liyihang9@h-partners.com>
-Message-ID: <67d02c58-e0d1-a078-e412-cf670326d569@h-partners.com>
-Date: Mon, 24 Nov 2025 17:13:23 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cZDvO8aS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A099C4CEF1;
+	Mon, 24 Nov 2025 13:44:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763991860;
+	bh=rai9lz/EjIl2+w9W0WsUsWwpVIvCKeTvObbGECTmuLo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=cZDvO8aS9+sk2SkZ6/z+EUamdgK78BlhoSu4LQd03bD2IEzEn5gQmpZAfoUZPErSU
+	 jN2KI+uTGIT+nxMF35EAMSeRWOSF6YPIgnWoj7uSx2FU9SPV9pg/mMq9vZw3MPEBz/
+	 ut+0AhHDEyNujABkvhxV7saFilaYYoipeWgJQA3CDqHyyOHCTxIWfNDXUfDDH4wF1z
+	 Z7kqXM3AuY7biv8N21rezTPNrrAlQ2GMPIp/o5ZKDqW/QphDQjjSmHRHWKKRSC6he3
+	 hxonhNpS5pW36aFGT+9EdsNWU/pYh2MZ6WrDPwOqMW9ykZyLOaKyOLh2rMbHlBDoS0
+	 T7/TZyvemXi5g==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	xxjack12xx@gmail.com,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH 0/3] ata: libata: Quirk DELLBOSS VD MV.R00-0 max_sectors
+Date: Mon, 24 Nov 2025 14:44:15 +0100
+Message-ID: <20251124134414.3057512-5-cassel@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <eb6411bf-141f-47a8-bf73-a9f669399c6a@kernel.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- kwepemh200005.china.huawei.com (7.202.181.112)
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=879; i=cassel@kernel.org; h=from:subject; bh=rai9lz/EjIl2+w9W0WsUsWwpVIvCKeTvObbGECTmuLo=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJVEvU+bp37WvuTXEr//8umkzyWbltnUa9+6Nua/oed8 +/9l9T43FHKwiDGxSArpsji+8Nlf3G3+5TjindsYOawMoEMYeDiFICJrIth+O819U/tkqfLP9TP lNNI8Qx1yfq/wUj32oGOMz2Ly3w5xZcz/LPraWO6xqrX67rR9/6C0LfP5DK+bpvmt/ZfjcrHX8n vkvgB
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Hi Mario,
+Hello there,
 
-On 2025/11/21 22:29, Mario Limonciello (AMD) (kernel.org) wrote:
-> 
-> 
-> It would be ideal to please reproduce on a mainline kernel if you haven't already.
-> 
-> Also; just to confirm did you reach this result with a bisect?  Or did you encounter this issue with a mainline kernel?
-> .
-> 
+a recent change:
+9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
 
-I am using the latest mainline kernel version, linux 6.18.0-rc6 with commit 8b690556d8fe.
+bumped the default max_sectors_kb from 1280 to 4096.
 
-By using a bisect method, I found that the issue occurs after merging commit 5433f0e7427ae ("ata: Kconfig: Update
-SATA_MOBILE_LPM_POLICY default to med_power_with_dipm").
+It seems like a lot for SATA controllers are buggy and don't really like
+this, see:
+https://bugzilla.kernel.org/show_bug.cgi?id=220693
 
-Thanks,
-Yihang
+For now, we only add a DELLBOSS VD MV.R00-0 max_sectors quirk, but surely
+more quirks are coming, so change libata-core to allow for more quirks,
+since after this change, all quirks bits are used.
+
+
+Niklas Cassel (3):
+  ata: libata: Move quirk flags to their own enum
+  ata: libata-core: Quirk DELLBOSS VD MV.R00-0 max_sectors
+  ata: libata: Allow more quirks
+
+ drivers/ata/libata-core.c | 16 +++++++-
+ include/linux/ata.h       |  1 +
+ include/linux/libata.h    | 81 +++++++++++++++++++++------------------
+ 3 files changed, 58 insertions(+), 40 deletions(-)
+
+-- 
+2.52.0
+
