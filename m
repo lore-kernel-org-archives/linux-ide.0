@@ -1,59 +1,59 @@
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3C5B261B6D
-	for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 20:51:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4F2128E00
+	for <linux-ide@vger.kernel.org>; Tue, 25 Nov 2025 00:00:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764017516; cv=none; b=nP+iKNecc5Sm4NVzCm98xXpw3C3MGHdX2qW4nt/RcFBUZJ7N3R1GzI0eYJNVIeQHjM3cYkx6kzT6WpIu2ixRQDAQCPKnmA+FKL9McADgjbRTH05Dwg1bqvNsrhlsXmJxh5qedpw6cPj1w9q7sRI2+lWXTjWBc3OOXvn+fZRQGgU=
+	t=1764028846; cv=none; b=JqiMzdFe9hAb03VlUQttnJnTAuMju9tfhW/IR2Qx7DhIaBwlAzcRNbhW2xBqvQRhDVBhuMKfnJZ8FrK/IOo0hrPnN1Jc9o+UaJfPeDvcWmaEHycGbZbPNFLwvd93yrix2x5zg0JxKcebeOOyQuf8eMEiHh/CRLTCjgWGU1M/N1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764017516; c=relaxed/simple;
-	bh=TNXgHjdHW+7hCc9KU3+HDCu1u7r/n7D9WCP2ChH+81k=;
+	s=arc-20240116; t=1764028846; c=relaxed/simple;
+	bh=7AlPnQKci4zxItjc4n6oVZCxEHtNoKjdwVhAM/58eRw=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Y+qiTdHT3MKocElSZ7hMx2FfWz5FJGiS0iU6URRCXYSYhgJ7QS2yO5UpyMzh2zWSRoh1Ge1yq7b0tmYfoZP/lmrA4RXB746MY+FwbBIDU8/NaBo26YfWwzsBgk4LPqyYx1BSlYKNsPuF2WKeMMUMjSBvNkHfsRkVkgKkgUpHAS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ffO0HsDz; arc=none smtp.client-ip=209.85.218.53
+	 To:Cc:Content-Type; b=SBhIsaoIenvuoMd9HodHRAV7HL/i0cUOx7brihtLYwVn4I9zFASttTW3pAP4D+9+m6pufaMFZVnXiBGEE7877aVmGAZi/7O05NU1Z72l8y8Nw9gAucd2K5GK4r+TUp6aOG4LN+pTqPgbLWneXKn8UtOfNqcy9h9OyNthfTT6do4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fvkQoc5F; arc=none smtp.client-ip=209.85.218.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ffO0HsDz"
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-b728a43e410so865070466b.1
-        for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 12:51:54 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fvkQoc5F"
+Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-b739b3fc2a0so59317566b.3
+        for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 16:00:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764017513; x=1764622313; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1764028843; x=1764633643; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=TNXgHjdHW+7hCc9KU3+HDCu1u7r/n7D9WCP2ChH+81k=;
-        b=ffO0HsDz6iNDtD6Lx9GMR6DAh/1hXYkQRra9vNG/xNAfujD6LpcjDlMy3N/JbfEILO
-         Y4fvXSxQHHUxrjNrGEmUT3db/sYntkA2zxN3UPQ4vowJZNyDRur8qH8o4i/Q7OEIddik
-         OGvgq51YdMMwtdT4t2vs9Wg3fgZgBMN9m/Uh0ZuGON9mOq9K5JDn8WBVbMiJtNr6tHR6
-         2MsiUqLuUu5qCJVQrsHdsyp73KEVlX+tJoF5gX3dNy0d5YwIOtTM5cNVORHt9gZXgwqa
-         7qd8HGEHY9hNsWjz0thQdUvRXJeaW5hmCUdKmEZEvWrT8n8NNJZJHo9RY7SVaEJE10VD
-         7Gbg==
+        bh=OZKolD1QM1RGLjgSNf0ENMzP0WrzpdlYVNa/MekuytY=;
+        b=fvkQoc5FMjZug80QiUS8QP0lFJE4Wd1fZF1roIkmdCkzio15Szk8FcabyWfRHZbdEq
+         aQx1dTWQb8zHc54mLV8t0HUJZlzBbpfWy8mY10TBopIOZqLHt2SzEWnxMnwcHdXxucJF
+         gxbMlJCbHM3YmUHe1iJqixEN643tdmHvWDz9D9Xobnvt5RoE2Xml5o2jtznxwV/+P4VV
+         Fg+yzW1QP7CGn5ooHAKdlW6QNlGKtF4b6YEvS8iDhZ8wSQJ9YHixpLvpF4OOpAAyDaDP
+         KvEF497oPDBEBqq8zC1Kb7uPC80jY5Xv1lZjxnHBit2cIRUPYktjA4KH389KWLI+QENq
+         lBsg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764017513; x=1764622313;
+        d=1e100.net; s=20230601; t=1764028843; x=1764633643;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=TNXgHjdHW+7hCc9KU3+HDCu1u7r/n7D9WCP2ChH+81k=;
-        b=pwXiCj4P4z08nQ+Zn9Zo2Ql+7dsEz4a67uXQpbs6EqfagHxTCgHkkipRH+cA3uzjGJ
-         O90c216Iwz1bHf1oFd4Q5iP3v5kwu50JteRupW1K+UulvPKoBX7/T3ciXuEoC2p5j1FY
-         vOsVEkfRJRQWosHBzGiV35RuxyBVQDrnQsSndvt7V7mrPsYsF9FOLt+CBgkLM1qC60if
-         sGLGfpMuGaLFZ8EhnoUyTODqu7ehb6Wyu+jg3jGRdaox/X7fwKRZ2k5UGzD/UBpztLMI
-         setyFBIb5FPXwoVPArjKsXrK26YzSYvHiuBVuC3hQVMhTZI/vkbIwcDbmtpX93/YfqUN
-         j1LQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUKYl8bRNrZRc6HSg583rtj5eGOGo6qtVhY/pRgjPLpXUG43pw+VLcpcvesHX9rXrbGuxnse8uvIEM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywhr1a35+ZfZph80LaQdWUzjCn/cUH6jwFYA4zerKlmBbmNpMeW
-	4BglKU2rg3ecCi0Z/RMYxwpvRERxqKKohcwwYsifFhfI2DtdHLGTGNrxJ0WcyfQqZ5Wxa+JD9HD
-	5GaB2vuP+DVCBTmLSy64zMoTCJn2E0Oo=
-X-Gm-Gg: ASbGncs2xOC93tsoV3n0yMg48KoRFRFPIugolU6igIXt4zL/LoxtvDHH3ob10pVeNq/
-	5EUUsK1MiD2Zh1emT0sNmiUp7Yo5luxu8W5rXkm3mCYKtBip3qQe22nuoaXPO5At0WaorPYnuCs
-	iMP7jQz0I0GHELDrrPjRZTxMqbr626vuGJJifARaJ0fhVgGOaxVte8ETxrX5X+Q9znhZIRvpQgP
-	kxrouJF1ob+S6ZHvwUn7VhdhrnKW9sxvQ216KIFos7jpL2vcXnt/dV1B6ae6fl/mxnYgW1n
-X-Google-Smtp-Source: AGHT+IEolpqh4VyTkys/PixTi5XkV8Lp6IrK5gzaB7Nab6YNMUvfFfrOi7K/QletWC/MotglssbNFUwo0tdIvj2NZT8=
-X-Received: by 2002:a17:906:9f96:b0:b75:7b39:90c9 with SMTP id
- a640c23a62f3a-b767188523cmr1603334566b.51.1764017512827; Mon, 24 Nov 2025
- 12:51:52 -0800 (PST)
+        bh=OZKolD1QM1RGLjgSNf0ENMzP0WrzpdlYVNa/MekuytY=;
+        b=wok54fi5VzxtGZOKQuYZg3iypR3m4Ns/5ptDxJqmiGkd2HkUgCV9QN+0UFLH8qACst
+         u0jwe/lwSBAOAArriL1ogO+Ryd0itsYRXbXHSbPZiYjeQwok484TL7QDqYRsqDOAKtao
+         UL6833Q1rUEQXI3Rm+qhzI9X30bL+x+ZINzbcbf3CVYhqvv7aUKoAlX5wxQE6AnlVZMo
+         JTnzqbhZEEjCZeF42oNqpsWgL4YLitPmnWzjfexbwArmo5fnQIObqz4EuitjEyPgyWQK
+         v5e5AFx+eSTjrmVaw2R6moyl9f629YXolezuqnitAOvDnfill90T9gouIW5E4oRwL26B
+         4kFw==
+X-Forwarded-Encrypted: i=1; AJvYcCWJ/QIqyr9NeUYqK18+dRPvp8m2opX6k+wegA4N5TxAJDSBBfp9/sX2NyHos6Q5oPmhqNyjJtZygss=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCaSAJ8ZcJHkTClMztik+UPLPE1bZfY0ipQWER+LW2KjYb2xkY
+	Hn5W9eNWFyw0m251emLRql/Iat4UYHJNkqU7x2B+/KwyjsOhVnQaPW4zrK/K50FTXXfu0YNDjw5
+	7SV0I3nKBmA35CZUyNfnwGKc+yL2v28s=
+X-Gm-Gg: ASbGncvBMsIZ3DzFbq74ge+YSMgWh7Lg9QWdcRgicV7FpCIWl1jmVZbJR96NWA98MX9
+	aTEDPfX7DzmM/s5hr0gQgHIBV3rarkhX+QCY4wDGk6YdOtzDFrDWGKHt09huK0p0dH0mKy86s6+
+	OZddzSla8Jjm14M4bEKiIU9fl0OdQgllj9c+QP8HcedHKiwog+zR1SuZmfGlJgYE/7P0ithwWoD
+	l8bqeXVR60Vz/bPq+pq0usbW9BDNUOvXpB8WYlkoQpqWIOBycGgv/oOOw2jgTeHHtCv7gwn
+X-Google-Smtp-Source: AGHT+IFDsyikEK7TsfaqwoG+30xdLLt6P78g2zQ+rejGfQp48KMulgdB2/6jQm1T7yqI7xkBwBDuX+ClOCwXIjdDkXA=
+X-Received: by 2002:a17:907:2da6:b0:b73:792c:6326 with SMTP id
+ a640c23a62f3a-b76c53564f6mr70261466b.11.1764028843153; Mon, 24 Nov 2025
+ 16:00:43 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -64,17 +64,22 @@ References: <20251124134414.3057512-5-cassel@kernel.org> <20251124134414.3057512
  <aSRnLyyopCslI4jT@ryzen>
 In-Reply-To: <aSRnLyyopCslI4jT@ryzen>
 From: "Jack L." <xxjack12xx@gmail.com>
-Date: Mon, 24 Nov 2025 12:51:15 -0800
-X-Gm-Features: AWmQ_bkdiUxGLwsTCKR5miKsgK_IVveTD7egMBBIpe9iZjHuC3l9RFoj8KV9r5M
-Message-ID: <CALeGphywgjdp5hBFsvb8+_RXeAKY16a6d=egSFZPZsK-d_x_UA@mail.gmail.com>
+Date: Mon, 24 Nov 2025 16:00:06 -0800
+X-Gm-Features: AWmQ_blFYQXlSqdN0_4yWzwhmJv3TVF3W-1hyj1YVZMHWMpwcJ34lKgNih8Wigk
+Message-ID: <CALeGphxDLn+=8sZyqih6zf5NUF_4V=Ob0RhWuq-36JGH5ddfOA@mail.gmail.com>
 Subject: Re: [PATCH 2/3] ata: libata-core: Quirk DELLBOSS VD MV.R00-0 max_sectors
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Is there a way to test by setting the value on the cmdline or setting
-a /sys variable?
+Applying the patch did not match the correct disk but after modifying
+the line to
+{ "DELLBOSS VD",        "MV.R00-0",     ATA_QUIRK_MAX_SEC_8191 },
+booting up the system results in
+kernel: ata15.00: Model 'DELLBOSS VD', rev 'MV.R00-0', applying
+quirks: maxsec8191
+and the disks isn't erroring with initial testing.
 
 On Mon, Nov 24, 2025 at 6:09=E2=80=AFAM Niklas Cassel <cassel@kernel.org> w=
 rote:
