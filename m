@@ -1,116 +1,157 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4F2128E00
-	for <linux-ide@vger.kernel.org>; Tue, 25 Nov 2025 00:00:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A159E1531C1
+	for <linux-ide@vger.kernel.org>; Tue, 25 Nov 2025 00:24:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764028846; cv=none; b=JqiMzdFe9hAb03VlUQttnJnTAuMju9tfhW/IR2Qx7DhIaBwlAzcRNbhW2xBqvQRhDVBhuMKfnJZ8FrK/IOo0hrPnN1Jc9o+UaJfPeDvcWmaEHycGbZbPNFLwvd93yrix2x5zg0JxKcebeOOyQuf8eMEiHh/CRLTCjgWGU1M/N1Y=
+	t=1764030289; cv=none; b=eJUYG9AdKRR/q9bvzf4g8rezx+Q9slZedb0a8ptXbgQUwXz4KaISD7CEitYjtdJMuGIwYwJCAt69nA0wB7POw4+k7RIaMs2aLWus2R8RjsgifNXP6kdhQhaMcoo6Nl58xBWHQT1fjZia1ms59rnlcrcUQH8WXqCIuWplJ1+8ODU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764028846; c=relaxed/simple;
-	bh=7AlPnQKci4zxItjc4n6oVZCxEHtNoKjdwVhAM/58eRw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=SBhIsaoIenvuoMd9HodHRAV7HL/i0cUOx7brihtLYwVn4I9zFASttTW3pAP4D+9+m6pufaMFZVnXiBGEE7877aVmGAZi/7O05NU1Z72l8y8Nw9gAucd2K5GK4r+TUp6aOG4LN+pTqPgbLWneXKn8UtOfNqcy9h9OyNthfTT6do4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fvkQoc5F; arc=none smtp.client-ip=209.85.218.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1764030289; c=relaxed/simple;
+	bh=XAvCVndyHLvDtwADmP5BRy0RUgYN2rh0pdO6K51b9Uw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HejPSX12Rm+LBWP6eV0kcJSMmynnbCSOEZMpU7vwfsnrMI7Bj6ADFloS5WAGWjrll8x1XDJ/NhULGCHi8EtpyqrI8fXkvvWNrnEABTKgq1nTcDEs8NfANweJUj2SE/Oy+K4FioDGNP+6kPD6xOaxhvATrqpverTSTWFHEQO2bNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IQn8bmzu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fvkQoc5F"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-b739b3fc2a0so59317566b.3
-        for <linux-ide@vger.kernel.org>; Mon, 24 Nov 2025 16:00:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764028843; x=1764633643; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OZKolD1QM1RGLjgSNf0ENMzP0WrzpdlYVNa/MekuytY=;
-        b=fvkQoc5FMjZug80QiUS8QP0lFJE4Wd1fZF1roIkmdCkzio15Szk8FcabyWfRHZbdEq
-         aQx1dTWQb8zHc54mLV8t0HUJZlzBbpfWy8mY10TBopIOZqLHt2SzEWnxMnwcHdXxucJF
-         gxbMlJCbHM3YmUHe1iJqixEN643tdmHvWDz9D9Xobnvt5RoE2Xml5o2jtznxwV/+P4VV
-         Fg+yzW1QP7CGn5ooHAKdlW6QNlGKtF4b6YEvS8iDhZ8wSQJ9YHixpLvpF4OOpAAyDaDP
-         KvEF497oPDBEBqq8zC1Kb7uPC80jY5Xv1lZjxnHBit2cIRUPYktjA4KH389KWLI+QENq
-         lBsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764028843; x=1764633643;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=OZKolD1QM1RGLjgSNf0ENMzP0WrzpdlYVNa/MekuytY=;
-        b=wok54fi5VzxtGZOKQuYZg3iypR3m4Ns/5ptDxJqmiGkd2HkUgCV9QN+0UFLH8qACst
-         u0jwe/lwSBAOAArriL1ogO+Ryd0itsYRXbXHSbPZiYjeQwok484TL7QDqYRsqDOAKtao
-         UL6833Q1rUEQXI3Rm+qhzI9X30bL+x+ZINzbcbf3CVYhqvv7aUKoAlX5wxQE6AnlVZMo
-         JTnzqbhZEEjCZeF42oNqpsWgL4YLitPmnWzjfexbwArmo5fnQIObqz4EuitjEyPgyWQK
-         v5e5AFx+eSTjrmVaw2R6moyl9f629YXolezuqnitAOvDnfill90T9gouIW5E4oRwL26B
-         4kFw==
-X-Forwarded-Encrypted: i=1; AJvYcCWJ/QIqyr9NeUYqK18+dRPvp8m2opX6k+wegA4N5TxAJDSBBfp9/sX2NyHos6Q5oPmhqNyjJtZygss=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyCaSAJ8ZcJHkTClMztik+UPLPE1bZfY0ipQWER+LW2KjYb2xkY
-	Hn5W9eNWFyw0m251emLRql/Iat4UYHJNkqU7x2B+/KwyjsOhVnQaPW4zrK/K50FTXXfu0YNDjw5
-	7SV0I3nKBmA35CZUyNfnwGKc+yL2v28s=
-X-Gm-Gg: ASbGncvBMsIZ3DzFbq74ge+YSMgWh7Lg9QWdcRgicV7FpCIWl1jmVZbJR96NWA98MX9
-	aTEDPfX7DzmM/s5hr0gQgHIBV3rarkhX+QCY4wDGk6YdOtzDFrDWGKHt09huK0p0dH0mKy86s6+
-	OZddzSla8Jjm14M4bEKiIU9fl0OdQgllj9c+QP8HcedHKiwog+zR1SuZmfGlJgYE/7P0ithwWoD
-	l8bqeXVR60Vz/bPq+pq0usbW9BDNUOvXpB8WYlkoQpqWIOBycGgv/oOOw2jgTeHHtCv7gwn
-X-Google-Smtp-Source: AGHT+IFDsyikEK7TsfaqwoG+30xdLLt6P78g2zQ+rejGfQp48KMulgdB2/6jQm1T7yqI7xkBwBDuX+ClOCwXIjdDkXA=
-X-Received: by 2002:a17:907:2da6:b0:b73:792c:6326 with SMTP id
- a640c23a62f3a-b76c53564f6mr70261466b.11.1764028843153; Mon, 24 Nov 2025
- 16:00:43 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IQn8bmzu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97E22C4CEF1;
+	Tue, 25 Nov 2025 00:24:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764030288;
+	bh=XAvCVndyHLvDtwADmP5BRy0RUgYN2rh0pdO6K51b9Uw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=IQn8bmzuX7hUa3UyYhwBFSR9R7SG7xVW5XSJKEbGKppcViMb/6wP6dwl/HaKw/zHD
+	 I2KBlWlDUmibdMogiMxojJstROBAOz+WzCishxOxuBroB1LuJo1bkItX4DfK+nAkqW
+	 OcaLXb/eyI4FhEh/6DNYIz5rKIaE33lhitvqjMfqN4dEqPlxU8rdZaQu6Ppa3ZbWZj
+	 EJCVSNZ21zchJHWEHUGvfkEpTY17u4SyO93RYjhYeJnEhS8F3oyy4aKK2Npn35vTnP
+	 okJIRlnj06Rhdor7JE02VaXhRYlkjbnZZTsPBvxL8ZU7CC6ECIkhyRiEXfJlnmGka5
+	 zQzZpaKRB02jg==
+Message-ID: <4a5fe360-6d26-4d06-9eca-d087966fee0a@kernel.org>
+Date: Tue, 25 Nov 2025 09:20:36 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251124134414.3057512-5-cassel@kernel.org> <20251124134414.3057512-7-cassel@kernel.org>
- <aSRnLyyopCslI4jT@ryzen>
-In-Reply-To: <aSRnLyyopCslI4jT@ryzen>
-From: "Jack L." <xxjack12xx@gmail.com>
-Date: Mon, 24 Nov 2025 16:00:06 -0800
-X-Gm-Features: AWmQ_blFYQXlSqdN0_4yWzwhmJv3TVF3W-1hyj1YVZMHWMpwcJ34lKgNih8Wigk
-Message-ID: <CALeGphxDLn+=8sZyqih6zf5NUF_4V=Ob0RhWuq-36JGH5ddfOA@mail.gmail.com>
-Subject: Re: [PATCH 2/3] ata: libata-core: Quirk DELLBOSS VD MV.R00-0 max_sectors
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] ata: libata-core: Quirk DELLBOSS VD MV.R00-0
+ max_sectors
 To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc: linux-ide@vger.kernel.org, xxjack12xx@gmail.com
+References: <20251124134414.3057512-5-cassel@kernel.org>
+ <20251124134414.3057512-7-cassel@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20251124134414.3057512-7-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Applying the patch did not match the correct disk but after modifying
-the line to
-{ "DELLBOSS VD",        "MV.R00-0",     ATA_QUIRK_MAX_SEC_8191 },
-booting up the system results in
-kernel: ata15.00: Model 'DELLBOSS VD', rev 'MV.R00-0', applying
-quirks: maxsec8191
-and the disks isn't erroring with initial testing.
+On 11/24/25 10:44 PM, Niklas Cassel wrote:
+> DELLBOSS VD MV.R00-0 with FW rev MV.R00-0 times out when sending
+> I/Os of size 4096 KiB.
+> 
+> Add a quirk so that the SATA controller is usable again.
 
-On Mon, Nov 24, 2025 at 6:09=E2=80=AFAM Niklas Cassel <cassel@kernel.org> w=
-rote:
->
-> On Mon, Nov 24, 2025 at 02:44:17PM +0100, Niklas Cassel wrote:
-> > DELLBOSS VD MV.R00-0 with FW rev MV.R00-0 times out when sending
-> > I/Os of size 4096 KiB.
-> >
-> > Add a quirk so that the SATA controller is usable again.
-> >
-> > Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> > ---
->
-> Jack, it would be helpful if you could test this series.
->
-> We know that your hardware chokes on 8192 sectors
-> (one sector is always 512 bytes in Linux kernel code)
-> 8192 * 512 =3D 4194304 bytes =3D 4096 KiB =3D=3D 4 MiB.
->
->
-> When you write 4095 to max_sectors, we will set the limit to
-> 8190 sectors.
->
-> My guess is that your hardware chokes when receiving an I/O
-> of anything larger than 8191 sectors.
->
-> If your hardware still chokes with this patch applied, then
-> we need to change the quirk to limit the I/Os to 8190 sectors
-> (which, thanks to your testing, we already know works).
->
->
-> Kind regards,
-> Niklas
+Please name the quirk here and describe it.
+
+> 
+> Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/ata/libata-core.c | 12 ++++++++++++
+>  include/linux/ata.h       |  1 +
+>  include/linux/libata.h    |  2 ++
+>  3 files changed, 15 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index f48fb63d7e85..be320c3e0fef 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3146,6 +3146,10 @@ int ata_dev_configure(struct ata_device *dev)
+>  		dev->max_sectors = min_t(unsigned int, ATA_MAX_SECTORS_1024,
+>  					 dev->max_sectors);
+>  
+> +	if (dev->quirks & ATA_QUIRK_MAX_SEC_8191)
+> +		dev->max_sectors = min_t(unsigned int, ATA_MAX_SECTORS_8191,
+> +					 dev->max_sectors);
+> +
+>  	if (dev->quirks & ATA_QUIRK_MAX_SEC_LBA48)
+>  		dev->max_sectors = ATA_MAX_SECTORS_LBA48;
+>  
+> @@ -3998,6 +4002,7 @@ static const char * const ata_quirk_names[] = {
+>  	[__ATA_QUIRK_NO_DMA_LOG]	= "nodmalog",
+>  	[__ATA_QUIRK_NOTRIM]		= "notrim",
+>  	[__ATA_QUIRK_MAX_SEC_1024]	= "maxsec1024",
+> +	[__ATA_QUIRK_MAX_SEC_8191]	= "maxsec8191",
+
+It would be a lot better  if we could have a definition for this a little more
+generic, that is, add a value to a generic "maxsec" quirk. E.g.:
+ 	
+	[__ATA_QUIRK_MAX_SEC_8191]	= { "maxsec", 8191 },
+
+That would avoid the need for more of these if other drives have different
+limits. We already have 2 maxsec limit, this is the 3rd one...
+
+>  	[__ATA_QUIRK_MAX_TRIM_128M]	= "maxtrim128m",
+>  	[__ATA_QUIRK_NO_NCQ_ON_ATI]	= "noncqonati",
+>  	[__ATA_QUIRK_NO_LPM_ON_ATI]	= "nolpmonati",
+> @@ -4104,6 +4109,12 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+>  	{ "LITEON CX1-JB*-HP",	NULL,		ATA_QUIRK_MAX_SEC_1024 },
+>  	{ "LITEON EP1-*",	NULL,		ATA_QUIRK_MAX_SEC_1024 },
+>  
+> +	/*
+> +	 * These devices time out with higher max sects.
+> +	 * https://bugzilla.kernel.org/show_bug.cgi?id=220693
+> +	 */
+> +	{ "DELLBOSS VD MV.R00-0", "MV.R00-0",	ATA_QUIRK_MAX_SEC_8191 },
+> +
+>  	/* Devices we expect to fail diagnostics */
+>  
+>  	/* Devices where NCQ should be avoided */
+> @@ -6455,6 +6466,7 @@ static const struct ata_force_param force_tbl[] __initconst = {
+>  
+>  	force_quirk_on(max_sec_128,	ATA_QUIRK_MAX_SEC_128),
+>  	force_quirk_on(max_sec_1024,	ATA_QUIRK_MAX_SEC_1024),
+> +	force_quirk_on(max_sec_8191,	ATA_QUIRK_MAX_SEC_8191),
+>  	force_quirk_on(max_sec_lba48,	ATA_QUIRK_MAX_SEC_LBA48),
+>  
+>  	force_quirk_onoff(lpm,		ATA_QUIRK_NOLPM),
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index c9013e472aa3..54b416e26995 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -29,6 +29,7 @@ enum {
+>  	ATA_MAX_SECTORS_128	= 128,
+>  	ATA_MAX_SECTORS		= 256,
+>  	ATA_MAX_SECTORS_1024    = 1024,
+> +	ATA_MAX_SECTORS_8191    = 8191,
+>  	ATA_MAX_SECTORS_LBA48	= 65535,/* avoid count to be 0000h */
+>  	ATA_MAX_SECTORS_TAPE	= 65535,
+>  	ATA_MAX_TRIM_RNUM	= 64,	/* 512-byte payload / (6-byte LBA + 2-byte range per entry) */
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 171268d65169..39534fafa36a 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -75,6 +75,7 @@ enum ata_quirks {
+>  	__ATA_QUIRK_NO_DMA_LOG,		/* Do not use DMA for log read */
+>  	__ATA_QUIRK_NOTRIM,		/* Do not use TRIM */
+>  	__ATA_QUIRK_MAX_SEC_1024,	/* Limit max sects to 1024 */
+> +	__ATA_QUIRK_MAX_SEC_8191,	/* Limit max sects to 8191 */
+>  	__ATA_QUIRK_MAX_TRIM_128M,	/* Limit max trim size to 128M */
+>  	__ATA_QUIRK_NO_NCQ_ON_ATI,	/* Disable NCQ on ATI chipset */
+>  	__ATA_QUIRK_NO_LPM_ON_ATI,	/* Disable LPM on ATI chipset */
+> @@ -115,6 +116,7 @@ enum {
+>  	ATA_QUIRK_NO_DMA_LOG		= (1U << __ATA_QUIRK_NO_DMA_LOG),
+>  	ATA_QUIRK_NOTRIM		= (1U << __ATA_QUIRK_NOTRIM),
+>  	ATA_QUIRK_MAX_SEC_1024		= (1U << __ATA_QUIRK_MAX_SEC_1024),
+> +	ATA_QUIRK_MAX_SEC_8191		= (1U << __ATA_QUIRK_MAX_SEC_8191),
+>  	ATA_QUIRK_MAX_TRIM_128M		= (1U << __ATA_QUIRK_MAX_TRIM_128M),
+>  	ATA_QUIRK_NO_NCQ_ON_ATI		= (1U << __ATA_QUIRK_NO_NCQ_ON_ATI),
+>  	ATA_QUIRK_NO_LPM_ON_ATI		= (1U << __ATA_QUIRK_NO_LPM_ON_ATI),
+
+
+-- 
+Damien Le Moal
+Western Digital Research
