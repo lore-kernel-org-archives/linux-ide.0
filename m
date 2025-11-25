@@ -1,68 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BF35288D6
-	for <linux-ide@vger.kernel.org>; Tue, 25 Nov 2025 04:34:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E32994A21
+	for <linux-ide@vger.kernel.org>; Tue, 25 Nov 2025 11:31:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764045286; cv=none; b=DgyhL1ERrgfpI/n2zSL1fRCnxTWlQ9iKstcYkCjHXUNdDWFOx35fKUwJSxtLSCoKT6hgIKmn09mhMmgAWMS/YgMtYo+27f2EH1mUzXvUEUu6tOMnAgvxk1i7g3tBF6dyJFC+dcl/j5XUICm2B8AmIYmXD2Opjjmd7yqRupoN2xY=
+	t=1764070303; cv=none; b=n5jO0jPijoG9FQmrilFipXcD2PxasKD/gto1sh6gwIygwe89lh1bqOC0wbzKI/BRqjwDFYNBVRBjtoUbkk5bM/i1cEp2uylit+J2Q0lLAaaaSWzCuuDMHGt4F1BxY7JtqoZcRDb1ASyhIu7pxxGjNq2gCKv37FUNkfsFLMPlUew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764045286; c=relaxed/simple;
-	bh=+1roETXJigZaCGO8+BIWPkOkI2UxnE1HIzCLaJut4VE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JZ2ZV4cBbRiDdTVikMbJZpJGonCZkDW71q6VedMPMRovr5xxIIr5qwpYVMwqU9W1sxDzZ4jv0uO/6KJGzVfTAkvwRRxlILTNfhbTT4Q13llt8s0WwF/rhc90+PlCgGZweDL1pn/N2iWjwVVEkswTRNN7GA8tnzqdO6z+Xg+XZzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h/MfWDR0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764070303; c=relaxed/simple;
+	bh=JPlPz+mOAu+v140CiJGGj3vsogWJ/rc0nPQrnFZSQiU=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=pKLZwt8QDkQkIzwEA5GbHUUPjOZCXkCRbvJyQcqgS9NUW1hwJcvWJucBkLfQIC3JTZOrXqeUkEAeqT6/56IHiobzJfMbk3ZZ7LEGsAfGkxbaEqmS6grqW1Wx+v73+OQ++M3whZlAzq7sJwMVzADlasoVCGhhwzJySHtSZjaqi58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=p0DKZo6z; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h/MfWDR0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5C01C4CEF1;
-	Tue, 25 Nov 2025 04:34:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764045285;
-	bh=+1roETXJigZaCGO8+BIWPkOkI2UxnE1HIzCLaJut4VE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=h/MfWDR0Hj/BVjXsfEivv3QApZe7rPAN1c57qO5bLftEdWdhmcwJbay/0M637x/sd
-	 cs/COJguO9P2GGkjReR+i7igzpt2UaWZrIu7CEortCrQEYkxMS/azI7E18B1WK7iPZ
-	 Nl+8mgjfh4ygL5pFUiZ2Yr5ZFtepiCODZKQnlv37jIn9ZKsFQJaf9gEOL34EBv6B0Z
-	 3D7Vetspm+49DuMp3EN6pCUhEAg9jdM4oLZAaxt88aegvdVUpoU6R8pRCbyEsVEV+t
-	 HCqzgs+DIrM2cbx48Y5XS0QIUS8ywTOytHzuYzMqlLc2iYaSts7Xy+xb0AvZNlvzEj
-	 CqAmkS0Lx0eHQ==
-Message-ID: <cd332a64-d8e1-4bb1-853c-d1087164b93f@kernel.org>
-Date: Tue, 25 Nov 2025 13:30:34 +0900
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="p0DKZo6z"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=HhSvhc53MOIjoXSLcJL6cmUZIKD1yXehEj8M0Cq3LLI=;
+	b=p0DKZo6zFEd8xvDQBIuBxcZDafcP/miVDaw5GVEy54szF4Dr87aw5PgwNYDiihx8YGot7DAJl
+	kailgqEKbu/xRGR8ZYjzc6STvNV6tIk502XGP3zmbpYM0bKHqWCDQhHY1By94I/YkfLlO+rV34w
+	VoKYqIDbkShhUjuFP6Y2FEs=
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4dG0pC57XNzcZxk;
+	Tue, 25 Nov 2025 19:29:23 +0800 (CST)
+Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1D02414022D;
+	Tue, 25 Nov 2025 19:31:37 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 25 Nov 2025 19:31:36 +0800
+Subject: Re: [PATCH] ata: libata-core: Disable LPM on Silicon Motion
+ MD619HXCLDE3TC
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+References: <20251124163433.3082331-2-cassel@kernel.org>
+CC: <linux-ide@vger.kernel.org>, Yihang Li <liyihang9@h-partners.com>
+From: Yihang Li <liyihang9@h-partners.com>
+Message-ID: <8850d82e-6818-b67f-9acb-cdfe78b7cedd@h-partners.com>
+Date: Tue, 25 Nov 2025 19:31:36 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] ata: libata: Allow more quirks
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, xxjack12xx@gmail.com
-References: <20251124134414.3057512-5-cassel@kernel.org>
- <20251124134414.3057512-8-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20251124134414.3057512-8-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20251124163433.3082331-2-cassel@kernel.org>
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemh200005.china.huawei.com (7.202.181.112)
 
-On 11/24/25 10:44 PM, Niklas Cassel wrote:
-> We have currently used up all 32-bits in the struct ata_device struct
-> member quirks. Thus, it is currently not possible to add another quirk.
+Hi Niklas,
+
+On 2025/11/25 0:34, Niklas Cassel wrote:
+> According to a user report, the Silicon Motion MD619HXCLDE3TC SSD has
+> problems with LPM.
 > 
-> Change the struct ata_device struct member quirks from an unsigned int to
-> an unsigned long long.
-> 
-> Doing this core level change now, will make it easier for whoever needs to
-> add another quirk, as they will not need to also do core level changes.
-> 
+> Reported-by: Yihang Li <liyihang9@h-partners.com>
+> Closes: https://lore.kernel.org/linux-ide/20251121073502.3388239-1-liyihang9@h-partners.com/
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+> Hello Yihang Li,
+> 
+> Please test this patch.
 
-Looks good.
+I found that the same issue also exists on another model of drive.
+The information is as follows:
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+# lsblk -o MODEL /dev/sda
+MODEL
+MD619GXCLDE3TC
 
--- 
-Damien Le Moal
-Western Digital Research
+# lsblk -o REV /dev/sda
+   REV
+TCV35D
+
+At the same time, while testing this patch, I found that the issue was not solved.
+Therefore, I printed out the model_num and model_rev of MD619HXCLDE3TC SSD and discovered that
+the actual model_rev should be "TCVAID" instead of "ID." However, the information obtained using
+the `lsblk -o REV /dev/sdX` command showed "ID," and I am not sure why this is the case.
+
+In any case, I suggest that the final modification should look like this, and after testing,
+this modification has solved my problem.
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index f48fb63d7e85..b721a8db11c4 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4216,6 +4216,10 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+        /* Apacer models with LPM issues */
+        { "Apacer AS340*",              NULL,   ATA_QUIRK_NOLPM },
+
++       /* Silicon Motion models with LPM issues */
++       { "MD619HXCLDE3TC",             "TCVAID", ATA_QUIRK_NOLPM },
++       { "MD619GXCLDE3TC",             "TCV35D", ATA_QUIRK_NOLPM },
++
+
+Thanks,
+Yihang
