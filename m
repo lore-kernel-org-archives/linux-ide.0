@@ -1,94 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 641A3227B8E
-	for <linux-ide@vger.kernel.org>; Wed, 26 Nov 2025 12:05:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F20D22900A8
+	for <linux-ide@vger.kernel.org>; Fri, 28 Nov 2025 02:54:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764158706; cv=none; b=BbOfFGWzth8MDdFfYhjTz/vgzUmnv0z6FMrJrq1APoVKsxKeFeORoazBGw6DeY60OBgChe3OHfKNHkXUBe30JXCSGoACcvSNYmDipYiyFKfZQXbisrZpdn7HcdF10q6C3RZJ4cmYiPEDsVPbZB0cQ0l5+vXdPgef5IlTY7spWCU=
+	t=1764298470; cv=none; b=ZJhQz5PFPOJz3X9m/zTdlOIcxREC3s1z5mSGDgxCcNu2hFs1QvyHpYKVWkZJNZL0EDySrkDl+E64DUlCvqlyFpCQG3Ewlnc4q018KZIfsiIKHad9u9jPCbqpuah/AwzNOHOn9w9fOaZj1vec3rWQ01N3rr1LYEYWI/mYcrmuQTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764158706; c=relaxed/simple;
-	bh=8AUkUujSNx2Xj4iTCvERT22T3GkwNDU0Ag7hq+Zw/pM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BH0ckkfsmShiM2jcVcFEq5u5r+CHrrX5omv5pY/iXZmFQM1V6JspQdI5LVcNvBwc/EJEtZZi9STlBnI2Q2DWAIEPLsQKOu2C8Ll8F3lKUssfCniBmKKT70Kc3AtpiV3aicC5qnhPZTT+EzhZkHkNiWA/UIyvAB38I1MkCtGm1Lc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HjZ8x0PM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764298470; c=relaxed/simple;
+	bh=EqSk2/IFuIbNI0nyCeChaVTw+BUa3mItX/lH1eWkqEc=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=rn+x0OG6KiSP58tiU50p41sJ/+tDUf8ppP3UCx8ptRsoCSFYe8s5wJkV/CXI9jcOLiNcQOUtFgHUORN7Ao8IcShr69pbfJSp5gx7PZolxEQRP9mtQ+muFrsSaGuc9frWXM2twt+63VmXl2CIor1h1hKye/olt4VXuepxqx+UDqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=FT+3sX8Y; arc=none smtp.client-ip=113.46.200.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HjZ8x0PM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03891C113D0;
-	Wed, 26 Nov 2025 12:05:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764158703;
-	bh=8AUkUujSNx2Xj4iTCvERT22T3GkwNDU0Ag7hq+Zw/pM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HjZ8x0PMntro0x6AW56ueeA+jTOki3xHAldmxeGMeisuilmglejsMcPOX+IcNxVrd
-	 j+n9tj57BAzUNrIJQcTh+zfGjTidQhSB0tUtkAMMMbXDXwsv79Pn9ssV1Q1gD/Uk7a
-	 s88kT3ekzg5pXAQ7BFfJUYY6Gex+2sNHCTZatkvWKh8FtoapAKhOylKgyMdZuDG6vI
-	 jumtAeyOlEnoRVPGcyfpZuFfijawxajUk53SGpKlLOzcPC70ZUX7FfXxPJsthsikeh
-	 /pBGxp1/8aV3aPvoIGpdbgfpKdsqDlb/lMylv7Sw01kU7JziPjnrMaXluOT+14vsQl
-	 GjfXC9ag1J6tg==
-Date: Wed, 26 Nov 2025 13:05:00 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Yihang Li <liyihang9@h-partners.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="FT+3sX8Y"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=cqLQRW1aXHA4VvwSa/OWtydtCKERso2nQjqfTt89aCM=;
+	b=FT+3sX8YddWwczC9fX8h1TpQe3RnTd3ch0qtHfuoDrEmI2kmM/R50NiExJQklMmAfAH4KCfyk
+	O9Yvj3siEC8TU+64+kKbFgTNoeYHeQ114Vgqo4BvAmuG/v+4R2dQc0LaCTWsQbbU7pXd+i7Z06X
+	RPlK2pfbU+Fcq/86ESc9a4Y=
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dHd9n4kBcznTXP;
+	Fri, 28 Nov 2025 10:51:57 +0800 (CST)
+Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
+	by mail.maildlp.com (Postfix) with ESMTPS id 222E8140275;
+	Fri, 28 Nov 2025 10:54:22 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 28 Nov 2025 10:54:21 +0800
 Subject: Re: [PATCH] ata: libata-core: Disable LPM on Silicon Motion
  MD619HXCLDE3TC
-Message-ID: <aSbs7HOYr_8waEZZ@ryzen>
+To: Niklas Cassel <cassel@kernel.org>
 References: <20251124163433.3082331-2-cassel@kernel.org>
  <8850d82e-6818-b67f-9acb-cdfe78b7cedd@h-partners.com>
  <aSWgnwVzGDAqPf0i@ryzen>
  <5c2c5cbd-b13c-8ba1-86c8-670f0a34fcf3@h-partners.com>
+ <aSbs7HOYr_8waEZZ@ryzen>
+CC: Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>, Yihang
+ Li <liyihang9@h-partners.com>
+From: Yihang Li <liyihang9@h-partners.com>
+Message-ID: <479136e6-12d1-7593-bedd-e11b53063a3b@h-partners.com>
+Date: Fri, 28 Nov 2025 10:54:21 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5c2c5cbd-b13c-8ba1-86c8-670f0a34fcf3@h-partners.com>
+In-Reply-To: <aSbs7HOYr_8waEZZ@ryzen>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemh200005.china.huawei.com (7.202.181.112)
 
-On Wed, Nov 26, 2025 at 04:48:09PM +0800, Yihang Li wrote:
-> Hi Niklas,
+
+
+On 2025/11/26 20:05, Niklas Cassel wrote:
+> Well, it should be sufficient that they support either HIPM and DIPM.
 > 
-> On 2025/11/25 20:27, Niklas Cassel wrote:
-> > Ok, really nice that we have a patch that fixes your problem.
-> > 
-> > However, like I wrote in the comment section:
-> > 
-> > Before we apply this patch, it would be nice if you could try another SSD,
-> > that supports LPM (HIPM and DIPM) with your AHCI controller:
-> > Huawei Technologies Co., Ltd. HiSilicon AHCI HBA [19e5:a235] (rev 30)
-> > 
-> > Note: You can see if your drive supports HIPM and DIPM from the
-> > ata_dev_print_features() print to dmesg during boot, e.g.:
-> > ata6.00: Features: Trust Dev-Sleep HIPM DIPM NCQ-sndrcv NCQ-prio
-> > 
-> > Just so we can verify that it is the MD619HXCLDE3TC SSD that is not
-> > handling LPM correctly, and that it is not the AHCI HBA that is at fault.
-> > 
-> > E.g. there have been some weird bugs with this AHCI controller before,
-> > see e.g. 234e6d2c18f5 ("ata: ahci: Disable SXS for Hisilicon Kunpeng920").
-> > 
-> > 
-> > 
-> > Do you have any other drive, other than MD619HXCLDE3TC and MD619GXCLDE3TC,
-> > which supports LPM, and you can see that the drive works as intended,
-> > with LPM enabled, so we can be certain that it is not the HBA that has
-> > broken LPM support?
-> > 
+> Ideally, they should support the same as:
+> MD619HXCLDE3TC and MD619GXCLDE3TC.
+> (Not sure if they supported HIPM and DIPM or only one of them).
 > 
-> I checked all the drives I own, but unfortunately, none of them support LPM (HIPM and DIPM).
-> :(
+> But the device should work fine to read / write / mount, etc. without showing
+> the same errors as you got with MD619HXCLDE3TC and MD619GXCLDE3TC.
+> 
 
-Well, it should be sufficient that they support either HIPM and DIPM.
+I found an SSD that supports DIPM and connected it to my AHCI controller for testing:
+ata7.00: Features: DIPM NCQ-sndrcv
 
-Ideally, they should support the same as:
-MD619HXCLDE3TC and MD619GXCLDE3TC.
-(Not sure if they supported HIPM and DIPM or only one of them).
+And it did not show the same errors as MD619HXCLDE3TC and MD619GXCLDE3TC.
+So, I think we can confirm that the issue is not with the AHCI controller.
 
-But the device should work fine to read / write / mount, etc. without showing
-the same errors as you got with MD619HXCLDE3TC and MD619GXCLDE3TC.
-
-
-Kind regards,
-Niklas
+Thanks,
+Yihang
