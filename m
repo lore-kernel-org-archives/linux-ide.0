@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EFB92222D0
-	for <linux-ide@vger.kernel.org>; Tue,  2 Dec 2025 02:23:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB1E252292
+	for <linux-ide@vger.kernel.org>; Tue,  2 Dec 2025 02:28:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764642239; cv=none; b=Itf46+fnzLgtkwJZBhxvNeq+pxg11LsLYtzes6UEJfJdzLIm6xKAf2oHIWaNyzDZcWO52Lxv7I6PbLVuBss5XJtlp63qVmXqBvTKdkD3lVQGGIxgVeEMZzk89X9AsXN0o+dQ7v+QxohzaqF7Bvp8U22u85xGHk6hT+49r1AvEm8=
+	t=1764642521; cv=none; b=AQu+NN4HcVv4m7YX9xllYAarJkRnYCPdgryfn5dW6z50WnfokZKtiKwU9yoYwQ5ZlvUv4ZTE2NJu3ShvbAncEEpRVOSURuLXN/enwT/1pBplViLfoOHtfiIfRX9fuMgQ8ImHzd//bnWYgAADfKQ5bSeI1BpM7Dh0i7PXYUzOaSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764642239; c=relaxed/simple;
-	bh=NrjnQeXiokVvJdrQsmKVDm6rbidletkF0p2RE9WnHKs=;
+	s=arc-20240116; t=1764642521; c=relaxed/simple;
+	bh=AJlaLjgbtW/Kl0GnW1F9AAGghB5BXd/q9MAjILFQ0vo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s3JpB6Fs03/qWurnPfkStqIDIN++6o3WBJ9ObZcWNJn7CymZ4GdHM+xAVC8/p1+E9W0ZRC/Q0QEo3gy952j8FOinDUNelH3N5twKTvpqCsQO1WerMTF2pKIQmD7v7xgDWmZX20MHWzkday4J7YCbEJ75BLYRsnLCaYpLSDAnysQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sqROSWBU; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Z5a8qbagzPBIkzLLaWyo/UFpHBGiV/bZE8Drscf8r24DlDWGCgXTCk85DGaD+Yjkb/S6SST39RpDbU4yx0leQUtBVPKiiZQaZLYBrhkuGgxCZylfEni2YlqkbFO9Bp5RoWEL/5H1j24UGLSqqe5MY/Osse1OvzGiysx33bo/nS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FfIg+AUx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sqROSWBU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AF54C4CEF1;
-	Tue,  2 Dec 2025 02:23:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FfIg+AUx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1795C4CEF1;
+	Tue,  2 Dec 2025 02:28:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764642238;
-	bh=NrjnQeXiokVvJdrQsmKVDm6rbidletkF0p2RE9WnHKs=;
+	s=k20201202; t=1764642520;
+	bh=AJlaLjgbtW/Kl0GnW1F9AAGghB5BXd/q9MAjILFQ0vo=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=sqROSWBUk6rw3r8pq6AYoCxuKtQ89+CvOrYd5y+ZEUFC/MgBxjfThRyd5zV/Rxqv9
-	 ZFiyfF3iJeVTOMk68Im/8RQwzZSmxec7TNhXlS1TfIQfwap2ErUMyoKHNtwbg+hvdg
-	 cJUWi6hK5iK23aa5Eqd0fPv0ZnR/9hzS7f+0JTDRvWxqWedUbepoMRLCg8VQ7ZF7wB
-	 bIrGe8a+kPRmFLqyq82yn1Gq/74Z83v8FNwDWWhH3PMxxZdDZ+aCFBZ7+23eEGc9w0
-	 mXYos6FyACyUswEavCGJT6rW/FF8Valti/sIc7AdjlzIAsaITUUoSGMmFcjXIJXdrP
-	 MdUHjdJfIWQhA==
-Message-ID: <10a15e04-08ab-4cca-83dc-9ee288511dbb@kernel.org>
-Date: Tue, 2 Dec 2025 11:23:56 +0900
+	b=FfIg+AUxruCflJZ8t5iYtbUz9+9KHdRB8/vvXSayMjHc9sAAI/miJrvT+MwVX+A6j
+	 x3ybhKX/5cH/HObU0QLPhl4dJM6HzXveSJhMcr5D1WWYyd9d54sM7Q0bazN2VGjv0w
+	 L1+R43nT9yW8NGeddDuLOV1Ai0skx3We/XAIydXW51JFwouxsFAYfEhBBpcuviyVhT
+	 Oa/59rKSPpuMCPRP2fr6qVLahhbv0NnlwHU0AGVTWD9QNsEo+9H26Bue2oqIxm7+f8
+	 FucQtVKZtDZqtg8qA4SyvNY3DdKS6a5idwmtY7wiRnygADLVFayrDArCzbUKTcL1g2
+	 4A1e1k4QTbsPw==
+Message-ID: <2accc2a3-e88b-46f7-bcf7-b9f5cb631640@kernel.org>
+Date: Tue, 2 Dec 2025 11:28:38 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,51 +35,76 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/8] ata: libata: Add ATA_QUIRK_MAX_SEC and convert all
- device quirks
+Subject: Re: [PATCH v3 4/8] ata: libata: Add ata_force_get_fe_for_dev() helper
 To: Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org, xxjack12xx@gmail.com,
  "Martin K. Petersen" <martin.petersen@oracle.com>
 References: <20251201123501.246282-10-cassel@kernel.org>
- <20251201123501.246282-13-cassel@kernel.org>
+ <20251201123501.246282-14-cassel@kernel.org>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20251201123501.246282-13-cassel@kernel.org>
+In-Reply-To: <20251201123501.246282-14-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 12/1/25 21:35, Niklas Cassel wrote:
-> Add a new quirk ATA_QUIRK_MAX_SEC, which has a separate table with device
-> specific values.
+> Add ata_force_get_fe_for_dev() helper to get the struct ata_force_ent for
+> a struct ata_device.
 > 
-> Convert all existing device quirks in __ata_dev_quirks to the new format.
-
-...all existing ATA_QUIRK_MAX_SEC_XXX device quirks in...
-
-> Quirks ATA_QUIRK_MAX_SEC_128 and ATA_QUIRK_MAX_SEC_1024 cannot be removed
-> yet, since they are also used by libata.force, which functionally, is a
-> separate user of the quirks. The quirks will be removed once all users
-> have been converted to use the new format.
+> Use the helper in ata_force_quirks().
+> The helper will also be used in follow up commits.
 > 
-> The quirk ATA_QUIRK_MAX_SEC_8191 can be removed since it has no equivalent
-> libata.force parameter.
+> No functional change intended.
 > 
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-One nit below.
-
-With that,
+A few nits below. With these addressed, feel free to add:
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-> +struct ata_dev_quirk_value {
-> +	const char *model_num;
-> +	const char *model_rev;
-> +	u64 val;
-> +};
+> -/**
+> - *	ata_force_quirks - force quirks according to libata.force
+> - *	@dev: ATA device of interest
+> - *
+> - *	Force quirks according to libata.force and whine about it.
+> - *	For consistency with link selection, device number 15 selects
+> - *	the first device connected to the host link.
+> - *
+> - *	LOCKING:
+> - *	EH context.
+> - */
+> -static void ata_force_quirks(struct ata_device *dev)
+> +static const struct ata_force_ent
+> +*ata_force_get_fe_for_dev(struct ata_device *dev)
 
-Please align the field names with tabs.
+The "*" should be on the previous line as it is part of the type definition for
+the return value.
+
+>  {
+>  	int devno = dev->link->pmp + dev->devno;
+>  	int alt_devno = devno;
+>  	int i;
+> +	const struct ata_force_ent *fe;
+
+Nit: move this as the first declaration so that there is not a long declaration
+line after a short one. Yes, this is 100% visual only, not a bug :)
+
+>  
+>  	/* allow n.15/16 for devices attached to host port */
+>  	if (ata_is_host_link(dev->link))
+>  		alt_devno += 15;
+>  
+>  	for (i = 0; i < ata_force_tbl_size; i++) {
+> -		const struct ata_force_ent *fe = &ata_force_tbl[i];
+> +		fe = &ata_force_tbl[i];
+>  
+
+Maybe drop the blank line here ?
+
+>  		if (fe->port != -1 && fe->port != dev->link->ap->print_id)
+>  			continue;
 
 
 
