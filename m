@@ -1,54 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2829318BC3D
-	for <linux-ide@vger.kernel.org>; Tue,  2 Dec 2025 02:44:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DCF823645D
+	for <linux-ide@vger.kernel.org>; Tue,  2 Dec 2025 07:45:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764643494; cv=none; b=PKg1QpSbm/DIQjiZ3e/LeSbc2+ON/RMbsAH3V/w5LbNwwNOsEYWXb772dUrGzrxI/JNcZwX8wnr/IkDoos1mejJsz341cuys+ZfWTp+WsGdVFjI+OZY3icnohjpnAGN2FmDDVM3ymBf1OVP+8i5Qw2/5OL8iNSY31rz5mzObTXc=
+	t=1764661536; cv=none; b=BRY9UTXxErlBcJfLAeEZfQ1H/hhsS92/YNIrKnVQsbUVg4tJm5LR6riFB0bGVm0bbeNR9LMcjr+ICvlSc7A3hXJ0q+M/Pa5RFzKkeTHudEjgUlskTtSdf7RssYWoC3Wovn8tuq4yYs1ZBYqRT+2NjYFBAwf2xfFa2cFcicyY3dk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764643494; c=relaxed/simple;
-	bh=1Y3VEfM8S3497tV5n9uL037xpLb3zCLu6sng9dy1TCc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z/1yOm+vcp56idqrz3b8OdIHxNHN2ZQ4bf1DXBZofitAAYOCrSY31d3z7xlExj5+VhCarB6Nh6D49dXZfSZSTx1w96VIHSimtmfdh7qrTcDJLzVIVtS3zLizOZlTe5ikz9pfnzkYB1muMDC1FuXipeT8k3ZMfa7oEks8v1pEgzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IgM/DLN6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764661536; c=relaxed/simple;
+	bh=7T8myRjc+Pb+0ETvJh08Jf9Ff806HceW3hb8Q1x/j6k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=F5Qz/PugmNNYlsGynjatUOfJ98+EZMYHLwEv3FVfq4hrOG5K0YllboXfjp4XNKCuNOtS4yVHgKGQuvKmpLpcg2DDD1jMlF04XF/P0apFSxjkaPnDUWPsLOCBpR+AB18IbQ0hbnXrccvpB40NB1y1eBD8FzgaPh66wd+wWzOdZFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uum+u6Pg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IgM/DLN6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA26AC4CEF1;
-	Tue,  2 Dec 2025 02:44:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uum+u6Pg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A98BCC4CEF1;
+	Tue,  2 Dec 2025 07:45:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764643493;
-	bh=1Y3VEfM8S3497tV5n9uL037xpLb3zCLu6sng9dy1TCc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=IgM/DLN66paVkVH8+xUOT7o/T4I5il73J7QdbYg9R0QzD8QGhcJFp34sAHSYFPFoJ
-	 djwBgnwbbhHrySNkVqpUSdEBIy2+bhHtOAzCZYMyTMCgTyjm9x/lKo1jXWhYEFbOJz
-	 rWg366N/+CSDsxvLs5faPbc7ZPBrcwJKLD16jGpvNK9E35XOb6oYL8kJU4m+rGM1J7
-	 9673T+dXEQDC6T9N5jjre6aFKSMXlC/rxkCghNPE/RAj1t0tUkzfyLI1SN9RSxaSoj
-	 cigz18vfxJLpOfGzO66g9ZBQ6wSgTk59+ZIieZPOCEgYeAkCcTsNtTFYHARGPk2D8i
-	 VEMjj2xZiyobQ==
-Message-ID: <984729e3-7c63-47a0-b066-a0a826d4983c@kernel.org>
-Date: Tue, 2 Dec 2025 11:44:51 +0900
+	s=k20201202; t=1764661535;
+	bh=7T8myRjc+Pb+0ETvJh08Jf9Ff806HceW3hb8Q1x/j6k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Uum+u6Pg8UEO3DrnLNal+nADvZfzxb7CSpBlL63WhnsK0vXetr5Ny2s+i9NbGOF6p
+	 2e1S4DYXWzfkXePjRuCjdNoKCmPdDTR40iAUrBK9jA06l3u6CDbLGvQ8ummVD1xZxA
+	 yg22vYpd6TL4tiT1NX+0ktQsRnzRHjUfogF30/LNrB8T8/IaSrkv6TGOrTA5jzTEOP
+	 l1ofO5cthOELMSV4i05yTXvZOCmCaSCoYBO+ZfHWwuxWNNC4IT9Jks7+ozzUL2GpOX
+	 XlX37CssZcgZr10zJjeE/E70aN2qHQ8OK+RftG3E2i7UWDvidTTnocdXqMaTclAKIG
+	 XaIv5G5ehs/6g==
+Date: Tue, 2 Dec 2025 08:45:32 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Henry Tseng <henrytseng@qnap.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	Kevin Ko <kevinko@qnap.com>, SW Chen <swchen@qnap.com>
+Subject: Re: [PATCH v3] ata: libata: avoid long timeouts on hot-unplugged
+ SATA DAS
+Message-ID: <aS6ZHEdaeBeUg1t5@ryzen>
+References: <20251201094622.1475358-1-henrytseng@qnap.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] ata: libata: avoid long timeouts on hot-unplugged SATA
- DAS
-To: Henry Tseng <henrytseng@qnap.com>
-Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
- Kevin Ko <kevinko@qnap.com>, SW Chen <swchen@qnap.com>
-References: <20251201094622.1475358-1-henrytseng@qnap.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20251201094622.1475358-1-henrytseng@qnap.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 12/1/25 18:46, Henry Tseng wrote:
+On Mon, Dec 01, 2025 at 05:46:22PM +0800, Henry Tseng wrote:
 > When a SATA DAS enclosure is connected behind a Thunderbolt PCIe
 > switch, hot-unplugging the whole enclosure causes pciehp to tear down
 > the PCI hierarchy before the SCSI layer issues SYNCHRONIZE CACHE and
@@ -107,10 +104,12 @@ On 12/1/25 18:46, Henry Tseng wrote:
 > Suggested-by: Damien Le Moal <dlemoal@kernel.org>
 > Signed-off-by: Henry Tseng <henrytseng@qnap.com>
 
-Looks good.
+Thanks for the patch!
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Since the merge window is already open, and since this is not a strict bug
+fix, this will be queued up after v6.19-rc1 is out (targeting v7.0 / v6.20,
+whichever Linus decides to name it).
 
--- 
-Damien Le Moal
-Western Digital Research
+
+Kind regards,
+Niklas
