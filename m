@@ -1,17 +1,17 @@
-Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A2F28327200;
+Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1077A32939F;
 	Fri,  5 Dec 2025 07:20:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764919286; cv=none; b=TNXO3rycqoty0Ov8JRERIHcfZY/f+UmWgjy8fBI1wqJwnHQvvER1QMs9a44BWNO+/pEVBhi+HsMvBNX/4Et9UCD8vHZF+7/c+7HxGfL+c7fHEhWLpsykzEZx0iqBO/FrqoIivos2QjsNF0lbP29Hvz7fTKeh5ihfghOKstIQ/1s=
+	t=1764919286; cv=none; b=mZkmTJtT2gUYEHYy+4/T32aNoGcEBKi/egsPtJL04yHf3z661Ly8E5akTv5XvcwjqzsiYZ3I/tpME8Hh6foaQ0fXroKxubvFtstm+ae8z7G/AUkjKNEn5yqp6wVbDx3esLFlFRsHGWHjYZoyjpoSjiz4iGqvEuqyvUDMxjY8FoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1764919286; c=relaxed/simple;
-	bh=314TpUAkZxMvbV2pk3wlciVKMbaC2tgJL1bvCZ48Y0A=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=K/ZXH7TPhy13IvsmzFwY3FnmoFxG26nPQ4UBjfgsN0s1FXjQF6VLaCKTI7/hJvAsRz4XTf/V6Q1stWN4wmOtd4sEA3lWXQ8Z3wWEJ6/OQwKS9iHsvI37qUheTw8kq3rYZeFnNeW3ma9Ix2Wiz83hJeVbLek7EtTJQ7dnJb3w3rs=
+	bh=Vj5gFQhrZ6G/CwdWvsAMyxS9WmcbVQk6wQ8WAinYldk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=gRTu1x8YHMw2ZCY/vuqLvIBq3VCWRYCzuTbYx7SarvhvwE/KlTQsOuZB4UpCRnz35x0BNRCOpfHfvY/oTOjVSMDREx1alU4SgL5Jr+D1FC7gWNwsHVZCOu+UV2UUpV9cUkFINvA+P4J2tZ6utxaQDiCXFXgjNX120S7JkjiXnwI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
-X-AuditID: a67dfc5b-c45ff70000001609-c6-6932877297a9
+X-AuditID: a67dfc5b-c2dff70000001609-24-69328773c470
 From: Byungchul Park <byungchul@sk.com>
 To: linux-kernel@vger.kernel.org
 Cc: kernel_team@skhynix.com,
@@ -178,45 +178,44 @@ Cc: kernel_team@skhynix.com,
 	aliceryhl@google.com,
 	tmgross@umich.edu,
 	rust-for-linux@vger.kernel.org
-Subject: [PATCH v18 32/42] completion, dept: introduce init_completion_dmap() API
-Date: Fri,  5 Dec 2025 16:18:45 +0900
-Message-Id: <20251205071855.72743-33-byungchul@sk.com>
+Subject: [PATCH v18 35/42] dept: introduce event_site() to disable event tracking if it's recoverable
+Date: Fri,  5 Dec 2025 16:18:48 +0900
+Message-Id: <20251205071855.72743-36-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20251205071855.72743-1-byungchul@sk.com>
 References: <20251205071855.72743-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0xTZxjH955bTytNTioZZ7qFrQuZ01DBiHk+LNPEXV4zjVO3fdAls5ET
-	OaEgaS2XMZPWiVydTU2L0o2b2jE4AjlgJkK1A+xwiBY10k0Bi4wNC2NWLqHIXGHz2y/P//n/
-	ni8PS2ru06tYMfOwYMzUG7SMilJNxtQmmgo3iEnDo0q4Z/VSMDNdRMG3TRIDi64fFVAkn6Gh
-	Z+AoBf7GBgTDM0UI5hZcJCzafQqYnr+vAIcVwXOPD4Gz305CwH+VBKnVSkCoK4zAERxloHzc
-	SsGUuwzB5HA7DQOzEwjco/8QMOotRBBy/s3AQt8tEsodfgQ1wUESwuMPEbT6hhD8brtIwl/N
-	DPTfCCH4+mwTA87vZAraHl5WQH/oGQEPnHYCGuQd0GurJaK3GHBcaCdg3l2vALclAUbqKhQw
-	eNJBQePkLRquD92jITRmZ0D+9RqC6btBAqSyMRLkR9HA89s6qDl+joIzlQ8Y6PBcp8B3aYSA
-	suaLNAxJz2mwuOZo8Ht7aWj6I0BAr6+H2pKKC24vMliqlBBeiNgRLrBFqWtiisTHWnKwZ7aa
-	wr/U8vhccYTAbRWDClwtm3FL3Vp8tmOcwDXhGRrL9cUMlsN2xceJe1XvpAoGMVswrn93vyrt
-	fJOLyfK8ndv91IYsKBJfgpQsz23kT7eeoF5wsDeMlpjh3uIDgXlyiWO51/mWE2N0CVKxJHcn
-	ni+c/yYasOxKbhf/+GTK0g7FJfDlQfdyV81t4mfLuv93xvMNzd5ljzI6dwxEllnDpfBVJXPL
-	Tp77XslfqW5F/xVe4X+qC1A2pK5GL9UjjZiZnaEXDRt1aXmZYq7uwKEMGUVfzn3k2b5LKOzf
-	04k4Fmlj1N6cZFFD67NNeRmdiGdJbax6wpAkatSp+rwvBeOhL4xmg2DqRKtZShun3jCbk6rh
-	DuoPC+mCkCUYX6QEq1xlQSuclwcMTz4yp5jvVuYX19HmI7oE6dPGN2ML8O6afMtW70pN0aAu
-	uXT3nkef3Jz+ak3G/sdJ78esiSRU0duPVb3286b2bX3pI5+Xfmh8ujkrd1/LTsn1cofId74X
-	t/jEl6/R9um24kBp/A8TPfZTf5oPbpmq+CC9Szr6KhR/9oZ1rj1JS5nS9MlrSaNJ/y8NsqoD
-	bgMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAAzVSbUxTZxT2vV+9NFZuKgl3LgtLE2NmgoKh5sw5Hf4Yb7bMaMziNBqp80Yu
-	lI+0CpQELWADotParK1aFWTSGKiCrQ5QG7Boo2MEGCr4gUDSsVVAFmhLWqisYPxz8pzzfOT5
-	cVhS3kKvYsW8I4ImT6VWMFJKuv2rimRN5QYxpdX4GVQZjsPrYR8Nz8s6KAgGqii41ORgIGpr
-	kUCV8wINjwfKKei92YhgOFiFYHbORoKhbYGCqMkrgUD4lQTMZQgW3F4Elj4TCYO97SQ4bpcR
-	MNP8noHxzmkE5lEfA1Z/GQVT9tMILo7ZJOB/lAGTw/doWBj6h4CB0AQCu+89Ab6OSgRRSw7U
-	1Llidst/DMx195BgNfciuDo6RMK0fwTBbe8bBO7r5Qz8bbxDQr9vBTwNTjHwxHyKgcm+SwS8
-	a2agttxNQ9+f4wgu20wIxl66Caj4rYkBy2UnBW0jdyXQNz5PwGuLiYBG5w8wbB+joMtYR8Tq
-	xlS3EsFmrSBi418CzDfuERC2N0i+qUd41nCGwg2u3wls+CvKYMcVB8JzERPCgfoKEhuMsbVz
-	YorEJ1xFuL5rgsGR4DMGu0O1FP6jjsfXTkYIfK47GbddHJLsSN8r3XxIUIuFgmb9lkxpVn2T
-	jSlwf1H8cMaI9CiSVI3iWJ5L40e7ptEiZrg1/OBgmFzECdznvOuXMboaSVmS60/iK8NnYgTL
-	ruR28m/PKhc1FLeat47al7wybiMfOv2Q+pCZxDc2dyzlxMXu5oHIEpZzSr6mepY2ImktWtaA
-	EsS8wlyVqFau0+Zk6fLE4nU/5+c6Ueyd7KXz51pRoD/DgzgWKZbLOopSRTmtKtTqcj2IZ0lF
-	gmxCnSLKZYdUuhJBk39Ac1QtaD3oU5ZSJMq+2y1kyrnDqiNCjiAUCJqPLMHGrdKj4/md0/s3
-	WnhdyX1vaFw4tvqqN/vr3LMuPx0OvTp/YVt556Zfv9WXlkhd4OH2rHek1/I9p5KzD2ZHrDjJ
-	v4tVzswlNBpbdJOYOJ8RMKS074j/XnTqg/a0lfplax37hn5892Bhq3JXfOikhyh6Ef3kJ++X
-	baU1L05sl8TTTYZMBaXNUqWuJTVa1f8LVNtlSgMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0xTdxjG/Z9r21lzUrycqRmuC9GgKDidr4tZDGo4H5ZsifGDmxs0cCIn
+	K5e0yGUZsWYr18EQpQYR26qUroWFlchNKxUHKKbITYvKraMBpCBKAC3IWK3h2y+/J8/zfnlF
+	uMxFbhYJiSm8KlGhlFMSQjK91himzt4rhI8thcPAsIeE5bJ6GnJspSRoG1cImPM9p6HkHIIV
+	exuC/q5mHLz3ZhGUuD0UzJh+R/CiNQpWBscxcC1MIdBfq6XAq3tFgdE9iEOvZx30zc9QUF5W
+	jEBXbiOgcaSJhodF1zDQ/b0JfCYLDSZNCLxzR0CbdZwG71gxBcPtWSTUa0ZosD1tRTDX58bA
+	NvqEBPuznXDb/oCAtoZ/MehyPCThufMPGh41VZNQ4erGwLtgwqHHYcBg7HEWBn/anRS0GTbC
+	zWYtgvYCBwbZE7coGCicJKDCPE3ChR4DBYuDDSQ8Kdb7qdJ/0FnXQUPHYgcG1m4C8rU6Ampe
+	V1Lw28B+KOyMgjmrhYKy1iH68GGu6moV4uYqfsU5bZGf7AsGgjvvDOMaLw/SnMF2hqs1h3LX
+	b7/AOOPsPMnZLLkUZ1yawLmXnZ001+g+yHn6LvlDTQn+7affSQ7F8UohlVft+SpGEt+7vEgm
+	j36SPjNUQGhQBZuHxCKW2cd6pkuJVa7OvUq/Z4rZzvb3+/D3vJ7ZxtYWjJF5SCLCmd5gNttX
+	GAiCGJ69cnEyUCCYEHbe5Q14KfMF+7ryGfVhNJi11jgCXuz3Ja7FAMuY/aw+701glGX0Yva+
+	Xoc+FD5m75r7iSIkNaA1FiQTElMTFIJy3+74jEQhfXdsUoIN+d/NlPnu+wY023W8BTEiJF8r
+	daRFCDJSkarOSGhBrAiXr5dOKcMFmTROkfEzr0qKVp1R8uoWtEVEyDdJ9y6kxcmY04oU/iee
+	T+ZVqykmEm/WoBuZa5S6V0tZW3O+iZ0JwXdFdhtvHT1SMPF08pdHO86W+Zqiq0/uErojg2Nc
+	J0au/LXkndr2gyR0PvP8dF2h+ejndfX/pZVrOsY3dGkPrnPnJP2oNH/50bGhY+nRzpTyqilF
+	tjhkuDThs/yqrXdOJkUdyL832v522Rv7tuZC7tdBb/45JZET6nhFRCiuUiv+B9GMYdJqAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSe0hTcRTH+93XrqPlZQldCixGkfS0JweSyCi6BEX0TyH0GHbJi5vKZj6i
+	h9OGZvlotWlOzayt8FGmVpqMhpFkZW6tmlhLpWXZNMuctum0teifw/d8vud7OH8cGpe2kAtp
+	ISmVVyXJFTJKTIj3bslZrc5dL0R/tc6DPO1Z+NDnJuGdxkqAdzyPgPK7dRQEjA9FkNd4lYRn
+	zmwCbHdqEfR58xBMThlx0LbOEhDQdYhg3PdeBHoNgllLBwKDXYdDj+0xDnXNGgx+NcxQ4Hky
+	hkA/4KagZEhDwKj5IoKyQaMIhp7ugpG+NhJmXV8wcE4MIzC7ZzBwW3MRBAyJcK26KRg3/KBg
+	qqsbhxK9DcH1ARcOY0P9CJo7PiKw3M6m4HPxfRwc7nnwxjtKQaf+AgUj9nIMvjdQUJVtIcH+
+	0oOgwqhDMNhrwSDnxl0KDBWNBLT2PxKB3TONwQeDDoPaxj3QZx4k4EVxNRY8Nzh1bwEYS3Kw
+	YPmKgb6+DQOfuUa0zYS4SW0hwdU0PcA47esAxdVV1iFuyq9D3LgpB+e0xcH2yfAozp1rSudM
+	L4Ypzu99S3GWiSqCe17NcjfP+zHuUtdqrrXMJdoXGyeOOcYrhDRetXbrUXGCI+AnUz5FZox+
+	LCCykInNR2E0y2xk689Xiv5qilnO9vT48L86glnCNhUMkvlITOOMYzGb6ysMGfMZni2/8i0U
+	IJhlrNfpCXEJs5n9eauX+rd0MVvbYA3xsCDXO/0hLWU2sdfyJ8liJK5Cc2pQhJCUppQLik1r
+	1IkJmUlCxpr4ZGUjCv6T+fT0pRY07tjVjhgayeZKrOnrBCkpT1NnKtsRS+OyCMmwIlqQSo7J
+	M0/yquQjqhMKXt2OFtGEbIFk9wH+qJQ5Lk/lE3k+hVf9dzE6bGEWshzOmLDEHhcKpk/cj+l+
+	WFi2YYcp+/ISl+9df1T4mbiE3wM7iqoziravOjIWV7T0YvNkVn1vvG95aaTnW+erzfG/04Sd
+	j1qe3oq64kgdGslvO5B50KSMfnNopsu0Ni71qnlamRxT2qI2O7u9tm7XfqMmnV6199TKiMdE
+	zA17abgtUUaoE+TrVuAqtfwPz1lkY0sDAAA=
 X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -224,157 +223,128 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Currently, dept uses dept's map embedded in task_struct to track
-dependencies related to wait_for_completion() and its family.  So it
-doesn't need an explicit map basically.
+With multi event sites for a single wait, dept allows to skip tracking
+an event that is recoverable by other recover paths.
 
-However, for those who want to set the maps with customized class or
-key, introduce a new API to use external maps.
+Introduce an API, event_site(), to skip tracking the event in the case.
 
 Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- include/linux/completion.h | 40 +++++++++++++++++++++-----------------
- 1 file changed, 22 insertions(+), 18 deletions(-)
+ include/linux/dept.h     | 30 ++++++++++++++++++++++++++++++
+ include/linux/sched.h    |  6 ++++++
+ kernel/dependency/dept.c | 20 ++++++++++++++++++++
+ 3 files changed, 56 insertions(+)
 
-diff --git a/include/linux/completion.h b/include/linux/completion.h
-index 4d8fb1d95c0a..e50f7d9b4b97 100644
---- a/include/linux/completion.h
-+++ b/include/linux/completion.h
-@@ -27,17 +27,15 @@
- struct completion {
- 	unsigned int done;
- 	struct swait_queue_head wait;
-+	struct dept_map *dmap;
- };
+diff --git a/include/linux/dept.h b/include/linux/dept.h
+index c796cdceb04e..7b822caee874 100644
+--- a/include/linux/dept.h
++++ b/include/linux/dept.h
+@@ -239,6 +239,31 @@ extern void dept_task_exit(struct task_struct *t);
+ extern void dept_free_range(void *start, unsigned int sz);
+ extern void dept_mark_event_site_used(void *start, void *end);
  
--#define init_completion(x)				\
--do {							\
--	__init_completion(x);				\
--} while (0)
-+#define init_completion(x) init_completion_dmap(x, NULL)
++extern void disable_event_track(void);
++extern void enable_event_track(void);
++
++#define event_site(es, evt_func, ...)					\
++do {									\
++	unsigned long _flags;						\
++	bool _disable;							\
++									\
++	local_irq_save(_flags);						\
++	dept_event_site_used(es);					\
++	/*								\
++	 * If !list_empty(&(es)->dept_head), the event site can be	\
++	 * recovered by others.  Do not track event dependency if so.	\
++	 */								\
++	_disable = !list_empty(&(es)->dep_head);			\
++	if (_disable)							\
++		disable_event_track();					\
++									\
++	evt_func(__VA_ARGS__);						\
++									\
++	if (_disable)							\
++		enable_event_track();					\
++	local_irq_restore(_flags);					\
++} while (0)
++
+ extern void dept_map_init(struct dept_map *m, struct dept_key *k, int sub_u, const char *n);
+ extern void dept_map_reinit(struct dept_map *m, struct dept_key *k, int sub_u, const char *n);
+ extern void dept_ext_wgen_init(struct dept_ext_wgen *ewg);
+@@ -302,6 +327,11 @@ struct dept_event_site { };
+ #define dept_task_exit(t)				do { } while (0)
+ #define dept_free_range(s, sz)				do { } while (0)
+ #define dept_mark_event_site_used(s, e)			do { } while (0)
++#define event_site(es, evt_func, ...)					\
++do {									\
++	(void)(es);							\
++	evt_func(__VA_ARGS__);						\
++} while (0)
  
+ #define dept_map_init(m, k, su, n)			do { (void)(n); (void)(k); } while (0)
+ #define dept_map_reinit(m, k, su, n)			do { (void)(n); (void)(k); } while (0)
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 5834555a3d09..a1737631ff54 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -879,6 +879,11 @@ struct dept_task {
+ 	 */
+ 	int				missing_ecxt;
+ 
++	/*
++	 * not to track events
++	 */
++	int				disable_event_track_cnt;
++
+ 	/*
+ 	 * for tracking IRQ-enable state
+ 	 */
+@@ -916,6 +921,7 @@ struct dept_task {
+ 	.stage_wait_stack = NULL,				\
+ 	.stage_lock = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED,\
+ 	.missing_ecxt = 0,					\
++	.disable_event_track_cnt = 0,				\
+ 	.hardirqs_enabled = false,				\
+ 	.softirqs_enabled = false,				\
+ 	.task_exit = false,					\
+diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+index 07d883579269..3c3ec2701bd6 100644
+--- a/kernel/dependency/dept.c
++++ b/kernel/dependency/dept.c
+@@ -2573,6 +2573,23 @@ static void __dept_wait(struct dept_map *m, unsigned long w_f,
+ 	}
+ }
+ 
++void disable_event_track(void)
++{
++	dept_task()->disable_event_track_cnt++;
++}
++EXPORT_SYMBOL_GPL(disable_event_track);
++
++void enable_event_track(void)
++{
++	dept_task()->disable_event_track_cnt--;
++}
++EXPORT_SYMBOL_GPL(enable_event_track);
++
++static bool event_track_disabled(void)
++{
++	return !!dept_task()->disable_event_track_cnt;
++}
++
  /*
-- * XXX: No use cases for now. Fill the body when needed.
-+ * XXX: This usage using lockdep's map should be deprecated.
+  * Called between dept_enter() and dept_exit().
   */
--#define init_completion_map(x, m) init_completion(x)
-+#define init_completion_map(x, m) init_completion_dmap(x, NULL)
+@@ -2585,6 +2602,9 @@ static void __dept_event(struct dept_map *m, struct dept_map *real_m,
+ 	struct dept_key *k;
+ 	int e;
  
- static inline void complete_acquire(struct completion *x, long timeout)
- {
-@@ -48,8 +46,11 @@ static inline void complete_release(struct completion *x)
- }
++	if (event_track_disabled())
++		return;
++
+ 	e = find_first_bit(&e_f, DEPT_MAX_SUBCLASSES_EVT);
  
- #define COMPLETION_INITIALIZER(work) \
--	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait), }
-+	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait), .dmap = NULL, }
- 
-+/*
-+ * XXX: This usage using lockdep's map should be deprecated.
-+ */
- #define COMPLETION_INITIALIZER_ONSTACK_MAP(work, map) \
- 	(*({ init_completion_map(&(work), &(map)); &(work); }))
- 
-@@ -90,15 +91,18 @@ static inline void complete_release(struct completion *x)
- #endif
- 
- /**
-- * __init_completion - Initialize a dynamically allocated completion
-+ * init_completion_dmap - Initialize a dynamically allocated completion
-  * @x:  pointer to completion structure that is to be initialized
-+ * @dmap:  pointer to external dept's map to be used as a separated map
-  *
-  * This inline function will initialize a dynamically created completion
-  * structure.
-  */
--static inline void __init_completion(struct completion *x)
-+static inline void init_completion_dmap(struct completion *x,
-+		struct dept_map *dmap)
- {
- 	x->done = 0;
-+	x->dmap = dmap;
- 	init_swait_queue_head(&x->wait);
- }
- 
-@@ -136,13 +140,13 @@ extern void complete_all(struct completion *);
- 
- #define wait_for_completion(x)						\
- ({									\
--	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	sdt_might_sleep_start_timeout((x)->dmap, -1L);			\
- 	__wait_for_completion(x);					\
- 	sdt_might_sleep_end();						\
- })
- #define wait_for_completion_io(x)					\
- ({									\
--	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	sdt_might_sleep_start_timeout((x)->dmap, -1L);			\
- 	__wait_for_completion_io(x);					\
- 	sdt_might_sleep_end();						\
- })
-@@ -150,7 +154,7 @@ extern void complete_all(struct completion *);
- ({									\
- 	int __ret;							\
- 									\
--	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	sdt_might_sleep_start_timeout((x)->dmap, -1L);			\
- 	__ret = __wait_for_completion_interruptible(x);			\
- 	sdt_might_sleep_end();						\
- 	__ret;								\
-@@ -159,7 +163,7 @@ extern void complete_all(struct completion *);
- ({									\
- 	int __ret;							\
- 									\
--	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	sdt_might_sleep_start_timeout((x)->dmap, -1L);			\
- 	__ret = __wait_for_completion_killable(x);			\
- 	sdt_might_sleep_end();						\
- 	__ret;								\
-@@ -168,7 +172,7 @@ extern void complete_all(struct completion *);
- ({									\
- 	int __ret;							\
- 									\
--	sdt_might_sleep_start_timeout(NULL, -1L);			\
-+	sdt_might_sleep_start_timeout((x)->dmap, -1L);			\
- 	__ret = __wait_for_completion_state(x, s);			\
- 	sdt_might_sleep_end();						\
- 	__ret;								\
-@@ -177,7 +181,7 @@ extern void complete_all(struct completion *);
- ({									\
- 	unsigned long __ret;						\
- 									\
--	sdt_might_sleep_start_timeout(NULL, t);				\
-+	sdt_might_sleep_start_timeout((x)->dmap, t);			\
- 	__ret = __wait_for_completion_timeout(x, t);			\
- 	sdt_might_sleep_end();						\
- 	__ret;								\
-@@ -186,7 +190,7 @@ extern void complete_all(struct completion *);
- ({									\
- 	unsigned long __ret;						\
- 									\
--	sdt_might_sleep_start_timeout(NULL, t);				\
-+	sdt_might_sleep_start_timeout((x)->dmap, t);			\
- 	__ret = __wait_for_completion_io_timeout(x, t);			\
- 	sdt_might_sleep_end();						\
- 	__ret;								\
-@@ -195,7 +199,7 @@ extern void complete_all(struct completion *);
- ({									\
- 	long __ret;							\
- 									\
--	sdt_might_sleep_start_timeout(NULL, t);				\
-+	sdt_might_sleep_start_timeout((x)->dmap, t);			\
- 	__ret = __wait_for_completion_interruptible_timeout(x, t);	\
- 	sdt_might_sleep_end();						\
- 	__ret;								\
-@@ -204,7 +208,7 @@ extern void complete_all(struct completion *);
- ({									\
- 	long __ret;							\
- 									\
--	sdt_might_sleep_start_timeout(NULL, t);				\
-+	sdt_might_sleep_start_timeout((x)->dmap, t);			\
- 	__ret = __wait_for_completion_killable_timeout(x, t);		\
- 	sdt_might_sleep_end();						\
- 	__ret;								\
+ 	if (DEPT_WARN_ON(e >= DEPT_MAX_SUBCLASSES_EVT))
 -- 
 2.17.1
 
