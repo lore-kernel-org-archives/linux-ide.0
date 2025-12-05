@@ -1,17 +1,17 @@
 Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 993AC2F744B;
-	Fri,  5 Dec 2025 07:20:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 11EF8326D6E;
+	Fri,  5 Dec 2025 07:20:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764919249; cv=none; b=UGudJUu3gW5Yw5vkBJRk0bWntM6eVHIAx3D7QMzdkMv8VxlwpxzDbitPcBB28xIrQOXrnYdpz8jtaq2cjqe8Hk+xiqjTwi7zr+trByoMspTw//xlYfKrs+GYD0SKOQ+TFqa6353z97JrNM8h5UGaWrOhR7+rY1uM0MU/RTnIyT8=
+	t=1764919266; cv=none; b=iMJn7PtcDV8TkAgwe4XWDEjr3N70/cu3PyNGRpGpH0gB4q/XSZzPk6fS7+KaZ3+L4Y5e5Hu5AKOZsHigmjSkjY/0qChqmnGRIa5nFzEq4PyDPzrkF4eYh6N31ngC+8ykTRR7IZ05LR3MhqTUQF65f4dTGywoqpHWNPoM/o6LdX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764919249; c=relaxed/simple;
-	bh=U+cEpt47wB7+ls1g6+mCT3YTUPUBHz5JwGW5fBJJJYA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=orRukqIMjm4uyLS2hHidxlD6JXa5axA1XNGlrGAHlmd5hNmdqfBqbJ2sCxG1VaM1NgVEKeA2QSDBdQAfqSQRqP8Gequ6x7OlkPykX5NTynaeFFqSdn/t9HOBhl9dlin8R0tHUIQelHng7t/2kEsZTL1q+cIje2/M0vaBXgnna4o=
+	s=arc-20240116; t=1764919266; c=relaxed/simple;
+	bh=HQb+FieD5UTtfcyEdgT0lo4GMUWAEhmBX2C4Cisefmo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=cKQHpp97UyooWTp0HYe2KAkBwaoDvDya4sbUqyXcy0XCRA481jgBRDytI3K+Ul3tUUfSPifbEMC8OqR6d3V9O6K9563MhcHe7l9dO6Udeu1RmH5yWZXJUSTYSNHS9bUYKlC0uLYTkx+M7qFyld92x4UBz5jq1Wkf1r44HpGYuYE=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
-X-AuditID: a67dfc5b-c45ff70000001609-79-6932876fd8f6
+X-AuditID: a67dfc5b-c2dff70000001609-2e-6932877153e0
 From: Byungchul Park <byungchul@sk.com>
 To: linux-kernel@vger.kernel.org
 Cc: kernel_team@skhynix.com,
@@ -178,45 +178,44 @@ Cc: kernel_team@skhynix.com,
 	aliceryhl@google.com,
 	tmgross@umich.edu,
 	rust-for-linux@vger.kernel.org
-Subject: [PATCH v18 21/42] dept: make dept able to work with an external wgen
-Date: Fri,  5 Dec 2025 16:18:34 +0900
-Message-Id: <20251205071855.72743-22-byungchul@sk.com>
+Subject: [PATCH v18 27/42] dept: assign dept map to mmu notifier invalidation synchronization
+Date: Fri,  5 Dec 2025 16:18:40 +0900
+Message-Id: <20251205071855.72743-28-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20251205071855.72743-1-byungchul@sk.com>
 References: <20251205071855.72743-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTdxjF/d97/7eXjrqbivEKyZxN0GRxCILL49tCQrbcD9No/ODismgj
-	d3JjS0kRkCVGhCJNg5U1qQzQUSBUJ8xiO5QKVd7GNAYBFSkIlo4Kw1JJoDBRaoc1fvudc55z
-	Pj0MKR/GsYyYeVLQZipVClpKSQPRtV9mlWwTE222taAvPgOjHh+GhaCegku2Rhr09goMngU9
-	gmJnmIKQqUcCwaVnEjCfRRB29SBw998lwd81h8Ds9dFQPn2WgllrKYLKySoJBDytGMJjUwT4
-	2ksQhC6egOpaBw1ve/tIqPGOkTA3PY7AdbWQhhdlzSQ8WZilITBwiYBXTTRYCl0YiupsNFy8
-	bKfAOX5bAgP+ZQIa7HvBY52koKr8XwLMf7QSYC2Ih6rexxiWvUkQtmjgeqAPg3/SRIPn73MY
-	bhWMS8A+/BeC4BMvAfaJpxjaXPcp0IeCCHpa/iGgtKkZw/PGMIb+9gcYbFNuAh703KPgfuXv
-	FNQPDRCwaIyD/l/OY3CXvUDgX7SSqen8NcdNgi9+FKL5xt8aEf/2jQnxwfoiki8uW5FdM7Mk
-	r3Pk8a5FC8U7K8ckvO7OiIS32HN4XXcA83Vt0wRfM7eA+RH/nv0Jh6W70wWVmCtot359VJox
-	MWgksjpTTw2OB3EBcqYYUBTDsSlc32wD/ZFvOK9HmGY3c273EvmeY9jPOcf5SWxAUoZkH2/g
-	SpaMkWANu5e7qbtAGRDDUGw8p6tNfm/L2K+4y20NxIfNDVxDU3vkPGrFNw+9ibCc3c5VG/6L
-	bHJsdRR35UIIfSis5zquuqkyJLOgVdeQXMzMVStFVUpCRn6meCrhmEZtRysPZz29/EMLmus/
-	2IlYBimiZe15SaIcK3Oz89WdiGNIRYxsRpUoymXpyvyfBa3miDZHJWR3ojiGUqyTbVvMS5ez
-	x5UnhROCkCVoP6YEExVbgHaqW6iX3+6aqBiuW/vJN6LGeiixPGwYuv3yu1GQfTpflBbcEl+T
-	Mp+s+X7Zt1p3YD/p29edZtwkGU3+7M+pLlP1w4pfp2ML01hboWnH65/UfXE7Vql+zGk+Y5w/
-	ijaqdu2Wzbzzpt44lhttPFeXisdOW16hZIe5u0MRHIl9vaZ0UEFlZyiTviC12cr/AUgBArZs
-	AwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSe0hTcRTH+93XrqPVZQldih4selBo9j7Rg+ofL4IVRUUR5ciLDueDzbQF
-	oXMuzfI12KSmaaaj3Cqf6bLZcGSlRdpcSmkaLsvUFNsUX9k0+ufwOd/v9xzOH4fGxbXkCloW
-	E88rYqRyCSUkhEf3aQJi07bLggz6jZCuTYKuHjcJH9V2AryedALyn1gomDXWCiC98jYJrztS
-	CGh9bEbQ401HMDFtxEFrnSNgVtckAM/kZwHo1QjmbE0IDG06HDpbX+BgqVZj8Lv8DwWDjjEE
-	+q9uCvIG1ASMmG4huNNvFMDAy2AY7qknYa77OwYd40MITO4/GLjtaQhmDVFQWFzlGzeMUjD9
-	7j0OefpWBPe+duMwNtCLoLrpCwLbgxQKvuXU4OB0L4F27wgFb/Q3KRhuy8fgVzkFRSk2Etre
-	DiIoMOoQ9H+yYaC5/4QCQ0ElAdbeZwJoG5zBoMugw8BcGQo9pn4CWnKKMd+5vlTFcjDmaTBf
-	+YGB/lE9BpOmMsGhUsRNaLMIrqzqKcZpP8xSnOWuBXHTUzrEeUo1OKfN8bWOoRGcS61K5Epb
-	hihuyuuiONt4EcE1F7NcyY0pjMt9F8BZ73QLjh8+J9wfzstlCbxi68EwYWSfKwuLazx0xdXr
-	IZORdWcG8qNZZidbYX1MzTPFbGQ7OyfxefZn1rJVmf1kBhLSOONcw6ZNZi0Yy5hQ9mlqNpGB
-	aJpg1rOpxTvmZRGzmy14bsb+7VzDmsvtC3E/n67vmFpgMbOLLcyYIHOQsAgtKkP+spiEaKlM
-	vitQGRWpipFdCbwUG12JfO9kujaTW4c8zuBGxNBIslhkT9wmE5PSBKUquhGxNC7xFw3Jg2Ri
-	UbhUdZVXxF5UXJbzyka0kiYky0UhZ/gwMRMhjeejeD6OV/x3MdpvRTLaG5Jo+bTJ+fCAquHD
-	q4lTEbuVZ1fVD46111ecb7h23d/sdVwYOaJ1IsmJ1RtOvj94+octylzeUtIXdq7OVZP6TD7t
-	CA7JRIEBo+wW0brstynZ2vF4lSSzPfn1TJc9eEBsilv6M2l0T0W+zZUwGldXqHbYDteWNvel
-	NR8rOeat00gIZaR022ZcoZT+BZditctKAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTdxTG97/vdHa56Ui4g0y0iS4x46VG3MnijFmWeT9oYkL0g4bgVW6g
+	oRRseSkuy3CTwkAaNFIDVVsQEQEdFjdBIVZwGhht7hBoQwpDGUUisIhQoRbctcYvJ7+c5znP
+	yUkOg6u8ZCyj1eeLBr2gU1MKQjG/oT7hRNl2bbLZ+zWUO2tJ8En3cXjVvk7BhdlTBNQFbDTM
+	/3OPhLfjMxh4g3MImv5dx2DNmg32hg7ZViMhWJydRDBd/TsOjp97SLhkO4cgMNaDgfWSk4Cu
+	ybs0+K3nMGh17oe/qhswOZwC660YsF34BZPLc7m4n5AQfqqBt45c6J8YJeFOySQNS8NPMWg7
+	E8DBOSX36s2NBNRe9lNQvraE4FHnMwyGWiUCfpvxYXDV+zcGQUscSGerSLix0EDBkMuBwfUe
+	NwXX7dcQmF+tk/C4yiV7lxZwKHt+jwK3zUPC1eZ5EkLjnSS4/xigYSA0gEFNuFze8zCIw5uV
+	ixRYPHthpX1KPm9JAzfWRhHY/pyg9+zhX5daCL50aI3i2y63Ib5v7j+cDy2PUPxZdwLfVTdO
+	8w5nAd/RvI2/0j2L8WMvvuGdLb9SfMX8MMb7R7spfsHjofnevnJ0YOthxa4MUactFA1Ju48q
+	sjwtLpTn/cr02G+nStBEQgWKYjh2B9ct3UYfOBSW8HdMsV9wPt9qhKPZTVxHVYCsQAoGZ5/E
+	c2WrlojwKZvGufx3ZIFhCHYL5280vUMlu5MLTBHvI+O51nZXxB0lt2u8oQir2BTOXvE6Esmx
+	9ijuyuob+v3AZ9yDZh9RjZQO9FELUmn1hTmCVrcjMatYrzUlHs/NcSL53Zp+DB/pRItSai9i
+	GaTeoHQVabQqUig0Fuf0Io7B1dHKOV2yVqXMEIpPiobcdEOBTjT2ojiGUMcotweLMlRsppAv
+	Zotinmj4oGJMVGwJirevLOubD1VuLNmn3pXZMOqp7e/QHOi625h+2zIopdYvz26mS9fzfdOV
+	Kec3qk+82M1+e7rHVPfxoS/33kwvur+cXGlSxy1ufhkw3/opLTHt5M1s3akf8M93Wo2L31GD
+	qfmPNgWFttTwJ8eiv9//TLhoPzySqWua7rKPnbEelMgks5owZgmabbjBKPwPKEZlr2oDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbWxLcRTG/e+9vb0rlasWrpKgMhOy2cTmBPH2wW4ImS+YeCu72Zp1Q8t0
+	QqyrZjUvmUa7UGxqa6Qbm+6FkUZtDJuyKdbQqZcqy8aEzrTrNjXx5eR3zvOcJ+fDoXBRA09M
+	yXL2c4ocqVxCCgjB+iWauH2FC2QJbdVRoNMeBY/Xx4NXagcB/QEdAReqq0gYMt3kg852jgeP
+	OgsIaL9eicDbr0MwMGjCQds4QsCQvoUPgeAbPhjUCEbsLQiMHXoc3O13caiqU2Pws2aYhJ7m
+	HwgM730klHSrCeiznERw3m/iQ/eDFPjqvcODka7PGHT+6kVg8Q1j4HMUIhgyZkGpuTaybvxO
+	wqDzGQ4lhnYEl9934fCj+x2Cupa3COxXC0j4VFyPg8s3Hl7095Hw2HCChK8dFzD4VkNCWYGd
+	Bx1PehBcNOkR+F/bMdBcqSbBeNFGQOO723zo6Alj4DHqMai0rQOvxU9AW7EZi5wbcd2YDKYS
+	DRYpXzAwXLuDQdBi5a+oQOyA9jTBWmsbMFb7fIhkqy5VIXYwpEdsoEKDs9riSNvc24ezx2oP
+	shVtvSQb6n9JsvZfZQTbambY8uMhjD3jjGMbz3fxU1duESxN5+SyXE4xf9lOQeZTqwPt7Vyk
+	eugpJfPR27giFEUx9EImFG7H/zJJxzJud3CUo+kZTO0pP68ICSicdk1nCoOnR4WJ9DbG4bkZ
+	ESiKoGMYT7nqLwrpZMb/kfgXOZ2prHGMuqMiY0NnaJRFdBJTWjTAK0aCMjTGiqJlObnZUpk8
+	KV6ZlZmXI1PF796TbUORb7IcCZ+5hQKulCZEU0gyTug4mCgT8aS5yrzsJsRQuCRa2CtPkImE
+	6dK8Q5xizw7FATmnbEJTKUIyWbhmE7dTRGdI93NZHLeXU/xXMSpKnI/ikz+Yr4rLVcsnZYjn
+	TE07Xna/dcLqkHfK4iezUw8NhrfrhrepVc76fKO1PmlgGtpqnXcv+1Hu7Gazxh1ucs90f451
+	DGvH2sR9rWdTsMOr1m4Onmp4ecSnr2y0WgNxydPymt/EuxPTahI2uFy7nHUxv+t+L97YVaAR
+	0/xZcudSrYRQZkoT5+IKpfQPavH1GEkDAAA=
 X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -224,221 +223,217 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-There is a case where the total map size of waits of a class is so large.
-For instance, PG_locked is the case if every struct page embeds its
-regular map for PG_locked.  The total size for the maps will be 'the #
-of pages * sizeof(struct dept_map)', which is too big to accept.
+Resolved the following false positive by introducing explicit dept map
+and annotations for dealing with this case:
 
-Keep the minimum data in the case, timestamp called 'wgen', that dept
-uses.  Make dept able to work with the wgen instead of whole regular map.
+   *** DEADLOCK ***
+   context A
+       [S] (unknown)(<sched>:0)
+       [W] lock(&mm->mmap_lock:0)
+       [E] try_to_wake_up(<sched>:0)
+
+   context B
+       [S] lock(&mm->mmap_lock:0)
+       [W] mmu_interval_read_begin(<sched>:0)
+       [E] unlock(&mm->mmap_lock:0)
+
+   [S]: start of the event context
+   [W]: the wait blocked
+   [E]: the event not reachable
+
+dept already tracks dependencies between scheduler sleep and ttwu based
+on internal timestamp called wgen.  However, in case that more than one
+event contexts are overwrapped, dept has chance to wrongly guess the
+start of the event context like the following:
+
+   <before this patch>
+
+   context A: lock L
+   context A: mmu_notifier_invalidate_range_start()
+
+   context B: lock L'
+   context B: mmu_interval_read_begin() : wait
+   <- here is the start of the event context of C.
+   context B: unlock L'
+
+   context C: lock L''
+   context C: mmu_notifier_invalidate_range_start()
+
+   context A: mmu_notifier_invalidate_range_end()
+   context A: unlock L
+
+   context C: mmu_notifier_invalidate_range_end() : ttwu
+   <- here is the end of the event context of C.  dept observes a wait,
+      lock L'' within the event context of C.  Which causes a false
+      positive dept report.
+
+   context C: unlock L''
+
+By explicitly annotating the interesting event context range, make dept
+work with more precise information like:
+
+   <after this patch>
+
+   context A: lock L
+   context A: mmu_notifier_invalidate_range_start()
+
+   context B: lock L'
+   context B: mmu_interval_read_begin() : wait
+   context B: unlock L'
+
+   context C: lock L''
+   context C: mmu_notifier_invalidate_range_start()
+   <- here is the start of the event context of C.
+
+   context A: mmu_notifier_invalidate_range_end()
+   context A: unlock L
+
+   context C: mmu_notifier_invalidate_range_end() : ttwu
+   <- here is the end of the event context of C.  dept doesn't observe
+      the wait, lock L'' within the event context of C.  context C is
+      responsible only for the range delimited by
+      mmu_notifier_invalidate_range_{start,end}().
+
+   context C: unlock L''
 
 Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- include/linux/dept.h     | 18 ++++++++++++++----
- include/linux/dept_sdt.h |  6 +++---
- kernel/dependency/dept.c | 30 +++++++++++++++++++++---------
- 3 files changed, 38 insertions(+), 16 deletions(-)
+ include/linux/mmu_notifier.h | 26 ++++++++++++++++++++++++++
+ mm/mmu_notifier.c            | 31 +++++++++++++++++++++++++++++--
+ 2 files changed, 55 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/dept.h b/include/linux/dept.h
-index e70cbc6f41dc..7d5e01f56e8e 100644
---- a/include/linux/dept.h
-+++ b/include/linux/dept.h
-@@ -129,6 +129,13 @@ struct dept_wait_hist {
- 	unsigned int			ctxt_id;
+diff --git a/include/linux/mmu_notifier.h b/include/linux/mmu_notifier.h
+index d1094c2d5fb6..2b70dce149f0 100644
+--- a/include/linux/mmu_notifier.h
++++ b/include/linux/mmu_notifier.h
+@@ -428,6 +428,14 @@ static inline int mmu_notifier_test_young(struct mm_struct *mm,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_DEPT
++void mmu_notifier_invalidate_dept_ecxt_start(struct mmu_notifier_range *range);
++void mmu_notifier_invalidate_dept_ecxt_end(struct mmu_notifier_range *range);
++#else
++static inline void mmu_notifier_invalidate_dept_ecxt_start(struct mmu_notifier_range *range) {}
++static inline void mmu_notifier_invalidate_dept_ecxt_end(struct mmu_notifier_range *range) {}
++#endif
++
+ static inline void
+ mmu_notifier_invalidate_range_start(struct mmu_notifier_range *range)
+ {
+@@ -439,6 +447,12 @@ mmu_notifier_invalidate_range_start(struct mmu_notifier_range *range)
+ 		__mmu_notifier_invalidate_range_start(range);
+ 	}
+ 	lock_map_release(&__mmu_notifier_invalidate_range_start_map);
++
++	/*
++	 * From now on, waiters could be there by this start until
++	 * mmu_notifier_invalidate_range_end().
++	 */
++	mmu_notifier_invalidate_dept_ecxt_start(range);
+ }
+ 
+ /*
+@@ -459,6 +473,12 @@ mmu_notifier_invalidate_range_start_nonblock(struct mmu_notifier_range *range)
+ 		ret = __mmu_notifier_invalidate_range_start(range);
+ 	}
+ 	lock_map_release(&__mmu_notifier_invalidate_range_start_map);
++
++	/*
++	 * From now on, waiters could be there by this start until
++	 * mmu_notifier_invalidate_range_end().
++	 */
++	mmu_notifier_invalidate_dept_ecxt_start(range);
+ 	return ret;
+ }
+ 
+@@ -470,6 +490,12 @@ mmu_notifier_invalidate_range_end(struct mmu_notifier_range *range)
+ 
+ 	if (mm_has_notifiers(range->mm))
+ 		__mmu_notifier_invalidate_range_end(range);
++
++	/*
++	 * The event context that has been started by
++	 * mmu_notifier_invalidate_range_start() ends.
++	 */
++	mmu_notifier_invalidate_dept_ecxt_end(range);
+ }
+ 
+ static inline void mmu_notifier_arch_invalidate_secondary_tlbs(struct mm_struct *mm,
+diff --git a/mm/mmu_notifier.c b/mm/mmu_notifier.c
+index 8e0125dc0522..31af5ea54a0c 100644
+--- a/mm/mmu_notifier.c
++++ b/mm/mmu_notifier.c
+@@ -46,6 +46,7 @@ struct mmu_notifier_subscriptions {
+ 	unsigned long active_invalidate_ranges;
+ 	struct rb_root_cached itree;
+ 	wait_queue_head_t wq;
++	struct dept_map dmap;
+ 	struct hlist_head deferred_list;
  };
  
-+/*
-+ * for subsystems that requires compact use of memory e.g. struct page
-+ */
-+struct dept_ext_wgen {
-+	unsigned int wgen;
-+};
-+
- extern void dept_on(void);
- extern void dept_off(void);
- extern void dept_init(void);
-@@ -138,6 +145,7 @@ extern void dept_free_range(void *start, unsigned int sz);
- 
- extern void dept_map_init(struct dept_map *m, struct dept_key *k, int sub_u, const char *n);
- extern void dept_map_reinit(struct dept_map *m, struct dept_key *k, int sub_u, const char *n);
-+extern void dept_ext_wgen_init(struct dept_ext_wgen *ewg);
- extern void dept_map_copy(struct dept_map *to, struct dept_map *from);
- extern void dept_wait(struct dept_map *m, unsigned long w_f, unsigned long ip, const char *w_fn, int sub_l, long timeout);
- extern void dept_stage_wait(struct dept_map *m, struct dept_key *k, unsigned long ip, const char *w_fn, long timeout);
-@@ -146,8 +154,8 @@ extern void dept_clean_stage(void);
- extern void dept_ttwu_stage_wait(struct task_struct *t, unsigned long ip);
- extern void dept_ecxt_enter(struct dept_map *m, unsigned long e_f, unsigned long ip, const char *c_fn, const char *e_fn, int sub_l);
- extern bool dept_ecxt_holding(struct dept_map *m, unsigned long e_f);
--extern void dept_request_event(struct dept_map *m);
--extern void dept_event(struct dept_map *m, unsigned long e_f, unsigned long ip, const char *e_fn);
-+extern void dept_request_event(struct dept_map *m, struct dept_ext_wgen *ewg);
-+extern void dept_event(struct dept_map *m, unsigned long e_f, unsigned long ip, const char *e_fn, struct dept_ext_wgen *ewg);
- extern void dept_ecxt_exit(struct dept_map *m, unsigned long e_f, unsigned long ip);
- extern void dept_sched_enter(void);
- extern void dept_sched_exit(void);
-@@ -174,6 +182,7 @@ extern void dept_hardirqs_off(void);
- #else /* !CONFIG_DEPT */
- struct dept_key { };
- struct dept_map { };
-+struct dept_ext_wgen { };
- 
- #define DEPT_MAP_INITIALIZER(n, k) { }
- 
-@@ -186,6 +195,7 @@ struct dept_map { };
- 
- #define dept_map_init(m, k, su, n)			do { (void)(n); (void)(k); } while (0)
- #define dept_map_reinit(m, k, su, n)			do { (void)(n); (void)(k); } while (0)
-+#define dept_ext_wgen_init(wg)				do { } while (0)
- #define dept_map_copy(t, f)				do { } while (0)
- #define dept_wait(m, w_f, ip, w_fn, sl, t)		do { (void)(w_fn); } while (0)
- #define dept_stage_wait(m, k, ip, w_fn, t)		do { (void)(k); (void)(w_fn); } while (0)
-@@ -194,8 +204,8 @@ struct dept_map { };
- #define dept_ttwu_stage_wait(t, ip)			do { } while (0)
- #define dept_ecxt_enter(m, e_f, ip, c_fn, e_fn, sl)	do { (void)(c_fn); (void)(e_fn); } while (0)
- #define dept_ecxt_holding(m, e_f)			false
--#define dept_request_event(m)				do { } while (0)
--#define dept_event(m, e_f, ip, e_fn)			do { (void)(e_fn); } while (0)
-+#define dept_request_event(m, wg)			do { } while (0)
-+#define dept_event(m, e_f, ip, e_fn, wg)		do { (void)(e_fn); } while (0)
- #define dept_ecxt_exit(m, e_f, ip)			do { } while (0)
- #define dept_sched_enter()				do { } while (0)
- #define dept_sched_exit()				do { } while (0)
-diff --git a/include/linux/dept_sdt.h b/include/linux/dept_sdt.h
-index 14917df0cc30..9cd70affaf35 100644
---- a/include/linux/dept_sdt.h
-+++ b/include/linux/dept_sdt.h
-@@ -25,7 +25,7 @@
- 
- #define sdt_wait_timeout(m, t)						\
- 	do {								\
--		dept_request_event(m);					\
-+		dept_request_event(m, NULL);				\
- 		dept_wait(m, 1UL, _THIS_IP_, __func__, 0, t);		\
- 	} while (0)
- #define sdt_wait(m) sdt_wait_timeout(m, -1L)
-@@ -49,9 +49,9 @@
- #define sdt_might_sleep_end()		dept_clean_stage()
- 
- #define sdt_ecxt_enter(m)		dept_ecxt_enter(m, 1UL, _THIS_IP_, "start", "event", 0)
--#define sdt_event(m)			dept_event(m, 1UL, _THIS_IP_, __func__)
-+#define sdt_event(m)			dept_event(m, 1UL, _THIS_IP_, __func__, NULL)
- #define sdt_ecxt_exit(m)		dept_ecxt_exit(m, 1UL, _THIS_IP_)
--#define sdt_request_event(m)		dept_request_event(m)
-+#define sdt_request_event(m)		dept_request_event(m, NULL)
- #else /* !CONFIG_DEPT */
- #define sdt_map_init(m)			do { } while (0)
- #define sdt_map_init_key(m, k)		do { (void)(k); } while (0)
-diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-index 519b2151403e..f928c12111fe 100644
---- a/kernel/dependency/dept.c
-+++ b/kernel/dependency/dept.c
-@@ -2172,6 +2172,11 @@ void dept_map_reinit(struct dept_map *m, struct dept_key *k, int sub_u,
+@@ -165,6 +166,25 @@ static void mn_itree_inv_end(struct mmu_notifier_subscriptions *subscriptions)
+ 	wake_up_all(&subscriptions->wq);
  }
- EXPORT_SYMBOL_GPL(dept_map_reinit);
  
-+void dept_ext_wgen_init(struct dept_ext_wgen *ewg)
++#ifdef CONFIG_DEPT
++void mmu_notifier_invalidate_dept_ecxt_start(struct mmu_notifier_range *range)
 +{
-+	ewg->wgen = 0U;
++	struct mmu_notifier_subscriptions *subscriptions =
++		range->mm->notifier_subscriptions;
++
++	if (subscriptions)
++		sdt_ecxt_enter(&subscriptions->dmap);
 +}
++void mmu_notifier_invalidate_dept_ecxt_end(struct mmu_notifier_range *range)
++{
++	struct mmu_notifier_subscriptions *subscriptions =
++		range->mm->notifier_subscriptions;
 +
- void dept_map_copy(struct dept_map *to, struct dept_map *from)
- {
- 	if (unlikely(!dept_working())) {
-@@ -2355,7 +2360,7 @@ static void __dept_wait(struct dept_map *m, unsigned long w_f,
-  */
- static void __dept_event(struct dept_map *m, struct dept_map *real_m,
- 		unsigned long e_f, unsigned long ip, const char *e_fn,
--		bool sched_map)
-+		bool sched_map, unsigned int wg)
- {
- 	struct dept_class *c;
- 	struct dept_key *k;
-@@ -2377,7 +2382,7 @@ static void __dept_event(struct dept_map *m, struct dept_map *real_m,
- 	c = check_new_class(&m->map_key, k, sub_id(m, e), m->name, sched_map);
- 
- 	if (c)
--		do_event(m, real_m, c, READ_ONCE(m->wgen), ip, e_fn);
-+		do_event(m, real_m, c, wg, ip, e_fn);
- }
- 
- void dept_wait(struct dept_map *m, unsigned long w_f,
-@@ -2602,7 +2607,7 @@ void dept_ttwu_stage_wait(struct task_struct *requestor, unsigned long ip)
- 	if (!m.keys)
- 		goto exit;
- 
--	__dept_event(&m, real_m, 1UL, ip, "try_to_wake_up", sched_map);
-+	__dept_event(&m, real_m, 1UL, ip, "try_to_wake_up", sched_map, m.wgen);
- exit:
- 	dept_exit(flags);
- }
-@@ -2781,10 +2786,11 @@ bool dept_ecxt_holding(struct dept_map *m, unsigned long e_f)
- }
- EXPORT_SYMBOL_GPL(dept_ecxt_holding);
- 
--void dept_request_event(struct dept_map *m)
-+void dept_request_event(struct dept_map *m, struct dept_ext_wgen *ewg)
- {
- 	unsigned long flags;
- 	unsigned int wg;
-+	unsigned int *wg_p;
- 
- 	if (unlikely(!dept_working()))
- 		return;
-@@ -2797,18 +2803,22 @@ void dept_request_event(struct dept_map *m)
++	if (subscriptions)
++		sdt_ecxt_exit(&subscriptions->dmap);
++}
++#endif
++
+ /**
+  * mmu_interval_read_begin - Begin a read side critical section against a VA
+  *                           range
+@@ -246,9 +266,12 @@ mmu_interval_read_begin(struct mmu_interval_notifier *interval_sub)
  	 */
- 	flags = dept_enter_recursive();
- 
-+	wg_p = ewg ? &ewg->wgen : &m->wgen;
-+
- 	wg = next_wgen();
--	WRITE_ONCE(m->wgen, wg);
-+	WRITE_ONCE(*wg_p, wg);
- 
- 	dept_exit_recursive(flags);
- }
- EXPORT_SYMBOL_GPL(dept_request_event);
- 
- void dept_event(struct dept_map *m, unsigned long e_f,
--		unsigned long ip, const char *e_fn)
-+		unsigned long ip, const char *e_fn,
-+		struct dept_ext_wgen *ewg)
- {
- 	struct dept_task *dt = dept_task();
- 	unsigned long flags;
-+	unsigned int *wg_p;
- 
- 	if (unlikely(!dept_working()))
- 		return;
-@@ -2816,24 +2826,26 @@ void dept_event(struct dept_map *m, unsigned long e_f,
- 	if (m->nocheck)
- 		return;
- 
-+	wg_p = ewg ? &ewg->wgen : &m->wgen;
-+
- 	if (dt->recursive) {
- 		/*
- 		 * Dept won't work with this even though an event
- 		 * context has been asked. Don't make it confused at
- 		 * handling the event. Disable it until the next.
- 		 */
--		WRITE_ONCE(m->wgen, 0U);
-+		WRITE_ONCE(*wg_p, 0U);
- 		return;
- 	}
- 
- 	flags = dept_enter();
- 
--	__dept_event(m, m, e_f, ip, e_fn, false);
-+	__dept_event(m, m, e_f, ip, e_fn, false, READ_ONCE(*wg_p));
+ 	lock_map_acquire(&__mmu_notifier_invalidate_range_start_map);
+ 	lock_map_release(&__mmu_notifier_invalidate_range_start_map);
+-	if (is_invalidating)
++	if (is_invalidating) {
++		sdt_might_sleep_start(&subscriptions->dmap);
+ 		wait_event(subscriptions->wq,
+ 			   READ_ONCE(subscriptions->invalidate_seq) != seq);
++		sdt_might_sleep_end();
++	}
  
  	/*
- 	 * Keep the map diabled until the next sleep.
- 	 */
--	WRITE_ONCE(m->wgen, 0U);
-+	WRITE_ONCE(*wg_p, 0U);
+ 	 * Notice that mmu_interval_read_retry() can already be true at this
+@@ -625,6 +648,7 @@ int __mmu_notifier_register(struct mmu_notifier *subscription,
  
- 	dept_exit(flags);
- }
+ 		INIT_HLIST_HEAD(&subscriptions->list);
+ 		spin_lock_init(&subscriptions->lock);
++		sdt_map_init(&subscriptions->dmap);
+ 		subscriptions->invalidate_seq = 2;
+ 		subscriptions->itree = RB_ROOT_CACHED;
+ 		init_waitqueue_head(&subscriptions->wq);
+@@ -1070,9 +1094,12 @@ void mmu_interval_notifier_remove(struct mmu_interval_notifier *interval_sub)
+ 	 */
+ 	lock_map_acquire(&__mmu_notifier_invalidate_range_start_map);
+ 	lock_map_release(&__mmu_notifier_invalidate_range_start_map);
+-	if (seq)
++	if (seq) {
++		sdt_might_sleep_start(&subscriptions->dmap);
+ 		wait_event(subscriptions->wq,
+ 			   mmu_interval_seq_released(subscriptions, seq));
++		sdt_might_sleep_end();
++	}
+ 
+ 	/* pairs with mmgrab in mmu_interval_notifier_insert() */
+ 	mmdrop(mm);
 -- 
 2.17.1
 
