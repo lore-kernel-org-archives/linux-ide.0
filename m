@@ -1,63 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9780136358
-	for <linux-ide@vger.kernel.org>; Sat,  6 Dec 2025 05:46:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E41023B8D54
+	for <linux-ide@vger.kernel.org>; Mon,  8 Dec 2025 00:05:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765000001; cv=none; b=RVE+317XXKRN85Naf/Vi73EMIQnCd1YzB4LcjGmNjSM797YsolQNgDe2vroiw03pSoGVdtTBTyff9pze4xrO+7J+rJHnA4iBwEoFvEk+bHN7eq2n3llSh5x3laRIE+/v11WzVYgTDgEJvhNgUsmCXaOessX51la8P5KQv9/GaaA=
+	t=1765152334; cv=none; b=JTGMcC+zLHkrbDAzjdTpGAnVuIbAa07bbT4ZbMlC8fgP0xJ97lcM0bAxs/D0NdCIByRcidaNVTGQ47FHyP5vHGZtoTBx5yPtzhJx8YiEUWK+YRavt/KS7iCZrFFu3jRuyEMT+0CU/jM9NqY2JQglfATP1gbnooqSNwrGbDcTI68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765000001; c=relaxed/simple;
-	bh=wutfK7Jwc8wHfcyTZh2LVSzqKRsVyxUGhBvkG2W4Gu8=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=Na16zfbvnX9wkbthD6s+N0U12zJlmYkD9aAEgdwFogBaQOiPJjPjXy0/VhSrxz1i0sjbvSRyBtlstlnfn25JkxkPcfUcjGjYoCqA+QqbzFMF27DNbh+LofuUdudk13rgeyyHQN/WVAuZdlaqsmo2zpBoyk6wwASx5vhrC3qKoTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vt/xQAL9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765152334; c=relaxed/simple;
+	bh=yVxOKaP6lsYxWw46LnZgZxiXp5ozEbHFboMyVXn2Dv8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ibWglnwZXclund3L7KO9G5KyE5YI1+OiXcMjVnGW7vq00v4CbyzYlnkKPaWrzWiHsEWKJR31UmbtBOSDRSPOcBCXK/R9/CIpfKX80BzHfwZCc2jyAfWI/10pYR5T53hNvNZRgAZvAyxAmAlphJbfxr7qg8FgzEwjp3e/7TuhH9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IMBLm+zT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vt/xQAL9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45CDBC4CEF5;
-	Sat,  6 Dec 2025 05:46:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IMBLm+zT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04715C4CEFB;
+	Mon,  8 Dec 2025 00:05:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765000001;
-	bh=wutfK7Jwc8wHfcyTZh2LVSzqKRsVyxUGhBvkG2W4Gu8=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=Vt/xQAL9huf+TdMf/GRYowI5yC4Lq5SdzWlUQBM2iERIfwUNz+bh1BYOZM9itWNJU
-	 QWaDgCRU/SDviVnfnDO2EtljOu9PVXBTL4+Mpf7Gw2AHH5oUvasmXuNsiJjZL/EQ5T
-	 OZqWs4GjMv7H/7qYZdqXUtA6FNrqDYRmLtF4EDASgSFPZvbA0NMF5SXHmmVBrvS/Aw
-	 wuTnvLuL3yJ5J2/6TaFz2O28moDVW7Ac0bhI1iEtTohFdo3aVOK3BISYqlsWqsapGl
-	 bql0z6MoA0f/HpMAV3DnMmrcFtI9SScsSp9NheoJf1sxJ1W9BzTJeuT2FosHqhtG2r
-	 eX7Lc5mhSFyTg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B73313808200;
-	Sat,  6 Dec 2025 05:43:39 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fix for 6.19-rc1
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20251205094339.1032996-1-cassel@kernel.org>
-References: <20251205094339.1032996-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20251205094339.1032996-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.19-rc1-part2
-X-PR-Tracked-Commit-Id: 2e983271363108b3813b38754eb96d9b1cb252bb
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 096571bb893b3777ae1d752b7e1d5679bcf4edfc
-Message-Id: <176499981832.1994707.17387183446557708705.pr-tracker-bot@kernel.org>
-Date: Sat, 06 Dec 2025 05:43:38 +0000
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+	s=k20201202; t=1765152333;
+	bh=yVxOKaP6lsYxWw46LnZgZxiXp5ozEbHFboMyVXn2Dv8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=IMBLm+zTkTXvvmQlXUOOdf3HhIWtzkxdGzk+vgcvQ3Z+oQuPsJLQ/NGJzTGSgrKt3
+	 Fxcx24z7+IEx03TNUFehSIcHHyu4cKCiGODOPCGbBMrxFrTrmYw/I1n9YKmf79vfOp
+	 UHLDmgIQv9bgQ3gjLkFoJtKaeE9TuYtOasWjWGFpVtHWX8Sp+B8Gl5rNCjt/O4uXTh
+	 dvcAtjFOwltSFw9Vz4UhS0wiyFkc35vhSMbGiXP5soJdhksVejb2x3xKes8dnzc1Tg
+	 071QrJYoshMswgrOzC17Q6jHCjRqWJXCtxdZbKoavTLv62UcPZLc2SvipkidWEA0dx
+	 /JDM2vmCwkDoQ==
+Message-ID: <493d44e9-6efa-4930-9712-cc9d82371408@kernel.org>
+Date: Mon, 8 Dec 2025 09:01:11 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata-scsi: Remove superfluous local_irq_save()
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
+References: <20251204131804.946417-2-cassel@kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20251204131804.946417-2-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The pull request you sent on Fri,  5 Dec 2025 10:43:39 +0100:
+On 12/4/25 10:18 PM, Niklas Cassel wrote:
+> Commit 28a3fc2295a7 ("libata: implement ZBC IN translation") added
+> ata_scsi_report_zones_complete(). Since the beginning, this function
+> has disabled IRQs on the local CPU using local_irq_save().
+> 
+> qc->complete_fn is always called with ap->lock held, and the ap->lock
+> is always taking using spin_lock_irq*().
+> 
+> Thus, this local_irq_save() is superfluous and can be removed.
+> 
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.19-rc1-part2
+I staged this in for-6.20, which I will rebase once rc1 is out.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/096571bb893b3777ae1d752b7e1d5679bcf4edfc
-
-Thank you!
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Damien Le Moal
+Western Digital Research
