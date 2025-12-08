@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B356B2566DD
-	for <linux-ide@vger.kernel.org>; Mon,  8 Dec 2025 03:52:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F380F1F7569
+	for <linux-ide@vger.kernel.org>; Mon,  8 Dec 2025 03:52:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765165931; cv=none; b=R/pqQo3suKzQXnbtbEevvn/Q6OjUrRxDco/f3HnWDl8ij1raYu1Acz4eWxLrtN/D2pe4WObmYQ0xITmvxgPnp0SMQjaE+eSNEKEo/qVOgUb5hkjd6m4NB5hsOWQmlzeTmjGfK5/vcY9NUDGhBipMuoVyn0T3fwoV9K0sRs9ewwU=
+	t=1765165956; cv=none; b=T3JMrvEAhr9ANJyWUQB0NnmhKZchl/Mao72huub6UeN1iBwotu6MX0R3sEww4b/uFUdNjN1IErwAJtmaUIdVpZK4mfqYQdpJdxm9B/+g496N3aa+hkiokbEQTrUKI1VVLm57lGZan78NzLFQGGdb5cwSdHsEfYaT8y4pntFF5RU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765165931; c=relaxed/simple;
-	bh=FalDwL5ed+hUcNGwaRIF7RHdWwRLtbGnqxzNvYtJOYE=;
+	s=arc-20240116; t=1765165956; c=relaxed/simple;
+	bh=P0QMmQ1SKG9Pr4GLNgwpp+tEyA6lfAUPOLppY9M8GfM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rq6nH5gJbL1+0HHk1rkvG5EtUGodexjIAfoUWK1ExK4bNkCKVya+QqChL/Ta7N8XTQdpp0TFxGpOLzOHhlQmRo48rt3zz1Ok+NnPjBeqPJBz6CFtqr2H6jKKq1fu5mbhNJo7e2tvCU3WfoCP4B9FlJcHtrovbdESqwlQP6Hq2Zw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W9QrXQAA; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=flJ3DtQyyfsMTHBlrmP+PXmVpu6IBlF3O4XqZ/JBY3PadwtxI7N2DDwEB0w+mUzB1bVwb5NmdgRyzg8ixwPdEhYf6jEpZ4TQunhlMwanZVJsS29FdbZoLhoaYZWW+2jkFZY3W1KCURumBligJ7yYt+cm1xnx31v8t7wUznjyoYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j8hq9AZ2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W9QrXQAA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63CD6C4CEF1;
-	Mon,  8 Dec 2025 03:52:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j8hq9AZ2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19235C4CEF1;
+	Mon,  8 Dec 2025 03:52:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765165931;
-	bh=FalDwL5ed+hUcNGwaRIF7RHdWwRLtbGnqxzNvYtJOYE=;
+	s=k20201202; t=1765165955;
+	bh=P0QMmQ1SKG9Pr4GLNgwpp+tEyA6lfAUPOLppY9M8GfM=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=W9QrXQAA0nn6nOxTMfaN/lMnRSaCQ5ciLFlhgxEmEyB9Tk4tmSi4T7DYpkbuebEJu
-	 V1UyJs7FZNL633sdUEJYtotPjADBXi7/TlqIWHakuWI/HhObXQ6tNCJ3nUHUM0RHsj
-	 ZvSz5A6Wi+Y9Fe5D8JE8VbS31b439KClul1X1NSmUuU6TqOzOIbkoNox5MPylnEBAi
-	 Pl03olZ0VcfWA+ZLbq7VC9oNX4UbKm1FZDJqPoq8FZ0P6TBx02ShO3df88El/kMaZy
-	 NfwZF9/PD6jbGX0msqnZazyNq54Bh/n8IlM0clnaY/8bivEmChEm3cL6bzdHqUZyzv
-	 vwnn1ZX0yDLOA==
-Message-ID: <0ca4b4c2-22b4-40bf-8f91-21697c4249f1@kernel.org>
-Date: Mon, 8 Dec 2025 12:47:48 +0900
+	b=j8hq9AZ2C6yZhNwGoEJfImiMmNKGoaVkJKSWgiZA/s/fvOgiX8ZKoKaDQQ670MKOL
+	 18cSQ0ZVQWN/iNY/QpKBMtsKygFFY5+XHagjQBnhlt+A1lNiuqQObR7dQsypfS832G
+	 iv7AH+70lqZTwYHL57ejt/tgR84B7GaX1F70Oy+UAc3FY/F6o8HhOfAOmMiC0ZdTjF
+	 ZDypQfLJgfzPpYSRF5RtE5Knz5t7QV50COpRHQ1dhwXWxwBE89d43qSup+F1v6hAOY
+	 003EvlsPqpgwk76o29nVwpfj5Ix8QCYn6m8fLM/EsqAKoKK1qffZfRfzbMKR6uOrhg
+	 J8t8M8drxHGww==
+Message-ID: <9ca385d3-d293-49e8-ada5-afc5f1f4b78d@kernel.org>
+Date: Mon, 8 Dec 2025 12:48:13 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,79 +35,48 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] ata: libata: avoid long timeouts on hot-unplugged SATA
- DAS
-To: Henry Tseng <henrytseng@qnap.com>
-Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
- Kevin Ko <kevinko@qnap.com>, SW Chen <swchen@qnap.com>
-References: <20251201094622.1475358-1-henrytseng@qnap.com>
+Subject: Re: [PATCH v4 0/6] ata: libata: Improve max sectors quirk handling
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen"
+ <martin.petersen@oracle.com>
+References: <20251202122129.421783-8-cassel@kernel.org>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20251201094622.1475358-1-henrytseng@qnap.com>
+In-Reply-To: <20251202122129.421783-8-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 12/1/25 6:46 PM, Henry Tseng wrote:
-> When a SATA DAS enclosure is connected behind a Thunderbolt PCIe
-> switch, hot-unplugging the whole enclosure causes pciehp to tear down
-> the PCI hierarchy before the SCSI layer issues SYNCHRONIZE CACHE and
-> START STOP UNIT for the disks.
+On 12/2/25 9:21 PM, Niklas Cassel wrote:
+> Hello there,
 > 
-> libata still queues these commands and the AHCI driver tries to access
-> the HBA registers even though the PCI channel is already offline. This
-> results in a series of timeouts and error recovery attempts, e.g.:
+> a recent change:
+> commit 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
 > 
->   [  824.778346] pcieport 0000:00:07.0: pciehp: Slot(14): Link Down
->   [  891.612720] ata8.00: qc timeout after 5000 msecs (cmd 0xec)
->   [  902.876501] ata8.00: qc timeout after 10000 msecs (cmd 0xec)
->   [  934.107998] ata8.00: qc timeout after 30000 msecs (cmd 0xec)
->   [  936.206431] sd 7:0:0:0: [sda] Synchronize Cache(10) failed:
->       Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
->   ...
->   [ 1006.298356] ata1.00: qc timeout after 5000 msecs (cmd 0xec)
->   [ 1017.561926] ata1.00: qc timeout after 10000 msecs (cmd 0xec)
->   [ 1048.791790] ata1.00: qc timeout after 30000 msecs (cmd 0xec)
->   [ 1050.890035] sd 0:0:0:0: [sdb] Synchronize Cache(10) failed:
->       Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> bumped the default max_sectors_kb from 1280 to 4096.
 > 
-> With this patch applied, the same hot-unplug looks like:
+> It seems like a lot for SATA controllers are buggy and don't really like
+> this, see:
+> https://bugzilla.kernel.org/show_bug.cgi?id=220693
 > 
->   [   59.965496] pcieport 0000:00:07.0: pciehp: Slot(14): Link Down
->   [   60.002502] sd 7:0:0:0: [sda] Synchronize Cache(10) failed:
->       Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
->   ...
->   [   60.103050] sd 0:0:0:0: [sdb] Synchronize Cache(10) failed:
->       Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> Therefore, improve the max sectors quirk handling, to only have one max
+> sectors quirk, which also takes an additional value.
 > 
-> In this test setup with two disks, the hot-unplug sequence shrinks from
-> about 226 seconds (~3.8 minutes) between the Link Down event and the
-> last SYNCHRONIZE CACHE failure to under a second. Without this patch the
-> total delay grows roughly with the number of disks, because each disk
-> gets its own SYNCHRONIZE CACHE and qc timeout series.
+> This reduces the number of ATA_QUIRK_MAX_SEC_XXX quirks from 3 to 1,
+> while also making it easier to quirk additional devices with different
+> max sector limits.
 > 
-> If the underlying PCI device is already gone, these commands cannot
-> succeed anyway. Avoid issuing them by introducing
-> ata_adapter_is_online(), which checks pci_channel_offline() for
-> PCI-based hosts. It is used from ata_scsi_find_dev() to return NULL,
-> causing the SCSI layer to fail new commands with DID_BAD_TARGET
-> immediately, and from ata_qc_issue() to bail out before touching the
-> HBA registers.
 > 
-> Since such failures would otherwise trigger libata error handling,
-> ata_adapter_is_online() is also consulted from ata_scsi_port_error_handler().
-> When the adapter is offline, libata skips ap->ops->error_handler(ap) and
-> completes error handling using the existing path, rather than running
-> a full EH sequence against a dead adapter.
+> The series is based on libata for-next branch, and the intention is to
+> queue this series up for v7.0.
 > 
-> With this change, SYNCHRONIZE CACHE and START STOP UNIT commands
-> issued during hot-unplug fail quickly once the PCI channel is offline,
-> without qc timeout spam or long libata EH delays.
 > 
-> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
-> Signed-off-by: Henry Tseng <henrytseng@qnap.com>
+> Changes since v3:
+> -Pick up tags from Damien.
+> -Fix minor review comments from Damien.
 
-Applied to for-6.20. Thanks!
+Applied to for-6.20.
+
 
 -- 
 Damien Le Moal
