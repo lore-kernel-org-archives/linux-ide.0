@@ -1,33 +1,27 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from pasta.tip.net.au (mx1.tip.net.au [203.10.76.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 675D72E03E3
-	for <linux-ide@vger.kernel.org>; Tue, 16 Dec 2025 05:34:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A1A33AD9C
+	for <linux-ide@vger.kernel.org>; Tue, 16 Dec 2025 23:44:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.10.76.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765863280; cv=none; b=lfoafP4Be5tknVFuf5jK/2PRhUsvz75pxZF5lTjaTUJX6LCqdMpTmIniGnrSQB2b0Img0wZGTVKEErLPvFqxQx759sH0z7ET/1s3E667WL7jySeqHHV5b2efcZjkDiO1jsbDdySpUbSaQr08fkCfivt7CXZj/f5ulU9Sq8CX7P8=
+	t=1765928704; cv=none; b=n4uNzn6tF74pCO5O+4rL72ZQC9aZ04Q0Z/l8cqR0CDSEHeYc7QmiUZUOq3EgEtl3iAtVvkmROyBFeRNlCD4pFsZ0lJTKWZB4kzhbKpTDD/MNOGsjel4HDGbpp8fbf6hHLGnIbiJv5rtIfTg2m/IlFINXqYUB+DBzatsnPrU+dVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765863280; c=relaxed/simple;
-	bh=exe5a1Oh2VduGMiztp9GlVsBeWiruwKGd9QOBdAnakA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fl2njqX84S0LnlFBKTn5pgK1nR17a00Pw20y4j/ODCZdsUILrgB7DNeqQxarSz+RGSuajelYEtvWDhiEr3Ncj8DjZfq33YT2O6CuKqmcscc9zDMeuCy6HvL37ZkryxpqIZbT8QRmgk4knamBGUWeIH63zV/GGtsJomvJVc+lsBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a4t5AQTC; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a4t5AQTC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A138C4CEF1;
-	Tue, 16 Dec 2025 05:34:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765863279;
-	bh=exe5a1Oh2VduGMiztp9GlVsBeWiruwKGd9QOBdAnakA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=a4t5AQTCmQIpDXjgJdAUuCcUjzYeP/zJ5mZQFoEnkWcuQGmONVtJlTUyI1EPtclxz
-	 iF+AeuDt+CUNrjl5idTBRPLXlQdgWl9MDunJxW6KATWMAt/tRsFzXx8/qGrL1wkvw1
-	 HkLBnRpgmafV5C5oj0HThsnQAxx7JUWmVDrClmewuIE1xw4jLYNH0md+0C7LE1I1ae
-	 Sjvs6FcjHgdebP/UM/gS1OpPUmcn/hqaDJB3TIverNukFJ5ciP8EKTBs0ehfKaPJQa
-	 awXRjZnVGYX+CivZr33xmaPeJDThHCy/It52vP1nhP34LY2cVCKGdmBgWRSdthT0c5
-	 vq29jx/hJljYw==
-Message-ID: <1e9a9ac6-77da-4727-b768-46bd7c496b0e@kernel.org>
-Date: Tue, 16 Dec 2025 14:30:11 +0900
+	s=arc-20240116; t=1765928704; c=relaxed/simple;
+	bh=iFGpE6nosay+NzugTh9koOxn5k8d400SScWIYpZsLi4=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
+	 In-Reply-To:Content-Type; b=anf0/hnQQh+ny64ABiRYaNfo0u6QtMMzb77GawTBMOOvf0uCXA/xr3uda4IItU2CVAcO/Cq7pM2YOLan7gqpMB2MNdALv6EuI3nqYe5R6TMoCioBDC7syagWRMibDB0NNW2shD5KdySK2G+Kzc5ZHu6xOadkwEJJqMlMYFF3lZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au; spf=pass smtp.mailfrom=eyal.emu.id.au; arc=none smtp.client-ip=203.10.76.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eyal.emu.id.au
+Received: from [192.168.122.14] (unknown [101.115.78.36])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mailhost.tip.net.au (Postfix) with ESMTPSA id 4dWD0k3C8Yz8vHD
+	for <linux-ide@vger.kernel.org>; Wed, 17 Dec 2025 10:39:18 +1100 (AEDT)
+Message-ID: <080383fe-63cf-4198-966a-b32d798bea06@eyal.emu.id.au>
+Date: Wed, 17 Dec 2025 10:39:11 +1100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,46 +29,54 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-core: Disable LPM on ST2000DM008-2FR102
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Emerson Pinter <e@pinter.dev>, linux-ide@vger.kernel.org
-References: <20251209042359.1467124-2-cassel@kernel.org>
+Subject: Re: ata timeout exceptions
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+To: list linux-ide <linux-ide@vger.kernel.org>
+Reply-To: eyal@eyal.emu.id.au
+References: <acf2fa9f-f98d-4eb0-b18b-a04aa123201b@eyal.emu.id.au>
 Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20251209042359.1467124-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <acf2fa9f-f98d-4eb0-b18b-a04aa123201b@eyal.emu.id.au>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 12/9/25 1:24 PM, Niklas Cassel wrote:
-> According to a user report, the ST2000DM008-2FR102 has problems with LPM.
-> 
-> Reported-by: Emerson Pinter <e@pinter.dev>
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220693
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/ata/libata-core.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index b96105481784..94c0e0ff981f 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4187,6 +4187,9 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
->  						ATA_QUIRK_NOLPM },
->  	{ "VB0250EAVER",	"HPG7",		ATA_QUIRK_BROKEN_FPDMA_AA },
->  
-> +	/* ST disks with LPM issues */
-> +	{ "ST2000DM008-2FR102",	NULL,		ATA_QUIRK_NOLPM },
-> +
->  	/* Blacklist entries taken from Silicon Image 3124/3132
->  	   Windows driver .inf file - also several Linux problem reports */
->  	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_QUIRK_NONCQ },
-> 
-> base-commit: a26a0b4b48e181ff5ff340f9dc83612c74f2ccad
+Resolved.
 
-Applied to for-6.19-fixes. Thanks !
+Limiting disk access bandwidth (as suggested by Damien Le Moal <dlemoal@kernel.org>)
+	# echo 1280 > /sys/block/sdX/queue/max_sectors_kb
+did the trick. No pauses/resets anymore for over a month.
+
+Setting
+	# echo 180 >/sys/block/sda/device/timeout
+did not help, only made the pauses longer before the reset.
+
+Thanks everyone.
+	Eyal
+
+On 3/11/25 15:13, Eyal Lebedinsky wrote:
+> I have a sata disk that is probably on its last legs.
+> It is a plain disk (no RAID or such). If it matters, it is an old 8TB Seagate SMA disk.
+> It sees very little activity.
+> 
+> Every two hours a small rsync copies a directory into this disk. A few 100s of files are copied each time, a few 10s of GB in total.
+> 
+> For the last few weeks it started to log timeout errors (not always) like this:
+> 
+>    kernel: ata2.00: exception Emask 0x0 SAct 0x2020 SErr 0x0 action 0x6 frozen
+>    kernel: ata2.00: failed command: WRITE FPDMA QUEUED
+>    kernel: ata2.00: cmd 61/80:28:a0:10:df/00:00:d1:01:00/40 tag 5 ncq dma 65536 out
+>                     res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
+>    kernel: ata2.00: status: { DRDY }
+>    kernel: ata2.00: failed command: WRITE FPDMA QUEUED
+>    kernel: ata2.00: cmd 61/00:68:18:15:30/20:00:20:01:00/40 tag 13 ncq dma 4194304 out
+>                     res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+>    kernel: ata2.00: status: { DRDY }
+>    kernel: ata2: hard resetting link
+>    kernel: ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+>    kernel: ata2.00: configured for UDMA/133
+>    kernel: ata2: EH complete
+
+[trimmed]
 
 -- 
-Damien Le Moal
-Western Digital Research
+Eyal Lebedinsky	(eyal@eyal.emu.id.au)
+
