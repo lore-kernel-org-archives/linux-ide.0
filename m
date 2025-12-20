@@ -1,109 +1,96 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2318C3A1E64
-	for <linux-ide@vger.kernel.org>; Fri, 19 Dec 2025 23:35:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 515A51B0F19
+	for <linux-ide@vger.kernel.org>; Sat, 20 Dec 2025 00:26:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766187354; cv=none; b=MhqT+ld7sSxJXUPz7FCOU3/Jnqg0XjltGgUZBassVjDf5JsLn8GtIjNdi031k9wBsNmPC30lYmExh0O26afcCoAgVfcqXvhLKeBycTjq8PhLwgWi1Zba5oN/qqVew/VGya2N0OHaz2+eGWERAA6gHjkdkuWe+ilvqk/Cy2cjiSM=
+	t=1766190373; cv=none; b=FatN2JQg7YYKbGr2UpJCw0ShKnpUxU5h8hqUiNMK+Zjr8oFWB8zUS6CKJR0vrhgQhPeJhDlOgGg/M5nDB6sbyllHCfpuVboALXhshC6iLfy2CEYEhtRU89Xd0focYzkRrR+lTuVg0K5oYA6uUEcUTY2t9TF95vzz82DH19z0sIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766187354; c=relaxed/simple;
-	bh=LAyj8cQ6UlTXq3av5J0USNUu97QXxWuEeokUPO9/A2w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B+/8xGCqi0/BLwSZdb2U1N5anHvNmisEHjWRm9UjLfDVumMQDRxwBxjGhcs2R3Wq8j8JZ32NewJrWq7GAmlx/NT9Jowa7ZKqG4b87T4Ft1d4gbVdmx5sltVC2na/isyyXwIXyPjlM8WS6KlJ1d7TKhCArFbqf3jYpcVoaefbQDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qvn2qBvM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766190373; c=relaxed/simple;
+	bh=IDk21KECJrCCTWwlq6eF3Pv0h7ShioYS2lK4THs0v24=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=vFRv3DuihWI1Ew7d3TnXJ0fVucIsXFwRb+pr+yF+k0ZKv2tRxqBA4Q7jq8/hotKeLOJxLCj0hIaqmOM888z2kMKS8Qtyb5uIzV6HiHYXl5YVDj9Dg/llj9qZw9HRMbHBqjNS9M9HK97g2M9LrMGEEEcJti2PD5OSqyTyFIjPDF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vEVAcso4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qvn2qBvM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6F47C4CEF1;
-	Fri, 19 Dec 2025 23:35:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vEVAcso4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23CB4C116C6;
+	Sat, 20 Dec 2025 00:26:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766187353;
-	bh=LAyj8cQ6UlTXq3av5J0USNUu97QXxWuEeokUPO9/A2w=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Qvn2qBvM2E29l6qnXvp9pEKgW0Wg74uym/zhaAD305sxIF2Volt3ST+hC9TG5lXS3
-	 cgiGnW76ordiyj8ZdCccYmqXHUyhKHqZB0TrazD8qrXCisivN3ldjM2d9m2c/6JfiV
-	 uSrST2wh6i4JX2VxniP4NVKenasxOm95OMPclLTKIUW6IbNWAa2v49HCDHfWW6jpEN
-	 lzZtzG7+j5SXJEHagZeAqxycOo67VC/QjEKTCm6TlSsMU8mWpkcKTsVN2D4zSZjgnZ
-	 +mipG4jyQW61iOHMrQp/gRy6Pw9OJXwie+O4TryMMGNzAwLVwXohoCe1f5Uvzn2928
-	 FeclzeYWmE+Kw==
-Message-ID: <ca5e7ee3-a996-425d-8127-f243881e0a9c@kernel.org>
-Date: Sat, 20 Dec 2025 08:35:51 +0900
+	s=k20201202; t=1766190372;
+	bh=IDk21KECJrCCTWwlq6eF3Pv0h7ShioYS2lK4THs0v24=;
+	h=From:To:Cc:Subject:Date:From;
+	b=vEVAcso4OToR+8MlkkMcWHCMYNxNU+MJa8CMJzXo+EwgPQy8MIwtXc+4fpjI8LGbd
+	 CUHAv+Ryz5Z3JT6L1OWFDafWXJawEYGPB+rRvpvX740wh74XC+Lb0easPltY0SVh30
+	 3yfPAabZ/eyThp6Sli20D4cIr2Xx4XmTtGmluQF5KapSTSZqLX7QW2ViTwXl/PUnOl
+	 fXq7YYMSKTYG02Dq+I4qJ+Gkf95BYEAzggA1LHf6vFnHrisQ6Gby7MkNFpqa5fkNbt
+	 gutt+oeoa16G44GMx/tTDbn80A5bDUayTrVFdLw5i/GLP6p8suOxJTE1L23r1UdXH7
+	 xvF5lgzBfLSeQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Igor Pylypiv <ipylypiv@google.com>,
+	Xingui Yang <yangxingui@huawei.com>,
+	John Garry <john.g.garry@oracle.com>
+Subject: [PATCH v3 0/2] Prevent non-NCQ command starvation
+Date: Sat, 20 Dec 2025 09:21:38 +0900
+Message-ID: <20251220002140.148854-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] ata: libata-scsi: avoid passthrough command
- starvation
-To: John Garry <john.g.garry@oracle.com>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-Cc: Igor Pylypiv <ipylypiv@google.com>, Xingui Yang <yangxingui@huawei.com>
-References: <20251219075134.501727-1-dlemoal@kernel.org>
- <20251219075134.501727-3-dlemoal@kernel.org>
- <e67adee8-281b-4a57-ab08-3b02acec7298@oracle.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <e67adee8-281b-4a57-ab08-3b02acec7298@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 12/19/25 23:07, John Garry wrote:
->  >   	init_waitqueue_head(&ap->eh_wait_q);
->>   	init_completion(&ap->park_req_pending);
->> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
->> index 2586e77ebf45..b90b17f680f8 100644
->> --- a/drivers/ata/libata-eh.c
->> +++ b/drivers/ata/libata-eh.c
->> @@ -917,6 +917,12 @@ static void ata_eh_set_pending(struct ata_port *ap, bool fastdrain)
->>   
->>   	ap->pflags |= ATA_PFLAG_EH_PENDING;
->>   
->> +	/*
->> +	 * If we have a deferred qc, requeue it so that it is retried once EH
-> 
-> big nitpick: qc or QC? It seems quite inconsistent.
+This small patch series addresses potential command starvation issues
+with non-NCQ passthrough commands issued to a device accessed through
+a multi-queue libsas HBA. In such setup, a non-NCQ passthrough command
+issued by an application may suffer long delays and even complete
+starvation if the device is under constant NCQ read/write workload.
 
-Yeah. "qc" I think, as that is what is being used most often. libata-eh has a
-couple of "QC" in a comment though.
+This issue is avoided by limiting the requeing through the block layer
+and instead explicitly waiting for the device command queue to drain
+before issuing the non-NCQ command. This is done reliably by not trying
+to second guess ata EH in case of error or device reset, by always
+requeuing a deferred command whenever EH is scheduled for the device
+port.
 
+When a non-ncq command is deferred waiting for the device queue to
+drain, all new incoming commands are always requeued through the regular
+busy mechanism, thus avoiding the need to manage an internal command
+queue.
 
->> +void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
->> +{
->> +	struct ata_queued_cmd *qc = ap->deferred_qc;
-> 
-> I think that you can just return early for !qc, no need to always be 
-> doing the lockdep_assert_held check. However, lockdep is slow anyway and 
-> I don't think that lockdep_assert_held does anything when lockdep is 
-> disabled (so returning early does not nothing, apart from reduce 
-> indentation).
+With this, the long latencies observed when executing non-NCQ
+passthrough commands under a heavy NCQ read/write workload at high queue
+depth is resolved: the non-NCQ command latency only depends on how long
+it takes for all in-flight commands to complete.
 
-OK for the return early. Bu even for that case, we should have the lockdep
-annotation since we are not supposed to be looking at ap->deferred_qc without
-holding the port lock. But granted, the lockdep assert may be overkill. Let me
-check if we really need/want it.
+Changes from v2:
+ - Improved comment about ata_scsi_qc_new() behavior in patch 1
+   (suggested by Garry).
+ - Removed some lockdep annotations from patch 2 as they have little
+   value.
+ - In patch 2, change ata_scsi_requeue_deferred_qc() and
+   ata_scsi_schedule_deferred_qc() to return early as suggested by
+   Garry.
+ - Fixed comments typo in patch 2.
 
->>   static int ata_scsi_defer(struct ata_port *ap, struct ata_queued_cmd *qc)
->>   {
->>   	int ret;
->>   
->> +	/*
->> +	 * If we already have a deferred QC, then rely on the SCSI layer to
->> +	 * defer and requeue all incoming commands until the deferred QC is
->> +	 * processed, once all on-going commands are completed.
->> +	 */
->> +	if (ap->deferred_qc) {
->> +		ata_qc_free(qc);
-> 
-> Would adding WARN_ON_ONCE(ap->deferred_qc == qc) be totally unnecessary?
+Changes from v1:
+ - Fixed ac leak in ata_scsi_defer() in patch 2.
+ - Added Hannes review tag
 
-If such warning trigger, I think things would be really very broken, and likely
-all sorts of failures/hangs would already be happening. Talking from experience
-here as the initial versions of this patch where less than perfect :)
+Damien Le Moal (2):
+  ata: libata-scsi: refactor ata_scsi_translate()
+  ata: libata-scsi: avoid passthrough command starvation
 
+ drivers/ata/libata-core.c |   1 +
+ drivers/ata/libata-eh.c   |   6 ++
+ drivers/ata/libata-scsi.c | 155 ++++++++++++++++++++++++++++++++------
+ drivers/ata/libata.h      |   2 +
+ include/linux/libata.h    |   3 +
+ 5 files changed, 142 insertions(+), 25 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.52.0
+
