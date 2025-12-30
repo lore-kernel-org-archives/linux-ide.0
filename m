@@ -1,61 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from pasta.tip.net.au (mx1.tip.net.au [203.10.76.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70D932A1BB
-	for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2025 13:40:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FD20145B27
+	for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2025 22:49:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.10.76.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767102061; cv=none; b=KVIP6TixgwzXuMAQ7RbM20OkHjJU+ymwdMa+ymKOhelqi3kXVpihUhaetk4GWEchEMkBhKrn3RUrE6ZEHt+jKZGO7DASQ20rN853jWKSE2NyzgJcnj+HDEvkQHe+Bb0dzdi7JgSvZ0Mx/L4O21NCwIjpDs1h5immvZ1B39bnxn4=
+	t=1767135002; cv=none; b=WTn5sxQtqmt22Xb9JIO0oL8aAAJBYLhjjefYJUHCZghJ3UmWPx5iNj4V0SaGq2Yuh4vMr5YH5IqcwvKuShxttNScza+D+JM5eErCslwxLchKYPrhaYy1ZZmi9ru9i0+VxxMY5C9tAur28OZ/VpVVzF5e/SUHk2ocFabaf3k7Ad4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767102061; c=relaxed/simple;
-	bh=nrVUifgNDNEaOyA6Ivg+CEgYRMu2gOv/aoluKwGsfpc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qQG0iaw/0JdnlVIrYHrdHZz3eCRq8yg2SKH4r0w0XGjUZpDZ2GG7YkY5XWAaqyQ7oi3lBL4Tc7dNcB6p8bl0jhpzDegzRmHwowFpkcIfrZ2Zcg0xhkV88QtTXCsQCX9znLAhB93NsPy8VUO+4qNsdFgeJ20KS+qpigPCcOJPv1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jdkvQwxc; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jdkvQwxc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFF1DC4CEFB;
-	Tue, 30 Dec 2025 13:40:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767102059;
-	bh=nrVUifgNDNEaOyA6Ivg+CEgYRMu2gOv/aoluKwGsfpc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jdkvQwxc7jZxN7p2qKjApwJS2iqsHFbDKNBbaE1u0km6xPYlrACVtUmNKvlgeycVv
-	 TBtrBwGhlipDMYEqshGxqrfBcVlWgZqLgK48f9p1NJMgRdhABws02quxY7aRFvEEab
-	 zWjU18UK4juDyq4Pa5RdtRVdaRETxIfvueXZKeeXUZVENWA9U9YKo9JK328kh04nyY
-	 NVWkDcfYwNZYtNhI5QfjrsZCnzq7dL/xS5twqtjFcXFqWcPSHlyj/AkteusAqEjr6i
-	 X0F0nSHhPGbRt/sp3GFjGCXFNF0tEuMIeNfP6X8ahuwClezVTklNbg4sdBGy+L++Yy
-	 GVovpGbZM7Dow==
-Date: Tue, 30 Dec 2025 14:40:55 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
-	Xingui Yang <yangxingui@huawei.com>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v3 1/2] ata: libata-scsi: refactor ata_scsi_translate()
-Message-ID: <aVPWZ7Sd_a3bMAs-@ryzen>
-References: <20251220002140.148854-1-dlemoal@kernel.org>
- <20251220002140.148854-2-dlemoal@kernel.org>
+	s=arc-20240116; t=1767135002; c=relaxed/simple;
+	bh=TDK7yfZknvyV7y3uR1ecUWw/6aNPpkQw9LfvrbA3eiM=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=pfNOanStG1ZQ3mPCMEw/dh8hfGIpIZRIrl9Lxi9qL52V9FE0W9U1m1uoJCvHlnEPzpgRIBqhvlCoWQ4m8G9u3Rfgdf8wVbYkIr+5cVFJqB9Sb+f9cSSiHpDLkXRvmcbGsYiomrlqPcb/wBhX8SJKbH+yPd+ucm9HeMXVuPcIWCQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au; spf=pass smtp.mailfrom=eyal.emu.id.au; arc=none smtp.client-ip=203.10.76.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eyal.emu.id.au
+Received: from [192.168.2.7] (unknown [101.115.78.36])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mailhost.tip.net.au (Postfix) with ESMTPSA id 4dgp6V3hfzz8tr6;
+	Wed, 31 Dec 2025 09:44:02 +1100 (AEDT)
+Message-ID: <893cb476-ca89-417a-a710-95f1e8c77c04@eyal.emu.id.au>
+Date: Wed, 31 Dec 2025 09:43:55 +1100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251220002140.148854-2-dlemoal@kernel.org>
+User-Agent: Mozilla Thunderbird
+Reply-To: eyal@eyal.emu.id.au
+Subject: Re: ata timeout exceptions
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+To: list linux-ide <linux-ide@vger.kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+References: <acf2fa9f-f98d-4eb0-b18b-a04aa123201b@eyal.emu.id.au>
+ <080383fe-63cf-4198-966a-b32d798bea06@eyal.emu.id.au>
+ <13bf2e98-1774-4444-bc56-38a39d539d8e@kernel.org>
+ <79fcb2f0-d09b-4649-bda0-55f309b20985@eyal.emu.id.au>
+ <746FB9BB-5945-415F-915F-3F05D8A6B063@kernel.org>
+ <582e748c-3e29-4f21-af7c-c799fb457e59@eyal.emu.id.au>
+ <3d476e67-31a9-4e7d-b8cc-5bb298a6d62f@kernel.org>
+ <9933af72-944e-4bb3-bab9-fdbd4fb0fad0@eyal.emu.id.au>
+ <3e81e6ae-1ef0-454c-935f-eee2bba91176@eyal.emu.id.au>
+ <cda2a663-10a5-4212-8725-8c780a2c291d@kernel.org>
+ <0239be44-cfc7-4c99-b245-636e376df037@eyal.emu.id.au>
+ <9d5644a9-8365-4dce-833a-5e26e2d79684@kernel.org>
+ <f6665313-7b26-40e5-9185-ada5e63c41b0@eyal.emu.id.au>
+Content-Language: en-US
+In-Reply-To: <f6665313-7b26-40e5-9185-ada5e63c41b0@eyal.emu.id.au>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Sat, Dec 20, 2025 at 09:21:39AM +0900, Damien Le Moal wrote:
-> Factor out of ata_scsi_translate() the code handling queued command
-> deferral using the port qc_defer callback into the new function
-> ata_scsi_defer(), and simplify the goto used in ata_scsi_translate().
-> While at it, also add a lockdep annotation to check that the port lock
-> is held when ata_scsi_translate() is called.
-> 
-> No functional changes.
-> 
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+On 22/12/25 16:57, Eyal Lebedinsky wrote:
+> On 22/12/25 14:43, Damien Le Moal wrote:
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+[trimmed]
+
+>> Once you confirm if we really need to maintain NCQ off or not with a small max
+>> sectors limit, we can write a proper quirk for this drive.
+> 
+> I am leaving it this way. It runs the usual workload (rsync in) every 2 hours. I will report back in a few days.
+It is now "a few days" later (9 days). All is well and not a single pause observed.
+My job (rsync'ing 21GB into this disk every 2 hours) reports:
+	max_sectors_kb=1024 timeout=120 queue_depth=32
+
+I am keeping it with these parameters, but can try different values if it tells us anything.
+
+Happy New Year Everyone,
+	Eyal
+
+-- 
+Eyal at Home (eyal@eyal.emu.id.au)
