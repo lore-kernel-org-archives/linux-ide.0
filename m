@@ -1,83 +1,61 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D8A12FD1B5;
-	Tue, 30 Dec 2025 09:59:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70D932A1BB
+	for <linux-ide@vger.kernel.org>; Tue, 30 Dec 2025 13:40:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767088781; cv=none; b=Sp2Y9k3LDPl+4ylzo/aMnyP/rCgx3EjjdKj+7sbWHNAFmt2EOaT4ZemfRwHn8cQXYa7yyatWtvt7eL968WiWOM6m49JZqvonc3vpyW7C3poacVmWhsCSuNOT2BMCN7hYCnLEWKL4BZi4chPOh3lJu84+sHdq6rquHupOaYiIDH0=
+	t=1767102061; cv=none; b=KVIP6TixgwzXuMAQ7RbM20OkHjJU+ymwdMa+ymKOhelqi3kXVpihUhaetk4GWEchEMkBhKrn3RUrE6ZEHt+jKZGO7DASQ20rN853jWKSE2NyzgJcnj+HDEvkQHe+Bb0dzdi7JgSvZ0Mx/L4O21NCwIjpDs1h5immvZ1B39bnxn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767088781; c=relaxed/simple;
-	bh=WQMM7B12M9tIAmaZVZs3gPdILEXJR91D0xsOKWnW8Xk=;
+	s=arc-20240116; t=1767102061; c=relaxed/simple;
+	bh=nrVUifgNDNEaOyA6Ivg+CEgYRMu2gOv/aoluKwGsfpc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uOBIoTI4VU4yi8Xbd1nVlYnaY7y/LFOo6yh0y2lWP3DqeHLKYbPYfJGDQAIThxjz81WR1jSJ9MeMQKPO1xo8B18PNnIayxn/HEJHwhYJln9B/QsLP7T5heGnkQ3gtEBIupSJfPEDBC9C8fcWdi3dt/1HlblTkCATAvP1W1LLJTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oqwrhjIp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=qQG0iaw/0JdnlVIrYHrdHZz3eCRq8yg2SKH4r0w0XGjUZpDZ2GG7YkY5XWAaqyQ7oi3lBL4Tc7dNcB6p8bl0jhpzDegzRmHwowFpkcIfrZ2Zcg0xhkV88QtTXCsQCX9znLAhB93NsPy8VUO+4qNsdFgeJ20KS+qpigPCcOJPv1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jdkvQwxc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oqwrhjIp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 805D4C4CEFB;
-	Tue, 30 Dec 2025 09:59:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jdkvQwxc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFF1DC4CEFB;
+	Tue, 30 Dec 2025 13:40:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767088780;
-	bh=WQMM7B12M9tIAmaZVZs3gPdILEXJR91D0xsOKWnW8Xk=;
+	s=k20201202; t=1767102059;
+	bh=nrVUifgNDNEaOyA6Ivg+CEgYRMu2gOv/aoluKwGsfpc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oqwrhjIpRrmUHbOHO5zyLEza02aPUJI3mccQhmKPtxIZJ9a/63KUmdx1YAbxcCL7u
-	 KTnKKlvrtH6j5FiVziTV3W29DE5n+FhJXL9b08FKGcm2M2LaBVIE1sp1k543D6KE09
-	 m3ys6JQk//QzYdKUsn2kDO9mgP2ubbHdsrROvC8IHIik/q0SRFbCwm3aNm1PHCrMqV
-	 b++Jl1KwixUXFPjevpwrPqzaAO5G+fMBMQNemV31K9hVERlEbGKfrF6rIT+bSDxns3
-	 qaPreNpkBNr+8agQGhRF8nS4SZWwIfG0sqJRaYlrNUyo5td/4cVhzzYGfPOL7HbLHC
-	 g+0h79GzwpqoA==
-Date: Tue, 30 Dec 2025 15:29:32 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Damien Le Moal <dlemoal@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	Stephan Gerhold <stephan.gerhold@linaro.org>, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
-	linux-pm@vger.kernel.org, linux-ide@vger.kernel.org, Frank Li <Frank.Li@nxp.com>, 
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: Re: [PATCH v4 0/5] PCI: Add initial support for handling PCIe M.2
- connectors in devicetree
-Message-ID: <jhykqitumvq6jr63euamjdli4zntxbxasepx3g5nn4m45fu4ou@m2v44lk7lbby>
-References: <20251228-pci-m2-v4-0-5684868b0d5f@oss.qualcomm.com>
- <aVOcgDeOejO9m1zE@ryzen>
+	b=jdkvQwxc7jZxN7p2qKjApwJS2iqsHFbDKNBbaE1u0km6xPYlrACVtUmNKvlgeycVv
+	 TBtrBwGhlipDMYEqshGxqrfBcVlWgZqLgK48f9p1NJMgRdhABws02quxY7aRFvEEab
+	 zWjU18UK4juDyq4Pa5RdtRVdaRETxIfvueXZKeeXUZVENWA9U9YKo9JK328kh04nyY
+	 NVWkDcfYwNZYtNhI5QfjrsZCnzq7dL/xS5twqtjFcXFqWcPSHlyj/AkteusAqEjr6i
+	 X0F0nSHhPGbRt/sp3GFjGCXFNF0tEuMIeNfP6X8ahuwClezVTklNbg4sdBGy+L++Yy
+	 GVovpGbZM7Dow==
+Date: Tue, 30 Dec 2025 14:40:55 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
+	Xingui Yang <yangxingui@huawei.com>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH v3 1/2] ata: libata-scsi: refactor ata_scsi_translate()
+Message-ID: <aVPWZ7Sd_a3bMAs-@ryzen>
+References: <20251220002140.148854-1-dlemoal@kernel.org>
+ <20251220002140.148854-2-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aVOcgDeOejO9m1zE@ryzen>
+In-Reply-To: <20251220002140.148854-2-dlemoal@kernel.org>
 
-On Tue, Dec 30, 2025 at 10:33:52AM +0100, Niklas Cassel wrote:
-> Hello Mani,
+On Sat, Dec 20, 2025 at 09:21:39AM +0900, Damien Le Moal wrote:
+> Factor out of ata_scsi_translate() the code handling queued command
+> deferral using the port qc_defer callback into the new function
+> ata_scsi_defer(), and simplify the goto used in ata_scsi_translate().
+> While at it, also add a lockdep annotation to check that the port lock
+> is held when ata_scsi_translate() is called.
 > 
-> On Sun, Dec 28, 2025 at 10:31:00PM +0530, Manivannan Sadhasivam wrote:
-> > The Mechanical Key M connector is used to connect SSDs to the host machine over
-> > PCIe/SATA interfaces. Due to the hardware constraints, this series only adds
-> > support for driving the PCIe interface of the connector in the kernel.
+> No functional changes.
 > 
-> Since this series does not add any support for SATA, do we really want to
-> modify the SATA device tree binding?
-> 
-> I know that device tree describes the hardware, but if there is no software
-> that makes use of this, the SATA DT binding change feels a bit unnecessary.
-> 
-> Do we perhaps want to defer modifying the SATA DT binding change until the
-> corresponding change in software is added?
-> 
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-I'll defer the question to Rob since he was the one who asked for the SATA
-binding change:
-
-https://lore.kernel.org/all/20251208191110.GA2473021-robh@kernel.org
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
