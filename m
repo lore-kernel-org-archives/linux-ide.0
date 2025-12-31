@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D20126F2A7
-	for <linux-ide@vger.kernel.org>; Wed, 31 Dec 2025 11:17:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B363123BD1D
+	for <linux-ide@vger.kernel.org>; Wed, 31 Dec 2025 11:39:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767179869; cv=none; b=n/I5KPPVf91KEmFO27FJYbgFwRQ84yL4qFxUe8pgihTb6CRJtQL/WAx7V3K3w21LNg3Zfi8Td/RP4+Rg1MOuVHSwh7OjvXk1slayCRx4CsKS86eWTJDSlWILtIeLmBzVgmbu6IDNXhak5LLj9dtTtGF3kgKn5bqLIXq6F7Bn8Xc=
+	t=1767181183; cv=none; b=dGDuFajLNRR2so3Ywgw5VZGUtcVFTJazcU3d3JKj3Ct1NyUlpYhkiqBUz9nmXsioqBffprHZuXRXp1qxUSmWo5BNkruDvCLU4QE4AjBTqpXDoRcVCOy5myRK6phSqmHbuG9urC1TLf59BwGCzsIHJq6Ugn9UXTv5Q75pToYwcPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767179869; c=relaxed/simple;
-	bh=77I7z5jU3jYmYNc9y9hM5bDujMy8Qf3CMM7Ll16aH4o=;
+	s=arc-20240116; t=1767181183; c=relaxed/simple;
+	bh=GL6IJ4W0Q1deAWZ9TgXWet021svoP83GR8m3uNRUlBg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nN7NyTvH2gEmZ107WPG3xDGyqrAnJtUXujdF4op2QUTgPmMbw00Bu9NsX0uHE4FP/jAjqnWD7EcPCo4vJRbLYT4dzfurkZPrC3KnKBpQ5tm1w+iPZd/SCALrZoF6of2MbU6hdihu0fAFqroMbhGuxnLEPOsueSlcOkQJXuA1of8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ftT/0doi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=LNSISTPN7FJAvlIAFRSWrl2Q2nSRrMD1RAHyQdR3/KR7pelVQGdf+hLppedc1diCqiyQC/3ZMnpe/YUUXABTIp9+3lT02abDF6G9MwbieLIaKeKktJwLXLzq7p9I4L+KwJJQlidPLPMAOA9lb3NoUBoBsRN0XlFeu2uAZcB5X/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RSAmPXaE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ftT/0doi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB26AC113D0;
-	Wed, 31 Dec 2025 11:17:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RSAmPXaE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB3C1C113D0;
+	Wed, 31 Dec 2025 11:39:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767179867;
-	bh=77I7z5jU3jYmYNc9y9hM5bDujMy8Qf3CMM7Ll16aH4o=;
+	s=k20201202; t=1767181183;
+	bh=GL6IJ4W0Q1deAWZ9TgXWet021svoP83GR8m3uNRUlBg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ftT/0doiCNwXy4cl/JXYmzhpRukoujxGppfOmCZ+oRP1gCJ/mMGAYqLCRO6jd8fqQ
-	 vrEXocMjTC4FW6U23mu5loGR/+gfnAlZjtu0B10Zt4Kq/P8eoczrjxPtCFoK++ZwBR
-	 OW2Y+jMVWxmSYVDBSA5kHbX+Cyky3RMMxPn2A5nx2DSkFg3tHn8hzoNVM0im/czPE6
-	 LQJQwIAWq05iEj4bCxYoneBL21supLEHLzeLLAmRs15yPSAeApjNoI2z6Nc8RCqogU
-	 sqn8XXUQoKyQU08zyCfHD9eA0hBSh9bSjx/IUWjxcOI5Nxa1w8/UhIj9Vodu6J7l39
-	 W/jfxpAnYvHXQ==
-Date: Wed, 31 Dec 2025 12:17:42 +0100
+	b=RSAmPXaE0fLA0gJ7TU09vDevvkjXygXKc8rIMzY0OPnslPb+KgDVOojsCnP4zmsMd
+	 3SoPTw3EOfUW1ImvtjNmOrWuxOKpUSlJ00zJMCcjsCM8Dj8kynIMsOu0EgWSnaOqhw
+	 v63Hf6/l0aWftYNNsLgyd27jp463EfFhJlJrXMBdV0tUg1oSMHHBcvicxFCBrRhLGW
+	 jLDpK1kp5VdUEqH1FxUFd/w5M3RmiFlNbHL4no25v3SeY+JCr/vyIrdyRSQ7PfWvxi
+	 rrhmbVZAipbCScyCb1FAW9bXIlxwAL4G7HYMgUcLu/YgjlgFAjYBlgj6cL8X+ORrOw
+	 hMEt4fBZM0vtQ==
+Date: Wed, 31 Dec 2025 12:39:38 +0100
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
@@ -34,7 +34,7 @@ Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
 	John Garry <john.g.garry@oracle.com>
 Subject: Re: [PATCH v3 2/2] ata: libata-scsi: avoid passthrough command
  starvation
-Message-ID: <aVUGVo3Oym2IcpPS@ryzen>
+Message-ID: <aVULegmRVY2O-TUC@ryzen>
 References: <20251220002140.148854-1-dlemoal@kernel.org>
  <20251220002140.148854-3-dlemoal@kernel.org>
 Precedence: bulk
@@ -48,99 +48,70 @@ Content-Disposition: inline
 In-Reply-To: <20251220002140.148854-3-dlemoal@kernel.org>
 
 On Sat, Dec 20, 2025 at 09:21:40AM +0900, Damien Le Moal wrote:
-> When a non-NCQ passthrough command is issued while NCQ commands are
+> @@ -1702,6 +1779,17 @@ static int ata_scsi_defer(struct ata_port *ap, struct ata_queued_cmd *qc)
+>  	if (!ret)
+>  		return 0;
+>  
+> +	/*
+> +	 * We must defer this qc: if this is not an NCQ command, keep this qc
+> +	 * as a deferred one and wait for all on-going NCQ commands to complete
+> +	 * before issuing it with the deferred qc work.
+> +	 */
+> +	if (!ata_is_ncq(qc->tf.protocol)) {
+> +		ap->deferred_qc = qc;
+> +		return SCSI_MLQUEUE_DEVICE_BUSY;
 
-Same as cover letter:
-s/non-NCQ passthrough command/non-NCQ command/
+Here you save the qc, and you return SCSI_MLQUEUE_DEVICE_BUSY;
+SCSI_MLQUEUE_DEVICE_BUSY will cause the block layer to reinsert the request
+in the queue, so you will get the same request sent to ata_scsi_translate()
+again, even though you have save it. A little ugly IMO.
 
-
-> being executed, ata_scsi_defer() indicates to ata_scsi_translate() that
-> ata_qc_issue() should not be called for the passthrough command, and
-
-s/passthrough//
-
-
-> instead returns SCSI_MLQUEUE_XXX_BUSY to defer the command execution.
-> This command deferring is correct and as mandated by the ACS
-> specifications since NCQ and non-NCQ commands cannot be mixed.
-> 
-> However, in the case of a host adapter using multiple submission queues,
-> when the target device is under a constant load of NCQ read or write
-
-s/NCQ read or write commands/NCQ commands/
-
-There are other NCQ commands, such as NCQ SEND and NCQ RECEIVE.
-E.g. a user could saturate the queue by doing a NCQ encapsulated READ LOG
-DMA EXT.
+It seems like you are relying on the ata_scsi_qc_new() call will give you
+the same *qc as the one you have stored...
 
 
-> commands, there are no guarantees that requeueing the non-NCQ command
-> will lead to it not being deferred again repeatedly, since other
-> submission queues can constantly issue NCQ commands from different CPUs
-> ahead of the non-NCQ command. This can lead to very long delays for the
-> execution of non-NCQ passthrough commands, and even complete starvation
-> in the worst case scenario.
-> 
-> Since the block layer and the SCSI layer do not distinguish between
-> queuable (NCQ) and non queueable (non-NCQ) commands, libata-scsi SAT
+> +	}
+> +
+> +	/* Use the SCSI layer to requeue and defer the command. */
+>  	ata_qc_free(qc);
+>  
+>  	switch (ret) {
+> @@ -1777,8 +1865,11 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+>  		goto done;
+>  
+>  	rc = ata_scsi_defer(ap, qc);
+> -	if (rc)
+> +	if (rc) {
+> +		if (qc == ap->deferred_qc)
+> +			return 0;
 
-s/queuable/queueable/
+...and then you have this code here, to do nothing in that case.
 
+But, are we guaranteed that we will always get the same qc?
 
-> implementation must ensure forward progress for non-NCQ commands in the
-> presence of NCQ command traffic. This is similar to what SAS HBAs with a
-> hardware/firmware based implementation do.
-> 
-> Implement such forward progress guarantee by limiting requeueing of
-> non-NCQ commands: when a non-NCQ command is received and NCQ commands
-> are in-flight, do not force a requeue of the non-NCQ command by
-> returning SCSI_MLQUEUE_XXX_BUSY in ata_scsi_translate() and instead
-> hold on to the qc using the new deferred_qc field of struct ata_port.
-> 
-> This deferred qc will be issued using the work item deferred_qc_work
-> running the function ata_scsi_deferred_qc_work() once all in-flight
-> commands complete, which is checked with the port qc_defer() callback
-> indicating that no further delay is necessary. This check is done using
-> the helper function ata_scsi_schedule_deferred_qc() which is called from
-> ata_scsi_qc_complete(). This thus excludes this mechanism from all
-> internal non-NCQ commands issued by ATA EH.
-> 
-> When a port deferred_qc is non NULL, that is, the port has a command
-> waiting for the device queue to drain, the issuing of all incoming
-> commands (both NCQ and non-NCQ) is deferred using the regular busy
-> mechanism. This simplifies the code and also avoids potential denial of
-> service problems if a user issues too many non-NCQ passthrough commands.
+Have you tried this both with and without mq-deadline?
+And on both ahci and libsas HBAs?
 
-Instead of introducing a workqueue, did you try/consider to do it the same
-way that we handle CDL commands that completed without error:
-https://github.com/torvalds/linux/blob/v6.19-rc3/drivers/ata/libata-core.c#L4971-L4988
+Because AFAICT, for AHCI with mq-deadline, I don't think that rq->tag will
+be kept, so you will probably get another *qc.
 
-I.e., in qc_defer(), if we try to queue a non-NCQ command while there
-are NCQ commands active, set ATA_PFLAG_EH_PENDING so that we do not
-trigger fast drain (we wait for the active commands to finish),
-and then call ata_qc_schedule_eh() on the non-NCQ qc.
+This is apparently because when using mq-deadline, q->elevator is non-NULL:
+https://github.com/torvalds/linux/blob/v6.19-rc3/block/blk-mq.c#L742-L745
 
-Sure, for passthrough commands specifically, SCSI will not want to
-retry the command, because scsi_noretry_cmd() will return true:
-https://github.com/torvalds/linux/blob/v6.19-rc3/drivers/scsi/scsi_error.c#L2227
+Thus RQF_SCHED_TAGS will be set.
 
-But this could easily be solved by e.g. modifying scsi_noretry_cmd()
-to add an additional "case DID_REQUEUE: return false;"
+When RQF_SCHED_TAGS is set, the rq->tag is not kept during requeue:
+https://github.com/torvalds/linux/blob/v6.19-rc3/block/blk-mq.c#L427-L433
 
-And also set set_host_byte(scmd, DID_REQUEUE); (probably based on a
-new ATA_QCFLAG_DEFER flag or simiar), after we have cleared DID_TIME_OUT
-using set_host_byte(scmd, DID_OK):
-https://github.com/torvalds/linux/blob/v6.19-rc3/drivers/ata/libata-eh.c#L640
+Perhaps it does work (only) for libsas HBAs though, because:
+https://github.com/torvalds/linux/blob/v6.19-rc3/drivers/ata/libata-scsi.c#L752-L762
 
-Since this works for CDL commands, I don't see why we shouldn't be able to
-also send a non-NCQ command (if there are NCQ commands active), via SCSI
-EH, so that SCSI itself retries the command, rather than us holding/hiding
-a command from the SCSI queue, by using an additional workqueue in libata.
-
-(If libata is just a SCSI LLDD, it somehow feels more logical to make use
-of the SCSI queue, rather than to add our own queueing in libata using a
-workqueue.)
+in that case, it seems like the tag is taken from scsi_cmd->budget_token
+rather than from rq->tag.
 
 
-Kind regards,
-Niklas
+>  		return rc;
+> +	}
+>  
+>  	ata_qc_issue(qc);
+>  
