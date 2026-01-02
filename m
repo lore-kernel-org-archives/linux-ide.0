@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 489F870830
-	for <linux-ide@vger.kernel.org>; Fri,  2 Jan 2026 01:14:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB2E14A60F
+	for <linux-ide@vger.kernel.org>; Fri,  2 Jan 2026 01:21:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767316471; cv=none; b=TRYFG5+VLFp2XraQdJHDw8Tt9lhscUiO3JKHOCehi+mOFXRG0URneNZ/qDifNPgs01IWdFIdrQpv4RvN4lmHr+HD4FR3IE2RO2k8toIDyQRt6JL/6QfQqvkBEsQar0n3FCrJqyOZqsHR5g4u5OGe07iaO1Ui2fSO7uDIgPoJ3fA=
+	t=1767316882; cv=none; b=rpL/bCNs6XxM+HlfcoY30dsHSb1Y1z1Nt6c847hwYMzj/ByOXOy4abeB1qbJ6Gb6xcANCx4grfmjor/jW8dQwYfivp6XpvlCDDxqXd4D0dtab05eZjYdONEEACapuwEvUDi8RjizI3xbRdNN40mRXXMlNb6x6uvsfqq8YVnKGsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767316471; c=relaxed/simple;
-	bh=KMkhhZqnKJNPiqcAnT3vvev0RqIlqkwlOye9cBSnPx4=;
+	s=arc-20240116; t=1767316882; c=relaxed/simple;
+	bh=zQ7jVyU8nCgQ55wCKTMUNIl7O1HhtkpC3w8B9pbdC0s=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pOYAcYUzA4/Htrzf8+uXZaRelhfD2Jwh4NTDjNC6jvu2JMt/tQMsW22zwRffTWyV90iZ2WDnI8VcKcdoDxpqAowb+Brfdh9hYesjO54gl+o1wNG1hSy5fXMQcoM9JIh4bk96u4WOJ6jjzjOu2T9JRZt8tLPUtP2H3yNCOXURmWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mzOtUw1x; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=mHMpdcGP9Qwi4RtV1E26eHvCwtENB2ExXTgfotSXEQzf+I+ZBJ+uFkNU6pRmOEZ7dVxpA3Nte+laFqT0fj0TVDqaZHqjHAwnINk6/MLN2jud9632h5qNOxbPyVYvKcuwG1AJHtsyEfdVsiZO6IUSHwPsazUySolK/kDb+Cx9LiE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q7xzSZo+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mzOtUw1x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34FE8C4CEF7;
-	Fri,  2 Jan 2026 01:14:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q7xzSZo+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28C95C4CEF7;
+	Fri,  2 Jan 2026 01:21:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767316470;
-	bh=KMkhhZqnKJNPiqcAnT3vvev0RqIlqkwlOye9cBSnPx4=;
+	s=k20201202; t=1767316881;
+	bh=zQ7jVyU8nCgQ55wCKTMUNIl7O1HhtkpC3w8B9pbdC0s=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=mzOtUw1x/74dGSRSvgxB7e9OeoolqV/0Q2RdajNSlZFqeKumBdnssfau1e0oC/4Jp
-	 6lkO1BS4RcgB6KXAhRlLl1aqA3I1aPxNaZim6wkY+PTaAkURsWsd2lRZP186kMQOHM
-	 iXIN8wQ6jbNNnnaPco+1M7fnzDs9iYJDhePs6kiu9SVciyyR0m/Myb/7lkPPRhFQz/
-	 6gO9pUEfzmFeHOptcytE2eNCtIAXzk+neAJxQVGedKFPVZ2cjDZxIXEMQcdLqTgmKg
-	 0TlF+z5z8YJEjIXsBEsqo3P33/aqIQOJPDeVxIC8/jrgXvL7FQtb/Vf4M3/Sjzn9Ck
-	 KncjnOvZMDAkA==
-Message-ID: <1b279430-e3e7-4712-9c21-c8d4da43d34a@kernel.org>
-Date: Fri, 2 Jan 2026 10:14:29 +0900
+	b=q7xzSZo+jhuHSOQeTblmOAKQa7avFvcchzM3jPa/O/qI15G0Z+v0ph5FpaMM44XtD
+	 Y9g5Y+FVHoEYGHW7RPlpV1u3kHDYTblYsmV6Q8BTWaP6tYZbaC691yuUVR5TGML+NR
+	 KGliyCzHrOKKgqm6ZAEYCyHoqBkijVtklLIoiE4P7P3hB/Lbg1P88uu4f1RdftmJkl
+	 fvn1JZ7gzvn+Fc+SUDknUQPe9N8Bat31gzKUGU7zlv80fL2DU9LnuqKUBLz7GX7feR
+	 TxRCCFqYwop4U7YNFaFKB96Sud6aPUrHlXYh3jlZjUeI5hYnuwKdeg0PhJyUHPCz1V
+	 KCY+NbFSqV57A==
+Message-ID: <6a821520-a4a2-454f-b220-c62ef4bf7a99@kernel.org>
+Date: Fri, 2 Jan 2026 10:21:20 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,42 +35,55 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 0/2] Prevent non-NCQ command starvation
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
- Xingui Yang <yangxingui@huawei.com>, John Garry <john.g.garry@oracle.com>
-References: <20251220002140.148854-1-dlemoal@kernel.org>
- <aVT1QdEZq09kAjS-@ryzen>
+Subject: Re: ata timeout exceptions
+To: eyal@eyal.emu.id.au, list linux-ide <linux-ide@vger.kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>
+References: <acf2fa9f-f98d-4eb0-b18b-a04aa123201b@eyal.emu.id.au>
+ <080383fe-63cf-4198-966a-b32d798bea06@eyal.emu.id.au>
+ <13bf2e98-1774-4444-bc56-38a39d539d8e@kernel.org>
+ <79fcb2f0-d09b-4649-bda0-55f309b20985@eyal.emu.id.au>
+ <746FB9BB-5945-415F-915F-3F05D8A6B063@kernel.org>
+ <582e748c-3e29-4f21-af7c-c799fb457e59@eyal.emu.id.au>
+ <3d476e67-31a9-4e7d-b8cc-5bb298a6d62f@kernel.org>
+ <9933af72-944e-4bb3-bab9-fdbd4fb0fad0@eyal.emu.id.au>
+ <3e81e6ae-1ef0-454c-935f-eee2bba91176@eyal.emu.id.au>
+ <cda2a663-10a5-4212-8725-8c780a2c291d@kernel.org>
+ <0239be44-cfc7-4c99-b245-636e376df037@eyal.emu.id.au>
+ <9d5644a9-8365-4dce-833a-5e26e2d79684@kernel.org>
+ <f6665313-7b26-40e5-9185-ada5e63c41b0@eyal.emu.id.au>
+ <893cb476-ca89-417a-a710-95f1e8c77c04@eyal.emu.id.au>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <aVT1QdEZq09kAjS-@ryzen>
+In-Reply-To: <893cb476-ca89-417a-a710-95f1e8c77c04@eyal.emu.id.au>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 12/31/25 19:04, Niklas Cassel wrote:
-> On Sat, Dec 20, 2025 at 09:21:38AM +0900, Damien Le Moal wrote:
->> This small patch series addresses potential command starvation issues
->> with non-NCQ passthrough commands issued to a device accessed through
+On 12/31/25 07:43, Eyal Lebedinsky wrote:
+> On 22/12/25 16:57, Eyal Lebedinsky wrote:
+>> On 22/12/25 14:43, Damien Le Moal wrote:
 > 
-> Here and everywhere else:
-> s/non-NCQ passthrough commands/non-NCQ commands/
+> [trimmed]
 > 
-> The problem is really not related to passthrough commands,
-> but rather the mix between NCQ and non-NCQ commands.
+>>> Once you confirm if we really need to maintain NCQ off or not with a small max
+>>> sectors limit, we can write a proper quirk for this drive.
+>>
+>> I am leaving it this way. It runs the usual workload (rsync in) every 2 hours. I will report back in a few days.
+> It is now "a few days" later (9 days). All is well and not a single pause observed.
+> My job (rsync'ing 21GB into this disk every 2 hours) reports:
+> 	max_sectors_kb=1024 timeout=120 queue_depth=32
 > 
-> E.g. you can perform a ioctl with the REQ_OP_DISCARD command,
-> for most ATA devices this is a SCSI WRITE SAME 16 CMD, which gets
-> translated to either a NCQ or non-NCQ command depending on if the
-> device supports NCQ encapsulated Data Set Management (DSM) commands,
-> and specifically if the device has the QUEUED DATA SET MANAGEMENT
-> SUPPORTS TRIM bit set or not, which is not a given.
-> 
-> TL;DR: the starvation problem is not directly tied to non-NCQ
-> passthrough commands, but any command, even commands that goes via
-> the block layer, that happens to be translated to a non-NCQ command.
+> I am keeping it with these parameters, but can try different values if it tells us anything.
 
-Yep. I corrected that.
+If you are OK with keeping these as your default with this drive and setting
+that through a udev rule or whatever else you prefer, then I think we are good.
+We can make the max_sectors_kb=1024 permanent as a quirk though, but that would
+be a little extreme since in the end, we are dealing with a very very slow drive
+here, not really a buggy one.
+
+> Happy New Year Everyone,
+
+Thanks. Happy new year to you too !
 
 
 -- 
