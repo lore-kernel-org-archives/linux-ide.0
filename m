@@ -1,97 +1,134 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-108-mta11.mxroute.com (mail-108-mta11.mxroute.com [136.175.108.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3CB42DF707
-	for <linux-ide@vger.kernel.org>; Mon,  5 Jan 2026 23:26:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 408F134EF05
+	for <linux-ide@vger.kernel.org>; Tue,  6 Jan 2026 20:02:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767655588; cv=none; b=Q1TH0TbsffWAMt3plPxN0pl3u0qiKBW6dI7h2io06EnX2SWLTPtagpeBXsFFUVcCmigGZJ3WwtxyTavp0zmvXMkSueM0SK3mcubsbYnPK7NYgE2egIYtgLMThTgS4j0ZdXt31eQc7TVW449VJAKCj8vYCWSSV7g1t1RdudTi1bQ=
+	t=1767729745; cv=none; b=lkLoHBEZqFqhDGcbydfjsKtRjlPxU1z6gJWuUShVRcGExVwU5lc8UWMMywDrnzSqTnf+XO0lFxHO+JkUiVdFSvTOaibySSoNKWnUJw5OkrBmGgcKnhERIWxdxrhZfZ3V9UX/3yEiRbofQihrRJltRHCu4q6Zwf+b6PiyZi8X4tc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767655588; c=relaxed/simple;
-	bh=E6fi/k+WJlX9JaL3qya2sm7lIzGqRfXc4StGV9/lhqY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=njgpJ1F/JSDm9YPTTnOpaJJylrgd2pJPLYRXcus4DpeBtE53ZogzDMDAT5RPtw3VbbPzZT9dfVDZiCnRu/872WXSnWh4hd04KfbzATErsZdlx1VHnu54x2Jt2yeg7cBnxRiIxct+wUIogx2tVIEv8J+1ojUbAIkPX9d6q80wqZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=wnpj9WNE; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1767729745; c=relaxed/simple;
+	bh=KgslWiZJSachWcLx0sgdMQzJ48U4UP3wAdNzBrpZlS8=;
+	h=MIME-Version:Date:From:To:Cc:Subject:Message-ID:Content-Type; b=K3JT8r4JYdxtA7Pj1n7EF7iAMFbo3dt7dZdeq//w+9zL7QCwg7GV5vxUFMLvf0OIP7HeOMZFADW4FZm9wiPBj5x+pYroie6xQrRfTRxRbxaID9FX2GnD8g8a5B1rTeKtlvWGIasBy9E9Zkp4vggUUJOeeCeOxvQ2tvxEntlE0dk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yoxt.cc; spf=pass smtp.mailfrom=yoxt.cc; dkim=pass (2048-bit key) header.d=yoxt.cc header.i=@yoxt.cc header.b=FAV205d3; arc=none smtp.client-ip=136.175.108.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yoxt.cc
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yoxt.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="wnpj9WNE"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2a0d06cfa93so34455ad.1
-        for <linux-ide@vger.kernel.org>; Mon, 05 Jan 2026 15:26:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1767655586; x=1768260386; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4RzpOLu9vNnl6xKFGK6Mo3CRqEDyepCvmuYVGfejP9I=;
-        b=wnpj9WNELuGb9N9TeVIWQ3jMqaA0osr3Tul8CCktMcuPkGbfqxW4ldOQkbQUCNucZc
-         YDP30No7C9nLx1IRSXof03KYopBsR+giBl03zwudeuKTCOchbNQ270oKfuF+mINNHbG7
-         H2nFIAmPPhTdbbSI9F28vwJiFLIIS2PhCcNwbT6Ac3cgBCp6MUex7+X9nYl2G35yCuSm
-         xtNpT8Bix/cxNAyqJexI7jX6SSZ4y8D9vbK2uoQAW+/eRhd30gy2FnZ9ITolyJ40uDss
-         WIABZZjlj66szDJ4ycrCz3MtACW3zM5tgcaCZEfwenz//GJtX8S8V6B2QRQAkgN4oLVv
-         KKDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767655586; x=1768260386;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4RzpOLu9vNnl6xKFGK6Mo3CRqEDyepCvmuYVGfejP9I=;
-        b=tXzV4ZbyTNFZ3HMQB8ONdufnFH97fawMIAwr88X7W+2DFGlRwnpEqBXmN8GsEejIup
-         xRNMAbqYiIcUbTpQ5cFhRB4QsFLflsnteFZ1lsotvgHxq8UfO2xHejIigTlQKZ52QT4I
-         Bsuu3CcgjSsue1LtYwQa+5zEm9WCi7qo4h7uk0EXwcMMfb2E1zn9YZuyD3Dg/lyS6m1q
-         y22yyc51huqnD83JvRnUQpKe6VetNypH7auT31F62H3VjVTxQE7LkBIqg2KG1NxRiIpu
-         pM0j8JR6i7QDLwjRRBfIu/VirBAK+xZLY+pL1sg5eR7oGNWsGK1Gtawb7B2C1g+IQwHq
-         DIPw==
-X-Gm-Message-State: AOJu0Yx+Hrp1+eydb0tLCazXhwDB5FJFnp4k797jAfMuhAS64NaVYhmb
-	mqS+uImjRsBLsVFgvBkxdkdEaBYea128sq3SfTayweafpWpjtnjkDgpG9t9OE2ujMg==
-X-Gm-Gg: AY/fxX4n3MTLzv2hlU6996lZ9a6OLgiKsQDWy/ryygi/NIZ7szcYr+/KnoxKOk31dwh
-	9qnD705K9Pa6pOfFWJhe/lYK2o/sSBLzPKul7P8acN1eztBvhtmaPwwIXSGhblXMOd/kTPmfL2K
-	GILGQlCZlaPVc2cCaMhVlEOWq7tmucv7UPrHKYQJI9lsf3veUfWP6c4jkNZu+J4azBe8Wm0SN0o
-	uV0C2SyR32Tx2f4Og6Ggr3jtUP7n4GYD3XvGo015fp9rHGwOXjY29YfKLfanjdy0XMB1LkIzHoT
-	NoUF6Vvjjfpcure9l4bbbMDh1fyShfJIM6yY8KcOURGCMpqfUaQpvnLt92EU/3xWUzCaTlr3mH8
-	pwA6ZjtgdJadIz5keGAXt0NuMfcRnqcxuv0zaTGrdOviipbQyPOiTXMShN0V8BC/andGGACEfP2
-	eZRIPIQJIcXPdPJrSyIDm1XV4O21o0wv2qjljZZojkTU0JyDmJ0w==
-X-Google-Smtp-Source: AGHT+IGpRFm4sSd1b+3aCWEytSbj2iig1Qbj8H05ZZ1tOM1awvYZ4d80e8gUVQe9rtgwakBBfh+f7A==
-X-Received: by 2002:a17:903:1a6f:b0:271:9873:80d9 with SMTP id d9443c01a7336-2a3e42a2e1emr465825ad.7.1767655585444;
-        Mon, 05 Jan 2026 15:26:25 -0800 (PST)
-Received: from google.com (185.29.127.34.bc.googleusercontent.com. [34.127.29.185])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-819c5de6405sm208941b3a.61.2026.01.05.15.26.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jan 2026 15:26:25 -0800 (PST)
-Date: Mon, 5 Jan 2026 15:26:20 -0800
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
-	Xingui Yang <yangxingui@huawei.com>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v5 1/2] ata: libata-scsi: refactor ata_scsi_translate()
-Message-ID: <aVxInN8EV4p_gkY3@google.com>
-References: <20260104082203.1212962-1-dlemoal@kernel.org>
- <20260104082203.1212962-2-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=yoxt.cc header.i=@yoxt.cc header.b="FAV205d3"
+Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
+ (Authenticated sender: mN4UYu2MZsgR)
+ by mail-108-mta11.mxroute.com (ZoneMTA) with ESMTPSA id 19b94e27acf0004eea.003
+ for <linux-ide@vger.kernel.org>
+ (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
+ Tue, 06 Jan 2026 19:57:09 +0000
+X-Zone-Loop: a552e5510674bf1e7b2e0e2caa84b75f34ea7864de21
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=yoxt.cc;
+	s=x; h=Content-Transfer-Encoding:Content-Type:Subject:Cc:To:From:Date:
+	MIME-Version:Sender:Reply-To:Content-ID:Content-Description:Resent-Date:
+	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:
+	References; bh=l9xpUbcT2Goz+ycuKP2edIKbuj1HoialB1ajw8Cl6HE=; b=FAV205d3pjdS/x
+	WY521a0NkntX8xDpNSNKoxoEyrjffdUqClqZE3wUE6+SyodWBfnl3s3nnQB8xFPVYfokU5zfG4VNq
+	GNLjYHRqTDCQdZxv4BeL/nY47D+yfK62fHWbTuBTFgck8fJtVJYmwqRo+tZpp7K95jD2DqqeoCHK7
+	eAWR/Z9y+VrwUCeaszGfl+R/5NL9oHs/5iUf1/2OM5cL7UCxR8WSIIzZp4WjWukJIcpNjZekhk6xW
+	aqlb1aAEKOjU6TZ/64CyjtcSeLhPWE8QibB6CppDf8ny9Zg3598R2TuyhEbwKQUTwIit3X/vhPZjT
+	KDbbSylpSpjnfdJO75cQ==;
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260104082203.1212962-2-dlemoal@kernel.org>
+Date: Tue, 06 Jan 2026 20:57:07 +0100
+From: wolf@yoxt.cc
+To: linux-ide@vger.kernel.org
+Cc: damien.lemoal@opensource.wdc.com, tj@kernel.org
+Subject: [REGRESSION] libata: SATA LPM forcibly disabled on Intel Raptor Lake
+ since Linux 6.14.
+Message-ID: <605b34a7723436284699c9a8e524907b@yoxt.cc>
+X-Sender: wolf@yoxt.cc
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+X-Authenticated-Id: wolf@yoxt.cc
 
-On Sun, Jan 04, 2026 at 05:22:02PM +0900, Damien Le Moal wrote:
-> Factor out of ata_scsi_translate() the code handling queued command
-> deferral using the port qc_defer callback and inssuing the queued
+Hello,
 
-s/inssuing/issuing/
+I am reporting a power-management regression in libata affecting the 
+Intel Raptor Lake SATA AHCI Controller, introduced after Linux 6.14.
 
-> command with ata_qc_issue() into the new function ata_scsi_qc_issue(),
-> and simplify the goto used in ata_scsi_translate().
-> While at it, also add a lockdep annotation to check that the port lock
-> is held when ata_scsi_translate() is called.
-> 
-> No functional changes.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Hardware:
+- CPU: Intel Core i5-12500
+- SATA controller: Intel Corporation Raptor Lake SATA AHCI Controller 
+[8086:7a62]
+- Motherboard: Gigabyte B760 GAMING X DDR4
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+Distributions tested:
+- Proxmox / Debian 13 (Trixie)
+- Chimera Linux Live USB (kernel 6.18)
 
+Kernel versions tested:
+- 6.14.x (Proxmox): OK
+- 6.17.x (Proxmox): REGRESSION
+- 6.18.x (Chimera): REGRESSION
+
+Problem description:
+On kernel versions newer than 6.14, SATA Link Power Management (LPM) is 
+forcibly disabled on part of the controller.
+Out of 8 SCSI hosts, 4 hosts are stuck with link_power_management_policy 
+set to "max_performance" and cannot be changed:
+
+max_performance
+max_performance
+max_performance
+max_performance
+med_power_with_dipm
+med_power_with_dipm
+med_power_with_dipm
+med_power_with_dipm
+
+The motherboard only has 4 physical SATA ports, so the presence of 8 
+hosts and 4 apparent dummy ports might be unexpected?
+
+Manually setting LPM on the affected hosts fails with:
+echo med_power_with_dipm > 
+/sys/class/scsi_host/host*/link_power_management_policy
+-bash: echo: write error: Operation not supported
+
+This worked correctly on 6.14.x and earlier.
+
+Because LPM cannot be enabled on all ports, the system is unable to 
+enter deeper package C-states.
+
+Observed effects:
+- CPU package C-states are stuck at C3 (normally reaches C8 or deeper)
+- Idle power consumption increased by approximately 4 watts
+- powertop reports 4 out of 8 SATA LPM tunables as permanently "Bad"
+
+SATA LPM worked reliably on this hardware on previous kernels
+
+dmesg logs:
+Working (6.14):
+https://www.dropbox.com/scl/fi/5ryfjrp9fgx1dkxmszm5l/6.14-proxmox.txt?rlkey=75y3hue5whdmxbfvxq1piyofg&raw=1
+
+Not working:
+6.17 (Proxmox):
+https://www.dropbox.com/scl/fi/ja2w0qtfummkmh406rxc7/6.17-proxmox.txt?rlkey=qxqpi7w2rn0ecbhdf2t4ju9kh&raw=1
+
+6.18 (Chimera):
+https://www.dropbox.com/scl/fi/s7412dfcv3pjk63mqfrep/6.18-chimera.txt?rlkey=9dd5wylsxb45l1b9zxgxadaw7&raw=1
+
+While reviewing the logs, I noticed:
+The presence of 4 apparent dummy SATA ports
+Exactly 4 out of 8 SATA LPM entries disabled in both sysfs and powertop
+This suggests the issue may be related to SATA port enumeration or 
+libata power-management handling in newer kernels.
+
+
+Expected behavior:
+The ability to enable SATA Link Power Management on all SATA hosts 
+should be restored, allowing the system to enter deeper package C-states 
+and return to previous idle power levels.
+
+
+Best regards,
+Wolf
