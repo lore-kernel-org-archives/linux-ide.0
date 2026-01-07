@@ -1,129 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC026368292
-	for <linux-ide@vger.kernel.org>; Wed,  7 Jan 2026 15:16:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20908345CC6;
+	Wed,  7 Jan 2026 16:48:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767799012; cv=none; b=Npi8ezFqRe+6xbDmpVMUoNXeC07Y7gUiyFOkqNCaZ5NZLQdiUNuTBi2jvs6iMoaXIFieLzYUXVSt9ShtzJjRqPZ5qRLXlsOelIsulBdBI0462EJDPvYFGkStTGPIa1IzDqrJDl5xGe4QzF2R9Mr+f5kJs0bye8SLDb2K/tri0YQ=
+	t=1767804521; cv=none; b=eXyJxTq7S5wXSIiUuuJwIPvPONcUJX/R+k+f4auiMIPlv7Y5uJOZ4rk6Ep97I1oeXV5XHrUcKRvze9zxWvkixV8BdKR64AzYlMU8QIpzybj45Bz1wf+d0P0T4+QYm4nFfWni0StEU4dbEOBJ9SE6N35Gtor9heYiOx0U9fup1I4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767799012; c=relaxed/simple;
-	bh=ZvSKYi7J+HgVOZKigHnH4pjHbLWJRNCdw63lRSjijPk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hviANOFJjUBZq9vd+LqxXMHNFN9RvjE9o/GyhpVMIZbQRmtDCoiKLnXiPterY9a3Cf0jvSlXCi3mzm83xMgHnXgTfGxOghPmGiicf0Nq6Vfk8MZWOeSmd/7gMVve86Hfg1e/o/DGTlcL5jcEeLKq8ZYZAASPKfNNLNI7jWjoML0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MOX//zYd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767804521; c=relaxed/simple;
+	bh=YlIeTCM10zf09MC9CyZkYv+Kn5yyXyFaG8Q3R0EOyrE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rIt2JV1/ldYbD8D9qZjcTCPPi4x0TYvPYibZLemwNWUTOUfFIYzPi0eTclv94e14bz2FWZyXa7pra639w7D5b21eQo08krtt8rvhUegHTXdvIs33Z1t7LgH8FVPrizAHMJNNasJddMIuChOL3nWizUrm+meQSYxpQv2R+JE9uHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YkCXjGpd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MOX//zYd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B92DC4CEF7;
-	Wed,  7 Jan 2026 15:16:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YkCXjGpd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C678FC4CEF1;
+	Wed,  7 Jan 2026 16:48:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767799011;
-	bh=ZvSKYi7J+HgVOZKigHnH4pjHbLWJRNCdw63lRSjijPk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=MOX//zYd7NxhTLrmITyi5RoAYYGrQGMMcM/vJKqDtfeBam1Gollbr1WQToLHwhgKl
-	 ayWa9gNeIM20U8iFmWbkqMZjtFu+NOEzc43znhYXf7NHlAiKDDXkQWGcaNMLTgcWuv
-	 G8I8sZbvpdKm9Pjh08zWTVMiQsJkDyCpPbpjvJGJ0LCuoRLx9hyvJGCc4HzxXm5n+A
-	 PFV95BtQ6HX7eyoYj/Gkz/p8WcTBH2DNrmStcw+HuyqXP2IhJXv/SLMRSC502sH2fC
-	 AasB9YZQrDHPio0FBFgTemf6yiQKzS3AI0MP+ZuYOTGrwrKDzcQiRqsxm7JAtuNreP
-	 zNNwpoAiOqcjQ==
-Message-ID: <7e24ae2e-4483-46fb-accd-5c0e3a066e89@kernel.org>
-Date: Wed, 7 Jan 2026 16:16:48 +0100
+	s=k20201202; t=1767804520;
+	bh=YlIeTCM10zf09MC9CyZkYv+Kn5yyXyFaG8Q3R0EOyrE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YkCXjGpdmaVvCdlXKlt1x5wAhSc63hUWo+x4Ex3TYEh2dB+ZMmdk5nm7o5G+BO/Ig
+	 0mlgkEV5z4chNbADVglVF4ChIBltwuEgqOvZ3JLfunPAthyFjdYfuA0l90z3UdIopQ
+	 hIiECu9bx4wH66PhzJ1HFT4RLVU8dd9ZxpwA3GXb3loqZRo7KUiB3E88wO8/ERm5wV
+	 yK13JQJX7C/662kUtLXhlUlceCVBda++u5jrfgo78rz8sb/iULabBS56d21dHdEqfx
+	 jmo2pWbLpmMVClcy+ti2vay36O1SZyDxqNriRNg97HdHNOgL2xYr+mr3y9vZkF+GF6
+	 D59Rq0OT+MotQ==
+Date: Wed, 7 Jan 2026 22:18:29 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Damien Le Moal <dlemoal@kernel.org>, 
+	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-pm@vger.kernel.org, linux-ide@vger.kernel.org, 
+	Frank Li <Frank.Li@nxp.com>, Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Subject: Re: [PATCH v5 0/5] PCI: Add initial support for handling PCIe M.2
+ connectors in devicetree
+Message-ID: <3jzmxpjz46rx6yfem6govgvahwpxwsqtzxfj5cmkcfmgeubdcb@6oudcjxqsw4h>
+References: <20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com>
+ <aV5vb1VlQYeWNcv1@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] libata: SATA LPM forcibly disabled on Intel Raptor
- Lake since Linux 6.14.
-To: Niklas Cassel <cassel@kernel.org>
-Cc: wolf@yoxt.cc, linux-ide@vger.kernel.org
-References: <605b34a7723436284699c9a8e524907b@yoxt.cc>
- <aV4yBZkxVD2Olg3X@ryzen> <85cae643-f3bc-43db-966c-3f57d8daa6b6@kernel.org>
- <aV5BjOXc1uK2HSZA@ryzen>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <aV5BjOXc1uK2HSZA@ryzen>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aV5vb1VlQYeWNcv1@ryzen>
 
-On 1/7/26 12:20, Niklas Cassel wrote:
-> I think the problem is:
+On Wed, Jan 07, 2026 at 03:36:31PM +0100, Niklas Cassel wrote:
+> On Wed, Jan 07, 2026 at 07:41:22PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> > Hi,
+> > 
+> > This series is an initial attempt to support the PCIe M.2 connectors in the
+> > kernel and devicetree binding. The PCIe M.2 connectors as defined in the PCI
+> > Express M.2 Specification are widely used in Notebooks/Tablet form factors (even
+> > in PCs). On the ACPI platforms, power to these connectors are mostly handled by
+> > the firmware/BIOS and the kernel never bothered to directly power manage them as
+> > like other PCIe connectors. But on the devicetree platforms, the kernel needs to
+> > power manage these connectors with the help of the devicetree description. But
+> > so far, there is no proper representation of the M.2 connectors in devicetree
+> > binding. This forced the developers to fake the M.2 connectors as PMU nodes [1]
+> > and fixed regulators in devicetree.
+> > 
+> > So to properly support the M.2 connectors in devicetree platforms, this series
+> > introduces the devicetree binding for Mechanical Key M connector as an example
+> > and also the corresponding pwrseq driver and PCI changes in kernel to driver the
+> > connector.
+> > 
+> > The Mechanical Key M connector is used to connect SSDs to the host machine over
+> > PCIe/SATA interfaces. Due to the hardware constraints, this series only adds
+> > support for driving the PCIe interface of the connector in the kernel.
+> > 
+> > Also, the optional interfaces supported by the Key M connectors are not
+> > supported in the driver and left for the future enhancements.
 > 
-> [    3.010059] ata8.00: ATA-11: ST16000NM000J-2TW103, SN06, max UDMA/133
-> [    3.010079] ata7.00: ATA-11: ST16000NM000J-2TW103, SN06, max UDMA/133
-> [    3.012748] ata6.00: ATAPI: PIONEER BD-RW  BDR-S12JX, 1.01, max UDMA/100
-> [    3.012779] ata5.00: ATAPI: PIONEER BD-RW  BDR-S12JX, 1.01, max UDMA/100
-> [    3.061873] ata8.00: Features: DIPM NCQ-sndrcv
-> [    3.065319] ata7.00: Features: DIPM NCQ-sndrcv
+> For me, it is not clear if there is a dependency or conflict with your
+> "major pwrctrl rework series":
+> [PATCH v4 0/8] PCI/pwrctrl: Major rework to integrate pwrctrl devices with controller drivers
 > 
-> The ST drives advertise support for DIPM, so these two ports should enter
-> a lower power state.
+> Does one need to go before the other, or are they completely unrelated
+> and can be merged in any order without conflicts?
 > 
-> 
-> For the PIONEER optical drives however, we don't seem to get any "Features: "
-> print at all. My guess is that the support neither HIPM nor DIPM, and thus
-> stops the whole system from entering a lower power state.
-> 
-> 
-> What I think happens:
-> 
-> For a device that does not support HIPM, we will clear flag ATA_LPM_HIPM from
-> hints:
-> https://github.com/torvalds/linux/blob/v6.19-rc4/drivers/ata/libata-eh.c#L2168-L2169
-> 
-> If flag ATA_LPM_HIPM is not set, we will disable HIPM (ALPE) for the port:
-> https://github.com/torvalds/linux/blob/v6.19-rc4/drivers/ata/libahci.c#L835-L847
-> 
-> Thus the HBA will never tell the device to enter a low power state.
-> (And if DIPM is not supported, the device itself will never enter a low
-> power state.)
-> 
-> 
-> Questions:
-> -Why was this not a problem on older kernels?
-> 
-> If you are willing try some patches from us, we could give you a patch with more
-> debug prints, to show for each device, when we {enable,disable} {HIPM,DIPM}.
-> 
-> 
-> -Why don't we get the Features: print for ATAPI devices?
-> 
-> We probably need something like this:
 
-Before doing this, one simple test to do would be to unplug the 2 ATAPI devices
-(CD/DVD drives) and reboot to see if LPM works then.
+Only patch 2 has the conflict with pwrctrl rework series, but that is trivial to
+fix. Otherwise, both are mostly independent.
 
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index fc250b494ce3..a8af200ac24f 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3161,11 +3161,13 @@ int ata_dev_configure(struct ata_device *dev)
->                 /* print device info to dmesg */
->                 if (print_info)
->                         ata_dev_info(dev,
-> -                                    "ATAPI: %s, %s, max %s%s%s%s\n",
-> +                                    "ATAPI: %s, %s, max %s%s%s%s%s%s\n",
->                                      modelbuf, fwrevbuf,
->                                      ata_mode_string(xfer_mask),
->                                      cdb_intr_string, atapi_an_string,
-> -                                    dma_dir_string);
-> +                                    dma_dir_string,
-> +                                    ata_id_has_hipm(dev->id) ? " HIPM" : "",
-> +                                    ata_id_has_dipm(dev->id) ? " DIPM" : "");
->         }
->  
->         /* determine max_sectors */
-> 
-> 
-> 
-> Kind regards,
-> Niklas
-
+- Mani
 
 -- 
-Damien Le Moal
-Western Digital Research
+மணிவண்ணன் சதாசிவம்
