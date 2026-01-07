@@ -1,107 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A90531283C
-	for <linux-ide@vger.kernel.org>; Wed,  7 Jan 2026 09:51:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 746792E8B75
+	for <linux-ide@vger.kernel.org>; Wed,  7 Jan 2026 10:14:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767779486; cv=none; b=P9bZtEabk56Oyn9dH/eHwDk4nDCVkiWYO1rL4FPSs6cFlHPXzHCVe3g6Ef32iKT2mgmBA0nIhjfzzMMdFsbRBl2DvcaTD5rYzESLnPAom7x7Sm1trOsPwDmA5x2S+7Dbtq4Lkfi45QeLe/Y/UfL+aQdWbUC2k0ODDNsM8y88BJ4=
+	t=1767780874; cv=none; b=iXfIfJbPQ8YrVjS7Bmpnaj+G+hYV8rzTAEFW26FDtF6ibEj62gfnjGl7FqsU3tN83HR3xBs7zOvA/arCUZWqxPIF/4F0XqPnd4jMKoD9AglXKtnt8y/KxkewZcdM6VYNCuon8wUEYL5jIPMUDtRS4gcCRMz11lzFteiG1t4uWAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767779486; c=relaxed/simple;
-	bh=NmLMzAzCpWZoeHjWGioABuXSbYuv+EuUrRg7mmBjYnY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=J0TFq/MDcq0hBmNtRHt60jCY9XzaXIct8eGupTUFcsHa9iXZKNuQrmMP2tIjnFd8C2XmhFFJzHqOBn+a3qCKTXGiQVdEaUrFbuUUh09OsGhTNxX6AvbSBs4oRJfjrcN/9/0k0VQU1e9FETpyHtEvcYL7R1+VGt+c5Nq9xMy5EOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qGeLT8rz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767780874; c=relaxed/simple;
+	bh=X0SbD+jGDnDmdAfVbyL54612ctjbhoNjF7WZhCDYMZk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sSV5E+nSAhH832RS5O0acCEz7tJ1EXXE0ziG1Nz4Jsoaews37WzmhODle+MeSA6cBb0Li316loht/xLbm+hxToBFssAGhisNUDMmlONvkTVySUzq+ttIxFavcjqOc4nyys5aF/eX0S98W7C306iI9BGYQVbyKgl/GWZNOD1xRx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZfmgptDR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qGeLT8rz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24A87C19422
-	for <linux-ide@vger.kernel.org>; Wed,  7 Jan 2026 09:51:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZfmgptDR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAC63C4CEF7;
+	Wed,  7 Jan 2026 10:14:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767779486;
-	bh=NmLMzAzCpWZoeHjWGioABuXSbYuv+EuUrRg7mmBjYnY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=qGeLT8rzryOa37z3RZZFI/qYuvMtWJyefGcugLj9TMGUVRzof6EdRfa0kYu3Q+LVQ
-	 2DKdzzsKPhlK0agbYQI59g31Ywvyz/CILBKHWs1xgYPfEgfUHq29yZvakPAQ2a0JLm
-	 vpPLDSnP0Yh66Bu78VKWqK57ZY4aDEbGYhfschOn1YzJDhdwO0qq+1KCDSTkAU0U70
-	 kzE9ItwNOHYKvydB2NV7bXx9s2kmWvw/+ekHyCbwbRzdfrOeLqlI5e2hL0A4G/R7km
-	 fqZ/zQhhQnJSIzIciUk9+XGYjWdXhaRE9j8eRYSwqc/KdKEquCeMXXAKzTB4TdR1mi
-	 aALpbhGjMcxUw==
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-37cef3ccb82so15575621fa.2
-        for <linux-ide@vger.kernel.org>; Wed, 07 Jan 2026 01:51:26 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWvo3YXKYYj9OEhbxeCoFpwrhjU7FD1v9bg3n3D5zKIc/tuj81bQaJAQajuqiYxyAoH9Fsw0Zmf6hM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyjzS/nhAZJ3+kXTh5frYwYqyQ9p1huBF6ahoQUvJbtKPG0tCJ2
-	1tCiO7cg+HX19gb1ndtP6misSxDP9QrYU4X0xZ7qi3eWi34t9pH/6HzDeQcuZ9duZUJm4g1Atx5
-	Id8pZDK/5kADYlyxAmO4bmhMMlP1nib/qzE7AFxuIig==
-X-Google-Smtp-Source: AGHT+IGsOoksfiYs3d/2Uvo17brphOFA2kNch8Yl6j6+wfFkNrmovd56yuzo/tpGa0rkoqkNNyxiklr2IQiXyV/Owns=
-X-Received: by 2002:a05:651c:2227:b0:372:8d61:c26f with SMTP id
- 38308e7fff4ca-382ff68f13amr6143751fa.11.1767779484574; Wed, 07 Jan 2026
- 01:51:24 -0800 (PST)
+	s=k20201202; t=1767780874;
+	bh=X0SbD+jGDnDmdAfVbyL54612ctjbhoNjF7WZhCDYMZk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZfmgptDRT0MMwUUeLX1cjAWTfca6fXVt1mI+tyYDnYzMSX0IM+Zere0xCRLkmUkmj
+	 8S2FTK17cvRlaq7rbHsi+Eq6K2bMziw3Y118DwELwiUU0+GTgQ+mCuXTTt7WEDEkuK
+	 PlokdIj2/0pO5du/1EQZ+W3MAPNEuwVp0UYE6CQ/SdOIdiEsS/GzM2NAifNuCcjtcF
+	 mlBkMghoy6lPFG50ShELN7HW29FUgqwU+zlcqvKyumFithqXZGh1IVaSjNDQ6EfTZm
+	 Onsv2o9ZkJ8jy6qhQseVKAMQ2v9FjjlczlJ4bATm0ZDNBDz3TVIFApTDnbQDQtQe/3
+	 IoLpFp0ZdQreQ==
+Date: Wed, 7 Jan 2026 11:14:29 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: wolf@yoxt.cc
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, tj@kernel.org
+Subject: Re: [REGRESSION] libata: SATA LPM forcibly disabled on Intel Raptor
+ Lake since Linux 6.14.
+Message-ID: <aV4yBZkxVD2Olg3X@ryzen>
+References: <605b34a7723436284699c9a8e524907b@yoxt.cc>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251228-pci-m2-v4-0-5684868b0d5f@oss.qualcomm.com>
- <20251228-pci-m2-v4-5-5684868b0d5f@oss.qualcomm.com> <CAMRc=MfPq7+ZbWTp7+H388hqHoX27qbbHsLHO+xeLaceTwZLVA@mail.gmail.com>
- <z33axfsiox73f2lklhiaulekjnqxnqtkycfylybwqnqxtx2fck@3qtas4u6mfnz>
-In-Reply-To: <z33axfsiox73f2lklhiaulekjnqxnqtkycfylybwqnqxtx2fck@3qtas4u6mfnz>
-From: Bartosz Golaszewski <brgl@kernel.org>
-Date: Wed, 7 Jan 2026 10:51:11 +0100
-X-Gmail-Original-Message-ID: <CAMRc=McS8a-1cH_y+kpze=zj2-PksHDO3SE=p3XnbEueUQt9xA@mail.gmail.com>
-X-Gm-Features: AQt7F2pY9Ypb4lLMQKTc1ZxHjn85KZ9DgQjKFvp34cr91yK650oitQF5-K0QY8Q
-Message-ID: <CAMRc=McS8a-1cH_y+kpze=zj2-PksHDO3SE=p3XnbEueUQt9xA@mail.gmail.com>
-Subject: Re: [PATCH v4 5/5] power: sequencing: Add the Power Sequencing driver
- for the PCIe M.2 connectors
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	Linus Walleij <linus.walleij@linaro.org>, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-pm@vger.kernel.org, 
-	linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <605b34a7723436284699c9a8e524907b@yoxt.cc>
 
-On Wed, Jan 7, 2026 at 10:39=E2=80=AFAM Manivannan Sadhasivam <mani@kernel.=
-org> wrote:
->
-> > > +
-> > > +static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
-> > > +{
-> > > +       struct device *dev =3D &pdev->dev;
-> > > +       struct pwrseq_pcie_m2_ctx *ctx;
-> > > +       struct pwrseq_config config =3D {};
-> > > +       int ret;
-> > > +
-> > > +       ctx =3D devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
-> > > +       if (!ctx)
-> > > +               return -ENOMEM;
-> > > +
-> > > +       ctx->of_node =3D dev_of_node(dev);
-> >
-> > Since you're storing the node address for later, I'd suggest using
-> > of_node_get() to get a real reference.
-> >
->
-> If CONFIG_OF_DYNAMIC is not enabled, then of_node_get() will just return =
-the
-> passed pointer. I always prefer using dev_of_node() since it has the CONF=
-IG_OF
-> and NULL check. Though, the checks won't apply here, I used it for consis=
-tency.
->
+On Tue, Jan 06, 2026 at 08:57:07PM +0100, wolf@yoxt.cc wrote:
+> Hello,
+> 
+> I am reporting a power-management regression in libata affecting the Intel
+> Raptor Lake SATA AHCI Controller, introduced after Linux 6.14.
 
-I think it's just more of a good practice to take a reference to any
-resource whenever you store keep it for longer than the duration of
-the function even if the actual reference counting is disabled in some
-instances. If ever we switch to fwnodes, the circumstances may be
-different than static devicetree.
+(snip)
 
-You can also do "ctx->of_node =3D of_node_get(dev_of_node(dev));", all
-the NULL-checks are there.
+> and 4 apparent dummy ports might be unexpected?
+> 
+> Manually setting LPM on the affected hosts fails with:
+> echo med_power_with_dipm >
+> /sys/class/scsi_host/host*/link_power_management_policy
+> -bash: echo: write error: Operation not supported
 
-Bart
+This is most likely because your ports are marked as External / Hotplug
+capable by BIOS.
+
+LPM and Hotplug are mutually exlusive in SATA.
+So in order allow your ports to detect a hotplug event, LPM cannot be
+disabled.
+
+
+Things you can do:
+-Go into your BIOS settings and disable the hot-plugging capability for the
+ ports.
+-If you don't have such a setting, you can use the mask_port_ext AHCI module
+ parameter. Simply add:
+ ahci.mask_port_ext=<your portmask here> to your kernel command line
+
+
+For more info, see this thread:
+https://lore.kernel.org/linux-ide/5a74106a-d9db-4e63-b3e6-3857f30a1190@interia.pl/T/
+
+
+Kind regards,
+Niklas
