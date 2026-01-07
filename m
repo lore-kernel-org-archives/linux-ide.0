@@ -1,97 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1845233D6E1;
-	Wed,  7 Jan 2026 14:36:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC026368292
+	for <linux-ide@vger.kernel.org>; Wed,  7 Jan 2026 15:16:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767796599; cv=none; b=q2r4KccmGj9SxpzQ9biDIHe23gxthBRMejwxtMPMlKA0pa/pUrn+dCPWijobSI9HMejDZY5y0JIIbWohpSfWs2Ac+sUD58yszLPu6Tj3Qyu2HwEE9bi8fABfhuHcNviDAWlA9LqU53SWka/tEW8E10sDYeb/MX2rJex6fPoN4P0=
+	t=1767799012; cv=none; b=Npi8ezFqRe+6xbDmpVMUoNXeC07Y7gUiyFOkqNCaZ5NZLQdiUNuTBi2jvs6iMoaXIFieLzYUXVSt9ShtzJjRqPZ5qRLXlsOelIsulBdBI0462EJDPvYFGkStTGPIa1IzDqrJDl5xGe4QzF2R9Mr+f5kJs0bye8SLDb2K/tri0YQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767796599; c=relaxed/simple;
-	bh=XwWSLB55x1rNencsXn/TLrmA6eEpbslMnGuzUkhuAZY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FAwHG5a3nVXvD5GuiPubA+3U32GsGXflxURdM2vdixcJEDDN5hv7eSQ4LTtcmytO67ohPDpvZMXLNhlW5oxvcuupMADB2n/2Tmjx3TqFXS+Ds9eMp05lPyJwhzN7Y1OIy+HK65zHJrc+NcwSRd5uf6yrum4N3rJRZuLgL3CKnAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eJGp+/42; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767799012; c=relaxed/simple;
+	bh=ZvSKYi7J+HgVOZKigHnH4pjHbLWJRNCdw63lRSjijPk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hviANOFJjUBZq9vd+LqxXMHNFN9RvjE9o/GyhpVMIZbQRmtDCoiKLnXiPterY9a3Cf0jvSlXCi3mzm83xMgHnXgTfGxOghPmGiicf0Nq6Vfk8MZWOeSmd/7gMVve86Hfg1e/o/DGTlcL5jcEeLKq8ZYZAASPKfNNLNI7jWjoML0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MOX//zYd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eJGp+/42"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A703C4CEF7;
-	Wed,  7 Jan 2026 14:36:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MOX//zYd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B92DC4CEF7;
+	Wed,  7 Jan 2026 15:16:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767796598;
-	bh=XwWSLB55x1rNencsXn/TLrmA6eEpbslMnGuzUkhuAZY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eJGp+/42xRifMjAf5rrJuTTUE42Vv6ojPGiVs3rklIv2y8HD+hCl1URycRStDpbiY
-	 Y5mhpDNIk9SCsBSZTSCxeBdqmHSy6CwFDiwhfTXYqbG5z8+42tSEcB0xQJgj/cAJx1
-	 7gLokOWP7SpUejdKujEOKG8LLOcc6FBd7mcc0QkD02TadGtPWF8s9nxU5wvrgGyNJo
-	 k9D1+7EjoU39UtwWs1JL/VbFq8ysrmYqsMMVnRqy2aZ1vzyy2uYE8JHyTrNDvA70Na
-	 jf6BAzdP3w0dwvzGzoVi7COcmoN7A/NW4+Le/t+VbOqbJYZyFhtL23E8/SJSwh3a+X
-	 7QRER6Vk8KsOg==
-Date: Wed, 7 Jan 2026 15:36:31 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	Stephan Gerhold <stephan.gerhold@linaro.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	linux-pm@vger.kernel.org, linux-ide@vger.kernel.org,
-	Frank Li <Frank.Li@nxp.com>,
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: Re: [PATCH v5 0/5] PCI: Add initial support for handling PCIe M.2
- connectors in devicetree
-Message-ID: <aV5vb1VlQYeWNcv1@ryzen>
-References: <20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com>
+	s=k20201202; t=1767799011;
+	bh=ZvSKYi7J+HgVOZKigHnH4pjHbLWJRNCdw63lRSjijPk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=MOX//zYd7NxhTLrmITyi5RoAYYGrQGMMcM/vJKqDtfeBam1Gollbr1WQToLHwhgKl
+	 ayWa9gNeIM20U8iFmWbkqMZjtFu+NOEzc43znhYXf7NHlAiKDDXkQWGcaNMLTgcWuv
+	 G8I8sZbvpdKm9Pjh08zWTVMiQsJkDyCpPbpjvJGJ0LCuoRLx9hyvJGCc4HzxXm5n+A
+	 PFV95BtQ6HX7eyoYj/Gkz/p8WcTBH2DNrmStcw+HuyqXP2IhJXv/SLMRSC502sH2fC
+	 AasB9YZQrDHPio0FBFgTemf6yiQKzS3AI0MP+ZuYOTGrwrKDzcQiRqsxm7JAtuNreP
+	 zNNwpoAiOqcjQ==
+Message-ID: <7e24ae2e-4483-46fb-accd-5c0e3a066e89@kernel.org>
+Date: Wed, 7 Jan 2026 16:16:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] libata: SATA LPM forcibly disabled on Intel Raptor
+ Lake since Linux 6.14.
+To: Niklas Cassel <cassel@kernel.org>
+Cc: wolf@yoxt.cc, linux-ide@vger.kernel.org
+References: <605b34a7723436284699c9a8e524907b@yoxt.cc>
+ <aV4yBZkxVD2Olg3X@ryzen> <85cae643-f3bc-43db-966c-3f57d8daa6b6@kernel.org>
+ <aV5BjOXc1uK2HSZA@ryzen>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <aV5BjOXc1uK2HSZA@ryzen>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jan 07, 2026 at 07:41:22PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> Hi,
+On 1/7/26 12:20, Niklas Cassel wrote:
+> I think the problem is:
 > 
-> This series is an initial attempt to support the PCIe M.2 connectors in the
-> kernel and devicetree binding. The PCIe M.2 connectors as defined in the PCI
-> Express M.2 Specification are widely used in Notebooks/Tablet form factors (even
-> in PCs). On the ACPI platforms, power to these connectors are mostly handled by
-> the firmware/BIOS and the kernel never bothered to directly power manage them as
-> like other PCIe connectors. But on the devicetree platforms, the kernel needs to
-> power manage these connectors with the help of the devicetree description. But
-> so far, there is no proper representation of the M.2 connectors in devicetree
-> binding. This forced the developers to fake the M.2 connectors as PMU nodes [1]
-> and fixed regulators in devicetree.
+> [    3.010059] ata8.00: ATA-11: ST16000NM000J-2TW103, SN06, max UDMA/133
+> [    3.010079] ata7.00: ATA-11: ST16000NM000J-2TW103, SN06, max UDMA/133
+> [    3.012748] ata6.00: ATAPI: PIONEER BD-RW  BDR-S12JX, 1.01, max UDMA/100
+> [    3.012779] ata5.00: ATAPI: PIONEER BD-RW  BDR-S12JX, 1.01, max UDMA/100
+> [    3.061873] ata8.00: Features: DIPM NCQ-sndrcv
+> [    3.065319] ata7.00: Features: DIPM NCQ-sndrcv
 > 
-> So to properly support the M.2 connectors in devicetree platforms, this series
-> introduces the devicetree binding for Mechanical Key M connector as an example
-> and also the corresponding pwrseq driver and PCI changes in kernel to driver the
-> connector.
+> The ST drives advertise support for DIPM, so these two ports should enter
+> a lower power state.
 > 
-> The Mechanical Key M connector is used to connect SSDs to the host machine over
-> PCIe/SATA interfaces. Due to the hardware constraints, this series only adds
-> support for driving the PCIe interface of the connector in the kernel.
 > 
-> Also, the optional interfaces supported by the Key M connectors are not
-> supported in the driver and left for the future enhancements.
+> For the PIONEER optical drives however, we don't seem to get any "Features: "
+> print at all. My guess is that the support neither HIPM nor DIPM, and thus
+> stops the whole system from entering a lower power state.
+> 
+> 
+> What I think happens:
+> 
+> For a device that does not support HIPM, we will clear flag ATA_LPM_HIPM from
+> hints:
+> https://github.com/torvalds/linux/blob/v6.19-rc4/drivers/ata/libata-eh.c#L2168-L2169
+> 
+> If flag ATA_LPM_HIPM is not set, we will disable HIPM (ALPE) for the port:
+> https://github.com/torvalds/linux/blob/v6.19-rc4/drivers/ata/libahci.c#L835-L847
+> 
+> Thus the HBA will never tell the device to enter a low power state.
+> (And if DIPM is not supported, the device itself will never enter a low
+> power state.)
+> 
+> 
+> Questions:
+> -Why was this not a problem on older kernels?
+> 
+> If you are willing try some patches from us, we could give you a patch with more
+> debug prints, to show for each device, when we {enable,disable} {HIPM,DIPM}.
+> 
+> 
+> -Why don't we get the Features: print for ATAPI devices?
+> 
+> We probably need something like this:
 
-For me, it is not clear if there is a dependency or conflict with your
-"major pwrctrl rework series":
-[PATCH v4 0/8] PCI/pwrctrl: Major rework to integrate pwrctrl devices with controller drivers
+Before doing this, one simple test to do would be to unplug the 2 ATAPI devices
+(CD/DVD drives) and reboot to see if LPM works then.
 
-Does one need to go before the other, or are they completely unrelated
-and can be merged in any order without conflicts?
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index fc250b494ce3..a8af200ac24f 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3161,11 +3161,13 @@ int ata_dev_configure(struct ata_device *dev)
+>                 /* print device info to dmesg */
+>                 if (print_info)
+>                         ata_dev_info(dev,
+> -                                    "ATAPI: %s, %s, max %s%s%s%s\n",
+> +                                    "ATAPI: %s, %s, max %s%s%s%s%s%s\n",
+>                                      modelbuf, fwrevbuf,
+>                                      ata_mode_string(xfer_mask),
+>                                      cdb_intr_string, atapi_an_string,
+> -                                    dma_dir_string);
+> +                                    dma_dir_string,
+> +                                    ata_id_has_hipm(dev->id) ? " HIPM" : "",
+> +                                    ata_id_has_dipm(dev->id) ? " DIPM" : "");
+>         }
+>  
+>         /* determine max_sectors */
+> 
+> 
+> 
+> Kind regards,
+> Niklas
 
 
-Kind regards,
-Niklas
+-- 
+Damien Le Moal
+Western Digital Research
