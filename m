@@ -1,116 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 992CF4A5AED
-	for <linux-ide@vger.kernel.org>; Thu,  8 Jan 2026 12:15:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB7C44A1599
+	for <linux-ide@vger.kernel.org>; Thu,  8 Jan 2026 14:12:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767874528; cv=none; b=f9u3PzlC5GPe+ttbuCpwQ58fJH9MINLa2KS54K0v8rF4XklmmJQ+oYaKxhhDvZrHUqy/6f8qtLHkHpJMEwegF4G6T/KV/Ae9J2UWsOX/zSr4b0QTxVH6XzmgImBrHr8MVPK7MdErrKJJalB+NLisUrf2+SNF6Mr3Xlg9g6LI6N8=
+	t=1767881558; cv=none; b=pqEU4koCfxhhfgQwJ8++zDK88h+wYwFDH3hA7hn+Rgu6QvvgRW0Td7rRwsNfqhGTEa3vIHCWFBvSFVrQPm9E1riA0BhwllHOXO/+BlJcBjYyejDOs7mazIpgiobHKcW4QbylUarDzb8nvfNtYkKOH0xArgenIkoKlRhsOF1ANC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767874528; c=relaxed/simple;
-	bh=oN3VJ81TR92t72IorUOGx+yYKZ6zgxZk9xFRV4q/Jvs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qaWwE3tOV9bUgY23MpoEdKRZst9G4XZo/cvkbf0xcX1yG6Hqa0gwLQxnm88a68sU54u9GT0ij7xe2tl9waPVzHbv9P9Vnw66FyXlzDrVx93ngx6kIycrzIO8O3q+/C1Vrvv1FTVD1Zu8C8c76FAOQtJFUG7CuMNObU+8dsV6J4c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iy5+++A8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767881558; c=relaxed/simple;
+	bh=h/o9lA08jplzswrxgQUj9DfY9YREgsTfckLnzG9/v1c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Cf/OPGmr6sX+6ICKJgjlLlKqJJJPg+fPast1f1QRE+6sRR14fgjD3n0p+er1FeBhja0ZhnRMvH/tQ8ikesCmTmtA36BkQJcFxBX+Q1fe4w+fIQ4JVDNjuFcYLDX2X4syFLKZ9QfV6HX8Gqonz7S0rDBfj/zZmSuAJr995zEEewk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H/i9Zx3r; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iy5+++A8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AE9AC2BCB2
-	for <linux-ide@vger.kernel.org>; Thu,  8 Jan 2026 12:15:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H/i9Zx3r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76FA7C16AAE;
+	Thu,  8 Jan 2026 14:12:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767874527;
-	bh=oN3VJ81TR92t72IorUOGx+yYKZ6zgxZk9xFRV4q/Jvs=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=iy5+++A86Sd4Opbng5Cpq18bXVkT5o3GMVfzsGGk+tSkDWzJntj1FB6j6rsTmvDV7
-	 htk5tpeZs7QIUTy1l81V0iwHwd+ld3bzRnlSLulPMLJgS5+BHEXo2cQsyv09Gs87c1
-	 6U6WuD9E4fHh9FTyCDiwOvTsfJCfMABaKvIEh/hxlznf66fal6a5ELJKAz+QYDHowm
-	 RSYmfVWwSOTYlMrwmhNGfnhOg87uRQ2rCIdg4Z746axEcP2smmEWDVmqa/Kjm2JKzd
-	 cTRPrW2m084iD5VJcJnB63d5nGR5SkqGE+jzjgNUCjYJgR3S/74C1Exn+71ksFN4o/
-	 YNS2z15g0sydA==
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-59b679cff1fso2154812e87.0
-        for <linux-ide@vger.kernel.org>; Thu, 08 Jan 2026 04:15:27 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWXs9I53yA8KOvlzHsVqxgkblAO2olUFvuQNvsEs5nqivYWNtX4EVOn3wQOt7PwZxpOauuslk3rWQ8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzvY88fIKUx7D7NPVJEy8dEJ2Vpb1oNSMCoNFhRjfgLcdUI9fRr
-	nG4QI3So32irX4ePvKGJGd+fHn9QTT0MG4vb4ay3lQpsfmI2WIWUO0UrXfuSmziQxMT7q7v6NFU
-	Al5/+4ULb0YDtlhxmnLAjr94iNxQiSVVyd1LDNIP23Q==
-X-Google-Smtp-Source: AGHT+IF/4koG/MN6sfNsURUrtRSXZrXyRHd0bqi6p5mzExxZBo2GY4yvcJpb3YE7lL2MK6UqIWbaGQBDGlnCB4B6bas=
-X-Received: by 2002:a05:6512:68f:b0:594:35c4:fed1 with SMTP id
- 2adb3069b0e04-59b6ef03a2dmr1813240e87.13.1767874525775; Thu, 08 Jan 2026
- 04:15:25 -0800 (PST)
+	s=k20201202; t=1767881558;
+	bh=h/o9lA08jplzswrxgQUj9DfY9YREgsTfckLnzG9/v1c=;
+	h=From:To:Cc:Subject:Date:From;
+	b=H/i9Zx3rZ5QVLFG0fEDqEJjkHIotIfyCGWVhPZ3CGa1MVi1R96ISet5/09RoQwQtb
+	 Q7sRfTc7Eu0WcJgBghiCQHwLyxyXaSzr0QNYmdcq8RWY+IXq/ybwA+JePE4iO3JGIn
+	 AucN6X7lMfth6ZIR47nN+ejuPeRMiwYGrm8mZKMKR1SycFlhuu+WXgMMrvs34ITzCE
+	 u8vTRNza3Fr3iU4Chp5z6mLte5GHS05t1VpUs5tedkpZUFpKStNBDJLcDEXNw/fZjs
+	 SHPayKtfV/C/99a/enUMzp+tAslhCYNz0T5LaARpGzoHMz/T5gvrAXDnJeAZeYEEpG
+	 jaip9dIaAAPzQ==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Subject: [PATCH] ata: libata: Advertize device support for DIPM and HIPM features for ATAPI
+Date: Thu,  8 Jan 2026 15:12:34 +0100
+Message-ID: <20260108141234.2837566-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com> <20260107-pci-m2-v5-5-8173d8a72641@oss.qualcomm.com>
-In-Reply-To: <20260107-pci-m2-v5-5-8173d8a72641@oss.qualcomm.com>
-From: Bartosz Golaszewski <brgl@kernel.org>
-Date: Thu, 8 Jan 2026 13:15:12 +0100
-X-Gmail-Original-Message-ID: <CAMRc=Md9TQiSX-gFa5q--JgaGyQ2ky4mOwjSpdxHhvHAj-X5Qw@mail.gmail.com>
-X-Gm-Features: AQt7F2puNlVWjbhiRoX8QQnOlbAAs4UdjLNY6ZTbm-vEXEFSeur6kT9w8kO5QSk
-Message-ID: <CAMRc=Md9TQiSX-gFa5q--JgaGyQ2ky4mOwjSpdxHhvHAj-X5Qw@mail.gmail.com>
-Subject: Re: [PATCH v5 5/5] power: sequencing: Add the Power Sequencing driver
- for the PCIe M.2 connectors
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	Linus Walleij <linus.walleij@linaro.org>, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-pm@vger.kernel.org, 
-	linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1273; i=cassel@kernel.org; h=from:subject; bh=h/o9lA08jplzswrxgQUj9DfY9YREgsTfckLnzG9/v1c=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDLjdwdxP3odb3g9dMGz1yK3hGeoVx6KmWjIt/6r0fsQL tbmbedXdJSyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAiFgEMf3h8M5n+vJTuZ3w9 ZxfTz3btaubInw4dIfP9TJhZ//Ue+snIsH/ry71nMhSuGUvfO7iAvbOT+dw7O7XbDer/v9nmHGu YxAUA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jan 7, 2026 at 3:11=E2=80=AFPM Manivannan Sadhasivam via B4 Relay
-<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> wrote:
->
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->
-> This driver is used to control the PCIe M.2 connectors of different
-> Mechanical Keys attached to the host machines and supporting different
-> interfaces like PCIe/SATA, USB/UART etc...
->
-> Currently, this driver supports only the Mechanical Key M connectors with
-> PCIe interface. The driver also only supports driving the mandatory 3.3v
-> and optional 1.8v power supplies. The optional signals of the Key M
-> connectors are not currently supported.
->
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.=
-com>
+Commit b1f5af54f1f5 ("ata: libata-core: Advertize device support for DIPM
+and HIPM features") added prints if the device supports DIPM and HIPM,
+however, it forgot to update the same print for ATAPI devices.
 
-This looks good to me, though there are some nits I may fix when applying.
+Before changes:
+ata1.00: ATAPI: Slimtype DVD A  DU8AESH, 6C2M, max UDMA/133
 
-I'll pick it up for v7.0 once the bindings are reviewed.
+After changes:
+ata1.00: ATAPI: Slimtype DVD A  DU8AESH, 6C2M, max UDMA/133 HIPM DIPM
 
-> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> @@ -0,0 +1,169 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-> + * Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com=
->
-> + */
-> +
-> +#include <linux/device.h>
-> +#include <linux/mod_devicetable.h>
-> +#include <linux/module.h>
-> +#include <linux/of.h>
-> +#include <linux/of_graph.h>
-> +#include <linux/of_platform.h>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libata-core.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-It looks like this is a leftover from previous versions and you no
-longer need it?
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index b96105481784..20d539730553 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3143,11 +3143,13 @@ int ata_dev_configure(struct ata_device *dev)
+ 		/* print device info to dmesg */
+ 		if (print_info)
+ 			ata_dev_info(dev,
+-				     "ATAPI: %s, %s, max %s%s%s%s\n",
++				     "ATAPI: %s, %s, max %s%s%s%s%s%s\n",
+ 				     modelbuf, fwrevbuf,
+ 				     ata_mode_string(xfer_mask),
+ 				     cdb_intr_string, atapi_an_string,
+-				     dma_dir_string);
++				     dma_dir_string,
++				     ata_id_has_hipm(dev->id) ? " HIPM" : "",
++				     ata_id_has_dipm(dev->id) ? " DIPM" : "");
+ 	}
+ 
+ 	/* determine max_sectors */
+-- 
+2.52.0
 
-> +
-> +static void pwrseq_pcie_free_resources(void *data)
-> +{
-> +       struct pwrseq_pcie_m2_ctx *ctx =3D data;
-> +
-> +       regulator_bulk_free(ctx->num_vregs, ctx->regs);
-> +}
-
-I would call it pwrseq_pcie_m2_free_regulators() if you don't mind.
-
-Bart
