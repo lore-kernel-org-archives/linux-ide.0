@@ -1,70 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A60D43FD1A;
-	Thu,  8 Jan 2026 09:29:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 992CF4A5AED
+	for <linux-ide@vger.kernel.org>; Thu,  8 Jan 2026 12:15:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767864579; cv=none; b=hi3D2nhTzA4nx3E6wozijungVQvShSqybuMoeadoTxTGickoCO1xw32+7hFA6CBU430ZBi6Fjm0InPsRnaELhptWqpCHLG1eXAaHbZ2fvzBNxI1/6sEBdLQ00JXSXW39IV6z+XJLrMyUf/CfRMZfO5p+DycbAPzW/TYOtoBjiqI=
+	t=1767874528; cv=none; b=f9u3PzlC5GPe+ttbuCpwQ58fJH9MINLa2KS54K0v8rF4XklmmJQ+oYaKxhhDvZrHUqy/6f8qtLHkHpJMEwegF4G6T/KV/Ae9J2UWsOX/zSr4b0QTxVH6XzmgImBrHr8MVPK7MdErrKJJalB+NLisUrf2+SNF6Mr3Xlg9g6LI6N8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767864579; c=relaxed/simple;
-	bh=W8DJmHThBYvxGSmtz4McDRjOmfRywwR7+XCWBWBL1l4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ikStancuUhVdU/ZGnBpU2ZV1/zSqQEjwFG8TA+bihrBAMxHkSIqAtUK6YwsNHk8PQ+HUtQyIWfyS3/3+k+WUvbzgDKLEPPqf0qZD+SKiCv1IbPUgTQjWW3KUrB/lqfz0KOV7ncz+bdMhJ2gcp09LcMQ53a1LuwEgvj1o6y49YNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f+u5Dmpl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767874528; c=relaxed/simple;
+	bh=oN3VJ81TR92t72IorUOGx+yYKZ6zgxZk9xFRV4q/Jvs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qaWwE3tOV9bUgY23MpoEdKRZst9G4XZo/cvkbf0xcX1yG6Hqa0gwLQxnm88a68sU54u9GT0ij7xe2tl9waPVzHbv9P9Vnw66FyXlzDrVx93ngx6kIycrzIO8O3q+/C1Vrvv1FTVD1Zu8C8c76FAOQtJFUG7CuMNObU+8dsV6J4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iy5+++A8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f+u5Dmpl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D5BCC116C6;
-	Thu,  8 Jan 2026 09:29:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iy5+++A8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AE9AC2BCB2
+	for <linux-ide@vger.kernel.org>; Thu,  8 Jan 2026 12:15:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767864578;
-	bh=W8DJmHThBYvxGSmtz4McDRjOmfRywwR7+XCWBWBL1l4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=f+u5DmplBkq203+bl7h8gv/gMn1W3Ksr4DnuBjxBUikh8Isjso1UliWw+z7+Uy3K4
-	 pfedbjT0JAncz0yLgOoDmicTWKkQ3UgggOvxVRkGmjpwsy+4bakGPgtLXGZpXxepcz
-	 pTtGtO1Md+MBlPv1cLaWXioLGd0FbN5YakLkVqJ/yS2en0MCa7QK44Cw38A/WDHrTj
-	 hdoUS0cGjV3cLvne3L3sejbUSY7fwNDS6HU8ZCDJP/Iey7FPNGlWh5Q8OEBrmjlh8o
-	 LZaXsaU7bnQZNW7FCuknupcNZmvMNIYAIo5ZP8fhJ0oSFfwvHrDKfWIhdtzoY1L8t/
-	 PPpIdqb/JcALw==
-Message-ID: <38385033-5bf6-4ee2-b227-f46677136d86@kernel.org>
-Date: Thu, 8 Jan 2026 10:29:33 +0100
+	s=k20201202; t=1767874527;
+	bh=oN3VJ81TR92t72IorUOGx+yYKZ6zgxZk9xFRV4q/Jvs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=iy5+++A86Sd4Opbng5Cpq18bXVkT5o3GMVfzsGGk+tSkDWzJntj1FB6j6rsTmvDV7
+	 htk5tpeZs7QIUTy1l81V0iwHwd+ld3bzRnlSLulPMLJgS5+BHEXo2cQsyv09Gs87c1
+	 6U6WuD9E4fHh9FTyCDiwOvTsfJCfMABaKvIEh/hxlznf66fal6a5ELJKAz+QYDHowm
+	 RSYmfVWwSOTYlMrwmhNGfnhOg87uRQ2rCIdg4Z746axEcP2smmEWDVmqa/Kjm2JKzd
+	 cTRPrW2m084iD5VJcJnB63d5nGR5SkqGE+jzjgNUCjYJgR3S/74C1Exn+71ksFN4o/
+	 YNS2z15g0sydA==
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-59b679cff1fso2154812e87.0
+        for <linux-ide@vger.kernel.org>; Thu, 08 Jan 2026 04:15:27 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWXs9I53yA8KOvlzHsVqxgkblAO2olUFvuQNvsEs5nqivYWNtX4EVOn3wQOt7PwZxpOauuslk3rWQ8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzvY88fIKUx7D7NPVJEy8dEJ2Vpb1oNSMCoNFhRjfgLcdUI9fRr
+	nG4QI3So32irX4ePvKGJGd+fHn9QTT0MG4vb4ay3lQpsfmI2WIWUO0UrXfuSmziQxMT7q7v6NFU
+	Al5/+4ULb0YDtlhxmnLAjr94iNxQiSVVyd1LDNIP23Q==
+X-Google-Smtp-Source: AGHT+IF/4koG/MN6sfNsURUrtRSXZrXyRHd0bqi6p5mzExxZBo2GY4yvcJpb3YE7lL2MK6UqIWbaGQBDGlnCB4B6bas=
+X-Received: by 2002:a05:6512:68f:b0:594:35c4:fed1 with SMTP id
+ 2adb3069b0e04-59b6ef03a2dmr1813240e87.13.1767874525775; Thu, 08 Jan 2026
+ 04:15:25 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] ata: ahci-dwc: Simplify with scoped for each OF
- child loop
-To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
- Niklas Cassel <cassel@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
- Sascha Hauer <s.hauer@pengutronix.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>, Nathan Chancellor <nathan@kernel.org>,
- Nick Desaulniers <nick.desaulniers+lkml@gmail.com>,
- Bill Wendling <morbo@google.com>, Justin Stitt <justinstitt@google.com>,
- linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
- llvm@lists.linux.dev
-Cc: Jonathan Cameron <jonathan.cameron@huawei.com>
-References: <20260105142944.372959-4-krzysztof.kozlowski@oss.qualcomm.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260105142944.372959-4-krzysztof.kozlowski@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com> <20260107-pci-m2-v5-5-8173d8a72641@oss.qualcomm.com>
+In-Reply-To: <20260107-pci-m2-v5-5-8173d8a72641@oss.qualcomm.com>
+From: Bartosz Golaszewski <brgl@kernel.org>
+Date: Thu, 8 Jan 2026 13:15:12 +0100
+X-Gmail-Original-Message-ID: <CAMRc=Md9TQiSX-gFa5q--JgaGyQ2ky4mOwjSpdxHhvHAj-X5Qw@mail.gmail.com>
+X-Gm-Features: AQt7F2puNlVWjbhiRoX8QQnOlbAAs4UdjLNY6ZTbm-vEXEFSeur6kT9w8kO5QSk
+Message-ID: <CAMRc=Md9TQiSX-gFa5q--JgaGyQ2ky4mOwjSpdxHhvHAj-X5Qw@mail.gmail.com>
+Subject: Re: [PATCH v5 5/5] power: sequencing: Add the Power Sequencing driver
+ for the PCIe M.2 connectors
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	Linus Walleij <linus.walleij@linaro.org>, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-pm@vger.kernel.org, 
+	linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 1/5/26 15:29, Krzysztof Kozlowski wrote:
-> Use scoped for-each loop when iterating over device nodes and switch to
-> iterating already over available nodes to make code a bit simpler.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+On Wed, Jan 7, 2026 at 3:11=E2=80=AFPM Manivannan Sadhasivam via B4 Relay
+<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> wrote:
+>
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+>
+> This driver is used to control the PCIe M.2 connectors of different
+> Mechanical Keys attached to the host machines and supporting different
+> interfaces like PCIe/SATA, USB/UART etc...
+>
+> Currently, this driver supports only the Mechanical Key M connectors with
+> PCIe interface. The driver also only supports driving the mandatory 3.3v
+> and optional 1.8v power supplies. The optional signals of the Key M
+> connectors are not currently supported.
+>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.=
+com>
 
-Applied all 3 patches to for-6.20. Thanks !
+This looks good to me, though there are some nits I may fix when applying.
 
+I'll pick it up for v7.0 once the bindings are reviewed.
 
--- 
-Damien Le Moal
-Western Digital Research
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> @@ -0,0 +1,169 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+> + * Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com=
+>
+> + */
+> +
+> +#include <linux/device.h>
+> +#include <linux/mod_devicetable.h>
+> +#include <linux/module.h>
+> +#include <linux/of.h>
+> +#include <linux/of_graph.h>
+> +#include <linux/of_platform.h>
+
+It looks like this is a leftover from previous versions and you no
+longer need it?
+
+> +
+> +static void pwrseq_pcie_free_resources(void *data)
+> +{
+> +       struct pwrseq_pcie_m2_ctx *ctx =3D data;
+> +
+> +       regulator_bulk_free(ctx->num_vregs, ctx->regs);
+> +}
+
+I would call it pwrseq_pcie_m2_free_regulators() if you don't mind.
+
+Bart
