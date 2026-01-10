@@ -1,107 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from pasta.tip.net.au (mx1.tip.net.au [203.10.76.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95E2A35E529
-	for <linux-ide@vger.kernel.org>; Fri,  9 Jan 2026 14:40:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66A3B1FF1C7
+	for <linux-ide@vger.kernel.org>; Sat, 10 Jan 2026 00:43:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.10.76.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767969604; cv=none; b=PGkEumFowy66FzpmuIdxeUyH4f991mTsNt5XxhHMVgGGhL1NxZPUZ0H9aQ+av6X/VWjFQ6jsx1lch34Q+73vk2zn9SZ9WqOUyjZj1o8g3HImwYZKSbrx/J5DjtNRxXW+ZxAvK6fkkXkAkovg0Tl63Fqr6jVZ0Gw7d1kHYpOGb8c=
+	t=1768005800; cv=none; b=ilaeKy5JEGrHbLhwpUhaeggnXQCPO8GFCUe2yhtoJxJGlfRS4DSekhI2iMZVo+TP9zzco8YK7Fx56Gs7RWo67MoB3zTb6+yUQrmnJ35CpVDDIfXqx+oLW2Z4hJCzlrr62EgE9oArXj9amG/gBm595UFIUiDQve6qmKxg0QL6E6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767969604; c=relaxed/simple;
-	bh=y8xRIEdRGOeUuWF6E+nu9I3VUL+D2Burgo87Gstz668=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jAl7KohlKw8/IGf2RGBEL8Kswtb2GG9nWy3QWUMxXmtA8bpxeRx0LyU/b/ao+DGsYo4SEvUMJl+GMb3Ev8C366eFQt6Ml4JC19FtHEvrp4+Pf15trJjfeJuW6e5Tu3Re7uEWAxIKhJGgvwyOIhixfXQ/SGIjzDL6BohvZvaIvJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kAif7L/j; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kAif7L/j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 575B5C4CEF1;
-	Fri,  9 Jan 2026 14:40:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767969604;
-	bh=y8xRIEdRGOeUuWF6E+nu9I3VUL+D2Burgo87Gstz668=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=kAif7L/jql1UKUj80jfj/uGwK9wo4d484HCsUhjiOes78gDv9Xl10R7ua5Eq0izo+
-	 I/Vj6HzElqRmlaY0vhttOd3JQ8n6NdlVx5vVAfI2eus75+XySfsENmoO4gDpv1mK78
-	 FOaR1mJJ69j9OAx0QiiiBxJUsI843r6J5HoTbjRDwHNiaB+thNCsRHj4TznUuJ65Ue
-	 iffALaxKpdx5B2DcenNuD204EDwB4lRq6A7JR13Q6Nb4CmmVO+Cppq5eBbjEpcfHXS
-	 /P8WTbCiekGB4tQxGzKs1T/DqYnckGu8zaNl1KTiPH9LBClO3WZbI0MC61X5PEu3qX
-	 n6qaVQNDU1oEw==
-From: Niklas Cassel <cassel@kernel.org>
-To: dlemoal@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	wolf@yoxt.cc,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH 5/5] ata: ahci: Do not read per port area for unimplemented ports
-Date: Fri,  9 Jan 2026 15:39:55 +0100
-Message-ID: <20260109143949.331105-12-cassel@kernel.org>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260109143949.331105-7-cassel@kernel.org>
-References: <20260109143949.331105-7-cassel@kernel.org>
+	s=arc-20240116; t=1768005800; c=relaxed/simple;
+	bh=7WqiBdQSQAlrQYU4KCjgNxHtTN3uDaG0vQRN50m53bg=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=aAdOwr7QfJm4moZIfhTc+fY/dbbYv/+NfUqokQH/ekcDmJzt2Vcrynv51wvv8zi3ExAkJVLqUWcOYZrLUAMNP7jMtiBpKCTrvPzsI9kf98WFxOutFc4jeHkNvPnMMCosy9KQ4WrVVfN121+Sd+LAWqN/EG6PhC89dUyaWltrGKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au; spf=pass smtp.mailfrom=eyal.emu.id.au; arc=none smtp.client-ip=203.10.76.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eyal.emu.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eyal.emu.id.au
+Received: from [192.168.2.7] (unknown [101.115.78.36])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mailhost.tip.net.au (Postfix) with ESMTPSA id 4dp07B1SByz8trQ
+	for <linux-ide@vger.kernel.org>; Sat, 10 Jan 2026 11:36:06 +1100 (AEDT)
+Message-ID: <a41dafec-2ab8-4e6f-83f6-628104ee9b7b@eyal.emu.id.au>
+Date: Sat, 10 Jan 2026 11:35:57 +1100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2124; i=cassel@kernel.org; h=from:subject; bh=y8xRIEdRGOeUuWF6E+nu9I3VUL+D2Burgo87Gstz668=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDIThc08Lwj29LJejN0y+bP1nKlO/brVG9qfPE29tbP+W ODe5NxVHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjImiJGhrmLH0lOTJN6ss5J 7dvugmfs9ovnnBS5oK3jtfvRw88bXrgxMixnP5z/Py8z/GFm0u+F7mZmi/YzZrbazxRo3qcqNi9 FgxEA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+To: list linux-ide <linux-ide@vger.kernel.org>
+Content-Language: en-US
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Why do Pending sectors disappear without writing to them?
+Reply-To: "Eyal Lebedinsky (emu)" <eyal@eyal.emu.id.au>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-An AHCI HBA specifies the number of ports is supports using CAP.NP.
-The HBA is free to only make a subset of the number of ports available
-using the PI (Ports Implemented) register.
+This happens with some regularity. This disk (/dev/sdf1) is part of a raid6. It seems to be unhealthy (another story).
+What I saw, a few times recently, is a smart report like
+	197 Current_Pending_Sector  -O--C-   100   100   000    -    8
+	198 Offline_Uncorrectable   ----C-   100   100   000    -    8
+and at the end of the smart report
+	Pending Defects log (GP Log 0x0c)
+	Index                LBA    Hours
+	    0        22791960168    54593
+	    1        22791960169    54593
+	    2        22791960170    54593
+	    3        22791960171    54593
+	    4        22791960172    54593
+	    5        22791960173    54593
+	    6        22791960174    54593
+	    7        22791960175    54593
+This stays for some time. For example this morning it started just after midnight
+until I checked the logs this morning.
 
-libata currently creates dummy ports for HBA ports that are provided by
-the HBA, but which are marked as "unavailable" using the PI register.
+I reacted by running
+	$ sudo raid6check /dev/md127 $(((22791960168-2048-262144)/1024-1)) 2
+BTW, I convert sector number to fs block:
+	2048   (sdf1 start from fdisk)
+	262144 'Data Offset : 262144 sectors' from 'mdadm --examine'
+	1024   'Chunk Size : 512K' [1024s]    from 'mdadm --examine'
+I expected an issue to be reported, but none were.
+However ... the above 197/198 smart attributes went to zero, and the 'Pending Defects log' was cleared.
 
-Each port will have per port area of registers in the HBA, regardless if
-the port is marked as "unavailable" or not using the PI register.
+My question is: raid6check is running in read-only mode, yet the disk cleared the pending reports. Why?
+I thought that you need to write to it for that.
 
-ahci_mark_external_port() currently reads this per port area or registers
-using readl() to see if the port is marked as external/hotplug-capable.
+Maybe the disk attempts to read the block (8 sectors) anyway and decides it is actually good?
+	In other words: first read failure is logged as Pending, a following good read clears it?
+	A failed write counts it as Reallocated_Sector_Ct.
 
-However, AHCI 1.3.1, section "3.1.4 Offset 0Ch: PI – Ports Implemented"
-states: "Software must not read or write to registers within unavailable
-ports."
+Interestingly, there is no indication of the reason for the initial failure (197/198 0->8).
+No i/o error. No md report. No program failure.
+The first log is from a regular 30m smart check.
 
-Thus, make sure that we only call ahci_mark_external_port() and
-ahci_update_initial_lpm_policy() for ports that are implemented.
+TIA
 
-For a libata perspective, this should not change anything related to LPM,
-as dummy ports do not provide any ap->ops (they do not have a .set_lpm()
-callback), so even if EH were to call .set_lpm() on a dummy port, it was
-already a no-op.
-
-Fixes: f7131935238d ("ata: ahci: move marking of external port earlier")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/ahci.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 7a7f88b3fa2b..931d0081169b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -2094,13 +2094,13 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		if (ap->flags & ATA_FLAG_EM)
- 			ap->em_message_type = hpriv->em_msg_type;
- 
--		ahci_mark_external_port(ap);
--
--		ahci_update_initial_lpm_policy(ap);
--
- 		/* disabled/not-implemented port */
--		if (!(hpriv->port_map & (1 << i)))
-+		if (!(hpriv->port_map & (1 << i))) {
- 			ap->ops = &ata_dummy_port_ops;
-+		} else {
-+			ahci_mark_external_port(ap);
-+			ahci_update_initial_lpm_policy(ap);
-+		}
- 	}
- 
- 	/* apply workaround for ASUS P5W DH Deluxe mainboard */
 -- 
-2.52.0
+Eyal at Home (eyal@eyal.emu.id.au)
 
