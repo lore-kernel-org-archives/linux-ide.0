@@ -1,85 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A280433B3
-	for <linux-ide@vger.kernel.org>; Mon, 12 Jan 2026 12:21:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41727358D12
+	for <linux-ide@vger.kernel.org>; Mon, 12 Jan 2026 13:17:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768220467; cv=none; b=d7GmbUz63Xvr+/LKNsSkGYa3zI712k1yDJwVqdek6Qa2n8csEgI2cXTbILSmlOjZ9Yy/FE4C1xECLrDwG80XLlOulpkR9CQyMiMBzdPpVz+pPPVa0zF2HOg5xPr6vd3Hy+8LG54WdDQMoThI0ACH6FrE5FP9tQVIneGCiBxn7dY=
+	t=1768223838; cv=none; b=ueKV+AfFEEZGZZUkxbF9AosiIBOpu0laTBWXPpCMaHo4ERQLjUVpJ+3xTep9KSxma1cd0lU8eTe1Ps1o6d9nzN2BoICP/0YjfsR4zbunJmSEb7Z0KnlKXgGGqQXkKP9SQtXZU11NW+q3jBsY0iRC1O/TCuzyBJEYJEEJg/4gY+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768220467; c=relaxed/simple;
-	bh=W9YEwrG4qavkDWkmEQJrIMFG9ufUFlkILgTHOGRZ9Mg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N4+lzCw7rTD30SYFmgIlIXanj35cB1hj6zt8TyRiuf8mRArg0t8NBqkrCikYCNVTTWjGNjq0LiGAV2p4YQ1/SNse9f6eMMDboEQRMg/vCRpzFwICygosDJ6ORWyq1jmljRcvCZ2B2z/EUvkIkRz3AngTWdClgK/iS91Wll+qEhc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ejLk8+rg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768223838; c=relaxed/simple;
+	bh=fVFgrl1NblTsD3Vx9hXgzSQgWi630u8dDucJ2I1csKA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=F4CrEIE94f9M01U2B58v0yJtIujzX2eGIYCD5wZuCzp83P0TvCVJEwzzaCnkBzqFAH5jsGp55VgJ+JVz7sfDU21RwO+e2GPjmL3vRdmZIX1cDVBNwEtfJuadvDiDmaSt/0psTrlabCZJy3x8JoCIxYSUKr4Lc7tW1oaIZ1MDdOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Oob+1UNp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ejLk8+rg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B688C16AAE;
-	Mon, 12 Jan 2026 12:21:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Oob+1UNp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1731CC19421;
+	Mon, 12 Jan 2026 13:17:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768220467;
-	bh=W9YEwrG4qavkDWkmEQJrIMFG9ufUFlkILgTHOGRZ9Mg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ejLk8+rgogfGk17Hc9G+NVKU4dT1N7SHPb3CGVcMHj5XtD/lNVgcOFL3GHt1bzrRg
-	 Sn+QT9rHnvPr7p4/Ue6Qmuv2Buav1EiLYmQqhnRxevW9msR1FkipgigQ4cTxGDJYp8
-	 PmJEO90uRsD7gQQ3cuesxLgCNTCcmJdRDsx12BAxDfFjKvRTA6pvjYq3B732vTTMps
-	 q/0hSqntcAlTPwi2GE2PQokfXvlxaTBnQt9f2HkCENkCmapHOgza1MsSpdBiyfsHIp
-	 dkR0sMCmrOYFs6ndXHHTJE89DkQ9qm58ltaCg+NMObjb8v+M862ORsGSPy02Oj2gnm
-	 0V6E/kx67BQzg==
-From: Niklas Cassel <cassel@kernel.org>
-To: dlemoal@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	wolf@yoxt.cc,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v2 6/6] ata: libata: Print features also for ATAPI devices
-Date: Mon, 12 Jan 2026 13:20:51 +0100
-Message-ID: <20260112122044.143637-14-cassel@kernel.org>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260112122044.143637-8-cassel@kernel.org>
-References: <20260112122044.143637-8-cassel@kernel.org>
+	s=k20201202; t=1768223837;
+	bh=fVFgrl1NblTsD3Vx9hXgzSQgWi630u8dDucJ2I1csKA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Oob+1UNpVR5vYzR+HVRORawH8gus1neQrqvOma2cmGJ3fgAkiuGqKTHDhbD0anVsh
+	 /F9AwAgYGBgmqYofkjzW6opA+LF7adKIKVPCyi5rC+yNMVkvP/kT28+FlD/70f1x5G
+	 jigglsjc679m7WeoDEp4PU18Cdn8qojR1xJkRpQl1nq9UvKVcyAkYV3WHWY4mb7EBt
+	 Iapm4OtQxrTvx/0K/ilP0nOv5iMPzrqRCob1K5cCJcVLQDd9tAIyHqP/uYoqmnHsJj
+	 8lxFrXdj1L71T41L4jn6WDBrAjHaTg5DrSNiPyU/IQ9qK40/8iYbNIX4/r5sGqFwaw
+	 ojPyPeJx6QJ0A==
+Message-ID: <5b945fcf-059d-409c-9475-630483c14a5e@kernel.org>
+Date: Mon, 12 Jan 2026 14:17:14 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1072; i=cassel@kernel.org; h=from:subject; bh=W9YEwrG4qavkDWkmEQJrIMFG9ufUFlkILgTHOGRZ9Mg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJTnitdNE4xm54hy/O85lfn7p8LXGJfyFVGiP8/s07km EXUzONdHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjIhXiG/75RT0K+cW3ODzvG 9iogdsvqb382rpjM/2+rYfyE29f3fMtgZNh37k5WYcz3+gXpX+UKJmQ2rNjD8Mw1c0bgj5St/zI W9DMAAA==
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/6] ata: libata-sata: Improve
+ link_power_management_supported sysfs attribute
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, wolf@yoxt.cc
+References: <20260112122044.143637-8-cassel@kernel.org>
+ <20260112122044.143637-11-cassel@kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260112122044.143637-11-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Commit d633b8a702ab ("libata: print feature list on device scan")
-added a print of the features supported by the device for ATA_DEV_ATA and
-ATA_DEV_ZAC devices, but not for ATA_DEV_ATAPI devices.
+On 1/12/26 13:20, Niklas Cassel wrote:
+> The link_power_management_supported sysfs attribute is currently set as
+> true even for ata ports that lack a .set_lpm() callback, e.g. dummy ports.
+> 
+> This is a bit silly, because while writing to the
+> link_power_management_policy sysfs attribute will make ata_scsi_lpm_store()
+> update ap->target_lpm_policy (thus sysfs will reflect the new value) and
+> call ata_port_schedule_eh() for the port, it is essentially a no-op.
+> 
+> This is because for a port without a .set_lpm() callback, once EH gets to
+> run, the ata_eh_link_set_lpm() will simply return, since the port does not
+> provide a .set_lpm() callback.
+> 
+> Thus, make sure that the link_power_management_supported sysfs attribute
+> is set to false for ports that lack a .set_lpm() callback. This way the
+> link_power_management_policy sysfs attribute will no longer be writable,
+> so we will no longer be misleading users to think that their sysfs write
+> actually does something.
+> 
+> Fixes: 0060beec0bfa ("ata: libata-sata: Add link_power_management_supported sysfs attribute")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/ata/libata-sata.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index b2817a2995d6..04e1e774645e 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -909,7 +909,7 @@ static bool ata_scsi_lpm_supported(struct ata_port *ap)
+>  	struct ata_link *link;
+>  	struct ata_device *dev;
+>  
+> -	if (ap->flags & ATA_FLAG_NO_LPM)
+> +	if ((ap->flags & ATA_FLAG_NO_LPM) || !ap->ops->set_lpm)
 
-Fix this by printing the features also for ATAPI devices.
+Can't we set ATA_FLAG_NO_LPM for ports that do not have set_lpm implemented
+earlier when scanning ? That would be safer.
 
-Before changes:
-ata1.00: ATAPI: Slimtype DVD A  DU8AESH, 6C2M, max UDMA/133
 
-After changes:
-ata1.00: ATAPI: Slimtype DVD A  DU8AESH, 6C2M, max UDMA/133
-ata1.00: Features: Dev-Attention HIPM DIPM
+>  		return false;
+>  
+>  	ata_for_each_link(link, ap, EDGE) {
 
-Fixes: d633b8a702ab ("libata: print feature list on device scan")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-core.c | 3 +++
- 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 7656aea7663f..43072b1d9221 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3151,6 +3151,9 @@ int ata_dev_configure(struct ata_device *dev)
- 				     dma_dir_string);
- 
- 		ata_dev_config_lpm(dev);
-+
-+		if (print_info)
-+			ata_dev_print_features(dev);
- 	}
- 
- 	/* determine max_sectors */
 -- 
-2.52.0
-
+Damien Le Moal
+Western Digital Research
