@@ -1,74 +1,273 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42C6438A9B9;
-	Wed, 14 Jan 2026 10:31:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44407395DA9
+	for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2026 13:18:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768386668; cv=none; b=damYrwIjlmikKt9UoW/jucfD73RBJfdvtjNIB3olyV56iNqGF2Liw1RAIyRXSrUmi4cXM0ySzpCNkEsgPs0qmgbxSKboI5VIdbsEEO2MEiidpS8LEoRfFqiYO976eKLhAHeZlvbKT9R50tgttkOQoAwlHuMTDEOegcfQtxRcq1I=
+	t=1768396717; cv=none; b=QGGqnSQqAh5gFChkJf1sBD+PwxnF1qtbrkli/JeGgIlAkiSr8q7Z8HLMLpa5FOwNG0mP9aYds33Pm0aM+cwLuY2sB3K4+43y7RTiiFuxOtpEOfVIAEsYrSRfE6zjAZ1itS0iYeLezeC/+qJ8XCStkCRjmYMequFgON4mRMJ/9mA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768386668; c=relaxed/simple;
-	bh=jhP+Ux+9M7AktWU3hsCE9s9kQrJMiHWvQXrGSRM2jWA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=R06PAoWTjz9h2OiKHGFwnUelUL6Y8gepL5WBswjH/iSzCjjA14rn7fXHCO9lHQb0RdG4ow1Z2oDcxUrptDtTlxVYafr+4BXvB8bxmCGvoHAjsr+LAce5HpC50auUUabcmZA10SvX3Uy8l/JFEnxy8333gCG95QhbzaIy2ekMFU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZncLeU2v; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768396717; c=relaxed/simple;
+	bh=FVAFxCkrY1hqsXCRQh6iZOM5/9mEdba4kTmLBXhSTkY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=Wg45h2tte4WeRy6GON5zoD00JKOJaL9lwl2hpxSW3iznjtsOpcNTpsjE7eR0e+WGznh4NBcEqt4ppU/4eFQIAUJxpEB2oBbbeH0PhcI9X5H2slmboAPUBNCn+Dpyqr2O/csKfeVaDAD563b4NZ9ESMFq7AWL2OoKBEh8CW2XlOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b1ypQr2s; arc=none smtp.client-ip=209.85.218.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZncLeU2v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED94CC16AAE;
-	Wed, 14 Jan 2026 10:31:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768386667;
-	bh=jhP+Ux+9M7AktWU3hsCE9s9kQrJMiHWvQXrGSRM2jWA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZncLeU2v/p3gZ6APS9CDIonkzqkaOUUrAOVjcR50WUVckRCx66z7QftytiAozCIQP
-	 iQQtL0LYjDABBUU3Z0VcR/aQlkvCHTVHaRqfuxso6qONnuUBIq7p+vZmbsNZJV1djv
-	 80G13BeW2iJtxlF9V/IYDidme6HQeW4sL6WwzZTkHV4gPKbaUaQTkmVkfF8LHUpoo4
-	 JLK2iCeIiDGUn2H7HCKJSmpINGamf/jTB+nsX2IZYJPVKtCkB407FgXLCebkB3ZEYz
-	 P0lq2kuWANdMbdW7g6TI7kyY/rmGRU+Uu+6dLpXp8RsKwFt05kj1SKGJ41ILMoi6z/
-	 mMe5CWw7bZjQw==
-Message-ID: <84882e25-2ff9-490e-81c7-068bd20d6342@kernel.org>
-Date: Wed, 14 Jan 2026 11:31:02 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b1ypQr2s"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-b876f3f603eso53221866b.0
+        for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2026 05:18:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1768396713; x=1769001513; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=k0CyQGmKP3Ppw+v/hzxqpF6zshGAi4PN54YlP/hI/iM=;
+        b=b1ypQr2sqXM5ZspRimwYiQa5TDcoH9zDnTqcZYUH2ehGhSt5rga5etqM4D1nrzv0LC
+         Y+6vaaWuSF9eCFThLjhJQoVpOZp8BZu47hI0IjTI3kUWmgXdARRAwcl1BCmnBA6pv+IL
+         TJ6cclCLump5Q/SEfOg2QaOuMbFGQREFWUTlsp8Krmdk/SAIrK5u25ZNo9COheYY4zkS
+         WtJj0O+ssFzAEpiSb1oIMcP0Oafy4on2mg9W6gapmoaG9Tk45+5Sm3pR3uCmXOxY7g56
+         iFtCgVM3xajtnEjg030KZOYm24LFXrp4HFisERP8uUwunWjYhPx0e7wPxWz0LznL7MUN
+         qfRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768396713; x=1769001513;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=k0CyQGmKP3Ppw+v/hzxqpF6zshGAi4PN54YlP/hI/iM=;
+        b=tKYANS+9f3S8aPqOZe89bFlBsiNf8+Z/xbK1cmB68Urm7SrTrQ+Fd7kB8fegIHMGSB
+         qFIfiLo+ZAQE+Er4CX0XsLuwgK3Or7sErzwmkdvR1kHs2L99ZgL1UTA2x5d7mg0L5SSi
+         YH8xdp80B/tQ7xobqTSacE0c2U2QXlr0CLbhAhEJXuir16iiHDQ2M/fmjusx01Zirx6S
+         ijvaWk2qjo07Tih0y8uW/TyevUqE9Int34ZWl5/U73BZQzL78asqmL4F7ZUP2DdCl15s
+         wRzktxHiPpIT1A+ftnjqLWfIgSlUw18eik1rA2LTCO36G3hmJJTyKRRBApiJ4/4IUWAZ
+         WRTQ==
+X-Gm-Message-State: AOJu0YxKgw9JcuIJ9/KkkIRgAcFsqztiTLpmSxcsy0+baHNTVsXmiiUT
+	3eSfWjlZFPOjnNNuvKe2BdpJA6S/wsPUDATSC7zx5tJBwpQ7pgZ7GhlKzRZI9bp2reg=
+X-Gm-Gg: AY/fxX4WILAdRdjbHFmJ6rl+rvNVP7NEcan9KvAnpZZ34MXB8+MIf1dOJvesjdBWY/r
+	1uLxcMYtgE9iHgpJZnUNvcfknKtVCjT16wNMxx0t5pwmebP+ILyH3cJ4ZRQRGgnIaGcNQ5WTeC4
+	rhO2MYFmdR5TB3rhBE2+4ns0BCWh8DRjD4chKoY75TL0f90Bb02XgdOXbwVjzaLJuXqwiJpD/La
+	GWkYyEDS8lm7W47p9c5Pa0Dg+Mq06ZYCt+/070CKtLdISeqKB0Mqt69iAmODSIAfmydt3+LazQI
+	LN4t20JrieNs5zxI+mCeIPWmVZhylVALyQCz29Qurw8aeNYJjs3WtQkT9TOKJkoPVGTNMz15Mlr
+	+HQhRyyGfQsvlDfqHLOUDouUVbwcywNV0wtJ6KidfnZd3ZKq4dln+xaNqyq/KA/idTdiftqEJRo
+	pEhi2J8jejSTKi14dnHSS0TgCGLFiI+4dkjlDEQcE9zPzb
+X-Received: by 2002:a05:6000:2511:b0:431:5ca:c1b0 with SMTP id ffacd0b85a97d-4342c4f2b7amr2408511f8f.4.1768391267620;
+        Wed, 14 Jan 2026 03:47:47 -0800 (PST)
+Received: from eldamar.lan (c-82-192-244-13.customer.ggaweb.ch. [82.192.244.13])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-432bd0e175csm49090275f8f.14.2026.01.14.03.47.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Jan 2026 03:47:46 -0800 (PST)
+Sender: Salvatore Bonaccorso <salvatore.bonaccorso@gmail.com>
+Received: by eldamar.lan (Postfix, from userid 1000)
+	id 03EC7BE2EE7; Wed, 14 Jan 2026 12:47:45 +0100 (CET)
+Date: Wed, 14 Jan 2026 12:47:45 +0100
+From: Salvatore Bonaccorso <carnil@debian.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	John Garry <john.g.garry@oracle.com>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+	Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	1120831@bugs.debian.org, snow.wolf.29@proton.me,
+	stable@vger.kernel.org, regressions@lists.linux.dev
+Subject: [regression] failed command: READ FPDMA QUEUED after boot for INTEL
+ SSDSC2KG480G8, XCV10120 after 9b8b84879d4a ("block: Increase
+ BLK_DEF_MAX_SECTORS_CAP")
+Message-ID: <176839089913.2398366.61500945766820256@eldamar.lan>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/5] dt-bindings: ata: sata: Document the graph port
-To: manivannan.sadhasivam@oss.qualcomm.com,
- Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam
- <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>,
- Niklas Cassel <cassel@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
- Bartosz Golaszewski <brgl@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- Stephan Gerhold <stephan.gerhold@linaro.org>,
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
- linux-pm@vger.kernel.org, linux-ide@vger.kernel.org
-References: <20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com>
- <20260107-pci-m2-v5-1-8173d8a72641@oss.qualcomm.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20260107-pci-m2-v5-1-8173d8a72641@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 1/7/26 15:11, Manivannan Sadhasivam via B4 Relay wrote:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> 
-> An external connector like M.2 could expose the SATA interface to the
-> plugin cards. So add the graph port to establish link between the SATA Port
-> and the connector node.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Control: forwarded -1 https://lore.kernel.org/regressions/176839089913.2398366.61500945766820256@eldamar.lan 
+Hi
 
-I applied this patch to the libata tree, for-6.20 branch. Thanks !
+A user reported a regression affecting his devices after 9b8b84879d4a
+("block: Increase BLK_DEF_MAX_SECTORS_CAP") which maybe needs a
+similar quirk like 2e9832713631 ("ata: libata-core: Quirk DELLBOSS VD
+max_sectors").
 
+The full report is at https://bugs.debian.org/1120831
 
--- 
-Damien Le Moal
-Western Digital Research
+One full boot log (without tainted kernel) is provided in
+https://bugs.debian.org/1120831#55 , where:
+
+Dec 10 18:56:03 kernel: ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+Dec 10 18:56:03 kernel: ata1.00: Model 'INTEL SSDSC2KG480G8', rev 'XCV10120', applying quirks: zeroaftertrim
+Dec 10 18:56:03 kernel: ata1.00: ATA-10: INTEL SSDSC2KG480G8, XCV10120, max UDMA/133
+Dec 10 18:56:03 kernel: ata1.00: 937703088 sectors, multi 1: LBA48 NCQ (depth 32)
+Dec 10 18:56:03 kernel: ata1.00: configured for UDMA/133
+Dec 10 18:56:03 kernel: scsi 0:0:0:0: Direct-Access ATA INTEL SSDSC2KG48 0120 PQ: 0 ANSI: 5
+Dec 10 18:56:03 kernel: iTCO_vendor_support: vendor-support=0
+Dec 10 18:56:03 kernel: ata1.00: Enabling discard_zeroes_data
+Dec 10 18:56:03 kernel: sd 0:0:0:0: [sda] 937703088 512-byte logical blocks: (480 GB/447 GiB)
+Dec 10 18:56:03 kernel: sd 0:0:0:0: [sda] 4096-byte physical blocks
+Dec 10 18:56:03 kernel: sd 0:0:0:0: [sda] Write Protect is off
+Dec 10 18:56:03 kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+Dec 10 18:56:03 kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Dec 10 18:56:03 kernel: sd 0:0:0:0: [sda] Preferred minimum I/O size 4096 bytes
+Dec 10 18:56:03 kernel: ata1.00: Enabling discard_zeroes_data
+[...]
+Dec 10 18:58:49 kernel: ata1.00: exception Emask 0x0 SAct 0x81fff8 SErr 0x0 action 0x6 frozen
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/00:18:50:4a:4c/20:00:0c:00:00/40 tag 3 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/00:20:50:6a:4c/20:00:0c:00:00/40 tag 4 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/00:28:50:8a:4c/20:00:0c:00:00/40 tag 5 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/80:30:88:28:00/00:00:00:00:00/40 tag 6 ncq dma 65536 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/28:38:00:08:40/00:00:00:00:00/40 tag 7 ncq dma 20480 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/48:40:38:08:40/00:00:00:00:00/40 tag 8 ncq dma 36864 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/28:48:00:08:80/00:00:00:00:00/40 tag 9 ncq dma 20480 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/48:50:38:08:80/00:00:00:00:00/40 tag 10 ncq dma 36864 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/80:58:00:08:c0/00:00:00:00:00/40 tag 11 ncq dma 65536 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/10:60:00:08:00/00:00:01:00:00/40 tag 12 ncq dma 8192 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/60:68:20:08:00/00:00:01:00:00/40 tag 13 ncq dma 49152 in res 40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/80:70:00:08:40/00:00:01:00:00/40 tag 14 ncq dma 65536 in res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/80:78:00:08:80/00:00:01:00:00/40 tag 15 ncq dma 65536 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 60/80:80:00:08:c0/00:00:01:00:00/40 tag 16 ncq dma 65536 in res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1.00: failed command: WRITE FPDMA QUEUED
+Dec 10 18:58:49 kernel: ata1.00: cmd 61/20:b8:68:28:b2/00:00:1e:00:00/40 tag 23 ncq dma 16384 out res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:58:49 kernel: ata1.00: status: { DRDY }
+Dec 10 18:58:49 kernel: ata1: hard resetting link
+Dec 10 18:58:49 kernel: ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+Dec 10 18:58:49 kernel: ata1.00: configured for UDMA/133
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#6 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#6 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#6 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#6 CDB: Read(10) 28 00 00 00 28 88 00 00 80 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 10376 op 0x0:(READ) flags 0x83700 phys_seg 16 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#7 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#7 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#7 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#7 CDB: Read(10) 28 00 00 40 08 00 00 00 28 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 4196352 op 0x0:(READ) flags 0x83700 phys_seg 5 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#8 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#8 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#8 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#8 CDB: Read(10) 28 00 00 40 08 38 00 00 48 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 4196408 op 0x0:(READ) flags 0x83700 phys_seg 9 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#9 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#9 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#9 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#9 CDB: Read(10) 28 00 00 80 08 00 00 00 28 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 8390656 op 0x0:(READ) flags 0x83700 phys_seg 5 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#10 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#10 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#10 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#10 CDB: Read(10) 28 00 00 80 08 38 00 00 48 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 8390712 op 0x0:(READ) flags 0x83700 phys_seg 9 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#11 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#11 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#11 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#11 CDB: Read(10) 28 00 00 c0 08 00 00 00 80 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 12584960 op 0x0:(READ) flags 0x83700 phys_seg 16 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#12 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#12 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#12 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#12 CDB: Read(10) 28 00 01 00 08 00 00 00 10 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 16779264 op 0x0:(READ) flags 0x83700 phys_seg 2 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#13 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#13 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#13 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#13 CDB: Read(10) 28 00 01 00 08 20 00 00 60 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 16779296 op 0x0:(READ) flags 0x83700 phys_seg 12 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#14 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#14 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#14 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#14 CDB: Read(10) 28 00 01 40 08 00 00 00 80 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 20973568 op 0x0:(READ) flags 0x83700 phys_seg 16 prio class 2
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#15 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=35s
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#15 Sense Key : Aborted Command [current]
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#15 Add. Sense: No additional sense information
+Dec 10 18:58:49 kernel: sd 0:0:0:0: [sda] tag#15 CDB: Read(10) 28 00 01 80 08 00 00 00 80 00
+Dec 10 18:58:49 kernel: I/O error, dev sda, sector 25167872 op 0x0:(READ) flags 0x83700 phys_seg 16 prio class 2
+Dec 10 18:58:49 kernel: ata1: EH complete
+Dec 10 18:58:49 kernel: ata1.00: Enabling discard_zeroes_data
+Dec 10 18:59:21 kernel: ata1.00: exception Emask 0x0 SAct 0x600 SErr 0x0 action 0x6 frozen
+Dec 10 18:59:21 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:59:21 kernel: ata1.00: cmd 60/00:48:50:6a:4c/20:00:0c:00:00/40 tag 9 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:59:21 kernel: ata1.00: status: { DRDY }
+Dec 10 18:59:21 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:59:21 kernel: ata1.00: cmd 60/00:50:50:8a:4c/20:00:0c:00:00/40 tag 10 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:59:21 kernel: ata1.00: status: { DRDY }
+Dec 10 18:59:21 kernel: ata1: hard resetting link
+Dec 10 18:59:21 kernel: ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+Dec 10 18:59:21 kernel: ata1.00: configured for UDMA/133
+Dec 10 18:59:21 kernel: ata1: EH complete
+Dec 10 18:59:51 kernel: ata1.00: exception Emask 0x0 SAct 0x20 SErr 0x0 action 0x6 frozen
+Dec 10 18:59:51 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 18:59:51 kernel: ata1.00: cmd 60/00:28:50:8a:4c/20:00:0c:00:00/40 tag 5 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 18:59:51 kernel: ata1.00: status: { DRDY }
+Dec 10 18:59:51 kernel: ata1: hard resetting link
+Dec 10 18:59:52 kernel: ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+Dec 10 18:59:52 kernel: ata1.00: configured for UDMA/133
+Dec 10 18:59:52 kernel: ata1: EH complete
+Dec 10 18:59:52 kernel: ata1.00: Enabling discard_zeroes_data
+Dec 10 19:00:22 kernel: ata1.00: NCQ disabled due to excessive errors
+Dec 10 19:00:22 kernel: ata1.00: exception Emask 0x0 SAct 0x20003400 SErr 0x0 action 0x6 frozen
+Dec 10 19:00:22 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 19:00:22 kernel: ata1.00: cmd 60/00:50:50:2a:4c/20:00:0c:00:00/40 tag 10 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 19:00:22 kernel: ata1.00: status: { DRDY }
+Dec 10 19:00:22 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 19:00:22 kernel: ata1.00: cmd 60/00:60:50:6a:4c/20:00:0c:00:00/40 tag 12 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 19:00:22 kernel: ata1.00: status: { DRDY }
+Dec 10 19:00:22 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 19:00:22 kernel: ata1.00: cmd 60/00:68:50:8a:4c/20:00:0c:00:00/40 tag 13 ncq dma 4194304 in res 40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 19:00:22 kernel: ata1.00: status: { DRDY }
+Dec 10 19:00:22 kernel: ata1.00: failed command: READ FPDMA QUEUED
+Dec 10 19:00:22 kernel: ata1.00: cmd 60/08:e8:68:08:c0/00:00:01:00:00/40 tag 29 ncq dma 4096 in res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+Dec 10 19:00:22 kernel: ata1.00: status: { DRDY }
+Dec 10 19:00:22 kernel: ata1: hard resetting link
+Dec 10 19:00:22 kernel: ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+Dec 10 19:00:22 kernel: ata1.00: configured for UDMA/133
+Dec 10 19:00:22 kernel: ata1: EH complete
+Dec 10 19:00:22 kernel: ata1.00: Enabling discard_zeroes_data
+
+The user bisected the issue down to the mentioned 9b8b84879d4a
+("block: Increase BLK_DEF_MAX_SECTORS_CAP").
+
+#regzbot introduced: 9b8b84879d4adc506b0d3944e20b28d9f3f6994b
+#regzbot link: https://bugs.debian.org/1120831
+
+What helps as a workaround was to apply a udev rule 
+
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sda", ATTR{queue/max_sectors_kb}="1280"
+
+and decreasing again max_sectors_kb to 1280 KiB.
+
+So maybe this device would need a similar quirk and limit the maximum
+size for these device I/O's to 2560 sectors?
+
+Regards,
+Salvatore
