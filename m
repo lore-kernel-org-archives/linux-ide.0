@@ -1,109 +1,205 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f202.google.com (mail-pf1-f202.google.com [209.85.210.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 954F93A1E71
-	for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2026 16:25:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E8732C924
+	for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2026 17:51:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768407911; cv=none; b=bbSq9WbQw1ZyjXYiJru+lAK4EWssrwvvhoY9voWsNKW5LiPPWbq/VeXJHcBxSRs4lhtJcanvrjd8hHd6JMDovgTtxSF5c45fAWnZQAayyqVI/YwdQ6dLKcrFxuoaf3yGN0QMW9y73VpXGG+i7UORHH2Rb/qavvEaWrovJN1ngFQ=
+	t=1768413082; cv=none; b=GOs0bLjfdodrNHnWBGk6SagDn41JyEQngrMcmtABwMf12XOXC2cHlkaMfAWFeqRB8/2m7+4i1XfKKnOHePPTGE8gxeZ6C0HRQLh1WpZdKP5BYn4GvlvxGs5b07YpbLRiTOzhlAaqZy3MnWT9GrmSYj/0Q8DCbzgjn7lhwGikoCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768407911; c=relaxed/simple;
-	bh=7axy5Ujtl+85/UQgkxRbuYqk8MNK91eI/THV8lmVkk8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KtZvcT1+kpTsHKOpeyAQF7qDjQiWDljMtbni4gi4rzP36QbiA8doGv+jxQ8gv+9qXq/7PxnEx0h+bJvY/o2bvFxUYfoYXcpzbe342gz+SfZgua/dlCK1GpTY8/WR2i0HLkfSewfeBXbOOF0APbcmtyq+QCu00g8mfCMd51M0+oE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JDugAJTa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768413082; c=relaxed/simple;
+	bh=0VlneB30FVhi6ckREc4C/e8nnUhhXw+xlKjHB2aXC68=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=bDUUW88F4WSD4sbyEVRS+x7YHgC2EdLIpGNohyVWLr8y89MP+P6mul7LI2WT0rotx6xukUB3HD4K6iakyu8ijHYqBE/mor4q2HkjQYtWMy1eFFsGhLL8ZWPRry/hULx5gQKmqINLM52zAhLv8Ji5nnJ82OjVNfeNHZ2Cs85IC1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=nxkOf63O; arc=none smtp.client-ip=209.85.210.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JDugAJTa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D01A4C16AAE;
-	Wed, 14 Jan 2026 16:25:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768407911;
-	bh=7axy5Ujtl+85/UQgkxRbuYqk8MNK91eI/THV8lmVkk8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JDugAJTaZTzLAbYIzCe3EQrZe2Wb/SXT8nkJAI5OV+xj1Lpvp0JFk7hJdqRiPeem9
-	 8q0om+hUxE1+gNclr3fbsDxGiMe9V+/i86uJ8APJlqSMWSC1IoYsKzSPoh3bI2aazC
-	 qJy+YiEJCWcglueC1VG4gMxwF+dELTJ2lEITxqr1pdeMsBbyZd1nG5sX2v/AwrEnjg
-	 CsReAyUluWH6txoAKY33HMoVgZftRbbr4CyRj8JXw/qR1cx6LQb7rfdTVyCW1waxXh
-	 U+7BWMFRxpasyuklhzYN1wiGnFciuHyuymsjXo5xRh7JVe44KT259l0H3w2yN1DRUY
-	 7+sqPGZQ1ur1w==
-Date: Wed, 14 Jan 2026 17:25:05 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Wolf <snow.wolf.29@proton.me>, dlemoal@kernel.org
-Cc: 1120831@bugs.debian.org, linux-ide@vger.kernel.org
-Subject: Re: [regression] failed command: READ FPDMA QUEUED after boot for
- INTEL SSDSC2KG480G8, XCV10120 after 9b8b84879d4a ("block: Increase
- BLK_DEF_MAX_SECTORS_CAP")
-Message-ID: <aWfDYaZU7nYtcH0b@fedora>
-References: <176839089913.2398366.61500945766820256@eldamar.lan>
- <aWelaQYNJyulLBVc@ryzen>
- <kkJPUUv8aExqrXPkwlzwEJV7Ywy3ogYCeTawLZZJm3wHBYylIhyCUeIKVFg6PWku-5BbspvtELJC6Tok6ens7Ib26hFkuSKKSm8NEwigRYo=@proton.me>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="nxkOf63O"
+Received: by mail-pf1-f202.google.com with SMTP id d2e1a72fcca58-81f3fb8c8caso77937b3a.1
+        for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2026 09:51:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1768413081; x=1769017881; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=uHdJBd8jMxMRZo0RZLZ+zHyApr0XgodixoY/B3frsaI=;
+        b=nxkOf63ONQUdmFOk+tGK6QWRE0JX74fNcqRRhhgPil9gI3Xyhi1wyAnszHd7wOf3gT
+         4RFd8WxfMYuQr6i2MuRzn1YE6JrjndH3FXAAfRWjQ2l861u3giLEJvyB3+dKwHPlt3L3
+         J1jKMb3CnIRvJb8vdI+yuNM75rSAKaZeBRc2TSSBPCeYJnF30V07Rdx2rw06ZeXvf+K8
+         puK6UlYbXbo25oV7ildb5o+hCc/3LKint3yqLoksyMROwGlZkGdD7/DNAVv9DCQvCfDk
+         HHz6w2irIiT3EIYm0Erd26k8IdSufduUURwCIga0zfd6/UUq+Ou1CsUKz8BabCBeNvtv
+         Awfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768413081; x=1769017881;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=uHdJBd8jMxMRZo0RZLZ+zHyApr0XgodixoY/B3frsaI=;
+        b=q86hQ2GsrDkOD4QJLkuPPYNCke0zqqBqK+CEN22aAV/yznzllLB/L7T51Av2kwE2pd
+         kbeGZmYLfpi1Dnd7ZZV/peGG2QsJyYAeIYNrWQY/ETNKzlu7+ECz02NxQ+yrp0mf7IMz
+         FAO7UBWxpipLY+P0NqFm98rRUUOjjblI0OG7VYyTWpG84pOrSZhRSHcTBL3xUt4xmXv8
+         Fb8dRQvOTTpYqOJVNtxF/AlqdnKc0p68p2OvjcsL2aLr8ho9zLbKGPN29El0uVh5+MWb
+         p1JPT7QYKwVNkRvkNw1/Jhj49cIZCpHdL918V7a039Vj6iCQRfZFsSuOXBovKIaaXwgB
+         z0Mg==
+X-Forwarded-Encrypted: i=1; AJvYcCUtEmhSoZVdjZDv4Kkdw7/hPftiKaFkWy+poL7m47YUEvV2HyETLywbuUqcOnAEQqcZz1ft8Yeb7r0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzfx9Oi9laSfcRpREF/eN4HkKc80Gw2WQzsJyHmVpjBM48siQ8W
+	cnHq7lXOGFVT/ClwLo0xUvsQwHaNeH6V65v7p97EzJBCIiJnQLdi/qNtpBc2ns4EQCE5DuarsJ2
+	VLPPV0v4UyGe5ww==
+X-Received: from pfay10.prod.google.com ([2002:a05:6a00:180a:b0:81f:7aad:edfa])
+ (user=ipylypiv job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a00:6ca4:b0:81e:f43a:3535 with SMTP id d2e1a72fcca58-81f82012706mr2706210b3a.66.1768413080718;
+ Wed, 14 Jan 2026 09:51:20 -0800 (PST)
+Date: Wed, 14 Jan 2026 09:51:15 -0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <kkJPUUv8aExqrXPkwlzwEJV7Ywy3ogYCeTawLZZJm3wHBYylIhyCUeIKVFg6PWku-5BbspvtELJC6Tok6ens7Ib26hFkuSKKSm8NEwigRYo=@proton.me>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
+Message-ID: <20260114175115.384741-1-ipylypiv@google.com>
+Subject: [PATCH] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+From: Igor Pylypiv <ipylypiv@google.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hello Wolf,
+Add a 'serial' sysfs attribute for SCSI and SATA devices. This attribute
+exposes the Unit Serial Number, which is derived from the Device
+Identification Vital Product Data (VPD) page 0x80.
 
-On Wed, Jan 14, 2026 at 03:11:50PM +0000, Wolf wrote:
-> Here is find-max-sectors.sh output:
-> 
-> Drive model:
-> INTEL SSDSC2KG480G8
-> 
-> Drive firmware:
-> XCV10120
-> 
-> SATA / AHCI controller:
-> 00:17.0 SATA controller [0106]: Intel Corporation Cannon Lake Mobile PCH SATA AHCI Controller [8086:a353] (rev 10)
-> 
-> Drive values before running the test:
-> /sys/block/sda/queue/max_hw_sectors_kb:32767
-> /sys/block/sda/queue/max_sectors_kb:1280
-> /sys/block/sda/queue/read_ahead_kb:128
-> 
-> Running test with max_sectors 128 KiB
-> Test: PASS
-> 
-> Running test with max_sectors 1024 KiB
-> Test: PASS
-> 
-> Running test with max_sectors 2048 KiB
-> Test: PASS
-> 
-> Running test with max_sectors 3072 KiB
-> Test: PASS
-> 
-> Running test with max_sectors 4095 KiB
-> Test: PASS
-> 
-> Running test with max_sectors 4096 KiB
-> Test: PASS
+Whitespace is stripped from the retrieved serial number to handle
+the different alignment (right-aligned for SCSI, potentially
+left-aligned for SATA). As noted in SAT-5 10.5.3, "Although SPC-5 defines
+the PRODUCT SERIAL NUMBER field as right-aligned, ACS-5 does not require
+its SERIAL NUMBER field to be right-aligned. Therefore, right-alignment
+of the PRODUCT SERIAL NUMBER field for the translation is not assured."
 
-It is quite unexpected that 4096 KiB passes.
+This attribute is used by tools such as lsblk to display the serial
+number of block devices.
 
-find-max-sectors.sh performs reads.
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+---
+ drivers/scsi/scsi_lib.c    | 53 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c  | 14 ++++++++++
+ include/scsi/scsi_device.h |  1 +
+ 3 files changed, 68 insertions(+)
 
-The commands that timed out according to dmesg shared were
-also reads:
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 93031326ac3e..dc09785c050c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -13,6 +13,7 @@
+ #include <linux/bitops.h>
+ #include <linux/blkdev.h>
+ #include <linux/completion.h>
++#include <linux/ctype.h>
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <linux/init.h>
+@@ -3451,6 +3452,58 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+ }
+ EXPORT_SYMBOL(scsi_vpd_lun_id);
+ 
++/**
++ * scsi_vpd_lun_serial - return a unique device serial number
++ * @sdev: SCSI device
++ * @sn:   buffer for the serial number
++ * @sn_size: size of the buffer
++ *
++ * Copies the device serial number into @sn based on the information in
++ * the VPD page 0x80 of the device. The string will be null terminated
++ * and have leading and trailing whitespace stripped.
++ *
++ * Returns the length of the serial number or error on failure.
++ */
++int scsi_vpd_lun_serial(struct scsi_device *sdev, char *sn, size_t sn_size)
++{
++	int len;
++	const unsigned char *d;
++	const struct scsi_vpd *vpd_pg80;
++
++	rcu_read_lock();
++	vpd_pg80 = rcu_dereference(sdev->vpd_pg80);
++	if (!vpd_pg80) {
++		rcu_read_unlock();
++		return -ENXIO;
++	}
++
++	len = vpd_pg80->len - 4;
++	d = vpd_pg80->data + 4;
++
++	/* Skip leading spaces */
++	while (len > 0 && isspace(*d)) {
++		len--;
++		d++;
++	}
++
++	/* Skip trailing spaces */
++	while (len > 0 && isspace(d[len - 1]))
++		len--;
++
++	if (sn_size < len + 1) {
++		rcu_read_unlock();
++		return -EINVAL;
++	}
++
++	memcpy(sn, d, len);
++	sn[len] = '\0';
++
++	rcu_read_unlock();
++
++	return len;
++}
++EXPORT_SYMBOL(scsi_vpd_lun_serial);
++
+ /**
+  * scsi_vpd_tpg_id - return a target port group identifier
+  * @sdev: SCSI device
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 99eb0a30df61..d80a546f54c2 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1013,6 +1013,19 @@ sdev_show_wwid(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
+ 
++static ssize_t
++sdev_show_serial(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	ssize_t ret;
++
++	ret = scsi_vpd_lun_serial(sdev, buf, PAGE_SIZE);
++	if (ret < 0)
++		return ret;
++	return sysfs_emit(buf, "%s\n", buf);
++}
++static DEVICE_ATTR(serial, S_IRUGO, sdev_show_serial, NULL);
++
+ #define BLIST_FLAG_NAME(name)					\
+ 	[const_ilog2((__force __u64)BLIST_##name)] = #name
+ static const char *const sdev_bflags_name[] = {
+@@ -1257,6 +1270,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_device_busy.attr,
+ 	&dev_attr_vendor.attr,
+ 	&dev_attr_model.attr,
++	&dev_attr_serial.attr,
+ 	&dev_attr_rev.attr,
+ 	&dev_attr_rescan.attr,
+ 	&dev_attr_delete.attr,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d32f5841f4f8..9c2a7bbe5891 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -571,6 +571,7 @@ void scsi_put_internal_cmd(struct scsi_cmnd *scmd);
+ extern void sdev_disable_disk_events(struct scsi_device *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
+ extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
++extern int scsi_vpd_lun_serial(struct scsi_device *, char *, size_t);
+ extern int scsi_vpd_tpg_id(struct scsi_device *, int *);
+ 
+ #ifdef CONFIG_PM
+-- 
+2.52.0.457.g6b5491de43-goog
 
-Dec 10 18:58:49 kernel: ata1.00: failed command: READ FPDMA QUEUED
-Dec 10 18:58:49 kernel: ata1.00: cmd 60/00:18:50:4a:4c/20:00:0c:00:00/40 tag 3 ncq dma 4194304 in res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-
-And also of size 4194304 == 4096 KiB.
-
-
-The script has been able to detect different limits for other
-"broken" drives, and was used to get the quirk value for e.g.
-commit 2e9832713631 ("ata: libata-core: Quirk DELLBOSS VD max_sectors"),
-so I wonder why it is not workin here (why 4 MiB reads passes).
-
-Damien, ideas?
-
-
-Kind regards,
-Niklas
