@@ -1,205 +1,134 @@
-Received: from mail-pf1-f202.google.com (mail-pf1-f202.google.com [209.85.210.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E8732C924
-	for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2026 17:51:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D0D02F0C7D;
+	Wed, 14 Jan 2026 20:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768413082; cv=none; b=GOs0bLjfdodrNHnWBGk6SagDn41JyEQngrMcmtABwMf12XOXC2cHlkaMfAWFeqRB8/2m7+4i1XfKKnOHePPTGE8gxeZ6C0HRQLh1WpZdKP5BYn4GvlvxGs5b07YpbLRiTOzhlAaqZy3MnWT9GrmSYj/0Q8DCbzgjn7lhwGikoCg=
+	t=1768423222; cv=none; b=l4NVugQ90VU01ZfpBezl1/CTJcCo0b/O/uPUtwuvHD5jQYFWPzAaf6TdGFVHamM9MNqItmrlgriKRE5ubj0zIGtNTdAgYvoIAg8TYnqKrkjkEWl9F1AyiiyhO3ntfdy9fAsVFyzw1L/KlFe6kufrYf+nOnqpgsupFK0tlqhWvig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768413082; c=relaxed/simple;
-	bh=0VlneB30FVhi6ckREc4C/e8nnUhhXw+xlKjHB2aXC68=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=bDUUW88F4WSD4sbyEVRS+x7YHgC2EdLIpGNohyVWLr8y89MP+P6mul7LI2WT0rotx6xukUB3HD4K6iakyu8ijHYqBE/mor4q2HkjQYtWMy1eFFsGhLL8ZWPRry/hULx5gQKmqINLM52zAhLv8Ji5nnJ82OjVNfeNHZ2Cs85IC1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=nxkOf63O; arc=none smtp.client-ip=209.85.210.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+	s=arc-20240116; t=1768423222; c=relaxed/simple;
+	bh=rYj1G0ZgOrlKgp7cvcUaf3N+xnMfL7FlvmwFqIWNaxU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZIzrQRiVO6k16Xc+uuybeO3nLed8PPQZsHIyGV6oVvBNuwd2XYzX+MDZVjH/Aq55iU9FnUYg9wQiTDt75LOubEzJaH10A+C/aGlMxa0Fe8hWz5cocAdX6mQGL34d98A9Og3923hjdnlpt7NI4HPBSrr4/oJ8o+dZbNrh6DjY0JY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DczfYK4a; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="nxkOf63O"
-Received: by mail-pf1-f202.google.com with SMTP id d2e1a72fcca58-81f3fb8c8caso77937b3a.1
-        for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2026 09:51:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1768413081; x=1769017881; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=uHdJBd8jMxMRZo0RZLZ+zHyApr0XgodixoY/B3frsaI=;
-        b=nxkOf63ONQUdmFOk+tGK6QWRE0JX74fNcqRRhhgPil9gI3Xyhi1wyAnszHd7wOf3gT
-         4RFd8WxfMYuQr6i2MuRzn1YE6JrjndH3FXAAfRWjQ2l861u3giLEJvyB3+dKwHPlt3L3
-         J1jKMb3CnIRvJb8vdI+yuNM75rSAKaZeBRc2TSSBPCeYJnF30V07Rdx2rw06ZeXvf+K8
-         puK6UlYbXbo25oV7ildb5o+hCc/3LKint3yqLoksyMROwGlZkGdD7/DNAVv9DCQvCfDk
-         HHz6w2irIiT3EIYm0Erd26k8IdSufduUURwCIga0zfd6/UUq+Ou1CsUKz8BabCBeNvtv
-         Awfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768413081; x=1769017881;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=uHdJBd8jMxMRZo0RZLZ+zHyApr0XgodixoY/B3frsaI=;
-        b=q86hQ2GsrDkOD4QJLkuPPYNCke0zqqBqK+CEN22aAV/yznzllLB/L7T51Av2kwE2pd
-         kbeGZmYLfpi1Dnd7ZZV/peGG2QsJyYAeIYNrWQY/ETNKzlu7+ECz02NxQ+yrp0mf7IMz
-         FAO7UBWxpipLY+P0NqFm98rRUUOjjblI0OG7VYyTWpG84pOrSZhRSHcTBL3xUt4xmXv8
-         Fb8dRQvOTTpYqOJVNtxF/AlqdnKc0p68p2OvjcsL2aLr8ho9zLbKGPN29El0uVh5+MWb
-         p1JPT7QYKwVNkRvkNw1/Jhj49cIZCpHdL918V7a039Vj6iCQRfZFsSuOXBovKIaaXwgB
-         z0Mg==
-X-Forwarded-Encrypted: i=1; AJvYcCUtEmhSoZVdjZDv4Kkdw7/hPftiKaFkWy+poL7m47YUEvV2HyETLywbuUqcOnAEQqcZz1ft8Yeb7r0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzfx9Oi9laSfcRpREF/eN4HkKc80Gw2WQzsJyHmVpjBM48siQ8W
-	cnHq7lXOGFVT/ClwLo0xUvsQwHaNeH6V65v7p97EzJBCIiJnQLdi/qNtpBc2ns4EQCE5DuarsJ2
-	VLPPV0v4UyGe5ww==
-X-Received: from pfay10.prod.google.com ([2002:a05:6a00:180a:b0:81f:7aad:edfa])
- (user=ipylypiv job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:6ca4:b0:81e:f43a:3535 with SMTP id d2e1a72fcca58-81f82012706mr2706210b3a.66.1768413080718;
- Wed, 14 Jan 2026 09:51:20 -0800 (PST)
-Date: Wed, 14 Jan 2026 09:51:15 -0800
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DczfYK4a"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dryfr4Hj7z1XLwWq;
+	Wed, 14 Jan 2026 20:40:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1768423219; x=1771015220; bh=tXLYtMu8kl/sqi/QeVbUV/yQ
+	7fOxlre6p6clJYbg/hg=; b=DczfYK4a7GWTwXB7gUHDpkfeJE671HIqhItypJJ1
+	71gOJDgCPGiw8lenTruuo7UxipaWyK+drLQMUHWx2u9E/7JZMJKVe0AA0uwtJBYx
+	aUmMyk4jjqfdkh+13z7cU2IzsQR8ksWiCLDjcMFXQmcSh9Oll2bSbPDLt0Qy83PK
+	4jkG+TYUkiQ95ayeCETJPwPFpKAXOfHdNoTzCrqvnPY6Tsq2X7wm0dJXKGVnS/Mc
+	e3FRBQu/PmHju/y0KbyQx9A777UN3l5Bd4ZlIoGtsTZBQd9h0nGyx7YsdJovC7Ar
+	HlQct5bosJWPJSyAmmurSPaztagQpCFL0fbOJ1ySLxSCag==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id Bis82rDIzv3S; Wed, 14 Jan 2026 20:40:19 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dryfn5NKQz1XM6Jk;
+	Wed, 14 Jan 2026 20:40:17 +0000 (UTC)
+Message-ID: <ce30b2fe-8225-47fb-b581-251a1b9cd2cf@acm.org>
+Date: Wed, 14 Jan 2026 12:40:16 -0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
-Message-ID: <20260114175115.384741-1-ipylypiv@google.com>
-Subject: [PATCH] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
-From: Igor Pylypiv <ipylypiv@google.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+To: Igor Pylypiv <ipylypiv@google.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260114175115.384741-1-ipylypiv@google.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260114175115.384741-1-ipylypiv@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Add a 'serial' sysfs attribute for SCSI and SATA devices. This attribute
-exposes the Unit Serial Number, which is derived from the Device
-Identification Vital Product Data (VPD) page 0x80.
+On 1/14/26 10:51 AM, Igor Pylypiv wrote:
+> Add a 'serial' sysfs attribute for SCSI and SATA devices. This attribute
+> exposes the Unit Serial Number, which is derived from the Device
+> Identification Vital Product Data (VPD) page 0x80.
+> 
+> Whitespace is stripped from the retrieved serial number to handle
+> the different alignment (right-aligned for SCSI, potentially
+> left-aligned for SATA). As noted in SAT-5 10.5.3, "Although SPC-5 defines
+> the PRODUCT SERIAL NUMBER field as right-aligned, ACS-5 does not require
+> its SERIAL NUMBER field to be right-aligned. Therefore, right-alignment
+> of the PRODUCT SERIAL NUMBER field for the translation is not assured."
+> 
+> This attribute is used by tools such as lsblk to display the serial
+> number of block devices.
 
-Whitespace is stripped from the retrieved serial number to handle
-the different alignment (right-aligned for SCSI, potentially
-left-aligned for SATA). As noted in SAT-5 10.5.3, "Although SPC-5 defines
-the PRODUCT SERIAL NUMBER field as right-aligned, ACS-5 does not require
-its SERIAL NUMBER field to be right-aligned. Therefore, right-alignment
-of the PRODUCT SERIAL NUMBER field for the translation is not assured."
+How can existing user space tools use a sysfs attribute that has not yet
+been implemented? Please explain.
 
-This attribute is used by tools such as lsblk to display the serial
-number of block devices.
+> +int scsi_vpd_lun_serial(struct scsi_device *sdev, char *sn, size_t sn_size)
+> +{
+> +	int len;
+> +	const unsigned char *d;
+> +	const struct scsi_vpd *vpd_pg80;
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
----
- drivers/scsi/scsi_lib.c    | 53 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_sysfs.c  | 14 ++++++++++
- include/scsi/scsi_device.h |  1 +
- 3 files changed, 68 insertions(+)
+The current convention for declarations in Linux kernel code is to order
+these from longest to shortest. In other words, the opposite order of
+the above order.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 93031326ac3e..dc09785c050c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -13,6 +13,7 @@
- #include <linux/bitops.h>
- #include <linux/blkdev.h>
- #include <linux/completion.h>
-+#include <linux/ctype.h>
- #include <linux/kernel.h>
- #include <linux/export.h>
- #include <linux/init.h>
-@@ -3451,6 +3452,58 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
- }
- EXPORT_SYMBOL(scsi_vpd_lun_id);
- 
-+/**
-+ * scsi_vpd_lun_serial - return a unique device serial number
-+ * @sdev: SCSI device
-+ * @sn:   buffer for the serial number
-+ * @sn_size: size of the buffer
-+ *
-+ * Copies the device serial number into @sn based on the information in
-+ * the VPD page 0x80 of the device. The string will be null terminated
-+ * and have leading and trailing whitespace stripped.
-+ *
-+ * Returns the length of the serial number or error on failure.
-+ */
-+int scsi_vpd_lun_serial(struct scsi_device *sdev, char *sn, size_t sn_size)
-+{
-+	int len;
-+	const unsigned char *d;
-+	const struct scsi_vpd *vpd_pg80;
-+
-+	rcu_read_lock();
-+	vpd_pg80 = rcu_dereference(sdev->vpd_pg80);
-+	if (!vpd_pg80) {
-+		rcu_read_unlock();
-+		return -ENXIO;
-+	}
-+
-+	len = vpd_pg80->len - 4;
-+	d = vpd_pg80->data + 4;
-+
-+	/* Skip leading spaces */
-+	while (len > 0 && isspace(*d)) {
-+		len--;
-+		d++;
-+	}
-+
-+	/* Skip trailing spaces */
-+	while (len > 0 && isspace(d[len - 1]))
-+		len--;
-+
-+	if (sn_size < len + 1) {
-+		rcu_read_unlock();
-+		return -EINVAL;
-+	}
-+
-+	memcpy(sn, d, len);
-+	sn[len] = '\0';
-+
-+	rcu_read_unlock();
-+
-+	return len;
-+}
-+EXPORT_SYMBOL(scsi_vpd_lun_serial);
-+
- /**
-  * scsi_vpd_tpg_id - return a target port group identifier
-  * @sdev: SCSI device
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 99eb0a30df61..d80a546f54c2 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1013,6 +1013,19 @@ sdev_show_wwid(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
- 
-+static ssize_t
-+sdev_show_serial(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	ssize_t ret;
-+
-+	ret = scsi_vpd_lun_serial(sdev, buf, PAGE_SIZE);
-+	if (ret < 0)
-+		return ret;
-+	return sysfs_emit(buf, "%s\n", buf);
-+}
-+static DEVICE_ATTR(serial, S_IRUGO, sdev_show_serial, NULL);
-+
- #define BLIST_FLAG_NAME(name)					\
- 	[const_ilog2((__force __u64)BLIST_##name)] = #name
- static const char *const sdev_bflags_name[] = {
-@@ -1257,6 +1270,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_device_busy.attr,
- 	&dev_attr_vendor.attr,
- 	&dev_attr_model.attr,
-+	&dev_attr_serial.attr,
- 	&dev_attr_rev.attr,
- 	&dev_attr_rescan.attr,
- 	&dev_attr_delete.attr,
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d32f5841f4f8..9c2a7bbe5891 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -571,6 +571,7 @@ void scsi_put_internal_cmd(struct scsi_cmnd *scmd);
- extern void sdev_disable_disk_events(struct scsi_device *sdev);
- extern void sdev_enable_disk_events(struct scsi_device *sdev);
- extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
-+extern int scsi_vpd_lun_serial(struct scsi_device *, char *, size_t);
- extern int scsi_vpd_tpg_id(struct scsi_device *, int *);
- 
- #ifdef CONFIG_PM
--- 
-2.52.0.457.g6b5491de43-goog
+> +	rcu_read_lock();
 
+Please use guard(rcu)() in new code.
+
+> +	vpd_pg80 = rcu_dereference(sdev->vpd_pg80);
+> +	if (!vpd_pg80) {
+> +		rcu_read_unlock();
+> +		return -ENXIO;
+> +	}
+> +
+> +	len = vpd_pg80->len - 4;
+> +	d = vpd_pg80->data + 4;
+> +
+> +	/* Skip leading spaces */
+> +	while (len > 0 && isspace(*d)) {
+> +		len--;
+> +		d++;
+> +	}
+> +
+> +	/* Skip trailing spaces */
+> +	while (len > 0 && isspace(d[len - 1]))
+> +		len--;
+> +
+> +	if (sn_size < len + 1) {
+> +		rcu_read_unlock();
+> +		return -EINVAL;
+> +	}
+
+Has it been considered to call strim() instead of implementing 
+functionality that is very similar to strim()?
+
+> +	return sysfs_emit(buf, "%s\n", buf);
+
+The C99 standard says that passing the output buffer pointer as an 
+argument to sprintf()/snprintf() triggers undefined behavior. I'm not 
+sure whether this also applies to the kernel equivalents of these
+functions but it's probably better to be careful.
+
+Thanks,
+
+Bart.
