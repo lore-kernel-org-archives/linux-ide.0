@@ -1,71 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72AAC37C0FB;
-	Mon, 19 Jan 2026 14:26:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C98D826CE25
+	for <linux-ide@vger.kernel.org>; Mon, 19 Jan 2026 20:02:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768832804; cv=none; b=gG139AjZQZdCdKnCjbUWumvLEcIrPg5npY5QIMHV/r+XXGz7vnvaS11ohpA5LucxxjZ4XkIeVQmjppyHdireeFwj5n3eBnsNNPtZylRoQy+HemS5M8g9ktFSEhghuZOr/23uo5hCn608FmMZyjM0wlzgyGVVDRhVVFyoIccVcqo=
+	t=1768852950; cv=none; b=sQrRSSX8iF9USs13cnAyuiBAyXB40FuBXoaTxRWbDMLm0aX3T7t9nGiTFnlKUlEM3OuJtueNcDJL45/zzQB8Z4Dy+3vqAPGzjW+K3TorY4/mFve1gFZ9MUFuwW7v7O5aEzMxnbMsBEksvf8lzRJ35gdq0ly5lDke3pyZwPjZPus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768832804; c=relaxed/simple;
-	bh=zYgPbUIvOI/eIYcLAUkaAfmyJoWuvHhnUe5EkIKG3qQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IxOmlO0wc6ZCaVRezLgNN6hrmdfzNQymluKLAb31qk0oTA2W894oYMgToRfvgFeibcAvM40xR4NtVl9Q4FKBuXyTIOzosL+kbY3/t0JCw2VNFxqQukLcNBHLP7hwU0tee6RKtKd4hAiw/LbaKfmvvG8lgx6fpXnhszpNKQaOjZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DmFJt6Mw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768852950; c=relaxed/simple;
+	bh=ZsLUjS8VKgsm4XzKkjhDhTBMqQX1rXXCreO1kotlJBg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Yzq3H/0k6c5fxuJUtDmiZIwnJa3d+WZjAB/rTOLaBJ04cVmt1/6sD1gsx+PgmI4z1C+IGzuAxEsGwxEUDQgoRSiL4PE5E80RvHdmeJjHnRd/ZM+gORLYrnslrgrpImg1bPDOoUxi4i/GzjEVcUDsvxywt1WfsgbTJhJ5mc4wFf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TXxlZ0LK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DmFJt6Mw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4941C19424;
-	Mon, 19 Jan 2026 14:26:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TXxlZ0LK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38E9CC116C6;
+	Mon, 19 Jan 2026 20:02:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768832804;
-	bh=zYgPbUIvOI/eIYcLAUkaAfmyJoWuvHhnUe5EkIKG3qQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DmFJt6Mw/5KVucLHrqBHkKImBW4D9anZGrDzR7DQ0z+TfTHQjB/JLG3sij3qK0FDT
-	 N9dTP1ieNYwddPogZcPsYykDCnziU7O/cKnIVud/yiOubFUoQVnYPmQJtItcrcPVZ2
-	 P/NPA9bzvx5f1C5FnYmICbzEMk48qXwuD/JnZBKCqAtaL4Dc6+EE8G12Ghjif00rxL
-	 jXxZBvWZ2LCJCPHmFOqiXxiUTtzP8JNcqMbjfILHZAVkRntiN9fvfNRetSN78bClse
-	 HGsElR3adIdLZlThgAqzTg9R+F7H6RkuzWzJAZjLXe5ooCaCtj3cGfsNTp0zmSikOx
-	 95itlDDyxK4LQ==
-Date: Mon, 19 Jan 2026 15:26:39 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org, 
-	lwn@lwn.net
-Subject: Re: LSF/MM/BPF: 2026: Call for Proposals
-Message-ID: <20260119-bagger-desaster-e11c27458c49@brauner>
-References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
+	s=k20201202; t=1768852950;
+	bh=ZsLUjS8VKgsm4XzKkjhDhTBMqQX1rXXCreO1kotlJBg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=TXxlZ0LKQcIXM68grf3Tqwpuc8iNC4e+tiT53xwaD4wgHgtVHj6RyuGKk/hbpg37B
+	 M+bCu7wC2zVmYCx1f5efvsJHtaHwyGB0Yvz278f35npHZK5RjFUWbuUHjW76RkQQWw
+	 koc9tdiQs/kY6ZFDKJz1A4VVHpdqdEqHV4XeQlManXzl8u2RB+c8A2Nym8zRKim/nt
+	 NQKVV8rgAoGqets0/YGZRHg7khG62ocCxxsMYAhsIF2G111WnJ2D8uxQhXMVGvwgP7
+	 pvhwf5b8Xz/iGjeADu36BpJZqghudneOL4hSJAEr5rfHnW9L+6iMa9eLO/VJBxokLK
+	 5hiUxW25nNbcw==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 6.19-rc7
+Date: Tue, 20 Jan 2026 04:57:42 +0900
+Message-ID: <20260119195742.320390-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
+Content-Transfer-Encoding: 8bit
 
-> (1) Fill out the following Google form to request attendance and
->     suggest any topics for discussion:
-> 
->           https://forms.gle/hUgiEksr8CA1migCA
-> 
->     If advance notice is required for visa applications, please point
->     that out in your proposal or request to attend, and submit the topic
->     as soon as possible.
+Linus,
 
-Hey everyone,
+The following changes since commit 0f61b1860cc3f52aef9036d7235ed1f017632193:
 
-This is a reminder to put in your invitation request for LSF/MM/BPF 2026!
+  Linux 6.19-rc5 (2026-01-11 17:03:14 -1000)
 
-The sooner you do this the easier it is for us to plan and the less time
-we have to spend hunting down missing attendees just weeks prior to the
-event. Unless you're really hankering for the special-snowflake
-experience please do your part and get in your invitation request.
+are available in the Git repository at:
 
-Please also don't forget to pester^wask^wremind your respective
-organizations to consider sponsoring LSF/MM/BPF 2026.
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.19-rc7
 
-Thanks!
-Christian
+for you to fetch changes up to c8c6fb886f57d5bf71fb6de6334a143608d35707:
+
+  ata: libata: Print features also for ATAPI devices (2026-01-13 22:00:02 +0900)
+
+----------------------------------------------------------------
+ata fixes for 6.19-rc7
+
+ * A set of fixes for link power management as the recent changes/fixes
+   introduced regressions with ATAPI devices and with adapters that have
+   DUMMY ports, preventing an adapter to fully reach a low power state
+   and thus preventing the system CPU from reaching low power C-states
+   (from Niklas).
+
+----------------------------------------------------------------
+Niklas Cassel (6):
+      ata: ahci: Do not read the per port area for unimplemented ports
+      ata: libata: Call ata_dev_config_lpm() for ATAPI devices
+      ata: libata-sata: Improve link_power_management_supported sysfs attribute
+      ata: libata: Add cpr_log to ata_dev_print_features() early return
+      ata: libata: Add DIPM and HIPM to ata_dev_print_features() early return
+      ata: libata: Print features also for ATAPI devices
+
+ drivers/ata/ahci.c        | 10 +++++-----
+ drivers/ata/libata-core.c |  8 +++++++-
+ drivers/ata/libata-sata.c |  2 +-
+ 3 files changed, 13 insertions(+), 7 deletions(-)
