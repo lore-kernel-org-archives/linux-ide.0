@@ -1,53 +1,52 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from jabberwock.ucw.cz (jabberwock.ucw.cz [46.255.230.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11F4A10F1;
-	Sat, 24 Jan 2026 21:24:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 201A31C84DC;
+	Sat, 24 Jan 2026 23:21:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.255.230.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769289844; cv=none; b=gGeXgRom2TG9anBs7yuRvPLP+v5qY7LIO+mH8ehgTSddoeeH8TkNvTfUy/V/0IYjW0GOYfcjuTNvDii7TTC4Y6wENVfLUugUS3lzgg3jM9VxD9lg3WK6rBc8Q0U3YtpCIWSH5O4IkG0UYe1JIrQuKS18ab1get7HdyI8Usopob4=
+	t=1769296892; cv=none; b=PF9F/eOaRoGiNj//GygKwFR2nhi291cLuwO2eiD3mHfLk7xIOvEBER+Y+m+81SrvsIOIPo2Sm8PeW0xx57Lhad/s5Sy6vrYpwnFROeV/ji6CbBKPMoAr7SD017raNGH83YKfG+9jwlvZd0v8EZrUKFFlnP5uAnt01WxkdPdv/uA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769289844; c=relaxed/simple;
-	bh=AJFo4eAxCnItWVeRCP+XLYGtuLNEENvSrhswbI1WgZw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=HsvXhTcPLzYc1JnNKtUk9FDN4IJtdhnBedeFDRsvn1fws2AriVcNIk5ibaFpKP3GRF/AvYrZlM4vJ9e5r+NRbpsV7xFkk7lVu4YuNLwmalPikwfu6+oF8J2xAFf0es+Cl1qXYgsaQELlRVFREvmdhiThrHM6O71REQrz0wp3Tvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uCr7YfHd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769296892; c=relaxed/simple;
+	bh=Bvq+TLhiwOOL92xm1UsF0bamKLs2yBBjaAgpeY4abJQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=euIQXNX9LgBev4D4+Ilz67pbYv18MPw5vMK5SXgQrDoHQ3yv49rXEFcTlxwcX4WexCObjP6RiHr0UKEUsrYWWtKh+IMZbKfVfkMxFHyGNTXSEUIiHcUfiGt697PbIMHLE+9A480eFlFxTzAAxqg2uZ1OPIIvPVhrPlmMJffIL6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ucw.cz; spf=pass smtp.mailfrom=ucw.cz; dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b=rfx1R6lW; arc=none smtp.client-ip=46.255.230.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ucw.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucw.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uCr7YfHd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7151DC116D0;
-	Sat, 24 Jan 2026 21:24:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769289843;
-	bh=AJFo4eAxCnItWVeRCP+XLYGtuLNEENvSrhswbI1WgZw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=uCr7YfHdiPtr0RJAwoaf+mfGXnleR92qoy5sh34I7SD8ghUmrTH5rs3fcpdAXM/Pg
-	 RlrVT5qnq//dBIxoDUIy8PNq1G2Pr0XGBPljTsZnBWgUe/tV1R2kcc/s2ie49u+/vR
-	 faAkRoRI/uhWjdn+S2pKCnndTU+TP49iO8PamH2VRy4pAuQbAoZEnh8BgYtCUwTzLD
-	 FEvVvHK2CobUcpQgsHIpFzFhHQlChoRfEtg5KndfQjJCsWAbnh9FZQTUSwcVL9Us7V
-	 RX2Jrya3q3xXLQJB6t9XJ3KKi+bX6VpL8wWM8VVNjCq9aP2mrBjvp8FtKBN4B6gqv8
-	 JH/oCMQeU6V/g==
-Date: Sat, 24 Jan 2026 15:24:01 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
+	dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b="rfx1R6lW"
+Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
+	id 03555327EDA; Sun, 25 Jan 2026 00:21:20 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ucw.cz; s=gen1;
+	t=1769296881;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0OpH0KF+2y13vEGNxyfpLdoVe3Uw1KoWHP7IMeNPLuU=;
+	b=rfx1R6lWPCEqtOJlYZGFzerBp7ov1CSc+0jeLuu9gcoXKdo4CFBHH8chTDbdib1XZSQ0Vg
+	qkyxWru4M9QJlT5ZXjvv1cNtOqjcJJQLuLBKSlMDfpnW41oliIk0XttFWxvNpz6UzxP1ia
+	mPyKwPqljHjwb8kDdxJ58m3NEGCNQxo=
+Date: Sun, 25 Jan 2026 00:21:20 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Markus Probst <markus.probst@posteo.de>
+Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
 	Rob Herring <robh@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Jacek Anaszewski <jacek.anaszewski@gmail.com>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	Stephan Gerhold <stephan.gerhold@linaro.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	linux-pm@vger.kernel.org, linux-ide@vger.kernel.org,
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: Re: [PATCH v6 2/4] PCI/pwrctrl: Add support for handling PCIe M.2
- connectors
-Message-ID: <20260124212401.GA181386@bhelgaas>
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-leds@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
+Message-ID: <aXVT8AzgHbr8tbsT@ucw.cz>
+References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -56,28 +55,18 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260122-pci-m2-v6-2-575da9f97239@oss.qualcomm.com>
+In-Reply-To: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
 
-On Thu, Jan 22, 2026 at 10:46:52PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> 
-> Add support for handling the PCIe M.2 connectors as Power Sequencing
-> devices. These connectors are exposed as the Power Sequencing devices
-> as they often support multiple interfaces like PCIe/SATA, USB/UART to the
-> host machine and each interfaces could be driven by different client
-> drivers at the same time.
+Hi!
 
-s/each interfaces/each interface/
+> Extend the disk trigger
+> - to allow configuration of the blinking delays
+>   and whether the led should be kept on, on idle.
+> - to allow an individual led to be mapped to an ata port
 
-> This driver handles the PCIe interface of these connectors. It first checks
-> for the presence of the graph port in the Root Port node with the help of
-> of_graph_is_present() API, if present, it acquires/poweres ON the
-> corresponding pwrseq device.
+I have used led trigger before, and it annoyed me than "constant disk
+activity" resulted in "constant LED blinking" instead of "LED
+constantly on". I would not mind if that was fixed.
 
-s/API, if/API. If/
-s/poweres/powers/
-
-> Once the pwrseq device is powered ON, the driver will skip parsing the Root
-> Port/Slot resources and registers with the pwrctrl framework.
-
-s/and registers/and register/
+Thanks and best regards,
+								Pavel
