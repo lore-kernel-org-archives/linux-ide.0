@@ -1,70 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65C6E21ABC9
-	for <linux-ide@vger.kernel.org>; Mon, 26 Jan 2026 06:48:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C6AF219A8A;
+	Mon, 26 Jan 2026 09:00:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769410126; cv=none; b=r7ts1LUNtmh4fAtfp8NFXvJsCNadUnZwPfF8pCJNMO6VJhEj53UADnSCuyHkkTICd1QeIV5PcBRTLMQx0+y1vzdUHFzsJz2xaZCwclZXSet/EC5Ww/GD46okvWiZYMZYThs5BJCPFcRixEwiuPx3yXbdL7IrVgtTKrQ3lvimHVE=
+	t=1769418052; cv=none; b=LOhlmbn5AsNGNoh9GvUum3wGsIG3OJsw14LD+k/WndX8xuMw16C/iM3901t2TJ4d+XT8TD2bX1TrRNHhmWhTI9yCuD2FMQVHBCiJJ4yx1q+PlQpnQ75tY/eoxDcMTzj+TwQKo4xVfDBKoGxtdwlhJIDmI6IkrBOB1jUE0IcYFfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769410126; c=relaxed/simple;
-	bh=3CZsmqY660ER814DDR8CPC7eDpR5TZXo48nwr7iXRXo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AbVmv7ASWXMjtGJJ4btbWIZCilxYXEZo2twvvK1GdA25GRTO4rAS+TLajBFnmPyX1yDIyNJNdR40M8Q72+0x+A59Ac9+HAgwrDO3/WmmNL8jxGmAV/0sjb8v7sSX6pHPpFJ6uiOOTpGV0G48S9zY59usC8cPhbgd86KidtGaNnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GF6CZg5o; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769418052; c=relaxed/simple;
+	bh=cJgrLjLQiB+SsK/eaFop4n4UxXAXE8CPdMBi7R+aO0Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sc5Wws/ETsgCm5/U1glU16eM8laOflrGwYKsEg6mo8wNn44EOoYn6ZXdJfM2h80PLQ8F3TT2UCUiJ8FsLJyGX6OEOYUyWUCsEydpZs1We+xXEGYw1v0Py65ahTGIT+GYUDvMvcRnS+aFfrMTofakCljJjhTx+nFGlv+83PZDj5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VzzT5JX2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GF6CZg5o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BF68C116C6;
-	Mon, 26 Jan 2026 06:48:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VzzT5JX2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EC70C116C6;
+	Mon, 26 Jan 2026 09:00:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769410126;
-	bh=3CZsmqY660ER814DDR8CPC7eDpR5TZXo48nwr7iXRXo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=GF6CZg5oX0IrZx6kfq/HVrDksg3C2iWlFnIwoN/Ivj2PetaTGjH9eSKE5Goys0Gu6
-	 wBGl9Im20kMuCVA+K3l6b+0OnvHGBzI7nMJ6istnZFp6RWrSYy/SHmfFVOJXall+WA
-	 xVILUUea4DVKFCnKNzqXKVyw+n5QBJ3kdzEIZjxHifxCSmYsL+z1STNBhFt1NnTqXd
-	 VTx5AsS2nOajmlHJV74sp20j6e+Nt0RRzU5T54ETds7XPQHX9SiO9bUuT6MuVLRZHe
-	 vev54pnpgE49gl4DtPNFKZVgs5WFaqG7frOZOamBEZL6f16Dzq5CD6BFk/yZLmb9cu
-	 cPK5Hp4Nt4ZOw==
-Message-ID: <a293512b-dac6-46d8-b9fc-6dd6433816a2@kernel.org>
-Date: Mon, 26 Jan 2026 15:43:46 +0900
+	s=k20201202; t=1769418052;
+	bh=cJgrLjLQiB+SsK/eaFop4n4UxXAXE8CPdMBi7R+aO0Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VzzT5JX2h/qS+jBtGXKzR+Ejuv9n/eOfGRdb80/IK3Rz1elHqKuXh/8iSeQo9/OPO
+	 GxhHznKk6Tz9w5Ujwjb4dGeWxKRYzqeWjNXrQ/iUmL1fj1H6W82CDX3WGNGlMTyJeZ
+	 l/CA/Nwa7KdhbkxmYt9DL93QBCCzAl1HT9YH0pmIZpZ5/+ZmYcb7c98r5a9Cttg61g
+	 0m8d4wistqltzkeqWls3LW0TkKCidcEeynkaApXIHNk3iQM7/CTN2j0a+PEcjNCeJb
+	 1J77zclR4IihWoY1BSuB+EKJycEVbLDbCWNJz4fw9TdcBPa03fEovDHGSEBx79hx5E
+	 tf7qnLI8Y9exg==
+Date: Mon, 26 Jan 2026 10:00:45 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Markus Probst <markus.probst@posteo.de>
+Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Jacek Anaszewski <jacek.anaszewski@gmail.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Pavel Machek <pavel@ucw.cz>, linux-leds@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
+Message-ID: <aXctPaaXFYemV20T@ryzen>
+References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-core: Quirk INTEL SSDSC2KG480G8 max_sectors
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Wolf <snow.wolf.29@proton.me>,
- Salvatore Bonaccorso <carnil@debian.org>
-References: <20260120103237.3922391-2-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260120103237.3922391-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
 
-On 1/20/26 7:32 PM, Niklas Cassel wrote:
-> Commit 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP") increased
-> the default max_sectors_kb from 1280 KiB to 4096 KiB.
-> 
-> INTEL SSDSC2KG480G8 with FW rev XCV10120 times out when sending I/Os of
-> size 4096 KiB.
-> 
-> Enable ATA_QUIRK_MAX_SEC, with value 8191 (sectors) for this device,
-> since any I/O with more sectors than that lead to I/O timeouts.
-> 
-> With this, the INTEL SSDSC2KG480G8 is usable again.
-> 
-> Link: https://lore.kernel.org/linux-ide/176839089913.2398366.61500945766820256@eldamar.lan/
-> Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Hello Markus,
 
-Applied to for-6.20. Thanks !
+On Fri, Jan 23, 2026 at 07:05:03PM +0000, Markus Probst wrote:
+> Extend the disk trigger
+> - to allow configuration of the blinking delays
+>   and whether the led should be kept on, on idle.
+> - to allow an individual led to be mapped to an ata port
+> 
+> I would also like to add another patch to this series, only leaving the led
+> on with invert 1 if also at least one disk is present on the ata port.
+> The led would then not only indicate activity, but also if a disk is
+> present.
+> That is why it is an RFC.
+> 
+> @Damien,Niclas: What would be the most straightforward way of telling
+> the led trigger if at least one disk is present on the ata port and
+> notifing it when this changes?
 
--- 
-Damien Le Moal
-Western Digital Research
+Why do we want to have this in kernel space?
+
+Sure, there is already the very simple ledtrig-disk driver.
+
+But I'm not a fan of making the driver more complex.
+If we want something more complex than what is already there, then it
+is probably much better handled in user space, considering the amount
+of possible configuration options.
+
+Basically the same argument as used in:
+https://lore.kernel.org/linux-nvme/20220227234258.24619-1-ematsumiya@suse.de/T/#u
+
+
+Kind regards,
+Niklas
