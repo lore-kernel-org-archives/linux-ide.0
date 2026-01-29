@@ -1,97 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1645726E71F;
-	Thu, 29 Jan 2026 04:41:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B29E5335090;
+	Thu, 29 Jan 2026 16:13:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769661675; cv=none; b=bfVMo21yZplp2yEyXlcBRKM9yYc60u2y+KhySXL3lDpna+U1U0TMCB3qyj1RCBoh0Ek2dErctkgacv/eHNMUTHpJGltXFcU9i4uNGo3rN0PK/JXojQjP6sTjw53vq78792jTVBuGuZ2rsS62XTmtOfnCIJ+67wK9Pu0mk4R+txM=
+	t=1769703238; cv=none; b=rrBcoYjdMoRO2Tc8cKF17DBMF8X5/lDm39j2XcHUFtjz6F4/w8Jvvl7ZdHy+jabGNNyonUqGqc14YuKIoJw80MAwRBsdp9kgcc7V+wcVfHH4WVpssNXrv6ZP/MaO6xPwG7/phqncZZDqPyuM/N5A72o0wdnieh/dUOhr20qZtJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769661675; c=relaxed/simple;
-	bh=gROWjWmyD7Nqp3cAvySmJU8PRCZMcKtAX74x9H8kGuA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KmVXpo9/GCFHISkbQ1GUxUOUUgTDExhc+ZrQKoZEHJI5VsJYGu4XBiOTBZ35m+AU/lxHzK91lAyvabKcNTrzd6CGzEfD2xssEy9i6zeaB/oJnVqUhqmegXKNK2YjmZdHyoFMBDDa6Ktc1Oxvxfota9UoqbJFU58OjIn/EYmnNBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ICkOUpqn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769703238; c=relaxed/simple;
+	bh=La9o6W4y0vVBdcH6KlN6XyFOKCu8acKZkPR8qhv2+vE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JZEBplK+140FXvlXjzq/HzJE6vemql/Vf3b81/K70VMvdmtF5ZgBijvSZBcyZSSHMDYkyGVQMMmMSnRIj0xnRK9DraClOpg8KjhiPFn9/R6aH4DxPoorxdLKAJGnT0f728c5kcPmhPsEXROYAnkwG7jB8pnJJY4DHUr9yjMMNDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lRPlLdn+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ICkOUpqn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7CAAC116D0;
-	Thu, 29 Jan 2026 04:41:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lRPlLdn+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74017C4CEF7;
+	Thu, 29 Jan 2026 16:13:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769661674;
-	bh=gROWjWmyD7Nqp3cAvySmJU8PRCZMcKtAX74x9H8kGuA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ICkOUpqn6bj8mPbjH6dzPbCIEiLLmTRtoGZX1UAB841E9xUZ7nn2H64sKhEX5B/9p
-	 jkpsgVWgeoQ6/X24R5XDeYveTYQUkQkz7DAaUcLGQjcF6T4gyRjdvcubWlqfjqMQ0Q
-	 +zszQx3lWJfFbOK7+XGW1xGvBwLrh9pY2BcMNrPoVpD2PdexL+kCphAo2V+cY+UGKl
-	 8m+pTwrT24O3RXWdv15EbqR16sVxEhaWuP0xsi04FTqr2qtly1PCzxzn+SxNR9yGcm
-	 1cVnwerlAzE4OZlq/Ucj1eBt37Bjn0u1OWQ30rg6aMrTE8+aDQ1oNIHT3sODuefx+H
-	 ZSGkBcd/+EN9g==
-Message-ID: <9e062635-f946-4a8b-862d-a38bfc50d6ce@kernel.org>
-Date: Thu, 29 Jan 2026 13:41:10 +0900
+	s=k20201202; t=1769703238;
+	bh=La9o6W4y0vVBdcH6KlN6XyFOKCu8acKZkPR8qhv2+vE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lRPlLdn++Td8jmuOq6JleUntXrH91GO4yrJZdWSzMPTDmpPBJ6nv76jPziMi9ovQp
+	 bIn02G/pVE0WSFFQmfs4D1nBRF7jyfqdm7ehToSqEm91VEq0IutGkhv3z1n9RPuTNq
+	 07q0cp4WRe74VrHEBVTpBegZIA/HFkpII9yOkSQrViRSZbri6Umnol8B8tzJ6/hFgD
+	 ooc+izjKn0i5pxc9MlAcI6lh8Xbnz+ypRl6Awzf5VWArZUfWKLIV4l64hYaquEYURB
+	 CwO2X2rA1nCqjH75mPKQtKLqEM/8oUvJbHJY7TUdsRFkbGTVS3GiTVhk7thEdz6std
+	 VQBPs3W7lUXTA==
+Date: Thu, 29 Jan 2026 17:13:52 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org, 
+	lwn@lwn.net
+Subject: Re: LSF/MM/BPF: 2026: Call for Proposals
+Message-ID: <20260129-beidseitig-unwohl-9ae543e9f9f5@brauner>
+References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
+ <20260119-bagger-desaster-e11c27458c49@brauner>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
-To: Markus Probst <markus.probst@posteo.de>, Niklas Cassel <cassel@kernel.org>
-Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Jacek Anaszewski <jacek.anaszewski@gmail.com>,
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Pavel Machek <pavel@ucw.cz>, linux-leds@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- Ian Pilcher <arequipeno@gmail.com>
-References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
- <aXctPaaXFYemV20T@ryzen>
- <ce454969b83dbb0e3bb4ea78f682603cc328ceb9.camel@posteo.de>
- <aXiGNZm12vLhQJ4Q@fedora>
- <20f855baaa7c36010eab9997a2f43b4f62be726b.camel@posteo.de>
- <2382dee0-983f-4c69-af7b-a7a48cad23aa@kernel.org>
- <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260119-bagger-desaster-e11c27458c49@brauner>
 
-On 1/29/26 00:44, Markus Probst wrote:
->> That will allow checking if anything is missing in the kernel
->> interface to do that nicely.
-> There is.
-> 
-> I noticed for leds, that the fwnode path isn't exposed in sysfs.
-> "/sys/class/leds/<name>/device/firmware_node/path" exists, but points
-> to the parent device.
-> 
-> Something similar with scsi and ata exists. scsi doesn't expose the
-> firmware_node and there is no symlink (or other connection that I am
-> ware of) between scsi_* and ata_* in sysfs. This means, I cannot map a
-> fwnode path to a block device.
-> 
-> If I want to distribute a pre-defined config for such led userspace
-> daemon alongside the ACPI Overlay for a specific NAS model, I need an
-> identifier that is equal across all devices with that specific NAS
-> model.
-> 
-> This is less of an issue for leds, but given that leds could be renamed
-> on name collisions the issue still exists.
+On Mon, Jan 19, 2026 at 03:26:39PM +0100, Christian Brauner wrote:
+> > (1) Fill out the following Google form to request attendance and
+> >     suggest any topics for discussion:
+> > 
+> >           https://forms.gle/hUgiEksr8CA1migCA
+> > 
+> >     If advance notice is required for visa applications, please point
+> >     that out in your proposal or request to attend, and submit the topic
+> >     as soon as possible.
 
-All of this is not the hot path, so we can work on it.
+This is another reminder to put in your invitation request!
 
-If new sysfs device attributes for an ATA device, you can add them to
-ata_ncq_sdev_attrs in libata-sata.c. These show up as part of the scsi device
-attributes, so if you define this well with the scsi side, the same attribute
-names can be used for pure scsi devices and ATA devices served with libata.
+What are you waiting for? The weather in Croatia in May is nice. What
+could be better than soaking up some sun through the meeting room window
+while someone's asking you to make your locking more complicated, grow
+your data structure by just a few bytes, or to add some more spaghetti
+to that code?
 
+Please also don't forget to pester^wask^wremind your respective
+organizations to sponsor LSF/MM/BPF 2026! Bring it up as much as you
+bring up that patch on-list that didn't get accepted but would've made
+everything so much better.
 
--- 
-Damien Le Moal
-Western Digital Research
+Thanks!
+Christian
