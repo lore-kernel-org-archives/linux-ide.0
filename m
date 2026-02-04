@@ -1,60 +1,65 @@
-Received: from mail.central-kino-rottweil.de (mail.central-kino-rottweil.de [85.214.227.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E024D37F737
-	for <linux-ide@vger.kernel.org>; Wed,  4 Feb 2026 10:29:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.227.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E6B7389459;
+	Wed,  4 Feb 2026 11:26:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770200987; cv=none; b=XPkySd9pWrAXzmfB4JsaWzOjTjVa81+apYL+9Kc1R2uaW9KCKkFlhbpNYpNCwgE69gN4dOrF3fc3LyehhzTJLPAhuoqa8CYj33uKPN9EqHqRxiOcLG8RmLLO3RS16k0Uck/jsys5sJkBgHT/Ec1Izjbfum2Aq6bQt077D2wSj2Y=
+	t=1770204372; cv=none; b=n9zzxZFV/3s2b2e00U49AEldNpmCDbAAiwsVzZTpOOUC+93Rjw+3kowulU+1Optd3k79ca9SSjzN2k1w9DfPsnFjr4Aru0nNxW+XCwlAyrgpwVc2oUD+AI6apXLw1WDXWhq4siUps5OBT4PC5ge3IG3NFwnA3QluQok6vT0BzCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770200987; c=relaxed/simple;
-	bh=C29L6mfoA/fH566PsHuUhIaizIxHhhKjCqXncmkbx6k=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DmcUEpOEOx5quae70T81KrJP4hPtaiEK6OzgxX7+weV1vzEIMWz3XpZxFZ5UJTc8EZtTsWmPUvMXCuypJimgdzEXRpcJ83fVeZDNRawlKvubpns5GqdPcbRqxwVYLd1MQGrgq5NemxNgDKUo9fVeVaVVqrcvoVcVYd5IR9YOOA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=central-kino-rottweil.de; spf=pass smtp.mailfrom=central-kino-rottweil.de; dkim=pass (2048-bit key) header.d=central-kino-rottweil.de header.i=@central-kino-rottweil.de header.b=qn33XUSW; arc=none smtp.client-ip=85.214.227.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=central-kino-rottweil.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=central-kino-rottweil.de
+	s=arc-20240116; t=1770204372; c=relaxed/simple;
+	bh=n533qauwA+XzKB1OGpIjsCk3VSjX/XOY+phhWUQLwCw=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=EzgLFtME1gwEP3tFrqxAcXmoabfR7afP1is2mV2PYl/gXdEzsXS76/yQuQ8Hhqc1YSq+5lkuY8cZHH6ilUluuGtbGI3ln4R+TvIL02y/okHwvP8JLsTs+Zezyyk1cJ4ixV7v6XBCV6lvUWMcFRLe0CHp2mHsvDAYAPl8hYyAXYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sjyQptC+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=central-kino-rottweil.de header.i=@central-kino-rottweil.de header.b="qn33XUSW"
-Reply-To: info.superenalotto@gmail.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=central-kino-rottweil.de;
-	s=2020; t=1770198430; h=from:from:reply-to:reply-to:subject:subject:date:date:
-	 message-id:message-id:to:to:cc:mime-version:mime-version:
-	 content-type:content-type:  content-transfer-encoding:content-transfer-encoding;
-	bh=MYBuTu5OB75A6/GrlgsR5Q1v5/fZBHf5I/RU1z8ZZiE=;
-	b=qn33XUSW0xDKXkTWsbHzOzxyk7JpCK8b/MxxU4OO3PSpTqi0cF38EstLoxZwBfPIpxPxVM
-	5tUTlae13/AzU92lh7uHDEr6a5fsVB7QCg71ATA4sYMqFdVWr3LvRXdbKPhca5LKMmFJ74
-	qjL0drGUe7DH0em3UVGDAIwtb+0bk0uO3nhsPGZyvTucwmKOubh0BCL1gguMlxdEgZrBjw
-	XcxOQg7TdFwtbkBIUKj6bC+dLGFuEqzo44fO/4gSZ1Zwf2BISYol/PJCqvvdBp1KHdPfY4
-	q/70V8PvLIX3Q5cq+xK8phkVBq0goBe/GDftmP1My3UKx0Jd0nAjMflI/HCMGQ==
-From: fsj@central-kino-rottweil.de
-To: linux-ide@vger.kernel.org
-Subject: /KXM/
-Date: 4 Feb 2026 01:47:09 -0800
-Message-ID: <20260204014709.C36DDBDE253705A1@central-kino-rottweil.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sjyQptC+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65408C4CEF7;
+	Wed,  4 Feb 2026 11:26:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770204371;
+	bh=n533qauwA+XzKB1OGpIjsCk3VSjX/XOY+phhWUQLwCw=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=sjyQptC+egp2M5NTpAMspHb2Ao7mcMQJ+hYWV1CU67OHZgdgMdFfefzmviQBTQoGo
+	 Gsi7zMvsviImWQFZhL4HQR3Aamt4PAfluv6ed1JLg8lrnJaVpZlb4wFzWzdx13CcDo
+	 XKKKDCdhqoDNfhe9BWYcn2vxp31+k6DN99Vm92VF5vXpk/3Cr9UQsXXEY9k1yf2F6i
+	 pXbJ+Q2R6LzIH6K7IFuGIAT4jLsOwWbervuYvjoziRwMW6eDQwTdp4ypYccGuZt2ov
+	 ZN/4UkuOe8gKkzKeZkYWZ2ygrcfmIdcBUhwM1Kocd2ejZrZsCC6Jtf8WwU8DOq6i/U
+	 k4u8sYMkv8bgA==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>, 
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, 
+ Tejun Heo <tj@kernel.org>, Hans Ulli Kroll <ulli.kroll@googlemail.com>, 
+ Linus Walleij <linusw@kernel.org>
+Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <20260203-gemini-pata-fix-v1-1-67e1c182b45e@kernel.org>
+References: <20260203-gemini-pata-fix-v1-1-67e1c182b45e@kernel.org>
+Subject: Re: [PATCH] ata: pata_ftide010: Fix some DMA timings
+Message-Id: <177020437014.2807081.12413031521504015903.b4-ty@kernel.org>
+Date: Wed, 04 Feb 2026 12:26:10 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Authentication-Results: ORIGINATING;
-	auth=pass smtp.auth=fsj@central-kino-rottweil.de smtp.mailfrom=fsj@central-kino-rottweil.de
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
+On Tue, 03 Feb 2026 11:23:01 +0100, Linus Walleij wrote:
+> The FTIDE010 has been missing some timing settings since its
+> inception, since the upstream OpenWrt patch was missing these.
+> 
+> The community has since come up with the appropriate timings.
+> 
+> 
 
+Applied to libata/linux.git (for-6.20), thanks!
 
-Wir freuen uns, Ihnen mitteilen zu k=C3=B6nnen, dass Sie zu den=20
-Gewinnern der letzten SuperEnalotto-Ziehung in Zusammenarbeit mit=20
-Lotto24 geh=C3=B6ren. EuroMillions und Powerball sind ebenfalls=20
-enthalten. Sie haben einen einmaligen Gewinn von =E2=82=AC3.850.000  in=20
-der zweiten Gewinnklasse erzielt. Um Ihren Gewinn zu bearbeiten,=20
-senden Sie uns bitte die folgenden Informationen per E-Mail:
+[1/1] ata: pata_ftide010: Fix some DMA timings
+      https://git.kernel.org/libata/linux/c/ff4a46c2
 
-Vollst=C3=A4ndiger Name: Land: Adresse: Alter: Geschlecht: Beruf:=20
-Mobilnummer: WhatsApp- und Telegram-Nummer.
+Kind regards,
+Niklas
 
-Im Namen der Online-Lotterie-Abteilung SuperEnalotto gratulieren=20
-wir Ihnen herzlich zu Ihrem wohlverdienten EuroMillions- und=20
-Powerball-Gewinn!
