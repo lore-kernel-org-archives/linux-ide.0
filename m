@@ -1,95 +1,142 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com [209.85.161.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8110294A10;
-	Tue, 17 Feb 2026 19:26:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A12D280CC1
+	for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2026 20:55:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771356366; cv=none; b=SIk156lm+rmoV8v0wuczPbdmNux3N61nHAqPYPcDj/dU+1fDONEtucy2Ma5sF8W86gEhG35O+DbByZfXYzGo4RF+hfGOZDE4mdzwzoybeR3cUOBrvjg3cClDsgsvkVgz76VfkJyuaPKLOOGrrdEUcqyYAv3S6TGepSOguyKRTL4=
+	t=1771361738; cv=none; b=k+/8Qfguhbpa81vA23ZqojpYqOClaFYwZZCQ9tGemUvonOq1HDaWnMHyoUNLtpflZlJ4vVnyqYmeC+ME3EGHW9K7RL4AoXLdP7ubwV9tEscwNs0m1mxqPLtihQ8SZOcGUJhiDWp2krJ/lEZYh7ZIrHkfFy0KUFvqwQ2IWKXK3tI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771356366; c=relaxed/simple;
-	bh=HMhq+q2YhFC+cxrAnPfr9IT2151Th3pDAVDr2aXKnzg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=N4DjKfl1Dxc941b24ZlTNo2nOzGxbYJhiPURHUb4MzO4X9PwpsD3Iv94vOSFaOOXonXgbcBs1EBRMUpSfYxadZcDn9Ic06Ass9DHcDndmct456bmPAEdOovlPPRudbUo6CrHhb9biTgowVIuzErxvCdBwOSYKNuFa8o9s+e+Pd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FNdY1BGQ; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FNdY1BGQ"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fFqPM2cFFzlfl8N;
-	Tue, 17 Feb 2026 19:25:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1771356357; x=1773948358; bh=Q/dy/mCL1L8B1QMUSYUopnFw
-	uAwqOl7aQk4BGp7SVf0=; b=FNdY1BGQ5ZtPeeVZusZN3MdN+DfAg4qLQt6kD9yF
-	LeYDlWW+AdDa4N1uWcv+gm8TRGFTXIL+XC7weJd/v+GqBttphUhbLWP+5n4bdt2G
-	7nrnqAi4gOqDOsyXbDo5unrHRVfxzzgTTRVZU6o+rkjbhOJguDUpuq7vLPIFd6V5
-	RaqHOG1rodOoxXsTLTOTWpv31JYV7sE9Z7Ph3OccDFNEFT2HHolpjC/A8lABSaGA
-	OsrT5CEQca5iDqSVxqtGxSsSWAEmfFfAAjavEe4PeYzF063hSrh8PvMq7b9AUCp0
-	/WXIahEA6TjUKRI25rLhppmdglFYM3JBaB3p5nbsxYXBxg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Ui_qCjFeZn0y; Tue, 17 Feb 2026 19:25:57 +0000 (UTC)
-Received: from [10.237.57.149] (173-255-98-114.utilitytelephone.net [173.255.98.114])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fFqPH107mzlfjRJ;
-	Tue, 17 Feb 2026 19:25:54 +0000 (UTC)
-Message-ID: <532ecccc-a225-44d2-bab9-52f0f758fb8b@acm.org>
-Date: Tue, 17 Feb 2026 11:25:53 -0800
+	s=arc-20240116; t=1771361738; c=relaxed/simple;
+	bh=I2bq8O0Am4NgLaWqcg8bKuOyWoKEexJmylufUFpU8LI=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=MZhcZwhtAWGoW8u/HqAmbPl/RU2B+5VFrSDpbc+Mdo9gMRZTr9ygSzt0cc6hku7FZosfKIAnr32/4eoLRTDx+rf+ZyrLwy0HSFTyZto/XTwNhB3gmWElhVa8HXvs/58HWUX7IwYQJiguH89GwYepMCsZWIgOru9XZkirBlFMmak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-6781479fe9dso3660653eaf.1
+        for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2026 12:55:36 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771361736; x=1771966536;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Bb6qhyFXxTx03Z7ggdi9EDskkcx19mjBlIu8eZ/eEIY=;
+        b=bWimurfmm3JkQeFKLI2bSKhRAGmgcEbY+3whMaR7Bp9/XEld7ITNAQK6IYHSoVH1s9
+         tMdKQnY1to+uh8hso6HPydD3/eGZzpVgIIQroJTuIosdEDiEEuqfgqdIam18DLD+moVu
+         c9ws8u594FQnvaVkiNQrPzyjA/2r62q/4qUcKM2gNy1umGGgNJFH44rWxEBPDkgmliby
+         c9dNjIOVtFNTFKyZy71MepybdUOm3FnsJfTBHuXR5dUDVPtBD3lCmQduRMO3zbszs5gF
+         33xnxT+BYpf8I8x5sM5ryZnAcx2kQLsgkRzP7ooJPYzInpmdQ8GJeDzoYNxSyhuOlFzD
+         NPVg==
+X-Forwarded-Encrypted: i=1; AJvYcCXm9dSGF/kGOXZw7ITGNuHJVLvNKcRm0ybw2LOFu8nG1u9TN1ru2QcNbH2XsRt/MlQnhwpYdYXWBco=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywb14vdaU7K0BL1s8VpVhUxjh/PZsnrhhr9K9mi0DZ6zX8aFZlx
+	1Bb/c8ckSmE8cY9I0Tsgxz81l+xkKmwncV2XxFmY3um9iMi0gj6DTi5MOTYbDJb1CpcTkxtyYWb
+	/05vk4wI9O/IV8y8CFSyDy7KMfhPUK5wBQ/3sUoXR1cPdzjc1BYD1QcpO71k=
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
-To: Igor Pylypiv <ipylypiv@google.com>, Hannes Reinecke <hare@suse.de>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260209212151.342151-1-ipylypiv@google.com>
- <d61a1830-d9d0-4697-b547-80106ce57023@suse.de> <aYtiDLvRotCE0hEt@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <aYtiDLvRotCE0hEt@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6820:3090:b0:662:fefa:9ee5 with SMTP id
+ 006d021491bc7-678221cdb37mr6222935eaf.27.1771361735998; Tue, 17 Feb 2026
+ 12:55:35 -0800 (PST)
+Date: Tue, 17 Feb 2026 12:55:35 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6994d5c7.a70a0220.2c38d7.010b.GAE@google.com>
+Subject: [syzbot] [ide?] UBSAN: shift-out-of-bounds in ata_qc_issue
+From: syzbot <syzbot+1f77b8ca15336fff21ff@syzkaller.appspotmail.com>
+To: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 2/10/26 8:51 AM, Igor Pylypiv wrote:
-> On Tue, Feb 10, 2026 at 12:38:51PM +0100, Hannes Reinecke wrote:
->> On 2/9/26 22:21, Igor Pylypiv wrote:
->>> +	if (sn_size < len + 1)
->>> +		return -EINVAL;
->>> +
->>> +	memcpy(sn, d, len);
->>
->> 'len' might well be '0' after 'strim()', please check
->> before calling 'memcpy'.
-> 
-> It looks like calling a memcpy() with zero length is a no-op. Is checking
-> for len > 0 really necessary in this case?
+Hello,
 
-It seems to me that the Linux kernel memcpy() implementation handles len 
-== 0 fine. From lib/string.c:
+syzbot found the following issue on:
 
-void *memcpy(void *dest, const void *src, size_t count)
-{
-	char *tmp = dest;
-	const char *s = src;
+HEAD commit:    ca4ee40bf13d Partly revert "drm/hyperv: Remove reference t..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=13c6c722580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=a771bfd268751cd6
+dashboard link: https://syzkaller.appspot.com/bug?extid=1f77b8ca15336fff21ff
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
 
-	while (count--)
-		*tmp++ = *s++;
-	return dest;
-}
-EXPORT_SYMBOL(memcpy);
+Unfortunately, I don't have any reproducer for this issue yet.
 
-Bart.
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-ca4ee40b.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/c714adf37ddd/vmlinux-ca4ee40b.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/4d56cd9f6175/bzImage-ca4ee40b.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+1f77b8ca15336fff21ff@syzkaller.appspotmail.com
+
+------------[ cut here ]------------
+UBSAN: shift-out-of-bounds in drivers/ata/libata-core.c:5166:24
+shift exponent 4210818301 is too large for 64-bit type 'long long unsigned int'
+CPU: 2 UID: 0 PID: 1282 Comm: kworker/2:1H Tainted: G             L      syzkaller #0 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Workqueue: events_highpri ata_scsi_deferred_qc_work
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
+ __ubsan_handle_shift_out_of_bounds+0x279/0x2a0 lib/ubsan.c:494
+ ata_qc_issue.cold+0x38/0x9f drivers/ata/libata-core.c:5166
+ ata_scsi_deferred_qc_work+0x154/0x1f0 drivers/ata/libata-scsi.c:1679
+ process_one_work+0x9d7/0x1920 kernel/workqueue.c:3275
+ process_scheduled_works kernel/workqueue.c:3358 [inline]
+ worker_thread+0x5da/0xe40 kernel/workqueue.c:3439
+ kthread+0x370/0x450 kernel/kthread.c:467
+ ret_from_fork+0x754/0xd80 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+---[ end trace ]---
+Kernel panic - not syncing: UBSAN: panic_on_warn set ...
+CPU: 2 UID: 0 PID: 1282 Comm: kworker/2:1H Tainted: G             L      syzkaller #0 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Workqueue: events_highpri ata_scsi_deferred_qc_work
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ vpanic+0x552/0x970 kernel/panic.c:650
+ panic+0xd1/0xe0 kernel/panic.c:787
+ check_panic_on_warn kernel/panic.c:524 [inline]
+ check_panic_on_warn.cold+0x19/0x34 kernel/panic.c:519
+ __ubsan_handle_shift_out_of_bounds+0x279/0x2a0 lib/ubsan.c:494
+ ata_qc_issue.cold+0x38/0x9f drivers/ata/libata-core.c:5166
+ ata_scsi_deferred_qc_work+0x154/0x1f0 drivers/ata/libata-scsi.c:1679
+ process_one_work+0x9d7/0x1920 kernel/workqueue.c:3275
+ process_scheduled_works kernel/workqueue.c:3358 [inline]
+ worker_thread+0x5da/0xe40 kernel/workqueue.c:3439
+ kthread+0x370/0x450 kernel/kthread.c:467
+ ret_from_fork+0x754/0xd80 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+Kernel Offset: disabled
+Rebooting in 86400 seconds..
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
