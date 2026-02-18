@@ -1,142 +1,249 @@
-Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com [209.85.161.72])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A12D280CC1
-	for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2026 20:55:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54790318B98
+	for <linux-ide@vger.kernel.org>; Wed, 18 Feb 2026 08:28:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771361738; cv=none; b=k+/8Qfguhbpa81vA23ZqojpYqOClaFYwZZCQ9tGemUvonOq1HDaWnMHyoUNLtpflZlJ4vVnyqYmeC+ME3EGHW9K7RL4AoXLdP7ubwV9tEscwNs0m1mxqPLtihQ8SZOcGUJhiDWp2krJ/lEZYh7ZIrHkfFy0KUFvqwQ2IWKXK3tI=
+	t=1771403304; cv=none; b=hKU72mNo3zTmgwEupX3bLRZT0OuUmnhObWm3l69wL4NHJJfslkQp1d3+heuWaVruiVujZOtGZTssrKTcFP9LJIUHRj4EBpVPEQTI9/R0GJYFe8OuHXihK2Aesenx1utjokvjJBNpOaz4wsiIjG363E5q7GIhg5pZ+bfB+IcTZlo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771361738; c=relaxed/simple;
-	bh=I2bq8O0Am4NgLaWqcg8bKuOyWoKEexJmylufUFpU8LI=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=MZhcZwhtAWGoW8u/HqAmbPl/RU2B+5VFrSDpbc+Mdo9gMRZTr9ygSzt0cc6hku7FZosfKIAnr32/4eoLRTDx+rf+ZyrLwy0HSFTyZto/XTwNhB3gmWElhVa8HXvs/58HWUX7IwYQJiguH89GwYepMCsZWIgOru9XZkirBlFMmak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-6781479fe9dso3660653eaf.1
-        for <linux-ide@vger.kernel.org>; Tue, 17 Feb 2026 12:55:36 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771361736; x=1771966536;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Bb6qhyFXxTx03Z7ggdi9EDskkcx19mjBlIu8eZ/eEIY=;
-        b=bWimurfmm3JkQeFKLI2bSKhRAGmgcEbY+3whMaR7Bp9/XEld7ITNAQK6IYHSoVH1s9
-         tMdKQnY1to+uh8hso6HPydD3/eGZzpVgIIQroJTuIosdEDiEEuqfgqdIam18DLD+moVu
-         c9ws8u594FQnvaVkiNQrPzyjA/2r62q/4qUcKM2gNy1umGGgNJFH44rWxEBPDkgmliby
-         c9dNjIOVtFNTFKyZy71MepybdUOm3FnsJfTBHuXR5dUDVPtBD3lCmQduRMO3zbszs5gF
-         33xnxT+BYpf8I8x5sM5ryZnAcx2kQLsgkRzP7ooJPYzInpmdQ8GJeDzoYNxSyhuOlFzD
-         NPVg==
-X-Forwarded-Encrypted: i=1; AJvYcCXm9dSGF/kGOXZw7ITGNuHJVLvNKcRm0ybw2LOFu8nG1u9TN1ru2QcNbH2XsRt/MlQnhwpYdYXWBco=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywb14vdaU7K0BL1s8VpVhUxjh/PZsnrhhr9K9mi0DZ6zX8aFZlx
-	1Bb/c8ckSmE8cY9I0Tsgxz81l+xkKmwncV2XxFmY3um9iMi0gj6DTi5MOTYbDJb1CpcTkxtyYWb
-	/05vk4wI9O/IV8y8CFSyDy7KMfhPUK5wBQ/3sUoXR1cPdzjc1BYD1QcpO71k=
+	s=arc-20240116; t=1771403304; c=relaxed/simple;
+	bh=9D3YKSSnS/MgTS3JbFnUjUUzK2tzpkrMHWQInjeEMbo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TNr/ytJsGN0dg93opgUCcgSxH1Xk/nRgeD2mj0SIU4k9MwQnpzZgPai9ojo5lXi7fknxYfiCZi+xkzPu/mmWN5jQueApgVtg14LBYZeIpFpBka4B1gDq6h0YgagmA8O7Ngt4A4NHQoDjDwQ5/Wqi1T3DwdRzv75lutMOwQIoiLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=M01pRlrg; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rY8DQz2R; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=M01pRlrg; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rY8DQz2R; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="M01pRlrg";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rY8DQz2R";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="M01pRlrg";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rY8DQz2R"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 880CA5BCC1;
+	Wed, 18 Feb 2026 08:28:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1771403301; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8yHtU4ZP4sfXTSihe+4Fe2HyrLow6Ebe4qzrAC0EoJU=;
+	b=M01pRlrgmejXInaW5LDHvYqoWFaf439hBlDe+Ib8yJ7togzaPfzZd3FTKylKwIjSW2fE/L
+	Wg2hzi7YP2j29lTRKc8bv2ghTojzgQYKPx/vsqLWpSdk5/Aw1YxU1qyqcVIXUwjfwUVTaS
+	nVQ7Pm5ucdfzz7fVQvjRtiHsUBgroTM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1771403301;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8yHtU4ZP4sfXTSihe+4Fe2HyrLow6Ebe4qzrAC0EoJU=;
+	b=rY8DQz2RCE4h7wigxzASfUetbust9vpx2ClCclyNGBfUQqzb4iYIx3N716S8kfuWoIqID1
+	TyO2iAhM5wp9CPDQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=M01pRlrg;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=rY8DQz2R
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1771403301; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8yHtU4ZP4sfXTSihe+4Fe2HyrLow6Ebe4qzrAC0EoJU=;
+	b=M01pRlrgmejXInaW5LDHvYqoWFaf439hBlDe+Ib8yJ7togzaPfzZd3FTKylKwIjSW2fE/L
+	Wg2hzi7YP2j29lTRKc8bv2ghTojzgQYKPx/vsqLWpSdk5/Aw1YxU1qyqcVIXUwjfwUVTaS
+	nVQ7Pm5ucdfzz7fVQvjRtiHsUBgroTM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1771403301;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8yHtU4ZP4sfXTSihe+4Fe2HyrLow6Ebe4qzrAC0EoJU=;
+	b=rY8DQz2RCE4h7wigxzASfUetbust9vpx2ClCclyNGBfUQqzb4iYIx3N716S8kfuWoIqID1
+	TyO2iAhM5wp9CPDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3ABF43EA65;
+	Wed, 18 Feb 2026 08:28:21 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ui5iDCV4lWnlJAAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 18 Feb 2026 08:28:21 +0000
+Message-ID: <afdcce0f-0f83-4714-a5f0-5ddee28df5b3@suse.de>
+Date: Wed, 18 Feb 2026 09:28:20 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:3090:b0:662:fefa:9ee5 with SMTP id
- 006d021491bc7-678221cdb37mr6222935eaf.27.1771361735998; Tue, 17 Feb 2026
- 12:55:35 -0800 (PST)
-Date: Tue, 17 Feb 2026 12:55:35 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6994d5c7.a70a0220.2c38d7.010b.GAE@google.com>
-Subject: [syzbot] [ide?] UBSAN: shift-out-of-bounds in ata_qc_issue
-From: syzbot <syzbot+1f77b8ca15336fff21ff@syzkaller.appspotmail.com>
-To: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260209212151.342151-1-ipylypiv@google.com>
+ <d61a1830-d9d0-4697-b547-80106ce57023@suse.de> <aYtiDLvRotCE0hEt@google.com>
+ <aZSeHCH-IOjqw2n3@google.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <aZSeHCH-IOjqw2n3@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	TO_DN_SOME(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
+X-Spam-Level: 
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 880CA5BCC1
 
-Hello,
+On 2/17/26 17:58, Igor Pylypiv wrote:
+> On Tue, Feb 10, 2026 at 08:51:24AM -0800, Igor Pylypiv wrote:
+>> On Tue, Feb 10, 2026 at 12:38:51PM +0100, Hannes Reinecke wrote:
+>>> On 2/9/26 22:21, Igor Pylypiv wrote:
+>>>> Add a 'serial' sysfs attribute for SCSI and SATA devices. This attribute
+>>>> exposes the Unit Serial Number, which is derived from the Device
+>>>> Identification Vital Product Data (VPD) page 0x80.
+>>>>
+>>>> Whitespace is stripped from the retrieved serial number to handle
+>>>> the different alignment (right-aligned for SCSI, potentially
+>>>> left-aligned for SATA). As noted in SAT-5 10.5.3, "Although SPC-5 defines
+>>>> the PRODUCT SERIAL NUMBER field as right-aligned, ACS-5 does not require
+>>>> its SERIAL NUMBER field to be right-aligned. Therefore, right-alignment
+>>>> of the PRODUCT SERIAL NUMBER field for the translation is not assured."
+>>>>
+>>>> This attribute is used by tools such as lsblk to display the serial
+>>>> number of block devices.
+>>>>
+>>>> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+>>>> ---
+>>>>
+>>>> v2->v3 changes:
+>>>> - Replaced sysfs_emit(buf, "%s\n", buf) with a manual newline placement
+>>>>     to avoid undefined behavior of passing the output buffer as an input.
+>>>>
+>>>> v1->v2 changes:
+>>>> - Reordered declarations in scsi_vpd_lun_serial() from longest to shortest.
+>>>> - Replaced rcu_read_lock()/rcu_read_unlock() with guard(rcu)().
+>>>>
+>>>>
+>>>>    drivers/scsi/scsi_lib.c    | 47 ++++++++++++++++++++++++++++++++++++++
+>>>>    drivers/scsi/scsi_sysfs.c  | 16 +++++++++++++
+>>>>    include/scsi/scsi_device.h |  1 +
+>>>>    3 files changed, 64 insertions(+)
+>>>>
+>>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>>>> index 4a902c9dfd8b..c17fbe4dd845 100644
+>>>> --- a/drivers/scsi/scsi_lib.c
+>>>> +++ b/drivers/scsi/scsi_lib.c
+>>>> @@ -13,6 +13,7 @@
+>>>>    #include <linux/bitops.h>
+>>>>    #include <linux/blkdev.h>
+>>>>    #include <linux/completion.h>
+>>>> +#include <linux/ctype.h>
+>>>>    #include <linux/kernel.h>
+>>>>    #include <linux/export.h>
+>>>>    #include <linux/init.h>
+>>>> @@ -3459,6 +3460,52 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+>>>>    }
+>>>>    EXPORT_SYMBOL(scsi_vpd_lun_id);
+>>>> +/**
+>>>> + * scsi_vpd_lun_serial - return a unique device serial number
+>>>> + * @sdev: SCSI device
+>>>> + * @sn:   buffer for the serial number
+>>>> + * @sn_size: size of the buffer
+>>>> + *
+>>>> + * Copies the device serial number into @sn based on the information in
+>>>> + * the VPD page 0x80 of the device. The string will be null terminated
+>>>> + * and have leading and trailing whitespace stripped.
+>>>> + *
+>>>> + * Returns the length of the serial number or error on failure.
+>>>> + */
+>>>> +int scsi_vpd_lun_serial(struct scsi_device *sdev, char *sn, size_t sn_size)
+>>>> +{
+>>>> +	const struct scsi_vpd *vpd_pg80;
+>>>> +	const unsigned char *d;
+>>>> +	int len;
+>>>> +
+>>>> +	guard(rcu)();
+>>>> +	vpd_pg80 = rcu_dereference(sdev->vpd_pg80);
+>>>> +	if (!vpd_pg80)
+>>>> +		return -ENXIO;
+>>>> +
+>>>> +	len = vpd_pg80->len - 4;
+>>>> +	d = vpd_pg80->data + 4;
+>>>> +
+>>>> +	/* Skip leading spaces */
+>>>> +	while (len > 0 && isspace(*d)) {
+>>>> +		len--;
+>>>> +		d++;
+>>>> +	}
+>>>> +
+>>>> +	/* Skip trailing spaces */
+>>>> +	while (len > 0 && isspace(d[len - 1]))
+>>>> +		len--;
+>>>> +
+>>>
+>>> Please use 'strim()' instead.
+>>
+>> Hi Hannes,
+>>
+>> Bart pointed this out in V1 as well. I'll copy-paste my reply from V1:
+>>
+>> "Yes, I considered using strim(). strim() modifies the input buffer by
+>> replacing first trailing whitespace with '\0' so we can't use it directly
+>> on the vpd_pg80->data. The solution would be to copy the whole vpd page
+>> data into the sn buffer and call strim() on the sn buffer. strim() returns
+>> a pointer to the first non-whitespace character so we would also need to
+>> memmove the serial number to the beginning of the sn buffer. All this extra
+>> copying seems to be redundant so I went ahead with a simpler solution
+>> that does a single memcpy()."
+>>
+>> Please let me know your thoughts on this.
+> 
+> Hi Hannes,
+> 
+> Ping for a feedback.
+> Sending this in case my previous reply fell through the cracks.
+> 
+Hmm. Okay, sounds reasonable.
 
-syzbot found the following issue on:
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-HEAD commit:    ca4ee40bf13d Partly revert "drm/hyperv: Remove reference t..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=13c6c722580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=a771bfd268751cd6
-dashboard link: https://syzkaller.appspot.com/bug?extid=1f77b8ca15336fff21ff
-compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+Cheers,
 
-Unfortunately, I don't have any reproducer for this issue yet.
+Hannes
 
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-ca4ee40b.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/c714adf37ddd/vmlinux-ca4ee40b.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/4d56cd9f6175/bzImage-ca4ee40b.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+1f77b8ca15336fff21ff@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-UBSAN: shift-out-of-bounds in drivers/ata/libata-core.c:5166:24
-shift exponent 4210818301 is too large for 64-bit type 'long long unsigned int'
-CPU: 2 UID: 0 PID: 1282 Comm: kworker/2:1H Tainted: G             L      syzkaller #0 PREEMPT(full) 
-Tainted: [L]=SOFTLOCKUP
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-Workqueue: events_highpri ata_scsi_deferred_qc_work
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
- ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
- __ubsan_handle_shift_out_of_bounds+0x279/0x2a0 lib/ubsan.c:494
- ata_qc_issue.cold+0x38/0x9f drivers/ata/libata-core.c:5166
- ata_scsi_deferred_qc_work+0x154/0x1f0 drivers/ata/libata-scsi.c:1679
- process_one_work+0x9d7/0x1920 kernel/workqueue.c:3275
- process_scheduled_works kernel/workqueue.c:3358 [inline]
- worker_thread+0x5da/0xe40 kernel/workqueue.c:3439
- kthread+0x370/0x450 kernel/kthread.c:467
- ret_from_fork+0x754/0xd80 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
----[ end trace ]---
-Kernel panic - not syncing: UBSAN: panic_on_warn set ...
-CPU: 2 UID: 0 PID: 1282 Comm: kworker/2:1H Tainted: G             L      syzkaller #0 PREEMPT(full) 
-Tainted: [L]=SOFTLOCKUP
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-Workqueue: events_highpri ata_scsi_deferred_qc_work
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
- vpanic+0x552/0x970 kernel/panic.c:650
- panic+0xd1/0xe0 kernel/panic.c:787
- check_panic_on_warn kernel/panic.c:524 [inline]
- check_panic_on_warn.cold+0x19/0x34 kernel/panic.c:519
- __ubsan_handle_shift_out_of_bounds+0x279/0x2a0 lib/ubsan.c:494
- ata_qc_issue.cold+0x38/0x9f drivers/ata/libata-core.c:5166
- ata_scsi_deferred_qc_work+0x154/0x1f0 drivers/ata/libata-scsi.c:1679
- process_one_work+0x9d7/0x1920 kernel/workqueue.c:3275
- process_scheduled_works kernel/workqueue.c:3358 [inline]
- worker_thread+0x5da/0xe40 kernel/workqueue.c:3439
- kthread+0x370/0x450 kernel/kthread.c:467
- ret_from_fork+0x754/0xd80 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
