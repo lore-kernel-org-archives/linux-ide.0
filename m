@@ -1,25 +1,80 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C5B33346BC
-	for <linux-ide@vger.kernel.org>; Thu, 19 Feb 2026 07:52:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C97030E844
+	for <linux-ide@vger.kernel.org>; Thu, 19 Feb 2026 08:19:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771487576; cv=none; b=il5ItM+vvCx/33+LolA6fE/WD2NQMftrC2Ww1nvFAyziwDoSvFxIGfb0JWh730lEIZrnTyOBShCrC2yNQaumA2o2JgJmuVtYeUt7ylHCnDo2M17arh+Xzk49UN68CQPzmEo/wKqrrObJaKfRjG0wplHbCllrnqF85e2/5jKJNEQ=
+	t=1771489196; cv=none; b=IoeIYoSCTECkSOjtC9wtY+JR23apcp+qx95NWZEC1jTKDWvC9Y9fij3kcaFl/XLsdKZELCTzbzNwSHxRPWCKqD8HXKWaDshFo8EYxJKzGIA6LwNRAkPnmw5110tZErmlBbh0ZYicgzTHs8M7jq7+Db09uurx0PVxvFz5XWtdMpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771487576; c=relaxed/simple;
-	bh=lf3CV8aUJXei677G7jpyNANxRaUYa5FRvykqIndO2vk=;
+	s=arc-20240116; t=1771489196; c=relaxed/simple;
+	bh=uU67RHGZtolgkGztrGBikSlanjgXNnrXeib1Zs0PxrQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=OrrpWPII041RBxQH2IttlrguRR8LfC4xbQHCVyhr41A1y5wyTn0C2yqGOGudUlDqH5g/nKGLS/dF36e9MFcF+bpJni86XD9McXXZ8BDfGQJEbdaINJudHFxkxR2AABjkSt2MnnGbuGzvKuv1Dr8xyVOEmuMTx0jgukjhC3tqUbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.104] (213.87.154.131) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Thu, 19 Feb
- 2026 10:52:36 +0300
-Message-ID: <4b93017e-7c92-4996-b2f8-a44eb982cc69@omp.ru>
-Date: Thu, 19 Feb 2026 10:52:35 +0300
+	 In-Reply-To:Content-Type; b=Zqo++eQukuuH4UwpLU4IxW+P3Fs7C78IspnXlV0wumSFvCcdYO84Bj4Le3Hmz+0SKcj/5fBWmqiOloY22HgYLA7j/ynB06nb4jPmzuqEJJe8j+3ESVkKpqrz9aYwolGIX8LxKw4qSRXCWb4Cl/mVmyNmeDbU/N9RiHP2Oe3kMDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VBjU7XvG; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=db6kaFh1; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VBjU7XvG; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=db6kaFh1; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VBjU7XvG";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="db6kaFh1";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VBjU7XvG";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="db6kaFh1"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 91CD45BCC3;
+	Thu, 19 Feb 2026 08:19:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1771489193; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=d8Vv3Ct0WrCTaRQpax2g5AegyJLYSmu7wZBoVlGjjHk=;
+	b=VBjU7XvGU1N60VSKe57P4jr9yeMX4q1PgvAr9T0QvPtXKxmufxgSJWsC0rvdFQ6kvszyCI
+	iw0twa4cgJbmPRBn7+kX2wnL5IJOksDMA3hTo5v0LdG3ac3i1OzTqKonU+Uk0kBPU0vWws
+	Qp14UvUEkSIZ41oXKrgZhhWN3LdvKyo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1771489193;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=d8Vv3Ct0WrCTaRQpax2g5AegyJLYSmu7wZBoVlGjjHk=;
+	b=db6kaFh1DKFKavlIKAZ0TDRdimAXFHxmD7tZhzzzFH0vyULtDfW0lRCEBMsVw3O4GmGlYP
+	LvPbbM0lLWzD0wBg==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1771489193; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=d8Vv3Ct0WrCTaRQpax2g5AegyJLYSmu7wZBoVlGjjHk=;
+	b=VBjU7XvGU1N60VSKe57P4jr9yeMX4q1PgvAr9T0QvPtXKxmufxgSJWsC0rvdFQ6kvszyCI
+	iw0twa4cgJbmPRBn7+kX2wnL5IJOksDMA3hTo5v0LdG3ac3i1OzTqKonU+Uk0kBPU0vWws
+	Qp14UvUEkSIZ41oXKrgZhhWN3LdvKyo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1771489193;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=d8Vv3Ct0WrCTaRQpax2g5AegyJLYSmu7wZBoVlGjjHk=;
+	b=db6kaFh1DKFKavlIKAZ0TDRdimAXFHxmD7tZhzzzFH0vyULtDfW0lRCEBMsVw3O4GmGlYP
+	LvPbbM0lLWzD0wBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 633D73EA65;
+	Thu, 19 Feb 2026 08:19:53 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id LjWOFqnHlmm1YgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 19 Feb 2026 08:19:53 +0000
+Message-ID: <12889555-2842-4edb-882f-9ad4927d68b8@suse.de>
+Date: Thu, 19 Feb 2026 09:19:53 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -27,97 +82,58 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/5] ata: libata-scsi: simplify
- ata_scsi_schedule_deferred_qc()
-To: Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>, Niklas
- Cassel <cassel@kernel.org>
+Subject: Re: [PATCH 1/5] ata: libata-core: improve tag checks in
+ ata_qc_issue()
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
 References: <20260219062312.1030867-1-dlemoal@kernel.org>
- <20260219062312.1030867-4-dlemoal@kernel.org>
+ <20260219062312.1030867-2-dlemoal@kernel.org>
 Content-Language: en-US
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <20260219062312.1030867-4-dlemoal@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 02/19/2026 07:37:38
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 200650 [Feb 19 2026]
-X-KSE-AntiSpam-Info: Version: 6.1.1.20
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 87 0.3.87
- 7430d8ffafccd8879e1d8370e5b501352446c2ba
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.154.131 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info:
-	127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: {Tracking_ip_hunter}
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.154.131
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 02/19/2026 07:39:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 2/19/2026 5:13:00 AM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260219062312.1030867-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -4.30
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.997];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_THREE(0.00)[3];
+	RCVD_COUNT_TWO(0.00)[2];
+	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
 
-On 2/19/26 9:23 AM, Damien Le Moal wrote:
-
-> Use ata_qc_done() instead of calling ata_qc_free() and scsi_done()
-> directly.
+On 2/19/26 07:23, Damien Le Moal wrote:
+> Make sure to check that the tag of a queued command is valid when
+> ata_qc_issue() is called, and fail the QC if the tag is not valid, or if
+> there is an on-going non-NCQ command already on the link.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->  drivers/ata/libata-scsi.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
+>   drivers/ata/libata-core.c | 9 +++++++--
+>   1 file changed, 7 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index c0dd75a0287c..41918e21d0f8 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1685,7 +1685,6 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
->  void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-   You're simplifying ata_scsi_requeue_deferred_qc() but the subject has
-ata_scsi_schedule_deferred_qc()...
+Cheers,
 
->  {
->  	struct ata_queued_cmd *qc = ap->deferred_qc;
-> -	struct scsi_cmnd *scmd;
->  
->  	lockdep_assert_held(ap->lock);
->  
-> @@ -1697,11 +1696,9 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
->  	if (!qc)
->  		return;
->  
-> -	scmd = qc->scsicmd;
->  	ap->deferred_qc = NULL;
-> -	ata_qc_free(qc);
-> -	scmd->result = (DID_SOFT_ERROR << 16);
-> -	scsi_done(scmd);
-> +	qc->scsicmd->result = (DID_SOFT_ERROR << 16);
-> +	ata_qc_done(qc);
->  }
->  
->  static void ata_scsi_schedule_deferred_qc(struct ata_port *ap)
-
-MBR, Sergey
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
