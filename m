@@ -1,39 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8074D329E62
-	for <linux-ide@vger.kernel.org>; Fri, 20 Feb 2026 16:37:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C94C365A05
+	for <linux-ide@vger.kernel.org>; Fri, 20 Feb 2026 17:33:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771605440; cv=none; b=W3kfG3AvvROggEW7ZFlC3rwBLH7MxBLERa2fwDepmRrHNF56W+0tM2aj2rpF2BIA4UiHjbpW7Zkm6z8X9FHvg1oJkI4YwjBhkArPBgnKcg2UT048N9bYWxNJRA3xnY6Gcwf7ZhEZVhsZ+5nRYx1Xi2nzM17jf7u1sJ2guljz9zI=
+	t=1771608796; cv=none; b=XTobZRntztyNT6wlqEBj0n1/fGdkL3ltAJ9n0HS9+fIzAbrM8NrgZ9/07CRh+ok0GNyVfNpcDzhSxJ5lJB1LBnkRP/R/lZVvwOV2BKP6Y8NpbeTPbaDeBAr9Z9CjXDFNdTjOfb6j1HwSTIv4COwY+XpP9l58fmnKHeE80Ot3Y4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771605440; c=relaxed/simple;
-	bh=EH3AhiRo3FWyldV3G0nz7UjBQR5FWEdz6aPdrm7kpjY=;
+	s=arc-20240116; t=1771608796; c=relaxed/simple;
+	bh=QM9KB71maLtomvW0oGH8RoFZ39kQmEj1ytElqGFmwLs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jd56aV6Bra7ytaV/n01rK4eydtXA/AQFvnIBTrNRUnAGx5KG3NxMSy88SCLAuhNtPmCL9i4VLZY+D4iBhHuN05yqY61/q+jvZqcr0RnctDmeATrQuityshbUMSf8Mi85SHrMXZQ9Cou3q+S7nTM/oxUWUJMqAAMm48UlbcQ+kRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YwMlptbK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nz5VWjvDtwni0CKy9uS6dK3q6c0mq9wJChWJlPC0+iivW4YYvUT7eJMm4GxKHUEyNZB+nZx8JrMsGIzYd7l4aNgDHIuWcj0AoRjfZxTcOj+dcOg7iWhr6X/5cD2VdDlPYoJSe/jVuRNPzuWsCz8kH/yHEhPaFO/z3XtLsZadBbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=IAxN+Zya; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YwMlptbK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9112BC116C6;
-	Fri, 20 Feb 2026 16:37:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771605440;
-	bh=EH3AhiRo3FWyldV3G0nz7UjBQR5FWEdz6aPdrm7kpjY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YwMlptbK4uYF9I5c2sN7ugubbLc3VcRLFwtovLvu6N4qCQ5DpJSd2J83Ii+69yuac
-	 vo+vK+HZrQC569pNKOvhqdi91mvBda5mKKcfxU3eWcSG7mMzfTl2e2ff9c3bZpu2Ht
-	 Z1KidG/W1OzW/jKEgLdqjvd2F7HCEiuDUJl/sYsJOsKd7Vcn3za/7cO7DbkDtoy0X4
-	 WQiaKQPXPrcAiyNrdsMQC5l7e5H0vtVitlFeZ2QpJV1/WVca3C1Cbd0BkeF9++cYLz
-	 6M+Zv3hCA6NElbVrR9C7M/6OnhPgV+UeOwcrx+7SIiOfYaRdQU5B8yinXExmJWf7NY
-	 p8AK00FXKGn/w==
-Date: Fri, 20 Feb 2026 17:37:12 +0100
-From: Niklas Cassel <cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IAxN+Zya"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2a885af8ee7so82865ad.1
+        for <linux-ide@vger.kernel.org>; Fri, 20 Feb 2026 09:33:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1771608794; x=1772213594; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=AWBWqzlUth5wxMx03K52CSxerrwNm7iygbTmKzcY4WA=;
+        b=IAxN+ZyajLsZ3MJRcV3bn8TLfYHwyutkvDmFQg9u2pWu04QeCfaGDrYluE/vEwfFt6
+         +THlgpzg+P3IrPzNhS3FdhSv1bnLzfnNy+VtWOKfNHDRsy8/9DtIiqO0Wi3M0gVdSWqI
+         AgWqNN+I0n1Hap+lEYjAVCEQHiR7N+YWWRJRrGDBBvvljD80sB00UujygII7aYmTcCDP
+         5PT12nTqO8IyyJzqtlM+KpagiXWSsPuQfm/ejygyA6HVO7BbEsKA8XVkzT/4kaPwahfV
+         yOPRCt4nAUpWfoQtxAuzWVimNNdOiVxoD4UxGfjvBeQ0oLzSaxrvJnoB3f9k/mZ7IRBb
+         PWXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771608794; x=1772213594;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=AWBWqzlUth5wxMx03K52CSxerrwNm7iygbTmKzcY4WA=;
+        b=a8AVMmhb4YEfBfpDA1r6r8Q1u3ggmFxFJTW4AaMMpCw8KjbTwh0S8uth7pRimZD/Pp
+         AN/E3vHBv6NA6MQuPmwfL5gvv17FB+pRqa5nszbv1FuZlB4ino5vo+aUr3FC8iv+HY/E
+         JIxgDBIwsQG0k+9Cz0xDjNuS93DB1VDC+AoHK3lmeCoVOZLtu4I50mN8wUt3ZIaqego0
+         JH9OB5EH70mmmUf2U/LIyeoEkiLrK8dLyy6HgWHHTq/Nfa2U+Zm5yeVx8W1xveMvwu9e
+         5xqbofVDNcvAmnw03xD+/7imcRKJMjJ0RPpBw4w0MOdtupBLgYRylW0QX36bgsXdbbIo
+         OOlg==
+X-Gm-Message-State: AOJu0Yyl0CfdreCfGlV8ppPbycWTqWM7mX+M99WlaSnlY0kCqFYbURdt
+	4dzUhYYeOS/TKN0FU+Jo69v78mVfgfAZKMTXg/FAOLG8z0lMQ8BEFIpeg58c3xOOwprP9nyTh9Y
+	pBczQ7nid
+X-Gm-Gg: AZuq6aKOat5RJSs5xEPHtuRZ82T7mnKptPZPQiQ2iBop0F/5errSNec4VZ2zxKIBxfM
+	YcVNz9nsH4QrsmgPN4GuaYi8MUQsZG106fbN4HR0BMGPBcLhG/4NvAvf07cby6+6N6HbeF3jX9q
+	29sV++qLRGo2D2DyosHtl48nKm2XiOiUTC/1cpyfj1IN9ovNwS/1DbbzbIzIzlNuWsBNXqOtTvT
+	8a5lJDkisAQzslOOzT5EAA6YzELkALS0ZQsmsmmgYpItGINqGakKZsb8Xy9rHqgGrQdra2GNZ4m
+	giPm75ITqsqcQPZmIl1YSO+Nd/fRbGBlLx6Y79ZuybPNwplHM2BQ6t1XuK1Vll6FjDEZUf4DO0L
+	6JsmY+EU9GolPiKwO1a7tGQql1aPfghi0kwH1mycWbqCcB7dBrRLO2WIBy6+9YMW249EeNEJ0YD
+	SMKlI6iUOnOqbykWw1fZuUyBXsBi1d8UPoj1AaCm7Cmt075qW7w0BqQWdPSLnfbg==
+X-Received: by 2002:a17:903:1a27:b0:2a8:ffed:4663 with SMTP id d9443c01a7336-2ad69e81213mr2102465ad.12.1771608794071;
+        Fri, 20 Feb 2026 09:33:14 -0800 (PST)
+Received: from google.com (185.29.127.34.bc.googleusercontent.com. [34.127.29.185])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-824c6a546edsm23494439b3a.25.2026.02.20.09.33.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Feb 2026 09:33:13 -0800 (PST)
+Date: Fri, 20 Feb 2026 09:33:09 -0800
+From: Igor Pylypiv <ipylypiv@google.com>
 To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Subject: Re: [PATCH 1/2] ata: libata-eh: correctly handle deferred qc timeouts
-Message-ID: <aZiNsC8fguChYpn2@ryzen>
+Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
+Subject: Re: [PATCH 2/2] ata: libata-core: fix cancellation of a port
+ deferred qc work
+Message-ID: <aZia1dnJ9pVkf3pq@google.com>
 References: <20260220050053.390135-1-dlemoal@kernel.org>
- <20260220050053.390135-2-dlemoal@kernel.org>
+ <20260220050053.390135-3-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -42,103 +74,60 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260220050053.390135-2-dlemoal@kernel.org>
+In-Reply-To: <20260220050053.390135-3-dlemoal@kernel.org>
 
-On Fri, Feb 20, 2026 at 02:00:52PM +0900, Damien Le Moal wrote:
-> A differed qc may timeout while waiting for the device queue to drain
-
-Nit: s/differed/deferred/
-
-
-> to be submitted. In such case, since the qc is not active,
-> ata_scsi_cmd_error_handler() ends up calling scsi_eh_finish_cmd(),
-> which frees the qc. But as the port deferred_qc field still references
-> this finished/freed qc, the deferred qc work may eventually attempt to
-> call ata_qc_issue() against this invalid qc, leading to errors such as
-> reported by UBSAN (syzbot run):
+On Fri, Feb 20, 2026 at 02:00:53PM +0900, Damien Le Moal wrote:
+> cancel_work_sync() is a sleeping function so it cannot be called with
+> the spin lock of a port being held. Move the call to this function in
+> ata_port_detach() before locking the port and add a call to
+> ata_scsi_requeue_deferred_qc() to make sure there are no remaining
+> deferred qc.
 > 
-> UBSAN: shift-out-of-bounds in drivers/ata/libata-core.c:5166:24
-> shift exponent 4210818301 is too large for 64-bit type 'long long unsigned int'
-> ...
-> Call Trace:
->  <TASK>
->  __dump_stack lib/dump_stack.c:94 [inline]
->  dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
->  ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
->  __ubsan_handle_shift_out_of_bounds+0x279/0x2a0 lib/ubsan.c:494
->  ata_qc_issue.cold+0x38/0x9f drivers/ata/libata-core.c:5166
->  ata_scsi_deferred_qc_work+0x154/0x1f0 drivers/ata/libata-scsi.c:1679
->  process_one_work+0x9d7/0x1920 kernel/workqueue.c:3275
->  process_scheduled_works kernel/workqueue.c:3358 [inline]
->  worker_thread+0x5da/0xe40 kernel/workqueue.c:3439
->  kthread+0x370/0x450 kernel/kthread.c:467
->  ret_from_fork+0x754/0xd80 arch/x86/kernel/process.c:158
->  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
->  </TASK>
-> 
-> Fix this by checking if the qc of a timed out command is a deferred one,
-> and in such case, clear the port deferred_qc field and finish the scsi
-> command with DID_TIME_OUT.
-> 
-> Reported-by: syzbot+1f77b8ca15336fff21ff@syzkaller.appspotmail.com
 > Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->  drivers/ata/libata-eh.c | 20 +++++++++++++++++---
->  1 file changed, 17 insertions(+), 3 deletions(-)
+>  drivers/ata/libata-core.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 72a22b6c9682..f86085f9b476 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -640,12 +640,26 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
->  		set_host_byte(scmd, DID_OK);
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index beb6984b379a..54afa4df987e 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -6254,9 +6254,18 @@ static void ata_port_detach(struct ata_port *ap)
+>  	/* Wait for any ongoing EH */
+>  	ata_port_wait_eh(ap);
 >  
->  		ata_qc_for_each_raw(ap, qc, i) {
-> -			if (qc->flags & ATA_QCFLAG_ACTIVE &&
-> -			    qc->scsicmd == scmd)
-> +			if (qc->scsicmd != scmd)
-> +				continue;
-> +			if ((qc->flags & ATA_QCFLAG_ACTIVE) ||
-> +			    qc == ap->deferred_qc)
->  				break;
+> +	/* Requeue any remaining deferred qc. */
+> +	ata_scsi_requeue_deferred_qc(ap);
+> +
+
+ata_scsi_requeue_deferred_qc() requires the port lock to be held (function
+has a lockdep assert).
+
+>  	mutex_lock(&ap->scsi_scan_mutex);
+> +
+> +	/* Make sure the deferred qc work finished. */
+> +	cancel_work_sync(&ap->deferred_qc_work);
+> +
+>  	spin_lock_irqsave(ap->lock, flags);
+>  
+> +	WARN_ON(ap->deferred_qc);
+> +
+>  	/* Remove scsi devices */
+>  	ata_for_each_link(link, ap, HOST_FIRST) {
+>  		ata_for_each_dev(dev, link, ALL) {
+> @@ -6269,10 +6278,6 @@ static void ata_port_detach(struct ata_port *ap)
 >  		}
+>  	}
 >  
-> -		if (i < ATA_MAX_QUEUE) {
-> +		if (qc == ap->deferred_qc) {
-> +			/*
-> +			 * This is a deferred command that timedout while
-
-s/timedout/timed out/
-
-
-> +			 * waiting for the command queue to drain. Since the qc
-> +			 * is not active yet, simply signal the timeout by
-
-How do we know for sure that the QC is not active yet?
-The answer appears to be that we always clear ap->deferred_qc before
-issuing the deferred QC, thus ap->deferred_qc will never have flag
-ATA_QCFLAG_ACTIVE set.
-
-Perhaps we could somehow make this clearer in the comment.
-
-Perhaps even a WARN_ON(qc->flags & ATA_QCFLAG_ACTIVE) ?
-
-
-Otherwise, this patch looks good to me.
-
-
-> +			 * finishing the SCSI command and clear the deferred qc
-> +			 * to prevent the deferred qc work from issuing this
-> +			 * qc.
-> +			 */
-> +			ap->deferred_qc = NULL;
-> +			set_host_byte(scmd, DID_TIME_OUT);
-> +			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-> +		} else if (i < ATA_MAX_QUEUE) {
->  			/* the scmd has an associated qc */
->  			if (!(qc->flags & ATA_QCFLAG_EH)) {
->  				/* which hasn't failed yet, timeout */
+> -	/* Make sure the deferred qc work finished. */
+> -	cancel_work_sync(&ap->deferred_qc_work);
+> -	WARN_ON(ap->deferred_qc);
+> -
+>  	/* Tell EH to disable all devices */
+>  	ap->pflags |= ATA_PFLAG_UNLOADING;
+>  	ata_port_schedule_eh(ap);
 > -- 
 > 2.53.0
+> 
 > 
