@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5941523A99E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74D7923A99E
 	for <linux-ide@vger.kernel.org>; Fri, 20 Feb 2026 05:06:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771563971; cv=none; b=lyEoK0OieeVbhvEWT8VmhApB/aNSP5xCnmTIRs7cdKvqehyvvUcEWiIDpFSzKVBaH8SsHp9ViAnXBpIYNSa6KUhMy3MZx7GDcSitNRiFD9Jmulv/FkJkw4tFDhOkNffK+t0VfPpeOjOHGTf7NDFCyzQYZtnpaxC4ckAvUOGmKJg=
+	t=1771563972; cv=none; b=cJNwfLmSZmRnp8ZcVT26KR5wB61Pu3DZ43R1S/XSFzt/9nGz72ejMUHhxCdjeiA4ZNW8F1qN/88JwG8Qw6+sUAECKn6WRz2nkzlhNatJu3EVNXbcrw0aqAnXKfu0QM81aOL5xZNQ8dXPOlZ0rjtR0/ydQXLE9A0bITA2Xpq1hHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771563971; c=relaxed/simple;
-	bh=LMRZFGnNSDuFDINxkH2ISoamfaA/GUESZnkgBs+VT5I=;
+	s=arc-20240116; t=1771563972; c=relaxed/simple;
+	bh=t99LW8lym2NGN3MKG6UZlD3bsRMUZ2RQcMKzIFlWYxg=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cbCUvNKneMtuHbTOwhriN/NA0UYtWO5cR7oz64JuuBBsQikytjf2WPeujqhI2joh49oM41VnLZw8NVew8HmwFbwmKDe6lT97M4gr6MxkYUFxxpXqRAnmGqIzxXEAZ2F/E2e+BUOG4rBP01B7CP5c6is+K5ZRJQaazix51BBfi6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d36i28TH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=tQ26LYO2f1aY+BaTL/KpQGWWH3iuCVvDXENVPJle7KzsiKyVJUd/75ENR9blHCtlaZINtIYdfORzad9x2r5IGK4I1J/GaUOxZX1iHgIEHyKRuDRkkzrEY+0i1133SX+XEvYtu3h6lYyfLDk0D1qyoN2MKo8ypPh+IG/GFTpecP0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TysRNkp5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d36i28TH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6632C19425;
-	Fri, 20 Feb 2026 05:06:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TysRNkp5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85B65C116D0;
+	Fri, 20 Feb 2026 05:06:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1771563971;
-	bh=LMRZFGnNSDuFDINxkH2ISoamfaA/GUESZnkgBs+VT5I=;
+	bh=t99LW8lym2NGN3MKG6UZlD3bsRMUZ2RQcMKzIFlWYxg=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=d36i28THANlNMCC5sQ/gGoxS9VoAHv2X7wemw0e78y2aNj6Cn4syP0OAeeoR4wsuz
-	 UcZPTWEplIKCSJ+ItTANZ4DIOXxN1OeOFb24brpCQ755gUiiFIVe39ntJdOIUdW7Xg
-	 njezLyKj3qXqECe7y4gIFPkWC6RlXPvyQqAYCXgN6yWeY9URRzrb9w2cj3KMEFC6ZJ
-	 HM2/RvA6xbZ68TpKW2RGFh0XEjJylRuUgNG7TSERX8FxN3keIzO8U3XGtaf2+s4NWU
-	 aNPUjzYBMC8/Q4c/QhvNmS90BEKX8NsjBW7qGN/4emflgQqd8BwwU54qolIHJWDxDx
-	 Ec89DBB+yfvSA==
+	b=TysRNkp52LkmTgXF9nqWWVPylYLKXCxkPAhRriSyblAcSUeOBItlN4YoKIzcL5SLD
+	 U2kfaR0MuZuVvJ/HTZ8veZdL8rPqoXTwzWOpDMXEy7+erDGJt8BNfkBWuGcrHrg6Z5
+	 oyu2flq3mzbTpdFQMspPueSXvew4oXk4VKBZbvSM8ahA1oZtiBpjHlp5+ByGCvkFhE
+	 5Z02BDvQp4XIeiySFGXJAcpIqbGvatqX39SqR6XjVo5ArO17Mkuyyr15FKm4MBrkX5
+	 Zzw/co098j6jHTW1uJ3I5aRgBhBiLjI2WHD3qknGWFgWyD8A9Dxv/2P3/kYL90M4AT
+	 Zhpw543Vy+Kgw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH 1/2] ata: libata-eh: correctly handle deferred qc timeouts
-Date: Fri, 20 Feb 2026 14:00:52 +0900
-Message-ID: <20260220050053.390135-2-dlemoal@kernel.org>
+Subject: [PATCH 2/2] ata: libata-core: fix cancellation of a port deferred qc work
+Date: Fri, 20 Feb 2026 14:00:53 +0900
+Message-ID: <20260220050053.390135-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260220050053.390135-1-dlemoal@kernel.org>
 References: <20260220050053.390135-1-dlemoal@kernel.org>
@@ -43,78 +43,52 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A differed qc may timeout while waiting for the device queue to drain
-to be submitted. In such case, since the qc is not active,
-ata_scsi_cmd_error_handler() ends up calling scsi_eh_finish_cmd(),
-which frees the qc. But as the port deferred_qc field still references
-this finished/freed qc, the deferred qc work may eventually attempt to
-call ata_qc_issue() against this invalid qc, leading to errors such as
-reported by UBSAN (syzbot run):
+cancel_work_sync() is a sleeping function so it cannot be called with
+the spin lock of a port being held. Move the call to this function in
+ata_port_detach() before locking the port and add a call to
+ata_scsi_requeue_deferred_qc() to make sure there are no remaining
+deferred qc.
 
-UBSAN: shift-out-of-bounds in drivers/ata/libata-core.c:5166:24
-shift exponent 4210818301 is too large for 64-bit type 'long long unsigned int'
-...
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
- ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
- __ubsan_handle_shift_out_of_bounds+0x279/0x2a0 lib/ubsan.c:494
- ata_qc_issue.cold+0x38/0x9f drivers/ata/libata-core.c:5166
- ata_scsi_deferred_qc_work+0x154/0x1f0 drivers/ata/libata-scsi.c:1679
- process_one_work+0x9d7/0x1920 kernel/workqueue.c:3275
- process_scheduled_works kernel/workqueue.c:3358 [inline]
- worker_thread+0x5da/0xe40 kernel/workqueue.c:3439
- kthread+0x370/0x450 kernel/kthread.c:467
- ret_from_fork+0x754/0xd80 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-
-Fix this by checking if the qc of a timed out command is a deferred one,
-and in such case, clear the port deferred_qc field and finish the scsi
-command with DID_TIME_OUT.
-
-Reported-by: syzbot+1f77b8ca15336fff21ff@syzkaller.appspotmail.com
 Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/libata-eh.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ drivers/ata/libata-core.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 72a22b6c9682..f86085f9b476 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -640,12 +640,26 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- 		set_host_byte(scmd, DID_OK);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index beb6984b379a..54afa4df987e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6254,9 +6254,18 @@ static void ata_port_detach(struct ata_port *ap)
+ 	/* Wait for any ongoing EH */
+ 	ata_port_wait_eh(ap);
  
- 		ata_qc_for_each_raw(ap, qc, i) {
--			if (qc->flags & ATA_QCFLAG_ACTIVE &&
--			    qc->scsicmd == scmd)
-+			if (qc->scsicmd != scmd)
-+				continue;
-+			if ((qc->flags & ATA_QCFLAG_ACTIVE) ||
-+			    qc == ap->deferred_qc)
- 				break;
++	/* Requeue any remaining deferred qc. */
++	ata_scsi_requeue_deferred_qc(ap);
++
+ 	mutex_lock(&ap->scsi_scan_mutex);
++
++	/* Make sure the deferred qc work finished. */
++	cancel_work_sync(&ap->deferred_qc_work);
++
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
++	WARN_ON(ap->deferred_qc);
++
+ 	/* Remove scsi devices */
+ 	ata_for_each_link(link, ap, HOST_FIRST) {
+ 		ata_for_each_dev(dev, link, ALL) {
+@@ -6269,10 +6278,6 @@ static void ata_port_detach(struct ata_port *ap)
  		}
+ 	}
  
--		if (i < ATA_MAX_QUEUE) {
-+		if (qc == ap->deferred_qc) {
-+			/*
-+			 * This is a deferred command that timedout while
-+			 * waiting for the command queue to drain. Since the qc
-+			 * is not active yet, simply signal the timeout by
-+			 * finishing the SCSI command and clear the deferred qc
-+			 * to prevent the deferred qc work from issuing this
-+			 * qc.
-+			 */
-+			ap->deferred_qc = NULL;
-+			set_host_byte(scmd, DID_TIME_OUT);
-+			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-+		} else if (i < ATA_MAX_QUEUE) {
- 			/* the scmd has an associated qc */
- 			if (!(qc->flags & ATA_QCFLAG_EH)) {
- 				/* which hasn't failed yet, timeout */
+-	/* Make sure the deferred qc work finished. */
+-	cancel_work_sync(&ap->deferred_qc_work);
+-	WARN_ON(ap->deferred_qc);
+-
+ 	/* Tell EH to disable all devices */
+ 	ap->pflags |= ATA_PFLAG_UNLOADING;
+ 	ata_port_schedule_eh(ap);
 -- 
 2.53.0
 
