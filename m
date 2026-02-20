@@ -1,115 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D07611C84AB
-	for <linux-ide@vger.kernel.org>; Fri, 20 Feb 2026 21:48:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B89F2D23BC
+	for <linux-ide@vger.kernel.org>; Fri, 20 Feb 2026 22:19:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771624107; cv=none; b=GfXXueChUikpFKvmcz2merCpT/KQ8TvL0mZ/t/43PNuTnqnL94eoUjSmSbA2o9e22+D8rBMALyZ3fva4GaH+YzGg5b20/waqocfSWw8idfo+3Tu4QaNK7qu27ApiDJpvE2PUD+7iI1shW33JjTEjTnIZ/vfb0eGhN2HRxuOMeL4=
+	t=1771625997; cv=none; b=pdMYb0hD2YWX2o5HxbGkH0CRq4zoAN4htvjnps4yaPgQj1QhKiO/ZJNX1+dcETp67pJR68TkUZee0oR+kLfSDY/B3Q1g5uM80qEQrZuxsr3fxoAprzoHJhfVKsCxMOVZZb0n9WUz7ia1CiC5odO46fCKY83Lc4L7taGUSIjDcME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771624107; c=relaxed/simple;
-	bh=3mosdxtCdzvezbf6yW4dbDu3e6k/YtGypF2fh2EB2ig=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=h7Y2qiwJucSlBN5qwc7wrRgwIhmt0MDi4tiRhHHVSrSxYjlvMhmBNU1E/JlnRITU2sm33Bpj8yHtWDs2kl+QvB8vG6WlVcVnHwwckfw5hrrFCR/Awrw3zU862c+irhP3r/pHTiq8iSJtVREpgi57gEeiWKfKPRDL2uWWr/+pa64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZXChO9sp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771625997; c=relaxed/simple;
+	bh=GOyhatqzw2/d0CfhA4/YuPj9mK14nMXfKS0qPwdIWWg=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=Xbx4m1gPSOr7qmeW2349irCL4QTNpjY+W3tydan4GYYAfVLoBRP5b0AP+47DmiOS5Iq74fY1jnuUQTiI9XvV8IhPGHUPf7OHYVb5MZ++Iwf2MdJQkwfc07vklFudicXhIDbgxwlqCl4vH8V8Tc4aa7jQLW2Nb9jLaGyJt7JYS94=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F12/qY64; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZXChO9sp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCF40C116C6;
-	Fri, 20 Feb 2026 21:48:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F12/qY64"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 777F3C116C6;
+	Fri, 20 Feb 2026 22:19:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771624107;
-	bh=3mosdxtCdzvezbf6yW4dbDu3e6k/YtGypF2fh2EB2ig=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZXChO9spvj2510pi5hHJuuLsH3wwXbHHW93aus8Urzg3sGCsuROyMymlrxDg7+PDD
-	 cbDftEX/wzjpTcl6vR/4D2YA5oWYSQP8HONl7thEP6/vTZLHIHKUuCOZfF1iga1G0C
-	 0YqmGy9OMvUupADFOf/VE4MicTNwdHnscWe/F/qdbt5+v8aXU/tDl4S+esZNpodCG4
-	 zRE0Tiv5ke2qCgXghaqDhL3nEypto4o4D67d+jxxqh3tESZUKu3B+B7im/7kFSqD3u
-	 +C6NYePYLD+G3ulBK0Wj2+qfAQO4b1Vh09JNhko3mIoYA1egSBIe2vaPnFAvpRnAya
-	 MAzX5MTKuR1kQ==
-Message-ID: <5f0aa0a4-0e0e-499c-8bb1-0bd665b36a67@kernel.org>
-Date: Sat, 21 Feb 2026 06:48:25 +0900
+	s=k20201202; t=1771625996;
+	bh=GOyhatqzw2/d0CfhA4/YuPj9mK14nMXfKS0qPwdIWWg=;
+	h=From:To:Subject:Date:From;
+	b=F12/qY64iUp36abhC8HNtbXcldBUPyAcj4IwHw7Hyois1g6tMgECs3eOO/DvTQjJN
+	 XwNyFmQ8HoOWn3jihqybodfmUun3kUVkqp3xzTkEAjFfFJUP3ZIkU1uQnhcLFIqgfd
+	 PrhmRuA0vMu8wGTP5SxVgLVGunMBhDTjj7WcdibRNq1YdR8QhjC5ze1wXAySZNFbbP
+	 tf+tnTKWv8VNZpfZ+oi1H7MwHmknm6obP3NtTxFEINZ71q8xuBk3hBzI0d3NMnSmzA
+	 BBkd42l/DGEGSIKSVg8HSfhF9R8knuBui2pgnll5TvWGdL8fsqkm7oTU50QfYgyfwv
+	 jWvLxqq8nojCA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v2 0/2] ATA port deferred qc fixes
+Date: Sat, 21 Feb 2026 07:14:37 +0900
+Message-ID: <20260220221439.533771-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] ata: libata-core: fix cancellation of a port deferred
- qc work
-To: Igor Pylypiv <ipylypiv@google.com>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
-References: <20260220050053.390135-1-dlemoal@kernel.org>
- <20260220050053.390135-3-dlemoal@kernel.org> <aZia1dnJ9pVkf3pq@google.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <aZia1dnJ9pVkf3pq@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2/21/26 02:33, Igor Pylypiv wrote:
-> On Fri, Feb 20, 2026 at 02:00:53PM +0900, Damien Le Moal wrote:
->> cancel_work_sync() is a sleeping function so it cannot be called with
->> the spin lock of a port being held. Move the call to this function in
->> ata_port_detach() before locking the port and add a call to
->> ata_scsi_requeue_deferred_qc() to make sure there are no remaining
->> deferred qc.
->>
->> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> ---
->>  drivers/ata/libata-core.c | 13 +++++++++----
->>  1 file changed, 9 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index beb6984b379a..54afa4df987e 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -6254,9 +6254,18 @@ static void ata_port_detach(struct ata_port *ap)
->>  	/* Wait for any ongoing EH */
->>  	ata_port_wait_eh(ap);
->>  
->> +	/* Requeue any remaining deferred qc. */
->> +	ata_scsi_requeue_deferred_qc(ap);
->> +
-> 
-> ata_scsi_requeue_deferred_qc() requires the port lock to be held (function
-> has a lockdep assert).
+The first patch addresses a use-after-free issue when a deferred qc
+times out. The second patch avoids a call to a potentially sleeping
+function while a port spinlock is held.
 
-Doh ! Yes, of course ! I had lockdep disabled on my test rig... Bad idea :)
-Let me fix this.
+Changes from v1:
+ - Corrected typo in patch 1 message, improved comment in code and added
+   a WARN_ON_ONCE() call to verify that a timed out qc is not active.
+ - Fixed patch 2 to not call ata_scsi_requeue_deferred_qc() without the
+   port lock held. This call is in fact removed: it is not needed as
+   ata_scsi_requeue_deferred_qc() is called in EH, which is always run
+   when removing a port.
 
-> 
->>  	mutex_lock(&ap->scsi_scan_mutex);
->> +
->> +	/* Make sure the deferred qc work finished. */
->> +	cancel_work_sync(&ap->deferred_qc_work);
->> +
->>  	spin_lock_irqsave(ap->lock, flags);
->>  
->> +	WARN_ON(ap->deferred_qc);
->> +
->>  	/* Remove scsi devices */
->>  	ata_for_each_link(link, ap, HOST_FIRST) {
->>  		ata_for_each_dev(dev, link, ALL) {
->> @@ -6269,10 +6278,6 @@ static void ata_port_detach(struct ata_port *ap)
->>  		}
->>  	}
->>  
->> -	/* Make sure the deferred qc work finished. */
->> -	cancel_work_sync(&ap->deferred_qc_work);
->> -	WARN_ON(ap->deferred_qc);
->> -
->>  	/* Tell EH to disable all devices */
->>  	ap->pflags |= ATA_PFLAG_UNLOADING;
->>  	ata_port_schedule_eh(ap);
->> -- 
->> 2.53.0
->>
->>
+Damien Le Moal (2):
+  ata: libata-eh: correctly handle deferred qc timeouts
+  ata: libata-core: fix cancellation of a port deferred qc work
 
+ drivers/ata/libata-core.c |  8 +++-----
+ drivers/ata/libata-eh.c   | 22 +++++++++++++++++++---
+ 2 files changed, 22 insertions(+), 8 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.53.0
+
