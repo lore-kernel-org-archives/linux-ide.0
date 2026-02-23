@@ -1,70 +1,70 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0CDF3370FE
-	for <linux-ide@vger.kernel.org>; Mon, 23 Feb 2026 17:48:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE2353382FB
+	for <linux-ide@vger.kernel.org>; Mon, 23 Feb 2026 17:49:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771868927; cv=none; b=SOcqfS4o31oVItS2YDkcHLcrGNNcrgYetFbQm40pgds4K1Ak3/0UsvmzMOrbuDpJSJNXp0FQo6Qa8YURSVfESPNR0KW3ZWqcZcHUEoCfXy3jnP2lekUqQ6Ar+7VDop+p9gK8bR3PzULb6J1CPTYGIjBmKhsoDBJcFQANs/Ol+7M=
+	t=1771868961; cv=none; b=hwJXtbTEOcvRl4QnEARY5p4eLqMBAhe2XQyRaANiF83DBmjs8qXICyrzIgSeYclK2GsmlJCu1YaRFwrpCNgVYLHUfC7cW6iQhRLiqk1SjWLg2y+JSgJsLAaYORqJIdv0VkIA8TvGaO4BsLFFbB93IyiktOIVXSm1lpsTlaEJ8KM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771868927; c=relaxed/simple;
-	bh=UrfZ5MYWOFIPLfpwD3rCBVOPfjIAnyrRbXEt+Y5WDRQ=;
+	s=arc-20240116; t=1771868961; c=relaxed/simple;
+	bh=zCsFPsi15Sesq/YfFE4D4Mrator93hTrxesIxYFXAik=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b86lyWrcgVIrvl1gLvQb67bnIGg4NC4pgvuTNdGxdsL/pgxgX0a94w1XcXIFmaJN6cADBP/jzNL8snY+zkYkCzPfDI84OaPAjCCBXhEtcl3jwXWwoC95QqiNecmlkiHQEJ+9ntCEDOK891/+wrYXcv1coR2jKNBihGqzaEsNKfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Ot7TJIa9; arc=none smtp.client-ip=209.85.214.177
+	 Content-Type:Content-Disposition:In-Reply-To; b=J9DZfl1Y48I8R3tsoxLPlXHv6m4QniiYfHNRW+fpHyN4EvSXtXHhTNlEZy7cz0K/bXH37PwwGRC26wmLPwzZyPTtC8Ta7n6XPWydt+WUt5O9GWGW7iF3W1J91Io9PT2Bi7dKznvoj7L5wjZFNgRHsMhR+hEfoQTie5Toorqgor8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ctGdLzdN; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ot7TJIa9"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2a76b39587aso2145ad.0
-        for <linux-ide@vger.kernel.org>; Mon, 23 Feb 2026 09:48:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ctGdLzdN"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2a76b39587aso2205ad.0
+        for <linux-ide@vger.kernel.org>; Mon, 23 Feb 2026 09:49:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771868925; x=1772473725; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1771868959; x=1772473759; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=fSMYf/SK8h8mWKDt+z1tL8b46vzqqkP2QabnWfLzpCM=;
-        b=Ot7TJIa9suj1E39ywFkXnUc79sHELBvq1vtf8r6A3HQzQHFw98SBF/MjpydN4XcR3Y
-         vwL3ZRmtjgQdhpYddw0DoVNM/nZSl1Tqpux2tJSB6mRqRaAt5gYbN3icamakqMrgtnIK
-         vqN2LaOJydzscNPzuOa78KHPJIPW5LUBqQGr1mPkx5sCiwkVP6ui/X/pXgTXNb6QsFpY
-         SJEy8GpkJLwjofpUNmusTSBhgE9udy8jEQqQnHWj+ti2C2NI3s37f3V6S3o7Cjf9DY3G
-         4z6g4m6dXTQtubiYllSmN8ILZgwNcOeGHMTh6Op27wWVJxgvDrIpegulxiZZ+S0HTfAi
-         /lBg==
+        bh=82hla+jnnTAa0JZoUXn9Fn/EcoC2SOr4qF0PvF/CMsc=;
+        b=ctGdLzdNXv+DsSyeMP5oWdWrXwrC8aeTDgvDco3eBQurn07MJd4UtHZZHPFNjVtaLk
+         ZNI6xk9n8IAqgvTAhfXJtDB1GhdkFsajNaQI+yj8+TpnYlNqbA4a4IRBXR1FlrLfnlsu
+         svRR6RLw8U3IRDzylIn+ShcpMr67xzHUQGjSVOifMMIlqgiOUz7zXvkzHflsDrdtHlaG
+         e+wB+ILbJqrNVYAfDzGHlI20J4oS08ewnYMbklvLaFeVAtne3yrDpeeZHRgaqYnpYRmR
+         8agPhfY5/gFCzYSH/2UuW0omuaLCUCRsTiNrShJTWrNpo+44nNZcOHVvmRKAmeT4XfPB
+         8iAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771868925; x=1772473725;
+        d=1e100.net; s=20230601; t=1771868959; x=1772473759;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fSMYf/SK8h8mWKDt+z1tL8b46vzqqkP2QabnWfLzpCM=;
-        b=pG6TKCD8tYRrrXlbZ1t57womMMP9ArR6XQUTzm/i3mT1F9ADeTwZp74O4d4gEB0GqO
-         JcUYS+UKRWj26XvsEZU3mPXzvy6D6leISNUD/j1cowhLOZy7xPQsi43fVD95+fRgczcu
-         ZIBysUSa0DF5ervbnFDKd7UBaTbFLvw9ktC179Ij3+ic2Y8vlZPQWaWpNmOiKD0JNeHi
-         fedUet5LF9rXfvUMcHpuumkABjzXB2MX7s3KK0BdLaoH+WA1A79WGrtQWFdt1yQzmqoc
-         9QYHtQOinOVUu/WfHhIlZBX722l3oriayivryB0U5v4TUzDjYR8QQaw6aOgbU2RlXbQl
-         NOOw==
-X-Gm-Message-State: AOJu0YyWZp1xkAjfsCcshZf8LTMLiZzkfXVEj1tzhSkl8R6iCGnKitFz
-	CkIHEsixaeJXx4mfS0d9wcRJ2vkC/JENMERcQBapW7xO5679Vr11GqDmA5jT6MpfeA==
-X-Gm-Gg: ATEYQzz4MoPKbi8CaYHW4yPEcNPuGrW/mfXFo6biYhSJC4PQuKn5yBtf7EGfWP/bhJ7
-	ghLfpEQUA87FAsqFZQCoJ/EohnBktsdhDiqhKwZwm18XriR7tnou22wu523/7Ux39iwpexcGCoY
-	pBlIEcBhxrHj/N1XdWM8GPPQU9VBgoV/7DdzVDA4tmbKtc2lSMRKQIpgByI2xFM3mxf6p7fRzNR
-	lwJgIYfxI/X/xsuA/L9Wua/FyzMeJcu7iHmiJ5NP+5PJ1n9VXTVGge2zkwti4JrI1NQOx1mDGMZ
-	cIHOap6qmXQn53oYI56sUIDs8VChJ5EbKMDmNnz62T8y1S6JxzuG6jMgS1Efi5NDJkmXcIhazg3
-	+B3EpWEResPfIrMh9U8QPddshVMnxl/2biyTGPPnwUTmUNn15sDvjVHthF/xq4NuHEzswBkU/3h
-	wB7VPKIJnv9FctX6xr0bX8XyedSom6sA7d5FviZM4L1qwPJi/Pl7kJAMaVUMU=
-X-Received: by 2002:a17:902:f60a:b0:2a9:5c9d:d1b with SMTP id d9443c01a7336-2ad75d58576mr3024205ad.9.1771868924554;
-        Mon, 23 Feb 2026 09:48:44 -0800 (PST)
+        bh=82hla+jnnTAa0JZoUXn9Fn/EcoC2SOr4qF0PvF/CMsc=;
+        b=FHG9afXLf9CCkRyUf15nKGt8K3QMTfTfBEfXCrqZQ3+V5eMoGRi2dCfKesptqMlGym
+         5YzxKGgpac4rMu6XCIb+W/eeNYX10Hf2mD+lLWVjSgIaX+upGGIUbJIxdw5+Q5MqBZSi
+         LAzfGnadB2TGuA2nSh0iUgoybSaIn6UPpvTnkcH1rzghc9iYeo03wr92lI4wDYuT68KK
+         mJrpPUZmeyqmezjVwvSGCS/iQyRsCoUcrLxO1UNHRhCs/MBEVKpVNrim3ZG3DnJ/ojB8
+         D1/+DstHTedNRHFfsjUn0n2B/in9TvKgRtg5vnjHqa2Fb5e6CYsMcIQ3MCMhoMis6i12
+         dYQA==
+X-Gm-Message-State: AOJu0YxLC0j7aHt8G+EF0yTWIFpL9Pdb6hSL7yUZ+1a41zSHKVSANT+o
+	8gJCVEZZkAD7/dWu9skkHxKgXk8eq8VHLs3K6od5pDGJj4dmTOmtMAMtBI0f7mL8uQ==
+X-Gm-Gg: ATEYQzwO3sLRraycf0H+t8OBEoQKUveKqha9rjgVJL+XvW3M8WtXo1MkG28FpgC5fxk
+	Ttsnf2G/iCbUu5Zwg9TARH8zRveNl33ArlsPN6m/6aibZt0a1r1wF+FeTee8do4WtWYpAaKltix
+	raTa8uL+9Gnsr7acPHj86/x/3QFsTv9t++rwb11aOtd2Z9swIohDDk/W7/zg8bCEeOlXdWxRZ9Z
+	mwfz3riecg+0Xp/FZwJBoqTO47xQl9FtblIH0GYRQP6RjxM07skae5RVMVHHjop64+lpxwYqFvY
+	HkFdh+BlWbw38b0tH0aPx9uhCK7VBY8iSek6Le6CTinKf1sP/ZUozAe12aQ9a/zjv/8HHQ4El6E
+	GzeNogi9OOqJz0WlXLVbOTLd2D8tWzkwAgn9v/iUBWDtUK/j9lwR7Hi3p1bnlW7MmZOt/S15Zzp
+	xZmHAI9zUjLJ0QASZ6cVmoQjNfYWf7p9Qt+BNIyj1XEJjVUDGE9cBqdXV3iZg=
+X-Received: by 2002:a17:903:15ce:b0:2a0:89b0:71d7 with SMTP id d9443c01a7336-2ad75d5c85bmr2738945ad.13.1771868958611;
+        Mon, 23 Feb 2026 09:49:18 -0800 (PST)
 Received: from google.com (33.75.230.35.bc.googleusercontent.com. [35.230.75.33])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad74f5e0f2sm81369715ad.31.2026.02.23.09.48.43
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3589d81cdbfsm14983853a91.7.2026.02.23.09.49.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Feb 2026 09:48:44 -0800 (PST)
-Date: Mon, 23 Feb 2026 09:48:39 -0800
+        Mon, 23 Feb 2026 09:49:18 -0800 (PST)
+Date: Mon, 23 Feb 2026 09:49:14 -0800
 From: Igor Pylypiv <ipylypiv@google.com>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
-Subject: Re: [PATCH v2 1/2] ata: libata-eh: correctly handle deferred qc
- timeouts
-Message-ID: <aZyS92-DhZga9kuD@google.com>
+Subject: Re: [PATCH v2 2/2] ata: libata-core: fix cancellation of a port
+ deferred qc work
+Message-ID: <aZyTGlcNJudRfd2v@google.com>
 References: <20260220221439.533771-1-dlemoal@kernel.org>
- <20260220221439.533771-2-dlemoal@kernel.org>
+ <20260220221439.533771-3-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -73,41 +73,14 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260220221439.533771-2-dlemoal@kernel.org>
+In-Reply-To: <20260220221439.533771-3-dlemoal@kernel.org>
 
-On Sat, Feb 21, 2026 at 07:14:38AM +0900, Damien Le Moal wrote:
-> A deferred qc may timeout while waiting for the device queue to drain
-> to be submitted. In such case, since the qc is not active,
-> ata_scsi_cmd_error_handler() ends up calling scsi_eh_finish_cmd(),
-> which frees the qc. But as the port deferred_qc field still references
-> this finished/freed qc, the deferred qc work may eventually attempt to
-> call ata_qc_issue() against this invalid qc, leading to errors such as
-> reported by UBSAN (syzbot run):
+On Sat, Feb 21, 2026 at 07:14:39AM +0900, Damien Le Moal wrote:
+> cancel_work_sync() is a sleeping function so it cannot be called with
+> the spin lock of a port being held. Move the call to this function in
+> ata_port_detach() after EH completes, with the port lock released,
+> together with other work cancellation calls.
 > 
-> UBSAN: shift-out-of-bounds in drivers/ata/libata-core.c:5166:24
-> shift exponent 4210818301 is too large for 64-bit type 'long long unsigned int'
-> ...
-> Call Trace:
->  <TASK>
->  __dump_stack lib/dump_stack.c:94 [inline]
->  dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
->  ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
->  __ubsan_handle_shift_out_of_bounds+0x279/0x2a0 lib/ubsan.c:494
->  ata_qc_issue.cold+0x38/0x9f drivers/ata/libata-core.c:5166
->  ata_scsi_deferred_qc_work+0x154/0x1f0 drivers/ata/libata-scsi.c:1679
->  process_one_work+0x9d7/0x1920 kernel/workqueue.c:3275
->  process_scheduled_works kernel/workqueue.c:3358 [inline]
->  worker_thread+0x5da/0xe40 kernel/workqueue.c:3439
->  kthread+0x370/0x450 kernel/kthread.c:467
->  ret_from_fork+0x754/0xd80 arch/x86/kernel/process.c:158
->  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
->  </TASK>
-> 
-> Fix this by checking if the qc of a timed out SCSI command is a deferred
-> one, and in such case, clear the port deferred_qc field and finish the
-> SCSI command with DID_TIME_OUT.
-> 
-> Reported-by: syzbot+1f77b8ca15336fff21ff@syzkaller.appspotmail.com
 > Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
