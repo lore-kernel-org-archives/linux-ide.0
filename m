@@ -1,81 +1,81 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2818B35C1B4
-	for <linux-ide@vger.kernel.org>; Mon, 23 Feb 2026 12:09:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE86335C1B4
+	for <linux-ide@vger.kernel.org>; Mon, 23 Feb 2026 12:09:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771848544; cv=none; b=pd5yW/PLFjQKGEuX0XEDCW5duJcE4bvzshAAAl43wQGS49pyn+I6xDVGWILO/Mhj2MWolJ0yovyw5PK34RqeukOovIoeHdpYzS8DtUJiDUUT7CZHJIWUevQUolZXZjq9oV7PmOtrrx7OwKTzeS4FZrLAJfmGb2ZgDPV+VtbFm2E=
+	t=1771848582; cv=none; b=lfn+3KHlX7nDXfLvLa76TfPG87a/+WEtZMSie1FJmk9YDjKqSrQwP/qDXWim9uMqHLJmXn44kRrmRaOsfM3vXGEG5Vo9FeXt3ZCohFD1LmhwD+7LMiXvSx39X98NFHBobQQL1rY0hepzvm3+E/B9akMa0d3x8E0+aEMecxZpirM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771848544; c=relaxed/simple;
-	bh=B3wpcop89NAfHCW5TKSLNyAbeOOgUgj25Yc0haV43ig=;
+	s=arc-20240116; t=1771848582; c=relaxed/simple;
+	bh=93wpzq27VSeZYgca0FEwSN5btWqnQHiYr015d2Ytz10=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=jg/N4QXW2zWxMaybY/cbqZEfnkCdPBFDwmSDE5FSebCoir+jsrXjLxghtnd02TpkFmpvEGgpl6pVKtjPoWt8eF3w1ImF+fycpibNQXw36mF1eCi0cJvPC8dJcpzpt7lSmgOQYWa31Q16A4inCidHk/6S8NL5Dl07gC3hSB4CY7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=oO46rIki; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fhqUllja; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=oO46rIki; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fhqUllja; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=h0jIBxj3chEX1YJMTO2HY2kRpsayiwO7Hh8yHjziyyThcsNfGu9vYcbeKpKndPjWCEPEVIyVfjJTCCytf7tFKdO/+OYvhmMRPE+yfgDyG0vztLm7NlbZCcYEYTgcoMtTLWVUThUTCooHIBsVjdGLDik5jf0pwtvHIJZA5/vEphY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MDcsPB1Q; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=uQDm22O2; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VAWm8trO; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=DrUcPpYc; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="oO46rIki";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fhqUllja";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="oO46rIki";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fhqUllja"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MDcsPB1Q";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="uQDm22O2";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VAWm8trO";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="DrUcPpYc"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7E2683EC6E;
-	Mon, 23 Feb 2026 12:09:01 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id EA8165BD12;
+	Mon, 23 Feb 2026 12:09:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1771848541; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1771848579; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Ck1L2Fq7VVn1v5bc/AMu9w6+iFxnAqX9cl0gW0LgBQk=;
-	b=oO46rIkiI9w7CZoIqihrqh9HzzWi+OQmOJcz4Z5oBLb7p4Suwf+BqlZYaop3NLwxiOazqs
-	+Wb98dG1vEiSBTq47BhCw8hCn6UdbaSs0sd2GkzGMMRp7NZFaW99jPNFaAz3l3uDTbbq56
-	d4Tv20PdKUezEgWEHuZ8VmzOL6XMtHk=
+	bh=6ne9bz9icA2RpvnD9mM6snq1tPivc6nD+FfaSPe0KnY=;
+	b=MDcsPB1QX4ovNrwrGueYB3sEEIM3c2C1wqYjp8/byjr1iEeIQn53TBV0Zpcs75Yd4wBJSZ
+	r9nADsUrCoZLjwcQDPFcZPFbEnwcVEmbHRaNuM5crj1N0dPA16eWPLvyZjIdq6N1y6WSfZ
+	7mpTUaGggQ2dgyYwHH6YuGoCnodwitc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1771848541;
+	s=susede2_ed25519; t=1771848579;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Ck1L2Fq7VVn1v5bc/AMu9w6+iFxnAqX9cl0gW0LgBQk=;
-	b=fhqUlljaLNCL1EA/Mq6oVmJaK+QgRbXSuCtw7+BLfmH5doi/Oz6ex1CktjJZrKPBWQRuLV
-	0IoRue+cbD7vwrBA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=oO46rIki;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=fhqUllja
+	bh=6ne9bz9icA2RpvnD9mM6snq1tPivc6nD+FfaSPe0KnY=;
+	b=uQDm22O2mDKDR+hfxSW2VVx5PY6D6KY8xdO8jFiTnEx7Kxr0J5CUWR1gHzQxDcSU6k2Gk4
+	jmcfrH2tZFgXYuBQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=VAWm8trO;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=DrUcPpYc
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1771848541; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1771848578; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Ck1L2Fq7VVn1v5bc/AMu9w6+iFxnAqX9cl0gW0LgBQk=;
-	b=oO46rIkiI9w7CZoIqihrqh9HzzWi+OQmOJcz4Z5oBLb7p4Suwf+BqlZYaop3NLwxiOazqs
-	+Wb98dG1vEiSBTq47BhCw8hCn6UdbaSs0sd2GkzGMMRp7NZFaW99jPNFaAz3l3uDTbbq56
-	d4Tv20PdKUezEgWEHuZ8VmzOL6XMtHk=
+	bh=6ne9bz9icA2RpvnD9mM6snq1tPivc6nD+FfaSPe0KnY=;
+	b=VAWm8trOZH3TgJhx6tUt+J4D05Ima5+i4emVB3+R4ivGTsFh8ncmWrKxHlGVKd/MMsv6Bh
+	joHAsgSr1pk00Cplp89yLAKFODMXSGiTjFrttNs3Y49ongxk0BqQpNQ0+o272GpLZL9bos
+	CR1Qt/P1IMQVolxUpOgurZZz8K0gVao=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1771848541;
+	s=susede2_ed25519; t=1771848578;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Ck1L2Fq7VVn1v5bc/AMu9w6+iFxnAqX9cl0gW0LgBQk=;
-	b=fhqUlljaLNCL1EA/Mq6oVmJaK+QgRbXSuCtw7+BLfmH5doi/Oz6ex1CktjJZrKPBWQRuLV
-	0IoRue+cbD7vwrBA==
+	bh=6ne9bz9icA2RpvnD9mM6snq1tPivc6nD+FfaSPe0KnY=;
+	b=DrUcPpYcMGYHk7d1IU4k7J3c34qExqalvBCkF9rXyjA0hKaClx2Q0ff/9nVPEHe78TtbE+
+	yTq/41yjQnYAzCDQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 675343EA68;
-	Mon, 23 Feb 2026 12:09:01 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D299F3EA68;
+	Mon, 23 Feb 2026 12:09:38 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 2AHIGF1DnGm6UgAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 23 Feb 2026 12:09:01 +0000
-Message-ID: <d6b0e434-b95d-44f6-9c4a-0153c80db091@suse.de>
-Date: Mon, 23 Feb 2026 13:09:01 +0100
+	id zwrsMoJDnGlRUwAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 23 Feb 2026 12:09:38 +0000
+Message-ID: <633f2603-6460-484a-88b2-d8da7b2ec858@suse.de>
+Date: Mon, 23 Feb 2026 13:09:38 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -83,15 +83,15 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] ata: libata-eh: correctly handle deferred qc
- timeouts
+Subject: Re: [PATCH v2 2/2] ata: libata-core: fix cancellation of a port
+ deferred qc work
 To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
  Niklas Cassel <cassel@kernel.org>
 References: <20260220221439.533771-1-dlemoal@kernel.org>
- <20260220221439.533771-2-dlemoal@kernel.org>
+ <20260220221439.533771-3-dlemoal@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260220221439.533771-2-dlemoal@kernel.org>
+In-Reply-To: <20260220221439.533771-3-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Rspamd-Action: no action
@@ -103,67 +103,40 @@ X-Spamd-Result: default: False [-4.51 / 50.00];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
 	MX_GOOD(-0.01)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
 	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
 	TO_DN_SOME(0.00)[];
 	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCVD_COUNT_TWO(0.00)[2];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Queue-Id: 7E2683EC6E
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCPT_COUNT_THREE(0.00)[3];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:dkim,suse.de:mid,suse.de:email]
+X-Rspamd-Queue-Id: EA8165BD12
 X-Spam-Flag: NO
 X-Spam-Score: -4.51
 X-Spam-Level: 
 
 On 2/20/26 23:14, Damien Le Moal wrote:
-> A deferred qc may timeout while waiting for the device queue to drain
-> to be submitted. In such case, since the qc is not active,
-> ata_scsi_cmd_error_handler() ends up calling scsi_eh_finish_cmd(),
-> which frees the qc. But as the port deferred_qc field still references
-> this finished/freed qc, the deferred qc work may eventually attempt to
-> call ata_qc_issue() against this invalid qc, leading to errors such as
-> reported by UBSAN (syzbot run):
+> cancel_work_sync() is a sleeping function so it cannot be called with
+> the spin lock of a port being held. Move the call to this function in
+> ata_port_detach() after EH completes, with the port lock released,
+> together with other work cancellation calls.
 > 
-> UBSAN: shift-out-of-bounds in drivers/ata/libata-core.c:5166:24
-> shift exponent 4210818301 is too large for 64-bit type 'long long unsigned int'
-> ...
-> Call Trace:
->   <TASK>
->   __dump_stack lib/dump_stack.c:94 [inline]
->   dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
->   ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
->   __ubsan_handle_shift_out_of_bounds+0x279/0x2a0 lib/ubsan.c:494
->   ata_qc_issue.cold+0x38/0x9f drivers/ata/libata-core.c:5166
->   ata_scsi_deferred_qc_work+0x154/0x1f0 drivers/ata/libata-scsi.c:1679
->   process_one_work+0x9d7/0x1920 kernel/workqueue.c:3275
->   process_scheduled_works kernel/workqueue.c:3358 [inline]
->   worker_thread+0x5da/0xe40 kernel/workqueue.c:3439
->   kthread+0x370/0x450 kernel/kthread.c:467
->   ret_from_fork+0x754/0xd80 arch/x86/kernel/process.c:158
->   ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
->   </TASK>
-> 
-> Fix this by checking if the qc of a timed out SCSI command is a deferred
-> one, and in such case, clear the port deferred_qc field and finish the
-> SCSI command with DID_TIME_OUT.
-> 
-> Reported-by: syzbot+1f77b8ca15336fff21ff@syzkaller.appspotmail.com
 > Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/libata-eh.c | 22 +++++++++++++++++++---
->   1 file changed, 19 insertions(+), 3 deletions(-)
+>   drivers/ata/libata-core.c | 8 +++-----
+>   1 file changed, 3 insertions(+), 5 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
