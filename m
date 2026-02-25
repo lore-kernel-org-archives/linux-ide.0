@@ -1,58 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D118327FB2A;
-	Wed, 25 Feb 2026 14:52:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FA5D31196C
+	for <linux-ide@vger.kernel.org>; Wed, 25 Feb 2026 18:51:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772031148; cv=none; b=Bn+9Ie7SG8jStEk8xC9/qmFM9NEhSSkKqRCgHWo9aUVBPbjqHrA7UBZQWdvj1jyd2s0413MJWmbC0dondPdnZZZsJpofS6kqsybWRxDo3PbA+QjBcn6PcyxfWw/4NUe9KGuIl80zRMqkNRLF/FpfjHZ0iGwWsqaPnUW6Zd9a5jk=
+	t=1772045476; cv=none; b=fDW9soenEFDqseXypUSjK5M1hpVKqoi9aqPV6DXBWAJHq44rNXPoUfYgsVxamyEuADdaFb+7NLAxGDN3rQiu7G8TYNMAD2ALCSgHL93u4SysyfsstGzVAI34eeYU5MwTm4eSsHwII3xdA0KH1Pm1KlhKCGnam4KpdA4LsJXSt7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772031148; c=relaxed/simple;
-	bh=eaxgYMDu4b1CCqhGuli8mqFA6url1u1XPz3Kqvl771s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IofsTX2qh10+h5M2WUVDgJ8eOJ0/GmQi6kvZdvtER28zMT1SbJ9NpmJXftgyzqPw3N0RGF1KSjMlQJxY/R7WRgVO8VGm32ceNWCd8O+yK3Q5PaKg3z0CFYExNGiPkMsAw6jQdRMrcdNJmmO8m777nyfCJNuwU+chciM65X5KlYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KoAeoXkh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772045476; c=relaxed/simple;
+	bh=iC9R+XaSqnX3G0/QdOnZn6SKh6fj6IECa90Qwrj0d/0=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=DZxiTnm7G9uonRGFYsrAPmY8PBsQ7eeZOh8tcmjjUp0SJwA1+jKtaEE0/wcoP7Z475Z/aSZYqDQno9opRVaCqhttzG4alxj2Pm0kusJMlz22ljiMm1g+o6HS29qjLyqiJLea1EhDucVZl+EzQEYvdwdyj02NirHKm6jAGnNDoeM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U38LHtVX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KoAeoXkh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A3BEC2BC86;
-	Wed, 25 Feb 2026 14:52:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U38LHtVX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20C20C116D0;
+	Wed, 25 Feb 2026 18:51:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772031148;
-	bh=eaxgYMDu4b1CCqhGuli8mqFA6url1u1XPz3Kqvl771s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KoAeoXkhhl1bznc4VYkRWZlAg2ppjiWIUk0dnyKZ/zNxMFttbW7QyxEtB6pG5zQjx
-	 kRRp3jq7uA9gplfRPwbQrmmtlzahdHgrT48RPrE5hr9qEsas/hD22oR8nBpFmdJIz9
-	 nKF71nxtE2uzxbqki8A49/NOqHEKaD1UetwZWfwNEopBdyqg0SRSjMIfs1BlmAd72/
-	 S1D/QAw/CU+JLfxhBZKU86lpGi2wPVQg1fPzvTlnR/ls1nbYymevb3TDDKOiQii4u/
-	 +yj1cu91PsamtV8cHHpRoUJyc5VGvw0IdmN62fKfAcoiMma3V/oyST85F6eJ5Ymxe7
-	 N1uGyXNaHKg+g==
-Date: Wed, 25 Feb 2026 15:52:23 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: LSF/MM/BPF: 2026: (V)FS: First Round of Invites Sent
-Message-ID: <20260225-aufeinander-kummervoll-1953a06beae9@brauner>
-References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
+	s=k20201202; t=1772045476;
+	bh=iC9R+XaSqnX3G0/QdOnZn6SKh6fj6IECa90Qwrj0d/0=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=U38LHtVXadGf8gx3U6XCKKc301UVKZWTtwcWN4I9J/C0ApgF3Ko3OXZJqJSC+ejJ5
+	 7SZfJJUFJnjYyANTz3xlurssprYmJp/DwMKT2vmvoI/vCcrDndNmOp9g26Nda6dU6s
+	 1hm9s3yBw9gRRTjRW8se/G+Y8zhKjIhmZgm5ioNZudtsA/QFnCcQmDEUHiAgdujCnY
+	 Zaxrfyz5eWKhBEymoMB1l6C1gkd9pRL31uenAQ4b8KNPo7oPM8Ne+HU7jPKToS0y+i
+	 4EArWs8iuRVEZKcRkjZfBdhS6g7bmzQMDla67BSwcKCLTJgzWBuz90d0Ytvq4Xu1ul
+	 T7gTSquztNwLA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 400923809A90;
+	Wed, 25 Feb 2026 18:51:22 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 7.0-rc2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20260225141956.3947017-1-cassel@kernel.org>
+References: <20260225141956.3947017-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20260225141956.3947017-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.0-rc2
+X-PR-Tracked-Commit-Id: 55db009926634b20955bd8abbee921adbc8d2cb4
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: d9d32e5bd5a4e57675f2b70ddf73c3dc5cf44fc2
+Message-Id: <177204548083.869939.9055625184506234618.pr-tracker-bot@kernel.org>
+Date: Wed, 25 Feb 2026 18:51:20 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
 
-Hey everyone,
+The pull request you sent on Wed, 25 Feb 2026 15:19:56 +0100:
 
-I sent out the first round of invites for the (V)FS track.
-The first batch is also the largest batch. We will send out a set of
-smaller invites later.
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.0-rc2
 
-Note that the first batch includes everyone that indicated that they
-would require a VISA.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/d9d32e5bd5a4e57675f2b70ddf73c3dc5cf44fc2
 
-Thanks!
-Christian
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
