@@ -1,79 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41D573D413A
-	for <linux-ide@vger.kernel.org>; Wed, 25 Feb 2026 14:20:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D118327FB2A;
+	Wed, 25 Feb 2026 14:52:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772029203; cv=none; b=C3ka5NG5XQ2vFbXIT28Hgo8uIUYKwSTt03XEkxyfw6z0RKBvq+QBrSHSxRAvLS1jthaA7rAZhqM/x5w5kfCaaOD0XwbEOCgbgDgTD0x2SZSONDp3weT4PsCbyoP9rNnYX783wA9RWEHmFoVdznDx4BMHh3uKpSfp/mLkBxtGfEM=
+	t=1772031148; cv=none; b=Bn+9Ie7SG8jStEk8xC9/qmFM9NEhSSkKqRCgHWo9aUVBPbjqHrA7UBZQWdvj1jyd2s0413MJWmbC0dondPdnZZZsJpofS6kqsybWRxDo3PbA+QjBcn6PcyxfWw/4NUe9KGuIl80zRMqkNRLF/FpfjHZ0iGwWsqaPnUW6Zd9a5jk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772029203; c=relaxed/simple;
-	bh=XVVkpMLUS1h4CkEHZbu7Kn8c4zKoEoycFgcT0pmT7z0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=vDtLcaqMfvXCKdcgQIrXmEUQ8u+SL15K4I0kXLSw7FrhIwBW7tPS1l4fyQKKaHK1bJUEoll1Vu+a1LVkRS9SrR7dX2nA00VUl+s/MeISD5AzM4JU787HBBgq0q7MLI/LpjX6MdluGGBsJ86R1pJl1i5Dga8W72ndezyEKjvf3Gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ahA938Z/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772031148; c=relaxed/simple;
+	bh=eaxgYMDu4b1CCqhGuli8mqFA6url1u1XPz3Kqvl771s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IofsTX2qh10+h5M2WUVDgJ8eOJ0/GmQi6kvZdvtER28zMT1SbJ9NpmJXftgyzqPw3N0RGF1KSjMlQJxY/R7WRgVO8VGm32ceNWCd8O+yK3Q5PaKg3z0CFYExNGiPkMsAw6jQdRMrcdNJmmO8m777nyfCJNuwU+chciM65X5KlYs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KoAeoXkh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ahA938Z/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E16EDC19423;
-	Wed, 25 Feb 2026 14:20:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KoAeoXkh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A3BEC2BC86;
+	Wed, 25 Feb 2026 14:52:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772029203;
-	bh=XVVkpMLUS1h4CkEHZbu7Kn8c4zKoEoycFgcT0pmT7z0=;
-	h=From:To:Cc:Subject:Date:From;
-	b=ahA938Z/Rhgu+fA7J2WxZYHZP/n7gRtaioGn8LHeQeHLPUym4L+Z7gciFdMkPsEjr
-	 zWvMrC3TX6HB7KONDKtznR8udzSeB+1wZSvo6y8jHVaNzSXFKwS9IEbWbYYc4koQfJ
-	 WO/kUQQnXJeMLvtjXJ/SzXcLm2QVYCFoXm/xsJUqMG9L9B95kEhSpE9yp/kJHWaJfy
-	 NvJAtq5ZKUipJ6KPAH3Q3dFTiLoTPXJfKQtKwBON/sV+Q1z1d8qWRkuLtvCXggMi/t
-	 QuMcP2jDXvPnFxzCJfsxuWUOJD4//hbbY3zptTKQCpr+TVLjjtvo697oetuvYeQ1nm
-	 7h3Ay6InoPuZQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata fixes for 7.0-rc2
-Date: Wed, 25 Feb 2026 15:19:56 +0100
-Message-ID: <20260225141956.3947017-1-cassel@kernel.org>
-X-Mailer: git-send-email 2.53.0
+	s=k20201202; t=1772031148;
+	bh=eaxgYMDu4b1CCqhGuli8mqFA6url1u1XPz3Kqvl771s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KoAeoXkhhl1bznc4VYkRWZlAg2ppjiWIUk0dnyKZ/zNxMFttbW7QyxEtB6pG5zQjx
+	 kRRp3jq7uA9gplfRPwbQrmmtlzahdHgrT48RPrE5hr9qEsas/hD22oR8nBpFmdJIz9
+	 nKF71nxtE2uzxbqki8A49/NOqHEKaD1UetwZWfwNEopBdyqg0SRSjMIfs1BlmAd72/
+	 S1D/QAw/CU+JLfxhBZKU86lpGi2wPVQg1fPzvTlnR/ls1nbYymevb3TDDKOiQii4u/
+	 +yj1cu91PsamtV8cHHpRoUJyc5VGvw0IdmN62fKfAcoiMma3V/oyST85F6eJ5Ymxe7
+	 N1uGyXNaHKg+g==
+Date: Wed, 25 Feb 2026 15:52:23 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: LSF/MM/BPF: 2026: (V)FS: First Round of Invites Sent
+Message-ID: <20260225-aufeinander-kummervoll-1953a06beae9@brauner>
+References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
 
-Linus,
+Hey everyone,
 
-The following changes since commit 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f:
+I sent out the first round of invites for the (V)FS track.
+The first batch is also the largest batch. We will send out a set of
+smaller invites later.
 
-  Linux 7.0-rc1 (2026-02-22 13:18:59 -0800)
+Note that the first batch includes everyone that indicated that they
+would require a VISA.
 
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.0-rc2
-
-for you to fetch changes up to 55db009926634b20955bd8abbee921adbc8d2cb4:
-
-  ata: libata-core: fix cancellation of a port deferred qc work (2026-02-24 09:38:55 +0900)
-
-----------------------------------------------------------------
-ata fixes for 7.0-rc2
-
- - The newly introduced feature that issues a deferred (non-NCQ) command
-   from a workqueue, forgot to consider the case where the deferred QC
-   times out. Fix the code to take timeouts into consideration, which
-   avoids a use after free (Damien)
-
- - The newly introduced feature that issues a deferred (non-NCQ) command
-   from a workqueue, when unloading the module, calls cancel_work_sync(),
-   a function that can sleep, while holding a spin lock. Move the function
-   call outside the lock (Damien)
-
-----------------------------------------------------------------
-Damien Le Moal (2):
-      ata: libata-eh: correctly handle deferred qc timeouts
-      ata: libata-core: fix cancellation of a port deferred qc work
-
- drivers/ata/libata-core.c |  8 +++-----
- drivers/ata/libata-eh.c   | 22 +++++++++++++++++++---
- 2 files changed, 22 insertions(+), 8 deletions(-)
+Thanks!
+Christian
