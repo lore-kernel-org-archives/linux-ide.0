@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14CD4296BD3;
-	Sun,  1 Mar 2026 01:32:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7962A29D270;
+	Sun,  1 Mar 2026 01:32:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328739; cv=none; b=nVotWvVYFahkwE8EtbyMy7bu1vQgtgC1ND5EqP1H0TLUCK7FwwNS1mAmtDH4UWKDFEof5mBZ5DJPjqkrdhsawOJlXWkcYCASOBPGSIi0EMDVuac46oiANC6xRNewWR+ReMYW0bXOXpZeekOpJbtA/cTv0DTiYYNxRhRXB0trtPY=
+	t=1772328753; cv=none; b=emFgAnPZ/qllANPOejAHuhF5akMefILA/E0wm6ZpJVhLNFgzo6mgvbX8dws9bDJo5LCkOftsbvteNZ8f00j6kD/5y01Zy6jWzWrKnLMvgDDrv1hX8MxxDWcnjdty/0Dpsw3lJpzskpEhuwFcrrFplSAlKbGDQA03ecmkG2L7q+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328739; c=relaxed/simple;
-	bh=gdV4eCxuaVLrpflB3GoOpp5muJ0kwbUwr8FzetZNizw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CyXroPGlDlJneFMYFVt7rJxlh044iQMkGD15DWr0ef6vaBI6uN7IoTvWsD/wO3cx81LgQY4ykNSg5Vx+t204/fSVqB04QVe/9VCnWTS/oweOHwXnVfwDsCiNva3e95s+vicoTuRGTE+x8PWHIuiphcj2V5/f4JqRFxdybHFfGgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Munv6MtW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772328753; c=relaxed/simple;
+	bh=UkhvmIiAG6hZYkB1uI1VQgPNN0Yr8xhIA8BCBdXCNHI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rv9t1DWnSN2qnjKFerZMghS28+R21VWOuvxhyj1Ba3IDVLC/eNPz/f7H51dyORVn7DLdpFe8E4cfjacAW5QckdTPh0Ix4GsGRXsw/B7VCODKXG5I05bShikOzBioFSR2o5hfMTacXjjnc3y34/ZIxMxYzXGXO+N27Z/0Wl6NiBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sHSLuemJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Munv6MtW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C86EC19421;
-	Sun,  1 Mar 2026 01:32:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sHSLuemJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 836BAC19421;
+	Sun,  1 Mar 2026 01:32:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328739;
-	bh=gdV4eCxuaVLrpflB3GoOpp5muJ0kwbUwr8FzetZNizw=;
+	s=k20201202; t=1772328753;
+	bh=UkhvmIiAG6hZYkB1uI1VQgPNN0Yr8xhIA8BCBdXCNHI=;
 	h=From:To:Cc:Subject:Date:From;
-	b=Munv6MtWTHviozzMnqdcRyI28uKAJNCKDmZgYs++0DC+BY7Qy75FcBq5N4wLRLAM4
-	 qavSifXEwYz8Q3uw1FzsUfNTjjKL3gIs3G0Pm7AASWDH4BFRKRJUpEB+7CLg5B1mLm
-	 jdVqinkBOqdA+cKeGaihT3VIFVMz4UjhBLa6jWeL5QLyjHDTigTSxRWnnfWgPQ6cnP
-	 VM7ZInyE7SY7DyVj8GIJB8uREReDKAULJoYjLiwbKtJbeTlj1lZUO2ACSMGMYIIZk5
-	 qL7FYtzClmwXwin21YLlhRbKICIS6xb9r+iEilQ7xbqNYGoVE/ZOWVHjb6feCKdZ0z
-	 x2gNRlqTYDgoQ==
+	b=sHSLuemJC6Vku4/Zt5jV9TKiJkiJqpqgyQgCaGDJYDohuoovrmaeQwbcPjUTvMA3D
+	 a1KtMAo6iuxU6PaGV++XQlUvnRwkm+R3M90mfwWM9lQ+GUNrbMXja56T2kMYiGqWu+
+	 cyVPRsFohwo7VJhuJEU/G1gX3CBfdSuMSB60RjsTQRgFpmkWS4j7yKisSToOsNyX/a
+	 wlNxzIDcaLvOZoZukB7BgG1ggwQ7Z96x9bwg9rzaIybmmGFdOKJ0CtwSXNsDZRMxE3
+	 9Pg6nASSkSDOsWsSw5L7liw+/ghPehlHbPr5eg7bLFPTcGbaZyZmeH5d1PVU8px/aJ
+	 EoMI/M8q7fBeA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	dlemoal@kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>,
+Cc: Xingui Yang <yangxingui@huawei.com>,
+	Igor Pylypiv <ipylypiv@google.com>,
+	Niklas Cassel <cassel@kernel.org>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	John Garry <john.g.garry@oracle.com>,
-	Igor Pylypiv <ipylypiv@google.com>,
 	linux-ide@vger.kernel.org
-Subject: FAILED: Patch "ata: libata-scsi: refactor ata_scsi_translate()" failed to apply to 6.6-stable tree
-Date: Sat, 28 Feb 2026 20:32:16 -0500
-Message-ID: <20260301013217.1691188-1-sashal@kernel.org>
+Subject: FAILED: Patch "ata: libata-scsi: avoid Non-NCQ command starvation" failed to apply to 6.6-stable tree
+Date: Sat, 28 Feb 2026 20:32:30 -0500
+Message-ID: <20260301013231.1691497-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -57,158 +58,272 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From bb3a8154b1a1dc2c86d037482c0a2cf9186829ed Mon Sep 17 00:00:00 2001
+From 0ea84089dbf62a92dc7889c79e6b18fc89260808 Mon Sep 17 00:00:00 2001
 From: Damien Le Moal <dlemoal@kernel.org>
-Date: Wed, 17 Dec 2025 14:05:25 +0900
-Subject: [PATCH] ata: libata-scsi: refactor ata_scsi_translate()
+Date: Wed, 17 Dec 2025 16:40:48 +0900
+Subject: [PATCH] ata: libata-scsi: avoid Non-NCQ command starvation
 
-Factor out of ata_scsi_translate() the code handling queued command
-deferral using the port qc_defer callback and issuing the queued
-command with ata_qc_issue() into the new function ata_scsi_qc_issue(),
-and simplify the goto used in ata_scsi_translate().
-While at it, also add a lockdep annotation to check that the port lock
-is held when ata_scsi_translate() is called.
+When a non-NCQ command is issued while NCQ commands are being executed,
+ata_scsi_qc_issue() indicates to the SCSI layer that the command issuing
+should be deferred by returning SCSI_MLQUEUE_XXX_BUSY.  This command
+deferring is correct and as mandated by the ACS specifications since
+NCQ and non-NCQ commands cannot be mixed.
 
-No functional changes.
+However, in the case of a host adapter using multiple submission queues,
+when the target device is under a constant load of NCQ commands, there
+are no guarantees that requeueing the non-NCQ command will be executed
+later and it may be deferred again repeatedly as other submission queues
+can constantly issue NCQ commands from different CPUs ahead of the
+non-NCQ command. This can lead to very long delays for the execution of
+non-NCQ commands, and even complete starvation for these commands in the
+worst case scenario.
 
+Since the block layer and the SCSI layer do not distinguish between
+queueable (NCQ) and non queueable (non-NCQ) commands, libata-scsi SAT
+implementation must ensure forward progress for non-NCQ commands in the
+presence of NCQ command traffic. This is similar to what SAS HBAs with a
+hardware/firmware based SAT implementation do.
+
+Implement such forward progress guarantee by limiting requeueing of
+non-NCQ commands from ata_scsi_qc_issue(): when a non-NCQ command is
+received and NCQ commands are in-flight, do not force a requeue of the
+non-NCQ command by returning SCSI_MLQUEUE_XXX_BUSY and instead return 0
+to indicate that the command was accepted but hold on to the qc using
+the new deferred_qc field of struct ata_port.
+
+This deferred qc will be issued using the work item deferred_qc_work
+running the function ata_scsi_deferred_qc_work() once all in-flight
+commands complete, which is checked with the port qc_defer() callback
+return value indicating that no further delay is necessary. This check
+is done using the helper function ata_scsi_schedule_deferred_qc() which
+is called from ata_scsi_qc_complete(). This thus excludes this mechanism
+from all internal non-NCQ commands issued by ATA EH.
+
+When a port deferred_qc is non NULL, that is, the port has a command
+waiting for the device queue to drain, the issuing of all incoming
+commands (both NCQ and non-NCQ) is deferred using the regular busy
+mechanism. This simplifies the code and also avoids potential denial of
+service problems if a user issues too many non-NCQ commands.
+
+Finally, whenever ata EH is scheduled, regardless of the reason, a
+deferred qc is always requeued so that it can be retried once EH
+completes. This is done by calling the function
+ata_scsi_requeue_deferred_qc() from ata_eh_set_pending(). This avoids
+the need for any special processing for the deferred qc in case of NCQ
+error, link or device reset, or device timeout.
+
+Reported-by: Xingui Yang <yangxingui@huawei.com>
+Reported-by: Igor Pylypiv <ipylypiv@google.com>
+Fixes: bdb01301f3ea ("scsi: Add host and host template flag 'host_tagset'")
 Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Niklas Cassel <cassel@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: John Garry <john.g.garry@oracle.com>
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+Tested-by: Igor Pylypiv <ipylypiv@google.com>
+Tested-by: Xingui Yang <yangxingui@huawei.com>
 ---
- drivers/ata/libata-scsi.c | 81 ++++++++++++++++++++++++---------------
- 1 file changed, 50 insertions(+), 31 deletions(-)
+ drivers/ata/libata-core.c |  5 +++
+ drivers/ata/libata-eh.c   |  6 +++
+ drivers/ata/libata-scsi.c | 93 +++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata.h      |  2 +
+ include/linux/libata.h    |  3 ++
+ 5 files changed, 109 insertions(+)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index b961054817845..e888f24456929 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5644,6 +5644,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 	mutex_init(&ap->scsi_scan_mutex);
+ 	INIT_DELAYED_WORK(&ap->hotplug_task, ata_scsi_hotplug);
+ 	INIT_DELAYED_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
++	INIT_WORK(&ap->deferred_qc_work, ata_scsi_deferred_qc_work);
+ 	INIT_LIST_HEAD(&ap->eh_done_q);
+ 	init_waitqueue_head(&ap->eh_wait_q);
+ 	init_completion(&ap->park_req_pending);
+@@ -6256,6 +6257,10 @@ static void ata_port_detach(struct ata_port *ap)
+ 		}
+ 	}
+ 
++	/* Make sure the deferred qc work finished. */
++	cancel_work_sync(&ap->deferred_qc_work);
++	WARN_ON(ap->deferred_qc);
++
+ 	/* Tell EH to disable all devices */
+ 	ap->pflags |= ATA_PFLAG_UNLOADING;
+ 	ata_port_schedule_eh(ap);
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index f4c9541d1910e..72a22b6c96821 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -918,6 +918,12 @@ static void ata_eh_set_pending(struct ata_port *ap, bool fastdrain)
+ 
+ 	ap->pflags |= ATA_PFLAG_EH_PENDING;
+ 
++	/*
++	 * If we have a deferred qc, requeue it so that it is retried once EH
++	 * completes.
++	 */
++	ata_scsi_requeue_deferred_qc(ap);
++
+ 	if (!fastdrain)
+ 		return;
+ 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d388a4ff9ae44..be620bc045848 100644
+index be620bc045848..e7898bf56308d 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -1691,6 +1691,42 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 	ata_qc_done(qc);
+@@ -1658,8 +1658,77 @@ static void ata_qc_done(struct ata_queued_cmd *qc)
+ 	done(cmd);
  }
  
-+static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
++void ata_scsi_deferred_qc_work(struct work_struct *work)
 +{
-+	int ret;
++	struct ata_port *ap =
++		container_of(work, struct ata_port, deferred_qc_work);
++	struct ata_queued_cmd *qc;
++	unsigned long flags;
 +
-+	if (!ap->ops->qc_defer)
-+		goto issue;
++	spin_lock_irqsave(ap->lock, flags);
 +
-+	/* Check if the command needs to be deferred. */
-+	ret = ap->ops->qc_defer(qc);
-+	switch (ret) {
-+	case 0:
-+		break;
-+	case ATA_DEFER_LINK:
-+		ret = SCSI_MLQUEUE_DEVICE_BUSY;
-+		break;
-+	case ATA_DEFER_PORT:
-+		ret = SCSI_MLQUEUE_HOST_BUSY;
-+		break;
-+	default:
-+		WARN_ON_ONCE(1);
-+		ret = SCSI_MLQUEUE_HOST_BUSY;
-+		break;
++	/*
++	 * If we still have a deferred qc and we are not in EH, issue it. In
++	 * such case, we should not need any more deferring the qc, so warn if
++	 * qc_defer() says otherwise.
++	 */
++	qc = ap->deferred_qc;
++	if (qc && !ata_port_eh_scheduled(ap)) {
++		WARN_ON_ONCE(ap->ops->qc_defer(qc));
++		ap->deferred_qc = NULL;
++		ata_qc_issue(qc);
 +	}
 +
-+	if (ret) {
-+		/* Force a requeue of the command to defer its execution. */
-+		ata_qc_free(qc);
-+		return ret;
-+	}
-+
-+issue:
-+	ata_qc_issue(qc);
-+
-+	return 0;
++	spin_unlock_irqrestore(ap->lock, flags);
 +}
 +
- /**
-  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
-  *	@dev: ATA device to which the command is addressed
-@@ -1714,66 +1750,49 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
-  *	spin_lock_irqsave(host lock)
-  *
-  *	RETURNS:
-- *	0 on success, SCSI_ML_QUEUE_DEVICE_BUSY if the command
-- *	needs to be deferred.
-+ *	0 on success, SCSI_ML_QUEUE_DEVICE_BUSY or SCSI_MLQUEUE_HOST_BUSY if the
-+ *	command needs to be deferred.
-  */
- static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 			      ata_xlat_func_t xlat_func)
- {
- 	struct ata_port *ap = dev->link->ap;
- 	struct ata_queued_cmd *qc;
--	int rc;
- 
++void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
++{
++	struct ata_queued_cmd *qc = ap->deferred_qc;
++	struct scsi_cmnd *scmd;
++
 +	lockdep_assert_held(ap->lock);
 +
 +	/*
-+	 * ata_scsi_qc_new() calls scsi_done(cmd) in case of failure. So we
-+	 * have nothing further to do when allocating a qc fails.
++	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
++	 * do not try to be smart about what to do with this deferred command
++	 * and simply retry it by completing it with DID_SOFT_ERROR.
 +	 */
- 	qc = ata_scsi_qc_new(dev, cmd);
- 	if (!qc)
--		goto err_mem;
-+		return 0;
- 
- 	/* data is present; dma-map it */
- 	if (cmd->sc_data_direction == DMA_FROM_DEVICE ||
- 	    cmd->sc_data_direction == DMA_TO_DEVICE) {
- 		if (unlikely(scsi_bufflen(cmd) < 1)) {
- 			ata_dev_warn(dev, "WARNING: zero len r/w req\n");
--			goto err_did;
-+			cmd->result = (DID_ERROR << 16);
-+			goto done;
- 		}
- 
- 		ata_sg_init(qc, scsi_sglist(cmd), scsi_sg_count(cmd));
--
- 		qc->dma_dir = cmd->sc_data_direction;
++	if (!qc)
++		return;
++
++	scmd = qc->scsicmd;
++	ap->deferred_qc = NULL;
++	ata_qc_free(qc);
++	scmd->result = (DID_SOFT_ERROR << 16);
++	scsi_done(scmd);
++}
++
++static void ata_scsi_schedule_deferred_qc(struct ata_port *ap)
++{
++	struct ata_queued_cmd *qc = ap->deferred_qc;
++
++	lockdep_assert_held(ap->lock);
++
++	/*
++	 * If we have a deferred qc, then qc_defer() is defined and we can use
++	 * this callback to determine if this qc is good to go, unless EH has
++	 * been scheduled.
++	 */
++	if (!qc)
++		return;
++
++	if (ata_port_eh_scheduled(ap)) {
++		ata_scsi_requeue_deferred_qc(ap);
++		return;
++	}
++	if (!ap->ops->qc_defer(qc))
++		queue_work(system_highpri_wq, &ap->deferred_qc_work);
++}
++
+ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ {
++	struct ata_port *ap = qc->ap;
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 	u8 *cdb = cmd->cmnd;
+ 	bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
+@@ -1689,6 +1758,8 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
  	}
  
- 	qc->complete_fn = ata_scsi_qc_complete;
- 
- 	if (xlat_func(qc))
--		goto early_finish;
--
--	if (ap->ops->qc_defer) {
--		if ((rc = ap->ops->qc_defer(qc)))
--			goto defer;
--	}
--
--	/* select device, send command to hardware */
--	ata_qc_issue(qc);
-+		goto done;
- 
--	return 0;
--
--early_finish:
--	ata_qc_free(qc);
--	scsi_done(cmd);
--	return 0;
-+	return ata_scsi_qc_issue(ap, qc);
- 
--err_did:
-+done:
- 	ata_qc_free(qc);
--	cmd->result = (DID_ERROR << 16);
- 	scsi_done(cmd);
--err_mem:
- 	return 0;
--
--defer:
--	ata_qc_free(qc);
--	if (rc == ATA_DEFER_LINK)
--		return SCSI_MLQUEUE_DEVICE_BUSY;
--	else
--		return SCSI_MLQUEUE_HOST_BUSY;
+ 	ata_qc_done(qc);
++
++	ata_scsi_schedule_deferred_qc(ap);
  }
  
- /**
+ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
+@@ -1698,6 +1769,16 @@ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 	if (!ap->ops->qc_defer)
+ 		goto issue;
+ 
++	/*
++	 * If we already have a deferred qc, then rely on the SCSI layer to
++	 * requeue and defer all incoming commands until the deferred qc is
++	 * processed, once all on-going commands complete.
++	 */
++	if (ap->deferred_qc) {
++		ata_qc_free(qc);
++		return SCSI_MLQUEUE_DEVICE_BUSY;
++	}
++
+ 	/* Check if the command needs to be deferred. */
+ 	ret = ap->ops->qc_defer(qc);
+ 	switch (ret) {
+@@ -1716,6 +1797,18 @@ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 	}
+ 
+ 	if (ret) {
++		/*
++		 * We must defer this qc: if this is not an NCQ command, keep
++		 * this qc as a deferred one and report to the SCSI layer that
++		 * we issued it so that it is not requeued. The deferred qc will
++		 * be issued with the port deferred_qc_work once all on-going
++		 * commands complete.
++		 */
++		if (!ata_is_ncq(qc->tf.protocol)) {
++			ap->deferred_qc = qc;
++			return 0;
++		}
++
+ 		/* Force a requeue of the command to defer its execution. */
+ 		ata_qc_free(qc);
+ 		return ret;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 89dd0ae2b9918..9b4e578ad07ec 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -166,6 +166,8 @@ void ata_scsi_sdev_config(struct scsi_device *sdev);
+ int ata_scsi_dev_config(struct scsi_device *sdev, struct queue_limits *lim,
+ 		struct ata_device *dev);
+ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev);
++void ata_scsi_deferred_qc_work(struct work_struct *work);
++void ata_scsi_requeue_deferred_qc(struct ata_port *ap);
+ 
+ /* libata-eh.c */
+ extern unsigned int ata_internal_cmd_timeout(struct ata_device *dev, u8 cmd);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index aa88244f3d838..d612d4c1660a7 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -899,6 +899,9 @@ struct ata_port {
+ 	u64			qc_active;
+ 	int			nr_active_links; /* #links with active qcs */
+ 
++	struct work_struct	deferred_qc_work;
++	struct ata_queued_cmd	*deferred_qc;
++
+ 	struct ata_link		link;		/* host default link */
+ 	struct ata_link		*slave_link;	/* see ata_slave_link_init() */
+ 
 -- 
 2.51.0
 
