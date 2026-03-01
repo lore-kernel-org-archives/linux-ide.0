@@ -1,38 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7AEF2C08AD;
-	Sun,  1 Mar 2026 01:53:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1F7A2F4A18;
+	Sun,  1 Mar 2026 02:00:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772330000; cv=none; b=Qd8POn9YnLjfIUi59t0K1557sqHx1qWYyOsYpza9B6oML2jipQNfbEmOdV7ao/vc8/9mEpVa/E/hXOdINJZ0fSg98jgb+KJENLrSkcqWt6JmwIdoySKTNdCipBn+8Az0VAUiC4BrRuuF7YBhTqgBgGcfYpIF6rq29DLWVS2KK9Q=
+	t=1772330410; cv=none; b=XbBpfjKWKrbJY8b5SjMs2uCPggV7O7G+yrmqFVrl2IvBZbo+Jq6Jk96luGVQ5lICuYwsEJaM7B5OZQzmC2M7hrPwLd6hiRWDgIubWPQoSL849ihmO6hp2lHce0HtVMX4o5SkYHcG/blO4gDgJHWFx98z0V6E2XkEa1D2rpdqOyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772330000; c=relaxed/simple;
-	bh=R5tQpyvkOahvTrujdWQ05xw2oehMgcO2zg2LLFExlho=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RhjjGau5pX21OiYdaraw6nUvtWuLEtYx3ViU4Jwb/mSeklsJhP7OH9Ao4hmKSfPy/vAVtzgitaHi6MiQOvVMju9+CDQAZbQncJu1TFBjCYDASGXA0knr4H3f+fBcvuRudARdr2JRRq2HV4ZsYcnhMMGjxATnMgYJFD9m0DYZAPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OV1ynq+7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772330410; c=relaxed/simple;
+	bh=DnZythngF05Al0rnMFs3G15L0ldrKXfVYrTBJG4h+eA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=V3owu4N8YLB/82iFn18J9sksG/73/Jf5nXkWjb2PxSKRvWxvocA/I3SRSdruTiYnbv1LBD7rnXcXaCK4Heq/JG5zO8PxgGstXDwqdb05RXu2e2BSn9aRjQl8l9lv2TH/JIBEurKQPWNaqhawCUlM3kILVEeivTG45K3J7AkgaI0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r3mDcivY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OV1ynq+7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28072C19421;
-	Sun,  1 Mar 2026 01:53:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r3mDcivY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1155BC19421;
+	Sun,  1 Mar 2026 02:00:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772330000;
-	bh=R5tQpyvkOahvTrujdWQ05xw2oehMgcO2zg2LLFExlho=;
+	s=k20201202; t=1772330409;
+	bh=DnZythngF05Al0rnMFs3G15L0ldrKXfVYrTBJG4h+eA=;
 	h=From:To:Cc:Subject:Date:From;
-	b=OV1ynq+7X5JiYcYcZOh1VnTJIO7QSBvxkgGlpBcGmGUcpUUqxc/4RKLj5BTqYxVzn
-	 Z4pMkPsUAFip3RZcIMa0paeicMbS89nSyZUwQPO2oVkb/vEGP7upJQJhLNx5oUkunP
-	 Sqx4fZ44PjeqePZ00bIMVgVdXku3pRXA5mbNrLx/bbZpItgy4jVKUefwB2XLK5pYyy
-	 dGaYk7W2e2B8s16tswlVPWNo55Zv1LmW2TKHlYiTkGYtoL/R/e1hcCXmAz/AItxiBu
-	 4ZWve41Vm9zNs08222i4CSd4bDe5qdEoYo1XtSldHyv3g0PGuK74obX5yMHF+QV6Up
-	 8922NCfwyYMNw==
+	b=r3mDcivY9vQ71T6ovohJxAST89yh7bnuNCFLJc9FPSJXdGW3nba7psxheZ21W8CY5
+	 OADpoMQsn+vHC18mHbBd0ywgXtzxT3A0mO3s1wKv3SCZjWYWKTGLhRNhrtPNb/sht4
+	 3VQ0/UjyFaE3HhUUA1aA+rpsxrFBhIkXoVV5UlkG2H0hCXmMmZar5HAXbpXFaoC5NY
+	 MlSfynd+904cr5mHGO7tin89OWD9FRTQC7rfG9OWItixauvBfuFPrgCeypaRet7jY8
+	 1dKb5yV8MvNcJjOqZs+c9xbDcop9qfBRUBnzTFmSp3x/efZRsOCTehhK9lRfpYe5AT
+	 8JBzhXMry+Ymg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	linusw@kernel.org
+	dlemoal@kernel.org
 Cc: Niklas Cassel <cassel@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Igor Pylypiv <ipylypiv@google.com>,
 	linux-ide@vger.kernel.org
-Subject: FAILED: Patch "ata: pata_ftide010: Fix some DMA timings" failed to apply to 5.15-stable tree
-Date: Sat, 28 Feb 2026 20:53:18 -0500
-Message-ID: <20260301015319.1720038-1-sashal@kernel.org>
+Subject: FAILED: Patch "ata: libata-scsi: refactor ata_scsi_translate()" failed to apply to 5.10-stable tree
+Date: Sat, 28 Feb 2026 21:00:07 -0500
+Message-ID: <20260301020007.1726105-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -44,7 +47,7 @@ X-Patchwork-Hint: ignore
 X-stable: review
 Content-Transfer-Encoding: 8bit
 
-The patch below does not apply to the 5.15-stable tree.
+The patch below does not apply to the 5.10-stable tree.
 If someone wants it applied there, or to any other stable or longterm
 tree, then please email the backport, including the original git commit
 id to <stable@vger.kernel.org>.
@@ -54,42 +57,158 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From ff4a46c278ac6a4b3f39be1492a4568b6dcc6105 Mon Sep 17 00:00:00 2001
-From: Linus Walleij <linusw@kernel.org>
-Date: Tue, 3 Feb 2026 11:23:01 +0100
-Subject: [PATCH] ata: pata_ftide010: Fix some DMA timings
+From bb3a8154b1a1dc2c86d037482c0a2cf9186829ed Mon Sep 17 00:00:00 2001
+From: Damien Le Moal <dlemoal@kernel.org>
+Date: Wed, 17 Dec 2025 14:05:25 +0900
+Subject: [PATCH] ata: libata-scsi: refactor ata_scsi_translate()
 
-The FTIDE010 has been missing some timing settings since its
-inception, since the upstream OpenWrt patch was missing these.
+Factor out of ata_scsi_translate() the code handling queued command
+deferral using the port qc_defer callback and issuing the queued
+command with ata_qc_issue() into the new function ata_scsi_qc_issue(),
+and simplify the goto used in ata_scsi_translate().
+While at it, also add a lockdep annotation to check that the port lock
+is held when ata_scsi_translate() is called.
 
-The community has since come up with the appropriate timings.
+No functional changes.
 
-Fixes: be4e456ed3a5 ("ata: Add driver for Faraday Technology FTIDE010")
 Cc: stable@vger.kernel.org
-Signed-off-by: Linus Walleij <linusw@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 ---
- drivers/ata/pata_ftide010.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/libata-scsi.c | 81 ++++++++++++++++++++++++---------------
+ 1 file changed, 50 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/ata/pata_ftide010.c b/drivers/ata/pata_ftide010.c
-index c3a8384c3e04d..c41da296eb389 100644
---- a/drivers/ata/pata_ftide010.c
-+++ b/drivers/ata/pata_ftide010.c
-@@ -122,10 +122,10 @@ static const u8 mwdma_50_active_time[3] = {6, 2, 2};
- static const u8 mwdma_50_recovery_time[3] = {6, 2, 1};
- static const u8 mwdma_66_active_time[3] = {8, 3, 3};
- static const u8 mwdma_66_recovery_time[3] = {8, 2, 1};
--static const u8 udma_50_setup_time[6] = {3, 3, 2, 2, 1, 1};
-+static const u8 udma_50_setup_time[6] = {3, 3, 2, 2, 1, 9};
- static const u8 udma_50_hold_time[6] = {3, 1, 1, 1, 1, 1};
--static const u8 udma_66_setup_time[7] = {4, 4, 3, 2, };
--static const u8 udma_66_hold_time[7] = {};
-+static const u8 udma_66_setup_time[7] = {4, 4, 3, 2, 1, 9, 9};
-+static const u8 udma_66_hold_time[7] = {4, 2, 1, 1, 1, 1, 1};
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d388a4ff9ae44..be620bc045848 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1691,6 +1691,42 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ 	ata_qc_done(qc);
+ }
  
- /*
-  * We set 66 MHz for all MWDMA modes
++static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
++{
++	int ret;
++
++	if (!ap->ops->qc_defer)
++		goto issue;
++
++	/* Check if the command needs to be deferred. */
++	ret = ap->ops->qc_defer(qc);
++	switch (ret) {
++	case 0:
++		break;
++	case ATA_DEFER_LINK:
++		ret = SCSI_MLQUEUE_DEVICE_BUSY;
++		break;
++	case ATA_DEFER_PORT:
++		ret = SCSI_MLQUEUE_HOST_BUSY;
++		break;
++	default:
++		WARN_ON_ONCE(1);
++		ret = SCSI_MLQUEUE_HOST_BUSY;
++		break;
++	}
++
++	if (ret) {
++		/* Force a requeue of the command to defer its execution. */
++		ata_qc_free(qc);
++		return ret;
++	}
++
++issue:
++	ata_qc_issue(qc);
++
++	return 0;
++}
++
+ /**
+  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
+  *	@dev: ATA device to which the command is addressed
+@@ -1714,66 +1750,49 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+  *	spin_lock_irqsave(host lock)
+  *
+  *	RETURNS:
+- *	0 on success, SCSI_ML_QUEUE_DEVICE_BUSY if the command
+- *	needs to be deferred.
++ *	0 on success, SCSI_ML_QUEUE_DEVICE_BUSY or SCSI_MLQUEUE_HOST_BUSY if the
++ *	command needs to be deferred.
+  */
+ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 			      ata_xlat_func_t xlat_func)
+ {
+ 	struct ata_port *ap = dev->link->ap;
+ 	struct ata_queued_cmd *qc;
+-	int rc;
+ 
++	lockdep_assert_held(ap->lock);
++
++	/*
++	 * ata_scsi_qc_new() calls scsi_done(cmd) in case of failure. So we
++	 * have nothing further to do when allocating a qc fails.
++	 */
+ 	qc = ata_scsi_qc_new(dev, cmd);
+ 	if (!qc)
+-		goto err_mem;
++		return 0;
+ 
+ 	/* data is present; dma-map it */
+ 	if (cmd->sc_data_direction == DMA_FROM_DEVICE ||
+ 	    cmd->sc_data_direction == DMA_TO_DEVICE) {
+ 		if (unlikely(scsi_bufflen(cmd) < 1)) {
+ 			ata_dev_warn(dev, "WARNING: zero len r/w req\n");
+-			goto err_did;
++			cmd->result = (DID_ERROR << 16);
++			goto done;
+ 		}
+ 
+ 		ata_sg_init(qc, scsi_sglist(cmd), scsi_sg_count(cmd));
+-
+ 		qc->dma_dir = cmd->sc_data_direction;
+ 	}
+ 
+ 	qc->complete_fn = ata_scsi_qc_complete;
+ 
+ 	if (xlat_func(qc))
+-		goto early_finish;
+-
+-	if (ap->ops->qc_defer) {
+-		if ((rc = ap->ops->qc_defer(qc)))
+-			goto defer;
+-	}
+-
+-	/* select device, send command to hardware */
+-	ata_qc_issue(qc);
++		goto done;
+ 
+-	return 0;
+-
+-early_finish:
+-	ata_qc_free(qc);
+-	scsi_done(cmd);
+-	return 0;
++	return ata_scsi_qc_issue(ap, qc);
+ 
+-err_did:
++done:
+ 	ata_qc_free(qc);
+-	cmd->result = (DID_ERROR << 16);
+ 	scsi_done(cmd);
+-err_mem:
+ 	return 0;
+-
+-defer:
+-	ata_qc_free(qc);
+-	if (rc == ATA_DEFER_LINK)
+-		return SCSI_MLQUEUE_DEVICE_BUSY;
+-	else
+-		return SCSI_MLQUEUE_HOST_BUSY;
+ }
+ 
+ /**
 -- 
 2.51.0
 
