@@ -1,56 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79A7E5D8F0
-	for <linux-ide@vger.kernel.org>; Tue,  3 Mar 2026 10:38:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB3783264C5
+	for <linux-ide@vger.kernel.org>; Tue,  3 Mar 2026 18:26:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772534306; cv=none; b=RQ8H1DQup82VcbX8qSJPQE5VTPpOy+X6Z1MAXepw21982sDIYBb6Rq+qWDYpt04N7BiMCd3jGhY4sG+J9A8pm2m8dEb2Pd4PL3INspGX8Rcc3zqbux4gOnR8nKCK6vrtWxfsI3t1sE3t0O/S/c6SZ7Zq2KvPldIxYrdIO12AjtA=
+	t=1772562372; cv=none; b=RyNUObLY+SbeJWoQPYDuFZu1SKV30vqNqHYuuEq8a21LDa+U0uu5K7c4soJeWZp7Xx43wngblJBpUTTdoPYKdUbcEpo3QT/cNv0npwVcmXF5eMqg+nnVGZjbTgpBdNv9uUMl80PSMoE6wLV298yGdFO42wWx05O8kqlJP89R784=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772534306; c=relaxed/simple;
-	bh=3oMhmE86SYRCNlEHWbay4Z9GcF9/yR2peATW0rFKxJQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AX+lTo54kSd2gjx+H6C2QnfVYUqnyqMZQ+v9x1RVw540fKNRpNhsvxrahQk90P6IsDmaUfTw+34mujF9URiOMpqAeFaDHlP/CYkUeGoaCXVMgkLBDwKw696QLcjByAIHwbQ7zZZTzrAUihBRVIH11CvcJvnYm+kcDwovnViPUDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SRSIt+eg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772562372; c=relaxed/simple;
+	bh=1v+tCKAD/1iRiPErkhLp9KYQ79uFU/rBCUvw0tFkyCg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XSXgN9+FcCXNeNAUqsIFdMv3tpdB+9MQ4I7luwmsLwqYoZgN+hTnF+PSv+AVHxU3d2B+ZqAEGOlxtPYHJJiYeaV8HrZBWx0TCmKF35ESVUqdUeuMR4riA7ZcQQ9ZOIvFblT4t0ser2e3Z4a7ZKfCB6FSdmmozHq46inlksNH5lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=BUSsuHME; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SRSIt+eg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFE63C116C6;
-	Tue,  3 Mar 2026 10:38:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772534306;
-	bh=3oMhmE86SYRCNlEHWbay4Z9GcF9/yR2peATW0rFKxJQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=SRSIt+egPqOmEeasMq0DikLgWDefqANNZErl9jEavsif56f3ZLbT11nzjdFFf2WDk
-	 Ir3ENDGmD1ncgGe4X15f9tK8rlb68+h9vvjCtH+FHTi0wN37QyrcCS8I64AKMYDvCF
-	 falJS8s2Q5Cj6l45CaDPlU+R5Tf7RCK/4ob83RJ/0BdOczbst6b2f8ftBLoNlyoArp
-	 4fpl//mvyF9tqOVd6gaqtDEAy1tsXntsPl21dFhYwYrrGxEA3AHtZ7wGrI1uHkN0wV
-	 IkzjJlFcxkDjev/DLrNHmizcBnALWiWgwV/GBFfE86oHUMZj0XpoRizk64SSq/5np2
-	 3k36rxqNonMKg==
-Message-ID: <35ff2f3a-7bd1-47e3-903e-4a1d22f5e8e9@kernel.org>
-Date: Tue, 3 Mar 2026 19:38:23 +0900
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="BUSsuHME"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2ae523d54d2so98545ad.1
+        for <linux-ide@vger.kernel.org>; Tue, 03 Mar 2026 10:26:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1772562371; x=1773167171; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=gS8IWzhnK488cirKjk26gFAoEtQU7yjXkq29KGI644A=;
+        b=BUSsuHMEQTtki4eAPSPJVYBAetWQE20GBrDl/yjy8f5nI9RRkvxpowqth3gZxh844y
+         KXQVEVrR1yQLH6SI/FZ2eFH9Pkr4yGZwllBic33vpNLz7yXPg+WAiZO7pefzCuOidS/C
+         t1hxAk2272o2AaEqucjvCNHIRQYiitwHUEKIat5EKbqnBT6m2BlMbf1+N+b7ioGBhkUE
+         Zc1QLC3XFBV1jMZtK4rUm6HTE/xRPALGkDw9TOCxdH6BnnF7uqJU1VUbiARKHjrvQZO2
+         R2Kdc6cwdU3pLM/tWte5YggyZjy1RB4ZRyddf6YZg3IlE4LsGD9X+OiAY3u9bTqXqBLv
+         M+aQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772562371; x=1773167171;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=gS8IWzhnK488cirKjk26gFAoEtQU7yjXkq29KGI644A=;
+        b=CHDgnKYKesPMo0JHPzXkDYOhs2aOI2lY23WwZICcWhaC9Pe7Ay0W5OgM6y0c2lpw5q
+         P2CQ/6CkQDqwSqet901kp6+rghILaGd4tsb7ihk0HpbCOPRSTKegT3If/TYeF+byyjaH
+         VOyjUuTh2HhS8Fu30SbkCIggMYdPzaBIl/bYh7XETKm/I/3zWsPHfl1i1nU49jI2kvVr
+         a9144QXZKD7/CTpaWNj46vMB3syVeLygxvKMIUsty/Oyfd780kP507KXqB+TgBwe5yYd
+         Hb0UldNz8oiAIHtk7SZIQBIOCrB2Z/9JM+ZGR6J59ThJBOAb/Py6YAgbVuIKOc990U6s
+         bnxg==
+X-Forwarded-Encrypted: i=1; AJvYcCU48xbO34I28SCFWup6stoUIU40oLhAnex5uPM3OmpL/Jdp6Ak2/gkDiPUCRLEcZe06VoEmZON5i5U=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzUOruWsxJrHNnFWGbFBm/RgChQBihYfXYIBlmm8UmWMmdu3wzS
+	SNrG7c9T1j7w8BRbdbiMuSvAj2TZQuRoc2nbupv7YBd9saWk42QshGA2JfVGVn4cng==
+X-Gm-Gg: ATEYQzwUXVcOEtE/ZJg3mPMdEno5XIA1cWIVmQIMCSeykQfrjKoa8K8CSl2kXerHCTG
+	n7dBmkOJ5t1rH0FlvNESkEy762YAv+ZexakptZrgWMA5/8/Bdu8cZQ9sKtv9pc08MTNj75V7bs/
+	mVl3hNJlQPe61M7WoB8aQ7fTstGXA+P55ehOPWSdGBIrUFCt7unJ6O6EYDYN5v+J31zzyeodmPL
+	BBm2Z/MkkbuvmpPM4T26CZNwMe0QHxru7MD2OkFG4UnZ0a4BQx1jqNF6K2DgRz4Ak2a533pHrQ3
+	Pc2YIzKkjSeFsvUKBQHp0TvbT0pExxmRfSet2+LGfPM6Cm9NJljSheLx2lwVpyXsskhIDt9Ibtf
+	hG0dEeHxm54tHXbLyWV755U1aqk0VfI4OOhvw9puosvqKzMPuUzp7FYhNArMJ48JaDVNS/gI/ps
+	nHb8h4zdqzntNM+v+VadTwWfxVNC2pRSUQs36yVop+sDhkv5c7OT+GX1f6K7GT5h0U27a01g==
+X-Received: by 2002:a17:902:f68c:b0:2ae:567a:c5a6 with SMTP id d9443c01a7336-2ae567ac7c9mr5295995ad.15.1772562370543;
+        Tue, 03 Mar 2026 10:26:10 -0800 (PST)
+Received: from google.com (33.75.230.35.bc.googleusercontent.com. [35.230.75.33])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3599c39def7sm2881520a91.12.2026.03.03.10.26.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Mar 2026 10:26:10 -0800 (PST)
+Date: Tue, 3 Mar 2026 10:26:05 -0800
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
+	syzbot+bcaf842a1e8ead8dfb89@syzkaller.appspotmail.com,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: libata: cancel pending work after clearing
+ deferred_qc
+Message-ID: <aacnvfNHFm8BsjKV@google.com>
+References: <20260303100341.362978-2-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata: cancel pending work after clearing
- deferred_qc
-To: Niklas Cassel <cassel@kernel.org>, John Garry <john.g.garry@oracle.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Hannes Reinecke <hare@suse.de>, Igor Pylypiv <ipylypiv@google.com>
-Cc: syzbot+bcaf842a1e8ead8dfb89@syzkaller.appspotmail.com,
- linux-ide@vger.kernel.org
-References: <20260303100341.362978-2-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20260303100341.362978-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 3/3/26 19:03, Niklas Cassel wrote:
+On Tue, Mar 03, 2026 at 11:03:42AM +0100, Niklas Cassel wrote:
 > Syzbot reported a WARN_ON() in ata_scsi_deferred_qc_work(), caused by
 > ap->ops->qc_defer() returning non-zero before issuing the deferred qc.
 > 
@@ -99,49 +129,7 @@ On 3/3/26 19:03, Niklas Cassel wrote:
 > Fixes: eddb98ad9364 ("ata: libata-eh: correctly handle deferred qc timeouts")
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Looks good.
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-Note that a followup cleanup, we may want to define a
-ata_scsi_cancel_deferred_qc() helper for the pattern:
-
-	ap->deferred_qc = NULL;
-	cancel_work(&ap->deferred_qc_work);
-
-to avoid repetitions.
-
-> ---
->  drivers/ata/libata-eh.c   | 1 +
->  drivers/ata/libata-scsi.c | 1 +
->  2 files changed, 2 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index b373cceb95d2..563432400f72 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -659,6 +659,7 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
->  			 */
->  			WARN_ON_ONCE(qc->flags & ATA_QCFLAG_ACTIVE);
->  			ap->deferred_qc = NULL;
-> +			cancel_work(&ap->deferred_qc_work);
->  			set_host_byte(scmd, DID_TIME_OUT);
->  			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
->  		} else if (i < ATA_MAX_QUEUE) {
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index c0dd75a0287c..ad798e5246b4 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1699,6 +1699,7 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
->  
->  	scmd = qc->scsicmd;
->  	ap->deferred_qc = NULL;
-> +	cancel_work(&ap->deferred_qc_work);
->  	ata_qc_free(qc);
->  	scmd->result = (DID_SOFT_ERROR << 16);
->  	scsi_done(scmd);
-
-
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+Igor
