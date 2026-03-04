@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35193347DD;
-	Wed,  4 Mar 2026 00:52:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD6256FC5;
+	Wed,  4 Mar 2026 01:04:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772585563; cv=none; b=tlACmMqEAZv3y4DwwWUkFwwwPOj0h8vcB/pSiEkEdjc1lU5wXpHylkZ2h+BYD8EM+GCWrOfX1wyIWyMcjwrRY4g/d4fkRxWJJoQg64ZMw1o2ZEplua+LwAyaxMcdbyvTDB4QintQ2mFoi3FLBG+9unZ+y5H7ED8qvyHsIq8gLcs=
+	t=1772586240; cv=none; b=o/Vv5K5yBm/q5a+MzNO/jDkc5x0PVi+IZ/gmZejos7dBcTPHiY56cJ37uH09IwDv4kD6aZ7PzHJ34PpLaQpHu2Hi3FubfdccGrPzcCK43ro59czXWkq+5lJitsCFHeoyrw8GeGBs9AppuveeVW3hTa3BDslKXYWMdnQ6Oj16TkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772585563; c=relaxed/simple;
-	bh=BhgHjqBrpD4tKo9sHdWPfVTzNuEeTOPr1ugk/pRikWw=;
+	s=arc-20240116; t=1772586240; c=relaxed/simple;
+	bh=yXTpb+U5/jwSEf+FnuQgi0uBtQX9WiiNoK3uMPa7Bvg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EdQ5G7X+kBYHaMuGA+G2OTrL1i0dd98rH/BpFYtXNlmKK2dTmeiYwqfAgrcichsPEGWkGJsnV2wEz8FNfpbp20fHwJWR7/NqxFCha0PSAXKyFV6O5T8gzr+HfCiWyubEcDhJUE+irJujr+0xKE4dNp0WYMqEs5NRqYovpy1R0hs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pANpF4rA; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=p/Hwo5Hi9Bt/4GPZ0jORWkahFsZP2qUdbzECj91iah7I20+ydB2wbi2g24yfLt0A9MIXrhg5wp2yN+Ri6bohHqs0ZojLs64SkhGjQq5/mFygDmzmJ+KiHhisBPgeDbI0PrHO2nyyj2aFnfVGh587UKyO1NXS/DsbdIlIjnw5zxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GKQhTTS+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pANpF4rA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2D47C116C6;
-	Wed,  4 Mar 2026 00:52:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GKQhTTS+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C373AC116C6;
+	Wed,  4 Mar 2026 01:03:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772585562;
-	bh=BhgHjqBrpD4tKo9sHdWPfVTzNuEeTOPr1ugk/pRikWw=;
+	s=k20201202; t=1772586240;
+	bh=yXTpb+U5/jwSEf+FnuQgi0uBtQX9WiiNoK3uMPa7Bvg=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=pANpF4rASVVDJpvmBkQT8AWiYGSUqMR1siPkmYvTE2wSolVaR9TeG9Iylo5435GyW
-	 M/fdb4xLalug7L3Mb8IvDPJ5CqQAQAcpcpmfRCggQFVhj/5Y8AEBA/ZN2la1/JrBql
-	 8JhdCKbn5RdRu74HnlsxS+bLMygqJJCVm1qsti7LG39spSjMra4ToOXHTQGEEg08kN
-	 1P9yMX5CvX5b144JuaaLsV4IuVu6p398peGTafGiyjCDtWUEcCkop58lAUIX81HdW9
-	 wIbjHF0Zu9wYGZliTHY72usy0OrFmVplM9JCjRc6snsOT596hTHBRM1I//VkOLlA3F
-	 6YIR6eQiMxpnQ==
-Message-ID: <9834e067-9018-4a47-9591-d5784dcca26d@kernel.org>
-Date: Wed, 4 Mar 2026 09:52:40 +0900
+	b=GKQhTTS+lXs4UuN8LxX19hUriV6DRaArmacrxEnCsrUrDczq0g2jNotr0DFB/w9dl
+	 81jyb3nCyimYlsFtZKGn5fouIWC0pVV7+DNhqJikPGwRDfq7zcLjL/mCXoPKUkXiiO
+	 NoTCT6J+/LzLzJU8c0dszTzaKZ04+7K+Z2zbi6uOnsnNkhgX4abzuaRYqajoqpfxvM
+	 ucxXpvJUBBhbrJpa/aeDHJlSwgGoktW3WfPZZUNB17mfZWEI0wo6fLHne6ujOBwqwI
+	 eo5zy0z/Jjo3qsAWXTitctJB+pIexw+ON2aZ4YJdlgsdbh1fbiYsy2lzrsFBc86TQz
+	 jyKbYIUGG8log==
+Message-ID: <bfd26e16-e5ba-4293-a37b-c21289de27eb@kernel.org>
+Date: Wed, 4 Mar 2026 10:03:58 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,65 +35,63 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-core: Disable LPM on ST1000DM010-2EP102
-To: maximilianpezzullo@gmail.com, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- Filippo Baiamonte <filippo.ba03@bugzilla.kernel.org>
-References: <20260303-ata-libata-core-disable-lpm-on-st1000dm010-2ep102-v1-1-40d5db367f67@gmail.com>
+Subject: Re: [PATCH] ata: libata-core: Add BRIDGE_OK quirk for QEMU drives
+To: Pedro Falcato <pfalcato@suse.de>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260303183337.1013474-1-pfalcato@suse.de>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20260303-ata-libata-core-disable-lpm-on-st1000dm010-2ep102-v1-1-40d5db367f67@gmail.com>
+In-Reply-To: <20260303183337.1013474-1-pfalcato@suse.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/4/26 07:52, Maximilian Pezzullo via B4 Relay wrote:
-> From: Maximilian Pezzullo <maximilianpezzullo@gmail.com>
+On 3/4/26 03:33, Pedro Falcato wrote:
+> Currently, whenever you boot with a QEMU drive over an AHCI interface,
+> you get:
+> [    1.632121] ata1.00: applying bridge limits
 > 
-> According to a user report, the ST1000DM010-2EP102 has problems with LPM,
-> causing random system freezes since kernel 6.15. The drive belongs to the
-> same BarraCuda family as the ST2000DM008-2FR102 which has the same issue.
+> This happens due to the kernel not believing the given drive is SATA,
+> since word 93 of IDENTIFY (ATA_ID_HW_CONFIG) is non-zero. The result is
+> a pretty severe limit in max_hw_sectors_kb, which limits our IO sizes.
+
+It would be nice to fix that in QEMU.
+
+> QEMU shares IDENTIFY data between PATA/SATA drives (and the corresponding
+> emulation of IDE/AHCI) but does not, in any way, emulate any of these
+> real hardware details. There is no PATA drive and no SATA cable.
 > 
-> Reported-by: Filippo Baiamonte <filippo.ba03@bugzilla.kernel.org>
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221163
-> Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
-
-Seriously ?
-
-> Signed-off-by: Maximilian Pezzullo <maximilianpezzullo@gmail.com>
-
-Looks good.
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
+> As such, add a BRIDGE_OK quirk for QEMU HARDDISK. This results in the
+> max_hw_sectors being limited solely by the controller interface's limits.
+> Which, for AHCI controllers, takes it from 128KB to 32767KB.
+> 
+> Signed-off-by: Pedro Falcato <pfalcato@suse.de>
 > ---
+> Note: This may be ok for stable, but I'll leave it up to you. There is
+> obviously no Fixes: here that doesn't go back 20 years.
 >  drivers/ata/libata-core.c | 1 +
 >  1 file changed, 1 insertion(+)
 > 
 > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index ccbf320524da..76b012f544ea 100644
+> index d61846f03edc..70703432063a 100644
 > --- a/drivers/ata/libata-core.c
 > +++ b/drivers/ata/libata-core.c
-> @@ -4189,6 +4189,7 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
->  						ATA_QUIRK_FIRMWARE_WARN },
+> @@ -4231,6 +4231,7 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+>  	/* Devices that do not need bridging limits applied */
+>  	{ "MTRON MSP-SATA*",		NULL,	ATA_QUIRK_BRIDGE_OK },
+>  	{ "BUFFALO HD-QSU2/R5",		NULL,	ATA_QUIRK_BRIDGE_OK },
+> +	{ "QEMU HARDDISK",		NULL,	ATA_QUIRK_BRIDGE_OK },
+
+Until we spend the time to improve QEMU ATA emulation, I think this is OK.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+I think adding a Cc-stable here makes sense too. Niklas, can you do that when
+applying ?
+
 >  
->  	/* Seagate disks with LPM issues */
-> +	{ "ST1000DM010-2EP102",	NULL,		ATA_QUIRK_NOLPM },
->  	{ "ST2000DM008-2FR102",	NULL,		ATA_QUIRK_NOLPM },
-
-Note: if we see one more of these, I am going to be tempted to replace this with
-a big hammer :)
-
-	{ "ST?000DM0*",		NULL,		ATA_QUIRK_NOLPM },
-
->  
->  	/* drives which fail FPDMA_AA activation (some may freeze afterwards)
-> 
-> ---
-> base-commit: af4e9ef3d78420feb8fe58cd9a1ab80c501b3c08
-> change-id: 20260303-ata-libata-core-disable-lpm-on-st1000dm010-2ep102-b0b85608e034
-> 
-> Best regards,
+>  	/* Devices which aren't very happy with higher link speeds */
+>  	{ "WD My Book",			NULL,	ATA_QUIRK_1_5_GBPS },
 
 
 -- 
