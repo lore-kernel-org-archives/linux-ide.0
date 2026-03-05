@@ -1,70 +1,71 @@
-Received: from mail-vk1-f194.google.com (mail-vk1-f194.google.com [209.85.221.194])
+Received: from mail-ot1-f52.google.com (mail-ot1-f52.google.com [209.85.210.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46ED72EB87E
-	for <linux-ide@vger.kernel.org>; Thu,  5 Mar 2026 08:29:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D5C6366572
+	for <linux-ide@vger.kernel.org>; Thu,  5 Mar 2026 08:36:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772699343; cv=none; b=F0l4LMF8ZEoSI10y9c+p0bmvkcdnKPcHHcc8TyyrlJAwltojY95G+hEQGb5JPkHCXtk9XvN0OYfE+xCnuFJNQbEGrU7M9CNZG9+lBlc7PP7CScKzPfV3AZ+rdeFLr+0EHkCY4Pg8yYXAY3D7Us6UOEEINKyUnrhplvC5DImHzSc=
+	t=1772699773; cv=none; b=lQnz/nAAlE6QlmD7TNFztWrMWOn7x3CTyA+NMdrssC2f78hRK+M594QAMjqY/IrpHQQFFX3Qt8FzC1Bz3ECiTrP1aEAWywEizY/n4TreRMxYPaVRmPZHzlAEPo8IxPX8qFibiZKI2/8MUwivykroHQPoMsZKkwXC9j2xNJBL5Hk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772699343; c=relaxed/simple;
-	bh=hefLtFvtSppGuVWRD/xSsfWMjnGgnQggEUG9Y7OFLDc=;
+	s=arc-20240116; t=1772699773; c=relaxed/simple;
+	bh=CSh/OPgCewZMrxAGotXGAjNREHTmD2ri4RotS2E+6yc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=p8cJmVa9cgaCAfJhwPNaGCaincNK7Y0mrrQPw6Xxwf8PUSmb0NbknaD3N6yyl4fqWkcVC6tsB7FnKoorxLtTSk9W/fR8OQbhiCOqAVn0blt+JrB4I5fLflz65aPVBd1w2ta90j841bqfGJsPBt8g6e7MGTHXYAFPMVixbH5L1kI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.194
+	 To:Cc:Content-Type; b=PBgBocgckQVrBGsTqeDWbDpp+Ac4D5Ke4g0gcfvzqnwzQATT5gP0UUdvCaI62t19QJ5abnufcR37iULobshGJeV/k4DANJzVxf/Q37STemn6dnlItHAdsXHMJvigF8dDGQnBOF1+IpkP5X0lYQ2q8+GVC65zQvepwCriPQwVDnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vk1-f194.google.com with SMTP id 71dfb90a1353d-56af41d1e0bso166441e0c.1
-        for <linux-ide@vger.kernel.org>; Thu, 05 Mar 2026 00:29:02 -0800 (PST)
+Received: by mail-ot1-f52.google.com with SMTP id 46e09a7af769-7d55b97f358so6130386a34.3
+        for <linux-ide@vger.kernel.org>; Thu, 05 Mar 2026 00:36:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772699341; x=1773304141;
+        d=1e100.net; s=20230601; t=1772699771; x=1773304571;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ZlLnToI6SbxsSn7ypnmaqq1RX+miw2VMTyDHKi+gwbk=;
-        b=ELwEGVl96hyawlik5Edag8GUsEsOFiKrcb0+hRA7RQ1cJmiOz+2RKy6OGRD1HY3yXS
-         q6BoO17RpLE4ch8VF0lr/gBjL8TRmyOVD/e7ydVIsExlw8eKwqc6nKx6Zgtog96kc449
-         5zpchsEj5r9IZicQiF6NaJyPjXU/AkI/PNFJAMqNjHJ8UnqOmrPSXU+z3yB01CvU+qjl
-         vo2vLR430isBMK1XLQu01yKUQVEnIfz/CgTB7kEtUennhFNydKlhKwkOCnB4PHQD4Z6+
-         0lRIv44aiCLlVDAVEG5cZkDy9W8W1MqCbswQgKGDz7DB2DZ0w106PmMxznOT8ibASMGC
-         nACg==
-X-Forwarded-Encrypted: i=1; AJvYcCVSXHHJbPfg+hmrYY9SMV/GiyjuKEZvRs18Ta0pzwiorAaBrBSgodz2fFJqLZ5adgcdeMz1SqWszoE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5cUTwu0YFFpTj6CvHnJx5iMlQTBNXy3bpfGGIeUIqxrR/zU4n
-	/LDC5NO6+IGre10mE4P3w32KVC6snGzBajrXXnMIdXcU7k2FoC8hS8JtE/kK/Md+Gm4=
-X-Gm-Gg: ATEYQzx88b92MK+a3MNvmtMaj6mij3hh6E5Aift05QTNm/U8cJv3xlUe51MTJ7tN0hb
-	tDSsJuWJ44BgMm04hff320qaYrDbeiABjdy7YIeU8gOfhr3N9VW+onGdmod7AaP3eG30AtkAOZk
-	OofqxuFa1v8L852jc+un3f99cxuomZAI3ZArpfD1nRnD+z+d5NT6DbSBa1D1a4oY0LA9IywT3ce
-	PW/3q3VdCstOPd/Rmtls5bCHy/rVfkZo9tjBjgzBCDjn2cDaOM4AszIs4Cod5NOCGfgir3IL16M
-	jHzyOzcqegq/oNWGWdTvyQm2mrDqLSRU5BHxN4GWyQWzResUjroonFBNd/b0uHm8uQyAQXAnU+r
-	TyALfdN8QCdG9UDezyyCN8p9Cycd7xMhlVJzF7s49zr6rX9ux8UrhCUDX3rW6E0ckgeXzwUUks1
-	zYzSFPk33D/zGl5CVth+qKcDjznEOWeLzDhqMERIVc1IiTTar+2i+6jB61rh26
-X-Received: by 2002:a05:6122:4893:b0:563:c868:a32d with SMTP id 71dfb90a1353d-56ae74dbbb6mr2358329e0c.2.1772699341236;
-        Thu, 05 Mar 2026 00:29:01 -0800 (PST)
-Received: from mail-ua1-f53.google.com (mail-ua1-f53.google.com. [209.85.222.53])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-94df63d8abbsm20056026241.2.2026.03.05.00.29.01
+        bh=8Ymdw+XC/6Jy9fN+NX35+E/o8bLZmtxZBZ4e3pQeTxE=;
+        b=v9SZCckzC7CDaGITDa6X4O6/Z96U+SMdjdNiTKkq2PLZ4/KIzgHqG9J5i3E/BTE4Jm
+         zkuMItNPfctdSZRgS2OONUcz+Vwi8qrpm+uwxRjdKwF+I0nIe+jFtQDeogFBMhgxRIU4
+         xTtJjbFqlkGe95nnW+8bR+N4NZ88rTMLWZ+NQAFKVGvG857Lf/Yw2rwisBr2TSw8sPAw
+         Nr9YRh0ur8yeuaQXEkfExEpnIDGZvOZTBicz0Se13FXwPeOPJBU+6NKx7lUB23Fxgceh
+         Tx49hjTQindI3sXFECr9zD7auf8yzlugdr8fhhfkHtwDCcznBImDQmju1wFVuI1Twysn
+         pKPA==
+X-Forwarded-Encrypted: i=1; AJvYcCXRNn7orlFCWjEp/XTnpYfX3YHUlCD3q2otTfvztZhH2Cs7o42NV72FQSdv+I/Trop7MMwSjNeZZyg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxETzYtLNRJyNX/fQHC4siWPWwcur1jJ4SEto7Ee1zTUNrW3gSz
+	2ed+5CrreWYPeTBioj2fNRkF6NTyIzOE5+LeAMyNb8InJltLIM7+F6OCm7DNR4Hv
+X-Gm-Gg: ATEYQzwRZDCwrB4Lylwjnfr4zGeQC54gZSlJdCDpqd7egNsUaMv4NfvmjrPpI9lK+hw
+	gZ11B6j+GIEQ6S66kiuvH2651bfNM3/S5ma8e7DFGnGEbQuW2JP2sJDiOB/IXvuagU06kq5OSOV
+	sSiX77IR3uFCMjAy7DdIkUQGen07u93VFGb5P2eK6wCmP4N81z1q1cLsP12l54Ptp33gkQmMkFk
+	XZihd6fm2tP/HpEQdhcGE1lNXcjx80NJfRveuc+NkdFE13ofoPahJfLLc6FDwYjqZle4ubnv5S7
+	Mj0aMlqG5j/1uy/b6KlyUQtGuxu7rj7OtStXAaWiNDL5TwvqB4A9fWPS751Xh2lJG/FHyC08Hg1
+	Jkyo2K280izqR7VmfXQt2dwdKzeCHrQ9cnyuGb9VHQBJJ2gxIifomKEQK6rsgdJfT6O16OY5iHs
+	QFPocRCMdMc3dIZNto02qnRp+qXUjQd8GCWUIRO4dpIg6VEZwpOT5w1drOwTwh
+X-Received: by 2002:a05:6830:3110:b0:7d1:93e7:cd6f with SMTP id 46e09a7af769-7d6d12569c1mr3692258a34.13.1772699771094;
+        Thu, 05 Mar 2026 00:36:11 -0800 (PST)
+Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com. [209.85.210.49])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7d586474d4csm19428166a34.9.2026.03.05.00.36.10
         for <linux-ide@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Mar 2026 00:29:01 -0800 (PST)
-Received: by mail-ua1-f53.google.com with SMTP id a1e0cc1a2514c-94dd687e040so1817720241.3
-        for <linux-ide@vger.kernel.org>; Thu, 05 Mar 2026 00:29:01 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXvxHC4tOpWoZ5q5TiwACUzJr59jZHlixbLgmWuHeuqqRfFiHrUdhqAUGNX0j2AEIC361Aw0hW4/1w=@vger.kernel.org
-X-Received: by 2002:a05:6102:1607:b0:5ff:c64d:228c with SMTP id
- ada2fe7eead31-5ffc64d2600mr724913137.22.1772699340961; Thu, 05 Mar 2026
- 00:29:00 -0800 (PST)
+        Thu, 05 Mar 2026 00:36:10 -0800 (PST)
+Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-7d513bc15c7so9413654a34.1
+        for <linux-ide@vger.kernel.org>; Thu, 05 Mar 2026 00:36:10 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWEUE2hbaVa8IvM6gq7NZV0+VhbCBkNDU/mh+B/qZE9XzmkfWA+7m2JPnUE8lnhB0JUzpuWduHlHss=@vger.kernel.org
+X-Received: by 2002:a05:6102:2ac9:b0:5f7:24dc:3ac3 with SMTP id
+ ada2fe7eead31-5ffaaa86250mr1899404137.7.1772699399463; Thu, 05 Mar 2026
+ 00:29:59 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260304175735.2660419-1-vladimir.oltean@nxp.com> <20260304175735.2660419-13-vladimir.oltean@nxp.com>
-In-Reply-To: <20260304175735.2660419-13-vladimir.oltean@nxp.com>
+References: <20260304175735.2660419-1-vladimir.oltean@nxp.com> <20260304175735.2660419-18-vladimir.oltean@nxp.com>
+In-Reply-To: <20260304175735.2660419-18-vladimir.oltean@nxp.com>
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Thu, 5 Mar 2026 09:28:50 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdV+7n==crPmitH-JCwtJiH+7LaPKZQYU4ZqX_duo3_7Eg@mail.gmail.com>
-X-Gm-Features: AaiRm50Kgxrt1IEt_9GEmeNyCIrylErpUd7qkh7D4FIoK_FYituUB8DTITetq4c
-Message-ID: <CAMuHMdV+7n==crPmitH-JCwtJiH+7LaPKZQYU4ZqX_duo3_7Eg@mail.gmail.com>
-Subject: Re: [PATCH phy-next 12/22] phy: move provider API out of public <linux/phy/phy.h>
+Date: Thu, 5 Mar 2026 09:29:48 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdXUBhpnFEnnTfyPdECWqNmKLweupX=FY2SedYA3bapG2g@mail.gmail.com>
+X-Gm-Features: AaiRm53mHozL13yvxji6rv0MKzaGvWxuhr7SWHD2SjBJ0VWNhqppZZeXezGpDhg
+Message-ID: <CAMuHMdXUBhpnFEnnTfyPdECWqNmKLweupX=FY2SedYA3bapG2g@mail.gmail.com>
+Subject: Re: [PATCH phy-next 17/22] net: renesas: rswitch: include PHY
+ provider header
 To: Vladimir Oltean <vladimir.oltean@nxp.com>
 Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
 	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
@@ -77,82 +78,65 @@ Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
 	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, 
 	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, 
 	netdev@vger.kernel.org, spacemit@lists.linux.dev, 
-	UNGLinuxDriver@microchip.com
+	UNGLinuxDriver@microchip.com, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Michael Dege <michael.dege@renesas.com>, 
+	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	"Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>
 Content-Type: text/plain; charset="UTF-8"
 
-Hi Vladimir,
-
-On Wed, 4 Mar 2026 at 19:03, Vladimir Oltean <vladimir.oltean@nxp.com> wrote:
-> The major goal is to hide the contents of struct phy from consumer
-> drivers.
+On Wed, 4 Mar 2026 at 19:00, Vladimir Oltean <vladimir.oltean@nxp.com> wrote:
+> As a PHY consumer driver, the Renesas rswitch dereferences internal
+> fields of struct phy, something which shouldn't be done, as that is
+> going to be made an opaque pointer.
 >
-> The idea with "phy-props.h" is that both consumers and providers make
-> use of some data types. So both headers include "phy-props.h".
+> It is quite clearly visible that the driver is tightly coupled with the
+> drivers/phy/renesas/r8a779f0-ether-serdes.c, which puts heavy pressure
+> on the Generic PHY subsystem.
 >
-> Two slight points of contention.
+> This was discussed before here:
+> https://lore.kernel.org/linux-phy/20260211194541.cdmibrpfn6ej6e74@skbuf/
 >
-> 1. phy_set_bus_width(): Vinod explains that despite the current caller
->    situation (9 providers, 1 consumer), it is a consumer API function.
+> but to summarize, it is generally expected that when a Generic PHY
+> function is called, it takes effect immediately. When this doesn't
+> happen, the PHY provider driver must change its implementation rather
+> than the consumer be made to work around it. PHY providers which rely on
+> a hardcoded call sequence in the consumer are just lazy and wrong.
 >
->    The use case is that the controller (for example UFS) may have
->    limitations and should set the expected lanes to be used and width on
->    those lanes. A number of Generic PHYs can support multiple lanes and
->    multiple width so this is way for controller telling I am using this
->    configuration.
+> The most obvious example is commit 5cb630925b49 ("net: renesas: rswitch:
+> Add phy_power_{on,off}() calling"). Problem description:
+> - Ethernet PHYs may change phydev->interface. When this happens, the
+>   SerDes must learn of the new phydev->interface using phy_set_mode_ext().
+> - drivers/phy/renesas/r8a779f0-ether-serdes.c implements phy_set_mode_ext(),
+>   but this only caches the mode and submode into channel->phy_interface
+>   and applies this to hardware during phy_power_on().
 >
-> 2. phy-provider.h should go to include/linux/phy/ or to drivers/phy/?
->    We do have 3 PHY providers outside of drivers/phy/:
+> The commit author decided to work around this at the consumer site, by
+> power cycling the PHY for the configuration to take effect.
 >
->    drivers/media/platform/sunxi/sun8i-a83t-mipi-csi2/sun8i_a83t_dphy.c
->    drivers/gpu/drm/rockchip/dw-mipi-dsi-rockchip.c
->    drivers/pinctrl/tegra/pinctrl-tegra-xusb.c
+> This had a worse implication from an API perspective in subsequent
+> commit 053f13f67be6 ("rswitch: Fix imbalance phy_power_off() calling").
+> It was observed that phy_power_on() and phy_power_off() calls need to be
+> balanced, and so, the consumer decided to start looking at the struct
+> phy :: power_count (the technical reason why I'm making this change).
 >
->    but the practice is not encouraged, and with time, these should be
->    moved to the subsystem. This is not something that I can do now.
+> This is also wrong from an API perspective because
+> - a consumer should only care about its own vote on the PHY power state.
+>   If this is a multi-port submode like QSGMII, a single phy_power_off()
+>   call will not actually turn the PHY off (nor should it).
+> - the power_count is written under the &phy->mutex, but read unlocked
+>   here.
 >
-> For temporary compatibility, keep including the provider header. This
-> will be removed when abuses are all gotten rid of.
+> The rswitch and r8a779f0-ether-serdes drivers both need to be completely
+> rethought in terms of Generic PHY API call sequence. There is no quick
+> fix to apply. Just include the PHY provider API along with the consumer
+> one, to keep working as before when struct phy will be made an opaque
+> pointer to normal PHY consumers. But this is a bad offender (and it's
+> not even a provider) so add a FIXME.
 >
 > Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-Thanks for your patch!
-
-> --- /dev/null
-> +++ b/drivers/phy/phy-provider.h
-
-> --- a/include/linux/phy/phy.h
-> +++ b/include/linux/phy/phy.h
-> @@ -1,246 +1,38 @@
->  /* SPDX-License-Identifier: GPL-2.0-or-later */
->  /*
-> - * phy.h -- generic phy header file
-> + * phy.h -- Generic PHY consumer API
->   *
->   * Copyright (C) 2013 Texas Instruments Incorporated - http://www.ti.com
->   *
->   * Author: Kishon Vijay Abraham I <kishon@ti.com>
->   */
->
-> -#ifndef __DRIVERS_PHY_H
-> -#define __DRIVERS_PHY_H
-> +#ifndef __PHY_CONSUMER_H
-> +#define __PHY_CONSUMER_H
->
-> -#include <linux/err.h>
-> -#include <linux/of.h>
-> -#include <linux/device.h>
-> -#include <linux/pm_runtime.h>
-> -#include <linux/regulator/consumer.h>
-> +#include <linux/phy/phy-props.h>
->
-> -#include <linux/phy/phy-dp.h>
-> -#include <linux/phy/phy-hdmi.h>
-> -#include <linux/phy/phy-lvds.h>
-> -#include <linux/phy/phy-mipi-dphy.h>
-> +#include "../../drivers/phy/phy-provider.h"
-
-Shouldn't there be one more "../"?
-Interestingly, it compiles with/without.
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
 Gr{oetje,eeting}s,
 
