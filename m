@@ -1,116 +1,123 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 042703A6F05
-	for <linux-ide@vger.kernel.org>; Thu,  5 Mar 2026 15:06:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E70E3C3BFC
+	for <linux-ide@vger.kernel.org>; Thu,  5 Mar 2026 15:35:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772723188; cv=none; b=Pu/DiiNAZ7ATc9Tuyr7EbCYLvrPmJjFPdjnq9TqdV0xwIjp18GClWEvOlG89fhSl4S+jPGAYzdC/2qksK66hkRHaR9/H5kt0pk5VWNl/m7OcrHI8U8IWN13OK93rHrmRq7sMZtvpUAtLQGQomsRxelaS2o7k6/YQ0IYl9ZJQXNk=
+	t=1772724906; cv=none; b=i+7bdV4fnESIIOvZnOMlYZOysEF5kDV5CFaD8POTBV4GOTgr1muUb6OFka00Fef2NqDWJUC7TdtKpjZm4C8OgX+QQkrzezSwD+geseku0+f2ZdygN2Zz+FhYBARo3I4hWfaa2O2fJLCiXrrmloYng99olHmYGrUewLYdq5ULjxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772723188; c=relaxed/simple;
-	bh=z4AHrGvw81ANUPukkGX+dgl7hXSQilMVx+iXO8GsSB0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W+CRb5nh6nvqzNHoAYzCiPT1HeUCJlZ1m8ivGFv5FQTqzUDyxEuLJXMGU4QZRdvhGbHE/6MTuwYAkNEoi0RpVBChQFW4igd4SW/BcPt7mMLfgrd7d7Q7RRTyfTaWbs1b168ASCBobATML2lRa0uT1vd8cYisRSpXVwy68Lbr1Pw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=HHF6rwun; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nEx1cRz8; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=HHF6rwun; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nEx1cRz8; arc=none smtp.client-ip=195.135.223.130
+	s=arc-20240116; t=1772724906; c=relaxed/simple;
+	bh=iPMsiVLWbKvFZDcIjAnjNJDRTfm5+W1JxTz7elaDtdg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oM/8EF/a48E7XW1EWgEyn8w7TItwu0+aNLMxUWFaDQiFDNXAeVIWn29IX184qdjzyeFLmd7MyKGqJdHO0KcuqhgdXS7cyFrNkpyFqaB4K4RGG0Gxbajbp5GSo6YWped0xH7D7Soe83diM2crrTq5PbWZC6RX5V4Hnk9DCyqWK3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=x5HxRSh+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=sVb14N8i; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=x5HxRSh+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=sVb14N8i; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="HHF6rwun";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nEx1cRz8";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="HHF6rwun";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nEx1cRz8"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="x5HxRSh+";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="sVb14N8i";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="x5HxRSh+";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="sVb14N8i"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 4FB883F26F;
-	Thu,  5 Mar 2026 15:06:25 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id A19ED5BCF7;
+	Thu,  5 Mar 2026 15:35:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1772723185; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1772724901; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=eKOkmoCvv3CEkHY2UPn5Y8n+3bq113EX2+oHYyLm0wU=;
-	b=HHF6rwunxvP9PQu2O3IDzVyt/xD5B7K6WToJZO0BrOXn5gWHXu3m0np/77rZ+BXKqt0yKT
-	IEEvfRdGTTbLn/13utde7kNc3Unq8UWlpHEK/u65g4h+IRfqacDU1dwfGjY19CF+JMK6hQ
-	GNmGtwqxgjPnS5icKG4emtd7Pwm564s=
+	bh=NTaBFZvMdyBZN0Q1KNvkXqRaPXfXE5I6oYxLEYEJ/qA=;
+	b=x5HxRSh+LfUNmGRcT7/jACy8M26QIbS/dks7yNWiYcuPfgMXHSDubr1Vj7jtQZmOH88d9j
+	kYMAwjXl7iRKGGmrFmUcDsZtnuxIGHQxxiUP83PjU8dieXkTisWAUGo2ZYDCvwxtzayXWu
+	z5RvVMPg0NJEJ1n3D/W3AeUBCxfAxP0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1772723185;
+	s=susede2_ed25519; t=1772724901;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=eKOkmoCvv3CEkHY2UPn5Y8n+3bq113EX2+oHYyLm0wU=;
-	b=nEx1cRz8l0ArCARScynOQ5PZLtur9dIQIt2UNxkv/tnJu0MC6elEx/mOeaA6PiT/772hT6
-	1/zisBg7b1lIjuBA==
-Authentication-Results: smtp-out1.suse.de;
+	bh=NTaBFZvMdyBZN0Q1KNvkXqRaPXfXE5I6oYxLEYEJ/qA=;
+	b=sVb14N8ix5T6/3MwAtgpstG52+GwmIGo3ihBxf0pOopUYdZKtIb+BEeHjnSevp2C5Z/NZI
+	rhQcdF3IC9doU+DA==
+Authentication-Results: smtp-out2.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1772723185; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1772724901; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=eKOkmoCvv3CEkHY2UPn5Y8n+3bq113EX2+oHYyLm0wU=;
-	b=HHF6rwunxvP9PQu2O3IDzVyt/xD5B7K6WToJZO0BrOXn5gWHXu3m0np/77rZ+BXKqt0yKT
-	IEEvfRdGTTbLn/13utde7kNc3Unq8UWlpHEK/u65g4h+IRfqacDU1dwfGjY19CF+JMK6hQ
-	GNmGtwqxgjPnS5icKG4emtd7Pwm564s=
+	bh=NTaBFZvMdyBZN0Q1KNvkXqRaPXfXE5I6oYxLEYEJ/qA=;
+	b=x5HxRSh+LfUNmGRcT7/jACy8M26QIbS/dks7yNWiYcuPfgMXHSDubr1Vj7jtQZmOH88d9j
+	kYMAwjXl7iRKGGmrFmUcDsZtnuxIGHQxxiUP83PjU8dieXkTisWAUGo2ZYDCvwxtzayXWu
+	z5RvVMPg0NJEJ1n3D/W3AeUBCxfAxP0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1772723185;
+	s=susede2_ed25519; t=1772724901;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=eKOkmoCvv3CEkHY2UPn5Y8n+3bq113EX2+oHYyLm0wU=;
-	b=nEx1cRz8l0ArCARScynOQ5PZLtur9dIQIt2UNxkv/tnJu0MC6elEx/mOeaA6PiT/772hT6
-	1/zisBg7b1lIjuBA==
+	bh=NTaBFZvMdyBZN0Q1KNvkXqRaPXfXE5I6oYxLEYEJ/qA=;
+	b=sVb14N8ix5T6/3MwAtgpstG52+GwmIGo3ihBxf0pOopUYdZKtIb+BEeHjnSevp2C5Z/NZI
+	rhQcdF3IC9doU+DA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E068A3EA68;
-	Thu,  5 Mar 2026 15:06:24 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8B16A3EA68;
+	Thu,  5 Mar 2026 15:35:01 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id h/uAM/CbqWnQHQAAD6G6ig
-	(envelope-from <pfalcato@suse.de>); Thu, 05 Mar 2026 15:06:24 +0000
-Date: Thu, 5 Mar 2026 15:06:23 +0000
-From: Pedro Falcato <pfalcato@suse.de>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2] ata: libata-core: Add BRIDGE_OK quirk for QEMU drives
-Message-ID: <ltqoseouwid7bfbntwr2e7tfquw7ypojit74hem6ccuzttgqh2@n2agw3lgdnh6>
-References: <20260305145312.1081112-1-pfalcato@suse.de>
+	id 17c2IaWiqWn5OwAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 05 Mar 2026 15:35:01 +0000
+Message-ID: <300ae0df-304b-45cc-9553-5a0735134a32@suse.de>
+Date: Thu, 5 Mar 2026 16:35:01 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ata: libata-core: Add BRIDGE_OK quirk for QEMU drives
+To: Pedro Falcato <pfalcato@suse.de>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20260305145312.1081112-1-pfalcato@suse.de>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
 In-Reply-To: <20260305145312.1081112-1-pfalcato@suse.de>
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -8.30
+X-Spam-Level: 
+X-Spamd-Result: default: False [-8.30 / 50.00];
+	REPLY(-4.00)[];
+	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.988];
 	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	MISSING_XM_UA(0.00)[];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
 	RCVD_TLS_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
+	RCPT_COUNT_FIVE(0.00)[6];
 	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
 X-Spam-Flag: NO
-X-Spam-Score: -3.80
-X-Spam-Level: 
 
-On Thu, Mar 05, 2026 at 02:53:12PM +0000, Pedro Falcato wrote:
+On 3/5/26 15:53, Pedro Falcato wrote:
 > Currently, whenever you boot with a QEMU drive over an AHCI interface,
 > you get:
 > [    1.632121] ata1.00: applying bridge limits
@@ -132,9 +139,30 @@ On Thu, Mar 05, 2026 at 02:53:12PM +0000, Pedro Falcato wrote:
 > 
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Pedro Falcato <pfalcato@suse.de>
+> ---
+>   drivers/ata/libata-core.c | 1 +
+>   1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index d61846f03edc..c57e35ccc092 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4231,6 +4231,7 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+>   	/* Devices that do not need bridging limits applied */
+>   	{ "MTRON MSP-SATA*",		NULL,	ATA_QUIRK_BRIDGE_OK },
+>   	{ "BUFFALO HD-QSU2/R5",		NULL,	ATA_QUIRK_BRIDGE_OK },
+> +	{ "QEMU HARDDISK",		"2.5+",	ATA_QUIRK_BRIDGE_OK },
+>   
+>   	/* Devices which aren't very happy with higher link speeds */
+>   	{ "WD My Book",			NULL,	ATA_QUIRK_1_5_GBPS },
 
-Ugh, just noticed I forgot to pick up Damien's Rb, please add it when
-applying, thanks!
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
+
+Hannes
 -- 
-Pedro
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
