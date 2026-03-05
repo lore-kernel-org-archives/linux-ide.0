@@ -1,168 +1,72 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.hostedemail.com (smtprelay0010.hostedemail.com [216.40.44.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E70E3C3BFC
-	for <linux-ide@vger.kernel.org>; Thu,  5 Mar 2026 15:35:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F113B3A63F4;
+	Thu,  5 Mar 2026 15:36:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772724906; cv=none; b=i+7bdV4fnESIIOvZnOMlYZOysEF5kDV5CFaD8POTBV4GOTgr1muUb6OFka00Fef2NqDWJUC7TdtKpjZm4C8OgX+QQkrzezSwD+geseku0+f2ZdygN2Zz+FhYBARo3I4hWfaa2O2fJLCiXrrmloYng99olHmYGrUewLYdq5ULjxg=
+	t=1772724967; cv=none; b=ko9mG0d23pCHLOp8T0zGjA0BbG+BR4PaODhM+IC14fLD4z3EQ4/DRoqIyVkO+312BZxnn8qZf4cZRz8O9d+fVwnGMsc4ajLTCSTff0TcfCYSfDjhA7dmUHmgoVKkGK7/pPiX3s5ltzTRnGFjhH1TzWXx+X/ddEucRJeCKOEGHCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772724906; c=relaxed/simple;
-	bh=iPMsiVLWbKvFZDcIjAnjNJDRTfm5+W1JxTz7elaDtdg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oM/8EF/a48E7XW1EWgEyn8w7TItwu0+aNLMxUWFaDQiFDNXAeVIWn29IX184qdjzyeFLmd7MyKGqJdHO0KcuqhgdXS7cyFrNkpyFqaB4K4RGG0Gxbajbp5GSo6YWped0xH7D7Soe83diM2crrTq5PbWZC6RX5V4Hnk9DCyqWK3A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=x5HxRSh+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=sVb14N8i; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=x5HxRSh+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=sVb14N8i; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="x5HxRSh+";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="sVb14N8i";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="x5HxRSh+";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="sVb14N8i"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id A19ED5BCF7;
-	Thu,  5 Mar 2026 15:35:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1772724901; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NTaBFZvMdyBZN0Q1KNvkXqRaPXfXE5I6oYxLEYEJ/qA=;
-	b=x5HxRSh+LfUNmGRcT7/jACy8M26QIbS/dks7yNWiYcuPfgMXHSDubr1Vj7jtQZmOH88d9j
-	kYMAwjXl7iRKGGmrFmUcDsZtnuxIGHQxxiUP83PjU8dieXkTisWAUGo2ZYDCvwxtzayXWu
-	z5RvVMPg0NJEJ1n3D/W3AeUBCxfAxP0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1772724901;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NTaBFZvMdyBZN0Q1KNvkXqRaPXfXE5I6oYxLEYEJ/qA=;
-	b=sVb14N8ix5T6/3MwAtgpstG52+GwmIGo3ihBxf0pOopUYdZKtIb+BEeHjnSevp2C5Z/NZI
-	rhQcdF3IC9doU+DA==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1772724901; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NTaBFZvMdyBZN0Q1KNvkXqRaPXfXE5I6oYxLEYEJ/qA=;
-	b=x5HxRSh+LfUNmGRcT7/jACy8M26QIbS/dks7yNWiYcuPfgMXHSDubr1Vj7jtQZmOH88d9j
-	kYMAwjXl7iRKGGmrFmUcDsZtnuxIGHQxxiUP83PjU8dieXkTisWAUGo2ZYDCvwxtzayXWu
-	z5RvVMPg0NJEJ1n3D/W3AeUBCxfAxP0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1772724901;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NTaBFZvMdyBZN0Q1KNvkXqRaPXfXE5I6oYxLEYEJ/qA=;
-	b=sVb14N8ix5T6/3MwAtgpstG52+GwmIGo3ihBxf0pOopUYdZKtIb+BEeHjnSevp2C5Z/NZI
-	rhQcdF3IC9doU+DA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8B16A3EA68;
-	Thu,  5 Mar 2026 15:35:01 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 17c2IaWiqWn5OwAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 05 Mar 2026 15:35:01 +0000
-Message-ID: <300ae0df-304b-45cc-9553-5a0735134a32@suse.de>
-Date: Thu, 5 Mar 2026 16:35:01 +0100
+	s=arc-20240116; t=1772724967; c=relaxed/simple;
+	bh=qocaInGB0SlfrWm+uA1O3uhdYbYezjAl8jrEXMJzGhU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=LWEfGZx3KKfqPR+EulOrLmlCpf/Zbe4FGWLQ38ONHzUkaONzLXL9e6My5PMks7NIArs4AmwsgoWqVrWV9nAjhuWpGrpWu7nVy9K1IDrlnpbbsxe+dAudTWfhENgZOVcfAVbKtdizgBtl3sxPU3CRhJwgBJmfJiRbqPuMFpyAKcw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=perches.com; spf=pass smtp.mailfrom=perches.com; arc=none smtp.client-ip=216.40.44.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=perches.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=perches.com
+Received: from omf17.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay08.hostedemail.com (Postfix) with ESMTP id 9322C14014F;
+	Thu,  5 Mar 2026 15:36:02 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf17.hostedemail.com (Postfix) with ESMTPA id E35031C;
+	Thu,  5 Mar 2026 15:35:55 +0000 (UTC)
+Message-ID: <21e84301a7c37f9d5ce6f0ddcaed7846174d2a4d.camel@perches.com>
+Subject: Re: [PATCH phy-next 22/22] MAINTAINERS: add regex for linux-phy
+From: Joe Perches <joe@perches.com>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+	linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, Neil
+ Armstrong	 <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
+	freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+ netdev@vger.kernel.org, 	spacemit@lists.linux.dev,
+ UNGLinuxDriver@microchip.com
+Date: Thu, 05 Mar 2026 07:35:54 -0800
+In-Reply-To: <20260305114352.2f7btqixg4tu5bzl@skbuf>
+References: <20260304175735.2660419-1-vladimir.oltean@nxp.com>
+	 <20260304175735.2660419-23-vladimir.oltean@nxp.com>
+	 <a8fee1cd-1e69-4a9e-8533-c0988c480fb9@oss.qualcomm.com>
+	 <20260305085148.7cwo3yflp7vcfldf@skbuf>
+	 <f3a5aa3df78553ffc0fd0024f5fd36a4e2158c88.camel@perches.com>
+	 <20260305114352.2f7btqixg4tu5bzl@skbuf>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: libata-core: Add BRIDGE_OK quirk for QEMU drives
-To: Pedro Falcato <pfalcato@suse.de>, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20260305145312.1081112-1-pfalcato@suse.de>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260305145312.1081112-1-pfalcato@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Score: -8.30
-X-Spam-Level: 
-X-Spamd-Result: default: False [-8.30 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.988];
-	MIME_GOOD(-0.10)[text/plain];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
+X-Stat-Signature: hdghxtayq5bkfzsomxmnfbydyyebzipf
+X-Rspamd-Server: rspamout08
+X-Rspamd-Queue-Id: E35031C
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX19f3I+nQL7Hl0m6eSD18a/IIsXK9f3qkJo=
+X-HE-Tag: 1772724955-671908
+X-HE-Meta: U2FsdGVkX1/X7uxRzGLN+IX8WCZcO8p7ZTfkKmYNWBtz0ybputMaHEYE9yjxoGJ588aNvqlmxPrL8260emaV8dmXUI0e+INEtvEJY25I/Ej/PwqlxILke5yF3tqaj6xtvov8nI2F5oYM0uwbLv+6+skyh/sdJqBRUfJJKxLUzixxjwVPNZYZfPXpcC3lGcz5BMW1nsCCc9lzUvpFfMAODgtiRdX4Al8waTK8ABKVHmTqbt8uPB5EPbopscO3f/XucT2DdozpyI3LxZQRIQw7tIxAWEpzWgj98RYMI3rQa9CVBr40+v4Qte7+qYx1OCa5
 
-On 3/5/26 15:53, Pedro Falcato wrote:
-> Currently, whenever you boot with a QEMU drive over an AHCI interface,
-> you get:
-> [    1.632121] ata1.00: applying bridge limits
-> 
-> This happens due to the kernel not believing the given drive is SATA,
-> since word 93 of IDENTIFY (ATA_ID_HW_CONFIG) is non-zero. The result is
-> a pretty severe limit in max_hw_sectors_kb, which limits our IO sizes.
-> 
-> QEMU has set word 93 erroneously for SATA drives but does not, in any
-> way, emulate any of these real hardware details. There is no PATA
-> drive and no SATA cable.
-> 
-> As such, add a BRIDGE_OK quirk for QEMU HARDDISK. Special care is taken
-> to limit this quirk to "2.5+", to allow for fixed future versions.
-> 
-> This results in the max_hw_sectors being limited solely by the
-> controller interface's limits. Which, for AHCI controllers, takes it
-> from 128KB to 32767KB.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Pedro Falcato <pfalcato@suse.de>
-> ---
->   drivers/ata/libata-core.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index d61846f03edc..c57e35ccc092 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4231,6 +4231,7 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
->   	/* Devices that do not need bridging limits applied */
->   	{ "MTRON MSP-SATA*",		NULL,	ATA_QUIRK_BRIDGE_OK },
->   	{ "BUFFALO HD-QSU2/R5",		NULL,	ATA_QUIRK_BRIDGE_OK },
-> +	{ "QEMU HARDDISK",		"2.5+",	ATA_QUIRK_BRIDGE_OK },
->   
->   	/* Devices which aren't very happy with higher link speeds */
->   	{ "WD My Book",			NULL,	ATA_QUIRK_1_5_GBPS },
+On Thu, 2026-03-05 at 13:43 +0200, Vladimir Oltean wrote:
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> K:	(?:struct\s+)?phy(?:_ops|_attrs|_lookup|_provider)?\b
 
-Cheers,
+You have (?:...)?phy(?:...)?\b
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+I rather doubt you want anything that ends in phy
+
+That matches words like cryptography and way too many dts/yaml files
