@@ -1,51 +1,51 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 671CD39A07B
-	for <linux-ide@vger.kernel.org>; Thu,  5 Mar 2026 12:15:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A050738654C
+	for <linux-ide@vger.kernel.org>; Thu,  5 Mar 2026 12:29:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772712938; cv=none; b=qMw/KCGOGfKl8jcBemcrhesmK5C0/Nicgd9++M1RJkp3osmmBdeZa7mflUgNPPZAm6QJD78tPlEqaVfwlHKeuU61vmkvLEzYFeoeK4N7aa8C5HUXds0+Hm+MCqwqWyXZAuMO7z5ejqtlr+s6T7HSLVdvdK8wf61DgBgBP4CvLj4=
+	t=1772713801; cv=none; b=L6WW3n5hE92EX76V+UfYr2LPqdRfPRtHbNFbZov0zdbYUVRm7FvmTpmvHSXhdY77EP1Z/F8I3tJHXOvHH2P0CpHxJuktdpUZAcg8w9XvG3UUyPDd1d/E5+A4ZTz0tLLMR7DBmzuZbTWIXOjI1kQlM9/qAjXdD2+54Oi2wEcRzik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772712938; c=relaxed/simple;
-	bh=1N9rpptCfEGuKF24I3MO+ctQKVCjB9J9sj4YNN7+SI8=;
+	s=arc-20240116; t=1772713801; c=relaxed/simple;
+	bh=4D2Q39ZrE8YmvazKvKW3aF1/g5Cpv43ee/MaVGKVTBI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hOKoCycoWmwu9YZq2ign1pcsRz/mCExFU+WDKI15aL/2N6NTwrmfMYktHuI6KoTGt9+RX6nieTGmzrkSKZmu/vwmas70yT95WKu0AOm9ro0Dyi5sJuNiYPHJdhgAwlW3S/Ajc2uWq6O0IRGxSpFd2nalAhwPjRj/SEzKzjDiFVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.42
+	 Content-Type:Content-Disposition:In-Reply-To; b=cUh5rzlX8ktIwReC3FqDg6u4PcUSj6zPhtTzp0X1ifp7SXN1W1vQxv73sFaUx0kxlYiHZV7Y/k2v/0rioi1BKas3WFTTkRHfbfDEHpiUwFcGlohVFolDw0f+tXu9W61hvAJXkc9JsQXM5JS2QbFMygvoUoJJngobeIEgL3PwIM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.215.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-35983877dc5so2192183a91.2
-        for <linux-ide@vger.kernel.org>; Thu, 05 Mar 2026 04:15:35 -0800 (PST)
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-bde0f62464cso2835027a12.2
+        for <linux-ide@vger.kernel.org>; Thu, 05 Mar 2026 04:29:59 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772712934; x=1773317734;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yS764krKV6WfB8kOxjvP29bXooB1nm1bNBDNiujlO4g=;
-        b=gE7Qc05WiB1DIZWyr7hNjq9YDOcuJ+ekEA9fNHQwp3qJgto7TAA1fGxzVfv9lKehcS
-         rpIrNORGcV0o0cUeqBr3fk74FrnFC9NVNHgUmPFLEodpOUAmVsC7XwF2rfzKY/GVNTaR
-         aKOcI+5UhNR3eFXKe1dk0w0YZiCJ1ZULAfFZMMHVxehud2m1SulqAXVyBdJmDr9fNFYN
-         PbAV4+zSXwkBt+c23DbmTafPq6hTfADI9vRzpjPtndgMu2ErQbNFz4ATPfkN48soQ2Hm
-         t6c0Mpvoth9IvI7Cgd5meI3kKOEmNP4WlQ1SGdV6dwmzeYx297Qe0IvphIDSmbHAzcud
-         IgYw==
-X-Forwarded-Encrypted: i=1; AJvYcCXWlRy9SRb1ERHBlWRKFfc/u0OuWRF+aslCw+BkMMQ30xCzoddG7eJswEhKSt1MbIoTAzN9EzYktCE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyd+MdkMvQQ7ZylQ3rJ3YTQJ8YJMDgIOtjLskxs8pu7Pbun+nIz
-	X7nDVsK4Kkq2svTMY0wpVn9tZMLGiC5YWSL5YiikiCyMg8XriJjmY0k6
-X-Gm-Gg: ATEYQzzwqyQXuNBG/PH0OHF6J+gSqpBGgrAcnLSrFdqEbOKcclt1H9Em239N6jbNbPS
-	Ck1QmNxr4hVBhZJDiy+yzc5beens/Y0wQunU+6xt2b/oKZrAngMvg/8iFAVdaKWGeSyXmf5KHdp
-	UVkl9sqV+tJSL8wsIvVv79PkWQN07rxhz2IZJAboI+bneSHWpKPFI4zfpvBzaLeUiXrwKvXrmq3
-	gCB9IcAv6x9dGRxoJAlgtvm0pQg47c9COaqeC8co/5aC3obSD1KetZPBG8cnAVzjjox6zedlAr7
-	BtdOCJSs3x50vERmxeKAqa/LnW257W9BcExuX+MzMtP6lRiTqVOP0f9tfUZnXYvLPmvPk7xCYN+
-	5Dn4kjvm5XggmZ0Fr+LcUrkcmfoWA9n1yhVqwPBnbysPB4q51I7fzYSusSsaufNb4p0lIEZxRJt
-	qwuO0yZNWvL8tE4Xu5frDqcsOTYbqvzPbl2LN+AU7OJuWpdLVoBR/+NjZm9WQEByiYEo3OtASol
-	Xz7nKVAQQmgpMJ1RajAaIF0+8kUFI1RimC5oxmfoGEMqhapkcVpMotIcRMQnQ==
-X-Received: by 2002:a17:90a:d44b:b0:34e:630c:616c with SMTP id 98e67ed59e1d1-359a6a92750mr4210979a91.31.1772712934483;
-        Thu, 05 Mar 2026 04:15:34 -0800 (PST)
+        d=1e100.net; s=20230601; t=1772713799; x=1773318599;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QrCqdrr01xMGx/SCx6YPhCapPZnumyW3whTx771nk9I=;
+        b=Y2cToyxFTYTT6PyobphtllT5PnEhd15/oXmW1IsnGnbhYar46D1oNe8Odg0nTuGrgQ
+         2SfAqQLszQlgeQSp4iPQqtATX0VWZo6t+zy0shUYF/ctoZlnnWoPciMS45ARBDETfCyi
+         QINwQdGsg0FhS+KiiuxABKyITjeOENjMLBEvqB0ZFBjNw2/XP8SwB36s0jNHscRBughm
+         64aR+RRBc+ca7dOSWuyk+4nYvG9VWaNYgms8e5PVrkDYLderMTRDcoBJpWaJGfT9Ajky
+         Th3bDqTr3IuYkvge1Aigb436pJEqx2k7iEXojgFyuTXHrGl6I8V+HB8GqZ3eve1YdAic
+         A8Aw==
+X-Forwarded-Encrypted: i=1; AJvYcCXVj3XF+Cq7q+KT522SH+NEmF2Egew3i6AEoHPswwlA3eJ7/lf7q6TCUFW6lP2JrVLyHo9vmHCxJpo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxo1y+xCxmoagReAP8xYTwlDoUZmmmRibXutG5+Nh3XMx/moOqJ
+	+A1ps4jm8QIrk2kHOf61QhUx7WfgXgJ6Ab5jXTy5WIkSAzBBdHdwHXbM
+X-Gm-Gg: ATEYQzzfLBVAR3YZaLOx3I+NgFJK8AFOMfk+OSozEc4Zd9X0gSLd22ZxejnuS9vMgvA
+	64j8PbdAaqsHtVkACTGG/Jz3VPFoeJIdg1VrjZ7LwyG5yl4JCcGZkAHjERMgPmdlA5JIx4UVWEd
+	DIu11ZJHiGZRC1YW96we2sjp8mRJmDNHVSmETcr0N+J0ciZAPdXEm/asMINxqyheid1e9Z+i5bY
+	2HFTYu5bjgNWoADSqaetnFYTWiGe4UKkM+y3Ahm2lpH/AgCyf2AtfqHfTVgkmqcsY8xguRkca7t
+	M8XmXS17vSxjVA+a/1X3dw9m0JPz45gQ+L+wufySAAYX8uDgVkGK1PI+zIfuBzprte+9UVkSHWu
+	tG/HlAnLAw0+y8uu2oO61eXbnyBoFIAULzKorSBKeBgooP+U0wvM1ZlHe8jrEYpsK1s5rucJAsy
+	os2//iAAP/rZa95KcvywVsPz7SpCwlWFd0OFgTqo7DF+TNVYjmjIk8UlY+eRRyY5tFr/m1bMMNP
+	18ft7bEKnUrdzp7bm/zVb9XNk5wyORGELIvDvcX7jrTjMxnub4=
+X-Received: by 2002:a17:903:1a43:b0:2ae:4701:3c31 with SMTP id d9443c01a7336-2ae6a9cc1c0mr59976385ad.11.1772713799017;
+        Thu, 05 Mar 2026 04:29:59 -0800 (PST)
 Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-359b2c1daa6sm2391359a91.0.2026.03.05.04.15.33
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb69fa43sm225561035ad.46.2026.03.05.04.29.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Mar 2026 04:15:33 -0800 (PST)
-Date: Thu, 5 Mar 2026 21:15:32 +0900
+        Thu, 05 Mar 2026 04:29:58 -0800 (PST)
+Date: Thu, 5 Mar 2026 21:29:57 +0900
 From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
 To: Vladimir Oltean <vladimir.oltean@nxp.com>
 Cc: Joe Perches <joe@perches.com>,
@@ -64,41 +64,54 @@ Cc: Joe Perches <joe@perches.com>,
 	netdev@vger.kernel.org, spacemit@lists.linux.dev,
 	UNGLinuxDriver@microchip.com
 Subject: Re: [PATCH phy-next 22/22] MAINTAINERS: add regex for linux-phy
-Message-ID: <20260305121532.GA1649635@rocinante>
+Message-ID: <20260305122957.GA1652563@rocinante>
 References: <20260304175735.2660419-1-vladimir.oltean@nxp.com>
  <20260304175735.2660419-23-vladimir.oltean@nxp.com>
  <a8fee1cd-1e69-4a9e-8533-c0988c480fb9@oss.qualcomm.com>
  <20260305085148.7cwo3yflp7vcfldf@skbuf>
  <f3a5aa3df78553ffc0fd0024f5fd36a4e2158c88.camel@perches.com>
  <20260305114352.2f7btqixg4tu5bzl@skbuf>
+ <20260305121532.GA1649635@rocinante>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260305114352.2f7btqixg4tu5bzl@skbuf>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260305121532.GA1649635@rocinante>
 
-Hello,
+On 26-03-05 21:15:32, Krzysztof Wilczyński wrote:
+> Hello,
+> 
+> > K:	\b(?:__)?(?:devm_)?(?:of_)?phy_(?:create|destroy|provider_(?:un)?register)\b
+> > K:	\bphy_(?:create|remove)_lookup\b
+> > K:	\bphy_(?:get|set)?_drvdata\b
+> > K:	\b(?:devm_)?(?:of_)?phy_(?:optional_)?(?:get|put)(?:_by_index)?\b
+> > K:	\bphy_pm_runtime_(?:get|put)(?:_sync)?\b
+> > K:	\bphy_(?:init|exit|power_(?:on|off))\b
+> > K:	\bphy_|(?:get|set)_(?:mode(?:_ext)?|media|speed|bus_width|max_link_rate)\b
+> > K:	\bphy_(?:reset|configure|validate|calibrate)\b
+> > K:	\bphy_notify_(?:connect|disconnect|state)\b
+> > K:	(?:struct\s+)?phy(?:_ops|_attrs|_lookup|_provider)?\b
+> > K:	(?:linux/phy/phy\.h|phy-props\.h|phy-provider\.h)
+> 
+> What about
+> 
+>   F:	drivers/*/*phy*
+> 
+> or something along these lines.
 
-> K:	\b(?:__)?(?:devm_)?(?:of_)?phy_(?:create|destroy|provider_(?:un)?register)\b
-> K:	\bphy_(?:create|remove)_lookup\b
-> K:	\bphy_(?:get|set)?_drvdata\b
-> K:	\b(?:devm_)?(?:of_)?phy_(?:optional_)?(?:get|put)(?:_by_index)?\b
-> K:	\bphy_pm_runtime_(?:get|put)(?:_sync)?\b
-> K:	\bphy_(?:init|exit|power_(?:on|off))\b
-> K:	\bphy_|(?:get|set)_(?:mode(?:_ext)?|media|speed|bus_width|max_link_rate)\b
-> K:	\bphy_(?:reset|configure|validate|calibrate)\b
-> K:	\bphy_notify_(?:connect|disconnect|state)\b
-> K:	(?:struct\s+)?phy(?:_ops|_attrs|_lookup|_provider)?\b
-> K:	(?:linux/phy/phy\.h|phy-props\.h|phy-provider\.h)
+For content match, it could also be:
 
-What about
+  K:	phy
 
-  F:	drivers/*/*phy*
+I believe this would match everything of interest?  Perhaps there is no
+need to have any of these complex regular expressions, would be my way of
+thinking here.  Makes it easier to maintain, too.
 
-or something along these lines.
+Just thinking out loud, really...
 
 	Krzysztof
