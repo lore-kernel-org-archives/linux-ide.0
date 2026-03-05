@@ -1,328 +1,148 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 500AC374198
-	for <linux-ide@vger.kernel.org>; Thu,  5 Mar 2026 09:36:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772703392; cv=none; b=m2GknRWNV/HKX7rBlzRWB2ZHMXNX4LNmdjw833v/f2XwSAeKvqwp8CgDwbQIN7dRKD4ISXj4DVEO9PcIRNtVRFXl1Rb0HlEVzDGWLTV2AK1ly+DzBB4XkxJQ/7MTp3D79EfDmgJbjrfDZXbQefiRv50g0N3+RR/vyrfex2J6w4s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772703392; c=relaxed/simple;
-	bh=CMgXM6u7309Wn3e+oqvoc7hX9vYREWTZOtF5JH1MCY8=;
-	h=Mime-Version:Content-Type:Date:Message-Id:From:To:Cc:Subject:
-	 References:In-Reply-To; b=qDUs3Cv3VKqnybfDreN1Mw4z/UvG6HRU4nMIYZN22p71vq2JfwI5e4p4lt8R4CJSZD6ncITr57DtGjNNEedYhI+tvfH3AD/p6ii3hbuZiIXd41nCg2Qs1HKcOPm3bLUX2VfFN0kHuir76a/NZ/vutU/4jsEpYXoqvBlxYYC9LPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=r8n3aZlu; arc=none smtp.client-ip=209.85.221.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55D953783B5;
+	Thu,  5 Mar 2026 09:53:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772704406; cv=pass; b=JTqu1JzKzrEzlhqVc5TyrK72gmp9gf3LB7fpV/hILgcf5X0LvNfh6S1kLmSfYs9Chwsj4oQAbG/DI33xZ9M/OdpcZxiWjSyJGguqw80WKKrV+fvAJG11De/ctvvDNT9CtArh7iR8MI1RI7Q3SnY9fq3mRBlbin2Q9UOJGiA4cTo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772704406; c=relaxed/simple;
+	bh=D7W50Gyx79F1BQJBBcvSYt9GNLrXBM4NZSb+Xw2SOq4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WAP5e7WHh5z6I+QPBlkK/PtDYW/R11767JXN7MpMcBf8W5LTMYV0QwEscS97mdzAF7pSouj+YqEpNtdnml6aYS/h8PcNrQkKLdo0QxwgDh6CYN5224CmjtZlkOkRH4/Vq6XIe2r2IGTEFh+76G1ZMCXmViKX6mG1g1Eka/IwyTg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=sebastian.reichel@collabora.com header.b=kuQ6wgoy; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="r8n3aZlu"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-439c9bdc1eeso1569056f8f.3
-        for <linux-ide@vger.kernel.org>; Thu, 05 Mar 2026 01:36:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1772703385; x=1773308185; darn=vger.kernel.org;
-        h=in-reply-to:references:subject:cc:to:from:message-id:date
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Mbidr/A9XxccdAFsJsVKLL2bBtmGRz8XUrt7LUMLgOs=;
-        b=r8n3aZluVhBTCfb7BQuBR7rtMDtwMt/hhUveTeZDZQAO4wJxkqYdVnWInamwTvoasd
-         njRsc4y1mlFqY6e8h+MrxsQmTwUtFPEr4bGcC2jwn78y+TT5X2hBUAy+EkXK3GfkPnMc
-         efI7YRWZmXX4iWMH3mdtVwJdLQgh9b+NgkxQAUiokU1kYqlHFgrFqn8X6Kh54oqNRJvL
-         W9KF9PgfXi06d+0sZ2isvDvqnFTaI47uFjf39desDXwhsR9fNqaB6S1RhpTym+6cBpi7
-         37SVpkS6dpjv/ggxoqRfyQPvFp9lVwc3QY78bUWB4dZgVEV/oWO3UY/ChIwfz5zMSHTu
-         wMIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772703385; x=1773308185;
-        h=in-reply-to:references:subject:cc:to:from:message-id:date
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Mbidr/A9XxccdAFsJsVKLL2bBtmGRz8XUrt7LUMLgOs=;
-        b=cTw0Dc2NIbwe81qfBpJL4U/03PqwVNpqrDuycyH7EZzwZzQPh+N93cUQuMnEPFdcub
-         rLQkhuDWTEGxOn2/WHy0FWqL2JEK+m/GBD4PfRVPojW+YxpcFEX5RC6tkOYbyTskpZ8i
-         I8deErE3uNPVPDx2YQZUOPzhp0hB+wL8Uc0ls2Ibidg8lXWUxqdRRi7gWRQ81abVjLq4
-         k1Wk4Ly1yFWmiqEhXafhRPCKShnMPlsWPiRs8sjj+teEE5r4kpkMJ3SdqUGDOrlxjsPf
-         +k+gLP3VTZxriOYCk18vYZVRafms8uXe5r7IWg+DLzQN2dVJRd1ONmpx9d3wRjMziDtG
-         AApw==
-X-Forwarded-Encrypted: i=1; AJvYcCVgRkMXXYd/iMiVFp0thaEXQ9k9lbuffz+5SkwlPlYxmjD6uCY4+3COIsJ6WqLCRkwVlqfd+HeGrzQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwabY4hKqLH+AqQdHCN7F8IHgd7brIsyvs+VtA/CmOSPe/dbdpu
-	4Gor+ncT2wFLJj8CD9+luQCgHvSjKMyGsP6nB2zYJ3mx7K+xoINrAItwjbabYz1sxPs=
-X-Gm-Gg: ATEYQzyoM84LhZYv5nLHl6aGvYbHvtk2xDML1kBuEnxLKuXHl9UKuWdFyXG0ELtrVw1
-	0zddP1G8cbkfb9Q1/zW+muikpkmvM4OZAjXq4SjpT/MshMP8h9/dFOmz2+5O7IDSSsnz8wBXYRx
-	HVZ7e7aBxUCvnDcBl0c+ItwUQejbSztdtU776fSlsuT8NuXoITuLcIgJVT7ZUbsVnB2zsrgeXLh
-	94d97+ovJ6Kf9IiWGvYyKiJgyShyuwPiXBIO5OrMxpgCXERHQ0ya7qRhRJNEO9bNS5gqgGa9Zus
-	Y1Ecc/BGR9FswJtg1YFDYKAwHFls+UVEzNb4bVRK4ciWHZafFboSDvLQXBsxVtN4snxAFQ5Rx9a
-	oeEz9ULzjvTZjWM3MIx491ogDKePzhXmtBvID9l7ez5oWY2750TmiztpEXozrhL/WOcGKN+AnY3
-	BwsXtCuHUI91MSFMI=
-X-Received: by 2002:a05:6000:144f:b0:439:b564:7a6c with SMTP id ffacd0b85a97d-439c7f6a2c9mr9158913f8f.4.1772703384539;
-        Thu, 05 Mar 2026 01:36:24 -0800 (PST)
-Received: from localhost ([195.52.25.213])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439c2f7eca1sm14966458f8f.11.2026.03.05.01.36.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Mar 2026 01:36:22 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=sebastian.reichel@collabora.com header.b="kuQ6wgoy"
+ARC-Seal: i=1; a=rsa-sha256; t=1772704388; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=ILbpyWSpgsHBsljKSeJYbS7Vw03gooRrhFM0zfvSJ0mMnsLhlex4dZfvu0oPRIpkKO47xszQ2NfzHWwj0pqoFXT4WttLKvDbi1tiW3nCRR4ojr4Vznpxn72wH7dC+ms4XVRbfVzqDJCc2LgWtNUaXznEcvPGtkEc57jsG4V4QXU=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1772704388; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=nzu6bAtb37Rscm3wTe12q1wA4WbiMxsyc0YgbMDmKhU=; 
+	b=mYJnA6goY8gyGl8bcxdTO/ByoiY0b4sP3KBwTqzQqQEu2c5WKfTddS9Fe6+yv32bTaxDKYI77aHYbYDm3y0nylvB+35tg6Dif1cn+oIsHiwDCXjvuTbZTh5SotriBERyVv4hZBgBiBYR/T0QbFyyAxO9Bo5rJckG1guguTRV57Q=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=sebastian.reichel@collabora.com;
+	dmarc=pass header.from=<sebastian.reichel@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772704388;
+	s=zohomail; d=collabora.com; i=sebastian.reichel@collabora.com;
+	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
+	bh=nzu6bAtb37Rscm3wTe12q1wA4WbiMxsyc0YgbMDmKhU=;
+	b=kuQ6wgoyu9T6YeGL0SUqZ9zx8isgTeA+3UHBcaeWieFRMa3K4z+NnEetspD5wWZI
+	TL1RG3LK6Yh1ZgrkSKhInXGy6ScbB4h0qNcCIN3ps5vMT5cv/qWX4tybyGlWVkJHBrt
+	Vz08HTmqhf50ivIQbgSUcJHFeQhtd9qRZpIk3S4c=
+Received: by mx.zohomail.com with SMTPS id 1772704385504238.17185557574544;
+	Thu, 5 Mar 2026 01:53:05 -0800 (PST)
+Received: by venus (Postfix, from userid 1000)
+	id 8DA0C180891; Thu, 05 Mar 2026 10:52:59 +0100 (CET)
+Date: Thu, 5 Mar 2026 10:52:59 +0100
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, 
+	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org, 
+	linux-usb@vger.kernel.org, netdev@vger.kernel.org, spacemit@lists.linux.dev, 
+	UNGLinuxDriver@microchip.com
+Subject: Re: [PATCH phy-next 19/22] power: supply: cpcap-charger: include
+ missing <linux/property.h>
+Message-ID: <aalSUJI5jFG2kJBL@venus>
+References: <20260304175735.2660419-1-vladimir.oltean@nxp.com>
+ <20260304175735.2660419-20-vladimir.oltean@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed;
- boundary=b895f1e89350da7f8491f35b99d431866030fe6df54b62358155e9918430;
- micalg=pgp-sha512; protocol="application/pgp-signature"
-Date: Thu, 05 Mar 2026 10:36:14 +0100
-Message-Id: <DGUQWFYCPRQZ.17SO07GXW2DYA@baylibre.com>
-From: "Markus Schneider-Pargmann" <msp@baylibre.com>
-To: "Vladimir Oltean" <vladimir.oltean@nxp.com>,
- <linux-phy@lists.infradead.org>
-Cc: "Vinod Koul" <vkoul@kernel.org>, "Neil Armstrong"
- <neil.armstrong@linaro.org>, <dri-devel@lists.freedesktop.org>,
- <freedreno@lists.freedesktop.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-arm-msm@vger.kernel.org>, <linux-can@vger.kernel.org>,
- <linux-gpio@vger.kernel.org>, <linux-ide@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
- <linux-riscv@lists.infradead.org>, <linux-rockchip@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-sunxi@lists.linux.dev>,
- <linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
- <netdev@vger.kernel.org>, <spacemit@lists.linux.dev>,
- <UNGLinuxDriver@microchip.com>, "Andrzej Hajda" <andrzej.hajda@intel.com>,
- "Robert Foss" <rfoss@kernel.org>, "Laurent Pinchart"
- <Laurent.pinchart@ideasonboard.com>, "Jonas Karlman" <jonas@kwiboo.se>,
- "Jernej Skrabec" <jernej.skrabec@gmail.com>, "Maarten Lankhorst"
- <maarten.lankhorst@linux.intel.com>, "Maxime Ripard" <mripard@kernel.org>,
- "Thomas Zimmermann" <tzimmermann@suse.de>, "David Airlie"
- <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Andy Yan"
- <andy.yan@rock-chips.com>, "Marc Kleine-Budde" <mkl@pengutronix.de>,
- "Vincent Mailhol" <mailhol@kernel.org>, "Nicolas Ferre"
- <nicolas.ferre@microchip.com>, "Alexandre Belloni"
- <alexandre.belloni@bootlin.com>, "Claudiu Beznea"
- <claudiu.beznea@tuxon.dev>, "Markus Schneider-Pargmann" <msp@baylibre.com>,
- "Geert Uytterhoeven" <geert+renesas@glider.be>, "Magnus Damm"
- <magnus.damm@gmail.com>
-Subject: Re: [PATCH phy-next 13/22] phy: introduce phy_get_max_link_rate()
- helper for consumers
-X-Mailer: aerc 0.21.0
-References: <20260304175735.2660419-1-vladimir.oltean@nxp.com>
- <20260304175735.2660419-14-vladimir.oltean@nxp.com>
-In-Reply-To: <20260304175735.2660419-14-vladimir.oltean@nxp.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="2vxe7ox52jklnq2g"
+Content-Disposition: inline
+In-Reply-To: <20260304175735.2660419-20-vladimir.oltean@nxp.com>
+X-Zoho-Virus-Status: 1
+X-Zoho-AV-Stamp: zmail-av-0.2.1.1.4.3/272.682.15
+X-ZohoMailClient: External
 
---b895f1e89350da7f8491f35b99d431866030fe6df54b62358155e9918430
+
+--2vxe7ox52jklnq2g
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH phy-next 19/22] power: supply: cpcap-charger: include
+ missing <linux/property.h>
+MIME-Version: 1.0
 
 Hi,
 
-On Wed Mar 4, 2026 at 6:57 PM CET, Vladimir Oltean wrote:
-> Consumer drivers shouldn't dereference struct phy, not even to get to
-> its attributes.
->
-> We have phy_get_bus_width() as a precedent for getting the bus_width
-> attribute, so let's add phy_get_max_link_rate() and use it in DRM and
-> CAN drivers.
->
+On Wed, Mar 04, 2026 at 07:57:32PM +0200, Vladimir Oltean wrote:
+> This file uses dev_fwnode() without including the proper header for it,
+> relying on transitive header inclusion from:
+>=20
+> drivers/power/supply/cpcap-charger.c
+> - include/linux/phy/omap_usb.h
+>   - include/linux/usb/phy_companion.h
+>     - include/linux/usb/otg.h
+>       - include/linux/phy/phy.h
+>         - drivers/phy/phy-provider.h
+>           - include/linux/of.h
+>             - include/linux/property.h
+>=20
+> With the future removal of drivers/phy/phy-provider.h from
+> include/linux/phy/phy.h, this transitive inclusion would break.
+>=20
 > Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
 > ---
-> Cc: Andrzej Hajda <andrzej.hajda@intel.com>
-> Cc: Neil Armstrong <neil.armstrong@linaro.org>
-> Cc: Robert Foss <rfoss@kernel.org>
-> Cc: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
-> Cc: Jonas Karlman <jonas@kwiboo.se>
-> Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
-> Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-> Cc: Maxime Ripard <mripard@kernel.org>
-> Cc: Thomas Zimmermann <tzimmermann@suse.de>
-> Cc: David Airlie <airlied@gmail.com>
-> Cc: Simona Vetter <simona@ffwll.ch>
-> Cc: Andy Yan <andy.yan@rock-chips.com>
-> Cc: Marc Kleine-Budde <mkl@pengutronix.de>
-> Cc: Vincent Mailhol <mailhol@kernel.org>
-> Cc: Nicolas Ferre <nicolas.ferre@microchip.com>
-> Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
-> Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-> Cc: Markus Schneider-Pargmann <msp@baylibre.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Magnus Damm <magnus.damm@gmail.com>
+> Cc: Sebastian Reichel <sre@kernel.org>
 > ---
->  drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c | 4 ++--
->  drivers/gpu/drm/bridge/synopsys/dw-dp.c             | 2 +-
->  drivers/net/can/at91_can.c                          | 2 +-
->  drivers/net/can/flexcan/flexcan-core.c              | 2 +-
->  drivers/net/can/m_can/m_can_platform.c              | 2 +-
->  drivers/net/can/rcar/rcar_canfd.c                   | 2 +-
->  drivers/phy/phy-core.c                              | 6 ++++++
->  include/linux/phy/phy.h                             | 6 ++++++
->  8 files changed, 19 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c b/driver=
-s/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> index a8b6ae58cb0a..ed7ed82ddb64 100644
-> --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> @@ -1300,7 +1300,7 @@ static u32 cdns_mhdp_get_training_interval_us(struc=
-t cdns_mhdp_device *mhdp,
-> =20
->  static void cdns_mhdp_fill_host_caps(struct cdns_mhdp_device *mhdp)
->  {
-> -	unsigned int link_rate;
-> +	u32 link_rate;
-> =20
->  	/* Get source capabilities based on PHY attributes */
-> =20
-> @@ -1308,7 +1308,7 @@ static void cdns_mhdp_fill_host_caps(struct cdns_mh=
-dp_device *mhdp)
->  	if (!mhdp->host.lanes_cnt)
->  		mhdp->host.lanes_cnt =3D 4;
-> =20
-> -	link_rate =3D mhdp->phy->attrs.max_link_rate;
-> +	link_rate =3D phy_get_max_link_rate(mhdp->phy);
->  	if (!link_rate)
->  		link_rate =3D drm_dp_bw_code_to_link_rate(DP_LINK_BW_8_1);
->  	else
-> diff --git a/drivers/gpu/drm/bridge/synopsys/dw-dp.c b/drivers/gpu/drm/br=
-idge/synopsys/dw-dp.c
-> index 4ab6922dd79c..79c72ee8e263 100644
-> --- a/drivers/gpu/drm/bridge/synopsys/dw-dp.c
-> +++ b/drivers/gpu/drm/bridge/synopsys/dw-dp.c
-> @@ -536,7 +536,7 @@ static int dw_dp_link_parse(struct dw_dp *dp, struct =
-drm_connector *connector)
-> =20
->  	link->revision =3D link->dpcd[DP_DPCD_REV];
->  	link->rate =3D min_t(u32, min(dp->plat_data.max_link_rate,
-> -				    dp->phy->attrs.max_link_rate * 100),
-> +				    phy_get_max_link_rate(dp->phy) * 100),
->  			   drm_dp_max_link_rate(link->dpcd));
->  	link->lanes =3D min_t(u8, phy_get_bus_width(dp->phy),
->  			    drm_dp_max_lane_count(link->dpcd));
-> diff --git a/drivers/net/can/at91_can.c b/drivers/net/can/at91_can.c
-> index 58da323f14d7..b56db253f02d 100644
-> --- a/drivers/net/can/at91_can.c
-> +++ b/drivers/net/can/at91_can.c
-> @@ -1126,7 +1126,7 @@ static int at91_can_probe(struct platform_device *p=
-dev)
->  	can_rx_offload_add_timestamp(dev, &priv->offload);
-> =20
->  	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +		priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	if (at91_is_sam9263(priv))
->  		dev->sysfs_groups[0] =3D &at91_sysfs_attr_group;
-> diff --git a/drivers/net/can/flexcan/flexcan-core.c b/drivers/net/can/fle=
-xcan/flexcan-core.c
-> index f5d22c61503f..3a4307bc1d61 100644
-> --- a/drivers/net/can/flexcan/flexcan-core.c
-> +++ b/drivers/net/can/flexcan/flexcan-core.c
-> @@ -2211,7 +2211,7 @@ static int flexcan_probe(struct platform_device *pd=
-ev)
->  	priv->transceiver =3D transceiver;
-> =20
->  	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +		priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	if (priv->devtype_data.quirks & FLEXCAN_QUIRK_NR_IRQ_3) {
->  		priv->irq_boff =3D platform_get_irq(pdev, 1);
-> diff --git a/drivers/net/can/m_can/m_can_platform.c b/drivers/net/can/m_c=
-an/m_can_platform.c
-> index 56da411878af..73525be6566b 100644
-> --- a/drivers/net/can/m_can/m_can_platform.c
-> +++ b/drivers/net/can/m_can/m_can_platform.c
-> @@ -132,7 +132,7 @@ static int m_can_plat_probe(struct platform_device *p=
-dev)
->  	}
-> =20
->  	if (transceiver)
-> -		mcan_class->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +		mcan_class->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	priv->base =3D addr;
->  	priv->mram_base =3D mram_addr;
-> diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rca=
-r_canfd.c
-> index eaf8cac78038..645d5671705d 100644
-> --- a/drivers/net/can/rcar/rcar_canfd.c
-> +++ b/drivers/net/can/rcar/rcar_canfd.c
-> @@ -1885,7 +1885,7 @@ static int rcar_canfd_channel_probe(struct rcar_can=
-fd_global *gpriv, u32 ch,
->  	priv->channel =3D ch;
->  	priv->gpriv =3D gpriv;
->  	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +		priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
->  	priv->can.clock.freq =3D fcan_freq;
->  	dev_info(dev, "can_clk rate is %u\n", priv->can.clock.freq);
-> =20
-> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-> index a1aff00fba7c..89f7410241aa 100644
-> --- a/drivers/phy/phy-core.c
-> +++ b/drivers/phy/phy-core.c
-> @@ -640,6 +640,12 @@ void phy_set_bus_width(struct phy *phy, int bus_widt=
-h)
->  }
->  EXPORT_SYMBOL_GPL(phy_set_bus_width);
-> =20
-> +u32 phy_get_max_link_rate(struct phy *phy)
-> +{
 
-All of the can drivers that would use this function are checking phy
-before assigning the max_link_rate:
+Acked-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 
-  if (transceiver)
-          priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
+-- Sebastian
 
-Would it be reasonable to have
-
-  if (!phy)
-          return 0;
-
-in this function to be able to drop these individual checks of the
-drivers? This would be similar to clk_get_rate() which does the same
-check and return 0 for convenience.
-
-Best
-Markus
-
-> +	return phy->attrs.max_link_rate;
-> +}
-> +EXPORT_SYMBOL_GPL(phy_get_max_link_rate);
-> +
->  /**
->   * _of_phy_get() - lookup and obtain a reference to a phy by phandle
->   * @np: device_node for which to get the phy
-> diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-> index 36307e47760d..af9c3e795786 100644
-> --- a/include/linux/phy/phy.h
-> +++ b/include/linux/phy/phy.h
-> @@ -57,6 +57,7 @@ int phy_notify_disconnect(struct phy *phy, int port);
->  int phy_notify_state(struct phy *phy, union phy_notify state);
->  int phy_get_bus_width(struct phy *phy);
->  void phy_set_bus_width(struct phy *phy, int bus_width);
-> +u32 phy_get_max_link_rate(struct phy *phy);
->  #else
->  static inline struct phy *phy_get(struct device *dev, const char *string=
-)
->  {
-> @@ -256,6 +257,11 @@ static inline int phy_get_bus_width(struct phy *phy)
->  static inline void phy_set_bus_width(struct phy *phy, int bus_width)
->  {
->  }
-> +
-> +static inline u32 phy_get_max_link_rate(struct phy *phy)
-> +{
-> +	return 0;
-> +}
->  #endif /* IS_ENABLED(CONFIG_GENERIC_PHY) */
+>  drivers/power/supply/cpcap-charger.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/power/supply/cpcap-charger.c b/drivers/power/supply/=
+cpcap-charger.c
+> index d0c3008db534..24221244b45b 100644
+> --- a/drivers/power/supply/cpcap-charger.c
+> +++ b/drivers/power/supply/cpcap-charger.c
+> @@ -21,6 +21,7 @@
+>  #include <linux/mod_devicetable.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/power_supply.h>
+> +#include <linux/property.h>
+>  #include <linux/regmap.h>
 > =20
->  #endif /* __PHY_CONSUMER_H */
+>  #include <linux/gpio/consumer.h>
+> --=20
+> 2.43.0
+>=20
 
-
---b895f1e89350da7f8491f35b99d431866030fe6df54b62358155e9918430
+--2vxe7ox52jklnq2g
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iKMEABYKAEsWIQSJYVVm/x+5xmOiprOFwVZpkBVKUwUCaalOjxsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMSwyLDIRHG1zcEBiYXlsaWJyZS5jb20ACgkQhcFWaZAVSlPc
-SwEAt3Fg0ly9qnS+HJQv96JGhcc9ssPHPspnN0LcoiUH76oBAJJ1UWuuXcnIsBb3
-namewJQN1U0nDnFUFRtJbSq49LcK
-=6g8b
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAmmpUncACgkQ2O7X88g7
++prvUBAAiDlamBegg+ohGQtBVAORFIULNrYOBZOk8AG1Qluc6NS+fOqK9Cpw1hjn
+4u0f9h1GsBhjBMOb0dS/kxcNWI+xKiTxrMzu4llAu0C9WimbA0CieynGh2b2a3Ja
+R/9RQ6pXqPuVZk+7oVlT6gk++/w8TU83M31vyXL0Kx786QzieoSbOvgyZqhEwLez
+W41hmnYSkPas6nVkhjp0mnP7eqYQRhXLBeFJgUWhgXvy5YMVAfRrso3DK5JA7hB3
+4q8qNISMg2IrcIDMdDaTKVq+3+Ba1z8pRgr4WpIaOpH+Gsq8e8tzt/SEsGt/4SIY
+bKuAPMOCmsYuR8RskVyUWJiWX4qt4/YIRU01cg2xxXP404xIKR49X9Z12aEOKjg8
+DoBnNzlrSRN/RP85te7hG74Mbc/eVL2fJM9dL+7yZylsv03FFoeii0d+a50bbrQT
+QfQy75KNMSMkb7BDrpalL0DhG9bJoZn96pso0p4aD+viqdbpIybrsgMhuUv9DKVS
+2rIsnhe/N1gPds7wwpt/4shjn93YGbngre66mxi0y0YvvBQqc3eCf4YbPkGttJ0g
+18vYhd7giJO8RE2ApEXsQzT6eKtQFPh01zUJhxvemKoAb6hr3Tptep+/2bn4BVzY
+k3rY5iRgS6ono6DZg08TuLXoB3Ck/kz2OE+ntIibQIQNa0GY/4w=
+=oTrF
 -----END PGP SIGNATURE-----
 
---b895f1e89350da7f8491f35b99d431866030fe6df54b62358155e9918430--
+--2vxe7ox52jklnq2g--
