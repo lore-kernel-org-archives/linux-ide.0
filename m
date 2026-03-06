@@ -1,111 +1,92 @@
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BE0734D915;
-	Fri,  6 Mar 2026 09:56:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.153.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 029C6221F24
+	for <linux-ide@vger.kernel.org>; Fri,  6 Mar 2026 12:38:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772791007; cv=none; b=V9QSwx5EPstEGFXJb3PgZ3Ol+T3rY9qusyFA1CbKcriN/uoCsdaDzA4bP+LvJS+RaOjNzN8MM/F6HdXARZ4Ej+0cQeYh/p4RdXekk7+fOBTvi8cs12pJmI4O7r/oXXeTFaDwgbW1KBued60E9H7fxqVfzBpA6X1NND6N1pLzTG4=
+	t=1772800717; cv=none; b=pJn55RhdVIP5BkVRhGqx44trbLWKVzQIW4Z6vE5qpmIl0FQ/qf5hGdwqXqsuuvSMUyHZcPcr831EHD3ovxJ7YQmVVH+XCapB09XDrvQq+5L1A2NPAMo/B69r0AqZXLBg5nT7857tCvYsugQ/WPkM0zfmExdkEU5WaWKes+D4kS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772791007; c=relaxed/simple;
-	bh=M0XofkcuBdV1zkdsuj7RJ1maZEJbks9g3VqYv60iJnU=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ea1+hzL+QxNHhc4NtkXjce7NRYEPUt7SEScJMnDDVSgt1WO7VwDxTfQZ6lC+uKKm7Mapo8x3lUsbLwvvFmKw+/+ksx5Ntnsb66twL7erxoY5VVCbkSx3L/C64b1yDTIUUFY5Y5asIiMHZ5I1Xlj6vhhvqoLzq3Gw6Om8WSMTLY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=zKN16av/; arc=none smtp.client-ip=68.232.153.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
+	s=arc-20240116; t=1772800717; c=relaxed/simple;
+	bh=9zdAi2PiuWA9szvJTCKPea+RhBpvISPL734SMX1FPzc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hYhAHiTiH9LkrWboygF7XqDPuVdE3IlL3PTxFG7tpOhO3ErH2A1IQ0QbxIH7I2fioZ2IPUBNxEpdAgJI7q4WVi8p/M068H9wssYPH9/tT7fERyGAdp06O1Khxk8411BUgEMCwK5kQ8bSSNa0iqqQK9TYSj+e65TjBMYsput7htA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ds7sZf4q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="zKN16av/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1772791005; x=1804327005;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=M0XofkcuBdV1zkdsuj7RJ1maZEJbks9g3VqYv60iJnU=;
-  b=zKN16av/YcO/gYHjYaU16mSlJXQ6p8l1+9SLEVylGTpIj/UUfrvtXmdU
-   tIDzYrUw2kzuJQUrZxG6H0zx3Tu7WgCu/QWT4ns5+NNhGFoN66mZrPBow
-   I3/Siw34DF23sIXntNqI43ZmqpI9T4ZM5TvEyZ6ZwfhOdkwyZCHAlm93t
-   ARqOmyQnDoje5m8zxU4ltfRHWqOaZDj1KEdIMcrBCIGjSQted+Gbb3M7w
-   2rpcnbqrQMG9iLcisYRqkaXdNT+KC5bI8IUNnH2pLhTDa4oYgycdBWYO1
-   5COuiQr+77VAHpvbv09JIVJiBN9H+vkuVmRzCfa97IrV9/qGKW3hr2WEf
-   Q==;
-X-CSE-ConnectionGUID: kkklftjzTt+tmC5CjQykRw==
-X-CSE-MsgGUID: y9hzzWGpTbWY5hyCt1eJ5w==
-X-IronPort-AV: E=Sophos;i="6.23,104,1770620400"; 
-   d="scan'208";a="54313383"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Mar 2026 02:56:43 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.58; Fri, 6 Mar 2026 02:56:27 -0700
-Received: from DEN-DL-M70577 (10.10.85.11) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server id 15.1.2507.58 via Frontend
- Transport; Fri, 6 Mar 2026 02:56:22 -0700
-Date: Fri, 6 Mar 2026 10:56:22 +0100
-From: Daniel Machon <daniel.machon@microchip.com>
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-CC: <linux-phy@lists.infradead.org>, Vinod Koul <vkoul@kernel.org>, "Neil
- Armstrong" <neil.armstrong@linaro.org>, <dri-devel@lists.freedesktop.org>,
-	<freedreno@lists.freedesktop.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-arm-msm@vger.kernel.org>, <linux-can@vger.kernel.org>,
-	<linux-gpio@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
-	<linux-riscv@lists.infradead.org>, <linux-rockchip@lists.infradead.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-sunxi@lists.linux.dev>,
-	<linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <spacemit@lists.linux.dev>,
-	<UNGLinuxDriver@microchip.com>, Andrew Lunn <andrew+netdev@lunn.ch>, "David
- S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, "Jakub
- Kicinski" <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Steen Hegelund
-	<Steen.Hegelund@microchip.com>
-Subject: Re: [PATCH phy-next 07/22] net: lan969x: include missing <linux/of.h>
-Message-ID: <20260306095622.rh3sje3wnexbdsqb@DEN-DL-M70577>
-References: <20260304175735.2660419-1-vladimir.oltean@nxp.com>
- <20260304175735.2660419-8-vladimir.oltean@nxp.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ds7sZf4q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E434C4CEF7;
+	Fri,  6 Mar 2026 12:38:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772800716;
+	bh=9zdAi2PiuWA9szvJTCKPea+RhBpvISPL734SMX1FPzc=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Ds7sZf4q0jhxDRyACPeOBnEy3wBQyMGqcafTdnAHJrwwil+loeRq+mM+BTNNicHxR
+	 Ena0lhPGNFfniCRtmGVZaIcbT7pnUVKYckhgUbyfKuwL0uXyLVgXzv4Cp7YkX5bZj4
+	 rC9w4OufBnG2tWVyNqFda1TN/Cvqm0n7J+b69p8M3qhOcSKOc9++kr81c4/b1s/NDp
+	 2lLPeI02wrHcmFWgzLRJgu40cAytkwgqgZVUns2Oxj15z9QioAyf+HZvl2188FymtT
+	 49MB3yO+qyCZIUYQTZHqlX9KAZbIgI9YSO5w4xd/zuSGK3ym3HhNf1efwd900YHGib
+	 t+1KYMcgIoAaw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 7.0-rc3
+Date: Fri,  6 Mar 2026 13:38:32 +0100
+Message-ID: <20260306123832.991363-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20260304175735.2660419-8-vladimir.oltean@nxp.com>
+Content-Transfer-Encoding: 8bit
 
-> This file is calling of_property_read_u32() without including the proper
-> header for it. It is provided by <linux/phy/phy.h>, which wants to get
-> rid of it.
-> 
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-> ---
-> Cc: Daniel Machon <daniel.machon@microchip.com>
-> Cc: Andrew Lunn <andrew+netdev@lunn.ch>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Eric Dumazet <edumazet@google.com>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: Paolo Abeni <pabeni@redhat.com>
-> Cc: Steen Hegelund <Steen.Hegelund@microchip.com>
-> ---
->  drivers/net/ethernet/microchip/sparx5/lan969x/lan969x_rgmii.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/ethernet/microchip/sparx5/lan969x/lan969x_rgmii.c b/drivers/net/ethernet/microchip/sparx5/lan969x/lan969x_rgmii.c
-> index 4e422ca50828..249114b40c42 100644
-> --- a/drivers/net/ethernet/microchip/sparx5/lan969x/lan969x_rgmii.c
-> +++ b/drivers/net/ethernet/microchip/sparx5/lan969x/lan969x_rgmii.c
-> @@ -4,6 +4,7 @@
->   * Copyright (c) 2024 Microchip Technology Inc. and its subsidiaries.
->   */
-> 
-> +#include <linux/of.h>
->  #include "lan969x.h"
-> 
->  /* Tx clock selectors */
-> --
-> 2.43.0
->
+Linus,
 
-Acked-by: Daniel Machon <daniel.machon@microchip.com>
+The following changes since commit 55db009926634b20955bd8abbee921adbc8d2cb4:
+
+  ata: libata-core: fix cancellation of a port deferred qc work (2026-02-24 09:38:55 +0900)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.0-rc3
+
+for you to fetch changes up to ee0e6e69a772d601e152e5368a1da25d656122a8:
+
+  ata: libata-eh: Fix detection of deferred qc timeouts (2026-03-06 09:58:47 +0100)
+
+----------------------------------------------------------------
+ata fixes for 7.0-rc3
+
+ - Fix a problem where the deferred non-NCQ command would incorrectly get
+   completed as a failed command, if there was another command that timed
+   out. Found by Gemini. (Guenter)
+
+ - The deferred non-NCQ command work is only supposed to run after the
+   last NCQ command finishes. However, because the work was never canceled
+   on error (e.g. a timeout), the work could incorrectly run when commands
+   were still in flight. Found by syzbot. (me)
+
+ - Add a quirk to make sure that QEMU harddrives can potentially use up to
+   32 MiB I/Os. (Pedro)
+
+ - Add a quirk to disable LPM on Seagate ST1000DM010-2EP102. (Maximilian)
+
+----------------------------------------------------------------
+Guenter Roeck (1):
+      ata: libata-eh: Fix detection of deferred qc timeouts
+
+Maximilian Pezzullo (1):
+      ata: libata-core: Disable LPM on ST1000DM010-2EP102
+
+Niklas Cassel (1):
+      ata: libata: cancel pending work after clearing deferred_qc
+
+Pedro Falcato (1):
+      ata: libata-core: Add BRIDGE_OK quirk for QEMU drives
+
+ drivers/ata/libata-core.c | 2 ++
+ drivers/ata/libata-eh.c   | 3 ++-
+ drivers/ata/libata-scsi.c | 1 +
+ 3 files changed, 5 insertions(+), 1 deletion(-)
