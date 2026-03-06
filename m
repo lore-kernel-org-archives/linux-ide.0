@@ -1,98 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20798346A06;
-	Fri,  6 Mar 2026 03:33:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00ECA371050
+	for <linux-ide@vger.kernel.org>; Fri,  6 Mar 2026 08:23:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772768004; cv=none; b=SDHDVV8xU4V1ue17ivhGJnVZXhYdi2IbCXu2x7C8ZjUUEigAYBSDzAJ1pjLEwdyNlxUQei7uxq7iNXD5kMPoL84QdrETUlX6WEQUNtusNxS7qHP+rL1fr6Mgz6W8mNHS2qpwo4vR/W/roEiZRcMpxrTZrN0K1J1u0+5zUrKecOA=
+	t=1772785423; cv=none; b=G4NDmQdGvpLd1SVE0uL4CiSQvpopy4vcARS4+vzJXeKTJlx7kPxb0KOQDgujAa00+lXQIxvNMuij6xCeJnBHIvyh61wE8zLkV1q0yY1PCgHC81xJeqriN2D9u/i5JguZALF+n/bCKbbxrTAWnMMhZ+oR2wM3ujQmpAkMwjiqe5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772768004; c=relaxed/simple;
-	bh=/+5eGCgzyEIhgaJAjdpZ9BQzbOFik0bPO7hv9ozzuRk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HhgLaUlx3La+L+MbmATX2P+Qy2Yf8n/9APTrB17vx/Brmzz6bOVuFG98gj1XnMdPuK9sZlvVTHRx2GLk+fzruRnw33bPfVla67elSElFcGqEtQBO7QQbIlCU80vWJ5eSNdpW7Gw5m7oxVPOSXCMqpkY/tl32fKwpBO7867DrCc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oL/8l80W; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772785423; c=relaxed/simple;
+	bh=oSdMXNHFWFTjs7eA2ZZWssIagt7xltWEI8r/SNpcS8U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=G3NC7E4Cb/JcRSjekn3aH7RBgeacZozuRP6FpttScmaNarKWyUp91+cO7vzklOUyfdKpJDu7ZRi7mP1OC3Ava45YDr0Ji4llufs6QZ53fJzAEN5wE9+iIAlMqwTwTSsOxotW/INjXMpCcDaTqVfuY3Oy6B1Aqr6ybPcYqcn3odE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P4FHexeK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oL/8l80W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16690C116C6;
-	Fri,  6 Mar 2026 03:33:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P4FHexeK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFE49C4CEF7;
+	Fri,  6 Mar 2026 08:23:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772768003;
-	bh=/+5eGCgzyEIhgaJAjdpZ9BQzbOFik0bPO7hv9ozzuRk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=oL/8l80W8HnI3Ym+dV53XM3AJW6x8p+df0AkZ/Gi4Nd2M6f7XRqSyjGYadtA62Jz2
-	 Yk8lT84PI9jnkffB4oRk7hg2cuNcTP6I2gxYgCUe4+mxIFMDICLPnzsCA3sq6gwjNB
-	 I/9L/PjCPywJvKwDz6Ob7UcSTGAOUF9eSffAaiqcH1VM1e4RMILN1Df8SpdkclJx5Y
-	 HC08V2jT6Xnz8SIqUoySGLWCW2EH7/5MvWLYXQsRL9VkmUVCeZqzS9EcgRLUlptWjl
-	 Y+8CTBwg55280MMOc0dLUXc/PbftEnuFZBdVLsKzSQlbNnPgIN/sRIkg9uB/HrQvno
-	 phVHb7Mcx9nrg==
-Message-ID: <58d258e3-c76e-41da-bb3b-7fa0cde9d8a8@kernel.org>
-Date: Fri, 6 Mar 2026 12:33:21 +0900
+	s=k20201202; t=1772785422;
+	bh=oSdMXNHFWFTjs7eA2ZZWssIagt7xltWEI8r/SNpcS8U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=P4FHexeKNWunuT6ZT7PQgA/pB/6Set/NGrn/lNbHxM6HSPjVsUkKFsI4+CK6IQAma
+	 bZs9iXqEGWL24l3jGVbHz3eHRiNXI6B4i2++UO/eg3XYjV4IB5ZuBp2ljZVjhgML6u
+	 5fLlFMh3xmNxfLcjlzR/z8tjUcHD4aGtI8F0TH0u5i0NF65xBaejdpYDrogsKfOxyX
+	 ZWco11jHX5d3xUAuR8XZEwhdrGqVGVYBHPHTJAhjJAXf8WGbMunp3v1QY3VzHX9Haf
+	 oVSOnDEwxkPwahS3hyC5HPnCxqDYRbFZtf/UBWFQLkkswZpQTrJQKvotlPkxwEmplG
+	 cxZvJbQVQbd1A==
+Date: Fri, 6 Mar 2026 09:23:39 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] ata: libata-eh: correctly handle deferred qc
+ timeouts
+Message-ID: <aaqPC3IzGKVA1WBl@ryzen>
+References: <20260220221439.533771-1-dlemoal@kernel.org>
+ <20260220221439.533771-2-dlemoal@kernel.org>
+ <ea6cdec5-cbd6-4387-9995-cbbfda978155@roeck-us.net>
+ <CFD23A2E-145E-4901-9160-72A91A5C3A9E@kernel.org>
+ <dd7763d3-1822-404e-b763-ae25f68b21ae@kernel.org>
+ <f04a275f-8c7d-4867-b5c6-464fdc69e22d@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-eh: Fix detection of deferred qc timeouts
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260306024805.2877513-1-linux@roeck-us.net>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260306024805.2877513-1-linux@roeck-us.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f04a275f-8c7d-4867-b5c6-464fdc69e22d@kernel.org>
 
-On 3/6/26 11:48, Guenter Roeck wrote:
-> If the `ata_qc_for_each_raw()` loop finishes without finding a matching
-> `scmd`, `qc` will hold a pointer to the last element examined, which is
-> accociated with `i == ATA_MAX_QUEUE - 1`. This element can match
-> `ap->deferred_qc`. If that happens, the condition `qc == ap->deferred_qc`
-> evaluates to true despite the loop not breaking on a scmd match.
-> In that case, the error handler mistakenly intercepts a command that
-> completed normally after an unrelated SCSI timeout, returning a timeout
-> error instead of success.
+On Fri, Mar 06, 2026 at 09:59:38AM +0900, Damien Le Moal wrote:
+> On 3/6/26 09:11, Damien Le Moal wrote:
+> >>> Could this mistakenly intercept a command that completed normally after a
+> >>> SCSI timeout, returning a timeout error instead of success? Would this
+> >>> also incorrectly clear `ap->deferred_qc`, dropping the deferred command?
+> >>
+> >> I think the AI is partially wrong here.
+> >>
+> >> If you read the comment below it if (), we know that ap->deferred_qc is only
+> >> set until that command has been issued. So if it is set, that qc has not
+> >> been issued, so it can't have successfully completed.
+> > 
+> > The request for the qc/scsi command was started from the block layer perspective
+> > and so can still timeout. So this is all valid.
+> > 
+> > BUT ATA_MAX_QUEUE qc (last in the loop if there is no match) is the one reserved
+> > for internal commands issued from EH. Internal QCs do not go through the
+> > deferred issue path, so even without checking for the index when there is no
+> > match, we have:
+> >  - qc is still a valid pointer (the array of QCs is ATA_MAX_QUEUE + 1 sized)
+> >  - We can never have qc == ap->deferred_qc.
 > 
-> Fix the problem by checking for i < ATA_MAX_QUEUE in addition to
-> qc == ap->deferred_qc.
+> This second part of my comment is obviously wrong. I need more coffee :)
 > 
-> The problem was found by an experimental code review agent based on
-> gemini-3.1-pro while reviewing backports into v6.18.y.
+> The first part stands: a deferred qc that has not been issued can timeout.
 
-Please remove all the quotes:
+Yes, did someone claim otherwise?
 
-If the ata_qc_for_each_raw() loop finishes without finding a matching SCSI
-command for any QC, the variable qc will hold a pointer to the last element
-examined, which has the tag i == ATA_MAX_QUEUE - 1. This qc can match the port
-deferred QC (ap->deferred_qc).
 
-If that happens, the condition qc == ap->deferred_qc evaluates to true despite
-the loop not breaking with a match on the SCSI command for this QC. In that
-case, the error handler mistakenly intercepts a command that not completed yet
-and that has not timed out, and thus erroneously returning a timeout error.
-
-Fix the problem by checking for i < ATA_MAX_QUEUE in addition to
-qc == ap->deferred_qc.
-
-The problem was found by an experimental code review agent based on
-gemini-3.1-pro while reviewing backports into v6.18.y.
-
-> Assisted-by: Gemini:gemini-3.1-pro
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Niklas Cassel <cassel@kernel.org>
-> Fixes: eddb98ad9364 ("ata: libata-eh: correctly handle deferred qc timeouts")
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-
-With the above, feel free to add:
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-Thanks !
-
--- 
-Damien Le Moal
-Western Digital Research
+Kind regards,
+Niklas
