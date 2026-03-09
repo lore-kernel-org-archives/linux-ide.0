@@ -1,333 +1,628 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011064.outbound.protection.outlook.com [52.101.70.64])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A790D34D934
-	for <linux-ide@vger.kernel.org>; Mon,  9 Mar 2026 09:19:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773047946; cv=none; b=mQP4reCkhUAeCwlPhY+gF79fhmP3HXbuzwcJt/Fz9sbdOyutAhzuaMpuLlx0qFzbRg7XdJz0S5XUpOM2HPJIudHSdpikVfSvlgnO6uTc6wWuRZZAZ17/POs6LAsHbtnYSXj6Enc9fH9OgbMYPRdc4ikB1fJJxu4xQETABQsZ2is=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773047946; c=relaxed/simple;
-	bh=CncL9gUcdJL6wlW5tkcGvRzvFuDGtQP6+c+HDcnsN/A=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=FpzvGq7PxJHWDzP5wyJ+WbVahTWpckGi0VoGl8f4U6NazhoMcxdKuoIovM7WcT7XzzzIvUsOv1UkaiG48ZlvPNtscnUf1xxYPUzxf3tvV1uDgJEriRUatG2qDsn2BDzJQXzT3pQb80vmx2fvYF0OEcn47yQW7OjoenZef4A9rNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=d4bw/dK6; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57BB74CB5B;
+	Mon,  9 Mar 2026 19:09:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.64
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773083352; cv=fail; b=i0dBJkiXCEFO7fgwMDNRrVY5/rxQ3yk/0oCKEQUjGjCMMPn3O9GDiy5FSe6/S7rb0s+Uo4k5EnrX+9G2f8U4hosMg8k40c/6S3dV0TBfi592Z/1DsgklQzubEZiHo1sUGiEiLtv4X5hB7pKNNAUKQEiA0lyyQAZMUdn+kHu/Cd4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773083352; c=relaxed/simple;
+	bh=X7/XzpGy3abkHgsSsA6IB4i1QxmevKqfq6o+l7RE03g=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=U7YWIjxN8Avkg+cPMF211zI0CRiOL+et8FC8thB5j+1lgC0zziuYYSWwjTWpdEpGRDjRKO90KmTeVFFRUQe9I1cIboiuKsmMTq1YZy6W2UwY4DfwA9fUFbZeS9AhF2yJjSBEP/WrluUnEnitOa7/C+T+efCgJav+7VFTnT0zysg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=B8hcSySU; arc=fail smtp.client-ip=52.101.70.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="d4bw/dK6"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-482f454be5bso114464225e9.0
-        for <linux-ide@vger.kernel.org>; Mon, 09 Mar 2026 02:19:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1773047940; x=1773652740; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=kNiLR6YNrMRtTldTWTQRiLTdnMm5k8O8M4DvpvHP74I=;
-        b=d4bw/dK6zVqZDdZTt12+IDmKf/RFmlRClqU3NCeMemKHCYqMLQGLcBHuqQc2BcWOeD
-         MXOLsFYj6TQwgG9d1ew4SkOgDEe3IxZWa8agXhd6YzzlHAvxlPV7zRMucd8EK5v6aeJX
-         euk/7xwAo8P7CEl3x9SHefS77U8Yxi0nmtZNqbpt2kkmWh1GnCE/QKraHW/3x9H3z+eu
-         Hgh8UVKxo75IMc3SnJVjy3eWFqYuMZouwGJ3APuDh1aMYpa7dmq2cnpGcTxaxURf3yju
-         ms2CccJlDvP945saycvwiiUZr1WiiL7+9v2UEYTcmobp9tF3vIAtjiGYalZ6Cr3d5R/U
-         YqKg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773047940; x=1773652740;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kNiLR6YNrMRtTldTWTQRiLTdnMm5k8O8M4DvpvHP74I=;
-        b=DR7bt9fRR+kcZEQyDX8uRMVzzh740tQTOz8HIxoh6+xCAioN74cl9bdyf71FF90xx6
-         K4OWizMp/spOwssPMSr7K66AocwcqWcU/Bij/8qGZmTwj0GI7uoyUWR+aCt4u0yJT0qp
-         PjzFem9nY8C6EuOqi3OxTuKkqdROdVh3Z0tp2qPf29ixpvmOg8jX2z5WWxbiSs812T08
-         Jsor5dR4an/DrmUU+Vyy/kq+j5Sc0VqZXTMXKOQAXNoSBCV+lDEVT/cm5ijtSO2BFyTk
-         9+259eMbEbnddZo5mceRwj27uJBUOOwdd7VIQfTLKTAH0YE6leFDmBzLFN7/3HxJE2IE
-         lr4Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVHoi4fKZ2cBDTGAZzS1Ew4LJWQVOjtH1i+QDahTm+MR+cOy+VN4o64TyzVEC5XMWYfy2WGtw98XrI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxzqrJ/uv3sJ5Prbd9BzAY4Ndq/irJlZERMOBlCDobY6LIWQqBh
-	sEGfI/lVdrxBQf9Wg5FfTJBC8synP0uKperYmNW/TRAAxSJkxf9LiWJZ4yVhgtKJrMI=
-X-Gm-Gg: ATEYQzz+v7mtM5/bouU+K0sB8Vw+pTDWQuLyHXBvptXVe6ez/DGsWTPYhtA7jRtAlNN
-	8IJczQY64+nq9cqAUJ6DdJgkODxbLNmhiuJpYEdwZNEoGFIRPzcEbFnPkdgKf3u13iOS1dLwITx
-	B/kQ30ROyVwv6Klaf1jyWLrrKUO/L2QKdGFfaTgaX2IgU4fT9n2PI8zJGBTmBOlUEqrzL81dZQQ
-	piPXdG9TbuCc9+VpcoTatdRsZsTKmGUVVz+Nd3qL5NSveLwT4RZyCWHIatOwmeXS97lMU97nRYk
-	O2iqLbvrhjpH5YeovPpZAPXdeUGnHcNCZbsQR7lUw2z8RqKCVflqWPWN3ZaQok8gT0VtUIwkx5a
-	BmgDxRcAuMBL6cSmQ77gF5/BvZsYTDU5gSvG1JO42l32shblow3nLp5QQ1K2b6yTWJoCtZ/wSMN
-	lWOnYc1zR+6sdxxt0=
-X-Received: by 2002:a05:6000:603:b0:439:909f:c5a3 with SMTP id ffacd0b85a97d-439da3277d9mr17145973f8f.4.1773047939930;
-        Mon, 09 Mar 2026 02:18:59 -0700 (PDT)
-Received: from localhost ([195.52.25.213])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439dada9116sm23029936f8f.14.2026.03.09.02.18.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Mar 2026 02:18:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="B8hcSySU"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bNbTDImIY7NqMJVU+MXwEf6Hc8bkSi2eRgLfH3ygomGYHNO6iPbUZ8qOYd3t85zl8nuCylPE/ar952deWfB/gxiNih0kGy1N+iJreRGtLphsR4sdnDhOxOI3MScU+l5gv/Y1XSzaZp1lQj/7KY16yMHgi5A/F3heEgQpXeNeNZyMmhcMHGXeZ7jjr+ovW/cMGO98BxjO3wtxKgA+3258QjJWD7t/98kosI/NLalUf8RxlLqnsKOGyvtWHIoKMPQ1REFjVLdeqV9ft8dCyzRPQXvQ5joraYSNRkzN0Er7bM07P23oxQMn/6RU4IxUxIRrE4B6HezADjbVV4mK8vNJ2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=IqFhRoKuEJh7cZsgILk/T3MDhA4GOK/prA32/q3g/gQ=;
+ b=GnpB0pw/YPFXd9adInxlE0TpPjFwc7Kv7Mhvt4jRsJRNZF7N2kahnokFL3jEQD7wMT0FSs6OZS/o5ics5v3zKKnS0h1ANyx+5V6b4j+ZKJ0KbRwfYPIAPMweBbmeg8gqtHnZ0l1HGkRdOz+dpJI5x0XFG4QbYZ5Ss3Cps0AyARI2NvtZZfZKsoUdw20hZGXrvzT7dARghAp9YRsGnGQLjKDVn74zLZRDBHSEEj3dD+DwfE/Cht4fXp5OXQxxp4TjGTdJK0/+7rmS0mqv/RlEtKoNzgcb2ciqqCpmHHP7kmyOWUPGxDNPO6Z2DZ20K7qrn7mD85rkZK5BStrVQPywRQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IqFhRoKuEJh7cZsgILk/T3MDhA4GOK/prA32/q3g/gQ=;
+ b=B8hcSySUemsVNKUSzLuPg8v/55+Sr0SufQPWBfwBUgjJ/BFiK++ll1ncq9LuGL+SHsPULJ+P71LCg2IYvLj5ZXYdgVgJtmAd5054YZ0Ci5TWFmCHqd2vz4lTVIm9yccTiRWn+gQgf2hbJ3299HcIdUKkZ3h1xV4RxD/J4BtWUWyjZQH3M8zxUVYgXOzXiIrT8JT3khgHhZau7TJmrdcxopKATFSGc1KnCEC6hT44akBzJ+gOeFmmFJvSmhrp/TaZXaZnj06XxDjEh1iKXcg0qPLD7u7dThyf2QOMw96613tbkjRGe4uH58RIRquqMXtMRlfCFGQyhQEHW6eZcfkACQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
+ by AM9PR04MB7540.eurprd04.prod.outlook.com (2603:10a6:20b:283::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.25; Mon, 9 Mar
+ 2026 19:09:05 +0000
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9678.023; Mon, 9 Mar 2026
+ 19:09:05 +0000
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+To: linux-phy@lists.infradead.org
+Cc: Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-sunxi@lists.linux.dev,
+	linux-tegra@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org,
+	spacemit@lists.linux.dev,
+	UNGLinuxDriver@microchip.com,
+	Abhinav Kumar <abhinav.kumar@linux.dev>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	Andrzej Hajda <andrzej.hajda@intel.com>,
+	Andy Yan <andy.yan@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Chanho Park <chanho61.park@samsung.com>,
+	Chen-Yu Tsai <wens@kernel.org>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	David Airlie <airlied@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Fabio Estevam <festevam@gmail.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	=?UTF-8?q?Heiko=20St=C3=BCbner?= <heiko@sntech.de>,
+	Inki Dae <inki.dae@samsung.com>,
+	Jagan Teki <jagan@amarulasolutions.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Jessica Zhang <jesszhan0024@gmail.com>,
+	Joe Perches <joe@perches.com>,
+	Jonas Karlman <jonas@kwiboo.se>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Marijn Suijten <marijn.suijten@somainline.org>,
+	Markus Schneider-Pargmann <msp@baylibre.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Maxime Ripard <mripard@kernel.org>,
+	Michael Dege <michael.dege@renesas.com>,
+	Nicolas Ferre <nicolas.ferre@microchip.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Peter Chen <peter.chen@kernel.org>,
+	Peter Griffin <peter.griffin@linaro.org>,
+	Rob Clark <robin.clark@oss.qualcomm.com>,
+	Robert Foss <rfoss@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	"Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
+	Samuel Holland <samuel@sholland.org>,
+	Sandy Huang <hjc@rock-chips.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Paul <sean@poorly.run>,
+	Sebastian Reichel <sre@kernel.org>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Steen Hegelund <Steen.Hegelund@microchip.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Tudor Ambarus <tudor.ambarus@linaro.org>,
+	Vincent Mailhol <mailhol@kernel.org>,
+	Yixun Lan <dlan@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v3 phy-next 00/24] Split Generic PHY consumer and provider API
+Date: Mon,  9 Mar 2026 21:08:18 +0200
+Message-ID: <20260309190842.927634-1-vladimir.oltean@nxp.com>
+X-Mailer: git-send-email 2.43.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: VI1P190CA0018.EURP190.PROD.OUTLOOK.COM
+ (2603:10a6:802:2b::31) To AM9PR04MB8585.eurprd04.prod.outlook.com
+ (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed;
- boundary=840703edd9f3f1e1e79a02bb78a8d4f69f696b0531524c2c45c8075436e0;
- micalg=pgp-sha512; protocol="application/pgp-signature"
-Date: Mon, 09 Mar 2026 10:18:50 +0100
-Message-Id: <DGY51AQLSNAD.3LE77TJER4LGF@baylibre.com>
-Cc: "Vinod Koul" <vkoul@kernel.org>, "Neil Armstrong"
- <neil.armstrong@linaro.org>, <dri-devel@lists.freedesktop.org>,
- <freedreno@lists.freedesktop.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-arm-msm@vger.kernel.org>, <linux-can@vger.kernel.org>,
- <linux-gpio@vger.kernel.org>, <linux-ide@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
- <linux-riscv@lists.infradead.org>, <linux-rockchip@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-sunxi@lists.linux.dev>,
- <linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
- <netdev@vger.kernel.org>, <spacemit@lists.linux.dev>,
- <UNGLinuxDriver@microchip.com>, "Andrzej Hajda" <andrzej.hajda@intel.com>,
- "Robert Foss" <rfoss@kernel.org>, "Laurent Pinchart"
- <Laurent.pinchart@ideasonboard.com>, "Jonas Karlman" <jonas@kwiboo.se>,
- "Jernej Skrabec" <jernej.skrabec@gmail.com>, "Maarten Lankhorst"
- <maarten.lankhorst@linux.intel.com>, "Maxime Ripard" <mripard@kernel.org>,
- "Thomas Zimmermann" <tzimmermann@suse.de>, "David Airlie"
- <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Andy Yan"
- <andy.yan@rock-chips.com>, "Marc Kleine-Budde" <mkl@pengutronix.de>,
- "Vincent Mailhol" <mailhol@kernel.org>, "Nicolas Ferre"
- <nicolas.ferre@microchip.com>, "Alexandre Belloni"
- <alexandre.belloni@bootlin.com>, "Claudiu Beznea"
- <claudiu.beznea@tuxon.dev>, "Markus Schneider-Pargmann" <msp@baylibre.com>,
- "Geert Uytterhoeven" <geert+renesas@glider.be>, "Magnus Damm"
- <magnus.damm@gmail.com>
-Subject: Re: [PATCH v2 phy-next 14/24] phy: introduce
- phy_get_max_link_rate() helper for consumers
-From: "Markus Schneider-Pargmann" <msp@baylibre.com>
-To: <vladimir.oltean@nxp.com>, <linux-phy@lists.infradead.org>
-X-Mailer: aerc 0.21.0
-References: <20260308114009.2546587-1-vladimir.oltean@nxp.com>
- <20260308114009.2546587-15-vladimir.oltean@nxp.com>
-In-Reply-To: <20260308114009.2546587-15-vladimir.oltean@nxp.com>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|AM9PR04MB7540:EE_
+X-MS-Office365-Filtering-Correlation-Id: d8db4a24-62e4-4f49-72c9-08de7e0f554d
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+ BCL:0;ARA:13230040|19092799006|1800799024|366016|10070799003|7416014|376014;
+X-Microsoft-Antispam-Message-Info:
+ XEcgWjBqi6oAw9ADhw/hwylx+r+2Q7iiz83/myXhNFA4LTMwxUpd+4JTrYXlv5Mqf4Mbw7vPobfK60LghGo2iBZSXSJ2xR72X5+EG9GzHoMTJ0MrwjEnfw1Nfn89/bmnodwdWMZgSuxLjXMGDxhxov04Q7Vhc2H7cysYYY271m4yTBMHjZ+HA0ouCyDCNqVdrlaoOSjKVybRUhc3Js3cxYFwsUoSoD1wxSUB2GmtMMKSi2Xzli5jwmCZECSDUotVvVgGqUBIPRyCi5YM2RmtLR+lEICZ3eV7PdvoA29Qq6GZGiZ3YrD9vSwEyZ2UrT8RwokCKoDUCpFuuV3ndtNQkePM+GnaFgDw5luOI7blSD+LaskoMPmytgxviN4sdgA5jj98a/Guilu15YxzHf3v3ZuNKZT8W7JF2hqiaTgDnJkeBI6zkk3LZSnG7AC+NN6DsCINfZnd36qlroaj0nR43GZCkX1D/ARS+6D/YzcZEaCgaJY52n70mlNKaEF7InI0SPmR92sGJgOi6g97lyBce6TUnhMm0XoIQQ5I4XNOrOy4t04MMd/Q6OtOBDoaTVrM0rWv+szu+GMyvbjERTba/qY9lVv3NIGm4BxxowHhpcWC3qRz4N1Nc1qrbuztAFsREU1a0AIxV+s4yRVyqai5g7W7RkSiIfNQsFybc8aMQALnrJRmlxUaUGdZkEUM5nz4
+X-Forefront-Antispam-Report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(10070799003)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+ =?utf-8?B?eldQUm1zVDZyUjRrM05QbHB6THY2SUFOWktmLys3eWNXeDIvRDU3Z1JabStT?=
+ =?utf-8?B?ZGN3N3hzQUpudWphaTdReXZYaTM1dHZyRG56MzZKZ1NiWHFONjVNWGs5eEt6?=
+ =?utf-8?B?N1FOQXBLR2orVnJqVk81dGNMYlArcTZwS25ob0RhczJCak5MT3hWMVVTUUg1?=
+ =?utf-8?B?WmlCc0gxK01LcldxZFAxTlJTdlg3RUlHMS9ldUl5dmhZZ0dYZ3did2MvaGZq?=
+ =?utf-8?B?WldVVlovQlRlemlQdDhmOWhtRDYwVVRBUWp4TExLeVV1Qi9KcHdWMVJkRm9R?=
+ =?utf-8?B?VzYwbkNML0pZbGVvOVhCZkRFYXpZSnM4V0pDRCtPb3ZlZlQzSC9DMlZCV0JF?=
+ =?utf-8?B?WVpWWngzS2kvTFl0Miswb0pBRXVscTBObmtGd3Vwd2g3b1lxWEp5WVhkbUVw?=
+ =?utf-8?B?RThFdE9CVkxNbG9vK2I4elhvYnlTOVIrZ1BBRlhLRWNrcXZYbXNNSU1GdFl5?=
+ =?utf-8?B?UXpIc2JNNktFMGlVMUMrbUNZMFpLZlVhKzNxL0RBS3VxbEpBeEphZW9uRGpW?=
+ =?utf-8?B?cklGREYzamlQV0thbndBbGl4Y2M3NEthYWpyTEV0akJ1eUZLSW1UNytjTkdN?=
+ =?utf-8?B?bHk4WEpUNWxzcXZHM3JBdlErSGtQQzFIMkx2NVB3QlBsN3F2bWJrQWVqM3dP?=
+ =?utf-8?B?MjlUTDlxbTRWQjR0a0ZQSlg5T1FLQWFtUmU0UHZ6NUhqdzBaek1YSDZOaVVL?=
+ =?utf-8?B?N1hKWmc0dUQvejlJTHRKQ3lxM25SUTR5eDBYWlhvWHhKVDdINWQ5VUUxM2c4?=
+ =?utf-8?B?eU9QeVovU2M5VUJTcHZDNy92T0JzenA1Q0ozVjh5YXl2Yi96M1VWb0JrZ1lR?=
+ =?utf-8?B?YmdnNEZDZThWV2VVL1VXcm5PRFNqczFMdHI0YnNRektNVDloMGZCSldkYnZh?=
+ =?utf-8?B?bTUyYitlb1VLa0IzVlZYRmlPL0tENjFRQzlxL29rU1Fua3FaQ2R1SE12YkFU?=
+ =?utf-8?B?YUdVdFRLQ3ZYaW91T09nR2VOWmRIRWNmOE9ibXJQaXNTaU9pRWloSkNOajhq?=
+ =?utf-8?B?cUQwTFV4V09aTS9Vbnh1QmVRdEF6N2NrMGpSdXkwVzdMaUxoWFdPam5zVnRY?=
+ =?utf-8?B?UG5GQy9XOXdaSlpKUERFcXlCUFREdEpHK1R2Ri81NC82UzlyNExGdnNqZG1V?=
+ =?utf-8?B?S2hDTjRXUWswbVQ5MllFVkYySElYWEJ0cndLSnhEYzRSdm00YkRKTFJsbmZD?=
+ =?utf-8?B?MmFodXRCUk5NeVprdERlK095U1VLd3FEYVFqekZ2VDNwUjBnU3htYi9NazlG?=
+ =?utf-8?B?WkVYSHJ5NFdrMTN4THM5bWI2WkxiRUJoQUY1QmhlZnBabzBYU2Zpek1qZzB0?=
+ =?utf-8?B?THdXMFgzTDZWQ0lWV0FZNUxUdzNXS3NORkMzcjRhUnp0akdDNkJYd0tDR29k?=
+ =?utf-8?B?ZE9NVFlkOFpybGsrQ25oM1BOMjU3Y0E0aU9TSjM4WVBmTmJrbVJoMHRUSERS?=
+ =?utf-8?B?ZG9pakVtRmJOQ3RRT00yRlYyMGw1a05wbWQ4d1E0eTNwdHlTWlUwTDJERUQ1?=
+ =?utf-8?B?T1VRKzdxS3I0bTNqYzdWd044SDVEWjc0TzdsYklKdFV2TTgveUtTN2xyOGl4?=
+ =?utf-8?B?YlRTaE5tL2xvOUVreUlHY09QbmhweTZmLysydGVBVVBtdmJDT3pVNnN3cHA0?=
+ =?utf-8?B?enVEZE1DNnZYNFlXSmoxY0xxb3YzVm1mOGNlb2hUVVhnbmR1aTczL0g3dmlB?=
+ =?utf-8?B?R1ZjZTlla1NGZVVnQlRJUXZYdnlkZmpFTkFSaERJbVRlNmYyVXJaRnZibEdE?=
+ =?utf-8?B?QUNFb1dudy9lTDBJSXlJeTFnclNLc3NWSDRIRTM0RWVRUUFjRUFPaHhBNURO?=
+ =?utf-8?B?UHZmVEhxaXBZWUUxeVROVlZCTDlhU0NaMjJlbkVxM1poRk1raVQ1U2VwamJ0?=
+ =?utf-8?B?V3pocFlXQUwrWVVVeDYvZ0ZFb3FNZGJ4VW9SenNRZjhKYzdxSVlDOHBsK3Ja?=
+ =?utf-8?B?Y0JXN05EK2o2anlNMFovYmZUeWllRzNkRThscEJNSk5TRHVaWDV2N0JBRi9X?=
+ =?utf-8?B?MHE1a2kwN3ZlSUlHR0hGYkQySkRDNm5BV09RZ3ZrUHNKM2FBTm5wdlQ1WDJw?=
+ =?utf-8?B?UE5KVkd2SmlJN0ZZZUN6bFYxc2diY1MxUFJGQ1JYTU9rcmg3UVZsRXJUMFBC?=
+ =?utf-8?B?Ry9mSG05b3dMdHVCdkxBTWxSR2xic0pTM2J2eW1ZM2MybHljejAyclIwdm5O?=
+ =?utf-8?B?TUhaQlpHc2ZnMmVKMXlXa09yWlpheXFKVlR3WmYyVHhJUnU3bU5xNHdqbFMr?=
+ =?utf-8?B?YW5QelNBN2pscVhsWXEvbXpJc2d4cjMrR2Q0cEJFbXg4UHBza09xU1MxZU1w?=
+ =?utf-8?B?eHZVOU9tVmlLQmJ5di9YMmZONnk2dHNZQ2ltaGFhUGhEMGtXSTFtM1Z0R21J?=
+ =?utf-8?Q?fPn/XMKu8RhTskNqW4usk5R2iwkANv3rOARNoneUEe3y7?=
+X-MS-Exchange-AntiSpam-MessageData-1: 25X3k10J55dIlE6TPhtIwsKPN+CfE6xF8ec=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d8db4a24-62e4-4f49-72c9-08de7e0f554d
+X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 19:09:05.6104
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5mxjD6/cBZmSNNYvle+QI/FI4XTHe8+OQrb7WMkGgQN5jRGmnpvJWqahjcOmetD/K+9d1oEZ3Dqt4xLs+srDHQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB7540
 
---840703edd9f3f1e1e79a02bb78a8d4f69f696b0531524c2c45c8075436e0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
+The biggest problem requiring this split is the fact that consumer
+drivers poke around in struct phy, accessing fields which shouldn't be
+visible to them. Follow the example of mux, gpio, iio, spi offload,
+pwrsec, pinctrl and regulator, which each expose separate headers for
+consumers and providers.
 
-Hi,
+Some off-list discussions were had with Vinod Koul regarding the 3 PHY
+providers outside the drivers/phy/ subsystem. It was agreed that it is
+desirable to relocate them to drivers/phy/, rather than to publish
+phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
+(new) phy-props.h - consumer-facing headers - stay there.
 
-On Sun Mar 8, 2026 at 12:39 PM CET, vladimir.oltean wrote:
-> Consumer drivers shouldn't dereference struct phy, not even to get to
-> its attributes.
->
-> We have phy_get_bus_width() as a precedent for getting the bus_width
-> attribute, so let's add phy_get_max_link_rate() and use it in DRM and
-> CAN drivers.
->
-> In CAN drivers, the transceiver is acquired through devm_phy_optional_get=
-()
-> and NULL is given by the API as a non-error case, so the PHY API should
-> also tolerate NULL coming back to it. This means we can further simplify
-> the call sites that test for the NULL quality of the transceiver.
+The hope is that developers get a hint when they need to include the
+wrong header to get their job done.
 
-Thanks for adding this.
+If that fails, patch 24/24 adds a regex in the MAINTAINERS entry that
+ensures linux-phy is copied on all Generic PHY patches, for an extra set
+of eyes.
 
->
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-> ---
-> Cc: Andrzej Hajda <andrzej.hajda@intel.com>
-> Cc: Neil Armstrong <neil.armstrong@linaro.org>
-> Cc: Robert Foss <rfoss@kernel.org>
-> Cc: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
-> Cc: Jonas Karlman <jonas@kwiboo.se>
-> Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
-> Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-> Cc: Maxime Ripard <mripard@kernel.org>
-> Cc: Thomas Zimmermann <tzimmermann@suse.de>
-> Cc: David Airlie <airlied@gmail.com>
-> Cc: Simona Vetter <simona@ffwll.ch>
-> Cc: Andy Yan <andy.yan@rock-chips.com>
-> Cc: Marc Kleine-Budde <mkl@pengutronix.de>
-> Cc: Vincent Mailhol <mailhol@kernel.org>
-> Cc: Nicolas Ferre <nicolas.ferre@microchip.com>
-> Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
-> Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-> Cc: Markus Schneider-Pargmann <msp@baylibre.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Magnus Damm <magnus.damm@gmail.com>
->
-> v1->v2: make phy_get_bus_width() NULL-tolerant to simplify CAN callers
-> ---
->  drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c | 4 ++--
->  drivers/gpu/drm/bridge/synopsys/dw-dp.c             | 2 +-
->  drivers/net/can/at91_can.c                          | 3 +--
->  drivers/net/can/flexcan/flexcan-core.c              | 3 +--
->  drivers/net/can/m_can/m_can_platform.c              | 3 +--
+The series is formatted on linux-phy/next for build testing, but is
+intended to be applied on top of commit
+https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git/commit/?id=4ff5801f45b494ad8251a16ec06c9f303ed3b9a0
+which is v7.0-rc1 + 1 patch, and then merged into linux-phy/next.
+The idea being that it's better to resolve the merge conflict early.
+There are 4 expected conflicts, details in the conflicting patches
+(21/24 and 22/24).
 
-For m_can:
-Acked-by: Markus Schneider-Pargmann <msp@baylibre.com>
+Requested merge strategy, I hope this works for everyone:
+- Subsystem maintainers ACK their affected portions
+- Entire series goes through linux-phy
+- linux-phy provides stable tag
+- (optionally) Said tag is merged back into affected subsystem 'next'
+  branches. Those who prefer can handle merge conflicts when they send
+  their PR.
 
-Best
-Markus
+Detailed change log in patches, summary below.
 
->  drivers/net/can/rcar/rcar_canfd.c                   | 3 +--
->  drivers/phy/phy-core.c                              | 9 +++++++++
->  include/linux/phy/phy.h                             | 6 ++++++
->  8 files changed, 22 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c b/driver=
-s/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> index a8b6ae58cb0a..ed7ed82ddb64 100644
-> --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-> @@ -1300,7 +1300,7 @@ static u32 cdns_mhdp_get_training_interval_us(struc=
-t cdns_mhdp_device *mhdp,
-> =20
->  static void cdns_mhdp_fill_host_caps(struct cdns_mhdp_device *mhdp)
->  {
-> -	unsigned int link_rate;
-> +	u32 link_rate;
-> =20
->  	/* Get source capabilities based on PHY attributes */
-> =20
-> @@ -1308,7 +1308,7 @@ static void cdns_mhdp_fill_host_caps(struct cdns_mh=
-dp_device *mhdp)
->  	if (!mhdp->host.lanes_cnt)
->  		mhdp->host.lanes_cnt =3D 4;
-> =20
-> -	link_rate =3D mhdp->phy->attrs.max_link_rate;
-> +	link_rate =3D phy_get_max_link_rate(mhdp->phy);
->  	if (!link_rate)
->  		link_rate =3D drm_dp_bw_code_to_link_rate(DP_LINK_BW_8_1);
->  	else
-> diff --git a/drivers/gpu/drm/bridge/synopsys/dw-dp.c b/drivers/gpu/drm/br=
-idge/synopsys/dw-dp.c
-> index 4ab6922dd79c..79c72ee8e263 100644
-> --- a/drivers/gpu/drm/bridge/synopsys/dw-dp.c
-> +++ b/drivers/gpu/drm/bridge/synopsys/dw-dp.c
-> @@ -536,7 +536,7 @@ static int dw_dp_link_parse(struct dw_dp *dp, struct =
-drm_connector *connector)
-> =20
->  	link->revision =3D link->dpcd[DP_DPCD_REV];
->  	link->rate =3D min_t(u32, min(dp->plat_data.max_link_rate,
-> -				    dp->phy->attrs.max_link_rate * 100),
-> +				    phy_get_max_link_rate(dp->phy) * 100),
->  			   drm_dp_max_link_rate(link->dpcd));
->  	link->lanes =3D min_t(u8, phy_get_bus_width(dp->phy),
->  			    drm_dp_max_lane_count(link->dpcd));
-> diff --git a/drivers/net/can/at91_can.c b/drivers/net/can/at91_can.c
-> index 58da323f14d7..7749da0a58f6 100644
-> --- a/drivers/net/can/at91_can.c
-> +++ b/drivers/net/can/at91_can.c
-> @@ -1125,8 +1125,7 @@ static int at91_can_probe(struct platform_device *p=
-dev)
-> =20
->  	can_rx_offload_add_timestamp(dev, &priv->offload);
-> =20
-> -	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +	priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	if (at91_is_sam9263(priv))
->  		dev->sysfs_groups[0] =3D &at91_sysfs_attr_group;
-> diff --git a/drivers/net/can/flexcan/flexcan-core.c b/drivers/net/can/fle=
-xcan/flexcan-core.c
-> index f5d22c61503f..093e48b8da58 100644
-> --- a/drivers/net/can/flexcan/flexcan-core.c
-> +++ b/drivers/net/can/flexcan/flexcan-core.c
-> @@ -2210,8 +2210,7 @@ static int flexcan_probe(struct platform_device *pd=
-ev)
->  	priv->reg_xceiver =3D reg_xceiver;
->  	priv->transceiver =3D transceiver;
-> =20
-> -	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +	priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	if (priv->devtype_data.quirks & FLEXCAN_QUIRK_NR_IRQ_3) {
->  		priv->irq_boff =3D platform_get_irq(pdev, 1);
-> diff --git a/drivers/net/can/m_can/m_can_platform.c b/drivers/net/can/m_c=
-an/m_can_platform.c
-> index 56da411878af..2a0f163a683a 100644
-> --- a/drivers/net/can/m_can/m_can_platform.c
-> +++ b/drivers/net/can/m_can/m_can_platform.c
-> @@ -131,8 +131,7 @@ static int m_can_plat_probe(struct platform_device *p=
-dev)
->  		goto probe_fail;
->  	}
-> =20
-> -	if (transceiver)
-> -		mcan_class->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +	mcan_class->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
-> =20
->  	priv->base =3D addr;
->  	priv->mram_base =3D mram_addr;
-> diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rca=
-r_canfd.c
-> index eaf8cac78038..9062db48d477 100644
-> --- a/drivers/net/can/rcar/rcar_canfd.c
-> +++ b/drivers/net/can/rcar/rcar_canfd.c
-> @@ -1884,8 +1884,7 @@ static int rcar_canfd_channel_probe(struct rcar_can=
-fd_global *gpriv, u32 ch,
->  	priv->transceiver =3D transceiver;
->  	priv->channel =3D ch;
->  	priv->gpriv =3D gpriv;
-> -	if (transceiver)
-> -		priv->can.bitrate_max =3D transceiver->attrs.max_link_rate;
-> +	priv->can.bitrate_max =3D phy_get_max_link_rate(transceiver);
->  	priv->can.clock.freq =3D fcan_freq;
->  	dev_info(dev, "can_clk rate is %u\n", priv->can.clock.freq);
-> =20
-> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-> index 0d0be494cfd7..737a760d97d1 100644
-> --- a/drivers/phy/phy-core.c
-> +++ b/drivers/phy/phy-core.c
-> @@ -647,6 +647,15 @@ void phy_set_bus_width(struct phy *phy, int bus_widt=
-h)
->  }
->  EXPORT_SYMBOL_GPL(phy_set_bus_width);
-> =20
-> +u32 phy_get_max_link_rate(struct phy *phy)
-> +{
-> +	if (!phy)
-> +		return 0;
-> +
-> +	return phy->attrs.max_link_rate;
-> +}
-> +EXPORT_SYMBOL_GPL(phy_get_max_link_rate);
-> +
->  /**
->   * _of_phy_get() - lookup and obtain a reference to a phy by phandle
->   * @np: device_node for which to get the phy
-> diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-> index a7e2432ca1ae..34b656084caf 100644
-> --- a/include/linux/phy/phy.h
-> +++ b/include/linux/phy/phy.h
-> @@ -57,6 +57,7 @@ int phy_notify_disconnect(struct phy *phy, int port);
->  int phy_notify_state(struct phy *phy, union phy_notify state);
->  int phy_get_bus_width(struct phy *phy);
->  void phy_set_bus_width(struct phy *phy, int bus_width);
-> +u32 phy_get_max_link_rate(struct phy *phy);
->  #else
->  static inline struct phy *phy_get(struct device *dev, const char *string=
-)
->  {
-> @@ -256,6 +257,11 @@ static inline int phy_get_bus_width(struct phy *phy)
->  static inline void phy_set_bus_width(struct phy *phy, int bus_width)
->  {
->  }
-> +
-> +static inline u32 phy_get_max_link_rate(struct phy *phy)
-> +{
-> +	return 0;
-> +}
->  #endif /* IS_ENABLED(CONFIG_GENERIC_PHY) */
-> =20
->  #endif /* __PHY_CONSUMER_H */
+v2->v3:
+- remove unused variable in PCI after device link removal
+- update MAINTAINERS regex pattern to escape forward slashes
+- add more people to CC list
+- provide conflict resolution
+v1->v2:
+- split "phy: include PHY provider header" into smaller chunks to work
+  around mailing list moderation due to patch size
+- improve MAINTAINERS regex pattern
+- make all PHY attribute helpers NULL-tolerant. Not just the new
+  phy_get_bus_width(), but also retroactively, the existing ones.
+- fixed the temporary include path from <linux/phy/phy.h> to
+  "phy-provider.h", removed anyway by the end of the series
+- logical bug fixes in the PCI controller <-> PHY device link removal
+  and Exynos UFS PHY API rework
 
+In case anyone wants to test the series, here it is on top of linux-phy/next:
+https://github.com/vladimiroltean/linux/tree/phy-split-consumer-provider-v3
 
---840703edd9f3f1e1e79a02bb78a8d4f69f696b0531524c2c45c8075436e0
-Content-Type: application/pgp-signature; name="signature.asc"
+I've also test-applied it on v7.0-rc1 and provided conflict resolution
+with net-next and with linux-phy/next:
+https://github.com/vladimiroltean/linux/commits/phy-split-consumer-provider-merge/
 
------BEGIN PGP SIGNATURE-----
+v2 at:
+https://lore.kernel.org/linux-phy/20260308114009.2546587-1-vladimir.oltean@nxp.com/
+v1 at:
+https://lore.kernel.org/linux-phy/20260304175735.2660419-13-vladimir.oltean@nxp.com/
 
-iKMEABYKAEsWIQSJYVVm/x+5xmOiprOFwVZpkBVKUwUCaa6QehsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIRHG1zcEBiYXlsaWJyZS5jb20ACgkQhcFWaZAVSlO3
-cwEAzFZFZ21Yi1E3bmSFVrYlzos6oRC2RIJXE4meDDVCTjUA/2INMu045NS1yRGm
-V6PI/m62S0rUjMso1TupNVful6QE
-=gdIq
------END PGP SIGNATURE-----
+Cc: Abhinav Kumar <abhinav.kumar@linux.dev>
+Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Cc: "André Draszik" <andre.draszik@linaro.org>
+Cc: Andrew Lunn <andrew+netdev@lunn.ch>
+Cc: Andrzej Hajda <andrzej.hajda@intel.com>
+Cc: Andy Yan <andy.yan@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Chanho Park <chanho61.park@samsung.com>
+Cc: Chen-Yu Tsai <wens@kernel.org>
+Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Daniel Machon <daniel.machon@microchip.com>
+Cc: David Airlie <airlied@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Dmitry Baryshkov <lumag@kernel.org>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Fabio Estevam <festevam@gmail.com>
+Cc: Frank Li <Frank.Li@nxp.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Heiko Stübner" <heiko@sntech.de>
+Cc: Inki Dae <inki.dae@samsung.com>
+Cc: Jagan Teki <jagan@amarulasolutions.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
+Cc: Jessica Zhang <jesszhan0024@gmail.com>
+Cc: Joe Perches <joe@perches.com>
+Cc: Jonas Karlman <jonas@kwiboo.se>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>
+Cc: Kevin Xie <kevin.xie@starfivetech.com>
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
+Cc: Linus Walleij <linusw@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Marc Kleine-Budde <mkl@pengutronix.de>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Marijn Suijten <marijn.suijten@somainline.org>
+Cc: Markus Schneider-Pargmann <msp@baylibre.com>
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Maxime Ripard <mripard@kernel.org>
+Cc: Michael Dege <michael.dege@renesas.com>
+Cc: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Nicolas Ferre <nicolas.ferre@microchip.com>
+Cc: Niklas Cassel <cassel@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
+Cc: Peter Chen <peter.chen@kernel.org>
+Cc: Peter Griffin <peter.griffin@linaro.org>
+Cc: Rob Clark <robin.clark@oss.qualcomm.com>
+Cc: Robert Foss <rfoss@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>
+Cc: Samuel Holland <samuel@sholland.org>
+Cc: Sandy Huang <hjc@rock-chips.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Paul <sean@poorly.run>
+Cc: Sebastian Reichel <sre@kernel.org>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Simona Vetter <simona@ffwll.ch>
+Cc: Steen Hegelund <Steen.Hegelund@microchip.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Cc: Thomas Zimmermann <tzimmermann@suse.de>
+Cc: Tudor Ambarus <tudor.ambarus@linaro.org>
+Cc: Vincent Mailhol <mailhol@kernel.org>
+Cc: Yixun Lan <dlan@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 
---840703edd9f3f1e1e79a02bb78a8d4f69f696b0531524c2c45c8075436e0--
+Vladimir Oltean (24):
+  ata: add <linux/pm_runtime.h> where missing
+  PCI: Add missing headers transitively included by <linux/phy/phy.h>
+  usb: add missing headers transitively included by <linux/phy/phy.h>
+  drm: add <linux/pm_runtime.h> where missing
+  phy: add <linux/pm_runtime.h> where missing
+  phy: spacemit: include missing <linux/phy/phy.h>
+  net: lan969x: include missing <linux/of.h>
+  PCI: Remove device links to PHY
+  ufs: exynos: stop poking into struct phy guts
+  drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
+  drm/msm/dp: remove debugging prints with internal struct phy state
+  phy: move provider API out of public <linux/phy/phy.h>
+  phy: make phy_get_mode(), phy_(get|set)_bus_width() NULL tolerant
+  phy: introduce phy_get_max_link_rate() helper for consumers
+  drm/rockchip: dsi: include PHY provider header
+  drm: bridge: cdns-mhdp8546: use consumer API for getting PHY bus width
+  media: sunxi: a83-mips-csi2: include PHY provider header
+  net: renesas: rswitch: include PHY provider header
+  pinctrl: tegra-xusb: include PHY provider header
+  power: supply: cpcap-charger: include missing <linux/property.h>
+  phy: include PHY provider header (1/2)
+  phy: include PHY provider header (2/2)
+  phy: remove temporary provider compatibility from consumer header
+  MAINTAINERS: add regexes for linux-phy
+
+ MAINTAINERS                                   |  11 +
+ drivers/ata/ahci.c                            |   1 +
+ drivers/ata/ahci_brcm.c                       |   1 +
+ drivers/ata/ahci_ceva.c                       |   1 +
+ drivers/ata/ahci_qoriq.c                      |   1 +
+ drivers/ata/libahci.c                         |   1 +
+ .../drm/bridge/analogix/analogix_dp_core.c    |   1 +
+ .../drm/bridge/cadence/cdns-mhdp8546-core.c   |   7 +-
+ drivers/gpu/drm/bridge/nwl-dsi.c              |   1 +
+ drivers/gpu/drm/bridge/samsung-dsim.c         |   1 +
+ drivers/gpu/drm/bridge/synopsys/dw-dp.c       |   2 +-
+ drivers/gpu/drm/msm/dp/dp_aux.c               |   1 +
+ drivers/gpu/drm/msm/dp/dp_ctrl.c              |  18 -
+ drivers/gpu/drm/rockchip/cdn-dp-core.c        |   1 +
+ .../gpu/drm/rockchip/dw-mipi-dsi-rockchip.c   |   1 +
+ drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c   |  25 +-
+ .../sun8i-a83t-mipi-csi2/sun8i_a83t_dphy.c    |   2 +-
+ drivers/net/can/at91_can.c                    |   3 +-
+ drivers/net/can/flexcan/flexcan-core.c        |   3 +-
+ drivers/net/can/m_can/m_can_platform.c        |   3 +-
+ drivers/net/can/rcar/rcar_canfd.c             |   3 +-
+ .../microchip/sparx5/lan969x/lan969x_rgmii.c  |   1 +
+ drivers/net/ethernet/renesas/rswitch_main.c   |   1 +
+ .../controller/cadence/pcie-cadence-plat.c    |   4 -
+ drivers/pci/controller/cadence/pcie-cadence.c |  16 +-
+ drivers/pci/controller/cadence/pcie-cadence.h |   2 -
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  16 -
+ drivers/pci/controller/dwc/pci-keystone.c     |  32 +-
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c |   1 +
+ drivers/pci/controller/dwc/pcie-histb.c       |   1 +
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     |   1 +
+ drivers/pci/controller/dwc/pcie-spacemit-k1.c |   2 +
+ drivers/pci/controller/dwc/pcie-tegra194.c    |   1 +
+ drivers/pci/controller/pci-tegra.c            |   1 +
+ drivers/pci/controller/pcie-rockchip-host.c   |   1 +
+ drivers/pci/controller/plda/pcie-starfive.c   |   1 +
+ drivers/phy/allwinner/phy-sun4i-usb.c         |   3 +-
+ drivers/phy/allwinner/phy-sun50i-usb3.c       |   3 +-
+ drivers/phy/allwinner/phy-sun6i-mipi-dphy.c   |   4 +-
+ drivers/phy/allwinner/phy-sun9i-usb.c         |   3 +-
+ drivers/phy/amlogic/phy-meson-axg-mipi-dphy.c |   2 +
+ .../amlogic/phy-meson-axg-mipi-pcie-analog.c  |   3 +-
+ drivers/phy/amlogic/phy-meson-axg-pcie.c      |   2 +
+ .../amlogic/phy-meson-g12a-mipi-dphy-analog.c |   3 +-
+ drivers/phy/amlogic/phy-meson-g12a-usb2.c     |   2 +
+ .../phy/amlogic/phy-meson-g12a-usb3-pcie.c    |   3 +-
+ drivers/phy/amlogic/phy-meson-gxl-usb2.c      |   3 +-
+ drivers/phy/amlogic/phy-meson8-hdmi-tx.c      |   3 +-
+ drivers/phy/amlogic/phy-meson8b-usb2.c        |   3 +-
+ drivers/phy/apple/atc.c                       |   3 +-
+ drivers/phy/broadcom/phy-bcm-cygnus-pcie.c    |   3 +-
+ drivers/phy/broadcom/phy-bcm-kona-usb2.c      |   4 +-
+ drivers/phy/broadcom/phy-bcm-ns-usb2.c        |   3 +-
+ drivers/phy/broadcom/phy-bcm-ns-usb3.c        |   3 +-
+ drivers/phy/broadcom/phy-bcm-ns2-pcie.c       |   3 +-
+ drivers/phy/broadcom/phy-bcm-ns2-usbdrd.c     |   3 +-
+ drivers/phy/broadcom/phy-bcm-sr-pcie.c        |   3 +-
+ drivers/phy/broadcom/phy-bcm-sr-usb.c         |   3 +-
+ drivers/phy/broadcom/phy-bcm63xx-usbh.c       |   3 +-
+ drivers/phy/broadcom/phy-brcm-sata.c          |   3 +-
+ drivers/phy/broadcom/phy-brcm-usb.c           |   2 +-
+ drivers/phy/cadence/cdns-dphy-rx.c            |   3 +-
+ drivers/phy/cadence/cdns-dphy.c               |   4 +-
+ drivers/phy/cadence/phy-cadence-salvo.c       |   3 +-
+ drivers/phy/cadence/phy-cadence-sierra.c      |   3 +-
+ drivers/phy/cadence/phy-cadence-torrent.c     |   3 +-
+ drivers/phy/canaan/phy-k230-usb.c             |   3 +-
+ drivers/phy/eswin/phy-eic7700-sata.c          |   3 +-
+ .../phy/freescale/phy-fsl-imx8-mipi-dphy.c    |   3 +-
+ drivers/phy/freescale/phy-fsl-imx8m-pcie.c    |   4 +-
+ drivers/phy/freescale/phy-fsl-imx8mq-usb.c    |   3 +-
+ drivers/phy/freescale/phy-fsl-imx8qm-hsio.c   |   6 +-
+ .../phy/freescale/phy-fsl-imx8qm-lvds-phy.c   |   3 +-
+ drivers/phy/freescale/phy-fsl-lynx-28g.c      |   3 +-
+ drivers/phy/hisilicon/phy-hi3660-usb3.c       |   3 +-
+ drivers/phy/hisilicon/phy-hi3670-pcie.c       |   3 +-
+ drivers/phy/hisilicon/phy-hi3670-usb3.c       |   3 +-
+ drivers/phy/hisilicon/phy-hi6220-usb.c        |   3 +-
+ drivers/phy/hisilicon/phy-hisi-inno-usb2.c    |   4 +-
+ drivers/phy/hisilicon/phy-histb-combphy.c     |   3 +-
+ drivers/phy/hisilicon/phy-hix5hd2-sata.c      |   3 +-
+ drivers/phy/ingenic/phy-ingenic-usb.c         |   3 +-
+ drivers/phy/intel/phy-intel-keembay-emmc.c    |   3 +-
+ drivers/phy/intel/phy-intel-keembay-usb.c     |   3 +-
+ drivers/phy/intel/phy-intel-lgm-combo.c       |   4 +-
+ drivers/phy/intel/phy-intel-lgm-emmc.c        |   3 +-
+ drivers/phy/lantiq/phy-lantiq-rcu-usb2.c      |   3 +-
+ drivers/phy/lantiq/phy-lantiq-vrx200-pcie.c   |   4 +-
+ drivers/phy/marvell/phy-armada375-usb2.c      |   3 +-
+ drivers/phy/marvell/phy-armada38x-comphy.c    |   3 +-
+ drivers/phy/marvell/phy-berlin-sata.c         |   3 +-
+ drivers/phy/marvell/phy-berlin-usb.c          |   3 +-
+ drivers/phy/marvell/phy-mmp3-hsic.c           |   3 +-
+ drivers/phy/marvell/phy-mmp3-usb.c            |   3 +-
+ drivers/phy/marvell/phy-mvebu-a3700-comphy.c  |   3 +-
+ drivers/phy/marvell/phy-mvebu-a3700-utmi.c    |   3 +-
+ drivers/phy/marvell/phy-mvebu-cp110-comphy.c  |   3 +-
+ drivers/phy/marvell/phy-mvebu-cp110-utmi.c    |   3 +-
+ drivers/phy/marvell/phy-mvebu-sata.c          |   3 +-
+ drivers/phy/marvell/phy-pxa-28nm-hsic.c       |   3 +-
+ drivers/phy/marvell/phy-pxa-28nm-usb2.c       |   3 +-
+ drivers/phy/marvell/phy-pxa-usb.c             |   3 +-
+ drivers/phy/mediatek/phy-mtk-dp.c             |   3 +-
+ drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c    |   1 -
+ drivers/phy/mediatek/phy-mtk-hdmi.h           |   3 +-
+ drivers/phy/mediatek/phy-mtk-mipi-csi-0-5.c   |   2 +-
+ drivers/phy/mediatek/phy-mtk-mipi-dsi.h       |   3 +-
+ drivers/phy/mediatek/phy-mtk-pcie.c           |   2 +-
+ drivers/phy/mediatek/phy-mtk-tphy.c           |   2 +-
+ drivers/phy/mediatek/phy-mtk-ufs.c            |   2 +-
+ drivers/phy/mediatek/phy-mtk-xfi-tphy.c       |   2 +-
+ drivers/phy/mediatek/phy-mtk-xsphy.c          |   2 +-
+ drivers/phy/microchip/lan966x_serdes.c        |   4 +-
+ drivers/phy/microchip/sparx5_serdes.c         |   2 +-
+ drivers/phy/motorola/phy-cpcap-usb.c          |   3 +-
+ drivers/phy/motorola/phy-mapphone-mdm6600.c   |   5 +-
+ drivers/phy/mscc/phy-ocelot-serdes.c          |   3 +-
+ drivers/phy/nuvoton/phy-ma35d1-usb2.c         |   3 +-
+ drivers/phy/phy-airoha-pcie.c                 |   2 +-
+ drivers/phy/phy-can-transceiver.c             |   3 +-
+ drivers/phy/phy-core-mipi-dphy.c              |   4 +-
+ drivers/phy/phy-core.c                        |  52 ++
+ drivers/phy/phy-google-usb.c                  |   4 +-
+ drivers/phy/phy-lpc18xx-usb-otg.c             |   3 +-
+ drivers/phy/phy-nxp-ptn3222.c                 |   3 +-
+ drivers/phy/phy-pistachio-usb.c               |   4 +-
+ drivers/phy/phy-provider.h                    | 256 +++++++++
+ drivers/phy/phy-snps-eusb2.c                  |   2 +
+ drivers/phy/phy-xgene.c                       |   3 +-
+ drivers/phy/qualcomm/phy-ath79-usb.c          |   3 +-
+ drivers/phy/qualcomm/phy-qcom-apq8064-sata.c  |   3 +-
+ drivers/phy/qualcomm/phy-qcom-edp.c           |   3 +-
+ .../phy/qualcomm/phy-qcom-eusb2-repeater.c    |   3 +-
+ drivers/phy/qualcomm/phy-qcom-ipq4019-usb.c   |   3 +-
+ drivers/phy/qualcomm/phy-qcom-ipq806x-sata.c  |   3 +-
+ drivers/phy/qualcomm/phy-qcom-ipq806x-usb.c   |   3 +-
+ drivers/phy/qualcomm/phy-qcom-m31-eusb2.c     |   2 +
+ drivers/phy/qualcomm/phy-qcom-m31.c           |   3 +-
+ drivers/phy/qualcomm/phy-qcom-pcie2.c         |   3 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-combo.c     |   4 +-
+ .../phy/qualcomm/phy-qcom-qmp-pcie-msm8996.c  |   3 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      |   3 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       |   3 +-
+ .../phy/qualcomm/phy-qcom-qmp-usb-legacy.c    |   4 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-usb.c       |   4 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-usbc.c      |   4 +-
+ drivers/phy/qualcomm/phy-qcom-qusb2.c         |   5 +-
+ drivers/phy/qualcomm/phy-qcom-sgmii-eth.c     |   3 +-
+ drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c |   4 +-
+ .../phy/qualcomm/phy-qcom-uniphy-pcie-28lp.c  |   3 +-
+ drivers/phy/qualcomm/phy-qcom-usb-hs-28nm.c   |   3 +-
+ drivers/phy/qualcomm/phy-qcom-usb-hs.c        |   3 +-
+ drivers/phy/qualcomm/phy-qcom-usb-hsic.c      |   3 +-
+ drivers/phy/qualcomm/phy-qcom-usb-ss.c        |   3 +-
+ drivers/phy/ralink/phy-mt7621-pci.c           |   3 +-
+ drivers/phy/ralink/phy-ralink-usb.c           |   3 +-
+ drivers/phy/realtek/phy-rtk-usb2.c            |   3 +-
+ drivers/phy/realtek/phy-rtk-usb3.c            |   3 +-
+ drivers/phy/renesas/phy-rcar-gen2.c           |   3 +-
+ drivers/phy/renesas/phy-rcar-gen3-pcie.c      |   4 +-
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c      |   3 +-
+ drivers/phy/renesas/phy-rcar-gen3-usb3.c      |   3 +-
+ drivers/phy/renesas/phy-rzg3e-usb3.c          |   3 +-
+ drivers/phy/renesas/r8a779f0-ether-serdes.c   |   4 +-
+ drivers/phy/rockchip/phy-rockchip-dp.c        |   3 +-
+ drivers/phy/rockchip/phy-rockchip-dphy-rx0.c  |   3 +-
+ drivers/phy/rockchip/phy-rockchip-emmc.c      |   3 +-
+ .../phy/rockchip/phy-rockchip-inno-csidphy.c  |   3 +-
+ .../phy/rockchip/phy-rockchip-inno-dsidphy.c  |   4 +-
+ drivers/phy/rockchip/phy-rockchip-inno-hdmi.c |   2 +
+ drivers/phy/rockchip/phy-rockchip-inno-usb2.c |   3 +-
+ .../rockchip/phy-rockchip-naneng-combphy.c    |   3 +-
+ drivers/phy/rockchip/phy-rockchip-pcie.c      |   2 +-
+ .../phy/rockchip/phy-rockchip-samsung-dcphy.c |   3 +-
+ .../phy/rockchip/phy-rockchip-samsung-hdptx.c |   2 +
+ .../phy/rockchip/phy-rockchip-snps-pcie3.c    |   3 +-
+ drivers/phy/rockchip/phy-rockchip-typec.c     |   5 +-
+ drivers/phy/rockchip/phy-rockchip-usb.c       |   3 +-
+ drivers/phy/rockchip/phy-rockchip-usbdp.c     |   2 +
+ drivers/phy/samsung/phy-exynos-dp-video.c     |   3 +-
+ drivers/phy/samsung/phy-exynos-mipi-video.c   |   3 +-
+ drivers/phy/samsung/phy-exynos-pcie.c         |   3 +-
+ drivers/phy/samsung/phy-exynos4210-usb2.c     |   3 +-
+ drivers/phy/samsung/phy-exynos4x12-usb2.c     |   3 +-
+ drivers/phy/samsung/phy-exynos5-usbdrd.c      |   2 +
+ drivers/phy/samsung/phy-exynos5250-sata.c     |   3 +-
+ drivers/phy/samsung/phy-exynos5250-usb2.c     |   3 +-
+ drivers/phy/samsung/phy-s5pv210-usb2.c        |   3 +-
+ drivers/phy/samsung/phy-samsung-ufs.c         |   2 +-
+ drivers/phy/samsung/phy-samsung-ufs.h         |   3 +-
+ drivers/phy/samsung/phy-samsung-usb2.c        |   2 +
+ drivers/phy/samsung/phy-samsung-usb2.h        |   3 +-
+ drivers/phy/socionext/phy-uniphier-ahci.c     |   3 +-
+ drivers/phy/socionext/phy-uniphier-pcie.c     |   3 +-
+ drivers/phy/socionext/phy-uniphier-usb2.c     |   3 +-
+ drivers/phy/socionext/phy-uniphier-usb3hs.c   |   3 +-
+ drivers/phy/socionext/phy-uniphier-usb3ss.c   |   3 +-
+ drivers/phy/sophgo/phy-cv1800-usb2.c          |   3 +-
+ drivers/phy/spacemit/phy-k1-pcie.c            |   4 +-
+ drivers/phy/spacemit/phy-k1-usb2.c            |   2 +
+ drivers/phy/st/phy-miphy28lp.c                |   4 +-
+ drivers/phy/st/phy-spear1310-miphy.c          |   3 +-
+ drivers/phy/st/phy-spear1340-miphy.c          |   3 +-
+ drivers/phy/st/phy-stih407-usb.c              |   3 +-
+ drivers/phy/st/phy-stm32-combophy.c           |   3 +-
+ drivers/phy/st/phy-stm32-usbphyc.c            |   2 +
+ drivers/phy/starfive/phy-jh7110-dphy-rx.c     |   3 +-
+ drivers/phy/starfive/phy-jh7110-dphy-tx.c     |   3 +-
+ drivers/phy/starfive/phy-jh7110-pcie.c        |   3 +-
+ drivers/phy/starfive/phy-jh7110-usb.c         |   3 +-
+ drivers/phy/sunplus/phy-sunplus-usb2.c        |   3 +-
+ drivers/phy/tegra/phy-tegra194-p2u.c          |   3 +-
+ drivers/phy/tegra/xusb-tegra124.c             |   2 +-
+ drivers/phy/tegra/xusb-tegra186.c             |   2 +-
+ drivers/phy/tegra/xusb-tegra210.c             |   2 +-
+ drivers/phy/tegra/xusb.c                      |   2 +-
+ drivers/phy/ti/phy-am654-serdes.c             |   3 +-
+ drivers/phy/ti/phy-da8xx-usb.c                |   3 +-
+ drivers/phy/ti/phy-dm816x-usb.c               |   3 +-
+ drivers/phy/ti/phy-gmii-sel.c                 |   3 +-
+ drivers/phy/ti/phy-omap-usb2.c                |   3 +-
+ drivers/phy/ti/phy-ti-pipe3.c                 |   3 +-
+ drivers/phy/ti/phy-tusb1210.c                 |   1 +
+ drivers/phy/ti/phy-twl4030-usb.c              |   3 +-
+ drivers/phy/xilinx/phy-zynqmp.c               |   4 +-
+ drivers/pinctrl/tegra/pinctrl-tegra-xusb.c    |   2 +-
+ drivers/power/supply/cpcap-charger.c          |   1 +
+ drivers/ufs/host/ufs-exynos.c                 |  24 +-
+ drivers/ufs/host/ufs-exynos.h                 |   1 +
+ drivers/usb/chipidea/ci_hdrc_imx.c            |   1 +
+ drivers/usb/core/hcd.c                        |   1 +
+ drivers/usb/dwc3/dwc3-generic-plat.c          |   1 +
+ drivers/usb/dwc3/gadget.c                     |   1 +
+ include/linux/phy/phy-props.h                 |  75 +++
+ include/linux/phy/phy-sun4i-usb.h             |   2 +-
+ include/linux/phy/phy.h                       | 497 ++++--------------
+ include/linux/phy/ulpi_phy.h                  |   2 +-
+ 237 files changed, 941 insertions(+), 705 deletions(-)
+ create mode 100644 drivers/phy/phy-provider.h
+ create mode 100644 include/linux/phy/phy-props.h
+
+-- 
+2.43.0
+
