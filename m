@@ -1,124 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EDDE3ACEE4
-	for <linux-ide@vger.kernel.org>; Tue, 10 Mar 2026 02:45:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F4D13B8D6B;
+	Tue, 10 Mar 2026 08:24:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773110716; cv=none; b=EGjdVM36u5yvEjsgEqgV4OAgJxkKkzyp4HEMbyKW69RzVIFl3jJz74IdwtNgLhzGJc0GpcNo/0aL7i/9pvlHN/bZblAGI6cIZvzH1R8DvqrxNMYtAN/PqXs/snPICogS1v1xOVAR2FPEg3RR5xTmLcnwmjxnvngh+PYwnH4UkeE=
+	t=1773131100; cv=none; b=XpJvxGBoIUnUylry7mynfLhUo5YFehiWv2z6dmzq1hEab2YxbbY4b8C97RRQr8daNQtm3gvljH8x69Gm94BscTVGgES/4EGMuouu1LE5gfkhq+1XQ3mzgCuo7lyJ9xgtglbJg1DcMvJrsJEPfbs44FSr72EdsUJ1nsMnDqX7DRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773110716; c=relaxed/simple;
-	bh=AiuSbGc4gyF+r0NsVvYBegnqTPdAIt4V0L/szs51RLs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=A1yGtiQVYW2piZ0m4Bfqtv7i+3Sw/pCAuKW+9ec/73CPQ0tHInggCb0fjuGUkhdX2yIAZYdR2NqKc9HvlRvzH84Dl0lAxOQcupCg9PXRj/87N4u6QJEAYl6Z4vsBVpjSdxpfM9m7NiYSVuKxP3RobTu3D4G7NnhfTz/oRP5d6H0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OYQ4GzGr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773131100; c=relaxed/simple;
+	bh=XRYHG+1OFO9B3BzHm+YXgweT4NhjII3UvBtiXddp6VI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=OGb3OegcJxbwICanihnWiL/HDrBg0uTIOyjecOXd47iLlptCnlGxoFDFlGtOo+q54VtLXW05Txa8L+24sJLJYKbSQpB9tsQl73xJGznplLe3Sk1yWkykN79gFh5xvG39hBqUDEJfW7H0Ajktw2/Trk4utb0AfYHdn23SfLuedRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b=JuC/yhxD; arc=none smtp.client-ip=185.11.138.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OYQ4GzGr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3173C2BCB9
-	for <linux-ide@vger.kernel.org>; Tue, 10 Mar 2026 02:45:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773110715;
-	bh=AiuSbGc4gyF+r0NsVvYBegnqTPdAIt4V0L/szs51RLs=;
-	h=References:In-Reply-To:Reply-To:From:Date:Subject:To:Cc:From;
-	b=OYQ4GzGrjp8DJFWsl2mM6ocePlwxv12ixt2gG1IoJH8dIMcy2K9jYlYp0xrXUr1hj
-	 vdJ1Hmp0SjmxQ+VCPPiqJlGt8YHvrtJ6IjbgXtVQ4LMZbCg9LwXbL8lu4+PBO7sjsL
-	 4s38j0P9Pc/iUqjSuchyjIAcNbjA/RLX+hPcWwe8rEaxzhE3zj7CNgU19ws9MZxPyz
-	 jVvlhgVmpbBARm+YBqB5I7YjjmX/kwY2NwSC8hyTJgVaSFIJVMQTWw9r0B2mnIUaZ+
-	 dgdQe+dNt9cNuRA9+q+H8NVNiXnbOpLUOvVf27C6ZPPIJpRz4lQ5Rxab9sF8pu86xC
-	 ckfjVXnxFH4qg==
-Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-38a2544b52bso71084221fa.3
-        for <linux-ide@vger.kernel.org>; Mon, 09 Mar 2026 19:45:15 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCX+/kZitXiZ6DCWiDJEx/PoQhfeuXbbJn+P/Byo2V5Tx/UOD8FTlIfxAg6TckwOoV+KnID3BLosz4k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxtYfAPqpcks0wb6oQfa7zuRCQ/N4AQoT3sC0GYYXYEc7SlRVIJ
-	+Ayu1+QnlzO1MIGGfnf6onlPcy8tdWhB13X1VvP4hsQrZ6rPjcaOt1a63jhfUrzdAIDwnMmoHpN
-	jF3xFMCLPnO1KAOG21amkjry7U4hQpKk=
-X-Received: by 2002:a05:651c:1104:b0:385:c21f:37e1 with SMTP id
- 38308e7fff4ca-38a40b6a2d2mr40186201fa.15.1773110714064; Mon, 09 Mar 2026
- 19:45:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b="JuC/yhxD"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sntech.de;
+	s=gloria202408; h=Content-Type:Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To;
+	bh=2W8R6JKoSWBQ/NVWe1VH8DTpdfOcfJODkzczD104anE=; b=JuC/yhxDoPy5BzKCllx+4lcx/F
+	aT/7U8Uk8l3EzePnMXUbbxXawsxzRHryg8fghP2VOHv5kHVBckllNBimOOiJ0d8LfnHjtGmniMUoP
+	q+tI4zY5GQIiNsEUe+qxnask3JoIfvvZdpBRFnoZGdldxQgpw2opTa6+/x5nJBA//K40leHf2j3eZ
+	QL1kjydLamseRW0i8hF8yC9BA+ISD2o9MPNpUsGC0DfntkB9k4h7pa/Fd+8ADCPiSf0DDEzQCBI5M
+	9HJQrDTSAcTC9UmZ18rrV1bkPrtisS78iMGtNExAIokgAvG70PlOoOoPpo/Lna+ZPaU1pgFFTLn9P
+	iDkZROYQ==;
+From: Heiko Stuebner <heiko@sntech.de>
+To: linux-phy@lists.infradead.org, Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
+ dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
+ linux-rockchip@lists.infradead.org, linux-samsung-soc@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-sunxi@lists.linux.dev,
+ linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+ netdev@vger.kernel.org, spacemit@lists.linux.dev,
+ UNGLinuxDriver@microchip.com, Sandy Huang <hjc@rock-chips.com>,
+ Andy Yan <andy.yan@rock-chips.com>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>
+Subject:
+ Re: [PATCH v3 phy-next 10/24] drm/rockchip: dw_hdmi: avoid direct dereference
+ of phy->dev.of_node
+Date: Tue, 10 Mar 2026 09:24:43 +0100
+Message-ID: <2218670.OBFZWjSADL@phil>
+In-Reply-To: <20260309190842.927634-11-vladimir.oltean@nxp.com>
+References:
+ <20260309190842.927634-1-vladimir.oltean@nxp.com>
+ <20260309190842.927634-11-vladimir.oltean@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260309190842.927634-1-vladimir.oltean@nxp.com> <20260309190842.927634-18-vladimir.oltean@nxp.com>
-In-Reply-To: <20260309190842.927634-18-vladimir.oltean@nxp.com>
-Reply-To: wens@kernel.org
-From: Chen-Yu Tsai <wens@kernel.org>
-Date: Tue, 10 Mar 2026 10:45:01 +0800
-X-Gmail-Original-Message-ID: <CAGb2v65surpnqrmv4tbH4TSrx6SaTpdbsQtCsNqwse5xwdb8fA@mail.gmail.com>
-X-Gm-Features: AaiRm535EaFxYtCAjq5FIkHiBmgOxc7_e434rO98DZfg5NrM7RTttw3IOCzqW1Y
-Message-ID: <CAGb2v65surpnqrmv4tbH4TSrx6SaTpdbsQtCsNqwse5xwdb8fA@mail.gmail.com>
-Subject: Re: [PATCH v3 phy-next 17/24] media: sunxi: a83-mips-csi2: include
- PHY provider header
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
-	freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, 
-	linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org, 
-	linux-usb@vger.kernel.org, netdev@vger.kernel.org, spacemit@lists.linux.dev, 
-	UNGLinuxDriver@microchip.com, Mauro Carvalho Chehab <mchehab@kernel.org>, 
-	Jernej Skrabec <jernej.skrabec@gmail.com>, Samuel Holland <samuel@sholland.org>
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-On Tue, Mar 10, 2026 at 3:10=E2=80=AFAM Vladimir Oltean <vladimir.oltean@nx=
-p.com> wrote:
->
-> The introduction commit 576d196c522b ("media: sunxi: Add support for the
-> A83T MIPI CSI-2 controller") says:
->
->     This implementation splits the protocol and D-PHY registers and
->     uses the PHY framework internally. The D-PHY is not registered as a
->     standalone PHY driver since it cannot be used with any other
->     controller.
->
-> However, this does not matter, and is not the only instance of tight PHY
-> provider <-> consumer pairing. According to Vinod Koul, having PHY
-> provider drivers outside of drivers/phy/ is discouraged, although it
-> would be difficult for me to address a proper movement here.
->
-> So just include the private provider API header from drivers/phy/ and
-> leave a FIXME in place.
->
+Am Montag, 9. M=C3=A4rz 2026, 20:08:28 Mitteleurop=C3=A4ische Normalzeit sc=
+hrieb Vladimir Oltean:
+> The dw_hdmi-rockchip driver validates pixel clock rates against the
+> HDMI PHY's internal clock provider on certain SoCs like RK3328.
+> This is currently achieved by dereferencing hdmi->phy->dev.of_node
+> to obtain the provider node, which violates the Generic PHY API's
+> encapsulation (the goal is for struct phy to be an opaque pointer).
+>=20
+> Refactor dw_hdmi_rockchip_bind() to perform a manual phandle lookup
+> on the "hdmi" PHY index within the controller's DT node. This provides
+> a parallel path to the clock provider's OF node without relying on the
+> internal structure of the struct phy handle.
+>=20
 > Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-
-Acked-by: Chen-Yu Tsai <wens@kernel.org>
-
 > ---
-> Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-> Cc: Chen-Yu Tsai <wens@kernel.org>
-> Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
-> Cc: Samuel Holland <samuel@sholland.org>
->
+> Cc: Sandy Huang <hjc@rock-chips.com>
+> Cc: "Heiko St=C3=BCbner" <heiko@sntech.de>
+> Cc: Andy Yan <andy.yan@rock-chips.com>
+> Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+> Cc: Maxime Ripard <mripard@kernel.org>
+> Cc: Thomas Zimmermann <tzimmermann@suse.de>
+> Cc: David Airlie <airlied@gmail.com>
+> Cc: Simona Vetter <simona@ffwll.ch>
+>=20
 > v1->v3: none
 > ---
->  .../media/platform/sunxi/sun8i-a83t-mipi-csi2/sun8i_a83t_dphy.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/media/platform/sunxi/sun8i-a83t-mipi-csi2/sun8i_a83t=
-_dphy.c b/drivers/media/platform/sunxi/sun8i-a83t-mipi-csi2/sun8i_a83t_dphy=
-.c
-> index 24bbcc85013d..1143feeb4fcb 100644
-> --- a/drivers/media/platform/sunxi/sun8i-a83t-mipi-csi2/sun8i_a83t_dphy.c
-> +++ b/drivers/media/platform/sunxi/sun8i-a83t-mipi-csi2/sun8i_a83t_dphy.c
-> @@ -4,9 +4,9 @@
->   * Author: Paul Kocialkowski <paul.kocialkowski@bootlin.com>
->   */
->
-> -#include <linux/phy/phy.h>
->  #include <linux/regmap.h>
->
-> +#include "../../../../phy/phy-provider.h" /* FIXME */
->  #include "sun8i_a83t_dphy.h"
->  #include "sun8i_a83t_mipi_csi2.h"
->
-> --
-> 2.43.0
->
+
+[...]
+
+> @@ -588,13 +589,17 @@ static int dw_hdmi_rockchip_bind(struct device *dev=
+, struct device *master,
+>  		return dev_err_probe(hdmi->dev, ret, "failed to get phy\n");
+>  	}
+> =20
+> -	if (hdmi->phy) {
+
+nit: a comment would be nice here. I.e. hdmi->phy being an opaque pointer
+so checking hdmi->phy !=3D NULL is not possible.
+
+With that being a "goal", I assume that information is not widely spread
+so this would prevent the next developer trying to change it back to
+"if (hdmi->phy)" while that handling change trickles down.
+
+
+apart from that:
+
+Reviewed-by: Heiko Stueber <heiko@sntech.de>
+
+
+
