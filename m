@@ -1,101 +1,113 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5942E3397
-	for <linux-ide@vger.kernel.org>; Tue, 10 Mar 2026 18:29:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FFBDEEBB;
+	Wed, 11 Mar 2026 02:06:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773167353; cv=none; b=FGWW9hS0umONuJ7Z+ELIGXmNtYSE9MFLCFcw07L7Q8ojAnaOIOiX+LiupqhpmvGmiM41qMff47glvcq0hA1KBJjduAaWpezQ8K/dtGvrojc3x5dKAyffg0V6IIbgiA3lBX3DHuFQy0yS4C7u27m9K74TCL5vwDDROrrw2Jaj7dI=
+	t=1773194789; cv=none; b=QryK+a49j2MpUFEAnyKFa+1y+EJsr2pe5AH/RXXskgC/EMJ6dXUIvZYrHJACvXwmWe008CSN/5vvV99lpS7dygNfhe7w3dgZ+jO5kEDCF2c7Kptjraqii9C/4KAihbIOVMcnpjiyRpVrYvjIc/8RLcxymW4IOrcrQ7Nt5pNjp+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773167353; c=relaxed/simple;
-	bh=TVaDgs6Y08HDTlO3dn7CwvR1rkT0Bpj72TDQiblAGnQ=;
+	s=arc-20240116; t=1773194789; c=relaxed/simple;
+	bh=eH84mDzMoUSx+DO97DUiav3cqzdrODjdBjEOUogQdtg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LNu5hdjzBLOfBl9GlG+uBq4yLzwwbzRHJ3muCVdd1ul5HIQfYqqALbCv4plUDJiNRyOl1/thVxIIFRKv1NHWDMhGALNMJ3/FguOn/pr7fBWJwNmFo1EQ0a1dMXRTAUD1ns3gtPyzJpbAqtzqhSIHeKd6jC5K3QCNRkdrAoI+gDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QzafLWkn; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 MIME-Version:Content-Type; b=jZTNSmiVsC5Blu/Rg5aJ3FVxZjnQfiNxXlMoGbYWinZFdbsF6kMt0tqJtTpJFfQ6/dapsQAHuHwe74d/qcl1ZzKH9uN+pL5/aItAAp5LFY1136R14WGkMeQTcppbkKOc4H2G9FgdaTXMLrOfnJQKDakD0yTT9lbU5GRRI/qO2/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=aFbrSthJ; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QzafLWkn"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-48541edecf9so16845605e9.1
-        for <linux-ide@vger.kernel.org>; Tue, 10 Mar 2026 11:29:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773167351; x=1773772151; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TVaDgs6Y08HDTlO3dn7CwvR1rkT0Bpj72TDQiblAGnQ=;
-        b=QzafLWknXWTYcfVCtQQ2awIsJ1ZHuwf+EvzkO2FcO2GPGbKCbCwdvpPMn4XBgH05dZ
-         LbhxcVNyEtf735lPo9Djd3kn0Yol1sWQxq2qk0t6ZMFcmYJLgu3LbH6EuBjKk8Mgw5Z8
-         rdUDgCmICQEuDyiNDxXk+SBKgxChSw17RzT7ndmCQSwbdZ+6M90fVLaRLNj9YFZgNR+P
-         XrICteM28Nk4qEjJxjf1WVt0iALlrNL48flhbxxm+c6i0Z/iwoVCHN79gfGzshuz1lYU
-         sMHNo9hTxBjiRiGxNaqHYwVMtaiUztQTjd/ChH/Ynftda7sCuJMnjpQdQntQ+5eM7/pb
-         oN6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773167351; x=1773772151;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=TVaDgs6Y08HDTlO3dn7CwvR1rkT0Bpj72TDQiblAGnQ=;
-        b=F58oYeMgPgoKi/1FWHtPBhnLWlPmYuan/UKJMHwN965iKRGSK8SfcuAY3Q0cVnOO7U
-         vd+PXBb+Vl5b1ze9ThtD7BnbPHYAtVUp0JnTcdN7AzCzBFL6asxmzMrW4qGmoh+qbwfg
-         StPBaPq6Pi71J9CS8rICYKJhUZaoZ1vvWeDucVVEAJBpzUg0RbaqR8LRNjjhISqcbSwE
-         Irv44ssLNPKAgtKfzD5/bspQQRTEBj+o8vZOXhXC8DEHD+VgYAkTp5EUj3wecpsQReNi
-         P0pNlTG+BNZw0JaFofu1d3gbeiGXMT8jlzB01KSzl6wxP5QITcyOxsV4YInCtfoTaezN
-         fnGg==
-X-Forwarded-Encrypted: i=1; AJvYcCUXodR+qPyke8Voj9SGvrkVoYyW+OUs1Jz1HrHOVkvLL4hC3m39T5xCLFptZm2PAhHOcKeztjj0gCQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx+qX9W49DsO5x+uUAIIOMN+p7eesWLj7w+KmesHCU0cShiaA0b
-	Y3QPAl/5nyZiisSIhap1UJMvCO+oEVWekqJ3z/1nNeJo4Z7DdsXahWDQ
-X-Gm-Gg: ATEYQzyykh1A4eLcKtKfHlmxLsCYsl/pV89Z537qKFxUQfqSla1Edp04C/f6DwgF8vK
-	cS1fcPznkzi6YqmD5tPkKKxguFNmu3jsLYGvUWTcI8YYKGkAgl3GrDPf/vTe9KR6FcSoODsnHYq
-	fl3ftHQzGq7/0DbEWFZL05MJBwxi4tHwuKNXkFITjtfGSVVNlHYaHXOCIIbrgXmAqq4htxYMW/5
-	VEPxSsIbVMj+ixkpI17d0GwUXf+WiUOkeMa77hTfVLrW6i7aaFr/kGgJ4l9O5uP6G9w/7nlstuY
-	aG0flhvw7YUqKdk2hyPOyvva0xmvVef7KhLSy1k2avZ1+cudFTimNDuIKTLhvUXX3fnzn/AvFK/
-	yLWD6+IgoU0AMoVXYehufNNaXJduHSsZHg9GNwl1KMO/KnlmVtDokFBGZRirWY+AA076G5S07fg
-	==
-X-Received: by 2002:a05:600c:8b01:b0:477:9814:6882 with SMTP id 5b1f17b1804b1-485269198bdmr262272285e9.5.1773167350702;
-        Tue, 10 Mar 2026 11:29:10 -0700 (PDT)
-Received: from kimsufi.. ([2001:41d0:303:6f54::1])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48541a900easm106200825e9.9.2026.03.10.11.29.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Mar 2026 11:29:10 -0700 (PDT)
-From: Ruslan Valiyev <linuxoid@gmail.com>
-To: cassel@kernel.org
-Cc: dlemoal@kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ruslan Valiyev <linuxoid@gmail.com>
-Subject: Re: [PATCH] ata: ahci: Add AMD 600 Series Chipset SATA Controller (0x43f6)
-Date: Tue, 10 Mar 2026 18:29:09 +0000
-Message-ID: <20260310182700.reply-val13@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <abBUdlxKa4DpVsPI@ryzen>
-References: <20260310154956.743071-1-linuxoid@gmail.com> <abBUdlxKa4DpVsPI@ryzen>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aFbrSthJ"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62AJJn6D2773171;
+	Wed, 11 Mar 2026 02:06:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=1rLRblBrv1X4dy3lQ9o2dSE3+cTugXmlj4J+7BN0b3A=; b=
+	aFbrSthJlzXh0/iNDz/AQcyqgrZFFvnc1AxeRjty+S7UyjVti1IOZTYnU5n0J3vY
+	hO5XK7tehAxc3e5bV8Yda/TJhAUBHYaBO1913PQEIr1cYNDkSXaEmPUjx4QAb5sK
+	1z7v7/Rp4JCKtfhVLsE5aDAeb0j7X7firVKp56OG3lxbLKgXoPsi+aIgpOx04v29
+	/CX1KRNmoS0gUlXFcMcmMj5lKJBRqsVhQ+K+JjU9QGR4+kH9lfkGxLeG+es8TGQN
+	op1KH3jp+2giQs9qtdev9xXqGHRqzTEzz1DjW52QznBlJ01l+WUegEPdDVowEb4U
+	4WcyQ2awGwg1S+WFDLBN1g==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4csjnum3v2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 11 Mar 2026 02:06:23 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62B1dfOH020383;
+	Wed, 11 Mar 2026 02:06:22 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4crafewwjf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 11 Mar 2026 02:06:22 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 62B26M5H002770;
+	Wed, 11 Mar 2026 02:06:22 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4crafewwj6-1;
+	Wed, 11 Mar 2026 02:06:22 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Igor Pylypiv <ipylypiv@google.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+Date: Tue, 10 Mar 2026 22:06:12 -0400
+Message-ID: <177289787691.2131580.9670043505735836826.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260209212151.342151-1-ipylypiv@google.com>
+References: <20260209212151.342151-1-ipylypiv@google.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-10_05,2026-03-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 mlxscore=0
+ mlxlogscore=942 adultscore=0 phishscore=0 suspectscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
+ definitions=main-2603110016
+X-Proofpoint-GUID: 7Mx2xLVuDMqI0_uvBPQfIO9qzh0DirNl
+X-Authority-Analysis: v=2.4 cv=c7WmgB9l c=1 sm=1 tr=0 ts=69b0ce1f b=1 cx=c_pps
+ a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=VwQbUJbxAAAA:8
+ a=cJe_iYIR-Q0b45NhNDEA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:12272
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzExMDAxNiBTYWx0ZWRfXxg+6SP6DiYUn
+ r5RiV+1vfX746RK2sOBcBvFNyIAnnz6GZCKI4BjI07h8Yz+s7TkRF8sRIUYLGsZV89pigiOe+Bj
+ CfBoRrF1Lmz97uANJI4MeLBQ3MInBRibOsFhvHIqi+JJt1T6SmcsEJW8ubr1+WFEk1Y1DxFpVvw
+ 9hkffis8//yJ96tBZFBu/bitO2mIAQ0ai7q++ZEMRBg1GFbb4e/Gxv9+NC2rKo2UaFZcu5s1olF
+ UioRTthj+zSBiTDheCDGYm9PAgk/+JWLtJLVdZwC3e031s6Fi3krcw4n1b2JWvWtjgMikszamnF
+ 3cBS8rY+lf4hYnXr9+juvbajAYMdnzApJqbkds2Dgfxxn/x73QTu1QjvatVRfPaeLEz6BJ6p+vB
+ FaYq5Q3owUvC8WKU6OTlLhkAjE2DimGf4nEGTskP1da7DUOABxsX5c6dB2GO7xBHu8GLgE0w1Xh
+ UlgzZg9gX43iKAxCIgvOZccipvMRENBAqEexW43U=
+X-Proofpoint-ORIG-GUID: 7Mx2xLVuDMqI0_uvBPQfIO9qzh0DirNl
 
-On Tue, Mar 10, 2026 at 05:27:PM +0000, Niklas Cassel wrote:
-> If the ahci driver fails to bind, that means that the class code for
-> this AMD AHCI controller is not PCI_CLASS_STORAGE_RAID and is not
-> PCI_CLASS_STORAGE_SATA_AHCI. I am honestly curious... what is the PCI
-> class code of this controller then? :)
+On Mon, 09 Feb 2026 13:21:51 -0800, Igor Pylypiv wrote:
 
-That is exactly the right question, and I should have asked it before
-sending this patch.
+> Add a 'serial' sysfs attribute for SCSI and SATA devices. This attribute
+> exposes the Unit Serial Number, which is derived from the Device
+> Identification Vital Product Data (VPD) page 0x80.
+> 
+> Whitespace is stripped from the retrieved serial number to handle
+> the different alignment (right-aligned for SCSI, potentially
+> left-aligned for SATA). As noted in SAT-5 10.5.3, "Although SPC-5 defines
+> the PRODUCT SERIAL NUMBER field as right-aligned, ACS-5 does not require
+> its SERIAL NUMBER field to be right-aligned. Therefore, right-alignment
+> of the PRODUCT SERIAL NUMBER field for the translation is not assured."
+> 
+> [...]
 
-I based this on a bugzilla report where the user confirmed the new_id
-workaround works, but I did not ask for lspci -nnvs output first. I
-do not have the class code from the affected system, which means I cannot
-justify the patch as-is.
+Applied to 7.1/scsi-queue, thanks!
 
-I will go back to the reporter and get the full lspci output. If the
-prog-if differs from yours (e.g. 0x00 instead of 0x01), I will resubmit
-with proper justification. If not, I will drop it.
+[1/1] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+      https://git.kernel.org/mkp/scsi/c/94c125bafa00
 
-Sorry for the noise.
-
-Ruslan
+-- 
+Martin K. Petersen
