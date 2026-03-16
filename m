@@ -1,60 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B68D9354AC7
-	for <linux-ide@vger.kernel.org>; Mon, 16 Mar 2026 09:14:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 034593859E8;
+	Mon, 16 Mar 2026 10:20:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773652489; cv=none; b=GOwZGibhz/mACmZphCQ0bfkjhErmeXLgp+zIE6e1OuPKKyX48FYxIwy5JFbYw7NwGA1rR6qB76bIYIS0pxmhQ0J1RZ3ugb7rwtZTWY5IGL4d1Bjq5WIa0mFFRG7+hISh+yy0UaA79ySE3NRaQeDUGCNaghgPDlsLt++lt8AfBEg=
+	t=1773656445; cv=none; b=hBLZ+jqShbROh7euT4kIrICI0UblNsE8D+emGKPsjP9d4mhd+zIa/ibnJ8jnu0Tpj6Sg2Ng27K0i2IJ6po1b2a/r10tx1fVCpJiQZ2P6TUQGej/sld1X2tz1U4hRRbn/cN6FZmuGQr8D0DvHiLbitTgwtX+2njvI7r1Q4h1RLbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773652489; c=relaxed/simple;
-	bh=jnhnpFbeIW9A2ys8bJfrGrPKaBhsmLinfPaziiLR0J8=;
+	s=arc-20240116; t=1773656445; c=relaxed/simple;
+	bh=uBu8mLZ+rpt9hHO2zebFJ320GkM1XA33y5mwSl91uXs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IOxhyEKmKBjsZKAq6RHqW1St26BUvbaV3idY7is0zbo83hITEErIEfQLzy9QyLEzzDIRIEIQ9ohEOFZf4MPnTthc6bRM6GLW2sr/6K/QuM+pOQYNWKDfqyUSd2mZD8sN+Mtu+HzTjHd8UKBwWJMg7lxDIf+mcoynYjWSmojyVV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mgrReNGd; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ox6UpvQqKyIkLpUH3vCLxPEy8SI8r5w6B3by97RRGjSHrp9tScSf9K42g/mHpz6YXSf3pH0CI1JAa2l/GqPyQI9QVr2TogWpAurvomtJQR1vpdrmDmSYKg1+7QF9QuGWzIgokdtQkDe/+8pqwvNydEscKbIIW2pkdmHLEf3Lprg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UDAiyRhI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mgrReNGd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5203C19421;
-	Mon, 16 Mar 2026 09:14:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UDAiyRhI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55DBDC19421;
+	Mon, 16 Mar 2026 10:20:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773652489;
-	bh=jnhnpFbeIW9A2ys8bJfrGrPKaBhsmLinfPaziiLR0J8=;
+	s=k20201202; t=1773656444;
+	bh=uBu8mLZ+rpt9hHO2zebFJ320GkM1XA33y5mwSl91uXs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mgrReNGd5ngzyIHvsqFmQF0RZ6o7OFj7VEeqvkjKQux95+U0XxIbyZ5BrYWYOHwwX
-	 /ph9Lr3C9XfZx3xB3UVS/Kw08SHiQkfyqYqNvkeVQLCKqN1G6XaZl2DH6z3diRD6LK
-	 MCPV+asm96IQF/z+Jg+rpl8RWN1L1IhV5Cg5tHasrA+1XtSL88D8KTS24ntzY4MDGA
-	 rH3uz/mThh2ndMukz7Ucb21atR+QXf23f0YPI0m48lFKvQBpr4rni5hG1Gpv9Rpzx9
-	 fWSlOUXIuZ0S6VuHmA/72CWcAzv9Wgwi9omezFmX1VYA7XtWFEGDZINB80EoePYmin
-	 uXujPYn/sCRlg==
-Date: Mon, 16 Mar 2026 10:14:43 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	Mohammad Khaled Bayan <mhd.khaled.bayan@gmail.com>
-Subject: Re: [PATCH] ata: libata-core: disable LPM on ADATA SU680 SSD
-Message-ID: <abfJ_u-ycYyTDgSf@ryzen>
-References: <20260314222415.51176-1-dlemoal@kernel.org>
+	b=UDAiyRhIXd16/3n5yLWqFADfP+XReuxaog2CvKttjDc2OI/QYNL4mwF+CIqtaO3Xt
+	 nVCnBO2veL3YHcW2M/al3N7NNdtQxG3RK5+PzYo5tgFWUbuZFWefrbgmebUobo/FqX
+	 E/7Jvw9UXMob3HhGf9JzB083MJy5xifdVTNGSQRDwUsTi6kWbzYkuEDGBF2AZBIsUu
+	 EsisgrMjf/pATcn8oakB9tMAm9J+p2kpQDMFFBWhJesBObIOEijxO7+S/94gcXri5W
+	 HwaihjisMgWQuD8/WV5d3I2sSQcn1UBREtld7gk+oOAmDJ3ndKabxfbaj/+Z5VDOrJ
+	 jGpDyanxyr9GA==
+Date: Mon, 16 Mar 2026 11:20:39 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: Re: LSF/MM/BPF: 2026: (V)FS: Second Round of Invites Sent
+Message-ID: <20260316-gebiss-drehkreuz-1f3f0e7a96df@brauner>
+References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
+ <20260225-aufeinander-kummervoll-1953a06beae9@brauner>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260314222415.51176-1-dlemoal@kernel.org>
+In-Reply-To: <20260225-aufeinander-kummervoll-1953a06beae9@brauner>
 
-On Sun, Mar 15, 2026 at 07:24:15AM +0900, Damien Le Moal wrote:
-> ADATA SU680 SSDs suffer from NCQ read and write commands timeouts or bus
-> errors when link power management (LPM) is enabled. Flag these devices
-> with the ATA_QUIRK_NOLPM quirk to prevent the use of LPM and avoid these
-> command failures.
+On Wed, Feb 25, 2026 at 03:52:23PM +0100, Christian Brauner wrote:
+> Hey everyone,
 > 
+> I sent out the first round of invites for the (V)FS track.
+> The first batch is also the largest batch. We will send out a set of
+> smaller invites later.
 
-Applied to libata/linux.git (for-7.0-fixes), thanks!
+Hey everyone,
 
-[1/1] ata: libata-core: disable LPM on ADATA SU680 SSD
-      https://git.kernel.org/libata/linux/c/ce5ae93d
+I sent out the second and last batch of invites for the (V)FS track.
+I've also sent out declined invitation notices. In case you have
+received neither it is to be treated as a declined invitation at this
+point.
 
-Kind regards,
-Niklas
+Should any attendees be unable to attend because of... events... we may
+be able to notify people on the list but it will likely be very short
+notice unfortunately.
+
+Thanks!
+Christian
