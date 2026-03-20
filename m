@@ -1,65 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E72D133D4E2
-	for <linux-ide@vger.kernel.org>; Fri, 20 Mar 2026 09:09:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1C3736829F
+	for <linux-ide@vger.kernel.org>; Fri, 20 Mar 2026 09:56:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773997799; cv=none; b=lXG7vXkxNaU0tzCmWSWL7LCW6aOoGxkYvjbfN7M5Xho5vv4SgwpndYlIZ2MFUZRBFnCBQnoY11m3951HLU4oZb73toBT3sKCq2DZxRcsvuxRt+IbsZNZC4zGInn6SMQ6mtBBp1R7poUB4ABwrzbHBtXkXNP1AqvavHIH1KzSLkI=
+	t=1774000577; cv=none; b=eUPTI+Lqw/gKLjbwO1V9DFR90vtrZ7s4iixCcRJM3HYZ6xEafc1/goH/jRChW1Ne10C/rkINaSi65OVmFP2yWUNtVD1736/rYKs98yS6uhHyBSdA3qP5nU2s7rsLEYMDfsodmG9Nqb0GhG1lzmUyTyd1tCfAuUpiLtjMfdHlF2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773997799; c=relaxed/simple;
-	bh=yAyF/NDv3uWV2tPg4o4ZcCW0MHMVqn6Y3PvJ/LHUF9w=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=KUkFL2Q4aXKfN1rMX5kAHVH31Zb0DUgZ/HSPQ80uH7F2IT3t/WfwnKSi+26BuUmtinrlyx8sGnNj5Qe1uXV4u1L02vqc+ecFpftS/sdng09+sg9ouqMI2uBohaCNbdhlDW7KpmkiyZT13MnuBKzkpu3kiWG5EfytrCehKo2oNHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ikn66okr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774000577; c=relaxed/simple;
+	bh=wihSJ/tZHGagnO0FGTXCZxtd42iey1gYZvjpdVGnwEU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NJ+7HGQJOl0OUZwlojh1P3poatqfRA+KwaN24tyXKFRl8bYyhVNpTlGxcg7w6hlk82ig53K8hGotf3NyR+5EFS5vehSZiaDzbEXs3tiReWQuzWNWXf6nXOO388HevZMGjczlfpGK1MKLCrK8r31oplvMhJwXYUnXT3a3ncE2PEY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iQE8Xymf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ikn66okr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B274BC2BC9E;
-	Fri, 20 Mar 2026 09:09:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iQE8Xymf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45B09C4CEF7;
+	Fri, 20 Mar 2026 09:56:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773997798;
-	bh=yAyF/NDv3uWV2tPg4o4ZcCW0MHMVqn6Y3PvJ/LHUF9w=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=ikn66okr/Jw4OJeXVR7knrzUsbvj6XQuUuRdNWSA0iLfr1S3b3hBjyPdwvp0ii+C+
-	 V3GRkBR4BwlXFNB+uuvKE7lzhJkJfkQThkT0b8B9CEzTUwOkXWvn/RwLBpgiFGzxPG
-	 tg3g/XQmKRtdJdFEnfxg8mWVOTc4NiGbkGS2sSuqfvhhEwQ7/QsSYBAhhlEULjxoV+
-	 dLyWYtUOFiKau+sSa0WlqDqGvdd4U10FJSIEgkZNHzSm50oRDgExIOLZkX2uhqJ4/A
-	 1LiyjZiQIu7CPOcW/UjNCdZxSFwCkpnL38HulnTdFZpNyVPecHP+1OraegQ7QJo/II
-	 FW8Uqe8TDxHlw==
+	s=k20201202; t=1774000576;
+	bh=wihSJ/tZHGagnO0FGTXCZxtd42iey1gYZvjpdVGnwEU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=iQE8XymfjPTfhDeN7k149zYxutoQiK7Li+aRSC5qR/6x6H3fNfbvjnzw9SqC5aG67
+	 2ID2hP/egCQ8VixxsPDAl7Rw+Q/ef2zkyCvV4NQYXCPAIZnf5QricJkv6Q3UN97dXk
+	 Wbmu+/607TIVRPV76ddc9CEi+QfEKDnTtf9eK+nX+3KmHP0cbIHlx8BXaPdmBQm7Kl
+	 7dg0l8kAjFRjOnmBK71b67OIHUvSP4o3JwocTGOeFPcS8aJv3nvi9vfuKFHS+RJv7i
+	 urPEIek8CU+x5g760x87eOfFlDSMCXd9rxYM4TixIfSb27RJNuwBq8xBE9sLCaB6CV
+	 E1YCbbz1jZQKQ==
 From: Niklas Cassel <cassel@kernel.org>
-To: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
-Cc: Guenter Roeck <linux@roeck-us.net>
-In-Reply-To: <20260320034801.529964-1-dlemoal@kernel.org>
-References: <20260320034801.529964-1-dlemoal@kernel.org>
-Subject: Re: [PATCH] ata: libata-scsi: report correct sense field pointer
- in ata_scsiop_maint_in()
-Message-Id: <177399779745.24057.2693453401978790860.b4-ty@kernel.org>
-Date: Fri, 20 Mar 2026 10:09:57 +0100
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 7.0-rc5
+Date: Fri, 20 Mar 2026 10:55:38 +0100
+Message-ID: <20260320095538.133163-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Transfer-Encoding: 8bit
 
-On Fri, 20 Mar 2026 12:48:01 +0900, Damien Le Moal wrote:
-> Commit 4ab7bb976343 ("ata: libata-scsi: Refactor ata_scsiop_maint_in()")
-> modified ata_scsiop_maint_in() to directly call
-> ata_scsi_set_invalid_field() to set the field pointer of the sense data
-> of a failed MAINTENANCE IN command. However, in the case of an invalid
-> command format, the sense data field incorrectly indicates byte 1 of
-> the CDB. Fix this to indicate byte 2 of the command.
-> 
-> [...]
+Linus,
 
-Applied to libata/linux.git (for-7.0-fixes), thanks!
+The following changes since commit ee0e6e69a772d601e152e5368a1da25d656122a8:
 
-[1/1] ata: libata-scsi: report correct sense field pointer in ata_scsiop_maint_in()
-      https://git.kernel.org/libata/linux/c/e6d7eba2
+  ata: libata-eh: Fix detection of deferred qc timeouts (2026-03-06 09:58:47 +0100)
 
-Kind regards,
-Niklas
+are available in the Git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.0-rc5
+
+for you to fetch changes up to e6d7eba23b666d85cacee0643be280d6ce1ebffc:
+
+  ata: libata-scsi: report correct sense field pointer in ata_scsiop_maint_in() (2026-03-20 09:59:30 +0100)
+
+----------------------------------------------------------------
+ata fixes for 7.0-rc5
+
+ - ADATA SU680 SSDs are causing command timeouts when LPM is enabled.
+   Enable the ATA_QUIRK_NOLPM quirk to prevent LPM from being enabled
+   on these devices. (Damien)
+
+ - When receiving a REPORT SUPPORTED OPERATION CODES command with an
+   invalid REPORTING OPTIONS format, sense data should have the field
+   pointer set to byte 2 (the location of the REPORTING OPTIONS field)
+   instead of incorrectly pointing to byte 1. (Damien)
+
+----------------------------------------------------------------
+Damien Le Moal (2):
+      ata: libata-core: disable LPM on ADATA SU680 SSD
+      ata: libata-scsi: report correct sense field pointer in ata_scsiop_maint_in()
+
+ drivers/ata/libata-core.c | 3 +++
+ drivers/ata/libata-scsi.c | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
