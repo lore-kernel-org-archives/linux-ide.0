@@ -1,207 +1,158 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f177.google.com (mail-dy1-f177.google.com [74.125.82.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D095C2C21E8;
-	Fri, 20 Mar 2026 02:11:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773972710; cv=fail; b=rBZd9gYkOrjYVHDktto5dbA1jKNMhJHYdhyzPC2kjWc/TpBFhjZJZG743M6UCNKOwG3qA1Qtk9P3HAiExg9zB0WJQ20DIhiSoaa+dTbUEDpUjfDQzczyv2GxooN/RKkD0+nhb4TF/EEwXnuiHy/FY90KIEt7/5ZSRwT0e4qDA+s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773972710; c=relaxed/simple;
-	bh=tlde9EiUe5H7mp3ddmd9ORPYCD/f9shKxauX7FNKI9M=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=nBM2KiKjiKkN5nlWPjO/mtsoDM9RvRRdcrstpTMrDvS76MoVIw3O3gcb6VxNHWh919hmbSzt3K9MrRai80K8BuB4sKhsyPyMz8y4y/XbltKHyYKWyD/TCRp3dT/A47qcijdQADebCRgCU2s+euVtD1/t4MsO5YcMUmEPxTgJ6AM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=r91JeBFa; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=ibSuhE/b; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F18BA2F261C
+	for <linux-ide@vger.kernel.org>; Fri, 20 Mar 2026 02:13:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.177
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773972805; cv=none; b=aL31wDxUYuSTInxXaRGLtpu3UjFpavGTqpqi9U9mUT5cOQxbwbK6BCQ2UO/tcjSVkijhkSaUAQ1DwZ9ZjUvydysR6R1p72LJ95HpeIxmL0C3sAGp5WIt6Ax5gBVtZdI0OEfKSuBOrz++uBql5iCltmYkvrD58D07+7MxSztCwg0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773972805; c=relaxed/simple;
+	bh=0PcA3aE/1meNQLkz/e1gLwMKc0OagQXWNnKGwo4atA4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fJDdsMySquw6xpIrzVskF3rP4XfZ3CzdhKTQ8NCtpcl+LzbaRW5hqFOs7uv3NV06ZSe4B34kMW72lExArSO/7vLIyd0aqAPRIucS3t8snuGpwNUoa1vCspSovbb/rIt/6/BiXrE8Udqq5ddpQsUNGSDp3nGxctBveINN6rJx+64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=F3/tZ1Ul; arc=none smtp.client-ip=74.125.82.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="r91JeBFa";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="ibSuhE/b"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62JFkZ5t975855;
-	Fri, 20 Mar 2026 02:11:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=corp-2025-04-25; bh=cfZULZU1o9PFVTLrPk
-	Vat199EGoUtc7cdvZ9JnWt9m4=; b=r91JeBFatxBEumDgKXJeydEJP7/LMur6mT
-	a2m3gvZgbrpu1kZhTG6dYGfvkf2EeQE/GCAsFfmYRdW+7B8saAz0QBIAwj2AZJJV
-	3V9MxF9jfFHYVkZzjPx4zS9Fvgmapo63naMgd0wYAdzafkVLyuXHZFc0aeDhJST1
-	GF5OffMaQ3g5L1V2H14zvgG2vnfxKsCkbLj+tcRaFQfu5DvDnKNvIcdve9astBHG
-	5Kd9+xj2nW4eKRfcLZr0z353Mu2mycA5RTJliUXVWIgYmRzgtrAcX/fLX0wQ93Ow
-	HzgBr99r+3iDh78LRP19UfBicB+Qjb8p3hspsgQzDGb2Nv/yC61w==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cw07rgym0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 20 Mar 2026 02:11:25 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62JMO4Wt003427;
-	Fri, 20 Mar 2026 02:11:24 GMT
-Received: from ph0pr06cu001.outbound.protection.outlook.com (mail-westus3azon11011017.outbound.protection.outlook.com [40.107.208.17])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4cvx4dnr2t-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 20 Mar 2026 02:11:24 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=S15PfkeybankWU96IdEUNgyiGy/esDIRJ9Jpa0w2jCJ5Ev/eLvpETeQZedxC/1cFqZsHONoQ/3aIvkNPw0YA5FuBgjFl55CBFtJee8taPs1ENaKz/vrn3GihjDus742i2QTS69/VD2axYHhje1y0K648nz9l+Km6tvPs1GaYPRcRp44PX1vqfSw7V5VfSVH5MnnvFqoGp5P3QHqLMpduB+PKdL5/vFlzQmuC7/UHsfh4uIAxVlvuGDLlrR/W4OAVJ6Nta4h6aG/XT5z/LukzJn2i/1g1IWmZM/UjqeC/EJAy+oKIqg5W5YZR/NuWLuIVSiBw6Z854cK5vNpzS2sAjQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cfZULZU1o9PFVTLrPkVat199EGoUtc7cdvZ9JnWt9m4=;
- b=B46fkJtp3QHlQ5j+C33hFqDskAkC3+/ezTpeMLD17zt1Z8ewYYu28sXKUB7F6vSkU8tpsbdtS3ycoJcHqI/THmo5oEGSP4gEnGMH+86twYMQc4eRp9ebU2lEpWrNzx6HHXezIRie6ruwcNG4tQL0LQcKm6/KdgCVT6WMqat/e588SeujTG4GZ0Xli9JcdNIPMgUN0rljpqupKiKLtNi9q9bez6u8NmIkRceC8eKxm/5UZjN/ev6Nf2IafB/AbKh2bIKpZRBE6jrBcE1Da8WK9sAO4h1f4ZpY5tv2uqj0RkWbUOc4Kh/KYMoOlbupoayZq8U6JbA/68YXmhnO0rF1Xw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F3/tZ1Ul"
+Received: by mail-dy1-f177.google.com with SMTP id 5a478bee46e88-2c0fa90d47bso584039eec.0
+        for <linux-ide@vger.kernel.org>; Thu, 19 Mar 2026 19:13:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cfZULZU1o9PFVTLrPkVat199EGoUtc7cdvZ9JnWt9m4=;
- b=ibSuhE/b6MToemu7oHxvUSnzRl9+9RTo1oE/A5YS0CldEnIf0eEtOSt4mucwFsxkIoEvatIL1aFd/a5xjQEpAZZzOpMJHZYFAeOOIQ3PcsP13KqpXBV9wPrLdhlAgOPFVetRlgkd8abS17UiCWDOTqc+Lc5V6BgiBbpVUbp3q1g=
-Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
- by IA4PR10MB8587.namprd10.prod.outlook.com (2603:10b6:208:55c::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Fri, 20 Mar
- 2026 02:11:18 +0000
-Received: from CH0PR10MB5338.namprd10.prod.outlook.com
- ([fe80::e525:dd71:b002:6ad5]) by CH0PR10MB5338.namprd10.prod.outlook.com
- ([fe80::e525:dd71:b002:6ad5%6]) with mapi id 15.20.9723.019; Fri, 20 Mar 2026
- 02:11:18 +0000
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: <linux-phy@lists.infradead.org>, Vinod Koul <vkoul@kernel.org>,
-        Neil
- Armstrong <neil.armstrong@linaro.org>,
-        <dri-devel@lists.freedesktop.org>, <freedreno@lists.freedesktop.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-can@vger.kernel.org>,
-        <linux-gpio@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-media@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
-        <linux-riscv@lists.infradead.org>,
-        <linux-rockchip@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-sunxi@lists.linux.dev>, <linux-tegra@vger.kernel.org>,
-        <linux-usb@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <spacemit@lists.linux.dev>, <UNGLinuxDriver@microchip.com>,
-        Alim Akhtar
- <alim.akhtar@samsung.com>,
-        Peter Griffin <peter.griffin@linaro.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin
- K. Petersen" <martin.petersen@oracle.com>,
-        Krzysztof Kozlowski
- <krzk@kernel.org>,
-        Chanho Park <chanho61.park@samsung.com>
-Subject: Re: [PATCH v4 phy-next 09/24] ufs: exynos: stop poking into struct
- phy guts
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <20260317230500.2056077-10-vladimir.oltean@nxp.com> (Vladimir
-	Oltean's message of "Wed, 18 Mar 2026 01:04:45 +0200")
-Organization: Oracle Corporation
-Message-ID: <yq1fr5vl090.fsf@ca-mkp.ca.oracle.com>
-References: <20260317230500.2056077-1-vladimir.oltean@nxp.com>
-	<20260317230500.2056077-10-vladimir.oltean@nxp.com>
-Date: Thu, 19 Mar 2026 22:11:16 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: YQZPR01CA0115.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:c01:83::8) To CH0PR10MB5338.namprd10.prod.outlook.com
- (2603:10b6:610:cb::8)
+        d=gmail.com; s=20230601; t=1773972802; x=1774577602; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DPZQH0Hyy5nc4kHUPsfCF/IaqEqcY4HuvY5FeRNLL4k=;
+        b=F3/tZ1UlSVGpe7I258nicLor2VzmuqOg8z2cD8oR5bos6zACK6xn9YQl3Fp4WNBM5g
+         YtKVhO+9saMtcdMLBSpidfR3irR36VhNEVDldP5l783ZiGGs5+w3zndbRSl/w/rt3GcJ
+         coQg8kaIwhshsp4abj5wn1NdxgVOiu8fnJhyQHDn3EwRJ4A5DqLO6QK3BE2jOKFa9yFX
+         SYFmC5yjWIN1JwmSEJ/VvjjmVEs+o+ZjNe86PctkqSmyglVps/CK4pfEXBjl00N83UMY
+         yzPcuYP45Lej/H50L76IWTttsZ2biv/EUkCBEVWdfKH3GazW6LbQ5T+GoOpnNB2M8T6f
+         zdsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773972802; x=1774577602;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=DPZQH0Hyy5nc4kHUPsfCF/IaqEqcY4HuvY5FeRNLL4k=;
+        b=e0fignQtAtOfUbPB0K2eSq6d7Aszelx3SIxkMFwNviVXhQgqwMwhA9VBICsXCyN/YW
+         KqumOLJNwcLB/kWA75u8YaeklY9gOeixEuEkFNyk43VTGZOUAtwDzPkUHHVMW7u1m20G
+         y1QIKL3c+lXeSthugqOHKw83luThVYC3p9X4abmftHB5UlH3Gm0rfAEEBXWqsiTBJW2D
+         4tQaUpHulyhuyMDv4FWpWPCOvvFoTEHSl4n5As+iCVFL8GHWWdEsRJlTSLMSj7S8B4UJ
+         FzPt/NtvhTugdAYEtVD6SCzZBCDI4sQY7f4BIq8bWR/3PerRp4iSvOkYxUw57ke1LirL
+         Zvrw==
+X-Gm-Message-State: AOJu0Yxffy0Rr9gJe8SL5n/XF3OFVwzMSDvH93pIaoBFFaDRt46wcUna
+	a/QCYmtbjIiaUonthailwIkQaYyhHYOpGkfZZvOcf82lK0/L/xtigDDW
+X-Gm-Gg: ATEYQzyWgrJir7vK3otjPfX8QQBciAGX8c4wON3MDTigantbjRR8o/2r325K3Xtryv9
+	uG9bSmqmu3iWbPIRMzx6To6olLIPMnCOpY6/sJLFQ4zpFjs2gX6meDVS6onSJv2ekQPGBYubBiJ
+	WObPMmK3588KLaQq20/SnW4dQW/nGhGB3qfZHL927o5XYRvQ9i6xSqA4V09144fKKCD2Y3dV1d0
+	YNgJMqLV+rrgqIe+maVtSyLt67GwCxIbU7RhNA93Sbqf0vJ4VzlRvXcayn0SrkoIydtDDDAtMw0
+	D1FeD666Yzq+sm4KB1qK0SyPBsPErTLEvjquxcRsS1HwgWvnP3pslxEDeKbuFu7Ko2NKp1NNZAa
+	OIzw8y7gA4ts0P8K3EidzXFdqnYyNLr7/0MSSxnWpmAvF2M0d5epknaWUbdxB0Pb16f/NUS8waA
+	yR09a6ldcAgl8e9ecog9/EnZ196uoc7A1vqwEV
+X-Received: by 2002:a05:7300:fb89:b0:2be:88f2:3c98 with SMTP id 5a478bee46e88-2c1096e250amr626504eec.1.1773972801889;
+        Thu, 19 Mar 2026 19:13:21 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2c10b29d28csm1529357eec.19.2026.03.19.19.13.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Mar 2026 19:13:21 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date: Thu, 19 Mar 2026 19:13:19 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
+Subject: Re: [PATCH 3/6] ata: libata-scsi: Refactor ata_scsiop_maint_in()
+Message-ID: <0676888d-e683-4696-8289-ee8bf43beeb0@roeck-us.net>
+References: <20241022024537.251905-1-dlemoal@kernel.org>
+ <20241022024537.251905-4-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|IA4PR10MB8587:EE_
-X-MS-Office365-Filtering-Correlation-Id: c1734605-c481-4755-a09d-08de8625f8c1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|1800799024|366016|18002099003|56012099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	xMwfgJlCcIEbR2jPQOQMAidSQ9LdYrTnlSZF7ql7HVlbwksNwQYonA/WTWhITFSCdMwa73wTCJtHIjZpk0fQdTScUVmd0OB/6cPLPcJSe/TyqHK7ATRhaBPnxqtKG53B3JFc16x6n6qQvTDb8+YrMbz9rvtmuLrm1BEYmLGcXq9o4sMVIoAQ4eJXVupvtoNeraCfo+49OvC3hFQAzGaDZCPpQpszSwiLBaBeE3W+D5pDw8KwXCx8Tsybr+o6QblaIuPdLGMMc27+0/4LklC6xARFJOPhE8cKjRy+zJQRaMHCNrk1fvt1qNgQxttxuQXxqys2DcNtio5xG+C142Z4BkHdTrh2OeVJMkSQn7cYdT0Q6DQz/Zmn9K76a/7CqVVtm+/9z6L6GPhI0xF9syoX7HVstGYQFV1V9GYg5IG1MyulAlD8SuYq2tFH6ytopjlxkPbLaQo/F6MKNeVX+nod7iQgQXQT4Sv65fQnGr6m3/a1kgmp9+zKNcrIY1jlIfAqjsnCQ1XN3Z11x2m9kjycITSNNhG0sPXSUzcyqmSdmbfPJc4U27g6UEaIMElrj0aQZTe/BsAEQcM16eBijJn9y1dZhDQNIVQOAP4PSoPP5Kzm9EpR2LB6ZtStLwRM4k/HP0GUB6OhF0eMtYu/0HPlBxmFiiI9hI1R0zi1A5/ZIW7SyvOz12cpkEzxj3c5sjlnTDa7op0kfLjNtJTI4Wfve4GHTvP5zeAT4IIH9fgt0CY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?wImPQe/cVJdVXrXLgy77MeKaWngDbfiuRgyPaL0izCmeTQKp3QA2cJWTn24q?=
- =?us-ascii?Q?p8XCCLX8LssU1yJ7bgwHsHbaZtqdpz2HBRl6iDXcTXVfxlfv12qw42++WHQM?=
- =?us-ascii?Q?YwRYWPM6JpMQvBcqzihb0xNrVak44GS3SaZX7xgEVlmZACIgVd1OgOxh0QTX?=
- =?us-ascii?Q?kDFHX4EqqCtT8qWqJifpUEkjLL2bBomoqVyU3N0TkVNTw/lbwvEuq4nEBmz3?=
- =?us-ascii?Q?edguLqSM3B2vndUqZ0P22rupDQftBRPJG+82QI1xTYZntCSDJKTXLRypkzbc?=
- =?us-ascii?Q?N3m4KLpun9d/BAYahfbrDKTAd7p8BTQFatbnBp2p+SZ2W5l+y3IFwjn3RYkm?=
- =?us-ascii?Q?PPdNnWI1HC5gasiqmi/3Yy+HKnWp40AalNDSktoa7PxMFWD3Hawi9Wd6WqQg?=
- =?us-ascii?Q?b+GvwWvt4HjCN7SkBpPZ/w5xeHx0X29cHmEDeyg9fZEJibXpm+bXydnr2Jqr?=
- =?us-ascii?Q?RU1bdKxmn8JmPGvqo9FNqAUBkXq2INfAgj4rI8wZN/q/dZ+A0DZEMgOLt7cY?=
- =?us-ascii?Q?W+9tRMXifGUR4CORd6YPb7VnzkeAcaOQHDKPKeye1zWK6UYMi6NYUzQe2MKI?=
- =?us-ascii?Q?wo3mcNEH9koJjGx/r0TWZqH5EDo7MlHHFT+RAf46riP5XI+0/RlRMMGmOFoh?=
- =?us-ascii?Q?n+xS0XwUVUBMSIAJ0Bts3u3IXtwGep+HXRkTINipgnhT89DTm5zxeAJkx5Ek?=
- =?us-ascii?Q?5pTZkV70HXQHfm+MfQ4bilE6wRLgFXtvLgE85ebC9honrPMUwVDFq64U8Ilw?=
- =?us-ascii?Q?u58Ng5SsMIzWtX4rq4eBTo2+XH6MgM60oxSqdHcHWa30mZn2ZRKVltIbRiJ/?=
- =?us-ascii?Q?NcsU50FS6QsWXMucKgMdgOrvE1GL+M7V91YLl7fbXNM6iHG7vz9/UA0pBw7s?=
- =?us-ascii?Q?/+qqDNX0ZNQDvdKvwSP2MTi5wqdaAldmvneRsRaQqrHQalyaR64YRGKACqV9?=
- =?us-ascii?Q?8vaoFrBIri9w370xgwBcCQV8UFDRj7jVNS1B5DgZCA/j7EINkr1idHevR/cM?=
- =?us-ascii?Q?LDrUJOZLnMc0XHWZ/dcnwg6RGIkaWYZ600DxzNqG8ecv1vpwfuRtaqAS1eLv?=
- =?us-ascii?Q?18cUbfdlzcs9qF00jcoCkvIPOdCDaWOhsu7snuqzJXdr45mSWqqsmxi4lrcn?=
- =?us-ascii?Q?W8NMdYqqpk3eB1lrRg8k5bdsyJtsQT3n8RJJwDVxxX20piVcd66y1i5Rkt4l?=
- =?us-ascii?Q?/xuvYHU4UMkx4sPMcu7XQKPPi1YXluoEWyMtVHokHpZDDyJ3SSf7hAvijOUd?=
- =?us-ascii?Q?Fsfk6pnVeE6eXS3nLPD89gTL9Qf+p5GeXO/IsRJwypH5PXx+Bng/+LlNGv0j?=
- =?us-ascii?Q?TmWzc9pVXXJV9IbTvcr6nUr4pMJgSt5CRUYGjFKi6l6366dfsgpPkyqlX39C?=
- =?us-ascii?Q?Z5bJkqoVVOoPrJHF3m/3GxTh14R33iUiI87oyy0/bv0X1T2mSVHNVedn4iV7?=
- =?us-ascii?Q?jav+CCOABWGNZEHniSkMxp3Hhx9kHwQkxtg3psID8dwnKVZEBUkFKRUuTEBQ?=
- =?us-ascii?Q?XshJWJkyB5oTsmKfLGxUkYsFmuQ+ClVMpJyRTCADo+MBVhJk4TNxFCLAVK3a?=
- =?us-ascii?Q?0UkvQge89NNwE245miV9DATvNjpNq7iQIablcy+0vsgjNGUawCV7dgRQYfIV?=
- =?us-ascii?Q?VK3Yb/k7DSoEOKOEkha/VB3P/AuDWNwtbJnH7AOcXFQGdjSyggMRKI6iHOjh?=
- =?us-ascii?Q?g7hkZL/LA54nsz/QCmjnZwOKN+HigMJAL/iFTfuT9yPt+73WMdap8DFBlzEn?=
- =?us-ascii?Q?++n38EiSQO/WsdiaHrZTbBsxcNqHkXg=3D?=
-X-Exchange-RoutingPolicyChecked:
-	H8jSffUDdFv7n2yLNHcylzLTTHp0DYK3tElbip+DnyGkaHgdk1ZKuwChvgXxVk/IvLkX5lQnYsUdLIXB4sqGgkrGIr/XhGT+dfRh1UKLrgDDeyGgisA9/NORCs3HvmePei4FdiP+99NOp+khitn++tqmarj+Ln7CtTHwhgVDFU5mVok7H22SsVX6zBtbmREe036ZoIX8wut6k0wmqIYVl+dhyBoHmk2c/NzKVkL8w1oSY7S+pk7kUJ7iFj2Mquy+oNtwW3yMIPyWOv6LQLx23PuWQdxdJNug6CDJuOKKsOVVJ9/jMzNUWsCx7q4YPB9r9fAm+v3A2Jxb69eSmeujPA==
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	v/L5Z1vlYvbsGQ7Jle3cH5CPiiBoSy03zr+i86+1aSwzkyQ0v1HwpLcc51vFmctej5saowQ533hpmq9sEsAE1tdxHXO755lfpCQ6D7DCQnPrpCFv+M9Pbt6CPN01zwBhhXi6SLapC4gq3kZ2RYkZlqMMB2e3W6V+q+OstQDk/qUpkRZ4hom5ZnW7woID8exFDM6SeRUU5896wl25QdF84HRi/PHfJsducCebLwogu+3yF8QmO9luIMvTPFDuC+FLWEeuDxgkkiNz2OrrImMinlSPF1TV2itx5jUjRwxHXhn8yR0xKes0rOnVZwmRLzN2PgZWEed4j81Bx3+FdEpQ+LXmLkAn+ZGN8VSpkKQKym4xHodKjlAOVy8iEIetm+6ghZm8MZ8hqZvJqjaYqBV0WqCWUTbrnoUWT03gmr+hHS/u9Jl8KjQdunC3os3b8iioKb4CSGUd7oLpQirjIx45nc5nsnNQgshWRbNBsPQVLXmaxthUrtijmjZxOTc0f4i4H6/VM16w1naKCpwLPHSZuk+9Dsy9wAqrXZcIFhDbi1WS5uezk6MIIjWHWo4fgYUx3wY5gQKOl7PXr6miSuMsrLIcuYspK9ssbZND0nm04uU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c1734605-c481-4755-a09d-08de8625f8c1
-X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2026 02:11:18.0043
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FyVfiNFG/T9yVSB9J0sMQoz8VeVKA2jmv/+tS0Z+0cau0gwE2NY32CAqTRc+W9OUNiAPySTptksh+n+7C1Msu4douSIGsjtZYlcwszxt9N4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA4PR10MB8587
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-19_04,2026-03-19_05,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=822
- adultscore=0 phishscore=0 malwarescore=0 suspectscore=0 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2603050001 definitions=main-2603200015
-X-Authority-Analysis: v=2.4 cv=HcsZjyE8 c=1 sm=1 tr=0 ts=69bcaccd cx=c_pps
- a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=Yq5XynenixoA:10
- a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=jiCTI4zE5U7BLdzWsZGv:22
- a=7Gl3-_t3PgB9XO-mQDs3:22 a=V9LyDDkgFULS-D7OFlMA:9
-X-Proofpoint-ORIG-GUID: rkXLPizU8Xhuq5wZntyuBHZEhnq6NBPM
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzIwMDAxNSBTYWx0ZWRfX9VqJ0sH0R86g
- zzUtRMM3Beq0lXc4HDGDRYvYVErO62pqWKdDBq3lOs1EV3JYMv9PRCepbuhonp8QdPSXbGV9etu
- pqGvG6uv3H4PrhrZcMvCaGGM7Ay5DPnx+XmfcBTQC/xDankt4CDH92uSkkpOJQFWtkVL4KVcmNm
- y0iURWgrGo5BN65ARQLnozqj4M5OKSn5+UuLP9ECPy7SmTcojEgrHf0vzSKfe8ixD1yVrfFRAKV
- kZRF6P8kKZonF2oYBEMVHWSLN3+jNKH69vFEv/bFRlEwomp5Nt2MvftYysK4VJhqlzRQB9llGp8
- NM15itIIaDKkbBvSSR6cLsjwxL1HSC3dlAd07lbTslg9FzrmWfOE3uDGy/GnUeQqS7SKnFnHbpU
- O3ZWlF7s0jGy6iwUFapvVfqUg+Yt6HxEClFpDCrdOaTmrdNSEHhswOmYAaaDVVjEycpor0kxxOl
- 5QO7LQ7wLL6EKBcLGZA==
-X-Proofpoint-GUID: rkXLPizU8Xhuq5wZntyuBHZEhnq6NBPM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241022024537.251905-4-dlemoal@kernel.org>
 
+Hi,
 
-Vladimir,
+On Tue, Oct 22, 2024 at 11:45:34AM +0900, Damien Le Moal wrote:
+> Move the check for MI_REPORT_SUPPORTED_OPERATION_CODES from
+> ata_scsi_simulate() into ata_scsiop_maint_in() to simplify
+> ata_scsi_simulate() code.
+> 
+> Furthermore, since an rbuff fill actor function returning a non-zero
+> value causes no data to be returned for the command, directly return
+> an error (return 1) for invalid command formt after setting the invalid
+> field in cdb error.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>  drivers/ata/libata-scsi.c | 20 +++++++++++---------
+>  1 file changed, 11 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 8097cf318b04..f9c70f650cfc 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3388,12 +3388,16 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+>  	struct ata_device *dev = args->dev;
+>  	u8 *cdb = args->cmd->cmnd;
+>  	u8 supported = 0, cdlp = 0, rwcdlp = 0;
+> -	unsigned int err = 0;
+> +
+> +	if ((cdb[1] & 0x1f) != MI_REPORT_SUPPORTED_OPERATION_CODES) {
+> +		ata_scsi_set_invalid_field(dev, args->cmd, 1, 0xff);
+> +		return 1;
+> +	}
+>  
+>  	if (cdb[2] != 1 && cdb[2] != 3) {
+>  		ata_dev_warn(dev, "invalid command format %d\n", cdb[2]);
+> -		err = 2;
+> -		goto out;
+> +		ata_scsi_set_invalid_field(dev, args->cmd, 1, 0xff);
 
-> The Exynos host controller driver is clearly a PHY consumer (gets the
-> ufs->phy using devm_phy_get()), but pokes into the guts of struct phy
-> to get the generic_phy->power_count.
+Nit, but should this possibly be
+		ata_scsi_set_invalid_field(dev, args->cmd, 2, 0xff);
+							   ^
+?
 
-Looks OK to me but it would be good to get an ack from Samsung.
+Thanks,
+Guenter
 
-Applied to 7.1/scsi-staging, thanks!
-
--- 
-Martin K. Petersen
+> +		return 1;
+>  	}
+>  
+>  	switch (cdb[3]) {
+> @@ -3461,11 +3465,12 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+>  	default:
+>  		break;
+>  	}
+> -out:
+> +
+>  	/* One command format */
+>  	rbuf[0] = rwcdlp;
+>  	rbuf[1] = cdlp | supported;
+> -	return err;
+> +
+> +	return 0;
+>  }
+>  
+>  /**
+> @@ -4377,10 +4382,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
+>  		break;
+>  
+>  	case MAINTENANCE_IN:
+> -		if ((scsicmd[1] & 0x1f) == MI_REPORT_SUPPORTED_OPERATION_CODES)
+> -			ata_scsi_rbuf_fill(&args, ata_scsiop_maint_in);
+> -		else
+> -			ata_scsi_set_invalid_field(dev, cmd, 1, 0xff);
+> +		ata_scsi_rbuf_fill(&args, ata_scsiop_maint_in);
+>  		break;
+>  
+>  	/* all other commands */
+> -- 
+> 2.47.0
+> 
