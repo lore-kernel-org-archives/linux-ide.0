@@ -1,141 +1,123 @@
-Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C67A26A08F
-	for <linux-ide@vger.kernel.org>; Tue, 24 Mar 2026 21:16:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ABBB3C13FF;
+	Tue, 24 Mar 2026 22:10:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774387012; cv=none; b=S2DUwSUBZav+u4dj8wPhHZgUnMrI9P1Alwsn5CeIaNALR38JnFe7q3ZHr6yM075hJWxpkwUU3PNoCO6ijuPzCdhAJHZ3lZ9NMRfFEtqfat+bythmk6xAJ+SyZqdWm+2OMdo3R7ZaleFXnHYYaSOlKUOICkLMe/mRlA7uxrkWczY=
+	t=1774390257; cv=none; b=DihWTBz7fDfLwRwqtcXFzlU261oiaiYWI1+EW7LjbMTksZioDYNB5mwn5CYBPNCtmAh/qJf8ev5sBkOSG3G4FQH90lOzsVxVE0Zgp5bwjzOZgDcvUHluo2ZiZYWjtAu7W7FnvIlL3RCRxy+t6QmNbUgSMRR/8BABbitt2S8+CYk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774387012; c=relaxed/simple;
-	bh=FppXID+0J4nDRs3X3TyPmxeAe0SJrDM6eTzwu4T3obM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EVeWl/h/7B/Km6eqznlMQpAWstu1Z5x+5HNVQp5rk6+ObBUR5QlnIwY4ajXcNWJHJ7mFBYV1HGcKiDzgUQ0YJ3drgrG01Xl18YwGzEYXY0IYewLa/UykpTvEoXjEVTBGZYj1qQcrxzXZQ3vI6b4UdTBU7xTffW8K1+dlTOEXsAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FkBQE7uJ; arc=none smtp.client-ip=209.85.222.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1774390257; c=relaxed/simple;
+	bh=+kehYrYV5udI79UZsWv7ehxJx9W8hKs0w0BfEAayIRI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=q9f3Wb7FQPZ3yo0uFmqWG3UkMTTHRU5xmgdDoULSxjAWoS8ozQN5Yp2xtNnfM0jEBR3EuaNPkcuVVoFFh0MMKEdYLnbYrdtFhtOpuBuaH73KigARhBRQfhUWpJT1xNeDq/UKAhIZKg8o9Wa5K5jgmBcDNIk+7zYHiwRoBJvQa54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uY1VaRdV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FkBQE7uJ"
-Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-8cd8576a512so35794685a.0
-        for <linux-ide@vger.kernel.org>; Tue, 24 Mar 2026 14:16:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774387010; x=1774991810; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=sm/4nEkrkeSiZOQFxxtUg+CAIgNYlGGhCoF4Utum28A=;
-        b=FkBQE7uJ2pMeTYgZBvq0jjU0PHytkjtlHvnq8TbcrwCDNvsW6GZ9OBJJhYWkP8uJ6k
-         iy0lyvXzd5n+oLOqkqn4ZmrHY3A4TXM6vAbOQguS25iiQR7yENL+oJrtOMo209CwrieK
-         5viuE6J/TW+8nE3jOriw1UMHYHB77kBPZRJS8DKvoy7YFT8e757BkM7due+TxiRDEZYE
-         2dHZjRrQZwIjrmu1EKDr7dQ7Xwea/BhEoME4r2NcKpO6nRsIKe9GMDjaSC4r423kPQ0C
-         LwkQ9hpFetckb/y4TSzh/KzAXiMtfljQqK+QHMCTky1rESz6Zmu9Y4snYSv3J1os3ktP
-         7qQg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774387010; x=1774991810;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sm/4nEkrkeSiZOQFxxtUg+CAIgNYlGGhCoF4Utum28A=;
-        b=hnwK2WbkjKM76HsSx7qfGLEl1j/lZIMOevwi9kDGZO9DDfTfvemuU8oFpySd/BpSZP
-         gMidcL/3gkbxDU/ri95huuCZMMbW3fHbFgljCzP4vCMQoZONE75wybnroflnxpWroSNh
-         DfkFpAlVRBI9LD1IBrk5eUVbHwptsvY/C206fD8TCKs/jyjV/LsPpTpgSLwc7/wqIQOz
-         CQr70MSWnj80AYLsHMSPNk/nuYzJD8pkS5psSMFa+yFcJMOAQzC5+if6492Rb4nLhY/j
-         w6VXy33xOrmCVBPY88wjQVcI8A0neNQ55SrOxNop++r/zMPgpWZBsegQ6ZgwHiFbwoeE
-         OLyA==
-X-Gm-Message-State: AOJu0YyYhIknT6fC5sSXfcBQFiHxeOeNMsk0GudVP5dKS81wPEdlfxP0
-	kH5hmI9LCp1h0dUNAQfiN5rlCPR5tnq7BN3xtK6xKaj3nr6q0mHo40mbihctaQ==
-X-Gm-Gg: ATEYQzxxJV4epq4hbBgb7xlnifyECmdkqepjoqiS8ngbc2UjDmGN2yZILoJo5lh7hmd
-	wjBYLHSa95VkV2FtngP3IH/LkvcmKTdxzcqXZ0Jc4UEE1dy6eN2ApnzcM4sl1eFix5qg63C8CRP
-	LO30aeev+M0JrIwWM1oR64FPosTEAPFMl2k4sG7qzwK8xXDo7THFsmtxQJN7Jb0o12ixNh11qpm
-	WFs4HtyAGwFR4QmEsSIQXqWdoWuqQKxCbXkASe9AEDd3fjz75EPgNaxlYCeAvy/CeiSDDuCaEyy
-	Yz2XjQQaplWxDJb+A7hoGhEHwCYhOOHP0rpHU02jwWGoQ5kik00R39FQf79bIwHoUkDU/VFaksA
-	uY0IIANVp4zhqKE0gxZpcFGKopAi3He4lKRP5cPQubpW5SUoxpA9uixuTCnB4aLAylshGvshbbG
-	ED0afAD4EZ0EbL/ysiqi1iKqGLt+oK5yupsD0skgfkNDOROF3tl62QIJs=
-X-Received: by 2002:a05:620a:4149:b0:8cf:c4e1:9761 with SMTP id af79cd13be357-8d000561a93mr192888585a.20.1774387010169;
-        Tue, 24 Mar 2026 14:16:50 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d::8bd])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cfc90bab92sm1117594685a.34.2026.03.24.14.16.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Mar 2026 14:16:49 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	linux-tegra@vger.kernel.org (open list:TEGRA ARCHITECTURE SUPPORT),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] ata: ahci_tegra: remove kcalloc
-Date: Tue, 24 Mar 2026 14:16:29 -0700
-Message-ID: <20260324211629.26924-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uY1VaRdV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C3D7C2BCB1;
+	Tue, 24 Mar 2026 22:10:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774390256;
+	bh=+kehYrYV5udI79UZsWv7ehxJx9W8hKs0w0BfEAayIRI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=uY1VaRdVZCIt15Gt+rKiGi/CFuAnyA5Lf61/KvONN48uuWE1zQEZ2QppektWO7Eux
+	 gEyZzFOMnxJHLbSSPtJrVZx0bH0vHGcJAybzOjhlVEPfgRpQTu/mMFOHhoGv2q/vzf
+	 Q9aPh2FK+R7Zy1iiVE+oGK5NCGpD/9JKF916hYCwwKHUQBJUinqTHfkrGPZdIABTdl
+	 7C4qSY4ihvLMz7zyPUFMygQgP4amUJ0Cdo6YWgd84pWltL5hR0pc2yeEDFGYRhRK/n
+	 DkpvS6ZbkxgYCZPwWU7ddbVV+q/8SoS5RogVF60ebTRloGO7VEV1srDbqVIOL6DPKB
+	 jVxbTi29UQDCw==
+Message-ID: <a27f4314-f7dc-445d-ae24-909ac6b45b5e@kernel.org>
+Date: Tue, 24 Mar 2026 15:10:50 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: ahci_tegra: remove kcalloc
+To: Rosen Penev <rosenp@gmail.com>, linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>,
+ Thierry Reding <thierry.reding@gmail.com>,
+ Jonathan Hunter <jonathanh@nvidia.com>,
+ "open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20260324211629.26924-1-rosenp@gmail.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260324211629.26924-1-rosenp@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Combine allocations into one by using a flexible array member.
+On 2026/03/24 14:16, Rosen Penev wrote:
+> Combine allocations into one by using a flexible array member.
+> 
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> ---
+>  drivers/ata/ahci_tegra.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
+> index 44584eed6374..5972fe04ff3f 100644
+> --- a/drivers/ata/ahci_tegra.c
+> +++ b/drivers/ata/ahci_tegra.c
+> @@ -175,8 +175,9 @@ struct tegra_ahci_priv {
+>  	struct reset_control	   *sata_cold_rst;
+>  	/* Needs special handling, cannot use ahci_platform */
+>  	struct clk		   *sata_clk;
+> -	struct regulator_bulk_data *supplies;
+>  	const struct tegra_ahci_soc *soc;
+> +
+> +	struct regulator_bulk_data supplies[];
 
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/ata/ahci_tegra.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+I think this needs a __counted_by() annotation, but not sure if that is possible
+given that soc->num_supplies is not in this structure. Might need a copy of it.
 
-diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-index 44584eed6374..5972fe04ff3f 100644
---- a/drivers/ata/ahci_tegra.c
-+++ b/drivers/ata/ahci_tegra.c
-@@ -175,8 +175,9 @@ struct tegra_ahci_priv {
- 	struct reset_control	   *sata_cold_rst;
- 	/* Needs special handling, cannot use ahci_platform */
- 	struct clk		   *sata_clk;
--	struct regulator_bulk_data *supplies;
- 	const struct tegra_ahci_soc *soc;
-+
-+	struct regulator_bulk_data supplies[];
- };
- 
- static void tegra_ahci_handle_quirks(struct ahci_host_priv *hpriv)
-@@ -512,6 +513,7 @@ static const struct scsi_host_template ahci_platform_sht = {
- 
- static int tegra_ahci_probe(struct platform_device *pdev)
- {
-+	const struct tegra_ahci_soc *soc;
- 	struct ahci_host_priv *hpriv;
- 	struct tegra_ahci_priv *tegra;
- 	struct resource *res;
-@@ -521,14 +523,15 @@ static int tegra_ahci_probe(struct platform_device *pdev)
- 	if (IS_ERR(hpriv))
- 		return PTR_ERR(hpriv);
- 
--	tegra = devm_kzalloc(&pdev->dev, sizeof(*tegra), GFP_KERNEL);
-+	soc = of_device_get_match_data(&pdev->dev);
-+	tegra = devm_kzalloc(&pdev->dev, struct_size(tegra, supplies, soc->num_supplies), GFP_KERNEL);
- 	if (!tegra)
- 		return -ENOMEM;
- 
- 	hpriv->plat_data = tegra;
- 
- 	tegra->pdev = pdev;
--	tegra->soc = of_device_get_match_data(&pdev->dev);
-+	tegra->soc = soc;
- 
- 	tegra->sata_regs = devm_platform_ioremap_resource(pdev, 1);
- 	if (IS_ERR(tegra->sata_regs))
-@@ -571,12 +574,6 @@ static int tegra_ahci_probe(struct platform_device *pdev)
- 		return PTR_ERR(tegra->sata_clk);
- 	}
- 
--	tegra->supplies = devm_kcalloc(&pdev->dev,
--				       tegra->soc->num_supplies,
--				       sizeof(*tegra->supplies), GFP_KERNEL);
--	if (!tegra->supplies)
--		return -ENOMEM;
--
- 	regulator_bulk_set_supply_names(tegra->supplies,
- 					tegra->soc->supply_names,
- 					tegra->soc->num_supplies);
+>  };
+>  
+>  static void tegra_ahci_handle_quirks(struct ahci_host_priv *hpriv)
+> @@ -512,6 +513,7 @@ static const struct scsi_host_template ahci_platform_sht = {
+>  
+>  static int tegra_ahci_probe(struct platform_device *pdev)
+>  {
+> +	const struct tegra_ahci_soc *soc;
+>  	struct ahci_host_priv *hpriv;
+>  	struct tegra_ahci_priv *tegra;
+>  	struct resource *res;
+> @@ -521,14 +523,15 @@ static int tegra_ahci_probe(struct platform_device *pdev)
+>  	if (IS_ERR(hpriv))
+>  		return PTR_ERR(hpriv);
+>  
+> -	tegra = devm_kzalloc(&pdev->dev, sizeof(*tegra), GFP_KERNEL);
+> +	soc = of_device_get_match_data(&pdev->dev);
+> +	tegra = devm_kzalloc(&pdev->dev, struct_size(tegra, supplies, soc->num_supplies), GFP_KERNEL);
+>  	if (!tegra)
+>  		return -ENOMEM;
+>  
+>  	hpriv->plat_data = tegra;
+>  
+>  	tegra->pdev = pdev;
+> -	tegra->soc = of_device_get_match_data(&pdev->dev);
+> +	tegra->soc = soc;
+>  
+>  	tegra->sata_regs = devm_platform_ioremap_resource(pdev, 1);
+>  	if (IS_ERR(tegra->sata_regs))
+> @@ -571,12 +574,6 @@ static int tegra_ahci_probe(struct platform_device *pdev)
+>  		return PTR_ERR(tegra->sata_clk);
+>  	}
+>  
+> -	tegra->supplies = devm_kcalloc(&pdev->dev,
+> -				       tegra->soc->num_supplies,
+> -				       sizeof(*tegra->supplies), GFP_KERNEL);
+> -	if (!tegra->supplies)
+> -		return -ENOMEM;
+> -
+>  	regulator_bulk_set_supply_names(tegra->supplies,
+>  					tegra->soc->supply_names,
+>  					tegra->soc->num_supplies);
+
+
 -- 
-2.53.0
-
+Damien Le Moal
+Western Digital Research
