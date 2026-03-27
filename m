@@ -1,171 +1,127 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 230DB25EFBB
-	for <linux-ide@vger.kernel.org>; Fri, 27 Mar 2026 02:51:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F1A12BE7BB;
+	Fri, 27 Mar 2026 06:53:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774579863; cv=none; b=LzONtyRjgafd0PJfeR+8T1fL94vVuYRz1MDCEQNGQRaSxLehgrJXRdGYRByNSJJcUFVZCZCOZmHIP7akAxF7YLhlyl1hRX2d21WHlEjydlYWLV0bDXgzWDq2TEOHTz/M92Gf/D9CGRX9ywK5Q2xGEyLyPSHY7gemfGt5WCm8HBg=
+	t=1774594384; cv=none; b=ESnt93odZ5ccH6QecTRpZez+pzGT89aWC5NqsSD8Fhcz/j3N18YOpxXVT0+bixAVPmssGaNK2zDc0HvmLkXEMzWwqty9HsdNmXprVtVgMdG2+G+T5L5RQWwWNWpCSTFW4enPEy2xpyRC3lru1cdjUBoELDq43oS19HqYbTfoCEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774579863; c=relaxed/simple;
-	bh=PhK1uiwCqLIJI3ueMcn4+tjHbQ8klTqD3ZDxXIovspU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Os9W7K3URYNdXO0G9ugMYW+st6ddCtjRN7Ld2N/QIWbzXrvr5KoISEjX7GBGhfoB/Y3lWtgomNs9+k2mWtJJhxGDk1jb5Cok9MeQ7T794ncKI4uP/IIGp6UGqvZQ3pEKZdJAuMpBwa8iwKUraTiBb2jO6CgOsC7iMTsBfKJlIV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I7GaevoJ; arc=none smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1774594384; c=relaxed/simple;
+	bh=+6taD/KYX6s6aOGsQO53ivGa0KI2dG/K2GEdTZ29IxI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=maY8VjJ4M8ub7rY6gutpF8eIFQyvtYi1+++x2DcJwHGfOX0f41dZIGa/Utm0EM31BBTovbZ3+CXl08C+ydUVpxWWk/i4kcyZ5hKkqJpgD7zVyXn0oEDR9CpUbgRk9lHRqxSD+owzeafQuMEczQJ88UbSl9Lvv+cLesXXTneo4VM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uM9tWBQS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I7GaevoJ"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-35a09e0dd63so1584475a91.3
-        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2026 19:51:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774579861; x=1775184661; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=SX5+VodhRV2hJI3/ddIJ/j9D3gWCV2wOSdzAThk9yJY=;
-        b=I7GaevoJG7rZ1bxnX7qR8Kui4uSmkux6ryLsLZD6hq8B+GX0TnA0pc05IfFFHjs/q9
-         zMd6m91ZmyrYv8ei9Erd3A4zT5ySD41DqlyBuwvA6LcojbUJUnXW7hdlQea3zDAPbW7W
-         s00F1sNmOQNHHUkOTVI6+whocKZX4WgPs317Z12W5DR/0VBMkciNrBhIQmIRP3aIsr01
-         GsCCbfOjk8WKn5egO3aF+zqV7wqo7i7yHhLEYV+Sn6xyjgaT/P6CZpHCxEQdD8X/ZBWI
-         MUmXYlkuGO77gawLVV3ibONKFc9oebyhe5X6bwkbKeyIoibLVsI2s71g7MdvLeed24CE
-         LcSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774579861; x=1775184661;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SX5+VodhRV2hJI3/ddIJ/j9D3gWCV2wOSdzAThk9yJY=;
-        b=MD2pJQey8Az3EnBJYh6Iju+7WBWbY/cf3lZLNJ33R6JBJ4H18WXoub7J+kijtwyEB8
-         e1GziHlCELpQOZNBrMw+FbqGM8Imlg446G7M8al2L5MOXUJgbc3jwWr2xkuwqBvmEkmZ
-         pBnHbnBlW+PPAFX+OTDH+6GHtoU41sLCvRrmKVvnLkYhe6B8rRUm8tGaqV917jWL0ZFv
-         9zFGFdiNPI3651JybOqojL2gn/HTpGIQAOncfd9ap0xOl05hYh+xHDpn6Gm8HJo/t/sX
-         hYFSRz/KBFAJap2PvY7WtVTTfMOY/oTenDl6Qwdgpxmjr/Dlj8nc/htCKpv1K+PXGReA
-         BOBA==
-X-Gm-Message-State: AOJu0YwZUyWyew7yWIS/fb/xROSErUATv2zWW+g/YS91LitU4Uuj9nKu
-	lfl1lGEOlpgiqV7GI3TQpEEEEYcsKKSJ6hzYqwusIh2G/TO4kWwaih18RlJdYe21
-X-Gm-Gg: ATEYQzwGjdl3xrRU2cBXYX7jZaFrBHpun9hVbpw8K8zNAdufKVar8/M3kfznXTGwP8T
-	DIuxr8U8kLVyhQsnJnJgVDqhikkkgKfnCijI+Lffa8aZc02puDyAmHu45JWJ7UaYFuUJToKMaSI
-	ZE5HcMIiUALpXMVyVp6rYotjr5fdzTbnxUmFYCQv2aH5tEqT2DZAlpMhB2kugz+ptz6pUm2x3rt
-	SAT07YoJzfzB+iF3YmWnEfNuKPYo4cP8k2nzPcLBkEV5Qr9ZwIv4UK3L5dSQJNTJlPaNoC/KUrY
-	PnZgl5TnP8KYyvvYpC+vN+xOwtP+Yl2XmCrxe8QSbU++4HnhwuzY2arJoaICnvbW0SZE6Bo0rsg
-	42XX3DCUUwoVKyAuGZvfT2qdj2Q9HGfZ5Ro2Aam28UCfa1FiYK5BpZ2KlvyAiqbkd5k8iQwXTuo
-	H92kn28PMPepC/b5/ypehqoAfysst02HodXn7vKX7QNxtjdQ7okqREPas=
-X-Received: by 2002:a17:903:28f:b0:2b0:67a7:5c4b with SMTP id d9443c01a7336-2b0cdcb0791mr9021885ad.28.1774579861001;
-        Thu, 26 Mar 2026 19:51:01 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d::8bd])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b0bc8c6895sm54574445ad.64.2026.03.26.19.50.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Mar 2026 19:51:00 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Hans de Goede <hansg@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-kernel@vger.kernel.org (open list),
-	linux-hardening@vger.kernel.org (open list:KERNEL HARDENING (not covered by other areas):Keyword:\b__counted_by(_le|_be)?\b)
-Subject: [PATCH] ata: libahci_platform: remove kcalloc
-Date: Thu, 26 Mar 2026 19:50:43 -0700
-Message-ID: <20260327025043.7565-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uM9tWBQS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5247EC19423;
+	Fri, 27 Mar 2026 06:52:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774594383;
+	bh=+6taD/KYX6s6aOGsQO53ivGa0KI2dG/K2GEdTZ29IxI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uM9tWBQSBzeOskmqaDM0QvWoV4jUNiC4DsBlIKIFg7In21qbXcrgvL+npIdvVsRu4
+	 qrE69iQ+kiDSqXlcivHy16z+fEY80xVdn90vInQTF9nPU0Nfe7+PBampXS2wO/gG+p
+	 NgAISEoCyX1+VSpZjmfa/Wk2xePLkgGitS5duT/iqLt2Xz6gmhtYoyq/3bAsUtsGq+
+	 2OtE88H/kNHCxHKSKe13LzCtkcFHYUQtieBVLEZ/RgfH2fMVrGZXCU2jVD0wDWvbDI
+	 /UHVNy1S2RfsSIT/lKpdHdy0Vk/hccjI1KCqeAffyJ+BOUCNvP4IiTCz7QCM5HVlUz
+	 YXDRsPrcv0reg==
+Date: Fri, 27 Mar 2026 12:22:46 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, 
+	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, netdev@vger.kernel.org, 
+	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: Re: [PATCH v5 phy-next 10/27] scsi: ufs: qcom: keep parallel track
+ of PHY power state
+Message-ID: <gq4sswslkjaoe5hhxe2mz6z57uiumotqknkryadvfsstj4srx4@qgenqekgrqv4>
+References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+ <20260319223241.1351137-11-vladimir.oltean@nxp.com>
+ <ezrcjjwtg5n76w4m65l27szu5mywx66ti3xuprkfcp3x6quvbf@2rew4zrnnbt2>
+ <20260325114309.3k7xkfrffpxp5xq4@skbuf>
+ <vu3cxpynr5mu2fzkrtmjcwijc5jz323wlnbc3r7lp2wxqmhydx@z5xhgf4myw2d>
+ <20260325115731.genmq2yew2p4dvbs@skbuf>
+ <20260326080444.gbesciaa5zwvcgoy@skbuf>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260326080444.gbesciaa5zwvcgoy@skbuf>
 
-Use a flexible array member with struct_size to combine the allocations.
+On Thu, Mar 26, 2026 at 10:04:44AM +0200, Vladimir Oltean wrote:
+> On Wed, Mar 25, 2026 at 01:57:31PM +0200, Vladimir Oltean wrote:
+> > On Wed, Mar 25, 2026 at 05:21:14PM +0530, Manivannan Sadhasivam wrote:
+> > > I believe I added the power_count check for phy_exit(). But since that got
+> > > moved, the check becomes no longer necessary.
+> > 
+> > FYI, the power_count keeps track of the balance of phy_power_on() and
+> > phy_power_off() calls, whereas it is the init_count keeps track of
+> > phy_init() and phy_exit() calls. They are only related to the extent
+> > that you must respect the phy_init() -> phy_power_on() -> phy_power_off()
+> > -> phy_exit() sequence. But in any case, both should be considered
+> > PHY-internal fields. The "Order of API calls" section from
+> > Documentation/driver-api/phy/phy.rst mentions the order that I just
+> > described above, and consumers should just ensure they follow that.
+> 
+> Ok, so we can close this topic of "checking the power_count not needed"
+> by linking to the conversation which spun off here:
+> https://lore.kernel.org/lkml/20260325120122.265973-1-manivannan.sadhasivam@oss.qualcomm.com/
+> 
 
-Added __counted_by support for extra runtime analysis.
+Sure.
 
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/ata/ahci.h             |  3 ++-
- drivers/ata/libahci_platform.c | 33 +++++++++++++++------------------
- 2 files changed, 17 insertions(+), 19 deletions(-)
+> Mani, I spent some more time to figure out what's really going on with
+> this unexpected phy_power_off() call. Do you think you could
+> regression-test the patch attached?
+> 
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 293b7fb216b5..9e8b6319025c 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -357,7 +357,6 @@ struct ahci_host_priv {
- 	 * If platform uses PHYs. There is a 1:1 relation between the port number and
- 	 * the PHY position in this array.
- 	 */
--	struct phy		**phys;
- 	unsigned		nports;		/* Number of ports */
- 	void			*plat_data;	/* Other platform data */
- 	unsigned int		irq;		/* interrupt line */
-@@ -379,6 +378,8 @@ struct ahci_host_priv {
- 	/* only required for per-port MSI(-X) support */
- 	int			(*get_irq_vector)(struct ata_host *host,
- 						  int port);
+I tested the patch. But it fails ufs_qcom_power_up_sequence() if PHY was already
+powered on:
+
+[   31.513321] qcom-qmp-ufs-phy 1d87000.phy: phy initialization timed-out
+[   31.513335] ufshcd-qcom 1d84000.ufshc: Failed to calibrate PHY: -110
+[   31.565273] ufshcd-qcom 1d84000.ufshc: Enabling the controller failed
+
+Funny thing is, it didn't affect the functionality since the UFS core retries
+ufshcd_hba_enable() and in the error path of ufs_qcom_power_up_sequence(),
+phy_power_off() gets called and that causes the next try to succeed. So it is
+evident that, if PHY was already powered ON, it should be powered off before
+ufs_qcom_phy_power_on(). And due to the UFS driver design,
+ufs_qcom_power_up_sequence() can get called multiple times. So we cannot just
+remove phy_power_off().
+
+Below diff on top of your patch fixes the issue:
+
+```
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index ed067247d72a..2c9fe03f349e 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -567,6 +567,8 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+        if (ret)
+                return ret;
+ 
++       ufs_qcom_phy_power_off(host);
 +
-+	struct phy		*phys[] __counted_by(nports);
- };
- 
- /*
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index f37247e7a5cb..6e072d681341 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -482,15 +482,29 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 	struct ahci_host_priv *hpriv;
- 	u32 mask_port_map = 0;
- 	u32 max_port;
-+	int nports;
- 
- 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
- 		return ERR_PTR(-ENOMEM);
- 
--	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
-+	/* find maximum port id for allocating structures */
-+	max_port = ahci_platform_find_max_port_id(dev);
-+	/*
-+	 * Set nports according to maximum port id. Clamp at
-+	 * AHCI_MAX_PORTS, warning message for invalid port id
-+	 * is generated later.
-+	 * When DT has no sub-nodes max_port is 0, nports is 1,
-+	 * in order to be able to use the
-+	 * ahci_platform_[en|dis]able_[phys|regulators] functions.
-+	 */
-+	nports = min(AHCI_MAX_PORTS, max_port + 1);
-+	hpriv = devres_alloc(ahci_platform_put_resources, struct_size(hpriv, phys, nports),
- 			     GFP_KERNEL);
- 	if (!hpriv)
- 		goto err_out;
- 
-+	hpriv->nports = nports;
-+
- 	devres_add(dev, hpriv);
- 
- 	/*
-@@ -573,23 +587,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 		goto err_out;
- 	}
- 
--	/* find maximum port id for allocating structures */
--	max_port = ahci_platform_find_max_port_id(dev);
--	/*
--	 * Set nports according to maximum port id. Clamp at
--	 * AHCI_MAX_PORTS, warning message for invalid port id
--	 * is generated later.
--	 * When DT has no sub-nodes max_port is 0, nports is 1,
--	 * in order to be able to use the
--	 * ahci_platform_[en|dis]able_[phys|regulators] functions.
--	 */
--	hpriv->nports = min(AHCI_MAX_PORTS, max_port + 1);
--
--	hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), GFP_KERNEL);
--	if (!hpriv->phys) {
--		rc = -ENOMEM;
--		goto err_out;
--	}
- 	/*
- 	 * We cannot use devm_ here, since ahci_platform_put_resources() uses
- 	 * target_pwrs after devm_ have freed memory
+        ret = ufs_qcom_phy_set_gear(host, mode);
+        if (ret) {
+                dev_err(hba->dev, "%s: phy_set_mode_ext() failed, ret = %d\n",
+```
+
+- Mani
+
 -- 
-2.53.0
-
+மணிவண்ணன் சதாசிவம்
