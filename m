@@ -1,65 +1,65 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFAB8191F98
-	for <linux-ide@vger.kernel.org>; Mon, 30 Mar 2026 15:20:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BE0A343D8A
+	for <linux-ide@vger.kernel.org>; Mon, 30 Mar 2026 15:21:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774884023; cv=none; b=LFjsLT5w4ZY7Tc9lye0hWKgqfDK9nQ/dLC8uSOOoW1opEc4/VuuPlz4K++bedTHIiklBaEpWiS+11r8rWMkkXOCpSvQRCEgut20PSyyCLCwUkl40IPZQnkFEM26YtbhvnYbogIsb3dZ1fkqpKqDFmiHGRL+br7nzTH6SVMhcpQM=
+	t=1774884111; cv=none; b=H27CTdc2lFFV9olYrYrdKHk5ZvHjSphn/2fChjSJ83q7GN0mSt2jeA7PvNqs8y+ohAx7upMIA8/6VAMaYlCexsnrtVvssc43uVSeBdzk+Ns+zAm3bWBY2BUEH+LbeLqkOEeGv8un9Ttzq+wUW2JLD9VcurEwVPlJsUBt07rg4+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774884023; c=relaxed/simple;
-	bh=PchLg47BoBpJohMsD4ROZvOHbC0GAawfXljfvYGjtgg=;
+	s=arc-20240116; t=1774884111; c=relaxed/simple;
+	bh=bl7KrmGRw0ScOMwx+l5gIcR3qkFAOsFnbP+m5FKjiu4=;
 	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=IQa6N69hA6Ebk+xcjwP2QxRZocVGV4f2JptLANP00IU+Wd2ghwc07osUjHe4Os9ywYWe0a65NOOVwFZ8PHzp/mOSpJroIHJpOcjW+tINGYa+JhN8iJ0yeTFWi3BlUaVnR8uZIsFOpOrNW5GPMxNNO1Zii6metSWd9QeTrQ72ugc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hyISMm5E; arc=none smtp.client-ip=209.85.128.46
+	 In-Reply-To:Content-Type; b=SWHNwhKqmRjt4bL1nm+IkztyEwWG+mdna/0QaqRk7nrqZjuYGgZhxvhK/Fike28nENtcqIovdyez2ya8vfXkn6sNod/xWAHWJAJ3OpoDT0OyavUxN5eX+YLDHOItAp/Tot6nmMcuY02ck46t9SPsAU10FLfTXgZD8oup0IgAwGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jx/mDxcr; arc=none smtp.client-ip=209.85.128.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hyISMm5E"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4853c1ca73aso46522425e9.2
-        for <linux-ide@vger.kernel.org>; Mon, 30 Mar 2026 08:20:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jx/mDxcr"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-486b96760easo50864825e9.2
+        for <linux-ide@vger.kernel.org>; Mon, 30 Mar 2026 08:21:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774884020; x=1775488820; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1774884108; x=1775488908; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:content-language:references
          :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=5NWc9Kh/cHqjmnT5hD86zA/WmWLW78ICGYIOiecTiQ4=;
-        b=hyISMm5EXvC4VA1vudXXsmmijinYb9zHntsPSUX/paBNTG+Hx3lJLQvKo3trAoFomX
-         gLZOx0y3wUZHoLrRw7duu2TUHh0i7FAmCgl2fUO3p74E6B7orvZ+2MEG2uABGlZEaTsa
-         lsDrNQYVMCYvUcWuofcVLk4Hpi/p4oTmd6BB2r5W0lykhdsOa02nNGf9/v1mReX0R6Ox
-         O4QbRGrcAw7ytOG11zYOjh//NSJtYNwSdydF0mgRQE+F+0XBngHETPuwolDVkan4SJoq
-         2MaOFWIQ7Ks5Zxrx/Al+p8OmiA2w3GuLX0DE0L1jy4ngLPPUD1Zy808+Cp2LMAeLp1SC
-         2wnA==
+        bh=8LtIoOi+S1ToaKtxTGQu8GSFJNrJDL2MG1FP76mWCFQ=;
+        b=Jx/mDxcrfYm55vrzEsvEtd8y0GxGalN2YAeZ5E+A4yoTSQcpseLsrIykni+SkeQKmX
+         bIzGG0b2lAztWLpXauDRq593LxV8GCVe9BNjo+IHcpzLXobwCori7Ot8C7zKU54XM/RD
+         dAiMMOSoszc071qUEgiKv7K5iTo+tQWJMRNQH6xafAKocTL6PAKZg8X7L03Kd3HXNexz
+         AS48b+/DrjEdpSzbbvTYnckMOrCeCihaMTw0M4l/zICKlbvJWIiDlwIaLK/li6aRMqet
+         RpFQU/3mWl96evzL4/N1iDt6IDik2TTeOOHnB3rKAMJv8GJLHpCHZQ5aKqfYm9i5pXdi
+         Vv8g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774884020; x=1775488820;
+        d=1e100.net; s=20251104; t=1774884108; x=1775488908;
         h=content-transfer-encoding:in-reply-to:content-language:references
          :cc:to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5NWc9Kh/cHqjmnT5hD86zA/WmWLW78ICGYIOiecTiQ4=;
-        b=tHbbrBl1Rbxe/Nt/8QW6vplxr2Wmr7iPPtDo6EYMB1w9oU26aCnSWfDNAky+911dCA
-         +B9gbjZPumqd/YnAclPhkrWuZ/19YJozQyd3MeF7aMdJx8QqD9P5KiFUNfryUAxUpnp6
-         dFdbiuIhjqXi+CaSpm8pzbxa1iHWCVjgToCRJzBjpOI8T9OJmXtC9XHh/B2edeL6wNhm
-         S7BIMgyH9/rn//aU00llr9/hEY3pjiyRJRg2m5RJvmqIaelOuXobW6tCc9VwwRLtPhI5
-         J3POEsPjE3CigkCw2ggw3vkyRfnuW8NgT8OQUFlFr/PkGeTtGTivBRPxQdc1VLdPM2P7
-         UlSw==
-X-Gm-Message-State: AOJu0YxOYXkhXLO9bNmASQtP3YVYiy2KDD+bHcVRUGIu1xC/fEjo6y3j
-	dUcf86OaDzidL+bJIDZRKNVpdy06UUvDbBIDsRAAWYVdArSwkmfNj98Wwx3OHQ==
-X-Gm-Gg: ATEYQzxOYFDZogEd4CgWKJPtiVzYjJPULQz1v6alyC8Wmw15T9pmqytQOx1A+kAaeUN
-	LVKqGNAdsrnCug7OVN8F0Lp8WLXIhPmirZoloXYWR2rAx28PTO9NqbXq7OynxDU4+C119Zf0zoH
-	6Hh3lmu6WkjfLaC2yW2EclXRZx26EGnpqX3lgsv2aKZx2Nh1DdgvQ8HTjIr0AEylydQhpwcCCDm
-	QuZEk5UO0+gvSlM51jOnFJHuzpIB5jhqw3gx/voYRKoB47fGK5jugMVIeo9XRHVtPQ71aclq71O
-	K9xvZVsYeKvwAIwayDW5n+5MxqgLEHrq4o/2gYeE/vZ+4KQOD8kGEVPoujbuuSdYNIQEOvv38MJ
-	v1QfVfK1fPckJvpCa0OLBOSe6eMldK+DPMULKKKby74tTm1UmPCntGm6/n6h06c5PwucL7ASURV
-	7YwD29ekwSdnSp/+O9synCVLcwY/eDSxTEZ9U41g7sSIuicoX6b+8TOA7DY8v5GH28zv/N+qHTu
-	S9ED6L9QNKUDkf/kZjZrYfM/X4VD6jkVFOOc2unJitV2dpdMRxcFANbzydnqGfzXQ==
-X-Received: by 2002:a05:600c:3b24:b0:483:6a8d:b2f9 with SMTP id 5b1f17b1804b1-48727d5a329mr234631805e9.5.1774884019744;
-        Mon, 30 Mar 2026 08:20:19 -0700 (PDT)
+        bh=8LtIoOi+S1ToaKtxTGQu8GSFJNrJDL2MG1FP76mWCFQ=;
+        b=WKXUPbM524OSm56GQaihjxhks8hIEu1XHGwLeU+9y+RE7HYFYVDOHebN4e/J4g59uf
+         q31UQKUk+lpZIjD2ZsBZkASW8UMVRL7skXIk3y9I8NGP9Bw8Kxn/1C071eZ2kK6UUZyV
+         BAwnV9GMEku1yXvVUUXcVuMAQLqd6dCpX/+6yGXeP0v/v9tv+AjcRRFKEzIQ/s4T/fvs
+         i9o4zayz2ojJjGlDaogBw5zYpjUrWkbrbM0c0KrwsnEuOYeVGdoMFHJI06i3AFWadXAj
+         v18Tb7BTxR+ufQJTy0+kOzCHPNMq0qjoLFybdfeLtN6n9cPGlNU8HX2CupmpuDy3aRTn
+         Y5Vw==
+X-Gm-Message-State: AOJu0Yy1Rk+zZyIWkovKDaA5YVbl9dsD21SI2/ltPkh1CT7e0slsLMQ9
+	WJoGqxKf60aGgnuD3edn5XFd9wzmZ76luOpVWMEW/G4oT9TyLmBtPlccmoxveg==
+X-Gm-Gg: ATEYQzz4lMtuhOPwOon7515K29fwKS4CGSXrxVxzbbKuZsPpbbOMO1uhrYDbqgwqK7e
+	hXLAhBPrmZOz5M8uJXqegNQHBHwO9bIMllc1ZFK8F3tgTf3Adr4bIhiNIXvhjtBc+BD1X/RcV+y
+	EskjOHf96bb8f9TJYc87RAh7GSstgM55inmn8fPS3f0epw7abWWFoHgYdLVvE/WKYtaL0NZKD9j
+	JA2snDJt/QfqOn4CNvv8dL8fj2c5WVvoxSnOzNwHGPHmC3IcVpeIbTQVX2Pqi/IzBN6YcBv4Hjx
+	/ElfJ3MufmAoTgGAzr6WO4guZjqqENg/GHLTmVcQPVsIPhyYSLd0PfulfJlR5aQ6np6LXyBtobh
+	Wj+k70xeVTZNOyYt89l8VHc7WkYzQqv9jQppZR9ciUtl1wBjbFM+ICH3G+AgUtL+r9bKNp3bkd3
+	aUEYZ37CnB6FpdT9PedXcB+OcF85nHqhj9rmIbRy0S590HuAFNK9XsXC+6iW+soU7LzYiWfNACh
+	+eRYNu1C1BMhzSihnnOE/jBD9x7rcYT6ESqr6DNmyLyyEXZ7uJkt0mZ0mFZltrhcg==
+X-Received: by 2002:a05:600c:c109:b0:485:40ed:2d1 with SMTP id 5b1f17b1804b1-48727ec777emr166468105e9.17.1774884108327;
+        Mon, 30 Mar 2026 08:21:48 -0700 (PDT)
 Received: from ?IPV6:2003:ea:8f1a:ba00:c5ab:4ea4:3ed7:a674? (p200300ea8f1aba00c5ab4ea43ed7a674.dip0.t-ipconnect.de. [2003:ea:8f1a:ba00:c5ab:4ea4:3ed7:a674])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43cf247472csm17144993f8f.28.2026.03.30.08.20.19
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48722c957b9sm423526885e9.8.2026.03.30.08.21.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 30 Mar 2026 08:20:19 -0700 (PDT)
-Message-ID: <bf2ecd99-cab3-413a-97e4-1828aecd2c23@gmail.com>
-Date: Mon, 30 Mar 2026 17:20:18 +0200
+        Mon, 30 Mar 2026 08:21:47 -0700 (PDT)
+Message-ID: <c23f827a-2ff9-4a6d-afcb-fce83fda4899@gmail.com>
+Date: Mon, 30 Mar 2026 17:21:46 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -67,7 +67,8 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH 4/5] ata: libata-transport: split struct ata_internal
+Subject: [PATCH 5/5] ata: libata-transport: remove static variable
+ ata_scsi_transport_template
 From: Heiner Kallweit <hkallweit1@gmail.com>
 To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org
@@ -77,118 +78,83 @@ In-Reply-To: <8592ed06-3a6f-45cb-9811-e163f31f7183@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-There's no need for an umbrella struct, so remove it. It's also a
-prerequisite for making the embedded struct scsi_transport_template
-public.
+Simplify the code by making struct ata_scsi_transportt public, instead
+of using separate variable ata_scsi_transport_template.
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- drivers/ata/libata-transport.c | 53 ++++++++++++++++------------------
- 1 file changed, 25 insertions(+), 28 deletions(-)
+ drivers/ata/libata-scsi.c      | 2 +-
+ drivers/ata/libata-transport.c | 9 ++-------
+ drivers/ata/libata-transport.h | 2 +-
+ 3 files changed, 4 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 06f3a243f..b15830bed 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4624,7 +4624,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const struct scsi_host_template *s
+ 		*(struct ata_port **)&shost->hostdata[0] = ap;
+ 		ap->scsi_host = shost;
+ 
+-		shost->transportt = ata_scsi_transport_template;
++		shost->transportt = &ata_scsi_transportt;
+ 		shost->unique_id = ap->print_id;
+ 		shost->max_id = 16;
+ 		shost->max_lun = 1;
 diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index 68ae57a89..538743e88 100644
+index 538743e88..adf38e4bb 100644
 --- a/drivers/ata/libata-transport.c
 +++ b/drivers/ata/libata-transport.c
-@@ -40,13 +40,6 @@
- struct scsi_transport_template;
- struct scsi_transport_template *ata_scsi_transport_template;
+@@ -37,9 +37,6 @@
+ #include "libata.h"
+ #include "libata-transport.h"
  
--struct ata_internal {
--	struct scsi_transport_template t;
--
--	struct transport_container link_attr_cont;
--	struct transport_container dev_attr_cont;
--};
+-struct scsi_transport_template;
+-struct scsi_transport_template *ata_scsi_transport_template;
 -
  static int ata_tlink_match(struct attribute_container *cont,
  			   struct device *dev);
  static int ata_tdev_match(struct attribute_container *cont,
-@@ -729,21 +722,25 @@ int ata_tlink_add(struct ata_link *link)
+@@ -224,7 +221,7 @@ static int ata_tport_match(struct attribute_container *cont,
+ {
+ 	if (!ata_is_port(dev))
+ 		return 0;
+-	return &ata_scsi_transport_template->host_attrs.ac == cont;
++	return &ata_scsi_transportt.host_attrs.ac == cont;
+ }
+ 
+ /**
+@@ -722,7 +719,7 @@ int ata_tlink_add(struct ata_link *link)
  	return error;
  }
  
--static struct ata_internal ata_transport_internal = {
--	.t.eh_strategy_handler	= ata_scsi_error,
--	.t.user_scan		= ata_scsi_user_scan,
-+static struct scsi_transport_template ata_scsi_transportt = {
-+	.eh_strategy_handler	= ata_scsi_error,
-+	.user_scan		= ata_scsi_user_scan,
+-static struct scsi_transport_template ata_scsi_transportt = {
++struct scsi_transport_template ata_scsi_transportt = {
+ 	.eh_strategy_handler	= ata_scsi_error,
+ 	.user_scan		= ata_scsi_user_scan,
  
--	.t.host_attrs.ac.class	= &ata_port_class.class,
--	.t.host_attrs.ac.grp	= &ata_port_attr_group,
--	.t.host_attrs.ac.match	= ata_tport_match,
-+	.host_attrs.ac.class	= &ata_port_class.class,
-+	.host_attrs.ac.grp	= &ata_port_attr_group,
-+	.host_attrs.ac.match	= ata_tport_match,
-+};
+@@ -783,8 +780,6 @@ __init int libata_transport_init(void)
+ 	transport_container_register(&ata_link_attr_cont);
+ 	transport_container_register(&ata_dev_attr_cont);
  
--	.link_attr_cont.ac.class = &ata_link_class.class,
--	.link_attr_cont.ac.grp   = &ata_link_attr_group,
--	.link_attr_cont.ac.match = ata_tlink_match,
-+static struct transport_container ata_link_attr_cont = {
-+	.ac.class	= &ata_link_class.class,
-+	.ac.grp		= &ata_link_attr_group,
-+	.ac.match	= ata_tlink_match,
-+};
- 
--	.dev_attr_cont.ac.class	= &ata_dev_class.class,
--	.dev_attr_cont.ac.grp	= &ata_device_attr_group,
--	.dev_attr_cont.ac.match	= ata_tdev_match,
-+static struct transport_container ata_dev_attr_cont = {
-+	.ac.class	= &ata_dev_class.class,
-+	.ac.grp		= &ata_device_attr_group,
-+	.ac.match	= ata_tdev_match,
- };
- 
- static int ata_tlink_match(struct attribute_container *cont,
-@@ -752,7 +749,7 @@ static int ata_tlink_match(struct attribute_container *cont,
- 	if (!ata_is_link(dev))
- 		return 0;
- 
--	return &ata_transport_internal.link_attr_cont.ac == cont;
-+	return &ata_link_attr_cont.ac == cont;
- }
- 
- static int ata_tdev_match(struct attribute_container *cont,
-@@ -761,7 +758,7 @@ static int ata_tdev_match(struct attribute_container *cont,
- 	if (!ata_is_ata_dev(dev))
- 		return 0;
- 
--	return &ata_transport_internal.dev_attr_cont.ac == cont;
-+	return &ata_dev_attr_cont.ac == cont;
- }
- 
- /*
-@@ -782,11 +779,11 @@ __init int libata_transport_init(void)
- 	if (error)
- 		goto out_unregister_port;
- 
--	transport_container_register(&ata_transport_internal.t.host_attrs);
--	transport_container_register(&ata_transport_internal.link_attr_cont);
--	transport_container_register(&ata_transport_internal.dev_attr_cont);
-+	transport_container_register(&ata_scsi_transportt.host_attrs);
-+	transport_container_register(&ata_link_attr_cont);
-+	transport_container_register(&ata_dev_attr_cont);
- 
--	ata_scsi_transport_template = &ata_transport_internal.t;
-+	ata_scsi_transport_template = &ata_scsi_transportt;
- 
+-	ata_scsi_transport_template = &ata_scsi_transportt;
+-
  	return 0;
  
-@@ -801,9 +798,9 @@ __init int libata_transport_init(void)
+  out_unregister_port:
+diff --git a/drivers/ata/libata-transport.h b/drivers/ata/libata-transport.h
+index fe5ca66fc..629ac843a 100644
+--- a/drivers/ata/libata-transport.h
++++ b/drivers/ata/libata-transport.h
+@@ -3,7 +3,7 @@
+ #define _LIBATA_TRANSPORT_H
  
- void __exit libata_transport_exit(void)
- {
--	transport_container_unregister(&ata_transport_internal.t.host_attrs);
--	transport_container_unregister(&ata_transport_internal.link_attr_cont);
--	transport_container_unregister(&ata_transport_internal.dev_attr_cont);
-+	transport_container_unregister(&ata_scsi_transportt.host_attrs);
-+	transport_container_unregister(&ata_link_attr_cont);
-+	transport_container_unregister(&ata_dev_attr_cont);
  
- 	transport_class_unregister(&ata_link_class);
- 	transport_class_unregister(&ata_port_class);
+-extern struct scsi_transport_template *ata_scsi_transport_template;
++extern struct scsi_transport_template ata_scsi_transportt;
+ 
+ int ata_tlink_add(struct ata_link *link);
+ void ata_tlink_delete(struct ata_link *link);
 -- 
 2.53.0
 
