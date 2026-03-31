@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37A182F549C
-	for <linux-ide@vger.kernel.org>; Tue, 31 Mar 2026 01:32:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C2F1A680F
+	for <linux-ide@vger.kernel.org>; Tue, 31 Mar 2026 01:35:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774920731; cv=none; b=DWgAhyoueyDGq4UnWWofCNBvG1Tm/YR34A0OQbH01vSMFWCP32h0od4OArXEilbcQw3sOQb0Eswq4OlXGryhM+9DYK8dgM6X76QuMPLbT5+2xnuWNvqG+W3cX3rzbG0DCAkgWu9snNokYPYpcQMSQ+v/+LC99AeCgsDkJeNYfYs=
+	t=1774920922; cv=none; b=YoSFe9wuYW58QsaY8Si3+faeQRyF/gZAypBPPHCR1c33ouOb3dTecsadreXcpVmdZ83WPD/KdkA+jo7GUrqtlUxauJn01GqgXJiUiPq8LLmn7hkYAt+YvyMQ46B+9IodxNiEyNuckbq3UUQGvxMzw0KeDgFwmf/4hFZnDJ+ywwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774920731; c=relaxed/simple;
-	bh=H6mT9vTY/69p/nFXTCKbzMPSWVHHmgabYybIZ0pR5EU=;
+	s=arc-20240116; t=1774920922; c=relaxed/simple;
+	bh=ZiLZEo39XARzojjtamhx8USVihYDlkVHxnJGEwQOSkg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jPkuSSoIL6h7NTZU78MtiN3eu76mut7rzxNzTSDtXxQ8FywBVfm5Py2ViF08d89NkUqhiDrPIOnM3v2eX/xaInXMsq5DGRX9aPn18ZSeFayk3NgFxCt2poNBbi6aSN9g5bsilSB8hjo/YT7itQKle/7VT/5PUyhhERzBvVDlkTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V7MLNMTW; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=YwBKaF8WGkq+4teOPswzwcjD5AczKOz/YmbwjvMf3/cKKdNBvGTgfG0h8sxpnsDb7112WRiFGfFo0BQBmoIsAYTnshvQ2PW4Hip9yWEqBphu24SqvhKNivt9bdOmfJUWNNJW4wf9fDi/4421Ppp70E05fsmEYeN2bMTD3lNbPDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bR7VWamQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V7MLNMTW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D8FFC4CEF7;
-	Tue, 31 Mar 2026 01:32:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bR7VWamQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96AD5C4CEF7;
+	Tue, 31 Mar 2026 01:35:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774920730;
-	bh=H6mT9vTY/69p/nFXTCKbzMPSWVHHmgabYybIZ0pR5EU=;
+	s=k20201202; t=1774920922;
+	bh=ZiLZEo39XARzojjtamhx8USVihYDlkVHxnJGEwQOSkg=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=V7MLNMTWwJfTS4ndSp7BwFQD1xkmhKQ+6JqMo7Xn5WOsKzfAoPHS8EbnEo9103FTf
-	 f4WCLzqDLsyaUvo99mx2WthCSRNdO1eUUmbtG4bCPTrwBc9SrP3T8TSpPCCquavEbM
-	 29Ko6WoPSZTY5xgKFQrJwIgbVAYRGkeo3vtF8OGovc2lg46hQhe60E2PnD2l3s7tbh
-	 Vigt987rdbKhnwuWu2rXd+YeQ2SUeX3Fs1CT602Z4INum2sq3Ixp1LPPtp5dQqvZjE
-	 W7b3IjIXXPIXgQsXM1EkY/qbXFH0D11lr4Qs5dKDcnbL0oQHjUBfNcHLK1AkQ+p0HN
-	 MQmLgIxN3AJrA==
-Message-ID: <70d9cb85-97c4-4a7b-924f-f8cd6434d416@kernel.org>
-Date: Tue, 31 Mar 2026 10:26:12 +0900
+	b=bR7VWamQPBHUw1eZUsXVd3TiEmw+xF3UYmbjykPqRDnul7/bGEpbLE1FpS4PiqlMj
+	 IRdEt741g6mYDWVyA7boVMiaZSGtCFZUgQhM6xN1+zz+BiPO8d3Nc5+ylqFR3SmivK
+	 v6W0sChRbkWIne05oM+e2VKCHppmozUI//un+0jD3iRLmrU6xtE7mnX2eUogf0kzh3
+	 cH4wVIbf3r/saEFCpdedg6n4FN6dGs5hoXLCwnKXnAyC5NrooIHU8z6Zgme4bCwJbC
+	 lT0Idf25BiQG9Ryhm6Nj1tVywYruFpH4TPSrG9m76+rIVUOQkCVHR6XlqWdvzyHBYI
+	 LB+AGuVMu+qkg==
+Message-ID: <d1916d58-6bba-44fa-943e-a8f879619586@kernel.org>
+Date: Tue, 31 Mar 2026 10:29:23 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,27 +35,28 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/5] ata: libata-transport: instantiate struct
- ata_internal statically
+Subject: Re: [PATCH 2/5] ata: libata-transport: inline
+ ata_attach|release_transport
 To: Heiner Kallweit <hkallweit1@gmail.com>, Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org
 References: <8592ed06-3a6f-45cb-9811-e163f31f7183@gmail.com>
- <ad6ef45a-1e47-4bc4-b9fd-6ba3ec8ca83e@gmail.com>
+ <f9d372b0-cd10-46b2-821f-80c4c29c8992@gmail.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <ad6ef45a-1e47-4bc4-b9fd-6ba3ec8ca83e@gmail.com>
+In-Reply-To: <f9d372b0-cd10-46b2-821f-80c4c29c8992@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 3/31/26 12:18 AM, Heiner Kallweit wrote:
-> Struct ata_internal is only instantiated once, in module init code.
-> So we can also instantiate it statically, what allows to simplify the
-> code.
+> Both functions can be merged into libata_transport_init() and
+> libata_transport_exit() respectively, thus simplifying the code.
 
-s/what allows to simplify/which allows simplifying
+That is not really simplifying anything but rather removing somewhat
+unnecessary helper functions that are being called once only. So let's just say
+that here.
 
-With that,
+Other than this, looks OK.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
