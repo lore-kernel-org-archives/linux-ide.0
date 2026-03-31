@@ -1,66 +1,33 @@
-Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C9C3E1D05
-	for <linux-ide@vger.kernel.org>; Tue, 31 Mar 2026 11:41:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F5EF38F93D
+	for <linux-ide@vger.kernel.org>; Tue, 31 Mar 2026 20:09:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774957301; cv=none; b=k6fhePFhDT4WO0ohVMgIrgZ98mIdkuM589QgbUEPGfsC55VFmiIc5OEVbsOOM1KoiL+4N9WYsM4yGRkCElIsAIyW+B12UWvZJygPNElKH5ETqiQg6dQlRLN0dZB9J+iS+9umB4HD3K15pOLvN1d90Am/ULTHry2KtgKiD/oCkOA=
+	t=1774987790; cv=none; b=tmxZDKAopAUFw53/7yUzxN/hoQ9cvCovE618LYdYPupN0KALComz1ZE9+6r+MERJHf0m+Jrb3BmxCBvCSEZhg1v0UEUCm0d+vfWowXamYSAD694JHowcAiWQER04drLdHLhcz6PDw7HRq9C1KLwkFwoaJDeb7ScyNi0kXU6LxgE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774957301; c=relaxed/simple;
-	bh=vwQlzq0mdhTgI/PHzyVMY9HnUHMl1gjyDR7/2W07Omg=;
+	s=arc-20240116; t=1774987790; c=relaxed/simple;
+	bh=Hx+riTK0Ch2jajHHa2lAnuETCYjG8hF0TZeIi0q88ek=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TghrAVPPBnwS48SwB5GRhRpcyvrWhz2yHnwL5RYSW8VR9YvvibQMxA9YELO+n+j4PI9/AC3iBzURd9293NgIG7Wu4KSykJyXMsKzB5DPrKU172ifv1RH3aOl5IjzJa2PzU6xu/sm1d4p71VO0Way7CFpINfnv9i1BSYAWBEMfWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nOrdK3Kw; arc=none smtp.client-ip=209.85.167.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 In-Reply-To:Content-Type; b=C7yv7WeKS8UfVIa1+fE0kax5X2OMTNNdHPhrMecGCUJFr6BkGA6p21soxWNWW33NxfbHYJKWaW1iJR2mWSwZ824VSw9kLJ/ln8W2NfikDvTy5QyJp1g91mC3NOfOeKbR7Ekpnv2xtQvw0sj2cFtQoLUlsYafYk7i6igOtQEhgHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fJIcwkb6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nOrdK3Kw"
-Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5a2b5366c7dso2585383e87.1
-        for <linux-ide@vger.kernel.org>; Tue, 31 Mar 2026 04:41:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774957298; x=1775562098; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Qj9gE4kBX6rgK0AvPjemgB0jdHOJa/5lrZ++2CWyy1E=;
-        b=nOrdK3KwTOeRdaQhG2HCwOIvedLaoWW78T9J7zhjx8I6GxqLt9te57WuyCbXhLH/Iu
-         h1ddw/uLyqCBGnUa7z2qrG2vDM5y+IlBOnVJY0Z7Vg06vP1uKHfxRqxAYijDjdpHITik
-         JYojrYN4YRw9gZBSQ8X0IuWsnUJLBGFuTJ+fnByIDkUcBTUo825WLCNEZteJWAjvP9Vc
-         GdyH4WOx7mJqlJuoFxO0EdIrNsSPJfxUPmg/iD+4a8vR68I+sMmX6OVOsS6ojrAXwvNi
-         C4iKfOotb2ggga7QXPxhnYxaDyMDesNSSViBE1+IYPc1nLim/qpWMXdhoJleO98afzvO
-         28Tg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774957298; x=1775562098;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Qj9gE4kBX6rgK0AvPjemgB0jdHOJa/5lrZ++2CWyy1E=;
-        b=LrrlF19fFHzQr5uCzgVk8nK0UjoBkmk34wvPkPFHIvYBDSAkR0v65Nj4xFFARf6he6
-         1920716pG4AoOWXTm6M/haS0bltFx7FAuStCNkKZGc4CTUBoChn+5OAJTyAZ3C032w1M
-         H5AYG41Q8SYqHuyJMn6Ge5ninZVL89CxkGD6gyYR3wi64+/FD7kZMEj5rLT49Y17l6h1
-         TtMiYsNufuhKK/IrsmGSSHVcO9qAQKtlvx/GeRO+WKaEAgi+KAAhRYYDrm0aoHojxh6c
-         pdHD23SViuLaMZU3O5JWI8F4Jl/WGaHj/VHlNr0LqYl7OjHwOxevRmg4MchDNBnxJJ8e
-         b3Ow==
-X-Gm-Message-State: AOJu0Yxq+akYKLe8alpf9xKGN+ZVKviOP3radOf+bD50mA2KwwpNTm42
-	e1Vptp69C4+9Soq2ztBB/CjO8MfEGM1+IDpgXZVMhBikGPM+mEN+IPrM
-X-Gm-Gg: ATEYQzzeUR+KNGCymgUpxp9OAjoE90AuyQ+cuN2jhsnMSwl3IHyDIIDoNZxSHge++kh
-	HJdTON3N80uybpj6SUZ5IffnLqRPHu4Bz8Ye+RB59MiG51SngwZeIi1c+h0ZTW1ZB/hM4Eqbm9n
-	Nlk39QIk1dSGfBcLFEL0j2BztcVKD6eYMXlhUh29MSmOpkpwWkP9sGULOaroR+0Qm7NUWS9WM1W
-	oz7mSpGBW3PxiWPHMbBOOSXDU7APP1kLnepMFj1hg/rqLMaYYU0VR8MVqElfbyVSsoZixWKkUw/
-	xarxpR+JP6A4eDM+eBUIEcSrBJX0RDMq2qoPJxJAbMJsSnCRBm1cUahnIMdg12enNIuJZ7WjkfQ
-	Aa3SMw2V2zL7u+n4TVJowa1x+nRovMexp9bY3ozsQwQ7pzCFDtpPa1dx2q10L4G/wf8iiD7BfIA
-	M5XHWZGjGlWmLveBqmEVK9+bvd1JzPCauaAlcmHzFT3AXB4LrZCZTazhtO37YruqApm7XO0KXxY
-	kKF
-X-Received: by 2002:a05:6512:1193:b0:5a2:bcbd:579c with SMTP id 2adb3069b0e04-5a2bcbd595cmr728062e87.28.1774957298013;
-        Tue, 31 Mar 2026 04:41:38 -0700 (PDT)
-Received: from ?IPV6:2a00:1fa0:306:797:c4a5:b190:f091:2055? ([2a00:1fa0:306:797:c4a5:b190:f091:2055])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5a2b13f4345sm2417866e87.17.2026.03.31.04.41.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 31 Mar 2026 04:41:37 -0700 (PDT)
-Message-ID: <172bb3e2-03fd-4440-9a5c-a3b4b174c0a0@gmail.com>
-Date: Tue, 31 Mar 2026 14:41:33 +0300
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fJIcwkb6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39730C19423;
+	Tue, 31 Mar 2026 20:09:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774987789;
+	bh=Hx+riTK0Ch2jajHHa2lAnuETCYjG8hF0TZeIi0q88ek=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=fJIcwkb6ku2PuxKp8Pdj+nQDVMp4Krm+aQnbMEAK+n6EAatQhiQrshQ3++nfA8POy
+	 EOJ69yybe0Vr4ry1woQ+vn9b7NwfxiUIUP45UGfEjjzQnjdXw6Wu7DfI5sJOnEMi9U
+	 hNmi/sd9vxFSa4z93iJvnGDU7b3oavCwwlJlcKJEstVNhIBh5KzEyenhXDBXm7OQOb
+	 cjFYif9ImeyFRH6jqe2wf8bkSed8aeZGjKmRTAcy05rVApBtzzgJkIik78hvoRiiFp
+	 XshQOwGx0ujuKhkCY8YVA2AlNuVKPgwOlqxFL7Z3CVStkbvqAFJCT0bQUe8BdKt9YG
+	 X+YECih/R7FdA==
+Message-ID: <c119c322-d59e-40a0-93c0-f1a4b0da6f56@kernel.org>
+Date: Wed, 1 Apr 2026 05:09:47 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -70,47 +37,59 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH 5/5] ata: libata-transport: remove static variable
  ata_scsi_transport_template
-To: Damien Le Moal <dlemoal@kernel.org>,
+To: Sergey Shtylyov <sergei.shtylyov@gmail.com>,
  Heiner Kallweit <hkallweit1@gmail.com>, Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org
 References: <8592ed06-3a6f-45cb-9811-e163f31f7183@gmail.com>
  <c23f827a-2ff9-4a6d-afcb-fce83fda4899@gmail.com>
  <6a02ae15-bc91-4a4d-be2d-87e311584ba5@kernel.org>
+ <172bb3e2-03fd-4440-9a5c-a3b4b174c0a0@gmail.com>
 Content-Language: en-US
-From: Sergey Shtylyov <sergei.shtylyov@gmail.com>
-In-Reply-To: <6a02ae15-bc91-4a4d-be2d-87e311584ba5@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <172bb3e2-03fd-4440-9a5c-a3b4b174c0a0@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/31/26 4:42 AM, Damien Le Moal wrote:
-[...]
->> Simplify the code by making struct ata_scsi_transportt public, instead
->> of using separate variable ata_scsi_transport_template.
+On 3/31/26 20:41, Sergey Shtylyov wrote:
+> On 3/31/26 4:42 AM, Damien Le Moal wrote:
+> [...]
+>>> Simplify the code by making struct ata_scsi_transportt public, instead
+>>> of using separate variable ata_scsi_transport_template.
+>>>
+>>> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 >>
->> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+>> One nit below. With that fixed,
+>>
+>> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+>>
+>>> diff --git a/drivers/ata/libata-transport.h b/drivers/ata/libata-transport.h
+>>> index fe5ca66fc..629ac843a 100644
+>>> --- a/drivers/ata/libata-transport.h
+>>> +++ b/drivers/ata/libata-transport.h
+>>> @@ -3,7 +3,7 @@
+>>>  #define _LIBATA_TRANSPORT_H
+>>>  
+>>>  
+>>> -extern struct scsi_transport_template *ata_scsi_transport_template;
+>>> +extern struct scsi_transport_template ata_scsi_transportt;
+>>
+>> Drop the extern please.
 > 
-> One nit below. With that fixed,
+>    I'm afraid this will turn the variable declaration into definition,
+> and I don't think we want that in a header file... Unlike the functions,
+> *extern* with variable declarations is not implied, IIRC.
+
+Arg... You are of course absolutely right. I was thinking "function" and
+overlooked that it is a variable. Apologies for the noise.
+
 > 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> [...]
 > 
->> diff --git a/drivers/ata/libata-transport.h b/drivers/ata/libata-transport.h
->> index fe5ca66fc..629ac843a 100644
->> --- a/drivers/ata/libata-transport.h
->> +++ b/drivers/ata/libata-transport.h
->> @@ -3,7 +3,7 @@
->>  #define _LIBATA_TRANSPORT_H
->>  
->>  
->> -extern struct scsi_transport_template *ata_scsi_transport_template;
->> +extern struct scsi_transport_template ata_scsi_transportt;
+> MBR, Sergey
 > 
-> Drop the extern please.
 
-   I'm afraid this will turn the variable declaration into definition,
-and I don't think we want that in a header file... Unlike the functions,
-*extern* with variable declarations is not implied, IIRC.
 
-[...]
-
-MBR, Sergey
-
+-- 
+Damien Le Moal
+Western Digital Research
