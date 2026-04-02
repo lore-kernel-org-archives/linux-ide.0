@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A42561A2392
-	for <linux-ide@vger.kernel.org>; Thu,  2 Apr 2026 08:34:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4649A3793CD;
+	Thu,  2 Apr 2026 08:55:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775118889; cv=none; b=bGDqE44WImFdCNv4GdJ/74wRpvjBFReyczSgW6Y/JtHoZKCcKktxME5vCfz9ujeRcmOX3FVs6w3fv96wmtbyc/CZ4KddgSCrYX6lg7OA6FF8EN53HfvHsQ2yYigMAnq9v37bNehlfLj2U6bcYbM99ejfScfgDE2v7DfC2fRRM3g=
+	t=1775120145; cv=none; b=Ey27FxWyZFBPIcVfEWPNpvKUKLWLKrg2Dl9WKqJckEnacd6KvkqxO8pI35qdkQiRjzauGVHFaLH+Zi89shYRiWX45OCyul//nQpxeSu0F92jylZHir82xLsfPpEhaCmyrzK0rJoOd2REVWV5hmotMO8Q68Kf4jWv5G9hGri4jlc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775118889; c=relaxed/simple;
-	bh=UJ2MzaMJSIQrC/o8Gpn/sM/JVlYbaF6uaFg4UP1trcI=;
+	s=arc-20240116; t=1775120145; c=relaxed/simple;
+	bh=nmZ3NhRcHniIQPQwmqvoaYukX1M9nYGCiSPPVrAgK6E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q+40eTFrTrbWj5N5sf2VePNdlS/TTwp3Q6gTNQ88kwlEQ3IkNVtOvyMtIpEB26qEBDJ13Vtogq3PFX52G8+5/6vEgF9Cug7tg5m0Gw6z7jKBefZ6dw16zMIm1tlrq/o9FEv1oZ78SxH/azGeq7qhrUjlHhLar75XSdOD+nwMEU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NmWjkDZm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=KPQ2my8ksR4xM38cIqsymDDUCqG2zQgZVP1xIvFjFKsUVm74L48X4/gY4of0TkM4U517wTzb/y4r6cd1X0oRz9Ci2a/OSkZ5UmdQNoz/z2VYUTTYKNeBE05MCQ3cH0ioBiqFLndrEZy3YDL42O1QnZtrtFw72oGmz/u7YibHw2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OT92EOzM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NmWjkDZm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6266BC2BC9E;
-	Thu,  2 Apr 2026 08:34:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OT92EOzM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7BD2C2BCB0;
+	Thu,  2 Apr 2026 08:55:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775118889;
-	bh=UJ2MzaMJSIQrC/o8Gpn/sM/JVlYbaF6uaFg4UP1trcI=;
+	s=k20201202; t=1775120145;
+	bh=nmZ3NhRcHniIQPQwmqvoaYukX1M9nYGCiSPPVrAgK6E=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NmWjkDZmvXFS3sc7H7Iy0TikaxHj2SzbEvZkqYVje7tL+aif+8BI1n4eLWP97on8t
-	 SiB88MW3y/ccLusMEPX5/Wv/gYdIHyOfWHTB7L/vCGTvoe3IRuJgIaL3BUlrqhiYpQ
-	 rvHkIi92rgnD1kd+shE6WJysOPkwibYW75bI8O4+PN8/5FtU6NA24A9tzH6q+fX6J2
-	 nh4AiaQRQp1KXiXwVfDdKMiZJW19V6jAtWQvAqSheaObkQX5jDNCD1ok74RzRz4ttE
-	 ys7VSYQ6XjYzfQsXMnVfg59ahuaRVPSEmV4cVpdUaLf4Jtl3zKYg0gG10aGzdaH24L
-	 VpFyJFvc5Si2g==
-Date: Thu, 2 Apr 2026 10:34:45 +0200
+	b=OT92EOzMXoUoJEwzV9w4a8VZKZzDlQ+7NPo2sYh4Fnxu1uXQ2oYij/WUzFuGJiPKM
+	 zQyUEHDxcyu9VbWLmoR2Se5nw5GQBqiG28PplW4yoMwFmNysYMqUgqgyWXxiw8x3Np
+	 oXja4ayRkMaOT/mMc4v4IwEaA316f21iNsIxo43Y3j6iB4mbiCH6apoCK3IToiT//4
+	 zirj3M896+GFatNI30K80roLzW+BMrbCkZbouCohmad6tI8KkhxZNhGUIxCTMnv+OC
+	 NjKMy36N9eqMZPdC0qOsWthuPkd29Q8ZmEPCznVQv86YyCEeLsDBs6lpRP8NZ0ICiW
+	 r3ibnVfjaEqZQ==
+Date: Thu, 2 Apr 2026 10:55:41 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH 0/5] ata: libata-transport: series with further
- refactorings
-Message-ID: <ac4qJZKTLGTpob9w@ryzen>
-References: <8592ed06-3a6f-45cb-9811-e163f31f7183@gmail.com>
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ata: libata-eh: Do not retry reset if the device is gone
+Message-ID: <ac4vDZVvJydch994@ryzen>
+References: <20260402011101.676267-1-ipylypiv@google.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -42,37 +42,26 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8592ed06-3a6f-45cb-9811-e163f31f7183@gmail.com>
+In-Reply-To: <20260402011101.676267-1-ipylypiv@google.com>
 
-Hello Heiner,
+On Wed, Apr 01, 2026 at 06:11:01PM -0700, Igor Pylypiv wrote:
+> If a device is hot-unplugged or otherwise disappears during error handling,
+> ata_eh_reset() may fail with -ENODEV. Currently, the error handler will
+> continue to retry the reset operation up to max_tries times.
+> 
+> Prevent unnecessary reset retries by exiting the loop early when
+> ata_eh_reset() returns -ENODEV.
 
-Once again, thank you for the nice cleanup!
+ata_do_reset() ?
 
-It would be nice if you could send a V2 within a few days,
-so that this will make it for 7.1.
+The loop is inside ata_eh_reset(), so it sounds a bit weird to exit
+the loop early if the function itself returns -ENODEV.
+
+
+I guess you could also write it like:
+Prevent unnecessary reset retries by exiting the loop early when
+a callee in ata_eh_reset() returns -ENODEV.
 
 
 Kind regards,
 Niklas
-
-On Mon, Mar 30, 2026 at 05:17:12PM +0200, Heiner Kallweit wrote:
-> This series aims at further improving and simplifying the code.
-> 
-> Heiner Kallweit (5):
->   ata: libata-transport: instantiate struct ata_internal statically
->   ata: libata-transport: inline ata_attach|release_transport
->   ata: libata-transport: use static struct ata_transport_internal to
->     simplify match functions
->   ata: libata-transport: split struct ata_internal
->   ata: libata-transport: remove static variable
->     ata_scsi_transport_template
-> 
->  drivers/ata/libata-core.c      |  11 +---
->  drivers/ata/libata-scsi.c      |   2 +-
->  drivers/ata/libata-transport.c | 117 +++++++++++++--------------------
->  drivers/ata/libata-transport.h |   5 +-
->  4 files changed, 49 insertions(+), 86 deletions(-)
-> 
-> -- 
-> 2.53.0
-> 
