@@ -1,44 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3223156F45;
-	Thu,  2 Apr 2026 08:28:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A42561A2392
+	for <linux-ide@vger.kernel.org>; Thu,  2 Apr 2026 08:34:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775118481; cv=none; b=q0MnOukWMwNBMLkaaWJW46LXulfRUWEjpnBEnilSgawrcZu2gKETjUPOukidqyd+ulRE+mBQZ/Hn/VczluBGogZ9QeEmDHLwCuYONuklYNrnIFZdLPa1LYvSbNo7YUoplt2vb7xbbZxL4gev1JK/vtZJrvKYs7q0GtLIsKHRjJk=
+	t=1775118889; cv=none; b=bGDqE44WImFdCNv4GdJ/74wRpvjBFReyczSgW6Y/JtHoZKCcKktxME5vCfz9ujeRcmOX3FVs6w3fv96wmtbyc/CZ4KddgSCrYX6lg7OA6FF8EN53HfvHsQ2yYigMAnq9v37bNehlfLj2U6bcYbM99ejfScfgDE2v7DfC2fRRM3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775118481; c=relaxed/simple;
-	bh=G8SiDjGqC1Rg8EZnFk69JOSwtRzvSWgjuNNkZjvYGHQ=;
+	s=arc-20240116; t=1775118889; c=relaxed/simple;
+	bh=UJ2MzaMJSIQrC/o8Gpn/sM/JVlYbaF6uaFg4UP1trcI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rbczeQV2Oaqiz9U22vLgCGKGrwv1e4SP8dZH1OvApYH6wEbDMIcLkBbmqfZDihlKaDIC49txJikStKlGHRoIhMYIr5LiEZT4oewnl0Cwg3jCmzV/O2n8IkOawgpH0WN5NvASoUNZR5I9PDuD26zoBigBNf4T7EkHDEF3sRbGh8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AHcL6rtE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=q+40eTFrTrbWj5N5sf2VePNdlS/TTwp3Q6gTNQ88kwlEQ3IkNVtOvyMtIpEB26qEBDJ13Vtogq3PFX52G8+5/6vEgF9Cug7tg5m0Gw6z7jKBefZ6dw16zMIm1tlrq/o9FEv1oZ78SxH/azGeq7qhrUjlHhLar75XSdOD+nwMEU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NmWjkDZm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AHcL6rtE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BDECC116C6;
-	Thu,  2 Apr 2026 08:27:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NmWjkDZm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6266BC2BC9E;
+	Thu,  2 Apr 2026 08:34:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775118481;
-	bh=G8SiDjGqC1Rg8EZnFk69JOSwtRzvSWgjuNNkZjvYGHQ=;
+	s=k20201202; t=1775118889;
+	bh=UJ2MzaMJSIQrC/o8Gpn/sM/JVlYbaF6uaFg4UP1trcI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AHcL6rtEvgdWEcZxsGumjDKKS1ZGFXwhea0Tz4NLdQdTJlt/nrwpNIn7JC9IEpjtL
-	 gZQN6T7U0r3c7phc5r+lrmdZblKh7RVeiWUjxZNZEPpC8K9NOsgGcfz8lMt7YGXVn4
-	 68x0CVNNoiWtmdRZUGoHNgRVQNFNrVJElUuoiNrmC6QyUz+eLZYMVeXWMPLIN/tPV2
-	 VGcxBNynWYdJ5P2ISH2CG1bIdeQNeLtrtt0Pb/x4XZ/vgSc8QHQe/P83xmGmJa9Ejg
-	 fi4WPf3zSac4ZHz/8dsaJ0+aU+zJFmJNRNqPU5LRtDkAHRWv5Kzu+MYYAmFSQqTjMj
-	 VX+IG7m8nnEJA==
-Date: Thu, 2 Apr 2026 10:27:57 +0200
+	b=NmWjkDZmvXFS3sc7H7Iy0TikaxHj2SzbEvZkqYVje7tL+aif+8BI1n4eLWP97on8t
+	 SiB88MW3y/ccLusMEPX5/Wv/gYdIHyOfWHTB7L/vCGTvoe3IRuJgIaL3BUlrqhiYpQ
+	 rvHkIi92rgnD1kd+shE6WJysOPkwibYW75bI8O4+PN8/5FtU6NA24A9tzH6q+fX6J2
+	 nh4AiaQRQp1KXiXwVfDdKMiZJW19V6jAtWQvAqSheaObkQX5jDNCD1ok74RzRz4ttE
+	 ys7VSYQ6XjYzfQsXMnVfg59ahuaRVPSEmV4cVpdUaLf4Jtl3zKYg0gG10aGzdaH24L
+	 VpFyJFvc5Si2g==
+Date: Thu, 2 Apr 2026 10:34:45 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Haoyu Lu <hechushiguitu666@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Viresh Kumar <vireshk@kernel.org>,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ata: pata_arasan_cf: fix missing newline in dev_err
- messages
-Message-ID: <ac4ojZl_qe3NXwwi@ryzen>
-References: <20260402021027.56-1-hechushiguitu666@gmail.com>
- <403a9722-02b8-463b-9980-e7de32e30008@kernel.org>
- <CAEZ4rQ8QMQ8q0ev2oSmVUoFw=02Sp5BEqTjzr_=Y+pv8Uk8osw@mail.gmail.com>
- <87f5a30f-0b81-4c88-bd33-c89970021ec5@kernel.org>
- <CAEZ4rQ_c9m=3Ksp15706xq7TtH-9SxF8vaNNZoNj_dBgP7EuNw@mail.gmail.com>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH 0/5] ata: libata-transport: series with further
+ refactorings
+Message-ID: <ac4qJZKTLGTpob9w@ryzen>
+References: <8592ed06-3a6f-45cb-9811-e163f31f7183@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,41 +42,37 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAEZ4rQ_c9m=3Ksp15706xq7TtH-9SxF8vaNNZoNj_dBgP7EuNw@mail.gmail.com>
+In-Reply-To: <8592ed06-3a6f-45cb-9811-e163f31f7183@gmail.com>
 
-Hello Haoyu,
+Hello Heiner,
 
-On Thu, Apr 02, 2026 at 03:48:42PM +0800, Haoyu Lu wrote:
-> Hi Damien,
-> 
-> Sorry for the mistake!
-> I didn't realize libata patches need to be based on libata/for-next,
-> not mainline.
+Once again, thank you for the nice cleanup!
 
-This patch was not based on either libata/for-next or Linus's tree.
-
-
-> I see the driver has been refactored and the newlines are already fixed.
-> I'll drop this patch and follow the correct branch for future changes.
-> Thanks for the clarification!
-
-There has not been any newlines added upstream, your fix is still valid.
-
-However, the function has not been refactored, you must have based your
-patch on some downstream kernel.
-
-While the patch does apply, and I could theoretically apply it, please:
-
--Send a V2 based on libata/for-next or Linus's tree
--Pick up the tag from Viresh
--Change the subject from
- ata: pata_arasan_cf: fix missing newline in dev_err messages
- to
- ata: pata_arasan_cf: fix missing newline in dev_err() messages
-
-
-If only to give you experience working with upstream kernels.
+It would be nice if you could send a V2 within a few days,
+so that this will make it for 7.1.
 
 
 Kind regards,
 Niklas
+
+On Mon, Mar 30, 2026 at 05:17:12PM +0200, Heiner Kallweit wrote:
+> This series aims at further improving and simplifying the code.
+> 
+> Heiner Kallweit (5):
+>   ata: libata-transport: instantiate struct ata_internal statically
+>   ata: libata-transport: inline ata_attach|release_transport
+>   ata: libata-transport: use static struct ata_transport_internal to
+>     simplify match functions
+>   ata: libata-transport: split struct ata_internal
+>   ata: libata-transport: remove static variable
+>     ata_scsi_transport_template
+> 
+>  drivers/ata/libata-core.c      |  11 +---
+>  drivers/ata/libata-scsi.c      |   2 +-
+>  drivers/ata/libata-transport.c | 117 +++++++++++++--------------------
+>  drivers/ata/libata-transport.h |   5 +-
+>  4 files changed, 49 insertions(+), 86 deletions(-)
+> 
+> -- 
+> 2.53.0
+> 
