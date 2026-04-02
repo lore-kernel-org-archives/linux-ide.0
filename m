@@ -1,107 +1,98 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pf1-f201.google.com (mail-pf1-f201.google.com [209.85.210.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA3E30C35F
-	for <linux-ide@vger.kernel.org>; Thu,  2 Apr 2026 15:34:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56F3736308D
+	for <linux-ide@vger.kernel.org>; Thu,  2 Apr 2026 16:07:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775144050; cv=none; b=WFh8YGud7TY4euNm/I/2A31TjzYi0VkDShItXWSoLiwHIga7kfTbVPtaGdoFpfYNVexvclExWP+kwWJXTi1d2MnvPyPbPv3Hw/1NSSyy3b3le8oFaHVG7WTy+Nc8JxyTPIBVvueYzMglAX6UsgKcALJCh519vlItGBbWLUjJsCo=
+	t=1775146032; cv=none; b=ZBZlyIhCJT93ij1VPxCQ9zF60IzPg8gcfOfQvlQHnZ6rmUo7cAuFgL1RooQ4ZvYu5zeXmDB/aGUMlh6LqMMe14Gf7yTnLaB5LFcuEIUJ5/fju2S157KB3f4eYZAaM+SQPMvcHEzqP1SypflZjVkcxRSqoDoMgL8aSA+r84xyZ2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775144050; c=relaxed/simple;
-	bh=VL4lBHVu6zmGUU9nz+PN/SJ7XueMUbcbTQXKq9IeTYY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rzjoa1x39PJsR5K6LbaudDjoAMqZNHE8EbcvaZw4nt1SsdT/CfLzTRziAQxpCOiLFMe7Ta0zBlAknlBn5mI2DWXY2UGHsVVgs87u9CMaeCCoexE44vfQfd55zhj2HYSPmbpUDwidptaoeEAccMHAJe1TITuD2TqahiYIpMgN+o0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=FDDFR6OF; arc=none smtp.client-ip=209.85.214.181
+	s=arc-20240116; t=1775146032; c=relaxed/simple;
+	bh=lJJPLiWQ88hF2omeXe9q0oHz1xITYMdJjEh/PkMHz9g=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=uqJ1qOi7d4ny7imgBjCkX1qFrgwAdom+drgrov59+VArWe+C0M+fgpaR9UPkMx0LrV+fmrSPQKniymq2zPOpPz3k9w0jyo/dlymQ7MP0vDCS1RQ0EFmrtjplMKZwVDtwVpAxsK+X3zhwECVPWRuRW9jXfgqeom3BaA7z228veB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aXO1DQmP; arc=none smtp.client-ip=209.85.210.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="FDDFR6OF"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2b0b260d309so77685ad.1
-        for <linux-ide@vger.kernel.org>; Thu, 02 Apr 2026 08:34:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aXO1DQmP"
+Received: by mail-pf1-f201.google.com with SMTP id d2e1a72fcca58-82ce1c395ccso1534368b3a.2
+        for <linux-ide@vger.kernel.org>; Thu, 02 Apr 2026 09:07:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1775144049; x=1775748849; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ktk7xptOhNTCBPMKzgE2ARifOuymzl3kcaYnuA/xXMc=;
-        b=FDDFR6OFNce6Iddws3/Dt00EL/gx4rN5tVSAXjCF18GV8w1xcfo9NSCeg4sLkT0+YE
-         I48wKaH4dY1nmQHbaqBlNtCIDLOxHSOowdOi0dfUVTyONsuD1tk+VLP1SAI5aAQqF4Qd
-         su9c2dfszjo4ycpoSctih73hI6qVx46PTRYzheLP4HVrXN2QO27LN4hxpBxE0o4HPyMe
-         /ZaMFswAXZ+Yfk+h8vebFMiGRIAaHf9MOQuTYBl9z3P2yqVKfb48o+F6yreIWsa9rYcc
-         hcEGzx1dvsbYHyI2dZ/n2BSdFApb5BWV6PzQUUF5YrTNWZKuZdCk7rPp3FgfrxX7b0nR
-         d7ng==
+        d=google.com; s=20251104; t=1775146030; x=1775750830; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=tY3YLUnv7koH8w7vvcawAH8VEOQcI6MwE/0pyNwOOEs=;
+        b=aXO1DQmPwvZtoKItVobD136gWUmQtqL4adFvwQl4KLICUv3teKt/O+Mu8xAz54s2w2
+         wptloYqcZ1NoEKm9RGROdM03D5TFZRXkVDBZxoQ/JzQ19bAt5QfPZw02y71T5ydzsVW9
+         L65LXdlt9OLEjoYAnseb0TGE5I5FR/zpZAFcOLon/04GyliFeyt4SNioIFdeAKF07tU1
+         i1ZwM4S/LO2J3AApQD8DsUBiryTVKqZGhDKkDtt2lZn2cS38tLmoUgVJ6/B1mCB6N45x
+         9UGE0Oo5T3TEivMyRjlCSmMf3kHEo88Aq86YexQBx0CQMuK/qKNic3V8nPJULCNv4gZA
+         YmDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775144049; x=1775748849;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ktk7xptOhNTCBPMKzgE2ARifOuymzl3kcaYnuA/xXMc=;
-        b=k4kz6FLiQLIEh2h//G41rNdh/w1QNUV1eM4NcMMkQJKXx9iCD1AnjylngMdwDc3rre
-         EhoVJElYVi1UkXo59OEswZkusyQoSrhjfcjT2V0ouucCziyen39TFdjA5nFktRtF8thi
-         +ELMk5YY29lVHhcnZSBl2qpDYi4zJrLYNE8jNk0Je9uaApzfNWuFZ5J5AxaDOybMi+ue
-         ATpXebcHo8LeQh1Dthmz9Yobsx09he/PGTOD27FcTYWpOmjLzqKp5xW763v+i3HzCfKq
-         s8CEAhMR4aJqIBwLr1bbfF/w/D/tkGNHYXGkJ4zPiakU3ugGO7VkFqtanLddqNGKa4Ub
-         +4rQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWCwfVmtpR217+VY1WGXwoEhvRkAGpQsoF4/jZnnLn8Y6oCKg/KLe6btRWPGcWewC0f1j1Iju9vD+c=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzGC7jwmtp4jOzNVMxw9UwxO1qrRsl++5/0IPi96/gKlDaR6aNV
-	6ZntnF46BcsaCGnfFypMrkAQYUAhkHQjBNAgr1LAwvS9J44wWtsPo6ebjAY435VH8g==
-X-Gm-Gg: AeBDiesRpf24lwG+2kPK+z+9Ew4IWdP3TFQZIdyrUOiZXGahLqJ1FgjWdmDs52vOor/
-	uDkbeVkaK4m+/EhPhhRtVvkGf+EVwj02Z+U56uvyzWFsQo6sH2+e4PeVxl5mHDU7qMY/QLqS2Kl
-	1heV6gbD30SRgutp8YKEg/SPw7N5x8lgA4tJ6ETrtpYj9cnWnozqaEMMYghNOYhb9ydrcdXvbV5
-	8mgAvZVD53e5M8Mp/jpmmMjzM797wEad4P5tvuchyDhFtdEOkBQlBl7z/rjphjYjO9+V1BZHSdj
-	+QjorILq0Nr499pkzmuaEgOynU9vLcGyBHM27seuSNoTVZIzHdpZXvFmaeuTpf5ZAeyRmd+n8Bw
-	9LNOkTcYgDiUkDzWJDj/CofJw0W1njoGQLklooN5RV492i31xdGjnImepQIXx3XuRcJu3TVoYve
-	puwUGp1IonhCBoT7i9twdpo1oUG2TPqPlE8ZBYol4sMBIp7imWy5XikNLgQs8T/A==
-X-Received: by 2002:a17:903:1ace:b0:2b0:4d40:ce18 with SMTP id d9443c01a7336-2b27858a844mr2358385ad.14.1775144048316;
-        Thu, 02 Apr 2026 08:34:08 -0700 (PDT)
-Received: from google.com (91.195.168.34.bc.googleusercontent.com. [34.168.195.91])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82cf9ca75dfsm3398012b3a.60.2026.04.02.08.34.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Apr 2026 08:34:07 -0700 (PDT)
-Date: Thu, 2 Apr 2026 08:34:03 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-eh: Do not retry reset if the device is gone
-Message-ID: <ac6MawqZxWf5_DW3@google.com>
-References: <20260402011101.676267-1-ipylypiv@google.com>
- <ac4vDZVvJydch994@ryzen>
+        d=1e100.net; s=20251104; t=1775146030; x=1775750830;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=tY3YLUnv7koH8w7vvcawAH8VEOQcI6MwE/0pyNwOOEs=;
+        b=ShDh7vwhd70IymteAYqqcH88BNFMNz808EMGC/YvE67/LFS0oekGvqg1Zum8W+KL67
+         bYji6/6G3LTnPGqEelFLZvSVVW6RmsTwX5ujYU+FQWJMlT8F+JHDcwdy68N0+jeayoh6
+         2YT3w3sQbo1ElZLqVe3Q0cNwXFOmz2ysHAYOnp0syq4zVMN6cS3/X78eVZFfKMV26VcB
+         A0priQYlCYAO3gR5pe532icxvP79I2bTqP69CxEplrEgysA7yjjoEm/J5PQktMf1cFxo
+         FdhAaTkcQ0wfHGCyFeY7oDv7iQkKcP7dbY8RIT4d4G170MM2hmkhl08XrHaOPSYmVoWD
+         FRvg==
+X-Gm-Message-State: AOJu0YzvlPlghbM0fSsZmZNDliGE0KvcwidNUiv14CuFC0kJrfWnOZM+
+	Y2hQLf4QrPFSnnDH2lW6ye6EwQbUT1o+ZmPwKG/IZgrRsD1Tkwy6LLdcEZ0j5i+rZRPeQxTjoCQ
+	QE9no7Acpoj0YJA==
+X-Received: from pfbhw14.prod.google.com ([2002:a05:6a00:890e:b0:82a:ff5:27be])
+ (user=ipylypiv job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a00:1888:b0:81f:3fa0:8c38 with SMTP id d2e1a72fcca58-82ce8957dd1mr9088627b3a.20.1775146029269;
+ Thu, 02 Apr 2026 09:07:09 -0700 (PDT)
+Date: Thu,  2 Apr 2026 09:07:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ac4vDZVvJydch994@ryzen>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.53.0.1185.g05d4b7b318-goog
+Message-ID: <20260402160705.1033273-1-ipylypiv@google.com>
+Subject: [PATCH v2] ata: libata-eh: Do not retry reset if the device is gone
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Apr 02, 2026 at 10:55:41AM +0200, Niklas Cassel wrote:
-> On Wed, Apr 01, 2026 at 06:11:01PM -0700, Igor Pylypiv wrote:
-> > If a device is hot-unplugged or otherwise disappears during error handling,
-> > ata_eh_reset() may fail with -ENODEV. Currently, the error handler will
-> > continue to retry the reset operation up to max_tries times.
-> > 
-> > Prevent unnecessary reset retries by exiting the loop early when
-> > ata_eh_reset() returns -ENODEV.
-> 
-> ata_do_reset() ?
-> 
-> The loop is inside ata_eh_reset(), so it sounds a bit weird to exit
-> the loop early if the function itself returns -ENODEV.
->
+If a device is hot-unplugged or otherwise disappears during error handling,
+ata_eh_reset() may fail with -ENODEV. Currently, the error handler will
+continue to retry the reset operation up to max_tries times.
+
+Prevent unnecessary reset retries by exiting the loop early when
+ata_do_reset() returns -ENODEV.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+---
+
+Changes from v1:
+- Corrected the commit message to reference ata_do_reset() instead of
+  ata_eh_reset() for the early loop break.
+
+drivers/ata/libata-eh.c | 2 +-
+1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 23be85418b3b..e97a842005e9 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3171,7 +3171,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	    sata_scr_read(link, SCR_STATUS, &sstatus))
+ 		rc = -ERESTART;
  
-Thank you for catching this, Niklas!
+-	if (try >= max_tries) {
++	if (try >= max_tries || rc == -ENODEV) {
+ 		/*
+ 		 * Thaw host port even if reset failed, so that the port
+ 		 * can be retried on the next phy event.  This risks
+-- 
+2.53.0.1185.g05d4b7b318-goog
 
-Yes, it should be ata_do_reset(). I'll send a V2 to fix the function name.
-
-Thanks,
-Igor
-> 
-> I guess you could also write it like:
-> Prevent unnecessary reset retries by exiting the loop early when
-> a callee in ata_eh_reset() returns -ENODEV.
-> 
-> 
-> Kind regards,
-> Niklas
