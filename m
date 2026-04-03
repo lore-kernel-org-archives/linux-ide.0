@@ -1,70 +1,70 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E773535959
-	for <linux-ide@vger.kernel.org>; Fri,  3 Apr 2026 19:18:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2B273624A7
+	for <linux-ide@vger.kernel.org>; Fri,  3 Apr 2026 22:53:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775243894; cv=none; b=IDrMabe4y/CQPDf467iNWosKdRiAlsYTyqCZ+6DwUs9WqdxOGGZ+KS5CKHUlH/rizsG1PAPP6BJsLv2bK6Jq8a1b0oSMN24iB1m2Yua1wyXR71sWuqWtMuqLZN0tCUFDIRv4vkSTfrxTSUZ4MCgcpjKGlZrHtpsWY3Z7LJPMgx4=
+	t=1775256802; cv=none; b=D0Qi73Tftlj20/kZ5kaXMaNM3yJUc+0kZWoP65AN0mO3uvuksJuPhiDcb5SKtTpDtnT8lcqyFu0r6In+WcWI4Spyj3/DPUBx5uqfqRdrAR6ILZb+AW8uXEchchtbITwt0XkeRNVhymQFU53G0V1UPu8qrpTwfAcY2M2/quZ28o0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775243894; c=relaxed/simple;
-	bh=5sd9w7DTFLwnnM8zr9LPq3i9lqiC1rsiJtfUfVeUPZA=;
+	s=arc-20240116; t=1775256802; c=relaxed/simple;
+	bh=eprISpmCG1iTcAbl9gyLBENb03Bt3s33TR+VmRDN2O0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=t3mHQAFm4Md6bAYy40jC+gpqWOjPldNltRsG0QxwWjuMfyiPvab5ySOXWP7a4Xx2e35aMn2yYVwMZ1z4/R7QMBo/7vHPpAERclu9FowOMNupunm7uVzHZyQP5JAAwJRhlK8Z3h4Wlx/pNeIaZ5az8lh60XwwmOJ3mGsYGIaEKCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WpR/XBh5; arc=none smtp.client-ip=209.85.216.48
+	 MIME-Version; b=ZfOiccAfhHAzMgQbd+w3vt+/yf/uHK3F8U1/2yoPW97qqQZsnXyNqdRWInqU7bIh/9RaIYewykzTwDOarA5L+EHcXCcPxIN92IqYgLWT7nBsLtR44GK2EdBpqVzEKAKExL08CWVvvSh7i6dTQ054k2brG/dJa98f/Nvzvuil5Lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OlVFUOTz; arc=none smtp.client-ip=209.85.214.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WpR/XBh5"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-35c1a131946so1936472a91.0
-        for <linux-ide@vger.kernel.org>; Fri, 03 Apr 2026 12:18:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OlVFUOTz"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2b24fcc2b5dso15112295ad.1
+        for <linux-ide@vger.kernel.org>; Fri, 03 Apr 2026 15:53:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775243892; x=1775848692; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1775256800; x=1775861600; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=+3Py0yQ8XkKI1xOrPOMiuCndItMurIJRFpDl731cy6E=;
-        b=WpR/XBh5HUr/0+66xcUgYud0zXSNWSO7ipSSwC3RzpY+C/YFapp8Yt/ZZCU9H7s49z
-         caySmA+aJbWfEWon4Ntv8Eofjpm7kFKvT/p/IjejdUoyEFhLqLb81uJVBSJ0MhxszO9Y
-         Fzqf9qVX1Q5mRG4K/9tdxGQvdc0iwt2nirxWSdcWfKzqTMuC0gpYLOXsovqoLojLwG4z
-         jANx4+OyFQVpCKTyiyVRhPEaF0SYjPK3vlgMvh3Rys5qfmy90iPX4JRN1h1obLd3/xUQ
-         0lXFTwz81aIsyp7yhC6qLzKgSNm4mT8fsOKlb5Ut1r51pK/fa+hTe2hN74XCA+k5hLJ+
-         thQA==
+        bh=vP3I7x1aHfaau206ls0y7NJ32arb32yUHOQgHg/w8ZY=;
+        b=OlVFUOTzWbMgCDctERojBw3WkNDdcxmDJWjbU2tLInfHg2FCBUzl9YsfuvYVazbkd2
+         8MVHVFQ+oBp2PwfLU6qsbziERFNe5gsZXcb/xqQxJM0SUNcY0rCllOpuSPc31byScIfC
+         hF9zNLMKuuL2ViV2yTL7Rbo7SNzbhjZEeJK6fPHWoMDXLXsbdAF8SLpsTRs32zL6mEdt
+         Xb2vTPbUdxhTO72xmB6lJ7Gdt5qafaA4EvOlqF4pZ73wp8mvB1Le4Z9V3L8V3SdGvEYo
+         9rQ0zjjvtvk9EboXlkXw1dIT2XvuISntC8yG+R6QeRxfvS4Og0qtz6MuhM3vJMxSMpDk
+         SZkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775243892; x=1775848692;
+        d=1e100.net; s=20251104; t=1775256800; x=1775861600;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=+3Py0yQ8XkKI1xOrPOMiuCndItMurIJRFpDl731cy6E=;
-        b=gRFd9cHAnKkHksf08H5bC+eBSPkFSAN/ASUFTT8RZ97xRZa+znKTMwoRic/Isi3b9+
-         gjjIFWQgzGUacecAKcBNPEhoh+SvOD9R9z7ilm4kQ+qzSxCm+v9Oe1uZRG02oSKUwi1M
-         +fz70cz/BJn0awCIfCfAeXN3rmm1CxtCYA4rJNpb/DpcBRJWw+eUXCKyUUNbB8wP1ZId
-         VIh62YoiKNhi/u3uiUkRJCTK3PIipuSYdsPsvVX3tSIdsGJtUnMRbXeZPXy7du6I7AC4
-         qCASDlGWutjJSOiZ/Y0GUygcsUpDY9fgnLitTNUl0mUrrtQfs3jUQ8uNUjVEgIkx33Cc
-         HfEg==
-X-Gm-Message-State: AOJu0YxqLydPAwfCMLVx1tx6w5tqkPt+xzyY1rh6rto6FSR2GCc6iMF5
-	WbPo1Bo7HDD909NdVpbKi5KIHx1l/ONpGa11Yi7ZCjKd4QiIcgu91zJa77mt9Q/HyiM=
-X-Gm-Gg: AeBDieteTNAyYU44hrnRH6lb87kC0LARXm/Cwec7ziDFP12bQkkyY1nXuyAHQCeTjbL
-	q1i8l74ILcVcqTaBAEcYZShW1bWsd9Yuzkb40zu2ClhEq78iBPBy5NHfqW5R6VbldusBI6vXX1x
-	avxtMUor5H9ZxqiCBzdTmGs2VW5P4u51IPX5CvzYpEk2UsuPMx0V+gQIPjFFHEvqtL6Ys7ihwTI
-	B03zdKgIgxjGYaImufToCnGwEDuLqv1SMYqGHv/YUjqYPVBli8EmvxMzVRZfPdtwR1KB4ykMMfB
-	qUHNF9/oxfV4FLsqSZCS9fX/ydkXRVeWUXJEXiWaS1nmglwAEed5qAA+K1jReO++PaymxqI4oDV
-	p1QmACXpC6Ka+jHev/LRedmsOdE23hp2u4ZJZnr+Aro8TXtA4Z3WoWYKZeCiGoOfH40Ss8b1FCB
-	DTe1Wq3DbQu46KJQ02w8COccgI8uX9QE3My85c
-X-Received: by 2002:a17:902:f709:b0:2b0:ac1e:9730 with SMTP id d9443c01a7336-2b277e36491mr67612025ad.14.1775243892036;
-        Fri, 03 Apr 2026 12:18:12 -0700 (PDT)
+        bh=vP3I7x1aHfaau206ls0y7NJ32arb32yUHOQgHg/w8ZY=;
+        b=K/eoLWKN+YtVb42mRQUbHVXYzR1UB5aTdmZYmTcbWyAlRY/4I7T+B5FLheNnh09/dF
+         iQCN6H4tPxH5G3arEKXtJ1QSKw1z6SLag7bAOhRUs9HTBpAokxKJEJ701Lai2aUosN6w
+         yXIfC2DrHyg8VM6oUzPKUk9n1fZT5nQN0lBX5FVmZqIxp95EiK6st2C43EWcwxHs5uAx
+         XsbwvCmAFiQinN7EX2A2k5AJSx1SRWP7c1iyQd/cWwTeWDVF88gezrn8fgNLLCjjiDkC
+         inalYHz94c8O4gxiZeuT+RUF0BW0/PNN+cMiZeGbAocFtQQQdRTSpbadgLEZoC931mY5
+         da2A==
+X-Gm-Message-State: AOJu0Yx4QuitD8fWRdZhHkzs3T2ussesNyM72QEHtRLkqsqQxeeY1C1A
+	qimjP+eVZAzbrj6j0SA0VyOYhoJcUaMU9fjggdES5ttbV4+Z/vYZ6nTC/0xAK3Nhj2s=
+X-Gm-Gg: AeBDieu6g5rWQDDF+Apt5wXgNsjmuGeIyQS0tVb2QjoABPDHMqzncBBhNaevDkbeTHG
+	V81Lz2JIHqL0BRlPqVVlYQ0STmMnwh34I2p4ddGXLiJ29Dn46yCKrU8/F/6k3l9Z0ricm2eTFZb
+	hfTmhSesMzp0wrjcxt40VP5sYUyGOmcSJ5bfw0OmMpEENxAOJ+xuD1yhNQhV1nkeThNLV3XqmkT
+	nFbmDWPTSL89XdV7c2U6NByKW7HpKm3jwzt3RkwaSO29KiNCiGdAE3qE0fsVR8FRLMlfHAE2Dt2
+	W2hhs3Dx4lyinYtM10TrdEYQXXg5vAs05sco6yT9BaW14XOJPunafTDet7nWff61E2hQ6mqIRqr
+	RvNdvGyL0iqK/Tl7Cf50CJm2T5b4yNgL/v+ANOEXZH6pfnlGqi4k4sqaTowspOYjpaoHvmP9tco
+	nbmfx21pJIPmJPjR9Rs2oqWycpQQX2YCMrM94N
+X-Received: by 2002:a17:903:b0e:b0:2b0:65e8:4041 with SMTP id d9443c01a7336-2b28186117fmr43241355ad.36.1775256799953;
+        Fri, 03 Apr 2026 15:53:19 -0700 (PDT)
 Received: from fedora.mshome.net ([162.247.45.47])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b27497c0f3sm66964105ad.41.2026.04.03.12.18.11
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b2749c38adsm84776375ad.69.2026.04.03.15.53.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Apr 2026 12:18:11 -0700 (PDT)
+        Fri, 03 Apr 2026 15:53:19 -0700 (PDT)
 From: Arthur Husband <artmoty@gmail.com>
 To: linux-ide@vger.kernel.org
 Cc: dlemoal@kernel.org,
 	cassel@kernel.org,
 	artmoty@gmail.com
 Subject: [PATCH v2] ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585
-Date: Fri,  3 Apr 2026 12:17:52 -0700
-Message-ID: <20260403191801.79888-1-artmoty@gmail.com>
+Date: Fri,  3 Apr 2026 15:53:14 -0700
+Message-ID: <20260403225314.96459-1-artmoty@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260403050418.50398-1-artmoty@gmail.com>
 References: <20260403050418.50398-1-artmoty@gmail.com>
@@ -74,13 +74,12 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 The JMicron JMB585 (and JMB582) SATA controllers advertise 64-bit DMA
 support via the S64A bit in the AHCI CAP register, but their 64-bit DMA
 implementation is defective. Under sustained I/O, DMA transfers targeting
-addresses above 4GB silently corrupt data — writes land at incorrect
+addresses above 4GB silently corrupt data -- writes land at incorrect
 memory addresses with no errors logged.
 
 The failure pattern is similar to the ASMedia ASM1061 (commit
