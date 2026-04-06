@@ -1,99 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBC8B17D2
-	for <linux-ide@vger.kernel.org>; Mon,  6 Apr 2026 07:30:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB6192030A;
+	Mon,  6 Apr 2026 07:30:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775460632; cv=none; b=bLfQigpDK2x3+/TgffBQg5kBGuxQnaBH3CiOjvxfr8MDLZvVUVJkU37pdXmLvzwM3Pk+3ZrvF1rogoUHd3jhlUCxmBNKSeFAX7yggClJXkRajliq3SN+ldjxeQs1h8moMBS3qZohYgHLZJExgHcnwPo5mH2EC3JaJjNCGnZWM+c=
+	t=1775460636; cv=none; b=Vq4v2uOGu9KG3gm5O33MNd73r8X1GwKjPkXOPIvC0InN9uyhCxUMfuO+pQzovwiM7/i+UIggbilMdA/Ri4kvED2sGev4QI1oTsfW+HHiQozBZb026hztbJEdCVg6FlVPXo07jCsuU3c+roMIon0FNLzv5iLb0PCnWPHOxPFfRR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775460632; c=relaxed/simple;
-	bh=03lQLDR95FItSY5pGeU4zmCi+QahYzqX8JqMH8qgAR0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kCSBo9/N4kvH5K3j7bBYUlkVaBPShr7dl6jIZJU4+y/HZzSAbegIw3QORq5CIJYsqrxzf7MrTqYVVGumr+2iUVVlpDOd8iKF8xRgoTG/5RpdHVWXnyPWghbtpEsr3uMNXrCkZwLX1ZoqPAnLjYufCyNVFfntMH1t3iourAK9i1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gcsYbt/V; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775460636; c=relaxed/simple;
+	bh=U+nbissSvvOO3VCP2qo9/CsMlLZXa9Ov4eJ7ZhvkHcg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RvaUD9+/tlL5jPMU6hWwbp4vlcKLSL8omGWZUVeXfzi/bPT1AfuXy8P7sofykEeSrIIUQ2oBGCinXNnRCr5ALAxt/okC63uQaL2WB1oMAF3Lsy/9UdtLy0gEtSTSDBIPG7/IwTukLeswyhuO+GDQFE9cbFz97j5GLF2qXblz99U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JaTyWcvc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gcsYbt/V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 823DDC4CEF7;
-	Mon,  6 Apr 2026 07:30:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JaTyWcvc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 983C9C4CEF7;
+	Mon,  6 Apr 2026 07:30:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775460632;
-	bh=03lQLDR95FItSY5pGeU4zmCi+QahYzqX8JqMH8qgAR0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gcsYbt/V/viUJSD86+m8DCpvEvJC5J30ztTePonyyKMiakdQK0sYUCMdpNxvQ25BO
-	 fOZsDd6su7911EjhbrdWR3agcI3Ovtkiim1dFFDr0dOBnxAr1CFkS6VuJQbKtKHr+Q
-	 DA/IS2VbyDETbBlYDolNgUkvBz77to/rfnOGJYtrysjk3WzWLSymTgZNhXU0KATWrB
-	 n5ANo5RhBto3+RoEJ8KyR+kC1pDRv1iYoa/H6PSxTd4Mut7kAguy3l3IG+JINwnHPZ
-	 FgqEfHQs/jeDHUPF3W944mL4hnbP2tLA9sl7EBIYpIpRxWfC+uWrBzeh+9K0k61v0t
-	 AX3zpVcEQWgHQ==
-Date: Mon, 6 Apr 2026 09:30:28 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Arthur Husband <artmoty@gmail.com>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org
-Subject: Re: [PATCH v2] ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585
-Message-ID: <adNhFOz6IRUSGfq0@ryzen>
-References: <20260403050418.50398-1-artmoty@gmail.com>
- <20260403225314.96459-1-artmoty@gmail.com>
+	s=k20201202; t=1775460636;
+	bh=U+nbissSvvOO3VCP2qo9/CsMlLZXa9Ov4eJ7ZhvkHcg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=JaTyWcvccXWxsvClQ+TpJ0gVmq2uP52yX0AZajvAuH91K6GzTYR2kbcMeE25tikiy
+	 ZB5BS5CrN8S5mAYAWA28C4LbYEPKqTvHFN118ZapG0noJ2KYx+iB0s86uhc0wtT4c5
+	 UZDs1aBt6/+puXrIz/IaXJT57D0ZvuI++8m67KpNwAL4zQWIooP1uBIoL6cdrfJxtz
+	 8J9q0U7rgOIehtNlQWNAJthbAxJmPrzhMoZkCT6ZZKWrpWnLQGiuMIF9ZnQmmNU3jh
+	 bhi4W+hgBCZjATEvhVxCiJaVxes2OIYBcKJH204nA4A9a4Rrt3r/sG0YnqlNVl1GNp
+	 nRvy9dWrJFrHg==
+Message-ID: <73386b55-933f-42b3-b566-e9f4e3ea001d@kernel.org>
+Date: Mon, 6 Apr 2026 09:30:34 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260403225314.96459-1-artmoty@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [BUG] ata: ahci: regression in f7870e8d345c disables DevSleep for
+ ACS-5 drives on PSC=0/SSC=0/SDS=1 controllers
+To: Patrick Zima <pz.102010@gmail.com>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+References: <1350BE53-13DB-4250-B323-7FBA335583BB@gmail.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <1350BE53-13DB-4250-B323-7FBA335583BB@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hello Arthur,
-
-On Fri, Apr 03, 2026 at 03:53:14PM -0700, Arthur Husband wrote:
-> The JMicron JMB585 (and JMB582) SATA controllers advertise 64-bit DMA
-> support via the S64A bit in the AHCI CAP register, but their 64-bit DMA
-> implementation is defective. Under sustained I/O, DMA transfers targeting
-> addresses above 4GB silently corrupt data -- writes land at incorrect
-> memory addresses with no errors logged.
+On 2026/04/05 21:01, Patrick Zima wrote:
+> Commit f7870e8d345c ("ata: ahci: Disable DIPM if host lacks support") introduced
+>   a regression: it disables DIPM — and thereby DevSleep — on drives behind AHCI
+>   controllers that have CAP.PSC=0 and CAP.SSC=0 but CAP2.SDS=1 (DevSleep capable).
+>   The guard condition is too broad; it treats the absence of Partial/Slumber state
+>   bits as grounds to disable DIPM, but DevSleep does not depend on Partial or
+>   Slumber being exposed to the OS — only on SDS=1 in CAP2.
 > 
-> The failure pattern is similar to the ASMedia ASM1061 (commit
-> 2073d0e9b2778 ("ahci: add 43-bit DMA address quirk for ASMedia ASM1061
-> controllers")), which also falsely advertised full 64-bit DMA support.
-> However, the JMB585 requires a stricter 32-bit DMA mask rather than
-> 43-bit, as corruption occurs with any address above 4GB.
+>   --- The logic flaw ---
 > 
-> On the Minisforum N5 Pro specifically, the combination of the JMB585's
-> broken 64-bit DMA with the AMD Family 1Ah (Strix Point) IOMMU causes
-> silent data corruption that is only detectable via checksumming
-> filesystems (BTRFS/ZFS scrub). The corruption occurs when 32-bit IOVA
-> space is exhausted and the kernel transparently switches to 64-bit DMA
-> addresses.
+>   The new code (simplified):
 > 
-> Add device-specific PCI ID entries for the JMB582 (0x0582) and JMB585
-> (0x0585) before the generic JMicron class match, using a new board type
-> that combines AHCI_HFLAG_IGN_IRQ_IF_ERR (preserving existing behavior)
-> with AHCI_HFLAG_32BIT_ONLY to force 32-bit DMA masks.
+>     if (!(cap & HOST_CAP_PART) || !(cap & HOST_CAP_SSC))
+>         set ATA_FLAG_NO_DIPM on port
+>         → SETFEATURES DISABLE DIPM to all drives with word 78 bit 3 set
 > 
-> Signed-off-by: Arthur Husband <artmoty@gmail.com>
-> ---
-
-You have sent two different V2 patches, however both of them fail to apply:
-
-error: patch fragment without header at line 18: @@ -115,6 +116,14 @@ static const struct ata_port_info ahci_port_info[] = {
-error: could not build fake ancestor
-Patch failed at 0001 ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585
-
-
->  drivers/ata/ahci.c | 16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
+>   On a controller with PSC=0, SSC=0 but SDS=1, this fires unconditionally,
+>   even though the controller is fully capable of negotiating DevSleep.
+>   The flag ATA_FLAG_NO_DIPM then also suppresses ALPM port behaviour at the
+>   kernel level — re-enabling DIPM at the drive level via SETFEATURES after the
+>   fact does not restore DevSleep.
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index XXXXXXX..XXXXXXX 100644
+>   --- Suggested fix ---
+> 
+>   Gate the DIPM-disable path on the absence of DevSleep support:
+> 
+>     if (!(cap & HOST_CAP_PART) && !(cap & HOST_CAP_SSC)
+>   +     && !(cap2 & HOST_CAP2_SDS)
+>         && (ap->flags & ATA_FLAG_DIPM)) {
+> 
+>   If the controller can do DevSleep (SDS=1), there is no reason to disable
+>   DIPM — the power state sequence Active → DevSleep does not require Partial
+>   or Slumber to be present.
 
-I think the problem is that you have index XXXXXXX..XXXXXXX.
-
-The XXXXXXX should be pre- and post-image blob object SHA1s, e.g.:
-index ad798e5246b49..3b65df914ebbe 100644
-
-Please use git-format-patch to generate your patch and send a V3.
+Instead of sending what looks like an AI generated report, what about you
+actually generate a proper patch from the suggested fix and test it ? And send
+said patch if the suggested fix works ?
 
 
-Kind regards,
-Niklas
+-- 
+Damien Le Moal
+Western Digital Research
