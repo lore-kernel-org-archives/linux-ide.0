@@ -1,52 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D9CB38911B
-	for <linux-ide@vger.kernel.org>; Tue,  7 Apr 2026 06:33:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 549312472AF
+	for <linux-ide@vger.kernel.org>; Tue,  7 Apr 2026 07:40:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775543633; cv=none; b=TjtRIowMV9y6zXdi53z1bluYfSzxKux8p80FSSMqkqabm3HQru7eLcfTRFDJcv1vnu4nENqa7/MDwTd5V+xhQ+t+tRpiHahoR/GxeUas1XWXy5J9hlD/2ugRoPI0aj8iO3i12JZEfrc9DPKOFFtt8/FUKD/4touuucTaR+N0Ngc=
+	t=1775547602; cv=none; b=R3SalyqpRy3n5HYym6ISjXBE6FFfdbJDSE8CJ8FhEWykgw2d/3wa7c0rUlFsa8CVVJKu1tLPO9g73WpYNBRdzZ3Qj0y8Kg+Bn5vP/w5SUD1NtK07kjOFu0T19Xcx1pdDEbzPiAqc+mFrIEru4mQ9QY92ErF4Hd6giQj7DxBKFF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775543633; c=relaxed/simple;
-	bh=bxdh7htL0/cBywPR2+IRuX7Hk6UlhyRNNn9KV4JrcFQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ojTB8GneLuVlY96tImWCmrvFCzEUQCNqW5wFXXlzihjtVrFpq6asTZ5zAwF0r5ovgH+juQTR9c4sklP6ksqbCF8o7TG9Z0cTgCbHK+Lq28cbW89XaHOxJjuwiy8Mujfdy9G8Lr062r72pt2B+VkRk0rD44W6lHseKZ5p0vWZw1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XC3r7Fpz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775547602; c=relaxed/simple;
+	bh=RTU9fF8UhSjFZMR132FvHE42KU8w/GozSzTfqgwTnSU=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=cKQE7C5OJ+l56xKDd+AJKitjqRYWV79TArtlBoVDljiwEI0aaFqTkGb9W0ZzdvmqRO6126Ah8Ncq90o0rX1fDh5pxkmLjIgWikIMaWZvRr8r2WiXbHBIiNATY0xmduaHWvvF1sndTrSrv/EJj2nvsTuExYlc4EDXXnMWNGCDw4w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gu2p53v5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XC3r7Fpz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4C95C19424;
-	Tue,  7 Apr 2026 06:33:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gu2p53v5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 725B3C2BCB1;
+	Tue,  7 Apr 2026 07:40:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775543632;
-	bh=bxdh7htL0/cBywPR2+IRuX7Hk6UlhyRNNn9KV4JrcFQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=XC3r7FpzZCTv01tD6+wVKnaAh4SmU2mstypRSrSlc4AFupSiaev4UESvSkeEw6Anr
-	 sTPhN0+GeDvCbvZeFEshi9hu8Yk3MDTHibKrTjTht2EeEJdykNnXJqCF3rs0drR05B
-	 SM8bkHnF5/nhqMbMeS/Ar3ves4w/8NQRoJTTgnjkM8jfMtICad1NE31Xa6fFhbrETx
-	 JFuAUuxA/QZ0iwXQtn+kc8uewlOerk8BcxWFXcdZ8kWeLAhZuh/mDYg4jKpJ3xHafQ
-	 0nQCzZWCQQfJVrIo0IcvscMMftYfiNmC4G2SZryR8tsxZ2wOeaS4wacCJGg1zpOyLA
-	 hVxddGF/xOMxA==
-Message-ID: <58df8c8c-98a6-47e4-81d7-f8c17e20e402@kernel.org>
-Date: Tue, 7 Apr 2026 15:33:50 +0900
+	s=k20201202; t=1775547602;
+	bh=RTU9fF8UhSjFZMR132FvHE42KU8w/GozSzTfqgwTnSU=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=Gu2p53v5qSl3oc+sBd8sl8d3M0QN+BUVIuS8mK7FGXJuv24kMo/iyiRPTZLuVuh6j
+	 7Yij9VXV6hcDKm91tgaNAhdSjXwtoAHmNshnWCq97tIPWg8RErEzLp9E/l5A125ev/
+	 /v0KRSvJcoGbBgF69at8CcLvF4Dvea/1yxH1+kBa+u/ajrV3T1qWTZpdGFd2Po4vGK
+	 abl56CrgTaXvRoX1LDF31VbqC7ORijFE6KbZjgwjw0gddT5a8WL/Y0iphF7XZiVR2W
+	 6x7QjIGiOx0seXqibDiPixb0Kv1hTVzESYLwKektNC5f9/i2BDsrTjxVSWzcboYeUx
+	 vekFCeDTfCMzA==
+From: Niklas Cassel <cassel@kernel.org>
+To: linux-ide@vger.kernel.org, Arthur Husband <artmoty@gmail.com>
+Cc: dlemoal@kernel.org
+In-Reply-To: <20260406222335.379935-1-artmoty@gmail.com>
+References: <20260406222335.379935-1-artmoty@gmail.com>
+Subject: Re: [PATCH v4] ata: ahci: force 32-bit DMA for JMicron
+ JMB582/JMB585
+Message-Id: <177554760118.1191831.7536592442646477281.b4-ty@kernel.org>
+Date: Tue, 07 Apr 2026 09:40:01 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585
-To: Arthur Husband <artmoty@gmail.com>, linux-ide@vger.kernel.org
-Cc: cassel@kernel.org
-References: <20260406222335.379935-1-artmoty@gmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260406222335.379935-1-artmoty@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On 4/7/26 07:23, Arthur Husband wrote:
+On Mon, 06 Apr 2026 15:23:35 -0700, Arthur Husband wrote:
 > The JMicron JMB585 (and JMB582) SATA controllers advertise 64-bit DMA
 > support via the S64A bit in the AHCI CAP register, but their 64-bit DMA
 > implementation is defective. Under sustained I/O, DMA transfers targeting
@@ -59,23 +58,13 @@ On 4/7/26 07:23, Arthur Husband wrote:
 > support. However, the JMB585 requires a stricter 32-bit DMA mask rather
 > than 43-bit, as corruption occurs with any address above 4GB.
 > 
-> On the Minisforum N5 Pro specifically, the combination of the JMB585's
-> broken 64-bit DMA with the AMD Family 1Ah (Strix Point) IOMMU causes
-> silent data corruption that is only detectable via checksumming
-> filesystems (BTRFS/ZFS scrub). The corruption occurs when 32-bit IOVA
-> space is exhausted and the kernel transparently switches to 64-bit DMA
-> addresses.
-> 
-> Add device-specific PCI ID entries for the JMB582 (0x0582) and JMB585
-> (0x0585) before the generic JMicron class match, using a new board type
-> that combines AHCI_HFLAG_IGN_IRQ_IF_ERR (preserving existing behavior)
-> with AHCI_HFLAG_32BIT_ONLY to force 32-bit DMA masks.
-> 
-> Signed-off-by: Arthur Husband <artmoty@gmail.com>
+> [...]
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Applied to libata/linux.git (for-7.0-fixes), thanks!
 
+[1/1] ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585
+      https://git.kernel.org/libata/linux/c/105c4256
 
--- 
-Damien Le Moal
-Western Digital Research
+Kind regards,
+Niklas
+
