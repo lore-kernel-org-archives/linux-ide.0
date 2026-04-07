@@ -1,80 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B38E3A257B;
-	Tue,  7 Apr 2026 07:48:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A86AE3921DC
+	for <linux-ide@vger.kernel.org>; Tue,  7 Apr 2026 08:20:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775548122; cv=none; b=gFsfFYep2/AgnvyneNQ7dPLc2bIMd0fugvGImR6xXTpJUyK4WmzsZWMFTH8niz5lPSFlaDJ4jypGyKh9S+n5qCF980VsIt8OsZQBgDSp5foptNxo1ehzDDNsYDmNUOteLcHNWhdOOftt/rh4idftu6KXkgpJRZIN+O8YPCbmLIg=
+	t=1775550023; cv=none; b=mJVEQyMpX9kvtsBm82lw6tXlMcNZmrd+pIX/tvy7gwiARbHb0nDt/ZqMUqRHmRqMIyTTroExjY4w65UqrHUb3fHJKAD+Di/jLf7iHg/RMRe/Ey7v2YZ3sF3FOtIK/N5cBVGRra+lZBoLFi+op5QXqAnUCtKZmjcDXjG18Eab2b4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775548122; c=relaxed/simple;
-	bh=u8A/0wl66hEXs4y1JwuOL9yEKLY5qPVcdw+rfTMfYkU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JdmRX4iT27JA0A0W8Xg9Yt3PL07oFIplCw3/RxuYj6dGHgSxumYVlGmx6AzJYxccPKIBfyQAzshC37zyW6OyWTGddgWe6Kqvn4NVFsV9qMaCeuQrvpnhC1aEaXU5XXH4O/4CXupEoWtlHk5iZkYQ/x7v2L0uKhf3W6gJNaIcqvE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NP1GFMQI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775550023; c=relaxed/simple;
+	bh=Zt/qbp7uAsD8rsdpJbvxF0gIbKuGAgNOrOXrL+EzK0k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iMKHx9zg07+0TSy+0yHxEOMgoEPZSumK4vs2fOQzFLzzQnNUhz8WtRCR6zlnl85HBHxCNYz6hFDgmLVUHfjZH5hwgt5ySY8bdvR1Ox3ykyWwwnBbMYXjNKOs75NQ6Y4R2uS+1qUSHB6nJGqIBx62pp7D69gB54HlUCLdjbu62lo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hbJRm4Lo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NP1GFMQI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DD2DC116C6;
-	Tue,  7 Apr 2026 07:48:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hbJRm4Lo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3514CC116C6;
+	Tue,  7 Apr 2026 08:20:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775548122;
-	bh=u8A/0wl66hEXs4y1JwuOL9yEKLY5qPVcdw+rfTMfYkU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NP1GFMQI9QfaREo2Xn6HcxXYDCvU4I7EpgfRiUSgLjpy5Oe1sVhplXPPkXKvUVqWv
-	 QT42pLMxJgTb3WnFFHK/am2hlh0QIccSq06mrUr5pBa4zZjj0XoeqOh/tAOTJK4By5
-	 NNqyUJY735kfXDfUNCfOXSlnWVS+29mTL+VuFAHvIu4FavUoyp4r+FCyWQ5AG2n0qO
-	 HB23w+rbT6Br/AJ2mpc3sUF6xrEfvyesiG4EW3DRh6y0ByfTI5AzlB/79cC3ewASV1
-	 ylddT3HbGMdLHAcknht2JmAZwjanEQUesdlgS0Y4OsfGEtft1ywCrBsPIrZCrcatVP
-	 HvtN08d2VNMCQ==
-Date: Tue, 7 Apr 2026 09:48:38 +0200
+	s=k20201202; t=1775550023;
+	bh=Zt/qbp7uAsD8rsdpJbvxF0gIbKuGAgNOrOXrL+EzK0k=;
+	h=From:To:Cc:Subject:Date:From;
+	b=hbJRm4Lo9gsbYLi7Sq0hp/+StdkgaxIWbzxwu6awYy8lm33VwcH+ePT0JqUoMd0gd
+	 2+FNhQM2YwCcdg1BHDTddT8w1A7m2y0VjcpDb+8vxo66J1JfjnzmCpcDCy8BcCiR6I
+	 e9U2NI5CDM0wA0aMeaj9tAo12o70a34Ml3KMTiniLCVqTgi74ya13qKiTVXL76OdFD
+	 3GxPAh9k3Q8I7t0Az63GPPWD3dXUsKIF8kK4/AM9mBWBtMx1z/1wNpfYhNtCp4YEaP
+	 8AwgrJ0mfWHHtSW5O3XGHTPSuLl9p+dtSSanr0z/SKVrEOoCkU5flM2Cu0PHEUhkIE
+	 u2uA0Ur7w469g==
 From: Niklas Cassel <cassel@kernel.org>
-To: Patrick Zima <pz.102010@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [BUG] ata: ahci: regression in f7870e8d345c disables DevSleep
- for ACS-5 drives on PSC=0/SSC=0/SDS=1 controllers
-Message-ID: <adS21s5NGLIc0H3G@ryzen>
-References: <1350BE53-13DB-4250-B323-7FBA335583BB@gmail.com>
- <73386b55-933f-42b3-b566-e9f4e3ea001d@kernel.org>
- <adNoXbieRl5DGbgA@ryzen>
- <F13D8AEB-E819-4322-AD3E-6AD7ECD7EBF0@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fix for 7.0-final
+Date: Tue,  7 Apr 2026 10:20:18 +0200
+Message-ID: <20260407082018.1205645-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <F13D8AEB-E819-4322-AD3E-6AD7ECD7EBF0@gmail.com>
 
-Hello Patrick,
+Linus,
 
-On Mon, Apr 06, 2026 at 05:51:39PM +0200, Patrick Zima wrote:
-> You are right, (and yes to Damien, I had AI consolidate my findings)
-> I need to investigate further - my drives definitely hibernate with kernel -18 and remain sleeping only with -20 
-> 
-> but ...
-> - the commit doesn't really seem to affect my controller ASM1164 (AHCI_HFLAG_USE_LPM_POLICY) as it seems to fire for Intel mobile chipsets only                                             
-> - still, the libata.ko and libahci.ko are identical between my two kernel versions — no LPM code changed for this controller
-> - I initially followed the path: link_power_management_policy reverting to keep_firmware_settings after afirst reboot after -20 kernel installed
-> 
-> To sum it up, my initial result, leading me to file the bug was wrong
-> 
-> Sorry
+The following changes since commit e6d7eba23b666d85cacee0643be280d6ce1ebffc:
 
-No need to say sorry, it sounds like you have a regression on real hardware
-(which was not clear from your previous mail).
+  ata: libata-scsi: report correct sense field pointer in ata_scsiop_maint_in() (2026-03-20 09:59:30 +0100)
 
-Please provide as much information as possible, so we can help you find the
-root cause.
+are available in the Git repository at:
 
-Can you please test with the latest upstream kernel? 7.0-rc7 to see if the
-problem still exists there? (Your distro usually provides the config it is
-using in /boot/config-*, and it makes sense to use the same config as your
-distro.)
+  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.0-final
 
+for you to fetch changes up to 105c42566a550e2d05fc14f763216a8765ee5d0e:
 
-Kind regards,
-Niklas
+  ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585 (2026-04-07 09:36:46 +0200)
+
+----------------------------------------------------------------
+ata fix for 7.0-final
+
+ - Add a quirk for JMicron JMB582/JMB585 AHCI controllers such that they
+   only use 32-bit DMA addresses. While these controllers do report that
+   they support 64-bit DMA addresses, a user reports that using 64-bit
+   DMA addresses cause silent corruption even on modern x86 systems
+   (Arthur)
+
+----------------------------------------------------------------
+Arthur Husband (1):
+      ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585
+
+ drivers/ata/ahci.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
