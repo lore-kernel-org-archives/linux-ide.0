@@ -1,80 +1,80 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 938EC39A7E5
-	for <linux-ide@vger.kernel.org>; Tue,  7 Apr 2026 10:29:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D17C39E166
+	for <linux-ide@vger.kernel.org>; Tue,  7 Apr 2026 10:30:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775557774; cv=none; b=VaORYNPKNIbH1590HcLeW5IPJnYGIO90Pl0CJYx+iKK9QkFhDV8m8yjUYiazNHxm7VXEWGN0bvGCURs9md8N1Jk0iUOvCOhy/D18ZYyp7dcgioy47PnjCJCLIeYMpFuHaHBRD3UyAQHLDnYUfreISxWOuPvOi0seof8vnoeD9Pw=
+	t=1775557840; cv=none; b=NFaRqIiE6nreO4YoHOPH+ZHJ2NazAviKR90FMs856KZ/kxJIpyiQmAFvfPlSS9LMm30TKV42u7hWzVelNRX7YvP8JIspXqwrN2zP1MDVadcIrCJxJVuY+Ro8Id0Drv7++IhjQO6HEugI14Rvy15pKZbGQFLFNhqXX+RWflQwZdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775557774; c=relaxed/simple;
-	bh=xCvb5yBAeM7YhPF8uZFruT4toCtoX9gUtPyqt6QG3T8=;
+	s=arc-20240116; t=1775557840; c=relaxed/simple;
+	bh=lYoIDrt0WFH2c7ifcctORyatXUXzglwvdYcnj0MWk0U=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jrKd0cXPW5MvP1ppXuY9A77ZZl3HPvDMOowQ2L7nQRqj09ry1EUT48UGbfjmNI6aq12UoH/3uRXUB2VONK5X+gjq3xyNZ3BCWKCQJO2Y1O9BidaBuxFPpQnDYyqyIg+d1ZCc10hGuwfgg/xw26e1UmgTxZbY8jNdMhA1AVLiqqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=X0/PvlQ6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=43awxsfa; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=X0/PvlQ6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=43awxsfa; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=uz1QBL3JRGKfAo0Bma8fJSgTbZ3hkUugLaBTpjhCc0s44E/KE45LYRvEUFzWIuLvmnoReDqUhIFM6mkSRAGazz+KwHGuKm7/aJoNGD0gyrApFqKSmQTMny0nYh69v/+98Hjo3Xl2tCXGeU1uhvWxj0SrTDdtAaSY4xhgMwxmDaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gvD8/D6X; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=KIhlp97g; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gvD8/D6X; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=KIhlp97g; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="X0/PvlQ6";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="43awxsfa";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="X0/PvlQ6";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="43awxsfa"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gvD8/D6X";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="KIhlp97g";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gvD8/D6X";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="KIhlp97g"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 8BE0A5BD36;
-	Tue,  7 Apr 2026 10:29:30 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id A094A4E3E3;
+	Tue,  7 Apr 2026 10:30:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1775557770; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1775557837; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Azdf7pvKfi1zUr2vA/FRBnH9TEtGXp2OeeqNOQ1GqGQ=;
-	b=X0/PvlQ62YA/cRcHu+q5m3UVObK0NYFmN+vDj7yIdmXF4+1+hHxm1JSljjxeps+dIuj/SA
-	6N/aRmpBMMCWXfnwljG4BMl+54dSkaV3VJjQseypbBaxXCRn+C5GS6xKIz79vvrNmVM4mR
-	XE4MNYwNkhQhFb5GfvRMZNI5joojyYw=
+	bh=wsm5AJItqLf95QEpVcHHmux1DcID7eqyEjcc0k9vlmU=;
+	b=gvD8/D6X/YML2AmOXBu6QCmaKYIetCMbIZCIqqhIZxJ3pIYwKxY/0pg5DcdS/8E2dzH/WC
+	zJAzSyc0lxJkEuH7d0Rmt+RHonc/Kt5vl4FbdE3poHJ6ihRf8ZpmzNMejTlHwMDuGe/TSq
+	hb9NNhN4cvJKQbhA+dyjv/4ds+dXH5w=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1775557770;
+	s=susede2_ed25519; t=1775557837;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Azdf7pvKfi1zUr2vA/FRBnH9TEtGXp2OeeqNOQ1GqGQ=;
-	b=43awxsfasyylhvGdgurLq/bBrdSRTWo0d28Xkz6OX7hpncN9W7EQ1hGPPIbuqRhJgmYI5n
-	lk+JBaJVQFw9o5BQ==
-Authentication-Results: smtp-out2.suse.de;
+	bh=wsm5AJItqLf95QEpVcHHmux1DcID7eqyEjcc0k9vlmU=;
+	b=KIhlp97g9QWE9Q2LQaajtJNQKveSWNIcYvdWFFqj3BwAxkVYJqQNq4w7NBs62F3St+XpPQ
+	viJMjrg0Pz7zqbAA==
+Authentication-Results: smtp-out1.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1775557770; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1775557837; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Azdf7pvKfi1zUr2vA/FRBnH9TEtGXp2OeeqNOQ1GqGQ=;
-	b=X0/PvlQ62YA/cRcHu+q5m3UVObK0NYFmN+vDj7yIdmXF4+1+hHxm1JSljjxeps+dIuj/SA
-	6N/aRmpBMMCWXfnwljG4BMl+54dSkaV3VJjQseypbBaxXCRn+C5GS6xKIz79vvrNmVM4mR
-	XE4MNYwNkhQhFb5GfvRMZNI5joojyYw=
+	bh=wsm5AJItqLf95QEpVcHHmux1DcID7eqyEjcc0k9vlmU=;
+	b=gvD8/D6X/YML2AmOXBu6QCmaKYIetCMbIZCIqqhIZxJ3pIYwKxY/0pg5DcdS/8E2dzH/WC
+	zJAzSyc0lxJkEuH7d0Rmt+RHonc/Kt5vl4FbdE3poHJ6ihRf8ZpmzNMejTlHwMDuGe/TSq
+	hb9NNhN4cvJKQbhA+dyjv/4ds+dXH5w=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1775557770;
+	s=susede2_ed25519; t=1775557837;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Azdf7pvKfi1zUr2vA/FRBnH9TEtGXp2OeeqNOQ1GqGQ=;
-	b=43awxsfasyylhvGdgurLq/bBrdSRTWo0d28Xkz6OX7hpncN9W7EQ1hGPPIbuqRhJgmYI5n
-	lk+JBaJVQFw9o5BQ==
+	bh=wsm5AJItqLf95QEpVcHHmux1DcID7eqyEjcc0k9vlmU=;
+	b=KIhlp97g9QWE9Q2LQaajtJNQKveSWNIcYvdWFFqj3BwAxkVYJqQNq4w7NBs62F3St+XpPQ
+	viJMjrg0Pz7zqbAA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 728344A0B1;
-	Tue,  7 Apr 2026 10:29:30 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 789474A0B1;
+	Tue,  7 Apr 2026 10:30:37 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id xEFFG4rc1GlFGgAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 07 Apr 2026 10:29:30 +0000
-Message-ID: <8abd467a-5a5f-4799-be4c-f4c01eccf8c7@suse.de>
-Date: Tue, 7 Apr 2026 12:29:30 +0200
+	id CJKUHM3c1Gm3GwAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 07 Apr 2026 10:30:37 +0000
+Message-ID: <8b509629-7aea-4cca-9df7-40f0db504cbe@suse.de>
+Date: Tue, 7 Apr 2026 12:30:37 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -82,20 +82,18 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/5] ata: libata-transport: instantiate struct
- ata_internal statically
+Subject: Re: [PATCH 2/5] ata: libata-transport: inline
+ ata_attach|release_transport
 To: Heiner Kallweit <hkallweit1@gmail.com>,
  Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org
 References: <8592ed06-3a6f-45cb-9811-e163f31f7183@gmail.com>
- <ad6ef45a-1e47-4bc4-b9fd-6ba3ec8ca83e@gmail.com>
+ <f9d372b0-cd10-46b2-821f-80c4c29c8992@gmail.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <ad6ef45a-1e47-4bc4-b9fd-6ba3ec8ca83e@gmail.com>
+In-Reply-To: <f9d372b0-cd10-46b2-821f-80c4c29c8992@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -4.30
-X-Spam-Level: 
 X-Spamd-Result: default: False [-4.30 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
@@ -118,18 +116,19 @@ X-Spamd-Result: default: False [-4.30 / 50.00];
 	RCVD_COUNT_TWO(0.00)[2];
 	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
 X-Spam-Flag: NO
+X-Spam-Score: -4.30
+X-Spam-Level: 
 
 On 3/30/26 17:18, Heiner Kallweit wrote:
-> Struct ata_internal is only instantiated once, in module init code.
-> So we can also instantiate it statically, what allows to simplify the
-> code.
+> Both functions can be merged into libata_transport_init() and
+> libata_transport_exit() respectively, thus simplifying the code.
 > 
 > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 > ---
->   drivers/ata/libata-core.c      | 11 ++-----
->   drivers/ata/libata-transport.c | 57 +++++++++++++++-------------------
->   drivers/ata/libata-transport.h |  2 +-
->   3 files changed, 28 insertions(+), 42 deletions(-)
+>   drivers/ata/libata-core.c      |  2 --
+>   drivers/ata/libata-transport.c | 34 +++++++++++-----------------------
+>   drivers/ata/libata-transport.h |  3 ---
+>   3 files changed, 11 insertions(+), 28 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
