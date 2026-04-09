@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7FC53C343F
-	for <linux-ide@vger.kernel.org>; Thu,  9 Apr 2026 11:55:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A929253950
+	for <linux-ide@vger.kernel.org>; Thu,  9 Apr 2026 12:01:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775735735; cv=none; b=aFTx+H8MdE6Eej0UdSPhOvqqRFkvN/HgjjmtNUUbWtlnUQWBFWp5tPGL6VlAgUqxfbDbPfrcVMdsP3id267mH7JFoRbJmdYtAKFayN34kbNhrLN0+TPylUZ7dBI+oiUlq6Lt3QiGqH5CBQVjKbBvbm5Llf8RT9WUDzriE6nAUSA=
+	t=1775736065; cv=none; b=E/lgbAXlAPWl79Dl2sWtOc/xy3T2CaPZa54R9+SiznJzA0Vxc2z49AwE0d+bfN5tLipSNC3eRC1j7zB+zyO8SynCdGcGwOxMz4EOsYylnAoWDXsomi9fcrMTS8D5neR99ZSI7w04QS8b08VGURNDm7P/YuIpA0TU1usBWF0ohWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775735735; c=relaxed/simple;
-	bh=pX8f11S9H4O0txHaccZRA6GAQVG1+dPSbQTfyBrEXVI=;
+	s=arc-20240116; t=1775736065; c=relaxed/simple;
+	bh=IjedEjDP3FdStqBRXrEIMdj000ozJiSCEyExXCYsWek=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=PCT7KOAYnFsRujgQjIvZYGRkDuE8dsyNxFHwC5P5DvRTtNAiKB02JJEzQsGGTzvSJhgGWgouAqtRHXZqEzrhtiDpgY2jREw203pr9yHaGFS5tw2UP8ASvADZlaQdscgcJtKIpMZH4NWYt2FUVrLCCpVYBWScEbBchqc0RSPP5xQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uTIMYAdv; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=NXJQ3ac8IGCDEPp9W9E4slQrC+jwMyOnHYTdxGOIDoocUv0dUlMMRWhUci4dM/vFWKA4zp37719WBhbLSwPpAJvehg8L4tL+s3IhzKzBSSjmimFGdH5n8H/pq8ryGIPv4GqJd2yI+ITeRApsS9yZwyAM6pcoI6M6dWka3pw4kIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bi7JOeuz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uTIMYAdv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C372C2BC87;
-	Thu,  9 Apr 2026 11:55:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bi7JOeuz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 700BDC4CEF7;
+	Thu,  9 Apr 2026 12:01:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775735735;
-	bh=pX8f11S9H4O0txHaccZRA6GAQVG1+dPSbQTfyBrEXVI=;
+	s=k20201202; t=1775736065;
+	bh=IjedEjDP3FdStqBRXrEIMdj000ozJiSCEyExXCYsWek=;
 	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=uTIMYAdvI66nFOiFkrAGrGnIngEv1/V5swfmqymyLjAtpxRyg7nlJDuhvhBYvar8O
-	 3PYdfokMxOhKdm3lBRuV0fhDajYA+hr1U3f8of+g+dFxXGfkhwl+zpOmuyiNpXowCx
-	 MyTuq6qJuYos1GUTDSTazYmgpkRCMG6vLtB7ftElh67igix8fCGh9ksrN1TNabj6mg
-	 ShNUXVhbTEFSKBCnz6Da7/9ajdL11Uy7r+rSHbJZb+AB7+R5U5so9PplLLhAUrPE+J
-	 oUmvyMEoXx8Hq5MTIg5XNpdeR+5+AHVdERRXQDLL0+elCEo7FlkIIs4ReLLIrL5Vay
-	 ehW2vrlzjg9vg==
-Message-ID: <4b000b96-b9cc-4acf-93b0-6f76ea03cd1b@kernel.org>
-Date: Thu, 9 Apr 2026 13:55:33 +0200
+	b=Bi7JOeuzffhYauR0ccOL0oyGM0zxO00FkGW1K4VbFyRbmhHgPb+d7h4pFwVzAmQaY
+	 1HB0QHzjPSOCnEhZBqJ2lARVgXPm/o+5Id4dxnpjvOLI4rdgaWyaVJGK8CMoeDiGsK
+	 k2UpthDZ9C7sTvTNzrM0efF6N80fu35F70PubcVJx7G1MCx9R4m+jnlm+cHnh8hYZ9
+	 r2IdgmJvi5BKDtXVMje4/g5FUreURKmGeefVB5oD1MZvhhXHRepgQZSDCf4eeGc/dZ
+	 aoKgkoToeRkHGF3/fDOOPUNnC4jkhaYYwr74Q9sfD01kkGvNlJEf/GEXGIplBA0bNA
+	 N8EpUYkmoF5cQ==
+Message-ID: <6740c3b7-c63c-4181-b36e-962e07bb468f@kernel.org>
+Date: Thu, 9 Apr 2026 14:01:03 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -37,7 +37,8 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: Default IDENTIFY timeout is 5000ms which is too short for
  enterprise disks
-To: AlanCui4080 <me@alancui.cc>, linux-ide@vger.kernel.org
+To: AlanCui4080 <me@alancui.cc>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
 References: <14015677.uLZWGnKmhe@alanarchdesktop>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
@@ -52,6 +53,10 @@ On 2026/04/09 12:21, AlanCui4080 wrote:
 > I have two ST4000NM000A-2HZ100 on my computer which is of seagate enterprise 
 > line.  But when i recovery from suspend, the kernel complains about that and 
 > the zpool kicks the disk off:
+
+We do not deal with out of tree code. So mentioning something that ZFS does is
+not helping. Please check with an upstream file system. E.g. XFS, ext4 or BTRFS.
+
 > 
 > ```
 > ata2: found unknown device (class 0)
@@ -74,6 +79,9 @@ On 2026/04/09 12:21, AlanCui4080 wrote:
 > ```
 > I think that's cause by the too slow spinup for my disk.
 > After make libata to wait longer, the warning disappeared.
+
+What kernel version is this ? Did you test with the latest mainline (7.0-rc7) ?
+
 > 
 > ```
 > # cat /proc/cmdline
@@ -92,6 +100,10 @@ On 2026/04/09 12:21, AlanCui4080 wrote:
 > 
 > Meanwhile, the seachest reports that the startup time from standby is 9sec, 
 > which is longer that the default ATA IDENTIFY timeout.
+
+Your drive is very slow/old. Most modern drives can reply to identify even when
+they are not fully spun up.
+
 > 
 > ```
 > /dev/sg0 - ST4000NM000A-2HZ100 - **** - TN04 - ATA
@@ -116,15 +128,13 @@ On 2026/04/09 12:21, AlanCui4080 wrote:
 > for those "heavy" disk? Or print some warnings about how to relax this 
 > problem.
 
-Elsewhere ? I have not seen any complaints/problem reports on the linux-ide list
-recently. So I do not know where "elsewhere" is.
+Elsewhere ? That certainly was not on this list as we have seen no problem
+reports recently.
 
-And no, we should not quirk the disk but rather improve resume from suspend to
-issue identify with increasing timeouts, like regular probe does, or to issue
-identify only once we see the drive ready, which is a check that exist for
-spundown startups. That should solve the issue.
-
-
+And no, we should not introduce a quirk for this. Rather, we should do the same
+3-steps timeout for revalidation after a resume from suspend in the same manner
+as a regular probe does. Or add a check/wait for "drive ready" when resuming,
+similar to the PUIS handling (power up in standby).
 
 
 -- 
