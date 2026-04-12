@@ -1,132 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E92642AA9;
-	Sun, 12 Apr 2026 07:41:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27FDF1D5151;
+	Sun, 12 Apr 2026 10:42:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775979671; cv=none; b=fSpin9cQJc5sSo+OJBrd3qQBEf7NJybpyyRSKX5wc5x3ej8HM6iXmpyU4COCXnhF8I1z0ZMKzG5TbPcJNTkC21GJnPsSdilv02jLsjpCD0MQuqZ0CqTdAzy74YQmTdPlg7JCM4FW4pXm2wmTvhcwXc5Ut0b2LwM9ameugtZjpbo=
+	t=1775990572; cv=none; b=Cf3I55kh5eMgYfgNknn1aIBEFXb8my2RS+sVtopdqsljN6d8PJgG3QHgRDalGLBVOS/djaSFjBmilQDc8J6wxZbeKGM30ZvzBFsmplwj8NJkea7cpNZF92fhUK+0jEfqvy87ZVOoc/cf8VC5q8yCT1DUfzeWjYp817Q+7EHS33k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775979671; c=relaxed/simple;
-	bh=t+fxPRduy+kLlBrpzBK0AZzm4tYLYBcjiNRxQEXXe94=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WHZJpBvYtng13HMkpnF03wwNaPdBCRz+lhe5VPoha19mRtuNJjti/FQaBRuuZziZDJRBvY/MaBK1WLJ6H72d6Vr4G4nJTaC6bZSx2yA0eiGVA+cVS1nYv51PUcl4if42c1r7frf9U5S2HaSNqDBNICKp+y+5nJqCUyifk7EfgPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BI9rAeLY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775990572; c=relaxed/simple;
+	bh=AZbOoikGmncQ+1zfs/8uAtJ8jAVI+LGDVPzQ/NHMwkc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vsr3XK+HKWuXSrhiucGtXB4GhqBbQp8Hl+JWH5MZTmaDCabLGTJb32eMlRqzDRZLEm/I/yZFwR8uv/TeOZouCcmJj0mFYh1fK9YO9YmNQwG7qE41Y1n6WlhiCfd37VNH+IAt6MoDQBXTdCsEJOWkmpdOI9l4X0J+RwWn5MLLWyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i0UMKbwr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BI9rAeLY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D3ECC19424;
-	Sun, 12 Apr 2026 07:41:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i0UMKbwr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C671C19424;
+	Sun, 12 Apr 2026 10:42:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775979671;
-	bh=t+fxPRduy+kLlBrpzBK0AZzm4tYLYBcjiNRxQEXXe94=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=BI9rAeLY2FdRh42ALHbBG+mcxSQe8VZ6F1KV7CJ2MnhmKdcRU7wDWT8PGKd4DFYkj
-	 OkTWdzwm+ZjF2KX2WNYetttKY5KNmNU7fVql50PZ+h4w2P2WRV+6ZXxoyp5dBnoHEy
-	 R1rlxT0zgxwh6GUC4dKTgar0tJm7MFq3z8gSSMwpSWbBUMLjhBYx6PSTN02clomA5k
-	 UEkwZZx/IXq2sIQPjhkBzfla1YZW3LYEKobbSP/UKu3r+S4rktR/S+XmxFI77K00SD
-	 GIEpE/uvyjIDu3//NJvtMZltfhme7MeEvAZgVldIvVQoacsFCjZJM+2UO/K1ugQ/FR
-	 xMmYUnIHUP25Q==
-Message-ID: <2eee9241-8910-431a-9305-b5919937c826@kernel.org>
-Date: Sun, 12 Apr 2026 09:41:07 +0200
+	s=k20201202; t=1775990571;
+	bh=AZbOoikGmncQ+1zfs/8uAtJ8jAVI+LGDVPzQ/NHMwkc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=i0UMKbwrNw3CAFkVCW/x7t5fW5uYj/26cZm1KFdqratQd9nDi+CFR0SCGP5hFhZVn
+	 QEiAUH/KiuScAorTTgsMUeC4FiISzFUePjTt7EQ7eXS1iHLiSeErWAzuc1kQjowREf
+	 M/V4NWDzAFRkmscRIOKZI+J8BwZajO8bHArrb1GogahNESTNj9FR1j0s8Yc79NnzFW
+	 ojX6Hp5eTOIvRBfv49Oq2rQjsuxaPQcjzh29ITYSmQ5ddTzmFc2GbAKGIJRRYl1shz
+	 ihE+1sB6gny20OzfUG5qFEDvKlX6rfvcymRrNYFUN6raTr6Gx1C1liTW8qHQegPt6z
+	 KNuiB3CNyVIsw==
+Date: Sun, 12 Apr 2026 12:42:46 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Xingui Yang <yangxingui@huawei.com>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ata: libata-scsi: fix requeue of deferred ATA
+ PASS-THROUGH commands
+Message-ID: <adt3JqwFcDx-Xe30@fedora>
+References: <20260410231519.951971-1-ipylypiv@google.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] ata: libata-scsi: probe additional LUNs for multi-LUN
- ATAPI devices
-To: Phil Pemberton <philpem@philpem.me.uk>, cassel@kernel.org,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260409210559.155864-1-philpem@philpem.me.uk>
- <20260409210559.155864-4-philpem@philpem.me.uk>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260409210559.155864-4-philpem@philpem.me.uk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260410231519.951971-1-ipylypiv@google.com>
 
-On 4/9/26 23:05, Phil Pemberton wrote:
-> Some ATAPI devices (e.g. the Panasonic PD/CD combo drives) implement
-> multiple logical units. For instance the aforementioned PD/CD has a CD
-> drive on LUN 0 and the rewritable Phase-change Dual (PD) block device on
-> LUN 1.
+On Fri, Apr 10, 2026 at 04:15:19PM -0700, Igor Pylypiv wrote:
+> Commit 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
+> introduced ata_scsi_requeue_deferred_qc() to handle commands deferred
+> during resets or NCQ failures. This deferral logic completed commands
+> with DID_SOFT_ERROR to trigger a retry in the SCSI mid-layer.
 > 
-> ata_scsi_scan_host() previously only scanned LUN 0 via
-> __scsi_add_device(). With the multi-LUN work now in place, extend this
-> scan to probe for additional LUNs on devices which have BLIST_FORCELUN
-> set in the SCSI device info table.
+> However, DID_SOFT_ERROR is subject to scsi_cmd_retry_allowed() checks.
+> ATA PASS-THROUGH commands sent via SG_IO ioctl have scmd->allowed set
+> to zero. This causes the mid-layer to fail the command immediately
+> instead of retrying, even though the command was never actually issued
+> to the hardware.
 > 
-> Scanning stops when __scsi_add_device() fails, or the device reports
-> device type 0x1f (unknown or no device type). The PD drive returns this
-> for unimplemented LUNs.
+> Switch to DID_REQUEUE to ensure these commands are inserted back into
+> the request queue regardless of retry limits.
 > 
-> The aforementioned BLIST_FORCELUN guard prevents non-multilun devices
-> from being affected.
-> 
-> Tested with a Panasonic LF-1195C PD/CD with Compaq firmware, which now
-> correctly enumerates as a CD drive (sr) and PD optical drive (sd).
-> 
-> Also tested with a LITE-ON iHAS124 DVD drive, which has a single LUN and
-> ignores the LUN parameter in the CDB. As a result, without the
-> BLIST_FORCELUN guard, this drive would pop up as eight separate devices.
-> 
-> Assisted-by: Claude:claude-opus-4-6
-> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 > ---
->  drivers/ata/libata-scsi.c | 29 +++++++++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
+>  drivers/ata/libata-scsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index dc6829e60fb3..0a7ce44118fe 100644
+> index 3b65df914ebb..0236394900cc 100644
 > --- a/drivers/ata/libata-scsi.c
 > +++ b/drivers/ata/libata-scsi.c
-> @@ -4732,6 +4732,35 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
->  			if (!IS_ERR(sdev)) {
->  				dev->sdev = sdev;
->  				ata_scsi_assign_ofnode(dev, ap);
-> +				/*
-> +				 * Multi-LUN ATAPI devices (e.g. PD/CD combo
-> +				 * drives) are flagged BLIST_FORCELUN in
-> +				 * scsi_devinfo.  Probe additional LUNs when
-> +				 * the flag is set.
-> +				 */
-> +				if (dev->class == ATA_DEV_ATAPI &&
-> +				    (sdev->sdev_bflags & BLIST_FORCELUN)) {
-> +					u64 lun;
-> +
-> +					for (lun = 1; lun < ap->scsi_host->max_lun;
-> +					     lun++) {
-> +						struct scsi_device *extra;
-> +
-> +						extra = __scsi_add_device(
-> +							ap->scsi_host,
-> +							channel, id, lun,
-> +							NULL);
-> +						if (IS_ERR(extra))
-> +							break;
-> +						/* PDT 0x1f: no device type */
-> +						if (extra->type == 0x1f) {
-> +							scsi_remove_device(extra);
-> +							scsi_device_put(extra);
-> +							break;
-> +						}
-> +						scsi_device_put(extra);
-> +					}
-> +				}
+> @@ -1692,7 +1692,7 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
+>  	/*
+>  	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
+>  	 * do not try to be smart about what to do with this deferred command
+> -	 * and simply retry it by completing it with DID_SOFT_ERROR.
+> +	 * and simply requeue it by completing it with DID_REQUEUE.
+>  	 */
+>  	if (!qc)
+>  		return;
+> @@ -1701,7 +1701,7 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
+>  	ap->deferred_qc = NULL;
+>  	cancel_work(&ap->deferred_qc_work);
+>  	ata_qc_free(qc);
+> -	scmd->result = (DID_SOFT_ERROR << 16);
+> +	set_host_byte(scmd, DID_REQUEUE);
 
-It would be a lot nicer and more readable to have this hunk as a helper
-function, e.g.: ata_scsi_scan_atapi_luns().
+set_host_byte() will set the host byte, but it will keep the status byte
+and the ML byte intact.
 
->  				scsi_device_put(sdev);
->  			} else {
->  				dev->sdev = NULL;
+By using the assignment operator, I assumed that Damien intentionally
+wanted to clear the status byte and the ML byte.
+
+My point is that using set_host_byte() is a logical change.
+If we want to stop clearing the status byte and the ML byte, then I think
+that change should be in a separate commit, with a proper motivation/commit
+message.
+
+However, for the fix patch itself, I think we should just do:
+-	scmd->result = (DID_SOFT_ERROR << 16);
++	scmd->result = (DID_REQUEUE << 16);
 
 
--- 
-Damien Le Moal
-Western Digital Research
+If that is sufficient to fix your observed problem.
+
+I would also be happy to see a follow up patch that changes to use
+set_host_byte(), if there is a motivation that can motivate why that change
+is safe/valid.
+
+
+Kind regards,
+Niklas
