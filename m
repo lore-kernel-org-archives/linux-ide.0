@@ -1,87 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5D812DC332;
-	Sun, 12 Apr 2026 18:11:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50BFF2E5B1B
+	for <linux-ide@vger.kernel.org>; Sun, 12 Apr 2026 18:22:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776017497; cv=none; b=eKKuW9Ga+i6kDcMwCfY6TVS4wv6LcqoVcs5/qS0Bwk9UMWGHS+/v647jgMOOIJt34fYvZIV3dtcyogsarLIPbVZqBc5S51TXHSCckKNWxTLbA1s1Ir3/gX+nlPFgZjTDXX2XS/UVp/FjBsSkKYjv0xvwb9PICo31WVgCZq/JErw=
+	t=1776018136; cv=none; b=d99i9AN7ohpB+JUc6caJ3I1aYfh2u7ZFJSiCLo06jXATFxOyqIQg+oSid0KMgVv610WupIOYqUWhuJrgEFl1LB3X06cNqHe37KGHitR0gts49LFdDZh5EHglyo+k9uV0o+McKmtSNRlvL4Ba9q71Kfwg/HOQdHmMUbCqOTyAH+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776017497; c=relaxed/simple;
-	bh=Ju/fJaO2pcbpcQjv6kJ9VPfdZqlRPZmb3O6vkUO04AQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IEBvDLJBKfmvQ62IAJ2aQxuEfaXmH3bJDoOFjRXrqzBvmbgwW2xqJhpVnuHcsJt8p2Y9iy5ngJ9RBmlbKvuPvtBOU+tQiHC8d1CtZurcBL83+qvyMB41dF48ApY924k1Tbaci+ugrWaSfETQ1tddRXry47zkD9z4YU9E0ewQ3gI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MfRM66Io; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776018136; c=relaxed/simple;
+	bh=NodZCqZW0PgvPg6CzvrNBUK3HBipxUXwUFQpvYOhnKA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fKfF4Sj07wHcTkEo3uBF59PL/w0DkGWeaYlbw2vbAWTn34gCnuCeHhsN2uXib/+3KqWk3wAUwOulN6zbcWRbifdafjQBpqDiKODhgIg4RvHXmfSFSw5HpPTDfAKzWISqAZNWl5gVr1kJBFvJJXCzYODUsVLJKZsB87DPGBIChqM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H3rgrI5b; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MfRM66Io"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9882CC19424;
-	Sun, 12 Apr 2026 18:11:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H3rgrI5b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C89FDC19424;
+	Sun, 12 Apr 2026 18:22:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776017497;
-	bh=Ju/fJaO2pcbpcQjv6kJ9VPfdZqlRPZmb3O6vkUO04AQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=MfRM66IoZq1R/p8UUwRKHFdLLMpKFmW0ooy/RqqBFk0KWEx7AHR+AFgo/qoS0f7cM
-	 Z+kFnpWp3YQNE7rtVQM+LloPbl1nHMUG9iLrTZFeePy3QF9ah9cO5M6xNdda5bPSUs
-	 A85I5FkM3L+Khi14PDSpusmui/rOIqYXLXCbpvOHOWx8uSF6268eTqlisSGgEAsJf1
-	 ZrWyEnl5VR5dD51leMRarYa0dkEcQOHdF9+7z+lCZ3Wln3RqdrW5aE2WL3dsmeu1ta
-	 vZd1UBuvByniTkvP1kiiTnjfgVTJZGZuaFFR+49+FqbdlIe1kDNOgJ4tUmG/ze2Y7O
-	 YU3MQWy99ZCuQ==
+	s=k20201202; t=1776018135;
+	bh=NodZCqZW0PgvPg6CzvrNBUK3HBipxUXwUFQpvYOhnKA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=H3rgrI5bxPQbxXh9HpfF/ui1Lv4bYewQjvznNzZW/SZ7BaXv92wnoGcuZrV53ZXlz
+	 6DcWifzhJR5/2vY+yH/T0z2PyT1mOYY0uXxnZSY7Ggo290d1F4I2MzledC+C4aXJeL
+	 3KUbQnqzE6bmn1lfIQYuho3mYohWByrjs/LUskH+fw98AFBQ17i7QO2P9JO2Py8s0/
+	 w18Yzvc9E/XGC1siiSgptJOOfmuNyEFFueY/u8OUBShvFWA3Jekwr1hlW68shkpFdB
+	 XipPeGXXJwtLQejZ1KphfryCGRJo5r9Z2gwissdw5vM3vaW1qzBOXw5AYRxG7CXzVT
+	 C1fTelPObUzRg==
+Date: Sun, 12 Apr 2026 20:22:12 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Igor Pylypiv <ipylypiv@google.com>,
-	linux-kernel@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Xingui Yang <yangxingui@huawei.com>,
-	linux-ide@vger.kernel.org,
-	Sergey Shtylyov <sergei.shtylyov@gmail.com>
-Subject: Re: [PATCH v=2] ata: libata-scsi: fix requeue of deferred ATA PASS-THROUGH commands
-Date: Sun, 12 Apr 2026 20:11:19 +0200
-Message-ID: <177601670536.2584527.11395508886922734288.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260412153637.475606-1-ipylypiv@google.com>
-References: <20260412153637.475606-1-ipylypiv@google.com>
+To: Tommy Kelly <linux@tkel.ly>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
+	Igor Pylypiv <ipylypiv@google.com>
+Subject: Re: [PATCH v2 0/2] ATA port deferred qc fixes
+Message-ID: <advi1OGShxsjdrCL@ryzen>
+References: <20260220221439.533771-1-dlemoal@kernel.org>
+ <ce09cc21-a8e9-4845-b205-35411e22fba9@tkel.ly>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1214; i=cassel@kernel.org; h=from:subject:message-id; bh=Ju/fJaO2pcbpcQjv6kJ9VPfdZqlRPZmb3O6vkUO04AQ=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJvP3DbvEZHVD0/MWhJyTWTr4px6dc9q9T39CbPt255b W5SV9nZUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIk8rWb4X8Q754nEaZaFDw7z CVWt2vIm0Hm66qW9eqaxc5X3nf9fnMXI8MxKh41nZekkqXc2If+Xqn66dNveSZelrFz6+a5VfbP deQE=
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ce09cc21-a8e9-4845-b205-35411e22fba9@tkel.ly>
 
-On Sun, 12 Apr 2026 08:36:37 -0700, Igor Pylypiv wrote:
-> Commit 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-> introduced ata_scsi_requeue_deferred_qc() to handle commands deferred
-> during resets or NCQ failures. This deferral logic completed commands
-> with DID_SOFT_ERROR to trigger a retry in the SCSI mid-layer.
+On Thu, Apr 02, 2026 at 02:22:49AM -0700, Tommy Kelly wrote:
+> On 2/20/26 14:14, Damien Le Moal wrote:
+> > The first patch addresses a use-after-free issue when a deferred qc
+> > times out. The second patch avoids a call to a potentially sleeping
+> > function while a port spinlock is held.
+> > 
+> > Changes from v1:
+> >  - Corrected typo in patch 1 message, improved comment in code and added
+> >    a WARN_ON_ONCE() call to verify that a timed out qc is not active.
+> >  - Fixed patch 2 to not call ata_scsi_requeue_deferred_qc() without the
+> >    port lock held. This call is in fact removed: it is not needed as
+> >    ata_scsi_requeue_deferred_qc() is called in EH, which is always run
+> >    when removing a port.
+> > 
+> > Damien Le Moal (2):
+> >   ata: libata-eh: correctly handle deferred qc timeouts
+> >   ata: libata-core: fix cancellation of a port deferred qc work
+> > 
+> >  drivers/ata/libata-core.c |  8 +++-----
+> >  drivers/ata/libata-eh.c   | 22 +++++++++++++++++++---
+> >  2 files changed, 22 insertions(+), 8 deletions(-)
+> > 
 > 
-> However, DID_SOFT_ERROR is subject to scsi_cmd_retry_allowed() checks.
-> ATA PASS-THROUGH commands sent via SG_IO ioctl have scmd->allowed set
-> to zero. This causes the mid-layer to fail the command immediately
-> instead of retrying, even though the command was never actually issued
-> to the hardware.
 > 
-> [...]
+> Hello, this is my first message on the LKML so please forgive me for
+> likely not following etiquette.
+> 
+> I have what might be a regression from somewhere in the recent series of
+> NCQ / QC patches.
+> 
+> I have a peculiar setup that might reveal the source of the bug. I'm
+> using a SATA Port Multiplier (PMP), powered by JMB575, which expands 1
+> SATA port to 5 drives.
+> The device/driver/subsystem tree looks like rk3568-dwc-ahci -> scsi -> sda.
+> The platform does not (yet) support FIS-Based Switching (FBS), so it is
+> using Command-Based Switching (CBS). FBS support may land in Linux 7.1.
+> 
+> > kernel: ahci-dwc fc800000.sata: flags: ncq sntf pm led clo only pmp fbs pio slum part ccc apst
+> > kernel: ahci-dwc fc800000.sata: port 0 is not capable of FBS
+> 
+> When switching from kernel 6.18.13 to 6.19.7, drive access became
+> extremely slow, causing lock timeouts at the filesystem level. I solved
+> the problem by changing /sys/block/sd*/device/queue_depth from 32 to 1.
+> 
+> I also looked through the recent LPM patches, but the drives'
+> performance didn't improve after changing LPM settings for the scsi host
+> in sysfs.
+> 
+> Let me know if I need to provide more details or logs. I can see
+> COMRESET a lot in each device's SMART logs but they aren't timestamped
+> so I haven't proved that they are recent. Perhaps the slow drive
+> switching is causing command starvation.
 
-Hello Igor,
+Hello Tommy,
 
-Considering that Linus is expected for release 7.0 any minute now (it is
-already Sunday afternoon), it seems too late to send this as a PR for 7.0.
+Igor recently found a bug in the deferred QC feature:
+https://lore.kernel.org/linux-ide/20260412153637.475606-1-ipylypiv@google.com/
 
-The fix will have to be backported to v7.0 stable instead.
+His fix patch has been queued up on libata/for-next, so perhaps you could try
+the libata/for-next branch:
+https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-next
 
-Therefore, I rebased your patch on libata/for-next
-(without any parens - the comment from Sergey).
+And see if you can still reproduce the problem there.
 
-
-Applied to libata/linux.git (for-7.1), thanks!
-
-[1/1] ata: libata-scsi: fix requeue of deferred ATA PASS-THROUGH commands
-      https://git.kernel.org/libata/linux/c/8ebf408e
 
 Kind regards,
 Niklas
