@@ -1,143 +1,137 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFB053BF676;
-	Mon, 20 Apr 2026 13:26:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E8E03A1D10;
+	Mon, 20 Apr 2026 13:29:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776691580; cv=none; b=pkEP92XNy9TQs9Yf4oO6LF8ih9IK7xiIM8rpOXMpffOjuFSy9XVtYIh3CJVGe/QqixUwJrEd0YHuHEpL88Q0MrPPCCo1U0nPafDr22yxxPWJyK62FmTVwLIDlAGOqBE5kn5MZp4yY9Y3WAR0SAp6Uk14E0yX7cppcd+thZkafIw=
+	t=1776691787; cv=none; b=R1m5U4hLDW2aSEucbFbHp2OtCWGUeaXDnXtTWu0NoToJXTlNXjrAOT41klbfSoRAq7Tv2buA6TgFEZzvQGExGMlgljMc8Mbalsv2SLfthQOWrnP9rTtMhRP3n+aqeXv2nmDvu4yAq+l2hzgvyMJijVbsEBM+bgZ9D7CqSpJQ6uw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776691580; c=relaxed/simple;
-	bh=DNKwBGIaLjPlsb7ZI58Ka3QcN1r97FnA/wx1odcoGUs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=U1fA4VeDG1O+KJU5DI27SC0t8G7UNZyU7aqGOtVd3G9IZg1DSBJjGU6m3JniUXRo2jDdmxVVP1XeqzE42WyCo4cThMGTbXPj5SpTMeD3MYCAi0N8ta1YMpinm6J8GJGkSv551cRWddSWPWecPRbMyG5q3DPzcio0OuxeEPA01Fs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.104] (213.87.137.185) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Mon, 20 Apr
- 2026 16:10:55 +0300
-Message-ID: <5584ba17-bc68-4d3a-aa63-0e18c3eff22a@omp.ru>
-Date: Mon, 20 Apr 2026 16:10:54 +0300
+	s=arc-20240116; t=1776691787; c=relaxed/simple;
+	bh=Z9R431ybjLB8AVvYdamQwwbm/eXKJM1LesQH9zAoukU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=e8gyPs+eTpt8y/pQJ7zGBNCU9azlFDvwcV38M3kwTAcdiJermYhLpkHZOfmS/kqtfeM5HscBde0+it82VZjp2Br33B1d1qbsK2/sdFiiFCWEWf3D97w6dEa/IjAFrYrR/iqzexyKCMBW3/iNDW1FtcgEO0v4y+6juCuBv0WYJ0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=utQ96oJY; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="utQ96oJY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07DB3C2BCB9;
+	Mon, 20 Apr 2026 13:29:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776691786;
+	bh=Z9R431ybjLB8AVvYdamQwwbm/eXKJM1LesQH9zAoukU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=utQ96oJYIud6uQVOcCFPJ2QH5MQ+2v8BczaRpbXWy+A3ZPZQem7KVbiC3jkNVG5oo
+	 SoQ/h8vnDPg+b+biuT2Sxx5HPCSXFNzP39zudBXav9eK+tOlER2dfPrhzmAmP/YfgZ
+	 UPhl7NJm+2kYN2d9sp1KObQ4W565Tb5cTNgmgoHTti9DPCGhvX7qoEoYJ1+ddrIi1t
+	 I7xZdzk4NmOQgdcta9FPXOA3gtY39eDYAlPxVqs60if6juM+jH3bkXanGEQoNZL523
+	 IGAQtW1Mu2hYxJNpFI+qtcvNv+rkR/mvTNKtU0W6AEs4vnw6Pgq00Ov15mDi3eqSxE
+	 gpgvD7bHf52Hg==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: Arthur Husband <artmoty@gmail.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Sasha Levin <sashal@kernel.org>,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18] ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585
+Date: Mon, 20 Apr 2026 09:19:47 -0400
+Message-ID: <20260420132314.1023554-193-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260420132314.1023554-1-sashal@kernel.org>
+References: <20260420132314.1023554-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5.10.y] ata: pata_sil680: fix result type of
- sil680_sel{dev|reg}()
-To: Rand Deeb <rand.sec96@gmail.com>, <stable@vger.kernel.org>
-CC: <axboe@kernel.dk>, <linux-ide@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <deeb.rand@confident.ru>,
-	<lvc-project@linuxtesting.org>, <khoroshilov@ispras.ru>, Damien Le Moal
-	<damien.lemoal@opensource.wdc.com>
-References: <20260419222355.5842-1-rand.sec96@gmail.com>
-Content-Language: en-US
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <20260419222355.5842-1-rand.sec96@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 04/20/2026 13:02:31
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 202452 [Apr 20 2026]
-X-KSE-AntiSpam-Info: Version: 6.1.1.22
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 100 0.3.100
- 82998f6d011048b8a55d77ec41a5097a5546c4f1
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.137.185 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.137.185 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: {Tracking_ip_hunter}
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.137.185
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 04/20/2026 13:04:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 4/20/2026 11:11:00 AM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.18.23
+Content-Transfer-Encoding: 8bit
 
-On 4/20/26 1:23 AM, Rand Deeb wrote:
+From: Arthur Husband <artmoty@gmail.com>
 
-> From: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
-> [ Upstream commit dafbbf5c57dd6ae01d20b894bc2200e9d9834c4e ]
-> 
-> sil680_sel{dev|reg}() return a PCI config space address but needlessly
-> use the *unsigned long* type for that,  whereas the PCI config space
-> accessors take *int* for the address parameter.  Switch these functions
-> to returning *int*, updating the local variables at their call sites.
-> Get rid of the 'base' local variables in these functions, while at it...
-> 
-> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
-> analysis tool.
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
-> ---
->  drivers/ata/pata_sil680.c | 30 +++++++++++++-----------------
->  1 file changed, 13 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-> index 7ab9aea3b..fe60f884b 100644
-> --- a/drivers/ata/pata_sil680.c
-> +++ b/drivers/ata/pata_sil680.c
-> @@ -47,11 +47,9 @@
->   *     criticial.
->   */
-> 
-> -static unsigned long sil680_selreg(struct ata_port *ap, int r)
-> +static int sil680_selreg(struct ata_port *ap, int r)
->  {
-> -       unsigned long base = 0xA0 + r;
-> -       base += (ap->port_no << 4);
-> -       return base;
-> +       return 0xA0 + (ap->port_no << 4) + r;
->  }
-> 
->  /**
-> @@ -64,12 +62,9 @@ static unsigned long sil680_selreg(struct ata_port *ap, int r)
->   *     the unit shift.
->   */
-> 
-> -static unsigned long sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
-> +static int sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
->  {
-> -       unsigned long base = 0xA0 + r;
-> -       base += (ap->port_no << 4);
-> -       base |= adev->devno ? 2 : 0;
-> -       return base;
-> +       return 0xA0 + (ap->port_no << 4) + r + (adev->devno << 1);
->  }
+[ Upstream commit 105c42566a550e2d05fc14f763216a8765ee5d0e ]
 
-   And why exactly is this needed in 5.10.y?
+The JMicron JMB585 (and JMB582) SATA controllers advertise 64-bit DMA
+support via the S64A bit in the AHCI CAP register, but their 64-bit DMA
+implementation is defective. Under sustained I/O, DMA transfers targeting
+addresses above 4GB silently corrupt data -- writes land at incorrect
+memory addresses with no errors logged.
 
-[...]
-MBR, Sergey
+The failure pattern is similar to the ASMedia ASM1061
+(commit 20730e9b2778 ("ahci: add 43-bit DMA address quirk for ASMedia
+ASM1061 controllers")), which also falsely advertised full 64-bit DMA
+support. However, the JMB585 requires a stricter 32-bit DMA mask rather
+than 43-bit, as corruption occurs with any address above 4GB.
+
+On the Minisforum N5 Pro specifically, the combination of the JMB585's
+broken 64-bit DMA with the AMD Family 1Ah (Strix Point) IOMMU causes
+silent data corruption that is only detectable via checksumming
+filesystems (BTRFS/ZFS scrub). The corruption occurs when 32-bit IOVA
+space is exhausted and the kernel transparently switches to 64-bit DMA
+addresses.
+
+Add device-specific PCI ID entries for the JMB582 (0x0582) and JMB585
+(0x0585) before the generic JMicron class match, using a new board type
+that combines AHCI_HFLAG_IGN_IRQ_IF_ERR (preserving existing behavior)
+with AHCI_HFLAG_32BIT_ONLY to force 32-bit DMA masks.
+
+Signed-off-by: Arthur Husband <artmoty@gmail.com>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+
+LLM Generated explanations, may be completely bogus:
+
+Error: Failed to generate final synthesis
+
+ drivers/ata/ahci.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 931d0081169b9..1d73a53370cf3 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -68,6 +68,7 @@ enum board_ids {
+ 	/* board IDs for specific chipsets in alphabetical order */
+ 	board_ahci_al,
+ 	board_ahci_avn,
++	board_ahci_jmb585,
+ 	board_ahci_mcp65,
+ 	board_ahci_mcp77,
+ 	board_ahci_mcp89,
+@@ -212,6 +213,15 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_avn_ops,
+ 	},
++	/* JMicron JMB582/585: 64-bit DMA is broken, force 32-bit */
++	[board_ahci_jmb585] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR |
++				 AHCI_HFLAG_32BIT_ONLY),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ 	[board_ahci_mcp65] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
+ 				 AHCI_HFLAG_YES_NCQ),
+@@ -439,6 +449,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* Elkhart Lake IDs 0x4b60 & 0x4b62 https://sata-io.org/product/8803 not tested yet */
+ 	{ PCI_VDEVICE(INTEL, 0x4b63), board_ahci_pcs_quirk }, /* Elkhart Lake AHCI */
+ 
++	/* JMicron JMB582/585: force 32-bit DMA (broken 64-bit implementation) */
++	{ PCI_VDEVICE(JMICRON, 0x0582), board_ahci_jmb585 },
++	{ PCI_VDEVICE(JMICRON, 0x0585), board_ahci_jmb585 },
++
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
+-- 
+2.53.0
 
