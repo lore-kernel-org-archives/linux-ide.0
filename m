@@ -1,137 +1,94 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E8E03A1D10;
-	Mon, 20 Apr 2026 13:29:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B20732E137
+	for <linux-ide@vger.kernel.org>; Mon, 20 Apr 2026 16:27:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776691787; cv=none; b=R1m5U4hLDW2aSEucbFbHp2OtCWGUeaXDnXtTWu0NoToJXTlNXjrAOT41klbfSoRAq7Tv2buA6TgFEZzvQGExGMlgljMc8Mbalsv2SLfthQOWrnP9rTtMhRP3n+aqeXv2nmDvu4yAq+l2hzgvyMJijVbsEBM+bgZ9D7CqSpJQ6uw=
+	t=1776702477; cv=none; b=GCg2Whi3vw4VzusJrFahAosIZOMQcpWtqnzS1LbwFZ28OyNIn2VhjwvOXNs97DfC7TQtH9lI7+JH5Xt/AWZLlePfbjZ4Gn0UxQYmlTDR7a3sY6uaHNebKniryNNsSzsMNxoZszIyGTaKajOl7Hv/WbVQJQDMCXPA5eDH3y80q9Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776691787; c=relaxed/simple;
-	bh=Z9R431ybjLB8AVvYdamQwwbm/eXKJM1LesQH9zAoukU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=e8gyPs+eTpt8y/pQJ7zGBNCU9azlFDvwcV38M3kwTAcdiJermYhLpkHZOfmS/kqtfeM5HscBde0+it82VZjp2Br33B1d1qbsK2/sdFiiFCWEWf3D97w6dEa/IjAFrYrR/iqzexyKCMBW3/iNDW1FtcgEO0v4y+6juCuBv0WYJ0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=utQ96oJY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776702477; c=relaxed/simple;
+	bh=TDbhItEMZ2Gspha5N1Q9UvzrdsEwBvXBar4aFawNezA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QROZTbSz1Kh6ncW50TfIfuWaVtyfKXaDxmC5ci+q/HEroX+1MMFffEXIPLow4ZJFWr6Ma2L/aKl4H4jJ2u8cx7Be8oxqgpTTZMwS53EHXMhgBwEpaZjS0Zkbizgf5nwF+d3JPY3kGO4mbXpAMIBG74tEunuO95Oor0pXytOhvX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oF/4uJKs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="utQ96oJY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07DB3C2BCB9;
-	Mon, 20 Apr 2026 13:29:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oF/4uJKs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51ECAC19425;
+	Mon, 20 Apr 2026 16:27:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776691786;
-	bh=Z9R431ybjLB8AVvYdamQwwbm/eXKJM1LesQH9zAoukU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=utQ96oJYIud6uQVOcCFPJ2QH5MQ+2v8BczaRpbXWy+A3ZPZQem7KVbiC3jkNVG5oo
-	 SoQ/h8vnDPg+b+biuT2Sxx5HPCSXFNzP39zudBXav9eK+tOlER2dfPrhzmAmP/YfgZ
-	 UPhl7NJm+2kYN2d9sp1KObQ4W565Tb5cTNgmgoHTti9DPCGhvX7qoEoYJ1+ddrIi1t
-	 I7xZdzk4NmOQgdcta9FPXOA3gtY39eDYAlPxVqs60if6juM+jH3bkXanGEQoNZL523
-	 IGAQtW1Mu2hYxJNpFI+qtcvNv+rkR/mvTNKtU0W6AEs4vnw6Pgq00Ov15mDi3eqSxE
-	 gpgvD7bHf52Hg==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Arthur Husband <artmoty@gmail.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585
-Date: Mon, 20 Apr 2026 09:19:47 -0400
-Message-ID: <20260420132314.1023554-193-sashal@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260420132314.1023554-1-sashal@kernel.org>
-References: <20260420132314.1023554-1-sashal@kernel.org>
+	s=k20201202; t=1776702477;
+	bh=TDbhItEMZ2Gspha5N1Q9UvzrdsEwBvXBar4aFawNezA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=oF/4uJKsZ0GbuamBR967v6/MeIC4TBzeJVahMbs03Dux3bxVJl0eoxYzLZFKfN6a+
+	 2q00YambJ/wMtkkjCMsjBezGLQYkzVRaUNa6h8Cipfg66uT++JVEfH7UltJ4pAGhN/
+	 ACzv/+kSPrKV2BdkwxyFt/Rj9kPQjoOIRxx354H0dt9JgcpoyBJcmhrqy2DphLsJCe
+	 K/N6rbOD9LnKLa2AI5Du0EGl0ObpCz29uenjGbpWWyXNAfWdfLPpSbQGdVUsOYbPIq
+	 aEfxMNDfdH1cY0RHd4kD1PWh+gUFMRE9FYNHazneAaUdRCxrOFgj7U7lmag0pGVw3z
+	 TpA5jWXUB1MBA==
+Date: Mon, 20 Apr 2026 18:27:53 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: AlanCui4080 <me@alancui.cc>
+Cc: linux-ide@vger.kernel.org
+Subject: Re: Default IDENTIFY timeout is 5000ms which is too short for
+ enterprise disks
+Message-ID: <aeZUCa5wumWXi_yN@ryzen>
+References: <14015677.uLZWGnKmhe@alanarchdesktop>
+ <6740c3b7-c63c-4181-b36e-962e07bb468f@kernel.org>
+ <ad-HTImFZxdtkD2J@ryzen>
+ <23071769.EfDdHjke4D@alanarchdesktop>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.18.23
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <23071769.EfDdHjke4D@alanarchdesktop>
 
-From: Arthur Husband <artmoty@gmail.com>
+On Thu, Apr 16, 2026 at 08:59:30PM +0800, AlanCui4080 wrote:
 
-[ Upstream commit 105c42566a550e2d05fc14f763216a8765ee5d0e ]
+[...]
 
-The JMicron JMB585 (and JMB582) SATA controllers advertise 64-bit DMA
-support via the S64A bit in the AHCI CAP register, but their 64-bit DMA
-implementation is defective. Under sustained I/O, DMA transfers targeting
-addresses above 4GB silently corrupt data -- writes land at incorrect
-memory addresses with no errors logged.
+> [12961.113196] ata2: link is slow to respond, please be patient (ready=0)
+> [12961.114200] ata4: link is slow to respond, please be patient (ready=0)
+> [12963.428372] r8169 0000:07:00.0 enp7s0: Link is Up - 1Gbps/Full - flow control rx/tx
+> [12965.816162] ata2: found unknown device (class 0)
+> [12965.816180] ata4: found unknown device (class 0)
+> [12965.969160] ata2: found unknown device (class 0)
+> [12965.969171] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [12965.970159] ata4: found unknown device (class 0)
+> [12965.970167] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [12981.369196] ata2.00: qc timeout after 15000 msecs (cmd 0xec)
+> [12981.369207] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> [12981.369210] ata2.00: revalidation failed (errno=-5)
+> [12981.369226] ata4.00: qc timeout after 15000 msecs (cmd 0xec)
+> [12981.369236] ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> [12981.369238] ata4.00: revalidation failed (errno=-5)
+> [12981.833047] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [12981.833134] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [12981.869506] ata2.00: configured for UDMA/133
+> [12981.879537] ata4.00: configured for UDMA/133
 
-The failure pattern is similar to the ASMedia ASM1061
-(commit 20730e9b2778 ("ahci: add 43-bit DMA address quirk for ASMedia
-ASM1061 controllers")), which also falsely advertised full 64-bit DMA
-support. However, the JMB585 requires a stricter 32-bit DMA mask rather
-than 43-bit, as corruption occurs with any address above 4GB.
+From this it seems that it is simply the first IDENTIFY that times out.
+On the second try, it seems that the IDENTIFY passes, otherwise we would
+have seen more "revalidation failed (errno=-5)" prints for the same drive.
 
-On the Minisforum N5 Pro specifically, the combination of the JMB585's
-broken 64-bit DMA with the AMD Family 1Ah (Strix Point) IOMMU causes
-silent data corruption that is only detectable via checksumming
-filesystems (BTRFS/ZFS scrub). The corruption occurs when 32-bit IOVA
-space is exhausted and the kernel transparently switches to 64-bit DMA
-addresses.
+So, from this log alone, I don't see any problem. We will try to do IDENTIFY
+up to three times, so just a single IDENTIFY failing should not be a problem.
 
-Add device-specific PCI ID entries for the JMB582 (0x0582) and JMB585
-(0x0585) before the generic JMicron class match, using a new board type
-that combines AHCI_HFLAG_IGN_IRQ_IF_ERR (preserving existing behavior)
-with AHCI_HFLAG_32BIT_ONLY to force 32-bit DMA masks.
+So I think the question is, at this point, can you read from the drive?
 
-Signed-off-by: Arthur Husband <artmoty@gmail.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
+E.g.:
+# dd if=/dev/sda of=/dev/null iflag=direct bs=4K count=1
 
-LLM Generated explanations, may be completely bogus:
+replace /dev/sda with the drive connected to ata2.00 or ata4.00.
 
-Error: Failed to generate final synthesis
+If you can read from the device, then this seem like a problem with zpool
+kicking the device off the RAID array (perhaps because it is taking longer
+than some zpool defined timeout value?), rather than a libata problem.
 
- drivers/ata/ahci.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 931d0081169b9..1d73a53370cf3 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -68,6 +68,7 @@ enum board_ids {
- 	/* board IDs for specific chipsets in alphabetical order */
- 	board_ahci_al,
- 	board_ahci_avn,
-+	board_ahci_jmb585,
- 	board_ahci_mcp65,
- 	board_ahci_mcp77,
- 	board_ahci_mcp89,
-@@ -212,6 +213,15 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_avn_ops,
- 	},
-+	/* JMicron JMB582/585: 64-bit DMA is broken, force 32-bit */
-+	[board_ahci_jmb585] = {
-+		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR |
-+				 AHCI_HFLAG_32BIT_ONLY),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
- 	[board_ahci_mcp65] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
- 				 AHCI_HFLAG_YES_NCQ),
-@@ -439,6 +449,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	/* Elkhart Lake IDs 0x4b60 & 0x4b62 https://sata-io.org/product/8803 not tested yet */
- 	{ PCI_VDEVICE(INTEL, 0x4b63), board_ahci_pcs_quirk }, /* Elkhart Lake AHCI */
- 
-+	/* JMicron JMB582/585: force 32-bit DMA (broken 64-bit implementation) */
-+	{ PCI_VDEVICE(JMICRON, 0x0582), board_ahci_jmb585 },
-+	{ PCI_VDEVICE(JMICRON, 0x0585), board_ahci_jmb585 },
-+
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
--- 
-2.53.0
-
+Kind regards,
+Niklas
