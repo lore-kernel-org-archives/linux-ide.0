@@ -1,76 +1,54 @@
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36384AD24
-	for <linux-ide@vger.kernel.org>; Sun, 19 Apr 2026 22:24:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA5FD39F164;
+	Mon, 20 Apr 2026 12:23:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776637486; cv=none; b=XmJqzZmIg9Jku8VzoHj4cCGcpY8OsOjSlzF0DCxKpmYaRO7/FBv6kYSX1fCAxN9v7TiLG1KCxQvCFO9/lYDxb35lhU7jorxfD0OKM6BBvHIWMa4/82dCjDm8urGk9wFuq6JTdhJJ9edT3dUiJ362jnaoaYt3xQPkJ9uBCUXCl90=
+	t=1776687822; cv=none; b=R6gD972ArSCko02WY6Yt9rHzTTtzCvBHbB6M4dMr+2w9GHGLfulaJx3wYGBSulM4mz7sgMMYak40qJydVKSaaO4WWhh7evMY79wHXvbFPV6ZKAAAeFwfsPshgipFCOpKiq3tPQYDxN44WjA5V924OdEE2HA8xrO0y/Vu+ENrYXc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776637486; c=relaxed/simple;
-	bh=HokyC2nDUbRTJYDs3PhWlBf/ZTkZR5B5P0FWV4QeBLg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=A6eI7l0rLi8nEkddNOQOEadytfeidZuX2nM8udO/ho4pVAXRI3nSfPHA5GJLyBK3ByXw2nSYMYVPrLfg0Bn4dKBQ4azSPnOgVJT9C/7Jw0xlc0IUqraaGLgI3aVVLoFr4zFnw7Op67bHEouK0Jq2ZZGdA925SbrmQspgAEMAsz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ekiMwlWS; arc=none smtp.client-ip=209.85.208.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776687822; c=relaxed/simple;
+	bh=zRabrlMAt8mmwgKPv2viGfu9sJPKsnu7kmQGmU+O7u4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=EDZMndVsjTKEkxxIbCN0DwpKOfhGYWDUoRyl16Uo6tJSqpMgX5U1F40buaU/yWG8xve1WkcbcGgGUZKFWuWLUJaCHcNIPl4i/GSfQrJU/WEmCyW2eK81a20Z03X6mjt44w1GWavAhD8G+6J2G75vPH+5pd6I2KzXlHqdgKhFpNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=hSPonNTc; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ekiMwlWS"
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-38dd9f0fdc6so36405061fa.0
-        for <linux-ide@vger.kernel.org>; Sun, 19 Apr 2026 15:24:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776637482; x=1777242282; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=HpNJcvd4vFonahhQxxRKSX+/5Qv/TqiQwoW9F6azc/c=;
-        b=ekiMwlWSHWkdNYZO2uvYuT7Ef7GXktYnaT4gnlpbBPKXQPBbz2CMLsq4QTBO6JM7MM
-         9PR+jjofyRZqmScMVuTPy9ViueG/4LyG91jd6pjRmrNNZYQy05BLNXKe9+lfRMTe7+CK
-         W2occPBGCeoumuRDhxV2JOo8+LSY58rWuK8T6IrvnSJyFwlp74C/yNDPzOsyv9kGFc5R
-         lUmIOt4iAd3E4UZfu2rM2sPUXUUN+ENYjl0la8+WdafHlvqNVaSOuLEDMpawe4Z7+3+E
-         EYPV4MqFVoS0XWwlPOaHiSyJXi6MlZJCrMKSDtUlrILnZ4kEL0EeazoDwl0sE43mnJ8B
-         dXCg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776637482; x=1777242282;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HpNJcvd4vFonahhQxxRKSX+/5Qv/TqiQwoW9F6azc/c=;
-        b=qpItPiQCcgKu7MzAv/0RxaoNetnMPOKvW/g+zQJMzOiIohjUJrfTMxmi3jPtNgMviJ
-         bfq74qItzWCfU+SolbazX4OXEcNQAKlGyiPllCV2jJaBWrMMBLoVEd05ScTpAAJ9nveF
-         7W21PFUc2e7EI+KTe8hz8//ioZ1BgI2MumCHELsV9rCrlSH8f7P2krMztsBn57KB5uOY
-         V9pvs2tL8nIr49Kx14qwNTMIZRPWnkY3bgSELBdgcyip15g5zTg97uyGwf63JYrsEQoU
-         +7QHwyZNdwuK7u/f/FgY7glDOVBJYFtckcvkOCpfi15lTtLzZW/SCBVmZxYOxPybc+fD
-         kaDg==
-X-Forwarded-Encrypted: i=1; AFNElJ+yorrz+GCxJdXju0uZ0pFFq3ijp/0mi5Na5uaJURQLhF0W855Pm57YCdsj3SiM2iChmBlAR0pCSgU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzhPyNS1B5CGkqDGGGBqbrVPISB91XZuTqstWZSxmvmLm5Xe8+C
-	zTN/tHFoQrptvrxiCGYyE4tfSWwbOtFi5eHKzSDHBoM93rc5TgyfvJ7MF7EOead/lCHiYA==
-X-Gm-Gg: AeBDietbBVyDt+gklfI6+yX9y4jpKVc9Jx0KGiW5B2NOaYDX3hP5Db8uwmqIeFGUtC8
-	DYa9VP8HLvNNVdxbEWk8XmUkIoL5wf4LpbbeJ/obpFYYskt6n1Rmow01hEGPHeosVgOpVSl4VSk
-	g+ZL8oVZwP4xBnOamNmOhP7HJfv3kC79z1WaRseHNb0Rm7vqKji48A0nwr9aB9k3kVcSrUzUbPP
-	fobrj9vyb8IO4z65+55qfASLCCgwR4HEFiITAFd6u+t1Rb+1FzqF3anXm7lCRO/DQ5S2UT90Sx4
-	rvctb+dkoRQYFpiwHq3G9O/T7kDSYbQ61an7Xs+ZAZoWOUJe2avrzy9g9k58KoxAVaCg15bDezH
-	qJwD4/SDXVkqKz3MnwWHmeFBrT5SajqWIQWDEBHL3RehHOzvnnUtnLlLgyihd6pm+oeCQ55ZkhO
-	HiGaAAbkVeSsdoGTf6Jq5ye5K/N0MBokjdJM7aRP6qbu543egSLMc9pLvFMT7ouA==
-X-Received: by 2002:a05:6512:3502:b0:5a1:3d08:cfab with SMTP id 2adb3069b0e04-5a4172a9d81mr3298109e87.23.1776637481976;
-        Sun, 19 Apr 2026 15:24:41 -0700 (PDT)
-Received: from localhost.localdomain ([85.143.146.122])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5a4185ad0fdsm2554297e87.13.2026.04.19.15.24.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 19 Apr 2026 15:24:41 -0700 (PDT)
-From: Rand Deeb <rand.sec96@gmail.com>
-To: stable@vger.kernel.org
-Cc: axboe@kernel.dk,
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="hSPonNTc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1776687809;
+	bh=zRabrlMAt8mmwgKPv2viGfu9sJPKsnu7kmQGmU+O7u4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=hSPonNTccTzUaQqPzRj8xdtZYj1Uk3qLzAJdWsR952oSPgB22H2cKVeolSTXFySWJ
+	 VfNATVZt7hBnCtZ4QpofE2sMZWklPQLZExUotcs2Ba4KaYhkrmvAsPoum/VyD8X3oU
+	 CwQRoK9ocxC9MkP7zACOUI5ItBIkJjgy1Q5RxYBM=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id 6A10BBEFEB;
+	Mon, 20 Apr 2026 12:23:29 +0000 (UTC)
+Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id CE25C5FC5B;
+	Mon, 20 Apr 2026 13:23:28 +0100 (BST)
+From: Phil Pemberton <philpem@philpem.me.uk>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
 	linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	deeb.rand@confident.ru,
-	lvc-project@linuxtesting.org,
-	khoroshilov@ispras.ru,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-	Rand Deeb <rand.sec96@gmail.com>
-Subject: [PATCH 5.10.y] ata: pata_sil680: fix result type of sil680_sel{dev|reg}()
-Date: Mon, 20 Apr 2026 01:23:55 +0300
-Message-ID: <20260419222355.5842-1-rand.sec96@gmail.com>
+	Phil Pemberton <philpem@philpem.me.uk>
+Subject: [PATCH v2 5/5] scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN ATAPI device quirk
+Date: Mon, 20 Apr 2026 13:23:21 +0100
+Message-ID: <20260420122321.4161027-6-philpem@philpem.me.uk>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260420122321.4161027-1-philpem@philpem.me.uk>
+References: <20260420122321.4161027-1-philpem@philpem.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -79,105 +57,37 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
+The COMPAQ PD-1 (OEM Panasonic/Matsushita LF-1195C) is a PD/CD combo
+drive that exposes two ATAPI LUNs: LUN 0 is a CD-ROM (TYPE_ROM),
+LUN 1 is a 650 MB PD (TYPE_DISK).
 
-[ Upstream commit dafbbf5c57dd6ae01d20b894bc2200e9d9834c4e ]
+Add it to the SCSI device list with:
+  - BLIST_FORCELUN: tells the SCSI layer to scan past LUN 0
+  - BLIST_SINGLELUN: serialises commands across the two LUNs, since
+    the drive has a single transport and cannot handle concurrent
+    operations on both
 
-sil680_sel{dev|reg}() return a PCI config space address but needlessly
-use the *unsigned long* type for that,  whereas the PCI config space
-accessors take *int* for the address parameter.  Switch these functions
-to returning *int*, updating the local variables at their call sites.
-Get rid of the 'base' local variables in these functions, while at it...
+The INQUIRY strings as reported by the device are:
+  Vendor:  "COMPAQ  " (T10 format, space-padded)
+  Product: "PD-1"
 
-Found by Linux Verification Center (linuxtesting.org) with the SVACE static
-analysis tool.
-
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
+Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
 ---
- drivers/ata/pata_sil680.c | 30 +++++++++++++-----------------
- 1 file changed, 13 insertions(+), 17 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-index 7ab9aea3b..fe60f884b 100644
---- a/drivers/ata/pata_sil680.c
-+++ b/drivers/ata/pata_sil680.c
-@@ -47,11 +47,9 @@
-  *	criticial.
-  */
- 
--static unsigned long sil680_selreg(struct ata_port *ap, int r)
-+static int sil680_selreg(struct ata_port *ap, int r)
- {
--	unsigned long base = 0xA0 + r;
--	base += (ap->port_no << 4);
--	return base;
-+	return 0xA0 + (ap->port_no << 4) + r;
- }
- 
- /**
-@@ -64,12 +62,9 @@ static unsigned long sil680_selreg(struct ata_port *ap, int r)
-  *	the unit shift.
-  */
- 
--static unsigned long sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
-+static int sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
- {
--	unsigned long base = 0xA0 + r;
--	base += (ap->port_no << 4);
--	base |= adev->devno ? 2 : 0;
--	return base;
-+	return 0xA0 + (ap->port_no << 4) + r + (adev->devno << 1);
- }
- 
- 
-@@ -84,8 +79,9 @@ static unsigned long sil680_seldev(struct ata_port *ap, struct ata_device *adev,
- static int sil680_cable_detect(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	unsigned long addr = sil680_selreg(ap, 0);
-+	int addr = sil680_selreg(ap, 0);
- 	u8 ata66;
-+
- 	pci_read_config_byte(pdev, addr, &ata66);
- 	if (ata66 & 1)
- 		return ATA_CBL_PATA80;
-@@ -112,9 +108,9 @@ static void sil680_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 		0x328A, 0x2283, 0x1281, 0x10C3, 0x10C1
- 	};
- 
--	unsigned long tfaddr = sil680_selreg(ap, 0x02);
--	unsigned long addr = sil680_seldev(ap, adev, 0x04);
--	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
-+	int tfaddr = sil680_selreg(ap, 0x02);
-+	int addr = sil680_seldev(ap, adev, 0x04);
-+	int addr_mask = 0x80 + 4 * ap->port_no;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	int pio = adev->pio_mode - XFER_PIO_0;
- 	int lowest_pio = pio;
-@@ -164,9 +160,9 @@ static void sil680_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 	static const u16 dma_table[3] = { 0x2208, 0x10C2, 0x10C1 };
- 
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	unsigned long ma = sil680_seldev(ap, adev, 0x08);
--	unsigned long ua = sil680_seldev(ap, adev, 0x0C);
--	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
-+	int ma = sil680_seldev(ap, adev, 0x08);
-+	int ua = sil680_seldev(ap, adev, 0x0C);
-+	int addr_mask = 0x80 + 4 * ap->port_no;
- 	int port_shift = adev->devno * 4;
- 	u8 scsc, mode;
- 	u16 multi, ultra;
-@@ -219,7 +215,7 @@ static void sil680_sff_exec_command(struct ata_port *ap,
- static bool sil680_sff_irq_check(struct ata_port *ap)
- {
- 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
--	unsigned long addr	= sil680_selreg(ap, 1);
-+	int addr		= sil680_selreg(ap, 1);
- 	u8 val;
- 
- 	pci_read_config_byte(pdev, addr, &val);
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 68a992494b12..06b211b93567 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -150,6 +150,7 @@ static struct {
+ 	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
++	{"COMPAQ", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
+ 	{"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ 	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
 -- 
 2.43.0
 
