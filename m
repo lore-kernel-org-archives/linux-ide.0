@@ -1,206 +1,198 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C88F037BE6F;
-	Wed, 22 Apr 2026 08:03:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D80983ED5BE;
+	Wed, 22 Apr 2026 14:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776845028; cv=none; b=ncT4LIzEsi4nJ6fKE3NlVAWotOqRS4PhUVfV7niv58/gZO8f/t/Cs6jGn9kNeLMlACvCxCty0XFxubNrNiAhWTAGGYgKDpK9UlbA0xV0Jc8ImEzP3fRSCccrQSBQLtFuTHZYqjMo4u47EjZjecu9Vp7AK2SdKK3+3AqITh+oNgo=
+	t=1776868610; cv=none; b=QKvMHuE0yMq0UHqxEaCZbUR7GJ1IZhNs6TfMWZFc6twS+cALBtwTHJ5gjmmZqH9NG+uOCUScw3x9Nhpm8OUHx0e24nuC7zd/yJqOOVuVvpr4NMN9xcTdGueYhPVynTuuv5qA8EUqUitDqvJe0TVZcJs91vB7HqwPDuk4pBL4Us4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776845028; c=relaxed/simple;
-	bh=urkZt31lbbLkpQNkQ/Fs6wvOVIIaHWPILqZE9IPJP4A=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CWM8wGXAatRA/m+/DVAYoOgw/7Aso9NzMdACyWoqkUGYUREq0gHiyG5V0q3p4ikyBJootZ6s36f6eJ2Q0AUFOVgf1eh1uU9iAqmbXsvpCXgrCwYgE2tKv8H2GuhwnlMKIMPEWLFzM/M7WoOQwpXZcvjSp+wjL+LLLDdVNo1+Xps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=R3Y7jc9H; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1776868610; c=relaxed/simple;
+	bh=xngBYNuEFPfDm+L5D6aKNJLDjNlEOAIX/oY7V8AW1Yc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qFWOv7WxDOR7Ue7appCHboCIOL5PUJ8hgebZuhPFnCzdz25D4a50keeDhxwqiG8laBPlhVahtKaAWSzCnrxCPSZ0em5/BS5OqbdQXwWAY41n1HEbkVOvLyf722hc9r14MIhG7hE/JigqBX5MObb7GSd2EASKMWwBKV3LT7T/wAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iNVPX8Bn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="R3Y7jc9H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=dz
-	UM66U/mmYOAhvCZdX3PhqgzKTSk0J60i999dBZQoM=; b=R3Y7jc9H2JG34YagoK
-	FMZL4dJXP1451CeIuQa/4sMhycCTQNnBnBY7p2JSjE17mAtOFlI7Ey3wVZrfAN+3
-	hXmQcyxRqUROPEfFIR7BQ6XbbmSQU7mfvzKYl5FDMX0UmOufpUprPcSKIgVfHuRH
-	/2tun59tQg04lIc3mckvOD8Uw=
-Received: from localhost.localdomain (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgBHwy_MgOhpcBXyAw--.135S2;
-	Wed, 22 Apr 2026 16:03:27 +0800 (CST)
-From: dayou5941@163.com
-To: dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	liyouhong@kylinos.cn
-Subject: [PATCH] ata: libahci: fix panic when accessing ports beyond MMIO region
-Date: Wed, 22 Apr 2026 16:03:22 +0800
-Message-Id: <20260422080322.1006592-1-dayou5941@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iNVPX8Bn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29A57C19425;
+	Wed, 22 Apr 2026 14:36:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776868610;
+	bh=xngBYNuEFPfDm+L5D6aKNJLDjNlEOAIX/oY7V8AW1Yc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iNVPX8Bnp45QIxGVfNwfq9hOQOyTx26yBf0p2/tryJJVxhiTJFPfJEi1qOmK89T8q
+	 J8Y5mOL4j6yXbCDwhFniHwhB1G6A0n0CmnmaaWOjOveBg7pbQM7jfGOxqOccjOuWOZ
+	 IMquv1n7FCIS+1cq3c8uUzEAVrQ3VEE1VuS1tOynMPmPIcJa8lilTSFowWpMtJpKZZ
+	 lHX2o34ND3cUUHZvXzwMAi9Y3fsj5uNHBUuc0bPChqs8h0339PI9PxM2C/8bOSGhZg
+	 GmyKLd2HwF1+5+0czVrffQvNAbp4x0PNqPhj5rxG+i9ElgXzf0T8zl2F843MqM6O3W
+	 FJlO9phs2JfUg==
+Date: Wed, 22 Apr 2026 16:36:46 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: dayou5941@163.com
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, liyouhong@kylinos.cn
+Subject: Re: [PATCH] ata: libahci: fix panic when accessing ports beyond MMIO
+ region
+Message-ID: <aejc_kqSuU60oRka@ryzen>
+References: <20260422080322.1006592-1-dayou5941@163.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PygvCgBHwy_MgOhpcBXyAw--.135S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3Jr1DAw47ur1kZr1kZr1UJrb_yoW3GFW5pF
-	W5WryxGrWkXrWxXa18J34UtF13Aa98Aay7GrZFyw1aka1UC34qvryUtayYg3WUJw48JFy3
-	Kr1qqw1jkr1UJw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jFpB-UUUUU=
-X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC+Q-nlmnogM8CYgAA3p
+In-Reply-To: <20260422080322.1006592-1-dayou5941@163.com>
 
-From: liyouhong <liyouhong@kylinos.cn>
+Hello liyouhong,
 
-Commit 18ee7c49f75b ("ata: ahci: Introduce firmware-specific caps
-initialization") introduced a regression where the driver would
-attempt to access port registers beyond the mapped MMIO region when
-HOST_PORTS_IMPL and HOST_CAP contains invalid values.
+On Wed, Apr 22, 2026 at 04:03:22PM +0800, dayou5941@163.com wrote:
+> From: liyouhong <liyouhong@kylinos.cn>
+> 
+> Commit 18ee7c49f75b ("ata: ahci: Introduce firmware-specific caps
+> initialization") introduced a regression where the driver would
+> attempt to access port registers beyond the mapped MMIO region when
+> HOST_PORTS_IMPL and HOST_CAP contains invalid values.
+> 
+> This occurs in scenarios where:
+> 1. The AHCI controller is disabled by BIOS, causing registers to read
+>    as 0xFFFFFFFF.
+> 2. HOST_PORTS_IMPL indicates more ports than physically implemented.
+> 3. The actual MMIO region is smaller than needed for the indicated
+> ports.
 
-This occurs in scenarios where:
-1. The AHCI controller is disabled by BIOS, causing registers to read
-   as 0xFFFFFFFF.
-2. HOST_PORTS_IMPL indicates more ports than physically implemented.
-3. The actual MMIO region is smaller than needed for the indicated
-ports.
+I'm not a fan of this patch for two reasons:
 
-When the driver iterates through ports indicated in HOST_PORTS_IMPL and
-accesses PORT_CMD registers, it may calculate port offsets that exceed
-the mapped MMIO region. On ARM64 systems, this causes a kernel panic.
-when attempting to read from the unmapped address.
+1) The AHCI specification, 1.3.1, "10.1.1 Firmware Specific Initialization":
 
-When mmio_size is 0x1000 and all ports need to be accessed.
-The issue manifests as a panic in __raw_readl() when i=30, as the
-calculated offset (0x1000) equals the typical MMIO region size (0x1000),
-placing the access exactly at the boundary of the mapped region.
+Firmware shall always initialize the following registers and values:
+ CAP.SSS (support for staggered spin-up)
+ CAP.SMPS (support for mechanical presence switches)
+ PI (ports implemented)
+  ...
 
-The log is as follows:
-[    0.389751][    T1] Unable to handle kernel paging request at virtual address ffff800082916018
-[    0.389752][    T1] Mem abort info:
-[    0.389753][    T1]   ESR = 0x0000000096000007
-[    0.389754][    T1]   EC = 0x25: D
-ABT (current EL), IL = 32 bits
-[    0.389756][    T1]   SET = 0, FnV = 0
-[    0.389757][    T1]   EA = 0, S1PTW = 0
-[    0.389758][    T1]   FSC = 0x07: level 3 translation fault
-[    0.389759][    T1] Data abort info:
-[    0.389760][    T1]   ISV = 0, ISS = 0x00000007, ISS2 = 0x00000000
-[    0.389761][    T1]   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
-[    0.389762][    T1] GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
-[    0.389764][    T1] swapper pgtable: 4k pages, 48-bit VAs, pgdp=00000000e16b1000
-[    0.389766][    T1] [ffff800082916018] pgd=10000000e264d003, p4d=10000000e264d003, pud=10000000e264e003, pmd=10000000e2653003, pte=0000000000000000
-[    0.389772][    T1] Internal error: Oops: 0000000096000007 [#1]  SMP
-[    0.391912][    T1] Modules linked in:
-[    0.397407][   T71] nvme nvme0: allocated 16 MiB host memory buffer (1 segment).
-[    0.406067][   T71] nvme nvme0: 8/0/0 default/read/poll queues
-[    0.426950][   T12]  nvme0n1: p1 p2 p3 p4 p5 p6
-[    0.427171][   T71] probe of 0000:01:00.0 returned 0 after 37797 usecs
-[    0.428770][   T80] Freeing initrd memory: 39012K
-[   12.823718][    T1] CPU: 1 UID: 0 PID: 1 Comm: swapper/0 Not tainted 7.0.0-dirty #3 PREEMPTLAZY 
-[   12.832490][    T1] Hardware name: ISOFTSTONE COMPUTER TianYaoW600 Series/EM_FC19M, BIOS KL4.2B.EM.D.R003.RTHF.260414.R 04/14/2026 16:26:14
-[   12.844992][    T1] pstate: 00400009 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-[   12.852635][    T1] pc : ahci_init_one+0x6a8/0xf68
-[   12.857417][    T1] lr : ahci_init_one+0x668/0xf68
-[   12.862194][    T1] sp : ffff8000828aba20
-[   12.866189][    T1] x29: ffff8000828aba20 x28: 000000000000001e x27: ffff800081742300
-[   12.874007][    T1] x26: ffff0020289b8000 x25: 0000000000000001 x24: ffff002020f710d0
-[   12.881823][    T1] x23: 0000000000000005 x22: ffff002026d9ee00 x21: ffff002026d9f280
-[   12.889639][    T1] x20: ffff002020f71000 x19: 0000000000000000 x18: 00000000ffffffff
-[   12.897456][    T1] x17: ffff002021c7c000 x16: ffff002020d6ee00 x15: ffff8000828ab850
-[   12.905272][    T1] x14: ffff0020289ba42c x13: ffff0020289ba3f9 x12: 0101010101010101
-[   12.913088][    T1] x11: 7f7f7f7f7f7f7f7f x10: 0000000000000078 x9 : ffff800080bdf1b0
-[   12.920905][    T1] x8 : 0000000000000030 x7 : 0000000000000008 x6 : ffff800081271928
-[   12.928721][    T1] x5 : 0000000000000030 x4 : 0000000000000030 x3 : 0000000000000000
-[   12.936537][    T1] x2 : ffff002026d9f280 x1 : 0000000000001018 x0 : ffff800082916018
-[   12.944354][    T1] Call trace:
-[   12.947481][    T1]  ahci_init_one+0x6a8/0xf68 (P)
-[   12.952260][    T1]  local_pci_probe+0x44/0xb0
-[   12.956693][    T1]  pci_device_probe+0xd4/0x268
-[   12.961298][    T1]  really_probe+0xc4/0x3e8
-[   12.965557][    T1]  __driver_probe_device+0xd4/0x188
-[   12.970595][    T1]  driver_probe_device+0x40/0x118
-[   12.975460][    T1]  __driver_attach+0xe8/0x218
-[   12.979977][    T1]  bus_for_each_dev+0x7c/0xe0
-[   12.984494][    T1]  driver_attach+0x28/0x38
-[   12.988751][    T1]  bus_add_driver+0x120/0x248
-[   12.993269][    T1]  driver_register+0x60/0x128
-[   12.997787][    T1]  __pci_register_driver+0x50/0x60
-[   13.002739][    T1]  ahci_pci_driver_init+0x28/0x38
-[   13.007605][    T1]  do_one_initcall+0x58/0x450
-[   13.012124][    T1]  kernel_init_freeable+0x1fc/0x560
-[   13.017164][    T1]  kernel_init+0x28/0x1f8
-[   13.021337][    T1]  ret_from_fork+0x10/0x20
-[   13.025596][    T1] Code: 53196021 91046021 f9400840 8b010000 (b9400000) 
-[   13.032370][    T1] ---[ end trace 0000000000000000 ]---
-[   13.037737][    T1] Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
-[   13.046077][    T1] SMP: stopping secondary CPUs
-[   13.050684][    T1] Kernel Offset: disabled
-[   13.054852][    T1] CPU features: 0x0000000,000e0005,40230521,0401720b
-[   13.061366][    T1] Memory Limit: none
-[   13.065102][    T1] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b ]---
+Thus, it is a spec violation to not initialize these registers correctly.
 
-Fix this by adding bounds checking in ahci_save_initial_config(). Before
-accessing each port's PORT_CMD register, verify that the port's register
-block offset is within the mapped MMIO region. Skip any ports that would
-require accessing memory beyond the mapped region.
+If you have an AHCI controller that is a PCIe card, it will surely expose
+the Ports Implemented register correctly.
 
-Fixes: 18ee7c49f75b ("ata: ahci: Introduce firmware-specific caps initialization")
-Signed-off-by: liyouhong <liyouhong@kylinos.cn>
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 2d1ca9f2f546..69de3560aeec 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -468,6 +468,8 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 	void __iomem *port_mmio;
- 	unsigned long port_map;
- 	u32 cap, cap2, vers;
-+	unsigned long long mmio_size = 0;
-+	bool is_pci_dev = false;
- 	int i;
- 
- 	/* make sure AHCI mode is enabled before accessing CAP */
-@@ -595,6 +597,13 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		hpriv->saved_port_map = port_map;
- 	}
- 
-+	is_pci_dev = dev_is_pci(dev);
-+	if (is_pci_dev) {
-+		struct pci_dev *pdev = to_pci_dev(dev);
-+
-+		mmio_size = (unsigned long long)pci_resource_len(pdev, 5);
-+	}
-+
- 	/*
- 	 * Preserve the ports capabilities defined by the platform. Note there
- 	 * is no need in storing the rest of the P#.CMD fields since they are
-@@ -605,6 +614,29 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 			continue;
- 
- 		port_mmio = __ahci_port_base(hpriv, i);
-+
-+		/* Calculate offset from MMIO base */
-+		unsigned long long port_offset = (unsigned long long)port_mmio -
-+						 (unsigned long long)mmio;
-+		/* Check if port register block is within MMIO region */
-+		if (is_pci_dev && port_offset >= mmio_size) {
-+			/*
-+			 * Port registers exceed MMIO region boundary.
-+			 * Since ports are sequentially mapped (0x100 + i*0x80),
-+			 * all subsequent ports will also exceed the boundary.
-+			 *
-+			 * Update port_map to exclude this and all higher ports,
-+			 * then break out of the loop.
-+			 */
-+			dev_warn(dev, "Port %d (offset 0x%llx) exceeds MMIO region (0x%llx),
-+				       truncating port map at port %d\n",
-+				       i, port_offset, mmio_size, i-1);
-+
-+			port_map = (1UL << i) - 1;
-+			hpriv->saved_port_map = port_map;
-+			break;
-+		}
-+
- 		hpriv->saved_port_cap[i] =
- 			readl(port_mmio + PORT_CMD) & PORT_CMD_CAP;
- 	}
--- 
-2.33.0
+So this problem should be limited to on-boad AHCI controllers, where
+BIOS/platform firmware has violated the specification, and not initialized
+the registers required by the specification.
 
+If you can disable the controller via BIOS, then the most logical thing is
+for these on-boards AHCI controllers to actually get disabled and not show
+up in lspci at all. As far as I know, that is how it works on Intel and
+AMD systems.
+
+
+2) Why limit this to AHCI controllers connected via PCI?
+
+Surely device tree platforms with a AHCI controller connected directly to
+the AXI bus can also violate the specification and not initialize the PI
+(Ports Implemented) register.
+
+Sure, for AHCI controllers connected without a PCI bus, there is the
+"ports-implemented" device tree property, that can be used to initialize
+this register correctly for platforms without any embedded firmware.
+
+But if we should implement a workaround, why add code that is explcitly
+limited to PCI?
+
+
+
+
+I think a better solution is to limit Ports Implemented to CAP.NP.
+As Ports Implemented is a bitmask with up to CAP.NP bits.
+
+Ports Implemented is not allowed to be larger than CAP.NP, it can
+only mark ports within the CAP.NP MMIO region as "unimplemented".
+
+So the highest bit set in Ports Implemented can not be higher than CAP.NP.
+(I.e. a per port MMIO offset is not allowed to be larger than
+CAP.NP * MMIO registers per port.)
+
+
+Looking at the libata code, it looks like we have code for this already:
+https://github.com/torvalds/linux/blob/v7.0/drivers/ata/libahci.c#L561-L569
+
+Could you perhaps debug to see why this code in no longer working as
+intended?
+
+If you revert 18ee7c49f75b ("ata: ahci: Introduce firmware-specific caps
+initialization"), do you see the
+"implemented port map (0x%lx) contains more ports than nr_ports (%u), using nr_ports"
+warning in the log?
+
+Please share the equivalent to these prints after reverting the commit:
+[1825468.337982] ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
+[1825468.350108] ahci 0000:00:17.0: 8/8 ports implemented (port mask 0xff)
+
+
+> When mmio_size is 0x1000 and all ports need to be accessed.
+> The issue manifests as a panic in __raw_readl() when i=30, as the
+> calculated offset (0x1000) equals the typical MMIO region size (0x1000),
+> placing the access exactly at the boundary of the mapped region.
+
+AFAICT, port_map gets limited to CAP.NP, and we only access ports that are
+within port_map (and this offset < CAP.NP):
+
+	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
+		if (hpriv->saved_port_cap[i])
+			continue;
+
+		port_mmio = __ahci_port_base(hpriv, i);
+
+
+
+Wait a second:
+
+> 3. The actual MMIO region is smaller than needed for the indicated
+> ports.
+
+I hope you are not saying that your PCI device is only exposing a BAR
+that is smaller than needed to contain the number of ports defined in
+CAP.NP in this controller?
+
+That sounds like a seriously buggy controller...
+
+Could you please share the output of (with the PCI BDF of you controller
+of course):
+
+$ sudo lspci -vvvnns 0000:00:17.0
+00:17.0 SATA controller [0106]: Intel Corporation C620 Series Chipset Family SATA Controller [AHCI mode] [8086:a182] (rev 0a) (prog-if 01 [AHCI 1.0])
+        Subsystem: Super Micro Computer Inc Device [15d9:1b62]
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin A routed to IRQ 138
+        NUMA node: 0
+        IOMMU group: 28
+        Region 0: Memory at a5984000 (32-bit, non-prefetchable) [size=8K]
+        Region 1: Memory at a598a000 (32-bit, non-prefetchable) [size=256]
+        Region 2: I/O ports at 4050 [size=8]
+        Region 3: I/O ports at 4040 [size=4]
+        Region 4: I/O ports at 4000 [size=32]
+        Region 5: Memory at a5700000 (32-bit, non-prefetchable) [size=512K]
+
+So we can see PCI vendor ID, PCI device ID, and size of the BARs?
+
+From 3.3 Port Registers (one set per port):
+
+Port offset = 100h + (PI Asserted Bit Position * 80h)
+
+CAP.NP can represent at most 32 ports. (Note that the register field itself
+is 0's based, so a value of 0 means 1 port and a value of 31 means 32 ports.)
+
+If you really have 32 ports, then you would need a BAR that has size:
+0x100+(31*0x80) + 0x80 (start offset + size of the per port register itself): 0x1100
+
+Then we would need to add a quirk for your PCI device and PCI vendor ID,
+which limits the number of ports to 30 (by setting CAP.NP to 29) for your
+AHCI controller.
+
+
+Kind regards,
+Niklas
