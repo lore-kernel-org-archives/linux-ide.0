@@ -1,100 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2470A377EB9
-	for <linux-ide@vger.kernel.org>; Thu, 23 Apr 2026 16:17:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CED01381B08
+	for <linux-ide@vger.kernel.org>; Thu, 23 Apr 2026 16:43:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776961039; cv=none; b=St99RLCssixYaxKR7Qxc0SamQLeI2rSAa0Jvnl7O6A99VZEyRNMXWIGnEZplTyvQtQOefaJVtyD0t5F9afywri/5yvYN25oDQr3erqPMnKtk2MCJ5PPib1G2SsHoNcoQw807I6IudA1ZpdunZpPpxpq1LbDMoUVdqttyhj4CgwQ=
+	t=1776962613; cv=none; b=sWNNEKIVmeoLkfkLKtBqmZH4xg+4sNwFMCGEOQKQc+7pl9ELhou9Bf+QfbV2Cdd5T9Uz4nherRFiPboKbxX8Q/oGjXuTOeEaQ/+NkMC3hkSZsujaUTnzPf7ko9v/Tg/7V52X35RFZQRM0RYqbBZhFAI9vyOyLxT8XTu2YACD4/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776961039; c=relaxed/simple;
-	bh=teQQGU1qUokgg8fXjpgeal63LuanB0YesvRr+OOBf8w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OYMdwFQvH2xpH+kFBDOeTkYRBfI075Vu9dstnvtMgnY6UN/3NEDRZGGz3mPh8e1eEklTNKKY94BHfWNnwN8ZkI7EawzQossCf1Lvl2Zwj5mr+Z664T+Oo6gAGdxRyF4gXNEvJJxO3kVTDWYggJajxug8ZpiYLs1yhjscuTvUngg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G/WyAz2O; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776962613; c=relaxed/simple;
+	bh=Mj4nOBRfej/BaMPaoOnah8ivfMpDlepKNgt1eAFdS+I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IkbOaqpMjKXC35vPWU+pndQ7GzdBYZRUCJkwWZ2pNrtIpkAxpZpTXlFVnVTf6nXfioko/EPGIvlyHkfdaKaRHjlPfTWZ/qPctUvjG45edv2OLSFxnJ+/1fXH3yzgXl7fvDE7Kz+As1Mm38dcmzPWp7Ux2zCatOpTvXpAvV2BnyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V2LSsSwc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G/WyAz2O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21688C2BCAF;
-	Thu, 23 Apr 2026 16:17:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V2LSsSwc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83394C2BCB3;
+	Thu, 23 Apr 2026 16:43:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776961038;
-	bh=teQQGU1qUokgg8fXjpgeal63LuanB0YesvRr+OOBf8w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=G/WyAz2ObjKUdR9rT1/0AxiJcLAlXOHfVFuR5IsvJZ/LlCRviUzB+QUo0XGmViWqB
-	 15KuSVeavMbeJS/USafYqC3W0ARO0uGjaQlRmuTeVP1HXbz6OttV5t2tmvR6aIokOL
-	 2Ur5g9Ucl1Rt+RnG68H+OKwc8lZi1VhO+suLLlovk5AxJ6Kb/UtgL8Ej61xehIpMeF
-	 RuyPILAahyZpepfr6IP0zNiFjMibMkC26YGelanGYcBGVUguoe1a3OGzG0sCw9Q7eD
-	 v9nbGaP62MuBAhSRtkkMh2va8Mz5bEMs6daC8I8iVpy7GYSAyk64sO9ICHvm3yUFr4
-	 XR/PUYTGRQ0DA==
-Date: Thu, 23 Apr 2026 18:17:15 +0200
+	s=k20201202; t=1776962613;
+	bh=Mj4nOBRfej/BaMPaoOnah8ivfMpDlepKNgt1eAFdS+I=;
+	h=From:To:Cc:Subject:Date:From;
+	b=V2LSsSwcNUYImv8Z0o4VtrQVm4Hx29+5qqqESQqSHMbKqhA/XMuuUsOmd/q6gp3k7
+	 dYn983DQTZhn5AgYF3/xjt9h95eMAtetoioRyqvyjT0ca9LdyvFTi2q3QHivksxZxr
+	 QHc5gBR9qZx3C5coGHIK4ADw33eqJrHrC9LJrM7xch9ireKbFIoITb3I0rqowkBAav
+	 xuXCQS3An2bVQ7pikSpsddkgISKUACkPTFXZbN7FkBUEcAfLkF5nFd8imzGiuPQs+I
+	 zE+6Z9+AVv6Ut5/72K019kjaNKfgII1t1oCFE5AXNGCnaCY6OFJf+9Jtx+jArnnEuO
+	 IlQllGyo04IiQ==
 From: Niklas Cassel <cassel@kernel.org>
-To: AlanCui4080 <me@alancui.cc>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org
-Subject: Re: Default IDENTIFY timeout is 5000ms which is too short for
- enterprise disks
-Message-ID: <aepGCyy5uXXxw6jT@ryzen>
-References: <14015677.uLZWGnKmhe@alanarchdesktop>
- <f8dAJyMVQ4yJA5_7X9Jscw@alancui.cc>
- <aen_SQ-7fPfdAylr@ryzen>
- <p9jLdz6RRGKjgu3OloMgWw@alancui.cc>
+Subject: [PATCH] ata: libahci: use ahci_nr_ports() helper
+Date: Thu, 23 Apr 2026 18:43:30 +0200
+Message-ID: <20260423164329.1541337-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <p9jLdz6RRGKjgu3OloMgWw@alancui.cc>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=595; i=cassel@kernel.org; h=from:subject; bh=Mj4nOBRfej/BaMPaoOnah8ivfMpDlepKNgt1eAFdS+I=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJf+Ri+Z2vf/80rq/HDSfGD2T/OuB1Va5gWJDLBbtNqp nOxwZNOdJSyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAiJ98yMvxMrbFbGBDoZhuY 1PZKlpFLIEzRrHtx7u4PNv6c9r5yfgz/gxm5zh/qzlq14NmDtkgp6/BNjosjYpW85jDe2bMz/90 fbgA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Hello Alan,
+Use ahci_nr_ports() helper instead of open coding the same.
 
-On Thu, Apr 23, 2026 at 10:26:55PM +0800, AlanCui4080 wrote:
-> Thank you for your really really detailed response. And i was surprised by your
-> reply, hopefully that doesn't cost your time too much.
+No functional change.
 
-My pleasure :)
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libahci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index c79abdfcd7a9..7169e9e89034 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -2636,7 +2636,7 @@ void ahci_print_info(struct ata_host *host, const char *scc_s)
+ 		,
+ 
+ 		hweight32(impl),
+-		(cap & 0x1f) + 1,
++		ahci_nr_ports(cap),
+ 		impl);
+ 
+ 	dev_info(host->dev,
+-- 
+2.53.0
 
-> I'm not a native speaker so the actually question that i want to ask is that
-> will kernel do quirk for those drives so let it just don't fail to avoid costing
-> extra 5 seconds and producing annoying erros on console?
-
-Well, considering that the controller does not send a reply when it is
-supposed to, I think that the error in the log is justified.
-
-
-You also wrote that:
-> I enlong the timeout, then this problem is being "relaxed", during 10
-> recoveries, only 2 times the revalidation failed.
-
-So as far as I can tell, even increasing the timeout does not solve the
-problem in all cases.
-
-So, right now, I can't even think of a way to quirk the device so that it
-works reliably.
-
-
-> > But as soon as you get a shell after a system resume, the above command
-> > succeeds, right?
-> 
-> Yes, that's correct.
-
-Great!
-
-
-> > My suggestion is to look at the zpool code to see how long it waits to finds
-> > all devices after a system resume before it kicks devices off the RAID array.
-> > 
-> > My initial feeling is that if your device is ready after 5 seconds after a
-> > system resume, then the timeout value for zpool to kick off a device must be
-> > very low.
-> 
-> I do believe that's about zpool, i migrated it into btrfs RAID now, it works very
-> well. And if you want to know, the timeout of TXG to commit is 5000ms also.
-
-Nice to hear that you are not seeing the same issue with btrfs.
-
-
-Kind regards,
-Niklas
