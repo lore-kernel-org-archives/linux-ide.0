@@ -1,82 +1,157 @@
-Received: from out28-65.mail.aliyun.com (out28-65.mail.aliyun.com [115.124.28.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE7E63E5564
-	for <linux-ide@vger.kernel.org>; Thu, 23 Apr 2026 09:23:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1188837C90D
+	for <linux-ide@vger.kernel.org>; Thu, 23 Apr 2026 11:03:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776936227; cv=none; b=PlnF2nA/Cpc44UWaovCcOAuW6T9qB8wE+NJBkzyuCnl+IK3yAfo5IF3eCHFgTSDhbcuSLgCdxU/v28erFjYIRSeGtxzhTdDKhrtyqNjf6S5DI3mmUio8LlwC8eeEOsFkujoPwPbFWlDHNceMnRmAsa+f86/FiOSMEpSVI1fnJzE=
+	t=1776942200; cv=none; b=QQkkaOqmksy1XP3X21YmEaeO4bdsBnswUFxsguugtRDturNWQtBKvLVK8SFcRXf6QP1JwFQdsf1WJyS0mxiaLNkACbBXsbikFCHNRXZWIQkd6C9OcjjAzNGQPmJReieoXdAmCD2Eg3z33zK28XI+jK49I2iAM97SUVL5OfmkHpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776936227; c=relaxed/simple;
-	bh=WPwiFc776qnX9G2zEUaL/RBl3KB88G7/FHizAE8Lsv0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uNvfO8k5dz1mMpwtIzjDL8aCSSfMYAa/uuuQK4nIly50SE7/aG3WAtpiahMhl7KkIcGn2SPhJNwfAMp/S4pMO06BoKtVIHO8MDvQMjKdwBB+x+C1FbeTjm/dZce2mObZT/F7rLIq3dCFxyugAl8CxJncmk+JJqxmwLR1WB/UpgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=alancui.cc; spf=pass smtp.mailfrom=alancui.cc; dkim=pass (2048-bit key) header.d=alancui.cc header.i=@alancui.cc header.b=tpoPs6o4; arc=none smtp.client-ip=115.124.28.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=alancui.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alancui.cc
+	s=arc-20240116; t=1776942200; c=relaxed/simple;
+	bh=vCyn6ularYPgMK+JZIAFAVkpBaAqrjoWjndiPa6yQbQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t6os1ut+ixO40t2O5i7OB8fLIiNW4AGlblyxVa+/bTBlknuIN1IKv4sqbRL2tw2fYULFYzH+UnaCv+k8+e8pzHhPjtdt6nbH+ZcvnkHkv7zThcRvu0WEngf0JlDmoXvLCl6ukWW9ojWUMblsLwG0LjpHtjKt3AOLLGWZxlOhGPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MXX1xtTB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=FFnNSYk7; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MXX1xtTB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=FFnNSYk7; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alancui.cc header.i=@alancui.cc header.b="tpoPs6o4"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=alancui.cc; s=default;
-	t=1776936224; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=WPwiFc776qnX9G2zEUaL/RBl3KB88G7/FHizAE8Lsv0=;
-	b=tpoPs6o4s784o92QLgQQS7EkoqM+rntD2xs9FyZqYtq6g1qh/r/qijkQonOhAUZH1mg7N69emFQzurSPru71jasMIMPWhOtHzSpXMrrsT6KVwrX3W/5thTkZI6C5YBzs7oHL0R+fe0mFnCqJP7m/8TXZ6pMxfx0CAQLuvFn0+wHdGgtBsG8YEjwIIM2Hv2VqzCH9L2XGWZKeCAePCKzeiOFHHyFNqfSiN67PelhaLhYyZweCKtpVtNp5o+jplmm3iAAcClhqRPptGsy3UxFEoLRI+LU1tWoo+V/8VQzpVUJuS29rCQfEDu72UkWYm9XuQdsVhUe8+PVaNrnrB1AHXg==
-X-Alimail-AntiSpam:AC=CONTINUE;BC=0.0802791|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0483249-0.000358162-0.951317;FP=6516163024916397306|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033023018039;MF=me@alancui.cc;NM=1;PH=DS;RN=2;RT=2;SR=0;TI=SMTPD_---.hIXsb3k_1776935904;
-Received: from alanarchdesktop.localnet(mailfrom:me@alancui.cc fp:SMTPD_---.hIXsb3k_1776935904 cluster:ay29)
-          by smtp.aliyun-inc.com;
-          Thu, 23 Apr 2026 17:18:25 +0800
-From: AlanCui4080 <me@alancui.cc>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Subject:
- Re: Default IDENTIFY timeout is 5000ms which is too short for enterprise
- disks
-Date: Thu, 23 Apr 2026 17:18:24 +0800
-Message-ID: <f8dAJyMVQ4yJA5_7X9Jscw@alancui.cc>
-In-Reply-To: <aeZUCa5wumWXi_yN@ryzen>
-References:
- <14015677.uLZWGnKmhe@alanarchdesktop> <23071769.EfDdHjke4D@alanarchdesktop>
- <aeZUCa5wumWXi_yN@ryzen>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MXX1xtTB";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="FFnNSYk7";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MXX1xtTB";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="FFnNSYk7"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 514415BD79;
+	Thu, 23 Apr 2026 11:03:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1776942197; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=yUJmH9rrYLiFteZFFzLNOgJG8T6aIo4w+/SpsRFCnsI=;
+	b=MXX1xtTBsOQx3LyP0h3J/mtXCpw5wNwRLSWfB6vhqiF7y6fIfqURPegOEYkn8ab4K+QyVt
+	B+SYCDJZ5DpopwH8A9mXf5WA3x8X0Tw7X/a29jCC9TMbRkZOr5WyKrSFqoQlTDznjS5GDY
+	0EeE80aRxj7NMI3cJtOjWy3siAYmruY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1776942197;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=yUJmH9rrYLiFteZFFzLNOgJG8T6aIo4w+/SpsRFCnsI=;
+	b=FFnNSYk7GSTX0tuQ0A15nlY3z6SjuAHv2Erc7lCW+yBaCLBawrnt6ygxNXTH8E1vVNmvXI
+	9o0hAOztoOJuoxBg==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1776942197; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=yUJmH9rrYLiFteZFFzLNOgJG8T6aIo4w+/SpsRFCnsI=;
+	b=MXX1xtTBsOQx3LyP0h3J/mtXCpw5wNwRLSWfB6vhqiF7y6fIfqURPegOEYkn8ab4K+QyVt
+	B+SYCDJZ5DpopwH8A9mXf5WA3x8X0Tw7X/a29jCC9TMbRkZOr5WyKrSFqoQlTDznjS5GDY
+	0EeE80aRxj7NMI3cJtOjWy3siAYmruY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1776942197;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=yUJmH9rrYLiFteZFFzLNOgJG8T6aIo4w+/SpsRFCnsI=;
+	b=FFnNSYk7GSTX0tuQ0A15nlY3z6SjuAHv2Erc7lCW+yBaCLBawrnt6ygxNXTH8E1vVNmvXI
+	9o0hAOztoOJuoxBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 37948593A3;
+	Thu, 23 Apr 2026 11:03:17 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id cZ0bDXX86WnaFAAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 23 Apr 2026 11:03:17 +0000
+Message-ID: <cb5255ef-ae53-46c7-8039-b1fff655883d@suse.de>
+Date: Thu, 23 Apr 2026 13:03:16 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/5] ata: libata-scsi: add atapi_max_lun module
+ parameter
+To: Phil Pemberton <philpem@philpem.me.uk>,
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260420122321.4161027-1-philpem@philpem.me.uk>
+ <20260420122321.4161027-2-philpem@philpem.me.uk>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260420122321.4161027-2-philpem@philpem.me.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -4.30
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
 
-On Tuesday, 21 April 2026 00:27=EF=BC=8Cyou wrote=EF=BC=9A
-> From this it seems that it is simply the first IDENTIFY that times out.
-> On the second try, it seems that the IDENTIFY passes, otherwise we would
-> have seen more "revalidation failed (errno=3D-5)" prints for the same dri=
-ve.
->=20
-> So, from this log alone, I don't see any problem. We will try to do IDENT=
-IFY
-> up to three times, so just a single IDENTIFY failing should not be a prob=
-lem.
+On 4/20/26 14:23, Phil Pemberton wrote:
+> Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
+> so the SCSI layer never scans past LUN 0.  This blocks support for
+> the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
+> COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
+> Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
+> 
+> Introduce a libata module parameter, atapi_max_lun, that controls the
+> upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
+> current behaviour exactly: out-of-the-box only LUN 0 is scanned.
+> Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling).
+> 
+> Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
+> device must both be on the SCSI device list (or carry the appropriate
+> quirk) and run on a host whose atapi_max_lun has been raised before
+> any extra LUNs are scanned.
+> 
+> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+> ---
+>   drivers/ata/libata-core.c | 5 +++++
+>   drivers/ata/libata-scsi.c | 2 +-
+>   drivers/ata/libata.h      | 1 +
+>   include/linux/libata.h    | 1 +
+>   4 files changed, 8 insertions(+), 1 deletion(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-So at your opinion, the error is caused by a hardware failure but not kerne=
-l,=20
-so we should not add any quirk to relax or solve the problem, is that corre=
-ct?
-(I just want to confirm that how kernel will deal with this error)
+Cheers,
 
-> So I think the question is, at this point, can you read from the drive?
->=20
-> E.g.:
-> # dd if=3D/dev/sda of=3D/dev/null iflag=3Ddirect bs=3D4K count=3D1
-
-I will be blocked out of the shell for 5 secs unless the IDENTIFY succeed.
-
->=20
-> If you can read from the device, then this seem like a problem with zpool
-> kicking the device off the RAID array (perhaps because it is taking longer
-> than some zpool defined timeout value?), rather than a libata problem.
-
-But after the link re-established, the drive works normally.
-
-Alan
-
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
