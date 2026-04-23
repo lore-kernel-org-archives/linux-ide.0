@@ -1,148 +1,266 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 684A330EF8F
-	for <linux-ide@vger.kernel.org>; Thu, 23 Apr 2026 11:15:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4DB130EF8F
+	for <linux-ide@vger.kernel.org>; Thu, 23 Apr 2026 11:15:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776942925; cv=none; b=IRMMmyg/tlUX2XTVK1A2Abi+sfC5s9e4iHYsMaVOc+D7iYt1usKtpbygqYbCRGocv3Y+WKrW19Ph03p8KExcA8PDTd/0zhRvYO+jdFPzhu5EP6CiIQeRqdTSULPRhowLfqn5lZE76GlOpex+sosg71TIEeZgUtBGRnKSS19iPQk=
+	t=1776942954; cv=none; b=opFxNc5AsiUh+MZpSUNo/8QA2OXx5fO2zEZqtkjYOUftFVRql7OL5fpNbDhAPOFDNqyMh3SJqQIzz0CDvPNCPn7Z157NHIUB8NlDeUHt0nqNg7YIyLbjqWcD9xGXX2kUcqCHLF5gkpQYkHUNq+5IRpbDp4WSqkoAPJvHc4n1Ltw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776942925; c=relaxed/simple;
-	bh=FZ+KqEOY8Au+l0aTYPICFKrbk63cneCrqrjuBerVASs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bCkyhN+Zx3LUvu6mboj4o3oHDUQcCfEMealPAmA0RXfxfbay3gL9jx/1zg5kofEBSC29tTG7+dnMkMLZxj+LDJZtrprkh3yEdDT77RAH2R5az3TDDWig0fX8YZA02WeoT9zYdAoQCUkLLHLe2+q9vJeNNIRjpceIxb/mTs6+8u8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gE+f54sb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776942954; c=relaxed/simple;
+	bh=DznzqFC9T50WL71Vnb83dD9fbVWPkIkgwBiGPZfEFtY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AEi9Ah6ua3awdEY5H85HHQXSdrRrD8yyt3yvnSUdBK/DTe4A6E0JmdjOgChcV1blcuaqW90qJSDZU7rGiya0yfeY3X9P6ORVUOcOzxA7eDZzJFC0NxJZ9ZbSqOhho8zylcAEEwxap7//7GS7aes+rhdW89UzkyoqLM7oF7rXK9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lt7eWV9R; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Hd+Cq6wA; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lt7eWV9R; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Hd+Cq6wA; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gE+f54sb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A24AC2BCAF;
-	Thu, 23 Apr 2026 11:15:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776942925;
-	bh=FZ+KqEOY8Au+l0aTYPICFKrbk63cneCrqrjuBerVASs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gE+f54sb2mYT5zR3DTeYZMVD6moS5JOSi1v9uZsP1+402SN46Y+Gbt65gYbe8JQEI
-	 GoQUAUoQI3aZ3mAxhstT3vDigwAwtY6yLj7FpT9a8cXWKWaJxZT8AGjpsArHJ7I70e
-	 zRki5JN5vg1xMG6GMt6MTxF9Q8xIpBypPX7JV5O0PNHOgFz/yDxP8x2RNfRWOyKGzA
-	 hKc96SB/4/Sw629bxe+Kdl2FSOGMebi4HeDj8syDobyghWgusAw9ZhdX3guE3WLoIZ
-	 Rw0e3fBgvaaA6CPEM7RlTpzCEocEf0PWfXwv7f+1RulD0gEHxyX6TI/MU4zMT43fAS
-	 lN1QfJ9vOGxUQ==
-Date: Thu, 23 Apr 2026 13:15:21 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: AlanCui4080 <me@alancui.cc>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org
-Subject: Re: Default IDENTIFY timeout is 5000ms which is too short for
- enterprise disks
-Message-ID: <aen_SQ-7fPfdAylr@ryzen>
-References: <14015677.uLZWGnKmhe@alanarchdesktop>
- <23071769.EfDdHjke4D@alanarchdesktop>
- <aeZUCa5wumWXi_yN@ryzen>
- <f8dAJyMVQ4yJA5_7X9Jscw@alancui.cc>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lt7eWV9R";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Hd+Cq6wA";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lt7eWV9R";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Hd+Cq6wA"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 08AA16A869;
+	Thu, 23 Apr 2026 11:15:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1776942951; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nOnUrea+ERQfv3b1N4rR1jJJE1d3MIbsSDg9LYsXyiU=;
+	b=lt7eWV9RvB9kzof0OORjow1JOhz/mM6TiqLcWitJSit8yHR8LhmfnrdqS1hyC7h6Dx0UaN
+	/NIURF84JHiZGDelJ7H6IFWyyLRJXnpj1uKAvpdRCTQ+ItUBWUmd89zjyyeXlfPQHX+wdq
+	O4zqjvO7iIrK4vXO8XARdqmO1kQOSII=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1776942951;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nOnUrea+ERQfv3b1N4rR1jJJE1d3MIbsSDg9LYsXyiU=;
+	b=Hd+Cq6wA0dcwr5OGFKXCetWGWM/eII8Cgvk3qL4zHyN+iWmW5fATcyq5DRElWwrZfTVmpc
+	Ugw1P59b2iivXXDQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=lt7eWV9R;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=Hd+Cq6wA
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1776942951; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nOnUrea+ERQfv3b1N4rR1jJJE1d3MIbsSDg9LYsXyiU=;
+	b=lt7eWV9RvB9kzof0OORjow1JOhz/mM6TiqLcWitJSit8yHR8LhmfnrdqS1hyC7h6Dx0UaN
+	/NIURF84JHiZGDelJ7H6IFWyyLRJXnpj1uKAvpdRCTQ+ItUBWUmd89zjyyeXlfPQHX+wdq
+	O4zqjvO7iIrK4vXO8XARdqmO1kQOSII=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1776942951;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nOnUrea+ERQfv3b1N4rR1jJJE1d3MIbsSDg9LYsXyiU=;
+	b=Hd+Cq6wA0dcwr5OGFKXCetWGWM/eII8Cgvk3qL4zHyN+iWmW5fATcyq5DRElWwrZfTVmpc
+	Ugw1P59b2iivXXDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E5E35593A3;
+	Thu, 23 Apr 2026 11:15:50 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Gm6ON2b/6WloIgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 23 Apr 2026 11:15:50 +0000
+Message-ID: <7d7d368b-2660-42f4-8109-63d62239fcc7@suse.de>
+Date: Thu, 23 Apr 2026 13:15:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/5] ata: libata-scsi: probe additional LUNs for
+ multi-LUN ATAPI devices
+To: Phil Pemberton <philpem@philpem.me.uk>,
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260420122321.4161027-1-philpem@philpem.me.uk>
+ <20260420122321.4161027-5-philpem@philpem.me.uk>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260420122321.4161027-5-philpem@philpem.me.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <f8dAJyMVQ4yJA5_7X9Jscw@alancui.cc>
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[philpem.me.uk:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:dkim,suse.de:mid,suse.de:email]
+X-Rspamd-Queue-Id: 08AA16A869
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
+X-Spam-Level: 
 
-Hello Alan,
-
-On Thu, Apr 23, 2026 at 05:18:24PM +0800, AlanCui4080 wrote:
-> On Tuesday, 21 April 2026 00:27，you wrote：
-> > From this it seems that it is simply the first IDENTIFY that times out.
-> > On the second try, it seems that the IDENTIFY passes, otherwise we would
-> > have seen more "revalidation failed (errno=-5)" prints for the same drive.
-> > 
-> > So, from this log alone, I don't see any problem. We will try to do IDENTIFY
-> > up to three times, so just a single IDENTIFY failing should not be a problem.
+On 4/20/26 14:23, Phil Pemberton wrote:
+> After LUN 0 is added for an ATAPI device, check its BLIST_FORCELUN
+> flag.  If set, call scsi_scan_target() with SCAN_WILD_CARD to trigger
+> the SCSI layer's built-in sequential LUN scan for that target only.
+> This probes LUNs 1..shost->max_lun, driven by the atapi_max_lun module
+> parameter from patch 1/5.  Devices without BLIST_FORCELUN (the vast
+> majority of ATAPI devices) are left with only LUN 0 — no sequential
+> scan is triggered, so single-LUN devices like the iHAS124 DVD writer
+> are completely unaffected.
 > 
-> So at your opinion, the error is caused by a hardware failure but not kernel, 
-> so we should not add any quirk to relax or solve the problem, is that correct?
-> (I just want to confirm that how kernel will deal with this error)
-
-Like Damien said, the IDENTIFY DEVICE command is one of the few commands which
-a device is required to execute without leaving the Standby state or requiring
-a spin-up. A device is allowed to reply to IDENTIFY with the 'incomplete' bit
-set:
-
-37C8h - Device requires SET FEATURES subcommand to spin-up after power-up and
-IDENTIFY DEVICE data is incomplete (see 4.19).
-738Ch - Device requires SET FEATURES subcommand to spin-up after power-up and
-IDENTIFY DEVICE data is complete (see 4.19).
-
-8C73h - Device does not require SET FEATURES subcommand to spin-up after
-power-up and IDENTIFY DEVICE data is incomplete (see 4.19).
-C837h - Device does not require SET FEATURES subcommand to spin-up after
-power-up and IDENTIFY DEVICE data is complete (see 4.19).
-
-libata looks like it already handles this:
-https://github.com/torvalds/linux/blob/v7.0/drivers/ata/libata-core.c#L1903-L1922
-
-
-
-However, in your case you get a timeout, which means that the device does
-not reply at all.
-
-Before a system suspend, libata will send a spin-down/STANDBY IMMEDIATE
-command to all drives.
-
-After a system resume, libata will send a COMRESET to all devices, before
-it sends the IDENTIFY, and after that it will send SET ACTIVE to spin-up
-the drive.
-
-It seems that occasionally, some of your drives hangs in a weird state after
-STANDBY + COMRESET + IDENTIFY. When we get a timeout, we will do another
-COMRESET + IDENTIFY, and this time your drive does not hang.
-
-My best guess is that it is a HDD firmware bug where the drive sometimes
-hangs after a STANDBY + COMRESET + IDENTIFY. Or claims to be ready before
-it is actually ready.
-
-It could of course also be a bug in e.g. ata_wait_ready(), and we are sending
-the IDENTIFY command too quickly after the COMRESET, but if that was the case,
-I think we would have seen way more bug reports from different vendors by now.
-
-
-
-Anyway, considering that from a user space perspective, we are never removing
-the device (we only do that if we fail IDENTIFY three times), so the retries
-themselves should not be visible to user space applications.
-
-So if you disregard the error in the log, from a user space application
-perspective, the only difference should be that it takes a few extra seconds
-for the device to reply to commands after a system resume.
-
-
+> To suppress spurious "No Device" log entries from non-responding LUNs
+> (e.g. LUN 2+ on a two-LUN PD/CD drive), set pdt_1f_for_no_lun on the
+> scsi_target during LUN 0 configuration.  The Panasonic PD-1 returns
+> PQ=0/PDT=0x1f for unpopulated LUNs rather than the standard PQ=3;
+> with this flag, scsi_probe_and_add_lun() silently skips them.
 > 
-> > So I think the question is, at this point, can you read from the drive?
-> > 
-> > E.g.:
-> > # dd if=/dev/sda of=/dev/null iflag=direct bs=4K count=1
+> If BLIST_FORCELUN is set but atapi_max_lun is still at its default of
+> 1, an informational message points the user at the module parameter so
+> the knob is discoverable from dmesg.
 > 
-> I will be blocked out of the shell for 5 secs unless the IDENTIFY succeed.
-
-But as soon as you get a shell after a system resume, the above command
-succeeds, right?
-
-
+> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+> ---
+>   drivers/ata/libata-scsi.c | 53 ++++++++++++++++++++++++++++++++-------
+>   1 file changed, 44 insertions(+), 9 deletions(-)
 > 
-> > 
-> > If you can read from the device, then this seem like a problem with zpool
-> > kicking the device off the RAID array (perhaps because it is taking longer
-> > than some zpool defined timeout value?), rather than a libata problem.
-> 
-> But after the link re-established, the drive works normally.
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 4e88ae7d94c3..9d18ef2835a5 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -26,6 +26,7 @@
+>   #include <scsi/scsi_device.h>
+>   #include <scsi/scsi_tcq.h>
+>   #include <scsi/scsi_transport.h>
+> +#include <scsi/scsi_devinfo.h>
+>   #include <linux/libata.h>
+>   #include <linux/hdreg.h>
+>   #include <linux/uaccess.h>
+> @@ -1132,6 +1133,22 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct queue_limits *lim,
+>   		sdev->security_supported = 1;
+>   
+>   	dev->sdev[sdev->lun] = sdev;
+> +
+> +	/*
+> +	 * Tell the SCSI scan layer that PDT 0x1f with PQ 0 means "no LUN
+> +	 * present" for this target.  The Panasonic PD-1 (and likely other
+> +	 * multi-LUN ATAPI devices) returns PQ=0/PDT=0x1f for unpopulated
+> +	 * LUNs instead of the standard PQ=3.  Setting this flag lets the
+> +	 * sequential LUN scan skip those LUNs cleanly.
+> +	 */
 
-My suggestion is to look at the zpool code to see how long it waits to finds
-all devices after a system resume before it kicks devices off the RAID array.
+But this would hard-code device-specifics in the generic code.
 
-My initial feeling is that if your device is ready after 5 seconds after a
-system resume, then the timeout value for zpool to kick off a device must be
-very low.
+> +	if (dev->class == ATA_DEV_ATAPI && sdev->lun == 0) {
+> +		sdev->sdev_target->pdt_1f_for_no_lun = 1;
 
+Don't. That should be done with blacklist flags for specific devices.
 
-Kind regards,
-Niklas
+> +
+> +		if ((sdev->sdev_bflags & BLIST_FORCELUN) && atapi_max_lun < 2)
+> +			ata_dev_info(dev,
+> +				"device has additional LUNs; set libata.atapi_max_lun=2 or higher to access them\n");
+
+Huh? How do you know? The device _might_ have additional luns, but
+here we just probed for LUN 0, giving no indication whether other
+LUNs are present.
+
+And you already know which devices are affected (as the blacklist flags
+should make that clear).
+So I don't think we need that warning.
+
+> +	}
+> +
+>   	return 0;
+>   }
+>   
+> @@ -4700,7 +4717,6 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+>    repeat:
+>   	ata_for_each_link(link, ap, EDGE) {
+>   		ata_for_each_dev(dev, link, ENABLED) {
+> -			struct scsi_device *sdev;
+>   			int channel = 0, id = 0;
+>   
+>   			if (dev->sdev[0])
+> @@ -4711,15 +4727,34 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+>   			else
+>   				channel = link->pmp;
+>   
+> -			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
+> -						 NULL);
+> -			if (!IS_ERR(sdev)) {
+> -				dev->sdev[0] = sdev;
+> -				ata_scsi_assign_ofnode(dev, ap);
+> -				scsi_device_put(sdev);
+> -			} else {
+> -				dev->sdev[0] = NULL;
+> +			{
+> +				struct scsi_device *sdev;
+> +
+> +				sdev = __scsi_add_device(ap->scsi_host,
+> +							 channel, id, 0, NULL);
+> +				if (!IS_ERR(sdev)) {
+> +					/*
+> +					 * For multi-LUN ATAPI (BLIST_FORCELUN),
+> +					 * trigger the sequential LUN scan.
+> +					 * pdt_1f_for_no_lun (set during LUN 0
+> +					 * configure) ensures non-responding LUNs
+> +					 * are silently skipped.  dev->sdev[] is
+> +					 * populated by ata_scsi_dev_config()
+> +					 * during the scan callbacks.
+> +					 */
+> +					if (dev->class == ATA_DEV_ATAPI &&
+> +					    sdev->sdev_bflags & BLIST_FORCELUN)
+> +						scsi_scan_target(
+> +							&ap->scsi_host->shost_gendev,
+> +							channel, id,
+> +							SCAN_WILD_CARD,
+> +							SCSI_SCAN_RESCAN);
+> +					scsi_device_put(sdev);
+> +				}
+>   			}
+> +
+> +			if (dev->sdev[0])
+> +				ata_scsi_assign_ofnode(dev, ap);
+>   		}
+>   	}
+>   
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
