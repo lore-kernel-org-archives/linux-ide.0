@@ -1,79 +1,114 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out198-186.us.a.mail.aliyun.com (out198-186.us.a.mail.aliyun.com [47.90.198.186])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DC6A2FD7BC;
-	Thu, 23 Apr 2026 11:47:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F6F13195EF
+	for <linux-ide@vger.kernel.org>; Thu, 23 Apr 2026 14:27:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.90.198.186
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776944820; cv=none; b=jEZRX4N6U4Of6T4Rqv85olCudXwtyMFkPk1+WsFAacB90zofwTwxo9yBmDdZUDQ2X7Lm9EmhOAE4iJqHnVFeJgib02MFVuQn9pXtbQd1dS0N6e2ocOFCVr9MANM0q4Ih2FpKalzGTDAeejJ+rXZ35py9XRwYitoRa0IefwrluC0=
+	t=1776954430; cv=none; b=ueOz53DrfP04RG7Y7iQKDYG85ELXLPlXni327lO61QWVz+wuP90HsSGD9JyP4iemtuzY4qlZZDEwwOXbwVeoEOH9S2JSNfrwLU9DnBQaXJvoIuBVCQSqVshjn49VIXv9nGlXeivRJpEnDAD3nEok3f6BEo/YqBZVZfEBfawnQGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776944820; c=relaxed/simple;
-	bh=lAH+tMgsReb5YVC0CmXAwj1oMmvhUfKDEdN5ypoXL7A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PbCfqZ58WYHmhxLKouG736JIRBhpFGj5+wMcqZJpowuSVRvm2X1VgZeMLwnYee2XKThyGcspD/fjKZYeK1BcSZhXAlv9I5xxx3Xq4YiKsaD+6N5UK2DUPPufoMYlKTJ9pKtJk588YObOR3XDnzh7OZUoqEuKFRcDaV6/cxtYoEE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VR1KrBY9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776954430; c=relaxed/simple;
+	bh=+AuNXhrm+yR59uV3tLBVtl0UJqxuc3yGZCoKlZoXWuU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=eakz67VLFuex9blryI3dRiTRjDMdIoHTxOhV7qMAg/ReS6Mv3GeVekPGiEpBQQZN5W841MylnGIWqsRrz18/fc4S6wzG9g7Wm6xx49hkGc0ODCD0oZF4dem17GzMoV5sUobV4ypU8m+7fxe5iMBpVU341D89uM0WIyBiio3rnJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=alancui.cc; spf=pass smtp.mailfrom=alancui.cc; dkim=pass (2048-bit key) header.d=alancui.cc header.i=@alancui.cc header.b=Imso6jV6; arc=none smtp.client-ip=47.90.198.186
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=alancui.cc
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alancui.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VR1KrBY9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DA02C2BCAF;
-	Thu, 23 Apr 2026 11:46:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776944820;
-	bh=lAH+tMgsReb5YVC0CmXAwj1oMmvhUfKDEdN5ypoXL7A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VR1KrBY9S+BKA8k7jOQ4sG8OyVJgAf6WtmbQeHmDYORbAMCr5fh7SpjfbTE9eZZxN
-	 rzHKzoxMGlqJJ6utbOn/T4Sg/BVYFXnKlhovHu8Hnk7nwTRdzPnxczM8ncMLTxEa6I
-	 /wlmNFzw1+ZOcQ1W26d+BcC9P5CfcCJA+EMtq0sjeFT9AB9b0m6Iv/3V0CegpKOGx5
-	 1208mxBZFaUodfH8KMVxqvI0AsIzojqJrDysFUAKn835F3B5vL8ltK63r7S484cONZ
-	 uECR5DDXheZKCldg6TyodnS/qboWOInXZISKyaXrr7Qv9jezXVe3Vx6epCT3FOHNwp
-	 CU3ro1rSzVU1A==
-Date: Thu, 23 Apr 2026 13:46:54 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, bpf@vger.kernel.org, lsf-pc@lists.linux-foundation.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: LSF/MM/BPF: 2026: Call for Proposals
-Message-ID: <20260423-auseinander-steigen-b80ee53079a8@brauner>
-References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
- <81033e57-99e5-43f1-a6c3-c363e96f9c9f@acm.org>
+	dkim=pass (2048-bit key) header.d=alancui.cc header.i=@alancui.cc header.b="Imso6jV6"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=alancui.cc; s=default;
+	t=1776954417; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	bh=+AuNXhrm+yR59uV3tLBVtl0UJqxuc3yGZCoKlZoXWuU=;
+	b=Imso6jV69Ttu/Q5GXAx309J8Oa7QlptlamvEJRij1MaihIAXXsQYZjfw3fOuSH2c1bACFawwOk4gdqbYoCf86btgleoOtq5OPybHVISlfccQX/IXZg55/rVzqZcw+2raXaMFKxfUHpzTYfzfd92mSU181FAUd8JZiU0QgPLm3Qr1xJt0LGLlj6ZfmC9FsbfknkVb3GFDcaONHzGMOXF2jkay1sknnIX8aNUPSakA7R4VaiRQBm1UGYhLsaPsdNlQqix7xgtRFRh4O3AFxh7Es/O217T81ZPaQkYQ+KcfqjcpBb0Jjc0Xe71t493zFaq0eN6cSEh3rplA1DD2QJ8Mlg==
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.07979926|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.127356-0.0323431-0.840301;FP=6123644231787261522|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033037017159;MF=me@alancui.cc;NM=1;PH=DS;RN=2;RT=2;SR=0;TI=SMTPD_---.hIkE77g_1776954416;
+Received: from alanarchdesktop.localnet(mailfrom:me@alancui.cc fp:SMTPD_---.hIkE77g_1776954416 cluster:ay29)
+          by smtp.aliyun-inc.com;
+          Thu, 23 Apr 2026 22:26:56 +0800
+From: AlanCui4080 <me@alancui.cc>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Subject:
+ Re: Default IDENTIFY timeout is 5000ms which is too short for enterprise
+ disks
+Date: Thu, 23 Apr 2026 22:26:55 +0800
+Message-ID: <p9jLdz6RRGKjgu3OloMgWw@alancui.cc>
+In-Reply-To: <aen_SQ-7fPfdAylr@ryzen>
+References:
+ <14015677.uLZWGnKmhe@alanarchdesktop> <f8dAJyMVQ4yJA5_7X9Jscw@alancui.cc>
+ <aen_SQ-7fPfdAylr@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <81033e57-99e5-43f1-a6c3-c363e96f9c9f@acm.org>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-On Wed, Apr 22, 2026 at 01:29:56PM -0700, Bart Van Assche wrote:
-> On 1/10/26 5:24 AM, Christian Brauner wrote:
-> > The annual Linux Storage, Filesystem, Memory Management, and BPF
-> > (LSF/MM/BPF) Summit for 2026 will be held May 4–6, 2026 in Zagreb,
-> > Croatia.
-> > 
-> > LSF/MM/BPF is an invitation-only technical workshop to map out
-> > improvements to the Linux storage, filesystem, BPF, and memory
-> > management subsystems that will make their way into the mainline
-> > kernel within the coming years.
-> > 
-> > LSF/MM/BPF 2026 will be a three-day, stand-alone conference with four
-> > subsystem-specific tracks, cross-track discussions, as well as BoF and
-> > hacking sessions. Please check out:
-> > 
-> >            https://events.linuxfoundation.org/lsfmmbpf/
-> > 
-> > for further details on the venue and hotels.
-> 
-> Thank you Christian for being one of the organizers of the
-> LSF/MM/BPF summit. Will a schedule be made available before the summit
-> starts? A link to the 2024 schedule is available at
-> https://lore.kernel.org/all/20240510212132.83346-1-sj@kernel.org/.
+Hi,
 
-The preliminary schedule is accessible here:
+Thank you for your really really detailed response. And i was surprised by =
+your
+reply, hopefully that doesn't cost your time too much.
 
-https://docs.google.com/spreadsheets/d/1mGEdDrWskp7Ua91jGXzquQGinorcD58DAVXhOiRp2Gg/edit?gid=1852749899#gid=1852749899
+On Thursday, 23 April 2026 19:15=EF=BC=8Cyou wrote=EF=BC=9A
+> My best guess is that it is a HDD firmware bug where the drive sometimes
+> hangs after a STANDBY + COMRESET + IDENTIFY. Or claims to be ready before
+> it is actually ready.
+>=20
+> It could of course also be a bug in e.g. ata_wait_ready(), and we are sen=
+ding
+> the IDENTIFY command too quickly after the COMRESET, but if that was the =
+case,
+> I think we would have seen way more bug reports from different vendors by=
+ now.
+>=20
 
-It just hasn't been liked on the website yet.
+That's the same as what i guessed, the drive's firmware didn't implement th=
+e ATA
+correctly, they either ignored the command or just don't want to reply. The=
+ vendor
+do really not instrest about specification, they do even break the APM and =
+changed
+the meaning of standard SMART value.
+
+I'm not a native speaker so the actually question that i want to ask is that
+will kernel do quirk for those drives so let it just don't fail to avoid co=
+sting
+extra 5 seconds and producing annoying erros on console?
+
+> >=20
+> > > So I think the question is, at this point, can you read from the driv=
+e?
+> > >=20
+> > > E.g.:
+> > > # dd if=3D/dev/sda of=3D/dev/null iflag=3Ddirect bs=3D4K count=3D1
+> >=20
+> > I will be blocked out of the shell for 5 secs unless the IDENTIFY succe=
+ed.
+>=20
+> But as soon as you get a shell after a system resume, the above command
+> succeeds, right?
+
+Yes, that's correct.
+
+>=20
+> My suggestion is to look at the zpool code to see how long it waits to fi=
+nds
+> all devices after a system resume before it kicks devices off the RAID ar=
+ray.
+>=20
+> My initial feeling is that if your device is ready after 5 seconds after a
+> system resume, then the timeout value for zpool to kick off a device must=
+ be
+> very low.
+
+I do believe that's about zpool, i migrated it into btrfs RAID now, it work=
+s very
+well. And if you want to know, the timeout of TXG to commit is 5000ms also.
+
+Alan
+
+
+
