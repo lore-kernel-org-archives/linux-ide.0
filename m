@@ -1,81 +1,82 @@
-Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
+Received: from out28-65.mail.aliyun.com (out28-65.mail.aliyun.com [115.124.28.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FFB1330675
-	for <linux-ide@vger.kernel.org>; Wed, 22 Apr 2026 21:28:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE7E63E5564
+	for <linux-ide@vger.kernel.org>; Thu, 23 Apr 2026 09:23:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776893326; cv=none; b=c50jOqqDKyeaX7b22S7bye8R7LaFh0I2y4NRGcfyw6YV3Kxo7Rqn8MSIJrQ6zTg70gwfQ8naAWk+8XSGAEPh8jKtZtuwDYDDN5rXmE6AjxkP5WD6iwHfxoKRFdDz60SCvk3B2piNVdL05rIC752XvIut9DhVfmjJddZCca8wF+4=
+	t=1776936227; cv=none; b=PlnF2nA/Cpc44UWaovCcOAuW6T9qB8wE+NJBkzyuCnl+IK3yAfo5IF3eCHFgTSDhbcuSLgCdxU/v28erFjYIRSeGtxzhTdDKhrtyqNjf6S5DI3mmUio8LlwC8eeEOsFkujoPwPbFWlDHNceMnRmAsa+f86/FiOSMEpSVI1fnJzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776893326; c=relaxed/simple;
-	bh=CquhhgFGSv6ftFYUJJC2CdtpiGXTjxEJ9Q/L2qjH8iU=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=BtjieEC3YAJ+3sjuXMvQ00GRbFU2ycyldHlvY1ULnLGXBMGRF52OvZh82p7n8UxH1NZ1ltnTJ6PpBu3q7STFH1RYGZT8+uxk9pU4kJW8+s+OENq6flORS3OVOM2Cy/0WxyL5u+jdcTaH05gvQI+FTf6AxpzUFHcHIvqJY8YAVoE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=daA1nv4E; arc=none smtp.client-ip=91.218.175.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1776936227; c=relaxed/simple;
+	bh=WPwiFc776qnX9G2zEUaL/RBl3KB88G7/FHizAE8Lsv0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=uNvfO8k5dz1mMpwtIzjDL8aCSSfMYAa/uuuQK4nIly50SE7/aG3WAtpiahMhl7KkIcGn2SPhJNwfAMp/S4pMO06BoKtVIHO8MDvQMjKdwBB+x+C1FbeTjm/dZce2mObZT/F7rLIq3dCFxyugAl8CxJncmk+JJqxmwLR1WB/UpgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=alancui.cc; spf=pass smtp.mailfrom=alancui.cc; dkim=pass (2048-bit key) header.d=alancui.cc header.i=@alancui.cc header.b=tpoPs6o4; arc=none smtp.client-ip=115.124.28.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=alancui.cc
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alancui.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="daA1nv4E"
-Content-Type: text/plain; charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1776893313;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Cgpza/ygVqVA9S3quWs8Q35TCmfB+GLC9CQWXkpoesk=;
-	b=daA1nv4EjYnSQLIE7dEMjIdoIMZC+orNAQvKRf1ByycCi4bPaBGaW2hGTdZwDfyOdXa2qb
-	0glFoOF2Dq6n0hpicGLRRDEUCYyZl+PTLFy5IJHVTiLMpzuAZq8Q2iKR/VLZKTaJzprZpO
-	1cwVSZV6Ayy/jV1maIfiGf0YJyB+YWs=
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=alancui.cc header.i=@alancui.cc header.b="tpoPs6o4"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=alancui.cc; s=default;
+	t=1776936224; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	bh=WPwiFc776qnX9G2zEUaL/RBl3KB88G7/FHizAE8Lsv0=;
+	b=tpoPs6o4s784o92QLgQQS7EkoqM+rntD2xs9FyZqYtq6g1qh/r/qijkQonOhAUZH1mg7N69emFQzurSPru71jasMIMPWhOtHzSpXMrrsT6KVwrX3W/5thTkZI6C5YBzs7oHL0R+fe0mFnCqJP7m/8TXZ6pMxfx0CAQLuvFn0+wHdGgtBsG8YEjwIIM2Hv2VqzCH9L2XGWZKeCAePCKzeiOFHHyFNqfSiN67PelhaLhYyZweCKtpVtNp5o+jplmm3iAAcClhqRPptGsy3UxFEoLRI+LU1tWoo+V/8VQzpVUJuS29rCQfEDu72UkWYm9XuQdsVhUe8+PVaNrnrB1AHXg==
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.0802791|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0483249-0.000358162-0.951317;FP=6516163024916397306|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033023018039;MF=me@alancui.cc;NM=1;PH=DS;RN=2;RT=2;SR=0;TI=SMTPD_---.hIXsb3k_1776935904;
+Received: from alanarchdesktop.localnet(mailfrom:me@alancui.cc fp:SMTPD_---.hIXsb3k_1776935904 cluster:ay29)
+          by smtp.aliyun-inc.com;
+          Thu, 23 Apr 2026 17:18:25 +0800
+From: AlanCui4080 <me@alancui.cc>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Subject:
+ Re: Default IDENTIFY timeout is 5000ms which is too short for enterprise
+ disks
+Date: Thu, 23 Apr 2026 17:18:24 +0800
+Message-ID: <f8dAJyMVQ4yJA5_7X9Jscw@alancui.cc>
+In-Reply-To: <aeZUCa5wumWXi_yN@ryzen>
+References:
+ <14015677.uLZWGnKmhe@alanarchdesktop> <23071769.EfDdHjke4D@alanarchdesktop>
+ <aeZUCa5wumWXi_yN@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (1.0)
-Subject: Re: LSF/MM/BPF: 2026: Call for Proposals
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Roman Gushchin <roman.gushchin@linux.dev>
-In-Reply-To: <81033e57-99e5-43f1-a6c3-c363e96f9c9f@acm.org>
-Date: Wed, 22 Apr 2026 14:28:17 -0700
-Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org,
- linux-mm@kvack.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
- bpf@vger.kernel.org, lsf-pc@lists.linux-foundation.org,
- linux-kernel@vger.kernel.org
-Message-Id: <32CD853E-921D-4EEA-B1D0-4E4A7537861A@linux.dev>
-References: <81033e57-99e5-43f1-a6c3-c363e96f9c9f@acm.org>
-To: Bart Van Assche <bvanassche@acm.org>
-X-Migadu-Flow: FLOW_OUT
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-I suggest LSFMMBPFLLM :)
+On Tuesday, 21 April 2026 00:27=EF=BC=8Cyou wrote=EF=BC=9A
+> From this it seems that it is simply the first IDENTIFY that times out.
+> On the second try, it seems that the IDENTIFY passes, otherwise we would
+> have seen more "revalidation failed (errno=3D-5)" prints for the same dri=
+ve.
+>=20
+> So, from this log alone, I don't see any problem. We will try to do IDENT=
+IFY
+> up to three times, so just a single IDENTIFY failing should not be a prob=
+lem.
 
-> On Apr 22, 2026, at 1:30=E2=80=AFPM, Bart Van Assche <bvanassche@acm.org> w=
-rote:
+So at your opinion, the error is caused by a hardware failure but not kerne=
+l,=20
+so we should not add any quirk to relax or solve the problem, is that corre=
+ct?
+(I just want to confirm that how kernel will deal with this error)
+
+> So I think the question is, at this point, can you read from the drive?
 >=20
-> =EF=BB=BFOn 1/10/26 5:24 AM, Christian Brauner wrote:
->> The annual Linux Storage, Filesystem, Memory Management, and BPF
->> (LSF/MM/BPF) Summit for 2026 will be held May 4=E2=80=936, 2026 in Zagreb=
-,
->> Croatia.
->> LSF/MM/BPF is an invitation-only technical workshop to map out
->> improvements to the Linux storage, filesystem, BPF, and memory
->> management subsystems that will make their way into the mainline
->> kernel within the coming years.
->> LSF/MM/BPF 2026 will be a three-day, stand-alone conference with four
->> subsystem-specific tracks, cross-track discussions, as well as BoF and
->> hacking sessions. Please check out:
->>           https://events.linuxfoundation.org/lsfmmbpf/
->> for further details on the venue and hotels.
+> E.g.:
+> # dd if=3D/dev/sda of=3D/dev/null iflag=3Ddirect bs=3D4K count=3D1
+
+I will be blocked out of the shell for 5 secs unless the IDENTIFY succeed.
+
 >=20
-> Thank you Christian for being one of the organizers of the
-> LSF/MM/BPF summit. Will a schedule be made available before the summit
-> starts? A link to the 2024 schedule is available at
-> https://lore.kernel.org/all/20240510212132.83346-1-sj@kernel.org/.
->=20
-> Thanks,
->=20
-> Bart.
->=20
->=20
+> If you can read from the device, then this seem like a problem with zpool
+> kicking the device off the RAID array (perhaps because it is taking longer
+> than some zpool defined timeout value?), rather than a libata problem.
+
+But after the link re-established, the drive works normally.
+
+Alan
+
+
