@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A420F38237E;
-	Fri, 24 Apr 2026 11:15:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8C5639283C;
+	Fri, 24 Apr 2026 11:18:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777029330; cv=none; b=k0NiADpNY0trhvhu4a+lw6IbeKn2lOhk7m5/CVVn/gizvuV4WTPVmfPBWJB8jNxyYvcunGeUpZ7OMX7AnJOtUTftr2oCZeG1vxSDmVxrDD/3TgzeT22ZDvvPbjxDS7ViPFQqE5sHY8rRUTNQCzECooqyzUUOhMG/EoYpLj0cbN8=
+	t=1777029515; cv=none; b=m7KcZiVc8cuK7PTRF+utrpDiM2jLsJIn2hybQzBqLhJep4ErHDF5YY3IzzlJtRWmn85dZ6nGQZ0JxBbxneDauXeDejJn7G+dAssYNUlKtoj7uNR57F7sG9VrTIquDoEVopQ/O8pu03d0IglvWVMvN+26728BGyVdezTKL2eBxkg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777029330; c=relaxed/simple;
-	bh=AsXvZGSPqw4/ZlUXdQTV4v/oei9H7bnuKyzoD77gR2c=;
+	s=arc-20240116; t=1777029515; c=relaxed/simple;
+	bh=ehukMGIJo+X8R1y4/oB/v2gPHP/oOer+ZAKLEWbafxE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HY97YkR2pLG3ANZVxv0XpHiFgF5nQBupkCMKG2p6Ah5tbGfwHFkJtxDAmxhIX6pxd1jdfZgsaS33E+eza1Ud5y9PWSbB0tXUrB6FVxGEw6klMoUvN118+ZzT4p75hb1batop8yYz5EhnWbe0byk6EpmVO1WYPewmjPN8TYURbZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kXF0LTf4; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=jjTn50bmYsahojBOy9XTt7nDEqL/6q8GGfJYPocxTSpTF8lUQkvdi1pM6pdjkuKVV3ycAuPytDGFcEuHakiGdk21BXM3+W26ohqPi22I0yZMN/Q6WuYG3E3Q6BgdN7qqWB9jPKoWygBfDr1M9gluASyRFRseg/PzZqj/EJ75XQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mY/8svIx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kXF0LTf4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EA50C19425;
-	Fri, 24 Apr 2026 11:15:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mY/8svIx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BE7DC19425;
+	Fri, 24 Apr 2026 11:18:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777029330;
-	bh=AsXvZGSPqw4/ZlUXdQTV4v/oei9H7bnuKyzoD77gR2c=;
+	s=k20201202; t=1777029514;
+	bh=ehukMGIJo+X8R1y4/oB/v2gPHP/oOer+ZAKLEWbafxE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=kXF0LTf4LwCs3jZgQaYq5s2cEAvAhViRHQD8/Hcg0UoSjFa6zyWOvjew+wlOShDAI
-	 iHu7YMZxXrNRGQ+HjqcvRsGfP0pdsDg6f5iFU4HAPlh2XSUHoPE/pOsxv6qzF1fvHD
-	 kjQQrq4RO1zOAI00A8O+OjsTJ/DXSMCtolNdDpkINURislGtNUzXxwfmwsflL/WkTb
-	 8vFwRgvRveInfJB5KThKkXkgLNwyDF0qwlCmF0Zetui4tyCzYGcnw/GQX+KmO3dT6Y
-	 VUW7svXBOhTplNmDkTxJgcZjrENuv83yJdP8Thbz2BsfQqTC7g0iexM+rmOfW+MtTY
-	 ZuUJrSxtwqLNg==
-Message-ID: <05483953-5bf0-4d7e-92ee-46a49c9796b0@kernel.org>
-Date: Fri, 24 Apr 2026 20:15:27 +0900
+	b=mY/8svIxRYnYgLjppPgVSedCEV/9L3GztasrI0D1skQBqIZQVrv657b8v72zSK8Ka
+	 zgQagdOMIKpi3ISS0xC4fol6H+9/osCll+A8APHURiy+97js20Kk1Xq9JBKMRYAIw/
+	 LgVQAk7YmPq14X6vJOAz2zYh5dR6OnQ3QiFexeNGV1GnSd1BkMDRXC0r/W06p+tVlQ
+	 r46M66HyL4tDIeIY631Pt1vS2+QwYE/y8ScG1hV5Ud/08OpWqAUufh98hVRsmVrg0q
+	 eyHBUXiHkiPkYW5miIrDwxadCrHLT6vxv2VTaG9cblJxRK8Z4X11AZb1vyVQBnomtG
+	 neEhaYTaiylvQ==
+Message-ID: <c5a202d0-3938-4bd0-8f95-b4628265840b@kernel.org>
+Date: Fri, 24 Apr 2026 20:18:31 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,67 +35,34 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libahci: fix panic when accessing ports beyond MMIO
- region
-To: Niklas Cassel <cassel@kernel.org>, =?UTF-8?B?5p2O5L2R6bi/?=
- <dayou5941@163.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- liyouhong@kylinos.cn
-References: <20260422080322.1006592-1-dayou5941@163.com>
- <aejc_kqSuU60oRka@ryzen>
- <55809835.8838.19db9be1205.Coremail.dayou5941@163.com>
- <aepUh_p0Jkw0XQ7N@ryzen> <e4280e3b-b02a-4c4d-97dd-1bd49daad2fd@kernel.org>
- <13d7d471.6389.19dbe594e14.Coremail.dayou5941@163.com>
- <aetO9e7Kf5DZK0QH@ryzen>
+Subject: Re: [PATCH] ata: pata_parport: switch to dynamic root device
+To: Johan Hovold <johan@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260424103830.2616828-1-johan@kernel.org>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <aetO9e7Kf5DZK0QH@ryzen>
+In-Reply-To: <20260424103830.2616828-1-johan@kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 4/24/26 20:07, Niklas Cassel wrote:
-> On Fri, Apr 24, 2026 at 03:16:56PM +0800, 李佑鸿  wrote:
->> At 2026-04-24 10:43:11, "Damien Le Moal" <dlemoal@kernel.org> wrote:
->>>
->>> What I am surprised of here is that we even see that device on the PCI bus at
->>> all when it is disabled in the BIOs. If that device is disabled, why are we even
->>> seeing it by scanning the PCI ports ? The adapter should simply not be visible
->>> at all.
+On 4/24/26 19:38, Johan Hovold wrote:
+> Driver core expects devices to be dynamically allocated and will, for
+> example, complain loudly when no release function has been provided.
 > 
-> I agree.
-> E.g. both AMD and Intel make sure that the AHCI controller PCI device does
-> not show up on the PCI bus if you disable it using the BIOS.
+> Use root_device_register() to allocate and register the root device
+> instead of open coding using a static device.
 > 
-> It would have been nice if the Phytium BIOS also worked like that.
+> Note that this also fixes a reference leak in the unlikely event that
+> device_register() ever fails.
 > 
-> 
->> 3. **BAR Size Mismatch**: `CAP.NP` indicates more ports than physically fit in the BAR
->> - If CAP claims 32 ports but BAR is only 4KB, this is physically impossible
->> - 32 ports require at least 0x1100 bytes (0x100 + 32 * 0x80)
-> 
-> The reason why I did not suggest failing the probe() originally, was because
-> 李佑鸿 sent a patch with a Fixes tag, so I assumed that he considered it a
-> regression, and wanted the hardware to continue working, even though it was
-> marked as disabled in BIOS, because that is how it was before the commit in
-> the Fixes tag was introduced.
-> 
-> That said, I fully agree that I think it is better to modify the AHCI driver
-> to fail the probe() for this AHCI controller when it has not been properly
-> initialized (because it is marked as disabled in BIOS).
-> 
-> I prefer option 3.
-> Look at CAP.NP and look at the BAR size, if it is too small, just fail the
-> probe().
+> Signed-off-by: Johan Hovold <johan@kernel.org>
 
-Sounds good (and a lot safer) to me.
+Looks OK to me.
 
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-> 
-> 
-> Kind regards,
-> Niklas
-
+I suspect that this should go in for 7.1, right ?
 
 -- 
 Damien Le Moal
