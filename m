@@ -1,99 +1,123 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2748B40DFCF;
-	Sat, 25 Apr 2026 06:15:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84FDC40DFB9
+	for <linux-ide@vger.kernel.org>; Sat, 25 Apr 2026 06:56:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777097743; cv=none; b=Xnz6hylzcbevfAxEHxjyTGQxQ+JjGrPM4HcWITB+eMyUzKHAwq1McXjRspxgDW2Iwk5bexc0ZpnWNpXemqLMAE+zJ8V9QDd9XEd37nrwzAlaH/yDJMhzfBibDOgPVUSEwD6nRt5XAy1RBXzi47xumEVGiSOO0bAyJOa+qpfcZIk=
+	t=1777100189; cv=none; b=Po2ImHJVvQKr7tzqi7GSoccjwILz3w5cbpHm16qVDuR6D7hKFWr0teGXNixRnLpgEXGQOMzggsna0YifJ6rhVki69fLcXf9/J2CypWuppEp0iz3FFFLS6A0k5jL1jrJrOkJ6Ow4TFHCH5s2blR+vAEGV81ks8Sd0xLOv9enyB3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777097743; c=relaxed/simple;
-	bh=0lAYVBqCoHAV6q+RwmAJ/4Pf+9xbLcuQQVNm809CbKY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=Gvq7wMVjl9C/UJQ3epL2bh/8yFiI+kZE+2tlkpwFMkiyVUYYKdvDKbKko5Y3cKIr7cmCxnXbdi1lj4unwYOMkDQCIxjvq1HhaSNX/tzQuS9jVTFDzfPOXa9hm5fEspfRC97a7EKNfDzyiuDKvVe+PQRNAcLYGWI39k4v3mDuoaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=W8NLohQ9; arc=none smtp.client-ip=220.197.31.5
+	s=arc-20240116; t=1777100189; c=relaxed/simple;
+	bh=snJGRbmvJsbYuKsGTG19GwkPxd5gMzlvXbfxs0ydHs8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NJdA0m1xrPqLu28v9CquuY8HqwK4p9LiyRcKW+jIDJ09Z4Ytc5GZEUxRDav0zI4SBig0KWF6q6Xkpqxj9x9PO9sTn3eh0kDYrJC1XfkmB6+t1e5luY3Ln8itnPTqys2r724vN44XyVwZAsyt9W5QEwkRg9+V63j7kpAdlZ0qX+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ParYK4ks; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="W8NLohQ9"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ParYK4ks"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=0lAYVBqCoHAV6q+RwmAJ/4Pf+9xbLcuQQVNm809CbKY=; b=W
-	8NLohQ9g6A1qLUsolDB396Z7ckUWy+HcDS6wxSM1K6B5tVTFbLzAvgoRsZGxaLkW
-	yL0u5tayrTfuUR9792ZZw0MHsnRFJmx2CVPksjAdmep1P0Bc6NIc9A/vGdOQeRUx
-	cl9OoXVi+8v0PleAukSUojrJzTtpDr8oDlifrtKbkI=
-Received: from dayou5941$163.com ( [116.128.244.169] ) by
- ajax-webmail-wmsvr-40-104 (Coremail) ; Sat, 25 Apr 2026 14:15:15 +0800
- (CST)
-Date: Sat, 25 Apr 2026 14:15:15 +0800 (CST)
-From: =?GBK?B?wO7T07roIA==?= <dayou5941@163.com>
-To: "Niklas Cassel" <cassel@kernel.org>
-Cc: "Damien Le Moal" <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, liyouhong@kylinos.cn
-Subject: Re:Re: Re: [PATCH] ata: libahci: fix panic when accessing ports
- beyond MMIO region
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20260403(27802f6d) Copyright (c) 2002-2026 www.mailtech.cn 163com
-In-Reply-To: <aetO9e7Kf5DZK0QH@ryzen>
-References: <20260422080322.1006592-1-dayou5941@163.com>
- <aejc_kqSuU60oRka@ryzen>
- <55809835.8838.19db9be1205.Coremail.dayou5941@163.com>
- <aepUh_p0Jkw0XQ7N@ryzen> <e4280e3b-b02a-4c4d-97dd-1bd49daad2fd@kernel.org>
- <13d7d471.6389.19dbe594e14.Coremail.dayou5941@163.com>
- <aetO9e7Kf5DZK0QH@ryzen>
-X-NTES-SC: AL_Qu2cBfySuE8q4yiaYukcmEsSg+02Wsq5u/si1YVec+8EnAHDxzseW1loH2vP0vukDAqwsAOIWSl08u9ld5ZekjHomJvdgSgg7slxNvvU5Q==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=IS
+	SqXdS4KGQqvbpOPr80nM+mCUTCiZX6ouWTLo7K4s4=; b=ParYK4ksirkC6Y7h80
+	iO/ercMnHiGYzAPXFNv5NIKW9HYDwYXi5w1Es378Bej5gocVGcQQnXKzUwJmovTO
+	lN9kvRgaaXQ5urChjYhphtrfLsB2zZoz4TWsbj7o+jRJIeQFmZpz6yrpWXPrzIEe
+	eQTflLwIl8pghoGKgUtyo9nK4=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wC3NNBOZexpnzCLBg--.21294S2;
+	Sat, 25 Apr 2026 14:55:11 +0800 (CST)
+From: dayou5941@163.com
+To: linux-ide@vger.kernel.org
+Cc: damien.lemoal@opensource.wdc.com,
+	niklas.soderlund@corigine.com,
+	liyouhong@kylinos.cn,
+	Damien Le Moal <dlemoal@kernel.org>
+Subject: [PATCH v2] ata: ahci: fail probe if BAR too small for claimed ports
+Date: Sat, 25 Apr 2026 14:55:09 +0800
+Message-Id: <20260425065509.733544-1-dayou5941@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <215c4c47.18f7.19dc347307f.Coremail.dayou5941@163.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:aCgvCgDXpTf0W+xpoEmXAA--.48728W
-X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC+hSpWGnsW-RF6AAA3Y
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wC3NNBOZexpnzCLBg--.21294S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJF4DCryfZF1fKFWDKFW5GFg_yoW5GrW3pF
+	W7KFsYkrWjgFy7Xa18Aan7Zry3GwsxWa47trZ8Gan3trn0k3s7WF1Sya47Aay3J3s8G3WI
+	q3yqqr1rur1UZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jozuXUUUUU=
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC+g8CsGnsZU-t1wAA3S
 
-CgoKCgoKSGkgTmlrbGFzLCBEYW1pZW4sCgoKCkF0IDIwMjYtMDQtMjQgMTk6MDc6MzMsICJOaWts
-YXMgQ2Fzc2VsIiA8Y2Fzc2VsQGtlcm5lbC5vcmc+IHdyb3RlOgo+T24gRnJpLCBBcHIgMjQsIDIw
-MjYgYXQgMDM6MTY6NTZQTSArMDgwMCwgwO7T07roICB3cm90ZToKPj4gQXQgMjAyNi0wNC0yNCAx
-MDo0MzoxMSwgIkRhbWllbiBMZSBNb2FsIiA8ZGxlbW9hbEBrZXJuZWwub3JnPiB3cm90ZToKPj4g
-Pgo+PiA+V2hhdCBJIGFtIHN1cnByaXNlZCBvZiBoZXJlIGlzIHRoYXQgd2UgZXZlbiBzZWUgdGhh
-dCBkZXZpY2Ugb24gdGhlIFBDSSBidXMgYXQKPj4gPmFsbCB3aGVuIGl0IGlzIGRpc2FibGVkIGlu
-IHRoZSBCSU9zLiBJZiB0aGF0IGRldmljZSBpcyBkaXNhYmxlZCwgd2h5IGFyZSB3ZSBldmVuCj4+
-ID5zZWVpbmcgaXQgYnkgc2Nhbm5pbmcgdGhlIFBDSSBwb3J0cyA/IFRoZSBhZGFwdGVyIHNob3Vs
-ZCBzaW1wbHkgbm90IGJlIHZpc2libGUKPj4gPmF0IGFsbC4KPgo+SSBhZ3JlZS4KPkUuZy4gYm90
-aCBBTUQgYW5kIEludGVsIG1ha2Ugc3VyZSB0aGF0IHRoZSBBSENJIGNvbnRyb2xsZXIgUENJIGRl
-dmljZSBkb2VzCj5ub3Qgc2hvdyB1cCBvbiB0aGUgUENJIGJ1cyBpZiB5b3UgZGlzYWJsZSBpdCB1
-c2luZyB0aGUgQklPUy4KPgo+SXQgd291bGQgaGF2ZSBiZWVuIG5pY2UgaWYgdGhlIFBoeXRpdW0g
-QklPUyBhbHNvIHdvcmtlZCBsaWtlIHRoYXQuCj4KPgo+PiAzLiAqKkJBUiBTaXplIE1pc21hdGNo
-Kio6IGBDQVAuTlBgIGluZGljYXRlcyBtb3JlIHBvcnRzIHRoYW4gcGh5c2ljYWxseSBmaXQgaW4g
-dGhlIEJBUgo+PiAtIElmIENBUCBjbGFpbXMgMzIgcG9ydHMgYnV0IEJBUiBpcyBvbmx5IDRLQiwg
-dGhpcyBpcyBwaHlzaWNhbGx5IGltcG9zc2libGUKPj4gLSAzMiBwb3J0cyByZXF1aXJlIGF0IGxl
-YXN0IDB4MTEwMCBieXRlcyAoMHgxMDAgKyAzMiAqIDB4ODApCj4KPlRoZSByZWFzb24gd2h5IEkg
-ZGlkIG5vdCBzdWdnZXN0IGZhaWxpbmcgdGhlIHByb2JlKCkgb3JpZ2luYWxseSwgd2FzIGJlY2F1
-c2UKPsDu09O66CBzZW50IGEgcGF0Y2ggd2l0aCBhIEZpeGVzIHRhZywgc28gSSBhc3N1bWVkIHRo
-YXQgaGUgY29uc2lkZXJlZCBpdCBhCj5yZWdyZXNzaW9uLCBhbmQgd2FudGVkIHRoZSBoYXJkd2Fy
-ZSB0byBjb250aW51ZSB3b3JraW5nLCBldmVuIHRob3VnaCBpdCB3YXMKPm1hcmtlZCBhcyBkaXNh
-YmxlZCBpbiBCSU9TLCBiZWNhdXNlIHRoYXQgaXMgaG93IGl0IHdhcyBiZWZvcmUgdGhlIGNvbW1p
-dCBpbgo+dGhlIEZpeGVzIHRhZyB3YXMgaW50cm9kdWNlZC4KPgo+VGhhdCBzYWlkLCBJIGZ1bGx5
-IGFncmVlIHRoYXQgSSB0aGluayBpdCBpcyBiZXR0ZXIgdG8gbW9kaWZ5IHRoZSBBSENJIGRyaXZl
-cgo+dG8gZmFpbCB0aGUgcHJvYmUoKSBmb3IgdGhpcyBBSENJIGNvbnRyb2xsZXIgd2hlbiBpdCBo
-YXMgbm90IGJlZW4gcHJvcGVybHkKPmluaXRpYWxpemVkIChiZWNhdXNlIGl0IGlzIG1hcmtlZCBh
-cyBkaXNhYmxlZCBpbiBCSU9TKS4KPgo+SSBwcmVmZXIgb3B0aW9uIDMuCj5Mb29rIGF0IENBUC5O
-UCBhbmQgbG9vayBhdCB0aGUgQkFSIHNpemUsIGlmIGl0IGlzIHRvbyBzbWFsbCwganVzdCBmYWls
-IHRoZQoKPnByb2JlKCkuCgoKClRoYW5rIHlvdSBmb3IgdGhlIGNsZWFyIGRpcmVjdGlvbi4gSSBh
-Z3JlZSB0aGF0IGNoZWNraW5nIEJBUiBzaXplIGFnYWluc3QKQ0FQLk5QIGlzIHRoZSBjbGVhbmVz
-dCBzb2x1dGlvbi4KCgpJIHdpbGwgcHJlcGFyZSBhIHYyIHBhdGNoIGltcGxlbWVudGluZyB0aGlz
-IGNoZWNrOgoKCjEuIEluIGFoY2lfaW5pdF9vbmUoKSwgYWZ0ZXIgbWFwcGluZyBNTUlPIGJ1dCBi
-ZWZvcmUgYW55IHBvcnQgYWNjZXNzLgoyLiBDYWxjdWxhdGU6IHJlcXVpcmVkX3NpemUgPSAweDEw
-MCArIChDQVAuTlAgKiAweDgwKS4KMy4gQ29tcGFyZSB3aXRoIHBjaV9yZXNvdXJjZV9sZW4ocGRl
-diwgNSkuCjQuIElmIHJlcXVpcmVkX3NpemUgPiBCQVIgc2l6ZSwgZmFpbCBwcm9iZSB3aXRoIC1F
-Tk9ERVYgYW5kIGNsZWFyIGVycm9yLgoKClRoZSBwYXRjaCB3aWxsIGluY2x1ZGU6Ci0gQSBuZXcg
-YWhjaV92YWxpZGF0ZV9iYXJfc2l6ZSgpIGhlbHBlciBmdW5jdGlvbgotIENsZWFyIGVycm9yIG1l
-c3NhZ2U6ICJBSENJOiBCQVI1IHRvbyBzbWFsbCBmb3IgJXUgcG9ydHMuLi4iCgoKSSdsbCBzZW5k
-IHRoZSB2MiBwYXRjaCBzaG9ydGx5LgoKCkJlc3QgcmVnYXJkcywKbGl5b3Vob25nPgo+Cj5LaW5k
-IHJlZ2FyZHMsCgo+TmlrbGFz
+From: liyouhong <liyouhong@kylinos.cn>
+
+When an AHCI controller is disabled in BIOS, its HOST_CAP register may
+contain invalid values (e.g., 0xFFFFFFFF) indicating an impossibly large
+number of ports. If CAP.NP claims more ports than can physically fit
+within the mapped BAR region, accessing port registers beyond the BAR
+boundary causes a kernel panic.
+
+Add validation in ahci_init_one() to check that the BAR size is
+sufficient for the number of ports claimed in CAP.NP. The check
+calculates the required MMIO size as:
+
+  required_size = 0x100 (global registers) + max_ports * 0x80
+
+If required_size exceeds the actual BAR size, the probe fails with
+-ENODEV, preventing the panic and providing a clear error message.
+
+This solution follows the suggestion by Damien Le Moal and Niklas Cassel
+to detect and reject obviously broken controller configurations early.
+
+v2:
+- Complete rewrite based on community feedback
+- Move check from libahci.c to ahci.c
+- Fail probe early instead of attempting to work around invalid state
+- Implement BAR size validation as suggested
+
+Reported-by: liyouhong <liyouhong@kylinos.cn>
+Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+Suggested-by: Niklas Cassel <niklas.soderlund@corigine.com>
+Signed-off-by: liyouhong <liyouhong@kylinos.cn>
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1d73a53370cf..09026ea12cde 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1888,6 +1888,23 @@ static ssize_t remapped_nvme_show(struct device *dev,
+ 
+ static DEVICE_ATTR_RO(remapped_nvme);
+ 
++static int ahci_validate_bar_size(struct pci_dev *pdev, void __iomem *mmio)
++{
++	u32 cap = readl(mmio + HOST_CAP);
++	unsigned int max_ports = ahci_nr_ports(cap);
++	u32 last_port_end = 0x100 + (max_ports * 0x80);
++	resource_size_t bar_size = pci_resource_len(pdev, AHCI_PCI_BAR_STANDARD);
++
++	if (last_port_end > bar_size) {
++		dev_err(&pdev->dev,
++			"AHCI: BAR5 too small for %u ports (last port ends at %u, BAR %llu)\n",
++			max_ports, last_port_end, (unsigned long long)bar_size);
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	unsigned int board_id = ent->driver_data;
+@@ -1988,6 +2005,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!hpriv->mmio)
+ 		return -ENOMEM;
+ 
++	rc = ahci_validate_bar_size(pdev, hpriv->mmio);
++	if (rc)
++		return rc;
++
+ 	/* detect remapped nvme devices */
+ 	ahci_remap_check(pdev, ahci_pci_bar, hpriv);
+ 
+-- 
+2.25.1
+
