@@ -1,126 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F86223708
-	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2026 05:44:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 535FE33B97F
+	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2026 06:06:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777268694; cv=none; b=sfbMimDSGy3t1/QrbvuguGPUh+CmPGY2nmTe8yPoNixVFmkqkTz82csl2mq03fZ5tkklV4PJ/tP6hEExHH/DllKVPYba+nmF1Y/huiILPIad4awi94N88IuBxqOhB0yf3YmJW834RcahrIWMwFB+t/3KS3ttk/p5nUeFwJnDu0w=
+	t=1777269975; cv=none; b=KAc8cxxOlCMJZn80SRpduGF6Y6qiKvftUfr5dqV2c5Kd/WaM3yyY7yT9GPefqLa7eBGfA32ITi42NC5RDgolktLbXDJunerScEIKIKKhQBLMAd867/zXdatCxo1Nplzl4RNAZlprijaUEfZkshHCHj0ygTCB9WWMlLSgefm5ZXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777268694; c=relaxed/simple;
-	bh=JWuwILYCZ474+w6QaLDovJO75S4kiKNHOf1l8YoFNjI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pBUcfPzzJpflhrnptIX5q1PgIsootVeNP+ak4c96PWp8bFwRZTG5Yt+76qWTqdngFhkMVqHmCXXyfz5WVxO2CmZNPVpMjoVFwsfUNeF+lJt0zrE5hEbrfA/SVzD0mI2l4Mq0z/cFS1LnOom1ZbDlK/6a3wUkMPJ62936U0fcW54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=drMSmXj6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777269975; c=relaxed/simple;
+	bh=kUmAnBbcNX8fuGV5z/55Xzzf8/BTD3UaldPCZW3B+SA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qEvQWPy9VhRM1Fe025pYBe+08j0Lh8NlOTAZTCWAxZE3eM6sn5qFyUdoMJ8cohir1AZMgBkoalIK4gUdE3j/DL1V+y5QNOSnl032hYaNUFmSdYOIeL89K0DLZsZ71DUBfVuXXTYjYBbBPnKonZ6IvEmgzdTlRplbxFyMClyx/LI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=QwDFK7ut; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="drMSmXj6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB09EC19425;
-	Mon, 27 Apr 2026 05:44:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777268694;
-	bh=JWuwILYCZ474+w6QaLDovJO75S4kiKNHOf1l8YoFNjI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=drMSmXj6RSWB5woDVyBwlarWw5BJeFXLCfqv3MuD57UPOorYvgqdVPSx5aztWOr84
-	 K8h94gbz1ORsg/Sq6kDrHJiShTLDe1PNMQ5VEuhyF82Hrtq5v9lhGc9KZFQa9euvIm
-	 WEE6Lr+qRpG+AHII/Bqv6r/ez4rD7uMO+jMGEKXWgL5z+VY3s2DZrhrI8By0RQB4ob
-	 EXFjW3tG3uoH+r9KJ2LjUk1ct5pfgQiP0w7eF53xIBHLjfyy7GsCxko0C6dkV0MtHj
-	 ZsTfru4a2RY4pCvU5wgESHoGM8L58cMN9IQQRAs5hxX6wzrbfCTwSPoObZKG2lzzqa
-	 FaRXLCM+90lQA==
-Message-ID: <2a79933e-9051-4d5d-a95e-c4bfc2c2c932@kernel.org>
-Date: Mon, 27 Apr 2026 14:44:46 +0900
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="QwDFK7ut"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Sz
+	kDcbEkKbEI9PF0QuJp3rJEm8DC3zbBZX3utA/tH9E=; b=QwDFK7utIspX30hX+g
+	6B0MCoaXoceQA3nTqiH5cCRpZGcypV8IKOI4vnlYdX5JpcE3VgsZ/RIJbrtIxSS4
+	t65IUQwa4KUelTGwXz3M4vuDWlAzNHTeQn2Bi29p99jxlbMgYqguPH+p7Pf2R8ff
+	whDwLd3GVTrK8EOfpQIDKt32k=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wAHVOS9_O5pN53SBw--.40422S2;
+	Mon, 27 Apr 2026 14:05:51 +0800 (CST)
+From: dayou5941@163.com
+To: linux-ide@vger.kernel.org
+Cc: dlemoal@kernel.org,
+	cassel@kernel.org,
+	liyouhong@kylinos.cn
+Subject: [PATCH v4] ata: ahci: fail probe if BAR too small for claimed ports
+Date: Mon, 27 Apr 2026 14:05:46 +0800
+Message-Id: <20260427060546.1407439-1-dayou5941@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] ata: ahci: fail probe if BAR too small for claimed
- ports
-To: dayou5941@163.com, linux-ide@vger.kernel.org
-Cc: cassel@kernel.org, liyouhong@kylinos.cn
-References: <20260427053752.613848-1-dayou5941@163.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260427053752.613848-1-dayou5941@163.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wAHVOS9_O5pN53SBw--.40422S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJF4DCryfZF1fKFWkGFy8Zrb_yoW5Ar47pF
+	WxGFZYyrWUWF47XayrAanrZry3Gws5GFW7trW3Ja93trn8K34kXr1fKa47Aay3J3ykG3WI
+	qryqqr1rur1UZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j1pBfUUUUU=
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC3h+EM2nu-L9MUQAA3v
 
-On 4/27/26 2:37 PM, dayou5941@163.com wrote:
-> From: liyouhong <liyouhong@kylinos.cn>
-> 
-> When an AHCI controller is disabled in BIOS, its HOST_CAP register may
-> contain invalid values (e.g., 0xFFFFFFFF) indicating an impossibly large
-> number of ports. If CAP.NP claims more ports than can physically fit
-> within the mapped BAR region, accessing port registers beyond the BAR
-> boundary causes a kernel panic.
-> 
-> Add validation in ahci_init_one() to check that the BAR size is
-> sufficient for the number of ports claimed in CAP.NP. The check
-> calculates the required MMIO size as:
-> 
->   required_size = 0x100 (global registers) + max_ports * 0x80
-> 
-> If required_size exceeds the actual BAR size, the probe fails with
-> -ENODEV, preventing the panic and providing a clear error message.
-> 
-> This solution follows the suggestion by Damien Le Moal and Niklas Cassel
-> to detect and reject obviously broken controller configurations early.
-> 
-> Reported-by: liyouhong <liyouhong@kylinos.cn>
-> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
-> Suggested-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: liyouhong <liyouhong@kylinos.cn>
-> ---
-> v3:
-> - Fix patch format: add "---" separator and move changelog to correct location
-> - Change dev_err to dev_warn as suggested
+From: Youhong Li <liyouhong@kylinos.cn>
 
-Note for next time: please keep *all* versions notes in the changelog. Do not
-keep only the description for the last changes.
+When an AHCI controller is disabled in BIOS, its HOST_CAP register may
+contain invalid values (e.g., 0xFFFFFFFF) indicating an impossibly large
+number of ports. If CAP.NP claims more ports than can physically fit
+within the mapped BAR region, accessing port registers beyond the BAR
+boundary causes a kernel panic.
 
-> 
-> ---
->  drivers/ata/ahci.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 1d73a53370cf..e5eff7e3d66b 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1888,6 +1888,23 @@ static ssize_t remapped_nvme_show(struct device *dev,
->  
->  static DEVICE_ATTR_RO(remapped_nvme);
->  
-> +static int ahci_validate_bar_size(struct pci_dev *pdev, void __iomem *mmio)
-> +{
-> +	u32 cap = readl(mmio + HOST_CAP);
-> +	unsigned int max_ports = ahci_nr_ports(cap);
-> +	u32 last_port_end = 0x100 + (max_ports * 0x80);
-> +	resource_size_t bar_size = pci_resource_len(pdev, AHCI_PCI_BAR_STANDARD);
+Add validation in ahci_init_one() to check that the BAR size is
+sufficient for the number of ports claimed in CAP.NP. The check
+calculates the required MMIO size as:
 
-Long line. Please break it after the "=":
+  required_size = 0x100 (global registers) + max_ports * 0x80
 
-	resource_size_t bar_size =
-		pci_resource_len(pdev, AHCI_PCI_BAR_STANDARD);
+If required_size exceeds the actual BAR size, the probe fails with
+-ENODEV, preventing the panic and providing a clear error message.
 
-> +
-> +	if (last_port_end > bar_size) {
-> +		dev_warn(&pdev->dev,
-> +			 "BAR5 too small for %u ports (last port ends at %u, BAR %llu)\n",
-> +			 max_ports, last_port_end, (unsigned long long)bar_size);
+This solution follows the suggestion by Damien Le Moal and Niklas Cassel
+to detect and reject obviously broken controller configurations early.
 
-Here too, long line. Break it after last_port_end.
-
-			max_ports, last_port_end,
-			(unsigned long long)bar_size);
-
-
-With that fixed, looks OK to me.
-
+Reported-by: liyouhong <liyouhong@kylinos.cn>
+Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+Suggested-by: Niklas Cassel <cassel@kernel.org>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: liyouhong <liyouhong@kylinos.cn>
+---
+v2:
+- Complete rewrite based on community feedback
+- Move check from libahci.c to ahci.c
+- Fail probe early instead of attempting to work around invalid state
+- Implement BAR size validation as suggested
 
+v3:
+- Fix patch format: add "---" separator and move changelog to correct location
+- Change dev_err to dev_warn as suggested
+
+v4:
+- Break long lines as suggested by Damien
+- Keep complete changelog history
+
+---
+ drivers/ata/ahci.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1d73a53370cf..c04bee682605 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1888,6 +1888,25 @@ static ssize_t remapped_nvme_show(struct device *dev,
+ 
+ static DEVICE_ATTR_RO(remapped_nvme);
+ 
++static int ahci_validate_bar_size(struct pci_dev *pdev, void __iomem *mmio)
++{
++	u32 cap = readl(mmio + HOST_CAP);
++	unsigned int max_ports = ahci_nr_ports(cap);
++	u32 last_port_end = 0x100 + (max_ports * 0x80);
++	resource_size_t bar_size =
++		pci_resource_len(pdev, AHCI_PCI_BAR_STANDARD);
++
++	if (last_port_end > bar_size) {
++		dev_warn(&pdev->dev,
++			 "BAR5 too small for %u ports (last port ends at %u, BAR %llu)\n",
++			 max_ports, last_port_end,
++			 (unsigned long long)bar_size);
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	unsigned int board_id = ent->driver_data;
+@@ -1988,6 +2007,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!hpriv->mmio)
+ 		return -ENOMEM;
+ 
++	rc = ahci_validate_bar_size(pdev, hpriv->mmio);
++	if (rc)
++		return rc;
++
+ 	/* detect remapped nvme devices */
+ 	ahci_remap_check(pdev, ahci_pci_bar, hpriv);
+ 
 -- 
-Damien Le Moal
-Western Digital Research
+2.25.1
+
