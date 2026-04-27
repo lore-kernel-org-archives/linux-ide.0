@@ -1,113 +1,131 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D6826C3B0
-	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2026 02:07:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88614224B04
+	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2026 04:40:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777255671; cv=none; b=WfiIl1uUq/nHLX+BWiZDjwHNWd+VPQMGbNDbpjsZBMBjOxP7NqtDFBBGzF5TjrGSlgULcaXtBwHuml4vVIh9a+VMYeS+Lb8Ja0/WHgNpEevsXJiN67qHIFTxw7YnNS2uI/Ic9Sa4thmMuTs4QIIQEJIds6uczsLY6EOTmYqWT1Y=
+	t=1777264859; cv=none; b=A9yOztDtqf6zHDj+OOqLmwiFNrIQGJ8vplxprFLsd8IfpfR6LmiAlPqqHzx+TEM2NglQzaJOn1C0XW5n9EDLUuKWPTlySHeiamZLGLvFX+iU4+kse1SxJKTZUzzPYKmIpQQlmxstPElYNQENfCZIGSR2aqiF35PjEoOHXgr5UNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777255671; c=relaxed/simple;
-	bh=z5UoqJTEzJjhUbxM1fKGhFFnKDCEzlmYzPlk0weMY/c=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=mG0CqmkRd2S02obcPkxh5cTQP8FFy6xjE2CjAhl8dzGu7NB4APzn8FUvJ4r5ShRCcOFcR4q60ODzRBoKZfyYPtlD5VzRla8vNjPrZ+JN6qL/lDfjmm2Qpfe0D09v8jDtDdJDF2Cu5F3V1Nv1FHicbvRyVCdJfi0maRbp8A3y4Jc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=aXi7HBWO; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1777264859; c=relaxed/simple;
+	bh=AM+xQlKoZoQLDOl3dS7rkIQLJLKkD+FONAP/djAB69Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=onLdik9hsDsrd3Jemmtcc+kv+ha+CAdGgqNGICQaG1drt2kDCg6sS4af63VRl4G764SWvJrdZSpM63LQs9pV9AkmkPev6ow6NMFsK1mFd9V7LT8PEvn85jG15BhOwhN1r3Ewde9WL/vt7xElpiDzd4Z3/Dx4Fa9EXidiVHzNRsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c2z0LN63; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="aXi7HBWO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=z5UoqJTEzJjhUbxM1fKGhFFnKDCEzlmYzPlk0weMY/c=; b=a
-	Xi7HBWOFu5t1d2GJgPg5tHK78rv4730dNGCxbA2tbFsvuYncM7A/fw/phsOxfhRu
-	0mewv1/GdQ/en47TW0NQLu/Sj/kGxiRK26hWOLhWwuD9NakMgc8bUgCLAHsNHQvn
-	a0ye7iEgp5ORgw5LAfcQVIRnevfX6dVHH8gQ5UvSXI=
-Received: from dayou5941$163.com ( [116.128.244.169] ) by
- ajax-webmail-wmsvr-40-104 (Coremail) ; Mon, 27 Apr 2026 10:07:18 +0800
- (CST)
-Date: Mon, 27 Apr 2026 10:07:18 +0800 (CST)
-From: =?GBK?B?wO7T07roIA==?= <dayou5941@163.com>
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, damien.lemoal@opensource.wdc.com,
-	liyouhong@kylinos.cn, cassel@kernel.org
-Subject: Re:Re: [PATCH v2] ata: ahci: fail probe if BAR too small for
- claimed ports
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20260403(27802f6d) Copyright (c) 2002-2026 www.mailtech.cn 163com
-In-Reply-To: <75618383-ad2b-4b58-97d1-250be32a4bea@kernel.org>
-References: <20260425065509.733544-1-dayou5941@163.com>
- <75618383-ad2b-4b58-97d1-250be32a4bea@kernel.org>
-X-NTES-SC: AL_Qu2cBf6euk4o7iOcZekcmEsSg+02Wsq5u/si1YVec+8EnAHDxzseW1loH2vP0vukDAqwsAOIWSl08u9ld5ZeMP1lfOW4OzjlqgroDLInLQ==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c2z0LN63"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D49A4C19425;
+	Mon, 27 Apr 2026 04:40:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777264859;
+	bh=AM+xQlKoZoQLDOl3dS7rkIQLJLKkD+FONAP/djAB69Q=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=c2z0LN63EyzVMwsmRrebqmbDOLfyMpNbKRjiJF8TEXJIGt2SuwUp42YjmOApJGAgY
+	 osjm1cT90Ul8xPnmt7zHrrt12JctZxvlfCt0D2x07IOc35j0gfC8CgNpANvzB1NJuh
+	 zWFgSmupm/GoV9HmYhZOLyzVEif5gSXJ3gk4M1yPfQw5JAkya8/BE6Y39VlqhyMYVA
+	 7Lc60CLA7YR4r/hjtaZhGZTfXgtsXhan0whKPBsW7sEbjhaVavuI9W6HH6zMzNUbYv
+	 lrLiVDKARfJ+RKkzNkhXCMgvNQV/yt8mNWbk9gnTIx/nfZ413Dv6lzL/W3DoDpX7ke
+	 Y8EiUDglQMc1w==
+Message-ID: <996a48b3-3b7a-4bb1-a13e-16e2c1897d2d@kernel.org>
+Date: Mon, 27 Apr 2026 13:40:51 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <442805bc.1eda.19dccb0e551.Coremail.dayou5941@163.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:aCgvCgDX_1HXxO5pE9KXAA--.754W
-X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC3Rd8K2nuxNdTYAAA36
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ata: ahci: fail probe if BAR too small for claimed
+ ports
+To: =?UTF-8?B?5p2O5L2R6bi/?= <dayou5941@163.com>
+Cc: linux-ide@vger.kernel.org, damien.lemoal@opensource.wdc.com,
+ liyouhong@kylinos.cn, cassel@kernel.org
+References: <20260425065509.733544-1-dayou5941@163.com>
+ <75618383-ad2b-4b58-97d1-250be32a4bea@kernel.org>
+ <442805bc.1eda.19dccb0e551.Coremail.dayou5941@163.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <442805bc.1eda.19dccb0e551.Coremail.dayou5941@163.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-CgoKCkF0IDIwMjYtMDQtMjcgMDc6NDY6MTIsICJEYW1pZW4gTGUgTW9hbCIgPGRsZW1vYWxAa2Vy
-bmVsLm9yZz4gd3JvdGU6Cj5PbiA0LzI1LzI2IDM6NTUgUE0sIGRheW91NTk0MUAxNjMuY29tIHdy
-b3RlOgo+PiBGcm9tOiBsaXlvdWhvbmcgPGxpeW91aG9uZ0BreWxpbm9zLmNuPgo+PiAKPj4gV2hl
-biBhbiBBSENJIGNvbnRyb2xsZXIgaXMgZGlzYWJsZWQgaW4gQklPUywgaXRzIEhPU1RfQ0FQIHJl
-Z2lzdGVyIG1heQo+PiBjb250YWluIGludmFsaWQgdmFsdWVzIChlLmcuLCAweEZGRkZGRkZGKSBp
-bmRpY2F0aW5nIGFuIGltcG9zc2libHkgbGFyZ2UKPj4gbnVtYmVyIG9mIHBvcnRzLiBJZiBDQVAu
-TlAgY2xhaW1zIG1vcmUgcG9ydHMgdGhhbiBjYW4gcGh5c2ljYWxseSBmaXQKPj4gd2l0aGluIHRo
-ZSBtYXBwZWQgQkFSIHJlZ2lvbiwgYWNjZXNzaW5nIHBvcnQgcmVnaXN0ZXJzIGJleW9uZCB0aGUg
-QkFSCj4+IGJvdW5kYXJ5IGNhdXNlcyBhIGtlcm5lbCBwYW5pYy4KPj4gCj4+IEFkZCB2YWxpZGF0
-aW9uIGluIGFoY2lfaW5pdF9vbmUoKSB0byBjaGVjayB0aGF0IHRoZSBCQVIgc2l6ZSBpcwo+PiBz
-dWZmaWNpZW50IGZvciB0aGUgbnVtYmVyIG9mIHBvcnRzIGNsYWltZWQgaW4gQ0FQLk5QLiBUaGUg
-Y2hlY2sKPj4gY2FsY3VsYXRlcyB0aGUgcmVxdWlyZWQgTU1JTyBzaXplIGFzOgo+PiAKPj4gICBy
-ZXF1aXJlZF9zaXplID0gMHgxMDAgKGdsb2JhbCByZWdpc3RlcnMpICsgbWF4X3BvcnRzICogMHg4
-MAo+PiAKPj4gSWYgcmVxdWlyZWRfc2l6ZSBleGNlZWRzIHRoZSBhY3R1YWwgQkFSIHNpemUsIHRo
-ZSBwcm9iZSBmYWlscyB3aXRoCj4+IC1FTk9ERVYsIHByZXZlbnRpbmcgdGhlIHBhbmljIGFuZCBw
-cm92aWRpbmcgYSBjbGVhciBlcnJvciBtZXNzYWdlLgo+PiAKPj4gVGhpcyBzb2x1dGlvbiBmb2xs
-b3dzIHRoZSBzdWdnZXN0aW9uIGJ5IERhbWllbiBMZSBNb2FsIGFuZCBOaWtsYXMgQ2Fzc2VsCj4+
-IHRvIGRldGVjdCBhbmQgcmVqZWN0IG9idmlvdXNseSBicm9rZW4gY29udHJvbGxlciBjb25maWd1
-cmF0aW9ucyBlYXJseS4KPj4gCj4+IHYyOgo+PiAtIENvbXBsZXRlIHJld3JpdGUgYmFzZWQgb24g
-Y29tbXVuaXR5IGZlZWRiYWNrCj4+IC0gTW92ZSBjaGVjayBmcm9tIGxpYmFoY2kuYyB0byBhaGNp
-LmMKPj4gLSBGYWlsIHByb2JlIGVhcmx5IGluc3RlYWQgb2YgYXR0ZW1wdGluZyB0byB3b3JrIGFy
-b3VuZCBpbnZhbGlkIHN0YXRlCj4+IC0gSW1wbGVtZW50IEJBUiBzaXplIHZhbGlkYXRpb24gYXMg
-c3VnZ2VzdGVkCj4+IAo+PiBSZXBvcnRlZC1ieTogbGl5b3Vob25nIDxsaXlvdWhvbmdAa3lsaW5v
-cy5jbj4KPj4gU3VnZ2VzdGVkLWJ5OiBEYW1pZW4gTGUgTW9hbCA8ZGxlbW9hbEBrZXJuZWwub3Jn
-Pgo+PiBTdWdnZXN0ZWQtYnk6IE5pa2xhcyBDYXNzZWwgPG5pa2xhcy5zb2Rlcmx1bmRAY29yaWdp
-bmUuY29tPgo+PiBTaWduZWQtb2ZmLWJ5OiBsaXlvdWhvbmcgPGxpeW91aG9uZ0BreWxpbm9zLmNu
-Pgo+Cj5Zb3VyIHBhdGNoIGlzIG5vdCBmb3JtYXR0ZWQgY29ycmVjdGx5OiB0aGUgY2hhbmdlbG9n
-IHNob3VsZCBub3QgYmUgcGFydCBvZiB0aGUKPmNvbW1pdCBtZXNzYWdlIGJ1dCBzaG91bGQgY29t
-ZSBiZXR3ZWVuIHRoZSAiLS0tIiBzZXBhcmF0b3IgYWZ0ZXIgdGhlIHRhZ3MgYW5kCj50aGUgZmly
-c3QgImRpZmYiIGxpbmUgb2YgdGhlIHBhdGNoIHByb3Blci4gVGhlICItLS0iIHNlcGFyYXRvciBp
-cyBtaXNzaW5nIGhlcmUKPnRvby4gRGlkIHlvdSBnZW5lcmF0ZSB0aGlzIHBhdGNoIHdpdGggImdp
-dCBmb3JtYXQtcGF0Y2giID8KPgo+PiAKPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2FoY2ku
-YyBiL2RyaXZlcnMvYXRhL2FoY2kuYwo+PiBpbmRleCAxZDczYTUzMzcwY2YuLjA5MDI2ZWExMmNk
-ZSAxMDA2NDQKPj4gLS0tIGEvZHJpdmVycy9hdGEvYWhjaS5jCj4+ICsrKyBiL2RyaXZlcnMvYXRh
-L2FoY2kuYwo+PiBAQCAtMTg4OCw2ICsxODg4LDIzIEBAIHN0YXRpYyBzc2l6ZV90IHJlbWFwcGVk
-X252bWVfc2hvdyhzdHJ1Y3QgZGV2aWNlICpkZXYsCj4+ICAKPj4gIHN0YXRpYyBERVZJQ0VfQVRU
-Ul9STyhyZW1hcHBlZF9udm1lKTsKPj4gIAo+PiArc3RhdGljIGludCBhaGNpX3ZhbGlkYXRlX2Jh
-cl9zaXplKHN0cnVjdCBwY2lfZGV2ICpwZGV2LCB2b2lkIF9faW9tZW0gKm1taW8pCj4+ICt7Cj4+
-ICsJdTMyIGNhcCA9IHJlYWRsKG1taW8gKyBIT1NUX0NBUCk7Cj4+ICsJdW5zaWduZWQgaW50IG1h
-eF9wb3J0cyA9IGFoY2lfbnJfcG9ydHMoY2FwKTsKPj4gKwl1MzIgbGFzdF9wb3J0X2VuZCA9IDB4
-MTAwICsgKG1heF9wb3J0cyAqIDB4ODApOwo+PiArCXJlc291cmNlX3NpemVfdCBiYXJfc2l6ZSA9
-IHBjaV9yZXNvdXJjZV9sZW4ocGRldiwgQUhDSV9QQ0lfQkFSX1NUQU5EQVJEKTsKPj4gKwo+PiAr
-CWlmIChsYXN0X3BvcnRfZW5kID4gYmFyX3NpemUpIHsKPgo+SXQgbWF5IGJlIGdvb2QgdG8gY2hl
-Y2sgYWxzbyB0aGF0IG1heF9wb3J0cyBpcyBub3QgemVybyBoZXJlLgo+Cj4+ICsJCWRldl9lcnIo
-JnBkZXYtPmRldiwKPj4gKwkJCSJBSENJOiBCQVI1IHRvbyBzbWFsbCBmb3IgJXUgcG9ydHMgKGxh
-c3QgcG9ydCBlbmRzIGF0ICV1LCBCQVIgJWxsdSlcbiIsCj4+ICsJCQltYXhfcG9ydHMsIGxhc3Rf
-cG9ydF9lbmQsICh1bnNpZ25lZCBsb25nIGxvbmcpYmFyX3NpemUpOwo+Cgo+UGxlYXNlIG1ha2Ug
-dGhpcyBhIHdhcm5pbmcgKGRldl93YXJuKCkpLgoKClRoYW5rIHlvdSBmb3IgdGhlIHJldmlldy4g
-SGVyZSdzIHYzIHdpdGggdGhlIHJlcXVlc3RlZCBjaGFuZ2VzOgoKCkZpeGVkIHBhdGNoIGZvcm1h
-dCAoYWRkZWQgIi0tLSIgc2VwYXJhdG9yLCBtb3ZlZCBjaGFuZ2Vsb2cpLgpDaGFuZ2VkIGRldl9l
-cnIgdG8gZGV2X3dhcm4uCgoKUmVnYXJkaW5nIHRoZSBtYXhfcG9ydHMgY2hlY2s6IFRoZSBhaGNp
-X25yX3BvcnRzKCkgaGVscGVyIGZ1bmN0aW9uIGlzIGRlZmluZWQgYXM6CnN0YXRpYyBpbmxpbmUg
-dW5zaWduZWQgaW50IGFoY2lfbnJfcG9ydHModTMyIGNhcCkKewogICAgcmV0dXJuIChjYXAgJiAw
-eDFmKSArIDE7ICAvLyBOb3RlIHRoZSArMQp9CgoKVGhpcyBmdW5jdGlvbiBhbHdheXMgcmV0dXJu
-cyBhIHZhbHVlIKHdIDEsIHNvIGNoZWNraW5nIGZvciAwIGlzIG5vdCBuZWVkZWQuClRoZSBoYXJk
-d2FyZSBjb3VsZCB0aGVvcmV0aWNhbGx5IHJlcG9ydCBDQVAuTlA9MCwgYnV0IHRoYXQgaW5kaWNh
-dGVzIDEgcG9ydAosIG5vdCAwIHBvcnRzLgoKClBsZWFzZSBsZXQgbWUga25vdyBpZiB5b3UnZCBs
-aWtlIGFkZGl0aW9uYWwgdmFsaWRhdGlvbi4KCgoKQmVzdCByZWdhcmRzLApsaXlvdWhvbmc=
+On 4/27/26 11:07 AM, 李佑鸿 wrote:
+> 
+> 
+> 
+> 
+> At 2026-04-27 07:46:12, "Damien Le Moal" <dlemoal@kernel.org> wrote:
+>> On 4/25/26 3:55 PM, dayou5941@163.com wrote:
+>>> From: liyouhong <liyouhong@kylinos.cn>
+>>>
+>>> When an AHCI controller is disabled in BIOS, its HOST_CAP register may
+>>> contain invalid values (e.g., 0xFFFFFFFF) indicating an impossibly large
+>>> number of ports. If CAP.NP claims more ports than can physically fit
+>>> within the mapped BAR region, accessing port registers beyond the BAR
+>>> boundary causes a kernel panic.
+>>>
+>>> Add validation in ahci_init_one() to check that the BAR size is
+>>> sufficient for the number of ports claimed in CAP.NP. The check
+>>> calculates the required MMIO size as:
+>>>
+>>>   required_size = 0x100 (global registers) + max_ports * 0x80
+>>>
+>>> If required_size exceeds the actual BAR size, the probe fails with
+>>> -ENODEV, preventing the panic and providing a clear error message.
+>>>
+>>> This solution follows the suggestion by Damien Le Moal and Niklas Cassel
+>>> to detect and reject obviously broken controller configurations early.
+>>>
+>>> v2:
+>>> - Complete rewrite based on community feedback
+>>> - Move check from libahci.c to ahci.c
+>>> - Fail probe early instead of attempting to work around invalid state
+>>> - Implement BAR size validation as suggested
+>>>
+>>> Reported-by: liyouhong <liyouhong@kylinos.cn>
+>>> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+>>> Suggested-by: Niklas Cassel <niklas.soderlund@corigine.com>
+>>> Signed-off-by: liyouhong <liyouhong@kylinos.cn>
+>>
+>> Your patch is not formatted correctly: the changelog should not be part of the
+>> commit message but should come between the "---" separator after the tags and
+>> the first "diff" line of the patch proper. The "---" separator is missing here
+>> too. Did you generate this patch with "git format-patch" ?
+>>
+>>>
+>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>>> index 1d73a53370cf..09026ea12cde 100644
+>>> --- a/drivers/ata/ahci.c
+>>> +++ b/drivers/ata/ahci.c
+>>> @@ -1888,6 +1888,23 @@ static ssize_t remapped_nvme_show(struct device *dev,
+>>>  
+>>>  static DEVICE_ATTR_RO(remapped_nvme);
+>>>  
+>>> +static int ahci_validate_bar_size(struct pci_dev *pdev, void __iomem *mmio)
+>>> +{
+>>> +	u32 cap = readl(mmio + HOST_CAP);
+>>> +	unsigned int max_ports = ahci_nr_ports(cap);
+>>> +	u32 last_port_end = 0x100 + (max_ports * 0x80);
+>>> +	resource_size_t bar_size = pci_resource_len(pdev, AHCI_PCI_BAR_STANDARD);
+>>> +
+>>> +	if (last_port_end > bar_size) {
+>>
+>> It may be good to check also that max_ports is not zero here.
+>>
+>>> +		dev_err(&pdev->dev,
+>>> +			"AHCI: BAR5 too small for %u ports (last port ends at %u, BAR %llu)\n",
+>>> +			max_ports, last_port_end, (unsigned long long)bar_size);
+>>
+> 
+>> Please make this a warning (dev_warn()).
+> 
+> 
+> Thank you for the review. Here's v3 with the requested changes:
+
+What v3 patch ? I did not receive anything.
+
+
+-- 
+Damien Le Moal
+Western Digital Research
