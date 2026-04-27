@@ -1,66 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B1F72701CB;
-	Mon, 27 Apr 2026 09:40:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7B1A31714F
+	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2026 11:53:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777282826; cv=none; b=f93s8K/fcIsnqkTJmWRYS6Ta9CqQo51aI3MXboFdice5gBYojRxbPEj1Xaf8qwA5MxDsLfAFnUY2Eb5OL8PfIbduOPQBZD+muOk5SU/Ex/+loH9Q9qU+XHiikjtf9ocDg/FNPUi/vhATQdO12LK+L7ZVpf73VYdXiVSo3fa3VyQ=
+	t=1777290794; cv=none; b=fOBZXxaqhgthW0cg4KqsR6WuxGlw1FN/c++ncn5VqnvbDdr7E9/HE9lH45uiDWh6I8OxpDDb/9R25UaOBPid5Ozr90z4ui2rsWyhQjp1A0mt9vuyXdY2mcOEHhnVDjoYYCIOzltvqwHpxZStkrt5z0lzvP2xPVsXX1TfN/NdgPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777282826; c=relaxed/simple;
-	bh=mpjnMhpYQ/4YNLFbIh+lqBH3wGCjmtK1JasmVSVfm8o=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Ugp6X6xMBYiEKOuxMLwjF8tICqhKFmo/NzWCmn88IpwD3hznh3f+kkF7tyVXf1bk6/RnBymcDP6eyitFlsreqAMHQDy3jNyJx7Qg0aZ+t08Sx/wdyGX4Cz+Ki1YdJ9WfPvorJp+9LDmsRAsJbTiwVhPrhjKelmAcPy/EzjggzB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fY2AQEhj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777290794; c=relaxed/simple;
+	bh=ScNGFZhKzbxPe9SQr468eN8NcONUVzyLAtaDAVFlpls=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pWYFbD+gaPhv+sFYfoLTq0eS62CaAITwUZqESQA/3AZ1RB4tx+EGWvCA8mj7DQ2HrmJvdJwawu+xi58bGfR13iLnRJphFlUWxFZunAlk3ddAetERVLvxPmIsMNy6rLO1KLcT2onn4HwdpXdUaKxy1llhy7sphTE8ha5uT/QMuXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ub0mCXDM; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JV0R4ncL; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=nwn2uSaM; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=RsMsE7Gw; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fY2AQEhj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2CEBC2BCB6;
-	Mon, 27 Apr 2026 09:40:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777282825;
-	bh=mpjnMhpYQ/4YNLFbIh+lqBH3wGCjmtK1JasmVSVfm8o=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=fY2AQEhj4lFDNPWPcSgXgPrniEi1c7ljAeUMvowK7lUGB5gCdeLnfSDMQt20iv+wi
-	 FY3oXGhrnPeWaPTwRbD5w9tFb2fEYds0ftqIol29zUBNnmIVxi9nVJ4oLT+IcbpA4l
-	 ngUmTzx0XW6VoZCH+tD55pGxmvKKn63APSKI3vMOGoYtYFvP6Zri/wUUfywwW7o4o9
-	 bza3zJDqLNdetAbpOp1evG6aj9t1wOuakq6IEiFiqr6CezPXM3fph3u0lbrBI9Y3r7
-	 OyVoLD7xnwv6SrE6yiuszzkxCoCrsFiBqe4I5XFQzi2yOlAOo3JDx99TDyO+6HScqY
-	 pwcYN67+dOvcg==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, Johan Hovold <johan@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20260424103830.2616828-1-johan@kernel.org>
-References: <20260424103830.2616828-1-johan@kernel.org>
-Subject: Re: [PATCH] ata: pata_parport: switch to dynamic root device
-Message-Id: <177728282459.2013659.16161609914156129933.b4-ty@b4>
-Date: Mon, 27 Apr 2026 11:40:24 +0200
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ub0mCXDM";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JV0R4ncL";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="nwn2uSaM";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="RsMsE7Gw"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 141006A902;
+	Mon, 27 Apr 2026 11:53:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1777290790; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RJ0zmdQVFh5ysw0l1XD+Z5F9O29OXzLAU5pcnX+cgvg=;
+	b=ub0mCXDMKfofFMDZMOAlBHX0NpexYl//aJPzWsoPoAYdp5+Fp5HeBbIILJF8VkWVUFzLtJ
+	Xx3NT9m9RPhAMbZDeulunl2aTTMY+OIGtsJ6DXUUjZIPMLpEtWyioXiDupySnSgefow+ol
+	tSOZSg4TRaeQU44WgBfJbW35gIlGpcc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1777290790;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RJ0zmdQVFh5ysw0l1XD+Z5F9O29OXzLAU5pcnX+cgvg=;
+	b=JV0R4ncLGogWC3Hr0ewlUDOxHRjEv9oyWv66lttRV59fqgp4x7S/XNCw1+KdzEpfllf2HW
+	57AmuSmONVR1pKDA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=nwn2uSaM;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=RsMsE7Gw
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1777290789; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RJ0zmdQVFh5ysw0l1XD+Z5F9O29OXzLAU5pcnX+cgvg=;
+	b=nwn2uSaMB6gIYFXtVPtx+J0ySzo2z4T6tcoa5WSsJkvm49VyqrV+8coxNOIfmcCYtPBqtM
+	m7FNDZGKLV9GjgBZaMnmdXbyLiHD8LRYBbRQYOi68ZxLD+p9VhGUhX3Tnd3hLmH+ckcJJA
+	nZdagf+IIAX64X6OS+GMLQmXlWlK4vg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1777290789;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RJ0zmdQVFh5ysw0l1XD+Z5F9O29OXzLAU5pcnX+cgvg=;
+	b=RsMsE7GwGTfjju6lAox/Jl8wmCa7SqhrXOvINnpRGQ9ojmL4ogp9fc60dun7AIV4pFXYxg
+	6d4q2sNk/rywJADA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id DAA30593B0;
+	Mon, 27 Apr 2026 11:53:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id uODuMyRO72mRcwAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 27 Apr 2026 11:53:08 +0000
+Message-ID: <cf3f9e41-7549-4da7-b72c-97d5101c2cfa@suse.de>
+Date: Mon, 27 Apr 2026 13:53:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.2
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 3/7] ata: libata-scsi: route non-zero LUN commands for
+ multi-LUN ATAPI
+To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20260426190920.2051289-1-philpem@philpem.me.uk>
+ <20260426190920.2051289-4-philpem@philpem.me.uk>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260426190920.2051289-4-philpem@philpem.me.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	RCVD_TLS_ALL(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Queue-Id: 141006A902
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
+X-Spam-Level: 
 
-On Fri, 24 Apr 2026 12:38:30 +0200, Johan Hovold wrote:
-> Driver core expects devices to be dynamically allocated and will, for
-> example, complain loudly when no release function has been provided.
+On 4/26/26 21:09, Phil Pemberton wrote:
+> Two changes are required to route commands to ATAPI LUNs other than 0:
 > 
-> Use root_device_register() to allocate and register the root device
-> instead of open coding using a static device.
+> 1. __ata_scsi_find_dev():  The existing code rejects any scsi_device
+>     with a non-zero LUN, returning NULL and dropping the command on
+>     the floor.  Relax both the PMP and non-PMP branches to allow
+>     non-zero LUNs through when the underlying ata_device is ATAPI
+>     class, since ATAPI devices can legitimately expose multiple LUNs.
 > 
-> Note that this also fixes a reference leak in the unlikely event that
-> device_register() ever fails.
+> 2. atapi_xlat():  Older ATAPI devices (SCSI-2 era) expect the LUN in
+>     CDB byte 1 bits 7:5 rather than relying on transport-level LUN
+>     addressing.  Encode scmd->device->lun into those bits, preserving
+>     the existing command-specific bits in 4:0.  This is required by
+>     both the Panasonic PD/CD combos and Nakamichi CD changers.  LUNs
+>     beyond 7 cannot be encoded in the 3-bit CDB field; reject them
+>     with AC_ERR_INVALID.
 > 
-> [...]
+> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+> ---
+>   drivers/ata/libata-scsi.c | 17 +++++++++++++++--
+>   1 file changed, 15 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 317883bac25f..48c7d323d6f9 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2951,6 +2951,11 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
+>   	memset(qc->cdb, 0, dev->cdb_len);
+>   	memcpy(qc->cdb, scmd->cmnd, scmd->cmd_len);
+>   
+> +	/* SCSI-2 CDB LUN encoding: bits 7:5 of byte 1 (3-bit field) */
+> +	if (scmd->device->lun >= 8)
 
-Applied to libata/linux.git (for-7.1-fixes), thanks!
+This should be 'max_luns' of the associated scsi device, and the driver
+should set the appropriate max_luns value for this specific device
+(via blacklist flags etc).
 
-[1/1] ata: pata_parport: switch to dynamic root device
-      https://git.kernel.org/libata/linux/c/163f6494
+Cheers,
 
-Kind regards,
-Niklas
+Hannes
 
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
