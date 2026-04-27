@@ -1,133 +1,173 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83DE23B6BFA;
-	Mon, 27 Apr 2026 12:12:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5420F3B6348
+	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2026 12:14:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777291965; cv=none; b=jGmIIaZTlp8MkCT5C8dLYP1NeGpyDxVvefjUOwH9ps+aYIxfQ2YTfUWXf0V6bgsu8huF1SorGEuDW5XwApHVFUx1swYEuOt39mxHvyH21qOIXYVwxq8S9AlYnnchYGMIDD8sE8reU0quy7x/pHTenhq72Zfs1iqC+H7ceuWQGVs=
+	t=1777292062; cv=none; b=Hjho2Dh7KnAOX5PZf8Fy1UDratuSWOVP6C7rHmCmb4B/bTwLJB9pB8Pp4++/WscZOHPKjy80Jte1R6PenNlICOYWvdHhqrNSF/QcAtxjvH5iGfPlhEHsHqFMSeEZj2yufFBgGRCy3OfUIUoJdg3VX0uKeFBkKOvvFx1IbCH50GI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777291965; c=relaxed/simple;
-	bh=giHwGTFD6wbmZRTrdyUEVWmsDYWotLmNnR/Uf5m1WPM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SWR8eK4turUbKamD3BNQkHcwl6FW/Hfc+6JPC9KVPynziQEYEfE1lT+BU+p5KvvN9GUnesQOwBOfMhYldaIJJHijwDX9YFKFLULy8txRUPghtF0Bgx7xHzh6J3eAwhEUr2BrrQ31kpcPQzllVThQ5HYcBabbdyDFMRBO5JxwPrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=xkMJ2dfw; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1777292062; c=relaxed/simple;
+	bh=DY4KEJNZ+0pmsiXVAcMHRaYvbm7DX81+y4zKcnRGmEE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nSoi5VkuPHf2rIxFZN1Gr4EeLfym5fzfPRNl42s3iy1eqUtlwgFHoNjZ5zXfyA1viQo/dCkcP2EI1TlevZ1YCue/5y2UZDZszNIHK0ket2/AzgIxoiRHnWTs1fx0yT/zBgMn4C/CfZdh1MsHdCtV30x75zkRF+Hno+CK4ORIuOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h1zV+2Yp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="xkMJ2dfw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1777291961;
-	bh=giHwGTFD6wbmZRTrdyUEVWmsDYWotLmNnR/Uf5m1WPM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=xkMJ2dfwgvqUJ6FdfMRNgrFGImw/JAtEWny/p4MOb7C7WzoWl/DNjhX0f3IhVZ0hS
-	 wvvjC6J6uYbmPPavQK20nwc0cc+JcMoIAO/deBCO47p8dxpUXltarNCRt5pZl/oulS
-	 7TJovViC/KqZ69795bR/TyEUfKXC8DnPSPWkPJzw=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id ADE46BD366;
-	Mon, 27 Apr 2026 12:12:41 +0000 (UTC)
-Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id F1A905FBA6;
-	Mon, 27 Apr 2026 13:12:40 +0100 (BST)
-Message-ID: <583f5450-38cb-4240-9518-785ba10bf306@philpem.me.uk>
-Date: Mon, 27 Apr 2026 13:12:40 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h1zV+2Yp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFE63C19425;
+	Mon, 27 Apr 2026 12:14:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777292062;
+	bh=DY4KEJNZ+0pmsiXVAcMHRaYvbm7DX81+y4zKcnRGmEE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=h1zV+2Ypy2dGtx+/OlfWe9QGXI0tZteDzqn1Vz30Ht39hcEGHbPElRHuethgbSjSh
+	 0FCEWqOkuTIbUDdR0PgYUg0Hnj4Ejjdpy4vAWLqebMW6t4V3aMLbnUHFvzCKz44dbT
+	 +HJeaaqs903N9IFjRyvlzapv62D5nOGii5Lv4etkXkWzR5oYaajnIYE6igBRxZvvBW
+	 SAIQ9pjDTWQykyrZzcOZhFqiS6t+GIdMTr6u9CUFLD3nBs5uioqRdextQ4c0/b8Txb
+	 GJYxmqJsuq4B1c7df4qptLJiu0knlOvCOs4uV/0rAUKbni2kfX3inGl1DKn5QFcI1t
+	 U8mjm+iFY7SVw==
+Date: Mon, 27 Apr 2026 14:14:18 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: dayou5941@163.com
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, liyouhong@kylinos.cn
+Subject: Re: [PATCH v4] ata: ahci: fail probe if BAR too small for claimed
+ ports
+Message-ID: <ae9TGoaQAi7dOVc0@ryzen>
+References: <20260427060546.1407439-1-dayou5941@163.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 7/7] scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to
- MATSHITA and NEC PD-1 variants
-To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260426190920.2051289-1-philpem@philpem.me.uk>
- <20260426190920.2051289-8-philpem@philpem.me.uk>
- <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
-Content-Language: en-GB
-From: Phil Pemberton <philpem@philpem.me.uk>
-In-Reply-To: <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260427060546.1407439-1-dayou5941@163.com>
 
-On 27/04/2026 12:56, Hannes Reinecke wrote:
-> On 4/26/26 21:09, Phil Pemberton wrote:
->> The Panasonic LF-1095/LF-1195 PD/CD combo drive was sold under three
->> OEM identities: COMPAQ "PD-1", MATSHITA "PD-1", and NEC "PD-1 ODX654P".
->> All three are the same drive mechanism with the same firmware family,
->> so they should share the BLIST_NO_LUN_1F quirk that was applied to the
->> COMPAQ variant: PDT 0x1f / PQ 0 INQUIRY responses on non-existent LUNs
->> are treated as "LUN not present" rather than as a phantom sdev.
->>
->> This patch is offered for completeness.  It has not been tested on the
->> MATSHITA or NEC variants -- the author only has access to the COMPAQ
->> unit -- but the drives are functionally identical and the flag is a
->> no-op on devices that do not exhibit the PDT 0x1f response.  Drop or
->> hold this patch if confirmation on real hardware is preferred before
->> extending the quirk.
->>
->> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
->> ---
->>   drivers/scsi/scsi_devinfo.c | 6 ++++--
->>   1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
->> index bfc2cbd43897..ab1ffa9433b7 100644
->> --- a/drivers/scsi/scsi_devinfo.c
->> +++ b/drivers/scsi/scsi_devinfo.c
->> @@ -201,7 +201,8 @@ static struct {
->>       {"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
->>       {"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
->>       {"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
->> -    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->> +    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
->> +                   BLIST_NO_LUN_1F},
->>       {"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | 
->> BLIST_INQUIRY_36},
->>       {"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | 
->> BLIST_INQUIRY_36},
->>       {"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
->> @@ -212,7 +213,8 @@ static struct {
->>       {"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
->>       {"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>       {"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->> -    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->> +    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
->> +                      BLIST_NO_LUN_1F},
->>       {"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
->>       {"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>       {"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+On Mon, Apr 27, 2026 at 02:05:46PM +0800, dayou5941@163.com wrote:
+> From: Youhong Li <liyouhong@kylinos.cn>
 > 
-> Any specific reason why this patch is not merged with the previous one?
-> Otherwise:
+> When an AHCI controller is disabled in BIOS, its HOST_CAP register may
+> contain invalid values (e.g., 0xFFFFFFFF) indicating an impossibly large
+> number of ports. If CAP.NP claims more ports than can physically fit
+> within the mapped BAR region, accessing port registers beyond the BAR
+> boundary causes a kernel panic.
 > 
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Add validation in ahci_init_one() to check that the BAR size is
+> sufficient for the number of ports claimed in CAP.NP. The check
+> calculates the required MMIO size as:
 > 
-> Cheers,
+>   required_size = 0x100 (global registers) + max_ports * 0x80
 > 
-> Hannes
+> If required_size exceeds the actual BAR size, the probe fails with
+> -ENODEV, preventing the panic and providing a clear error message.
+> 
+> This solution follows the suggestion by Damien Le Moal and Niklas Cassel
+> to detect and reject obviously broken controller configurations early.
+> 
+> Reported-by: liyouhong <liyouhong@kylinos.cn>
+> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+> Suggested-by: Niklas Cassel <cassel@kernel.org>
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Signed-off-by: liyouhong <liyouhong@kylinos.cn>
+> ---
+> v2:
+> - Complete rewrite based on community feedback
+> - Move check from libahci.c to ahci.c
+> - Fail probe early instead of attempting to work around invalid state
+> - Implement BAR size validation as suggested
+> 
+> v3:
+> - Fix patch format: add "---" separator and move changelog to correct location
+> - Change dev_err to dev_warn as suggested
+> 
+> v4:
+> - Break long lines as suggested by Damien
+> - Keep complete changelog history
+> 
+> ---
+>  drivers/ata/ahci.c | 23 +++++++++++++++++++++++
+>  1 file changed, 23 insertions(+)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 1d73a53370cf..c04bee682605 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1888,6 +1888,25 @@ static ssize_t remapped_nvme_show(struct device *dev,
+>  
+>  static DEVICE_ATTR_RO(remapped_nvme);
+>  
+> +static int ahci_validate_bar_size(struct pci_dev *pdev, void __iomem *mmio)
 
-Hi Hannes,
+static int ahci_validate_bar_size(struct pci_dev *pdev, int bar, struct ahci_host_priv *hpriv)
 
-The short answer is because I don't have those two drives to test with. 
-They're based on the same hardware platform but I'm assuming they have 
-the same behaviour.
 
-The idea of the separate patch is that if the lack of testing was an 
-issue, it could be separated from the known-working parts in the first 6 
-sections.
+> +{
+> +	u32 cap = readl(mmio + HOST_CAP);
 
-Thanks,
--- 
-Phil.
-philpem@philpem.me.uk
-https://www.philpem.me.uk/
+readl(hpriv->mmio, HOST_CAP);
+
+
+> +	unsigned int max_ports = ahci_nr_ports(cap);
+> +	u32 last_port_end = 0x100 + (max_ports * 0x80);
+> +	resource_size_t bar_size =
+> +		pci_resource_len(pdev, AHCI_PCI_BAR_STANDARD);
+
+pci_resource_len(pdev, bar);
+
+
+> +
+> +	if (last_port_end > bar_size) {
+> +		dev_warn(&pdev->dev,
+> +			 "BAR5 too small for %u ports (last port ends at %u, BAR %llu)\n",
+
+"BAR%d too small for %u ports (last port ends at %#x, BAR %pa)\n", bar,
+
+
+> +			 max_ports, last_port_end,
+> +			 (unsigned long long)bar_size);
+
+Print resource_size_t as %pa instead of casting to unsigned long long
+and pass bar_size by reference (&bar_size):
+https://docs.kernel.org/core-api/printk-formats.html#physical-address-types-phys-addr-t
+
+
+> +		return -ENODEV;
+
+return -EIO;
+
+
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  {
+>  	unsigned int board_id = ent->driver_data;
+> @@ -1988,6 +2007,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	if (!hpriv->mmio)
+>  		return -ENOMEM;
+>  
+> +	rc = ahci_validate_bar_size(pdev, hpriv->mmio);
+
+Please let this function be called with the arguments:
+
+ahci_validate_bar_size(pdev, ahci_pci_bar, hpriv);
+
+Such that it takes the same arguments as ahci_remap_check().
+
+
+Kind regards,
+Niklas
+
+
+> +	if (rc)
+> +		return rc;
+> +
+>  	/* detect remapped nvme devices */
+>  	ahci_remap_check(pdev, ahci_pci_bar, hpriv);
+>  
+> -- 
+> 2.25.1
+>
