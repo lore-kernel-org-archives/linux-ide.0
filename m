@@ -1,146 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AA2B146A66;
-	Mon, 27 Apr 2026 04:46:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D9A223708
+	for <linux-ide@vger.kernel.org>; Mon, 27 Apr 2026 05:38:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777265163; cv=none; b=BS1jWbgTBwDdPqYpW3erR453jAqaO+Rg60XKW283WAOd3Dw5LAAcMsrAWdLz9LrXygKu3wvuN7NDc3BnVdL36DVFEBkE/K/SMCvDx+fZpof8R1Dvw2HLSWq1qS2n03l9tm7M/Oa6FRMQAOfjfFh9DkhkC8SZIrAH7puM0l/x/XI=
+	t=1777268308; cv=none; b=G8WgyIZSN3I4a2jngTnqRiNQXkKtKQVfgjpS+NwdDSu/jJl8yHTTUxmJen056STAG1iAL2zA9Yv7nyfUvtQ9RPyHtT4wsI9cTizitYHUC9rcT5tkEKhCR6XumAJbT5IypE06eGHWsr42bER1vGc9rrfFkk/+zK/wr55NhdoAM9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777265163; c=relaxed/simple;
-	bh=z95bnebCYSGOB/ExuIaArFAKmpoIpR6vBAvj96UQp9o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JuHJHUgWkBJgeM7OTGieJN+gNXaGD5F51pxLSRyk9gGeIXo+meIjkNFx4El1wvcG3YFaN0hr8P7wCj0QV4pW7FtLb0irk0Jz0kGvSjznrm/vHtwFedG7eG1fbWl1uycE5RP/mp3njS3mtdRpysW0piDp3mFZITeMKOFX/ACq3sE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NC25d9TI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777268308; c=relaxed/simple;
+	bh=4vrungAFMDSFJMS4VWWxF37qjeJgD35eGndwMe1zdhE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DcHHB4mi4FmUNogW7U+Sw3hEr4KdEWH7IAH87/DyONTB1uVTQWgbmHJ+Q8VE17SfvYvBfbrCgQ5llM2/+MAC+Mu5W2emdV4dOZgxQ9wzk6/DDOr0ltYL/pX1okXNUwj5/mEIXG2/OB6g9h4whHvzTCoVG5Cdo/L1E/4QuJLnZmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=nAfqOvkI; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NC25d9TI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E4EAC19425;
-	Mon, 27 Apr 2026 04:46:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777265162;
-	bh=z95bnebCYSGOB/ExuIaArFAKmpoIpR6vBAvj96UQp9o=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=NC25d9TIotfJuT2HCn8abAjphYl4TEKWW18gimWI6Xr3CWYm38ID3AKEjWXxi8z5A
-	 RI5nBGj6Ai4Ec54ZBArwTILhrVUVpAufZfXgON/wpu/h4m8I/dU4O4sdpxNHPLlSsZ
-	 dkIn8B/IKKzFvWDm5V7u4LAtOX9q9Qx9RjudSjJ4REsH/P291TdY51TR6xXIFfL3lu
-	 r0zAbHJAczd5Uss8hYqZPQtoSbN9uEf20ZvZmbrTAe3a46O8Y4IQukD5uR8azeQUC2
-	 J/tlQT1zxh7WIWHcSVqXY90pHTi+SPRfZ+Ay2NKphp0ScCX8SyW9o+Q7nz96zNfpQU
-	 Omv1FIBEDbmEA==
-Message-ID: <33299d0d-d863-4e00-951e-4728ddc823e2@kernel.org>
-Date: Mon, 27 Apr 2026 13:45:54 +0900
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="nAfqOvkI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=z+
+	lX1RX3c8LLaUmdkZlIqR+h1uFs58E3RZKvVuZyh1A=; b=nAfqOvkI5M7JKq/sfk
+	b0EQJY/KnQqN8AmuwFZcPWDfDEpD70CRIGe4p0cfHAySkWtYcmzZXvYFGTIB0apk
+	U2CrVOrqDDbzjXAI4MdY0oCaooyyok1+3a9Sg991xw8kpocFOJ+7Fesjb6WpEvAV
+	zDTmk0HPWd6EuGBAXE4ms04jU=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp4 (Coremail) with SMTP id PygvCgDnt0ky9u5p32pTBg--.97S2;
+	Mon, 27 Apr 2026 13:37:57 +0800 (CST)
+From: dayou5941@163.com
+To: linux-ide@vger.kernel.org
+Cc: dlemoal@kernel.org,
+	cassel@kernel.org,
+	liyouhong@kylinos.cn
+Subject: [PATCH v3] ata: ahci: fail probe if BAR too small for claimed ports
+Date: Mon, 27 Apr 2026 13:37:52 +0800
+Message-Id: <20260427053752.613848-1-dayou5941@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-sata: retry hardreset when device detected
- but PHY not established
-To: yangxingui <yangxingui@huawei.com>, cassel@kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- liuyonglong@huawei.com, kangfenglong@huawei.com, linux-ide@vger.kernel.org
-References: <20260425060447.1312763-1-yangxingui@huawei.com>
- <e8d237bc-7191-4881-924b-86a34ff0f3b9@kernel.org>
- <a118114e-9828-06d6-d38b-2b426c92bb14@huawei.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <a118114e-9828-06d6-d38b-2b426c92bb14@huawei.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PygvCgDnt0ky9u5p32pTBg--.97S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJF4DCryfZF1fKFWkGFy8Zrb_yoW5GrWUpF
+	W7KFZYyrWUWF47X3W5AFs29ry3Gws3Wa47tay7Ga93trn0k34xWF1fta47Aay3J3s7G3WI
+	q34qqr18ur4UAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jbCztUUUUU=
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC3hbgj2nu9jaj7wAA3s
 
-On 4/27/26 10:51 AM, yangxingui wrote:
-> 
-> 
-> On 2026/4/26 6:53, Damien Le Moal wrote:
->> On 4/25/26 15:04, Xingui Yang wrote:
->>> When sata_link_hardreset() detects that the link is offline, it currently
->>> returns immediately without distinguishing the reason. According to SATA
->>> specification, the SStatus register's det filed (bits 0-3) indicates:
->>>    - 0x0: No device detected, PHY not communicating
->>>    - 0x1: Device detected but PHY communication not established
->>>    - 0x3: Device detected and PHY communication established
->>>
->>> This patch helps improve device detection reliability and adds a check
->>> when the link is offline but det filed shows 0x1, return -EAGAIN to
->>> trigger retry, rather than giving up immediately.
->>>
->>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->>
->> This is a pure ATA patch so please CC the linux-ide list, not the linux-scsi
->> list.
-> 
-> Ok.
->>
->> Also, please check your mail setup: your email was in my Junk folder.
-> 
-> Well, patche was sent using the git send command.
+From: liyouhong <liyouhong@kylinos.cn>
 
-Not git send-email, your smtp server. It probably has something wrong with
-DMARC. All your emails endup in my junk folder.
+When an AHCI controller is disabled in BIOS, its HOST_CAP register may
+contain invalid values (e.g., 0xFFFFFFFF) indicating an impossibly large
+number of ports. If CAP.NP claims more ports than can physically fit
+within the mapped BAR region, accessing port registers beyond the BAR
+boundary causes a kernel panic.
 
->> This is preceeded by a call to sata_link_resume(), which calls
->> sata_link_debounce() and that function makes sure that DET is stable. So if
->> after that DET still shows that their is no PHY, there is likely a big problem
->> with it and it is super slow to be established.
->>
->> In this case, I do not think that doing another hardreset is the right thing to
->> do. Have you tried increasing the deadline for hardreset ? That deadline is used
->> as the limit for the link debounce too.
->>
->> Do you have a specific controller/device where you see this issue ? What exactly
->> is the hardware setup where you see this issue ?
-> 
-> Our customer imports and verifies a new disk, there is an occasional failure in
-> performing a hard reset on the disk and no exception log is generated for
-> resume and debounce.
+Add validation in ahci_init_one() to check that the BAR size is
+sufficient for the number of ports claimed in CAP.NP. The check
+calculates the required MMIO size as:
 
-Does this hold for all disks or for only one or some models ?
+  required_size = 0x100 (global registers) + max_ports * 0x80
 
-> 
-> [   22.864418][ T1285] ahci 0000:76:03.0: Adding to iommu group 23
-> [   22.870403][ T1285] ahci 0000:76:03.0: controller does not support SXS,
-> disabling CAP_SXS
-> [   22.878655][ T1285] ahci 0000:76:03.0: SSS flag set, parallel bus scan disabled
-> [   22.885966][ T1285] ahci 0000:76:03.0: AHCI 0001.0300 32 slots 2 ports 6
-> Gbps 0x3 impl SATA mode
-> [   22.894743][ T1285] ahci 0000:76:03.0: flags: 64bit ncq sntf stag pm led clo
-> only pmp fbs slum part ccc ems boh
-> [   22.905277][ T1285] scsi host0: ahci
-> [   22.909061][ T1285] scsi host1: ahci
-> [   22.966463][ T1285] ata1: SATA max UDMA/133 abar m4096@0xa3010000 port
-> 0xa3010100 irq 108
-> [   22.974629][ T1285] ata2: SATA max UDMA/133 abar m4096@0xa3010000 port
-> 0xa3010180 irq 109
-> [   25.242373][ T1286] ata1: SATA link down (SStatus 1 SControl 300)
-> <==============
-> [   25.659901][ T1288] ata2: SATA link down (SStatus 0 SControl 300)
->>
->>
->>
->>> +        u32 sstatus;
->>> +
->>> +        if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0 &&
->>> +            (sstatus & 0xf) == 0x1) {
->>> +            ata_link_warn(link, "device detected but PHY not ready (SStatus
->>> %X), retrying\n",
->>> +                      sstatus);
->>> +            rc = -EAGAIN;
->>> +        }
->>> +
->>>           goto out;
->>> +    }
->>>         /* Link is online.  From this point, -ENODEV too is an error. */
->>>       if (online)
->>
->>
-> 
-> Thanks,
-> Xingui
-> 
+If required_size exceeds the actual BAR size, the probe fails with
+-ENODEV, preventing the panic and providing a clear error message.
 
+This solution follows the suggestion by Damien Le Moal and Niklas Cassel
+to detect and reject obviously broken controller configurations early.
 
+Reported-by: liyouhong <liyouhong@kylinos.cn>
+Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+Suggested-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: liyouhong <liyouhong@kylinos.cn>
+---
+v3:
+- Fix patch format: add "---" separator and move changelog to correct location
+- Change dev_err to dev_warn as suggested
+
+---
+ drivers/ata/ahci.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1d73a53370cf..e5eff7e3d66b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1888,6 +1888,23 @@ static ssize_t remapped_nvme_show(struct device *dev,
+ 
+ static DEVICE_ATTR_RO(remapped_nvme);
+ 
++static int ahci_validate_bar_size(struct pci_dev *pdev, void __iomem *mmio)
++{
++	u32 cap = readl(mmio + HOST_CAP);
++	unsigned int max_ports = ahci_nr_ports(cap);
++	u32 last_port_end = 0x100 + (max_ports * 0x80);
++	resource_size_t bar_size = pci_resource_len(pdev, AHCI_PCI_BAR_STANDARD);
++
++	if (last_port_end > bar_size) {
++		dev_warn(&pdev->dev,
++			 "BAR5 too small for %u ports (last port ends at %u, BAR %llu)\n",
++			 max_ports, last_port_end, (unsigned long long)bar_size);
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	unsigned int board_id = ent->driver_data;
+@@ -1988,6 +2005,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!hpriv->mmio)
+ 		return -ENOMEM;
+ 
++	rc = ahci_validate_bar_size(pdev, hpriv->mmio);
++	if (rc)
++		return rc;
++
+ 	/* detect remapped nvme devices */
+ 	ahci_remap_check(pdev, ahci_pci_bar, hpriv);
+ 
 -- 
-Damien Le Moal
-Western Digital Research
+2.25.1
+
