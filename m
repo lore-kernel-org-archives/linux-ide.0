@@ -1,79 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCBA63A16A0;
-	Thu, 30 Apr 2026 09:28:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 991133939AC
+	for <linux-ide@vger.kernel.org>; Thu, 30 Apr 2026 09:29:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777541284; cv=none; b=BgpM/j5C2uO55D9jhHMoLtNnF4zkbD9/MV+ovxIBEujjKH9UuImDZjjbdBkjz0fO8YSQcSj+PJIZRno+91s9H8QnQluzftyVEA1MMSFxkgi4yustQcThZJDHIcT6yfgUdy+lmMCG1LpYXrYbu3nYqKBe809rVgs6CypHVLP2i50=
+	t=1777541399; cv=none; b=sL3FsmNxqxrEHWg71fE65ay6QGHyqd4H6+XecIvOSw+8Q0VVRbVLTr9Vh6HhmNQrGKa7biTmcV7JvNjtte3DZk0FuA38kJoCw4JTxGidXOZ2p48aGSb1iey9AsOF1RoNhl2h+yfTH2ryK36wTTl3eKT4tNmL/V6EcwUNCX3WejI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777541284; c=relaxed/simple;
-	bh=QjF8M8eq94doDD8ljiXqNcFncYsw6vQvhCXVxZQUyn0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jzk17miB+pMlCs86rfIXJnNw5ZHlDT12V6LxUdSDAeN9E7EvdnbC+4gDzMs4sKg1cWhOXk3dQEK2+obZzXnPzf7PsLZf3qp2mt0FZt2c8muzNnfHE70N/TY65aN4ivRxeiEgmXzWFDmOdLwXK4NxmRuPP7kFQJtvmRK7QNjSCXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AOJQ4uTN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777541399; c=relaxed/simple;
+	bh=n1Q30ixYOtqZ55oYud2pMjhUZtd6AeiJEslV7LVNqRM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=a6XBGMxFWvPkin2KalirJUduM3++95WNetrP9ZNZ6xFytNPSUiOOJujllcJ5J5YP1x6NSWfhXBW+A69ed5YfYWpUJwJC851qwY11dmOeg9bAJpic2sirZPvdIA/DJ2/574fYJl+0rj7Rvnoq1e6/s6dJnusfrlT5DooS2FhZYMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=CgJnBKEf; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AOJQ4uTN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41D33C2BCB3;
-	Thu, 30 Apr 2026 09:28:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777541284;
-	bh=QjF8M8eq94doDD8ljiXqNcFncYsw6vQvhCXVxZQUyn0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AOJQ4uTNFnlazTkyB6L8OrYENelgf2tF9IIw6ruxVkYOwhbPahFN9xm/Y5nQoZokN
-	 n6XMdflHnQbouSWgcg0GMabXW4lCfShPpcOSMAjis5H9LNbkaW/CF+UHA+Aab8CXq6
-	 iu3KPx3hkaJKDN3ROMRR/hyPKvbvrZCeEAlIeHovA1DjsYGFuVVSmJmwx/3RMfHNuw
-	 SXlSn9FL/LXeRPI9gm0Dc4VWQP5+QgvbaUvTvZDWRHoQvOb05BIeRhMCRkdWWGz0N5
-	 XTk3hfdsUBgxO+HalmpMad6mdRfdP2eSRBVSe7otySbpawtnbUOIo6E8r1JiByT93w
-	 qP6koXWlCCtDg==
-Date: Thu, 30 Apr 2026 11:28:00 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: yangxingui <yangxingui@huawei.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-kernel@vger.kernel.org,
-	liuyonglong@huawei.com, kangfenglong@huawei.com,
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="CgJnBKEf"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-448528f4e69so423833f8f.3
+        for <linux-ide@vger.kernel.org>; Thu, 30 Apr 2026 02:29:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1777541394; x=1778146194; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=old5jyYu22W6jYV0qg4x4mp+/GqT2/HXZ0E6OdCIxiw=;
+        b=CgJnBKEfSiuhdvUIVBjGJZKvm3B6sEvJUi6R+xCwdZuIzkl8p0nqG8NjJ6gyPlKDG5
+         c2f+YlPwxSWbdKHAIyNOvskIyXjjXb8sta4fRTwtGlkTxOU0h4YcCEtpY4RkdjRjbtSJ
+         uDurdfYnQUn/EHbJsKMfjcDR+y+ntzfbeCV2/TyBzpQevhedqiawC5CuDH3fjnASnN6F
+         7dpBV8xqhsrzVijXVI+lYMBy7/HE+Q+Vg6bmo5sfy0g40k6oULuEfiwoZfQ3agv2NMyC
+         ecyngnTbkBwaS93/4NezeeUnY3TReFRasuQAjQcHD3/cGxauzdxkCu2ee2XU3RD7fSNf
+         1hvw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777541394; x=1778146194;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=old5jyYu22W6jYV0qg4x4mp+/GqT2/HXZ0E6OdCIxiw=;
+        b=OlfGjYWf9UmtyNyadYHkkB4zgQdRip2FS9sfMdMiCBk85MmkN4bSKGRaJkTY0F+DG1
+         JYGTktOIYk9KGUQNsx7hVvcijcBsvO4G5Obg/Xvw7kfibUVTdg9x4p5kvayoEpNmC20B
+         Ll8Kg7+ZQ1JOoU9HS9ikBn9jN7lwwkNVjmouSGSk5dUuZLs4wyRfEtr1HnAVueRkV3f6
+         R2urwdBtN5D1A8lp5JRj1sbcizLZrnuaA211JegDojlGJ00toNoW9TvOpslVvZOMZGcm
+         5sPJb6JlT+tpl2GmEGZvHosXMvTlFn6VS+0bCmM08A69HgnZNPJCtGdRFtNAaGuTHL3H
+         +xVg==
+X-Forwarded-Encrypted: i=1; AFNElJ906lhlP+OS8Iu00qDFo7aKw1MMvaTeksgVVFQOfAieLF6EuRgxHSHcjcRpX1Htca33rDMwtCbA5q8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyx0L+vshG3OilaAXfBwM4TKV+rz57xfiJ8slGsys5gMpU78WbN
+	xbvp/UuIBIyRNOa7SljLRGV90GSmtfPupjiY8iXJFc3n9sqBASIJqhFas0SnKDNZFYk=
+X-Gm-Gg: AeBDietCemXgtla8zxtnlxLWGgA5iSZlJqicUNHovBQlP13mGIvIO2ri+qoOT2HuhxG
+	BNGY8PWeac6q59MacO8w9wxe8BzKsrAK8Fq0HiUJnjVSx0RfIspkFFpnaSEgoYu6+uQarh7/weT
+	DF5pwMBfFaTOs7wH/TwX13bcKu8YuYiLQ0+IT4UWHOvQcqRd7tMYbXo0DR6fOCvZmyXedOU0Ct7
+	3gQdLJsuR3/T3236mqGDyXAyC4X5GexvBtUPpWpHHRfvuTKd0OXzH3J6ZO5wLV7kszd8X9RrYJy
+	pN1IvRKBnLJUBEH/5x7p/5HnuhVTrAHWkZk8QdpOVQ+ZxY9gMvCXjsCqaY0msikkXoRjt/On/Jn
+	zoIbXTZa+yHRzr8z3ARucp7U68qmK9LyOAS5DZUf6bBSSjb2+/lFshuFgUMeMVxH0y/TJKU30l9
+	3r/7CEeZIsNtomRDP3CrdVKiGnfzEB1g+qZ+7ieGlNw7IeHHmpTSqB/bCQn9GjIgT9XeSE
+X-Received: by 2002:a5d:5d05:0:b0:43d:76ec:91f6 with SMTP id ffacd0b85a97d-4493ee4c9bfmr3226097f8f.41.1777541394306;
+        Thu, 30 Apr 2026 02:29:54 -0700 (PDT)
+Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-447b76e5bf2sm12318654f8f.27.2026.04.30.02.29.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Apr 2026 02:29:54 -0700 (PDT)
+From: Marco Crivellari <marco.crivellari@suse.com>
+To: linux-kernel@vger.kernel.org,
 	linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-sata: retry hardreset when device detected
- but PHY not established
-Message-ID: <afMgoFBFPWR0f4gK@ryzen>
-References: <20260425060447.1312763-1-yangxingui@huawei.com>
- <e8d237bc-7191-4881-924b-86a34ff0f3b9@kernel.org>
- <a118114e-9828-06d6-d38b-2b426c92bb14@huawei.com>
- <33299d0d-d863-4e00-951e-4728ddc823e2@kernel.org>
- <0539efac-d9b5-4f95-eecd-b88cb3cb8724@huawei.com>
- <66bc004a-4a18-43d1-b296-463ea72cbc85@kernel.org>
- <c78f6dad-b0fe-a2fb-8458-9fe182cd6b54@huawei.com>
- <afMW2scJrBSI_jLo@ryzen>
+Cc: Tejun Heo <tj@kernel.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [RFC PATCH] ata: libata-scsi: Move long delayed work on system_dfl_long_wq
+Date: Thu, 30 Apr 2026 11:29:47 +0200
+Message-ID: <20260430092947.128647-1-marco.crivellari@suse.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <afMW2scJrBSI_jLo@ryzen>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Apr 30, 2026 at 10:46:22AM +0200, Niklas Cassel wrote:
-> If that is the case ata_do_reset() would return 0, and
-> ata_eh_followup_srst_needed() (returns true only if -EAGAIN) would return false.
-> 
-> Which should eventually cause us to retry another hard reset, as long as
-> tries <= max_tries.
+Currently the code enqueue work items using {queue|mod}_delayed_work(),
+using system_long_wq. This workqueue should be used when long works are
+expected, but it is a per-cpu workqueue.
 
-I see now that max_tries is just set to 1.
+This is important because queue_delayed_work() queue the work using:
 
-I think I would prefer another hardreset (with a larger timeout) over
-a follow-up softreset after the hardreset...
+   queue_delayed_work_on(WORK_CPU_UNBOUND, ...);
 
-If -EAGAIN is reserved for "do an follow up SRST after the COMRESET",
-because certain Port Multipliers need it.
+Note that WORK_CPU_UNBOUND = NR_CPUS.
 
-Perhaps introduce another error code, which means, device detected,
-overload max_tries to 3 and goto retry.
+This would end up calling __queue_delayed_work() that does:
 
-That way we will retry using COMRESET, with increasing timeouts, since:
-deadline = ata_deadline(jiffies, ata_eh_reset_timeouts[try++]);
+    if (housekeeping_enabled(HK_TYPE_TIMER)) {
+    //      [....]
+    } else {
+            if (likely(cpu == WORK_CPU_UNBOUND))
+                    add_timer_global(timer);
+            else
+                    add_timer_on(timer, cpu);
+    }
 
+So when cpu == WORK_CPU_UNBOUND the timer is global and is
+not using a specific CPU. Later, when __queue_work() is called:
 
-Kind regards,
-Niklas
+    if (req_cpu == WORK_CPU_UNBOUND) {
+            if (wq->flags & WQ_UNBOUND)
+                    cpu = wq_select_unbound_cpu(raw_smp_processor_id());
+            else
+                    cpu = raw_smp_processor_id();
+    }
+
+Because the wq is not unbound, it takes the CPU where the timer
+fired and enqueue the work on that CPU.
+The consequence of all of this is that the work can run anywhere,
+depending on where the timer fired.
+
+Recently, a new unbound workqueue specific for long running work has
+been added:
+
+    c116737e972e ("workqueue: Add system_dfl_long_wq for long unbound works")
+
+So change system_long_wq with system_dfl_long_wq so that the work may
+benefit from scheduler task placement.
+
+Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
+---
+ drivers/ata/libata-scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index f44612e269a4..6733f2b14521 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4753,7 +4753,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+ 			     "WARNING: synchronous SCSI scan failed without making any progress, switching to async\n");
+ 	}
+ 
+-	queue_delayed_work(system_long_wq, &ap->hotplug_task,
++	queue_delayed_work(system_dfl_long_wq, &ap->hotplug_task,
+ 			   round_jiffies_relative(HZ));
+ }
+ 
+-- 
+2.53.0
+
