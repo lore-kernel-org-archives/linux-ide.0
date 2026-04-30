@@ -1,144 +1,329 @@
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D2BE33A9F3;
-	Wed, 29 Apr 2026 07:01:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0445324BBFD;
+	Thu, 30 Apr 2026 01:00:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777446115; cv=none; b=QDN0xSYGU3YO39dsbX1+5LdorauJ/ik8Lkt7tqOcjnFPXTYxc6pMs6OczUsCjilSE2ZRdWzejio0oKH5BQa6OlZs6omtJuYp9G4YtvCjrOgxPd/CjucUlCp7eWDTSHz8Wdkfn38DmNpzA2/fuQR2YWfvf5N6YqD5Peq2hIsvQeQ=
+	t=1777510826; cv=none; b=SfgfvJ4AL7csrNH5XMOGlvGt6V0v0vFAd/okExvVXecAUbDNxL3TsBo3PGIP44WQAsQRJh/3QzZBUFHvQSgjmOfdDWcwBxpY//x6koaRlCy9+QItm7Rq/fh/2bav+6GhwtqOO/UawtC6hpLuJ+Gh5/6p3uRg1c0HdJx1Bupon3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777446115; c=relaxed/simple;
-	bh=703zLGMUwnJRugy7XjlPoYHwCoOwLPBvMMWK1Drp5WE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=LdMAB2YYD9cDl69V54BHEfSXAY8vRjMhsd8jKL8KeBhPuYuncflVh8B6a4KSXDwvqmUkp7ABz5ZNO3tDvePYG7r1hRsNx+YEY1tY3r2Ri+CByjywosTR/1Uo2YUBjHxFZ5dJitQdjN9k9cBfe6PH3PGgUSr/4FrlnnZkNZ2vquw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=V9XGB1x8; arc=none smtp.client-ip=113.46.200.224
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1777510826; c=relaxed/simple;
+	bh=EYWCu7pcpjJUbAqcj2oVsDuaMCGyOKj0egVRvkGiCao=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QD6i9CQ+JX7UDJsdZaFYq3CrSZhzIia+ve8Jvkd+oHq+5CNkTT9CrLrTmLIf0hx9w8aDomiyJOKP5Hhs2KOZU8Bj2ai7EPA7dqbNlKiIYWV7gltZnuYF5t80YR5tItMcfixdc0qb4H1lv3cuOyG1Qk2/wDYK9FYsffxdSuAkNNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=W+hZsc41; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="V9XGB1x8"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=BhKfaY3u3QrBK4OJw/K1RR5Nfo0/d3vhjT28vZ6g8sk=;
-	b=V9XGB1x8sACKmizSqPVV5ROL5T47OzyOiWxWva4/6QSffp0dizrFK1+e/vqzBGSwdy2+6/O9k
-	3oHTr4rhCLc4EDh6zYo6oB+CNgI9Xi6d8BtAPGd2lP95djC0nctSLiwe3+Cf+hlf3J9fG2Cierj
-	Jf+mp29uPPNib22jTVAm0ZM=
-Received: from mail.maildlp.com (unknown [172.19.163.200])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4g57NW1VGfz1cyp9;
-	Wed, 29 Apr 2026 14:55:23 +0800 (CST)
-Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
-	by mail.maildlp.com (Postfix) with ESMTPS id 4262C40649;
-	Wed, 29 Apr 2026 15:01:49 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Wed, 29 Apr 2026 15:01:48 +0800
-Message-ID: <c78f6dad-b0fe-a2fb-8458-9fe182cd6b54@huawei.com>
-Date: Wed, 29 Apr 2026 15:01:48 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="W+hZsc41"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1777510825; x=1809046825;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=EYWCu7pcpjJUbAqcj2oVsDuaMCGyOKj0egVRvkGiCao=;
+  b=W+hZsc41gO+vLWTGD4KBIhoVW/YZVgTUnHbIi2CUnhcxJYkTL0VyB/CL
+   DktzFb1jpB+OG5cUL26sEi1RXW8THScSuRet7/WzslCUj2i4rwcEPTdFY
+   HjN+VrmXSjtvEM3JdoHVfDm602wGI4kE0XnrdtZj9sjPOlz+HHiJ7KxeJ
+   pT06Ua+cZSRW6J+AzYHmDX8dc6wMUHBifw6P93mYaliJ+1L7rx0mfQtFO
+   FxG9r99Zhot04/9F9v1vLvOnTPnv/XAQIFMBLbrlL7Y8udwoV6TgY0lqz
+   EUNKROBZOT9Ib+Ed7Xkvnz5hnQqrkWjSxZvhyFJv7DHnmLNNb1ct5Kf12
+   A==;
+X-CSE-ConnectionGUID: OaLRpVC3Tlqh62doSdKj4w==
+X-CSE-MsgGUID: 3FayHJUxQh2kB8t9FYfR4g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11771"; a="88765235"
+X-IronPort-AV: E=Sophos;i="6.23,207,1770624000"; 
+   d="scan'208";a="88765235"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 18:00:22 -0700
+X-CSE-ConnectionGUID: jVdDLsXNTnyJvKxkcc+Yvg==
+X-CSE-MsgGUID: cFU99KVIRJC2v6TqLQri6Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,207,1770624000"; 
+   d="scan'208";a="239452394"
+Received: from lkp-server01.sh.intel.com (HELO aa799cca880d) ([10.239.97.150])
+  by orviesa005.jf.intel.com with ESMTP; 29 Apr 2026 18:00:20 -0700
+Received: from kbuild by aa799cca880d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wIFlI-00000000BkC-3Irb;
+	Thu, 30 Apr 2026 01:00:16 +0000
+Date: Thu, 30 Apr 2026 08:59:57 +0800
+From: kernel test robot <lkp@intel.com>
+To: dayou5941@163.com, dlemoal@kernel.org, cassel@kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	liyouhong@kylinos.cn
+Subject: Re: [PATCH] ata: libahci: fix panic when accessing ports beyond MMIO
+ region
+Message-ID: <202604300815.6kpEidbJ-lkp@intel.com>
+References: <20260422080322.1006592-1-dayou5941@163.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH] ata: libata-sata: retry hardreset when device detected
- but PHY not established
-Content-Language: en-CA
-To: Damien Le Moal <dlemoal@kernel.org>, <cassel@kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>, <linux-ide@vger.kernel.org>
-References: <20260425060447.1312763-1-yangxingui@huawei.com>
- <e8d237bc-7191-4881-924b-86a34ff0f3b9@kernel.org>
- <a118114e-9828-06d6-d38b-2b426c92bb14@huawei.com>
- <33299d0d-d863-4e00-951e-4728ddc823e2@kernel.org>
- <0539efac-d9b5-4f95-eecd-b88cb3cb8724@huawei.com>
- <66bc004a-4a18-43d1-b296-463ea72cbc85@kernel.org>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <66bc004a-4a18-43d1-b296-463ea72cbc85@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepemh500001.china.huawei.com (7.202.181.130) To
- kwepemj100018.china.huawei.com (7.202.194.12)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260422080322.1006592-1-dayou5941@163.com>
+
+Hi,
+
+kernel test robot noticed the following build errors:
+
+[auto build test ERROR on linus/master]
+[also build test ERROR on v7.1-rc1 next-20260429]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/dayou5941-163-com/ata-libahci-fix-panic-when-accessing-ports-beyond-MMIO-region/20260422-192119
+base:   linus/master
+patch link:    https://lore.kernel.org/r/20260422080322.1006592-1-dayou5941%40163.com
+patch subject: [PATCH] ata: libahci: fix panic when accessing ports beyond MMIO region
+config: arm64-randconfig-003-20260430 (https://download.01.org/0day-ci/archive/20260430/202604300815.6kpEidbJ-lkp@intel.com/config)
+compiler: clang version 23.0.0git (https://github.com/llvm/llvm-project 5bac06718f502014fade905512f1d26d578a18f3)
+rustc: rustc 1.88.0 (6b00bc388 2025-06-23)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260430/202604300815.6kpEidbJ-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202604300815.6kpEidbJ-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/ata/libahci.c:614:18: warning: missing terminating '"' character [-Winvalid-pp-token]
+     614 |                         dev_warn(dev, "Port %d (offset 0x%llx) exceeds MMIO region (0x%llx),
+         |                                       ^
+   drivers/ata/libahci.c:615:44: warning: missing terminating '"' character [-Winvalid-pp-token]
+     615 |                                        truncating port map at port %d\n",
+         |                                                                        ^
+>> drivers/ata/libahci.c:614:18: error: expected expression
+     614 |                         dev_warn(dev, "Port %d (offset 0x%llx) exceeds MMIO region (0x%llx),
+         |                                       ^
+   2 warnings and 1 error generated.
 
 
+vim +614 drivers/ata/libahci.c
 
-On 2026/4/29 9:36, Damien Le Moal wrote:
-> On 4/29/26 10:14, yangxingui wrote:
->>
->>
->> On 2026/4/27 12:45, Damien Le Moal wrote:
->>> On 4/27/26 10:51 AM, yangxingui wrote:
->>>>
->>>>
->>>> On 2026/4/26 6:53, Damien Le Moal wrote:
->>>>> On 4/25/26 15:04, Xingui Yang wrote:
->>>>>> When sata_link_hardreset() detects that the link is offline, it currently
->>>>>> returns immediately without distinguishing the reason. According to SATA
->>>>>> specification, the SStatus register's det filed (bits 0-3) indicates:
->>>>>>      - 0x0: No device detected, PHY not communicating
->>>>>>      - 0x1: Device detected but PHY communication not established
->>>>>>      - 0x3: Device detected and PHY communication established
->>>>>>
->>>>>> This patch helps improve device detection reliability and adds a check
->>>>>> when the link is offline but det filed shows 0x1, return -EAGAIN to
->>>>>> trigger retry, rather than giving up immediately.
->>>>>>
->>>>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->>>>>
->>>>> This is a pure ATA patch so please CC the linux-ide list, not the linux-scsi
->>>>> list.
->>>>
->>>> Ok.
->>>>>
->>>>> Also, please check your mail setup: your email was in my Junk folder.
->>>>
->>>> Well, patche was sent using the git send command.
->>>
->>> Not git send-email, your smtp server. It probably has something wrong with
->>> DMARC. All your emails endup in my junk folder.
->>
->> Alright, it might be related to the company's SMTP server, but this
->> configuration is fixed, and I'm not quite sure how to fix it yet.
->>
->>>
->>>>> This is preceeded by a call to sata_link_resume(), which calls
->>>>> sata_link_debounce() and that function makes sure that DET is stable. So if
->>>>> after that DET still shows that their is no PHY, there is likely a big problem
->>>>> with it and it is super slow to be established.
->>>>>
->>>>> In this case, I do not think that doing another hardreset is the right thing to
->>>>> do. Have you tried increasing the deadline for hardreset ? That deadline is used
->>>>> as the limit for the link debounce too.
->>>>>
->>>>> Do you have a specific controller/device where you see this issue ? What exactly
->>>>> is the hardware setup where you see this issue ?
->>>>
->>>> Our customer imports and verifies a new disk, there is an occasional failure in
->>>> performing a hard reset on the disk and no exception log is generated for
->>>> resume and debounce.
->>>
->>> Does this hold for all disks or for only one or some models ?
->>
->> It may be some models, It is not found on other disks.
-> 
-> Some model ? Which one ?
+   428	
+   429	/**
+   430	 *	ahci_save_initial_config - Save and fixup initial config values
+   431	 *	@dev: target AHCI device
+   432	 *	@hpriv: host private area to store config values
+   433	 *
+   434	 *	Some registers containing configuration info might be setup by
+   435	 *	BIOS and might be cleared on reset.  This function saves the
+   436	 *	initial values of those registers into @hpriv such that they
+   437	 *	can be restored after controller reset.
+   438	 *
+   439	 *	If inconsistent, config values are fixed up by this function.
+   440	 *
+   441	 *	If it is not set already this function sets hpriv->start_engine to
+   442	 *	ahci_start_engine.
+   443	 *
+   444	 *	LOCKING:
+   445	 *	None.
+   446	 */
+   447	void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+   448	{
+   449		void __iomem *mmio = hpriv->mmio;
+   450		void __iomem *port_mmio;
+   451		unsigned long port_map;
+   452		u32 cap, cap2, vers;
+   453		unsigned long long mmio_size = 0;
+   454		bool is_pci_dev = false;
+   455		int i;
+   456	
+   457		/* make sure AHCI mode is enabled before accessing CAP */
+   458		ahci_enable_ahci(mmio);
+   459	
+   460		/*
+   461		 * Values prefixed with saved_ are written back to the HBA and ports
+   462		 * registers after reset. Values without are used for driver operation.
+   463		 */
+   464	
+   465		/*
+   466		 * Override HW-init HBA capability fields with the platform-specific
+   467		 * values. The rest of the HBA capabilities are defined as Read-only
+   468		 * and can't be modified in CSR anyway.
+   469		 */
+   470		cap = readl(mmio + HOST_CAP);
+   471		if (hpriv->saved_cap)
+   472			cap = (cap & ~(HOST_CAP_SSS | HOST_CAP_MPS)) | hpriv->saved_cap;
+   473		hpriv->saved_cap = cap;
+   474	
+   475		/* CAP2 register is only defined for AHCI 1.2 and later */
+   476		vers = readl(mmio + HOST_VERSION);
+   477		if ((vers >> 16) > 1 ||
+   478		   ((vers >> 16) == 1 && (vers & 0xFFFF) >= 0x200))
+   479			hpriv->saved_cap2 = cap2 = readl(mmio + HOST_CAP2);
+   480		else
+   481			hpriv->saved_cap2 = cap2 = 0;
+   482	
+   483		/* some chips have errata preventing 64bit use */
+   484		if ((cap & HOST_CAP_64) && (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)) {
+   485			dev_info(dev, "controller can't do 64bit DMA, forcing 32bit\n");
+   486			cap &= ~HOST_CAP_64;
+   487		}
+   488	
+   489		if ((cap & HOST_CAP_NCQ) && (hpriv->flags & AHCI_HFLAG_NO_NCQ)) {
+   490			dev_info(dev, "controller can't do NCQ, turning off CAP_NCQ\n");
+   491			cap &= ~HOST_CAP_NCQ;
+   492		}
+   493	
+   494		if (!(cap & HOST_CAP_NCQ) && (hpriv->flags & AHCI_HFLAG_YES_NCQ)) {
+   495			dev_info(dev, "controller can do NCQ, turning on CAP_NCQ\n");
+   496			cap |= HOST_CAP_NCQ;
+   497		}
+   498	
+   499		if ((cap & HOST_CAP_PMP) && (hpriv->flags & AHCI_HFLAG_NO_PMP)) {
+   500			dev_info(dev, "controller can't do PMP, turning off CAP_PMP\n");
+   501			cap &= ~HOST_CAP_PMP;
+   502		}
+   503	
+   504		if ((cap & HOST_CAP_SNTF) && (hpriv->flags & AHCI_HFLAG_NO_SNTF)) {
+   505			dev_info(dev,
+   506				 "controller can't do SNTF, turning off CAP_SNTF\n");
+   507			cap &= ~HOST_CAP_SNTF;
+   508		}
+   509	
+   510		if ((cap2 & HOST_CAP2_SDS) && (hpriv->flags & AHCI_HFLAG_NO_DEVSLP)) {
+   511			dev_info(dev,
+   512				 "controller can't do DEVSLP, turning off\n");
+   513			cap2 &= ~HOST_CAP2_SDS;
+   514			cap2 &= ~HOST_CAP2_SADM;
+   515		}
+   516	
+   517		if (!(cap & HOST_CAP_FBS) && (hpriv->flags & AHCI_HFLAG_YES_FBS)) {
+   518			dev_info(dev, "controller can do FBS, turning on CAP_FBS\n");
+   519			cap |= HOST_CAP_FBS;
+   520		}
+   521	
+   522		if ((cap & HOST_CAP_FBS) && (hpriv->flags & AHCI_HFLAG_NO_FBS)) {
+   523			dev_info(dev, "controller can't do FBS, turning off CAP_FBS\n");
+   524			cap &= ~HOST_CAP_FBS;
+   525		}
+   526	
+   527		if (!(cap & HOST_CAP_ALPM) && (hpriv->flags & AHCI_HFLAG_YES_ALPM)) {
+   528			dev_info(dev, "controller can do ALPM, turning on CAP_ALPM\n");
+   529			cap |= HOST_CAP_ALPM;
+   530		}
+   531	
+   532		if ((cap & HOST_CAP_SXS) && (hpriv->flags & AHCI_HFLAG_NO_SXS)) {
+   533			dev_info(dev, "controller does not support SXS, disabling CAP_SXS\n");
+   534			cap &= ~HOST_CAP_SXS;
+   535		}
+   536	
+   537		/* Override the HBA ports mapping if the platform needs it */
+   538		port_map = readl(mmio + HOST_PORTS_IMPL);
+   539		if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
+   540			dev_info(dev, "forcing port_map 0x%lx -> 0x%x\n",
+   541				 port_map, hpriv->saved_port_map);
+   542			port_map = hpriv->saved_port_map;
+   543		} else {
+   544			hpriv->saved_port_map = port_map;
+   545		}
+   546	
+   547		/* mask_port_map not set means that all ports are available */
+   548		if (hpriv->mask_port_map) {
+   549			dev_warn(dev, "masking port_map 0x%lx -> 0x%lx\n",
+   550				port_map,
+   551				port_map & hpriv->mask_port_map);
+   552			port_map &= hpriv->mask_port_map;
+   553		}
+   554	
+   555		/* cross check port_map and cap.n_ports */
+   556		if (port_map) {
+   557			int map_ports = 0;
+   558	
+   559			for (i = 0; i < AHCI_MAX_PORTS; i++)
+   560				if (port_map & (1 << i))
+   561					map_ports++;
+   562	
+   563			/* If PI has more ports than n_ports, whine, clear
+   564			 * port_map and let it be generated from n_ports.
+   565			 */
+   566			if (map_ports > ahci_nr_ports(cap)) {
+   567				dev_warn(dev,
+   568					 "implemented port map (0x%lx) contains more ports than nr_ports (%u), using nr_ports\n",
+   569					 port_map, ahci_nr_ports(cap));
+   570				port_map = 0;
+   571			}
+   572		}
+   573	
+   574		/* fabricate port_map from cap.nr_ports for < AHCI 1.3 */
+   575		if (!port_map && vers < 0x10300) {
+   576			port_map = (1 << ahci_nr_ports(cap)) - 1;
+   577			dev_warn(dev, "forcing PORTS_IMPL to 0x%lx\n", port_map);
+   578	
+   579			/* write the fixed up value to the PI register */
+   580			hpriv->saved_port_map = port_map;
+   581		}
+   582	
+   583		is_pci_dev = dev_is_pci(dev);
+   584		if (is_pci_dev) {
+   585			struct pci_dev *pdev = to_pci_dev(dev);
+   586	
+   587			mmio_size = (unsigned long long)pci_resource_len(pdev, 5);
+   588		}
+   589	
+   590		/*
+   591		 * Preserve the ports capabilities defined by the platform. Note there
+   592		 * is no need in storing the rest of the P#.CMD fields since they are
+   593		 * volatile.
+   594		 */
+   595		for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
+   596			if (hpriv->saved_port_cap[i])
+   597				continue;
+   598	
+   599			port_mmio = __ahci_port_base(hpriv, i);
+   600	
+   601			/* Calculate offset from MMIO base */
+   602			unsigned long long port_offset = (unsigned long long)port_mmio -
+   603							 (unsigned long long)mmio;
+   604			/* Check if port register block is within MMIO region */
+   605			if (is_pci_dev && port_offset >= mmio_size) {
+   606				/*
+   607				 * Port registers exceed MMIO region boundary.
+   608				 * Since ports are sequentially mapped (0x100 + i*0x80),
+   609				 * all subsequent ports will also exceed the boundary.
+   610				 *
+   611				 * Update port_map to exclude this and all higher ports,
+   612				 * then break out of the loop.
+   613				 */
+ > 614				dev_warn(dev, "Port %d (offset 0x%llx) exceeds MMIO region (0x%llx),
+   615					       truncating port map at port %d\n",
+   616					       i, port_offset, mmio_size, i-1);
+   617	
+   618				port_map = (1UL << i) - 1;
+   619				hpriv->saved_port_map = port_map;
+   620				break;
+   621			}
+   622	
+   623			hpriv->saved_port_cap[i] =
+   624				readl(port_mmio + PORT_CMD) & PORT_CMD_CAP;
+   625		}
+   626	
+   627		/* record values to use during operation */
+   628		hpriv->cap = cap;
+   629		hpriv->cap2 = cap2;
+   630		hpriv->version = vers;
+   631		hpriv->port_map = port_map;
+   632	
+   633		if (!hpriv->start_engine)
+   634			hpriv->start_engine = ahci_start_engine;
+   635	
+   636		if (!hpriv->stop_engine)
+   637			hpriv->stop_engine = ahci_stop_engine;
+   638	
+   639		if (!hpriv->irq_handler)
+   640			hpriv->irq_handler = ahci_single_level_irq_intr;
+   641	}
+   642	EXPORT_SYMBOL_GPL(ahci_save_initial_config);
+   643	
 
-When the disk is properly connected, the log is as follows:
-
-[   22.658068][ T1297] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 
-300)
-[   22.665083][ T1297] ata1.00: ATA-10: S1XE240S3N6Y9TC1AP, F66002.0, 
-max UDMA/100
-[   22.727017][  T806] scsi 0:0:0:0: Direct-Access     ATA 
-S1XE240S3N6Y9TC1 02.0 PQ: 0 ANSI: 5
-> 
-> And please remove linux-scsi from your emails for this topic.
-
-Ok.
-
-Thanks,
-Xingui
-.
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
