@@ -1,313 +1,239 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519763A5420
-	for <linux-ide@vger.kernel.org>; Fri,  1 May 2026 12:54:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777640065; cv=none; b=RJQnvKhuIcFJekGNbVYb+Xztl2K4zGelLBEivBn+vUakO5+VtZl4XKuDm2fAvLDkrZmQFyOTkOYINgZ6iG6sKSMSR/nxzhhWzG5rzcGbquBHReWFlHFOAcnrPsreKfa1TDReRhKwftEIHJtEede8/c32P4D3Fg9ZOSwbY80uCoY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777640065; c=relaxed/simple;
-	bh=j62k58F05RiR/yX9yyHmoEuIKRNt1X3OmKoxfTu/mx8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DL76O5BGLrII8qRjRK9bupMohJGA8ozs70z06q76OZkSc+rmqjLTcC5OuzNLKMl9UPgzjlVv+GlI2AvNZdJsZox61QVdg9mF34+AeYmr8A28BNKmNONRpeBEsVunONSS1rZo6PAjipehsnSL9ki3a0mzezLM5DGqNoxyqlos38E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=umDFMyss; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88D541A6834
+	for <linux-ide@vger.kernel.org>; Fri,  1 May 2026 14:19:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777645182; cv=fail; b=dGiSvmS7hKIjWfB2uAvocKuGxf95/gyE6wr8ozp7QNU2k8MV/2MdvmgWD7l34T8VBAMm9TnOz1nKC70hbASGyz5FyRZXZRkcw2rAnCxfdRt6/KRXAoLLSLjCOu+AsPhNjeSZDOzLtyFsu0UJA9bvZK44aamK4t289aRBs3oVzsA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777645182; c=relaxed/simple;
+	bh=5mgd/Jr9Si5I09K0qJ4PfMTCi97kVIPxDB1iLgvL6w8=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=qzSAV94wOTNIsnrUYejZkclAZs810ZFpFzlKH06/l/nw+tWgDiz8kJSSxE+FjB7jCYPXjg3FwjVYgDA0ubG+71ojWbIJ2LGcBuFwQVQ3PEK6vyODBSp9I49sd2VY73w3flW5wJevJvI9YuNpO/zoXhagdn7qjSqsQ60KL1ONRFg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ZK4L2irM; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=p/CRscl4; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="umDFMyss"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74799C2BCB8;
-	Fri,  1 May 2026 12:54:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777640065;
-	bh=j62k58F05RiR/yX9yyHmoEuIKRNt1X3OmKoxfTu/mx8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=umDFMyssGH8kXNiJHLuXsY9YceC+xLH331fJwrNYgSXUC22WLhxgvv+kR40Bp1eou
-	 73GZQvXC8pyGp8u9rLQoiIxg3hI5SbQa6mBnexF703FD++WmA/T5gPDkx6QHjAY3WD
-	 d0re2HcgAO+yfsFsP2K/kXIM+ioQNH5O5eJbBOHvnLlLFYaVFH6wwFeuB3k+Noe0uB
-	 Ud5GVq5zi2DBudeVkgTaxmGcO5fHrPUGwZ+ONfwM64ogfjD7QiA+reGRUj4WsCKD/6
-	 qjXykiGMFJ/YYdyv9s1/enHLLxq3L7vfHQm58HjbZsnklOadvhKcjS3xSCxNr5MVKf
-	 N0HJYLeHKRplQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Tommy Kelly <linux@tkel.ly>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	John Garry <john.g.garry@oracle.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org
-Subject: [PATCH 3/3] ata: libata-scsi: do not needlessly defer commands when using PMP with FBS
-Date: Fri,  1 May 2026 14:54:13 +0200
-Message-ID: <20260501125410.1204490-8-cassel@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260501125410.1204490-5-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZK4L2irM";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="p/CRscl4"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6414GrwL622771;
+	Fri, 1 May 2026 14:19:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=c9/615yX9p2mfp38bF8U4poaNsHlsQ+yW2jJaJMsljI=; b=
+	ZK4L2irMvk3lhYyu8BbN9br9sRJXBv42DKIP2olJtoYndecunCbXoMq/ZHuf5FOQ
+	spvN/5ABb/aZy4JMyaKbBeSYf18gnBGmdTRCs08uhQmTpKIRoLvIXZ2mVGRunkGy
+	W7w4yYj+XLCgKb/icmS0xW2Hu+TKNZPVNF6rW7uCFdtuofzSxx6WqSwPxfUFN/+3
+	T3HacmMo/CzikAWFBINTBt2FrBQEkwMGkvwbSkheBWyQB1zLKvXkywwLRcfSOG3N
+	lUoToxqoZsqoy6qgY22Sj+P/fAxodDJTWrWZwexKiIJ3w9+3FS3Preghn6lSgxLo
+	HdFncttsSN1TkVPt7uHj5w==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4drng8qftf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 01 May 2026 14:19:11 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 641EGIOc015097;
+	Fri, 1 May 2026 14:19:10 GMT
+Received: from dm1pr04cu001.outbound.protection.outlook.com (mail-centralusazon11010036.outbound.protection.outlook.com [52.101.61.36])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4drm2gwhwb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 01 May 2026 14:19:10 +0000 (GMT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ZTXK6+us5CQk4/GDDyPH0iV0jYxexIcf3C0aVX/4JtEqVOoVAsOK4i5UQHj2JyI+nv2rmfx9DTV46jWQTIaTYP8bKqVPiQ7SID1irqp5JdTMWvcLxjL5GDajJPg9ajLKDXlqBCS5xIEIwYe0uKaRWsta3+edor93clCEjWiAVC0L4SK99ihT1DoYdmCn91r1YDpAOEYUBQeKzqZFW/oII+aQXK1wX12e9FK66SyQCu+H/HvIVYap+H3dcnQ9zLVZ1kgOHEJDvJJOd0YK0TjydIhAImebbydGOkyi2Z3dnXHI8nLuMftoi5bEDn32Rydt7GkKEzCeToQvIyUcBP4iGw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=c9/615yX9p2mfp38bF8U4poaNsHlsQ+yW2jJaJMsljI=;
+ b=O4raERd7gklJyNrQ8Vuze3e0PS6vSftisZHBTBz7grscI7YLW/+o3ZK0KsFor+//jxotN4LFfjoUTlQJFuOvvAvPZF521HEcRr4khcpUGQQJ3HBHU0uXiMbgOOAYN+YB+fh/vakw8LuRp6BuFeQFPgJj7LP4VBhT+oNygOM1//a/zePn2tGUXwno7z/hfe5PB1ddh3wvJ3GcsbOBgon8/SQX/1rJUvcaSM+7v08t8kYnl1AyjBvnqEYwVZf2t1rezRJ0GZnXJeovBmc2m7ajOGYrDrvGL+x6VTGye4qs0JCVPJOHAAIuQYPrplfXV69y0RiXXETY9BiFIEkbKYRwOQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=c9/615yX9p2mfp38bF8U4poaNsHlsQ+yW2jJaJMsljI=;
+ b=p/CRscl4YCYeSWLc8/3vF7Vgde8JN1KJlXoloBy8+v8tAxVCrgb5FLXQgDlkpJZQ9qqLCtfgZQfV5OwvikTab5w7DeUUzX7/FE9z/d4YJ6UzOqfOa0dO3q6+Wn1AUA4fOaoxG/squ84nKpZPxBbUQGXZOfSxGif73yXXTWgqShA=
+Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ (2603:10b6:f:fc00::d54) by PH3PPF2B2347B8A.namprd10.prod.outlook.com
+ (2603:10b6:518:1::792) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.26; Fri, 1 May
+ 2026 14:19:07 +0000
+Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ ([fe80::9da2:46fe:4d63:a74b]) by DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ ([fe80::9da2:46fe:4d63:a74b%7]) with mapi id 15.20.9870.022; Fri, 1 May 2026
+ 14:19:07 +0000
+Message-ID: <4be77745-2b7d-416c-b01a-88669d9bbeb8@oracle.com>
+Date: Fri, 1 May 2026 15:19:03 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
+To: Niklas Cassel <cassel@kernel.org>, Tommy Kelly <linux@tkel.ly>,
+        Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <htejun@gmail.com>,
+        Jeff Garzik <jeff@garzik.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, hare@suse.de
 References: <20260501125410.1204490-5-cassel@kernel.org>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20260501125410.1204490-5-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR2P281CA0150.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:98::11) To DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ (2603:10b6:f:fc00::d54)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=9483; i=cassel@kernel.org; h=from:subject; bh=j62k58F05RiR/yX9yyHmoEuIKRNt1X3OmKoxfTu/mx8=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDK/LCopPhpW88v25IHVIR0LH/+7OlH19As/K5P/C17N9 YyfutTpTEcpC4MYF4OsmCKL7w+X/cXd7lOOK96xgZnDygQyhIGLUwAmMl+LkaHH+PoHf3MVWe65 9jE/N2nEct9Z+aPHa4fUX44Ja6Y92qTB8E/zQnTmwbNHS3hPXd/ry5Bpd36Te8qEaxV5rsftNj7 vPcAOAA==
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS4PPFEAFA21C69:EE_|PH3PPF2B2347B8A:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2de41cbc-f431-465f-0db9-08dea78c9af5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|1800799024|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	eE5KrleeSvDUrLQUu3fsn310Lrm5TBeyrPdsdB5vS9XrSJVF6vbNWbQ2mg6FkZ3RFs4PsiN6lWMVezNHcmoE4B8/KBN2Mnew6+Q9me36f697V6Q0WC9YQJ2mxyS//iJ/xtQnB8zGFWELGALwFog0SIKY+CgOkSl1SIXSvh9SR/fku4d+TQW5ALJDtdGGyO3UVYbTOI0AugvoSug+9MGHI4J4xOLcNrNJpkQJXhLVUgBdQz42GGqgBjuZUirND80Jv8SbSkjSODh8+ijI2hJX6+/vYIaPRnv7NLU6wDJFJq8ZChjsGRgfK7fC0/OWwdUgYH0j+9zZB7G0zUQ+knqfL2ZgWqR9NIpNbJimgiqC8mng3d/CzwmON+kgojmNUov6Aa0yA6I4UGSFOQnPDppnQWI7UJpwh1l1pXB1AoK/ikpKIzU2tgKsnozDf8syaR5RSoNeW6BtrRfoz7p4/zWSegfE/BouWtXlUTm9vkm8i4sztcPkGQazJEC2Ty2Tt4cFNvfQbypXoqCej7+52LjVFI/rOgdDDmKhBbYagpDx0/+e5gKjO7uMaUT2L0LaUo25T5Hcc4PTJR6Gk8U+rAjFtVSw2h4B/J6On72V/mU2B4P2fBhPXI4uZD8rSYlgxm5cfBHOnBHGa6jf50v9bGoYCw==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPFEAFA21C69.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WHZaRURoRGVFMERPTFVjSDNmbmlkMEVkbnF2MTFlRnltWGxETFV0R3E4Zmty?=
+ =?utf-8?B?NWhOYmRWNDNxZ0x5TEYrYzU3MUEra0I4RS93OWlOQXpGK1JrOWFacVV4ZExM?=
+ =?utf-8?B?SmkzRnJkakoyMkNtNjk5d1V1MDk4WTk5djV2dGVRUDY3cXFKR3c0RWdsankw?=
+ =?utf-8?B?M2pBcVdvYzUyYVJmWmIxQlF3R2dCNFVwNEtwVDFPZHVGUml6R0p0UHVIMTVE?=
+ =?utf-8?B?cFIvZE9DTHZ1SGVqa21YWW1mNEJWTEFwdGRaM1dhclRuenpUUkR1eEJOQU1Q?=
+ =?utf-8?B?WmhFN09YQ0dJeXlaR3BISTNlNlBkS0VLOUNzRkVaN09wNDlmNkZLa3VMMHp0?=
+ =?utf-8?B?c0tlTkUwaWlMM1hSQ2JHNFE5Mkc0RS8wYXloWWJTY0FuR3pLWEhOdXFJbU8w?=
+ =?utf-8?B?M2FvZ0tWTFF4Z2xZd3dtRDk1NVM3U3hOVGswajNYRDl2WFU5ZmhDekpJNU1O?=
+ =?utf-8?B?NDkycE5sOTFTRTZaQXh0T0szc2hBSi9mZDNmT1d2a0lxbitzcU5hWjNHdkJa?=
+ =?utf-8?B?Vmc3V0NaYUFFc0RIRk16WHA5aDc2MzJweG9JY0tEeUNpZXZkeVNVbFFpOVpD?=
+ =?utf-8?B?UTVvNVYwUmlhWThLMGFRclZjYzlmaWNvc0dLdXdnWlFMVVpONlY2OEdFeWVY?=
+ =?utf-8?B?WCtpVXVrY2xqUFg4SThKOUFzd1c3cGhSMEVCN2RsbkNNTXdDSy9VaUJJM0lT?=
+ =?utf-8?B?cGgzMWJobkUxK2NkR3NCbXdhcEd5N0ZGaFpOaUlOTThFT1owVWgrbHdoTHFN?=
+ =?utf-8?B?RU5rUHdpSWJTZHhoNFJZaTJuN3RnR3JVUXRFZ1J1bnRkOWdMaDdBbFRCc2Jz?=
+ =?utf-8?B?Z0ZYLzR0KzhqVkNZdFcxc1BCMUg1Nm1ia3dtOHZXNmNMN1EwdmpZaWp5d1NR?=
+ =?utf-8?B?UGl1dU8yR1Q2bGtVaVl0TzNFOWhUM2duNC9MUDlLSlBuOW5ENXY5eHdjTGw1?=
+ =?utf-8?B?Y2JmQjlPRDhKR3RNYTcrNzdNcGRsb2FWTGdnMXZiWkVpQUVPUVFRQ1JhVEdr?=
+ =?utf-8?B?K2hBbDZOemdTUEU3bFRSbFplWDJaOWx4cUxQa1ZxYlkyTGpjaGoybVJyNkdw?=
+ =?utf-8?B?dWp0c0JaUjhKYU9GelZoMmhScDVqbVRjUGVyRkhvb3lSeWdOQTFMQlpVZTV5?=
+ =?utf-8?B?ZC9kMWM3L29McEVCZDVab3cyK2VUSGhiU1o1UHdCWXIrRnBhclJSeFNiK0Jy?=
+ =?utf-8?B?YWQ5SDRlQjRsWXUzMFdDei9QMG1sWVExcE91OWtIOU9zTDBzR051ZGs2d2N5?=
+ =?utf-8?B?NXRjZXFMeUkyZ013ZmowRDI1R2hsVUV4RzduMnA3SXNTN1ZON1FPVFRRdCtr?=
+ =?utf-8?B?RW1KTURPTkRJZnZwaVUwNTlORWJpZDhQUHF1S0hjSkdmMzRJbEh2Zm96Y2Jo?=
+ =?utf-8?B?YW5JalFkMGlDTDc4eXJVSTJ4bjlLajZxRVBUK3I3L3FXWW5WdUhORjZ2bVg3?=
+ =?utf-8?B?OFJBUmpvUEd4SVRqNlcwbWZ1M1EwajFLa1VzSVpaa1NJOTYzS1J2b2YweUo5?=
+ =?utf-8?B?dlhVSjNxMm93VjNFMlJ6bHh5SElybFBLYldTZU84SDVka0RYV3lJK29WT2JI?=
+ =?utf-8?B?STllWjZBNWc0UmlNQ0JVNDFPd2JndlE1dVVwRFVkUC9GNjNSdTh0M1dsZFh4?=
+ =?utf-8?B?R0xiSDYreFQyNEtRVCtlTHQreFRNTWg4UmhPbHJYVTRQMVpyY1ZnWTVMTytH?=
+ =?utf-8?B?b3FPaXY0V2gwdEdPMGF3M2IvQlhwb3g3MTR4UXEwQTJ4a3RiVDNnNGlXN1Jj?=
+ =?utf-8?B?OGdKdWtvV0VXMEY1ZHZ2bUJmYTZvQUxYTUg4L1AvL24zUytQZDZMSzg3NjB3?=
+ =?utf-8?B?NE04dC9iODFtY1Q5RGQySUYxaFZtT3JXTkpkR3BOcXpFWms4NHFXTFFtd0Qv?=
+ =?utf-8?B?ZkJIc2xWTisvcFM0RUNZbVNkazJYWmVEN3R4cFBSWXVNQzJnaGp1aGgyc1NP?=
+ =?utf-8?B?RkVCdHpaQ25Od3JoQXo2Q28xNmpSZWJvbVlHSnFqaWQ5Zlh2Qlh0L2c2VUts?=
+ =?utf-8?B?UmZIY0dncVMvWDZUaUxVV3hVSzFucVpmZ1FRRlV5UUErT1U5dUV4WDk2Uzdr?=
+ =?utf-8?B?YjQxSUMvZ0pFNHRRZkI5aTRKaElqb0J6VDZycmNQYVJJRzNmNndkVVRxL3F6?=
+ =?utf-8?B?NXdMZHBncTZ1REw2dDA3d2pCa0tIQ1pEYlNpaWxIME5tdHQ3WitaeEorM0F3?=
+ =?utf-8?B?S0RRV3l1L3Jid1pDUUZ3b2lLV2tyWkZIcFlEN3QxcDcyUWNGZWhGcytKaUpw?=
+ =?utf-8?B?V2Y4QzNFM1FlbWFTRnNUUkFaWVJzWlB2TW1YeVNPV3ZXMk1XZmJmM2pxMjFQ?=
+ =?utf-8?B?UDlCN1BhZ1VmZ3JHdFJTdTJsRVhTLzZZN3MxaEpUaThqZkdsbjZVUT09?=
+X-Exchange-RoutingPolicyChecked:
+	OCIcsjFhrqsdjW9mj1lK1EKZFUOOxflLjdYle1GgVz1rvg6GCaJo3zo9phbRQ34Ex73Mo3Spy+izEIa7DiNkfT4K64fXP3ZFGRbArP1r683IffPrfQrVtZCCTZuBSrLndLDsDRn8iYui/xvHQGDh/WIFFUhZwHckm8nugOOok7qAyhgSqZ5zaapWIcyErynDdBsaW0web8q+q2e3V36ew29V/8HBH8IUCXZ2y9uIjkHa6X43YqDWrsUKTbHj1fdda5BENIjZ0AKFEiKJ6hrKbYFXnqAJQotzxuDmDz2BXOMq/LXF/U0ol2PNDxho09AEsG1DP6+axNtvrHEb/G5ZHw==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	iq7FTO71xiTkTPiSAdDNEv5/oKNxhA/2rvR1X9VCSzSbEa+So5XJ+litqRvA8qLY586r5MzVSYeOo3JMzjmgaqCMaIrvS+F6wcAFKoWvg6sxElJORzpmbvfBdHVoL14f3qRf5F3YKaDLCNNsgwJ4+7fatuVQTZxEDWfwIwtEZ8uJPqbbeKGhZ1fHDnZoc0gn8UpkezSSKYuLykWja0SxYYFejYMoDbmOEDwacDz0JM9ohJwdWLMGA8+GmWZiCms1DCmJl+PqA6jC41dcXKDzx0rLniu1cOuaIZZwSGs+ZxUe1sCEsjkVIzmYTHV9DETyKzBdSle5oJrMxyXFXp9qMxVNdeB4BSmm1gCBH3KK2mY7xzk/YBZga0vYGLi1x9KlWaV02f+IO2zoOO+8gNcIPWMaFi+9M6CfVLh00rlJO3Jgc5+/UKQLSwOACxaxmBTdoqAvCA6VRUc4jqlKzcSMvwKxFBtpuSn7YQeZHOQ+goXFsvza1qlaFJYWUqZEj+YDbtx63j94SzKvYrlnW3IMt/La//YqhEGmMJPQ4ZxNNlQOYELR+BPMivxbnbX+YbSspLflPkE00dtKQgVwhvUBVUMFxwzBxYFzFocJKdlVwL0=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2de41cbc-f431-465f-0db9-08dea78c9af5
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPFEAFA21C69.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 May 2026 14:19:07.1501
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: zeDAC6f4xC90PWFDOh3RX00EuTZaVc4N7mP6JNgAvi2ks63x9bowztr3LLDhh2FB9s+C/x0N/QdnI1Sgco8hqg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH3PPF2B2347B8A
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-01_04,2026-04-30_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 suspectscore=0 lowpriorityscore=0 malwarescore=0
+ spamscore=0 mlxscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2604200000 definitions=main-2605010139
+X-Authority-Analysis: v=2.4 cv=U7uiy+ru c=1 sm=1 tr=0 ts=69f4b65f b=1 cx=c_pps
+ a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=NGcC8JguVDcA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=EIcjfB9IiI4px24ztqRk:22 a=VwQbUJbxAAAA:8
+ a=07-hrkyYv0_hsO-RJ1gA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:13840
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTAxMDEzOSBTYWx0ZWRfX3Q4HLiUcI0xx
+ n5DISK6ezu0RmAM8mjFE5SlMXn5resc0mXvkzPxFw6A99EKw8/RncZbEIEhhIyttbk/Nfagiykz
+ atDDROnMAfnIrox0yc4UeE2X9A+r+qdgjzXS4mF/q7AoTIo71CczcVEeNyPt+IOL03db0xaqzVq
+ k/2DH4uIdwsSdFBlDUnjIFedoQMk1HK4T/l9bvbROyJQPQkmMEmAbasjo/fXX7hCcs5W93OENDb
+ P5e6NE278NM+woDZ572VKZFpY5tNZrBAxzS9Pa1pTbMEe+8D1OWL3pYdpMmNeJS7eROhtIQuz2Q
+ 4Ix0LrJFHgWdSwnJRNm4fnZ7wJ/omAwUrech9RAwN2lkMV2PMm6KQizBy4YJDMiJPPS9JIvczTe
+ JSK7mGcy1ofE5hGXty2K2YkONP76FqfV2ZX7aNFjsJYSriA5OVOfdMEewQgMzIW3Fsqe+2ajIkj
+ hiamEd4FIUV4BV/Z8TXvApMXQ+maSTuggMS2vePM=
+X-Proofpoint-GUID: vZfQ-TGaUE-mPhNeAqTt6Y3ttx4eWHdN
+X-Proofpoint-ORIG-GUID: vZfQ-TGaUE-mPhNeAqTt6Y3ttx4eWHdN
 
-The SATA specification does not allow a non-NCQ command to be issued while
-an NCQ command is outstanding.
+On 01/05/2026 13:54, Niklas Cassel wrote:
+> Hello all,
+> 
+> Tommy Kelly reported a regression with PMP that use CBS:
+> https://lore.kernel.org/linux-ide/ce09cc21-a8e9-4845-b205-35411e22fba9@tkel.ly/
+> 
+> To me, this appears to be a problem in ata_pmp_qc_defer_cmd_switch() that
+> has been there since this function was introduced. ap->excl_link did not
+> always get set. This is fixed in patch 1/3.
+> 
+> While looking at the code, when using a PMP with CBS, it turns out that we
+> are incorrectly using the deferred_qc feature that issues a QC via a
+> workqueue, even for non-NCQ commands that are issued to another link
+> (a link that is not the active link). This workqueue feature was meant to
+> avoid dealing with non-NCQ vs NCQ commands for a single drive, not to
+> duplicate the existing ap->excl_link logic. This is fixed in patch 2/3.
+> 
+> While looking at the code, it turns out that the deferred qc issuing via
+> workqueue is misdesigned. It assumed that we can't mix NCQ and non-NCQ
+> commands on the same port. The limitation is that you can not mix NCQ and
+> non-NCQ commands on the same drive. However, with a PMP with FBS, you can
+> issue (mixed NCQ and non-NCQ commands) to the different drives. Thus, move
+> the saved deferred QC from struct ata_port to struct ata_link. This is
+> fixed in patch 3/3.
+> 
+> Tommy, it would be nice if you could apply this series and see if it solves
+> your problem. Right now the series is compile tested only.
+> 
+> 
 
-Commit 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-introduced a feature where a deferred non-NCQ command gets issued from a
-workqueue. The design stores a single non-NCQ command per port.
+Hi Niklas,
 
-However, when using Port Multipliers (PMPs), specifically PMPs that
-support FIS-Based Switching (FBS), non-NCQ and NCQ commands can be mixed
-on the same port, just not for the same link, see e.g. ata_std_qc_defer()
-which is, and always has operated on a per-link basis.
+As I understand, this deferred QC scheme was intended to solve 
+starvation problems for multiqueue SAS HBAs (using libsas-based 
+drivers). libsas has no port multiplier support, so I wonder why we make 
+deferred QC scheme work for port multiplier, i.e. non-libsas scenario.
 
-Therefore, move the deferred_qc from struct ata_port to struct ata_link.
-This way, when using a PMP with FBS, we will not needlessly defer commands
-to all other links, just because one link issued a non-NCQ command while
-having an NCQ command outstanding. Only commands for that specific link
-will be deferred.
+Thanks,
+John
 
-Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-core.c | 16 +++++++++++-----
- drivers/ata/libata-eh.c   |  8 ++++----
- drivers/ata/libata-pmp.c  |  4 +++-
- drivers/ata/libata-scsi.c | 39 +++++++++++++++++++++++----------------
- include/linux/libata.h    |  6 +++---
- 5 files changed, 44 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e76d15411e2a..c3a10e85a19c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5584,6 +5584,7 @@ void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp)
- 	link->pmp = pmp;
- 	link->active_tag = ATA_TAG_POISON;
- 	link->hw_sata_spd_limit = UINT_MAX;
-+	INIT_WORK(&link->deferred_qc_work, ata_scsi_deferred_qc_work);
- 
- 	/* can't use iterator, ap isn't initialized yet */
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-@@ -5666,7 +5667,6 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	mutex_init(&ap->scsi_scan_mutex);
- 	INIT_DELAYED_WORK(&ap->hotplug_task, ata_scsi_hotplug);
- 	INIT_DELAYED_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
--	INIT_WORK(&ap->deferred_qc_work, ata_scsi_deferred_qc_work);
- 	INIT_LIST_HEAD(&ap->eh_done_q);
- 	init_waitqueue_head(&ap->eh_wait_q);
- 	init_completion(&ap->park_req_pending);
-@@ -6291,9 +6291,9 @@ static void ata_port_detach(struct ata_port *ap)
- 
- 	/* It better be dead now and not have any remaining deferred qc. */
- 	WARN_ON(!(ap->pflags & ATA_PFLAG_UNLOADED));
--	WARN_ON(ap->deferred_qc);
-+	WARN_ON(ap->link.deferred_qc);
- 
--	cancel_work_sync(&ap->deferred_qc_work);
-+	cancel_work_sync(&ap->link.deferred_qc_work);
- 	cancel_delayed_work_sync(&ap->hotplug_task);
- 	cancel_delayed_work_sync(&ap->scsi_rescan_task);
- 
-@@ -6301,8 +6301,14 @@ static void ata_port_detach(struct ata_port *ap)
- 	if (ap->pmp_link) {
- 		int i;
- 
--		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
--			ata_tlink_delete(&ap->pmp_link[i]);
-+		for (i = 0; i < SATA_PMP_MAX_PORTS; i++) {
-+			struct ata_link *pmp_link = &ap->pmp_link[i];
-+
-+			WARN_ON(pmp_link->deferred_qc);
-+			cancel_work_sync(&pmp_link->deferred_qc_work);
-+
-+			ata_tlink_delete(pmp_link);
-+		}
- 	}
- 
- 	/* Remove the associated SCSI host */
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 9a4b67b90b17..d623eb32ed8b 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -651,11 +651,11 @@ int ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- 			if (qc->scsicmd != scmd)
- 				continue;
- 			if ((qc->flags & ATA_QCFLAG_ACTIVE) ||
--			    qc == ap->deferred_qc)
-+			    qc == qc->dev->link->deferred_qc)
- 				break;
- 		}
- 
--		if (i < ATA_MAX_QUEUE && qc == ap->deferred_qc) {
-+		if (i < ATA_MAX_QUEUE && qc == qc->dev->link->deferred_qc) {
- 			/*
- 			 * This is a deferred command that timed out while
- 			 * waiting for the command queue to drain. Since the qc
-@@ -666,8 +666,8 @@ int ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- 			 * deferred qc work from issuing this qc.
- 			 */
- 			WARN_ON_ONCE(qc->flags & ATA_QCFLAG_ACTIVE);
--			ap->deferred_qc = NULL;
--			cancel_work(&ap->deferred_qc_work);
-+			qc->dev->link->deferred_qc = NULL;
-+			cancel_work(&qc->dev->link->deferred_qc_work);
- 			set_host_byte(scmd, DID_TIME_OUT);
- 			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
- 		} else if (i < ATA_MAX_QUEUE) {
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 0575e1e283d8..b0c484a591b8 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -574,8 +574,10 @@ static void sata_pmp_detach(struct ata_device *dev)
- 	if (ap->ops->pmp_detach)
- 		ap->ops->pmp_detach(ap);
- 
--	ata_for_each_link(tlink, ap, EDGE)
-+	ata_for_each_link(tlink, ap, EDGE) {
-+		cancel_work_sync(&tlink->deferred_qc_work);
- 		ata_eh_detach_dev(tlink->device);
-+	}
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 	ap->nr_pmp_links = 0;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index dca7ea7e6315..201dac46d0a3 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1664,8 +1664,9 @@ static void ata_scsi_qc_done(struct ata_queued_cmd *qc, bool set_result,
- 
- void ata_scsi_deferred_qc_work(struct work_struct *work)
- {
--	struct ata_port *ap =
--		container_of(work, struct ata_port, deferred_qc_work);
-+	struct ata_link *link =
-+		container_of(work, struct ata_link, deferred_qc_work);
-+	struct ata_port *ap = link->ap;
- 	struct ata_queued_cmd *qc;
- 	unsigned long flags;
- 
-@@ -1676,10 +1677,10 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
- 	 * such case, we should not need any more deferring the qc, so warn if
- 	 * qc_defer() says otherwise.
- 	 */
--	qc = ap->deferred_qc;
-+	qc = link->deferred_qc;
- 	if (qc && !ata_port_eh_scheduled(ap)) {
- 		WARN_ON_ONCE(ap->ops->qc_defer(qc));
--		ap->deferred_qc = NULL;
-+		link->deferred_qc = NULL;
- 		ata_qc_issue(qc);
- 	}
- 
-@@ -1688,7 +1689,7 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
- 
- void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
- {
--	struct ata_queued_cmd *qc = ap->deferred_qc;
-+	struct ata_link *link;
- 
- 	lockdep_assert_held(ap->lock);
- 
-@@ -1697,16 +1698,21 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
- 	 * do not try to be smart about what to do with this deferred command
- 	 * and simply requeue it by completing it with DID_REQUEUE.
- 	 */
--	if (qc) {
--		ap->deferred_qc = NULL;
--		cancel_work(&ap->deferred_qc_work);
--		ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-+	ata_for_each_link(link, ap, EDGE) {
-+		struct ata_queued_cmd *qc = link->deferred_qc;
-+
-+		if (qc) {
-+			link->deferred_qc = NULL;
-+			cancel_work(&link->deferred_qc_work);
-+			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-+		}
- 	}
- }
- 
--static void ata_scsi_schedule_deferred_qc(struct ata_port *ap)
-+static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
- {
--	struct ata_queued_cmd *qc = ap->deferred_qc;
-+	struct ata_queued_cmd *qc = link->deferred_qc;
-+	struct ata_port *ap = link->ap;
- 
- 	lockdep_assert_held(ap->lock);
- 
-@@ -1723,12 +1729,12 @@ static void ata_scsi_schedule_deferred_qc(struct ata_port *ap)
- 		return;
- 	}
- 	if (!ap->ops->qc_defer(qc))
--		queue_work(system_highpri_wq, &ap->deferred_qc_work);
-+		queue_work(system_highpri_wq, &link->deferred_qc_work);
- }
- 
- static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- {
--	struct ata_port *ap = qc->ap;
-+	struct ata_link *link = qc->dev->link;
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	u8 *cdb = cmd->cmnd;
- 	bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
-@@ -1759,11 +1765,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 
- 	ata_scsi_qc_done(qc, false, 0);
- 
--	ata_scsi_schedule_deferred_qc(ap);
-+	ata_scsi_schedule_deferred_qc(link);
- }
- 
- static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
- {
-+	struct ata_link *link = qc->dev->link;
- 	int ret;
- 
- 	if (!ap->ops->qc_defer)
-@@ -1774,7 +1781,7 @@ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
- 	 * requeue and defer all incoming commands until the deferred qc is
- 	 * processed, once all on-going commands complete.
- 	 */
--	if (ap->deferred_qc) {
-+	if (link->deferred_qc) {
- 		ata_qc_free(qc);
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 	}
-@@ -1793,7 +1800,7 @@ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
- 		 * commands complete.
- 		 */
- 		if (!ata_is_ncq(qc->tf.protocol)) {
--			ap->deferred_qc = qc;
-+			link->deferred_qc = qc;
- 			return 0;
- 		}
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 5c085ef4eda7..a04384e67b84 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -854,6 +854,9 @@ struct ata_link {
- 	unsigned int		sata_spd;	/* current SATA PHY speed */
- 	enum ata_lpm_policy	lpm_policy;
- 
-+	struct work_struct	deferred_qc_work;
-+	struct ata_queued_cmd	*deferred_qc;
-+
- 	/* record runtime error info, protected by host_set lock */
- 	struct ata_eh_info	eh_info;
- 	/* EH context */
-@@ -899,9 +902,6 @@ struct ata_port {
- 	u64			qc_active;
- 	int			nr_active_links; /* #links with active qcs */
- 
--	struct work_struct	deferred_qc_work;
--	struct ata_queued_cmd	*deferred_qc;
--
- 	struct ata_link		link;		/* host default link */
- 	struct ata_link		*slave_link;	/* see ata_slave_link_init() */
- 
--- 
-2.54.0
+> Niklas Cassel (3):
+>    ata: libata-pmp: fix ata_pmp_qc_defer_cmd_switch()
+>    ata: libata-scsi: do not use the deferred QC feature on PMPs with CBS
+>    ata: libata-scsi: do not needlessly defer commands when using PMP with
+>      FBS
+> 
+>   drivers/ata/libata-core.c | 16 +++++++---
+>   drivers/ata/libata-eh.c   |  8 ++---
+>   drivers/ata/libata-pmp.c  | 13 +++++---
+>   drivers/ata/libata-scsi.c | 66 ++++++++++++++++++++++-----------------
+>   include/linux/libata.h    |  6 ++--
+>   5 files changed, 64 insertions(+), 45 deletions(-)
+> 
 
