@@ -1,112 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.tkel.ly (mail.tkel.ly [149.248.17.236])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E6FD34D4FE
-	for <linux-ide@vger.kernel.org>; Fri,  1 May 2026 18:42:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C71140DFB7
+	for <linux-ide@vger.kernel.org>; Sun,  3 May 2026 01:06:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.248.17.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777660966; cv=none; b=lb8n/CY4u1b0C5dojzMGntwyRPwVuqCjhYztIE5qkCCMpm5WEpXjFZfOw2OWLEAXRNV8uGs66lhWfEfmzCsnK2/JqCR9Q1y+ylZGlC0aYtLrO1L5DiYxVXIz8ogrHj7scP7gZEvRsASjH1TTuP5QaRmy5Es/viMooub56EklcZ4=
+	t=1777770382; cv=none; b=Iz9B+MV1vHA7MhXlxSXb3gOz/+DKUdeOmkmte0nIa4aS1n5r1z10kBygpZhzZy8gYRO4ReK7Mn5FD/BaaRY0lTMSEJa1PdJXeU+FkQmAEgRD0AOFp62Bmwz+bVdhF5cgVcLCTR7rD5vH3v+YplXBhsxivDMeRykrRL3UG7WVnjI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777660966; c=relaxed/simple;
-	bh=S/u4KZO1AO9TH54BDWTok7pWhcLnHgz22mW0i3pJN1k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h/gAyLlBZ4ouZrmexVGbEUvz7QI3afus/7uSVtLdXIrCT4jHwcl+X6y0i4RbhfvAZDEEZ5LsfxuXgxwbkhHEyrJuh/Z6yKOe7qSNTO32C8YgE1BKC43iTw3yIdVqxm6ALq4yFxLCcCUwzlJDccu1Ioc34ts7Adx61yQuj78Zf3U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ELOXszeS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777770382; c=relaxed/simple;
+	bh=g/HiGntLKwRrijwxSpmz1z1bzqJb2tvCxVOM5L7pAOI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:In-Reply-To:
+	 From:Content-Type; b=SkzWi0/mkSBWjmH8peoxfWu9J65RBdpgSutB4RPN0SH+vkxpo7n4vkP6dI3rFgRWlwK269S02pHFbrG/Le9XnEVHSQc76+56R2vkZ2LqkV7Qpn49uDUw+HGxUH98qkdC52GWjbT/5AH/pcULAfFZDZJezrh5gBwDNX9v0nz+9Cw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tkel.ly; spf=pass smtp.mailfrom=tkel.ly; dkim=pass (2048-bit key) header.d=tkel.ly header.i=@tkel.ly header.b=Z+yeoLiW; arc=none smtp.client-ip=149.248.17.236
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tkel.ly
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tkel.ly
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ELOXszeS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33B39C2BCB4;
-	Fri,  1 May 2026 18:42:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777660965;
-	bh=S/u4KZO1AO9TH54BDWTok7pWhcLnHgz22mW0i3pJN1k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ELOXszeS74053cVL3VmdlvLVrG36eoWbBFYrL3aBcPSnOc4CoYaG2mXkUWn9qBLWs
-	 VaC11U1mhYxoazOddPe7jaE31bxbdfzOAiz6n7HGrbikbH7Iag80a23XsCWvviZAnD
-	 HMjaXeTqw10l7E5kqAB+iWC5dPUxuNvaVOKqrhHlflxWvKcnj1vJMIDnnCebCUsun9
-	 Jmo0IJz9iNX5rt6LWxhsnTAWncgOxsV8JHk0k1P2HT6gVKimSfIHfgXE2Pa6mIhhuy
-	 FDcQmnMr2SJqzAEoA5Qg6JvoUPgP6vmYjHYC2+sOCqJBwjuuOTDpC1pc2Is6Dc4xc8
-	 G1VjUCRxBoHvQ==
-Date: Fri, 1 May 2026 20:42:40 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Tommy Kelly <linux@tkel.ly>, Damien Le Moal <dlemoal@kernel.org>,
-	Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-ide@vger.kernel.org, hare@suse.de
-Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
-Message-ID: <afT0INMUg7scssxk@fedora>
-References: <20260501125410.1204490-5-cassel@kernel.org>
- <4be77745-2b7d-416c-b01a-88669d9bbeb8@oracle.com>
+	dkim=pass (2048-bit key) header.d=tkel.ly header.i=@tkel.ly header.b="Z+yeoLiW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tkel.ly; s=mail;
+	t=1777769955; bh=g/HiGntLKwRrijwxSpmz1z1bzqJb2tvCxVOM5L7pAOI=;
+	h=Subject:To:Cc:References:In-Reply-To:From;
+	b=Z+yeoLiWt5znu/FuoW1rud/UnkqfXMRzDCqxPQbeLBnWXBYZTr+yaWDmPs1UiR4tQ
+	 7Ft5PtLx559bx+AyLgctsU1a7DrurcPmAKNva1ssqrMRMXMKX8LATYsZG52Ig1kqEq
+	 7cFGcRLipRogqWtXBGbmIDBNAcViidyemc0mI0Rw5/l/4SA7xsNKPgXgip5hrdOE9P
+	 8aO0UoceqxyGLcg7D0FJclK/RUjAfr7m0SmSJUTbQ0BSSQuB2fZxSo2fW5WY+dGPIo
+	 sO8FNFg0dScEOSM9mzsgh3OKpPlVbolg/zGYr8+pt5XO/NPNZIyqotQGz+a70KbbRh
+	 QET9Z1HIvXrjw==
+Message-ID: <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
+Date: Sat, 2 May 2026 17:59:12 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4be77745-2b7d-416c-b01a-88669d9bbeb8@oracle.com>
+Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
+ John Garry <john.g.garry@oracle.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20260501125410.1204490-5-cassel@kernel.org>
+Content-Language: en-US
+In-Reply-To: <20260501125410.1204490-5-cassel@kernel.org>
+From: Tommy Kelly <linux@tkel.ly>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, May 01, 2026 at 03:19:03PM +0100, John Garry wrote:
-> On 01/05/2026 13:54, Niklas Cassel wrote:
+On 5/1/26 05:54, Niklas Cassel wrote:
+> Hello all,
 > 
-> As I understand, this deferred QC scheme was intended to solve starvation
-> problems for multiqueue SAS HBAs (using libsas-based drivers). libsas has no
-> port multiplier support, so I wonder why we make deferred QC scheme work for
-> port multiplier, i.e. non-libsas scenario.
+> Tommy Kelly reported a regression with PMP that use CBS:
+> https://lore.kernel.org/linux-ide/ce09cc21-a8e9-4845-b205-35411e22fba9@tkel.ly/
 
-Are you certain that there are no libsas HBAs that support port
-multipliers?
+> 
+> Tommy, it would be nice if you could apply this series and see if it solves
+> your problem. Right now the series is compile tested only.
+> 
+> 
+> Niklas Cassel (3):
+>   ata: libata-pmp: fix ata_pmp_qc_defer_cmd_switch()
+>   ata: libata-scsi: do not use the deferred QC feature on PMPs with CBS
+>   ata: libata-scsi: do not needlessly defer commands when using PMP with
+>     FBS
+> 
+>  drivers/ata/libata-core.c | 16 +++++++---
+>  drivers/ata/libata-eh.c   |  8 ++---
+>  drivers/ata/libata-pmp.c  | 13 +++++---
+>  drivers/ata/libata-scsi.c | 66 ++++++++++++++++++++++-----------------
+>  include/linux/libata.h    |  6 ++--
+>  5 files changed, 64 insertions(+), 45 deletions(-)
+> 
 
+Hi Niklas,
 
-Basically, before commit:
-0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
+Yes, this patch series fixed the regression for me with a CBS Port Multiplier.
 
-We always aborted a new command, if that would have caused NCQ and non-NCQ
-commands to be mixed on the same device.
-Regardless if libsas driver or any other SATA driver, e.g. AHCI.
+Here are the commits I tested with:
 
+> (HEAD -> fedora-7.0-libata) ata: libata-scsi: do not needlessly defer commands when using PMP with FBS
+> ata: libata-scsi: do not use the deferred QC feature on PMPs with CBS
+> ata: libata-pmp: fix ata_pmp_qc_defer_cmd_switch()
+> ata: ahci: fail probe if BAR too small for claimed ports
+> ata: libahci: use ahci_nr_ports() helper
+> ata: pata_parport: switch to dynamic root device
+> Merge remote-tracking branch 'libata/for-7.1' into fedora-7.0-libata
+> (tag: kernel-7.0.3-0, kernel-ark/fedora-7.0, fedora-7.0) [redhat] kernel-7.0.3-0
+> Merge Linux v7.0.3
+> (tag: v7.0.3, kernel-ark/linux-7.0.y, linux-7.0.y) Linux 7.0.3
 
-After commit:
-0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-If sending a non-NCQ command while NCQ commands are in flight,
-we instead save the non-NCQ command and issue it as soon all NCQ
-commands are finished, from a workqueue.
+And here's some logs showing ata_id (non-NCQ) resolving immediately.
+After, I'm able to boot and mount and use the filesystem no problem.
+No errors and no timeouts.
 
-This commit changed the behavior both for libsas based drivers and
-all other SATA drivers, including AHCI, which does support Port
-Multipliers.
+> Mar 12 17:00:10 localhost kernel: ahci-dwc fc800000.sata: port 0 is not capable of FBS
+> May 02 17:12:39 (udev-worker)[874]: sdd: Starting 'ata_id --export /dev/sdd'
+> May 02 17:12:39 (udev-worker)[874]: sdd: 'ata_id --export /dev/sdd'(out) 'ID_ATA=1'
+> May 02 17:12:39 (udev-worker)[874]: sdd: Process 'ata_id --export /dev/sdd' succeeded.
 
-As you might now, Port Multipliers are not that common, and I think
-simply no one tested the change on Port Multipliers before the change
-was included.
+> $ cat /sys/block/sd*/device/queue_depth
+> 32
+> 32
+> 32
+> 32
+> 32
 
+I will also apply the FBS devicetree change (5918bf2) and test with that too.
 
-As you can see in patch 2/3, we basically stop using this deferred QC
-issuing via workqueue for Port Multipliers with CBS - when sending
-commands to different devices.
+Thank you for your work on this!
 
-For Port Multipliers with FBS support, or PMPs with CBS support where
-issuing commands within the same drive, we are still using it.
+- Tommy
 
-For PMPs with FBS, I don't see any problem of keep using the workqueue
-to issue a deferred QC. It should basically be the same as if directly
-connected on the port. (There is no extra logic to handle ap->excl_link.)
-
-
-For PMPs with CBS, we could keep the same behavior as before, and just
-abort the command, if NCQ and non-NCQ are mixed.
-
-The advantage is that the workqueue issuing would not be able to somehow
-collide with the ap->excl_link handling for CBS PMPs. Looking at the code,
-it "should work", because we always will always have ATA_QCFLAG_CLEAR_EXCL
-set on the QC issued by the workqueue.
-
-This would require that we know that PMPs (with CBS) can't be used on
-libsas based HBAs. Hell, we could probably do that if we wanted to, since
-I don't think that people using an expense SAS HBA with a cheap CBS PMP
-(does not not even support FBS) is very common in practice.,,
-
-
-Kind regards,
-Niklas
