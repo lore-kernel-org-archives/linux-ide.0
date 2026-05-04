@@ -1,251 +1,162 @@
-Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011049.outbound.protection.outlook.com [40.107.130.49])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F6B228C2BF;
-	Mon,  4 May 2026 07:57:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777881476; cv=fail; b=YYHi7Tq/B0Jnqi8DjvXrzmJQfEUmQg1e9CvFJwNQg10Z+aq3bimjlu8G2oafl5UKxxY09mPjahCozYWtk+VcixNmqF+6J3EVHGP3Qk2+WG8Z0awZBqOdp1TPhLFCHKyRALDN/R3pADM+hrNXFY7Xl1LfCCM6CJvvIFI34eO3Ni0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777881476; c=relaxed/simple;
-	bh=FI5XCipd6lQkpvf6m9PRM3D5ko1TWpCFe9sg3srFwz4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=FIyvOZOW5LBRyZQaLTCjV91N9UsXXwxJ+/KATjwWHD4qG+rMN2GocwNILlVY8QwCA8s0Le0Olh7Vn4Px/mPxRBIbYtEnlmxCPKYdd2wH1Ee6BySC+wwacvIIUkFhsyp7/M2XjyqvYLsEp/wanfGgn5CqW+mdXKNHJvWRXm1ydtQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=LBxmIe4j; arc=fail smtp.client-ip=40.107.130.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCAFD318B9C;
+	Mon,  4 May 2026 08:09:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777882198; cv=none; b=gEfhNQMAmgZbBRBcz076rID2uk7/vXw+e6lwXDxC+iYeenp8d4w46G79jhqbS22eKPeXsojimWYnaczYrQK0wOagltP3HveHGFibvSw67iT4vAtxppBBuCKM0vVsAc7BR+bzCM1IVO8SFq/ax6KmnEWgI3LOK6TKQ8gO5B3aLl4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777882198; c=relaxed/simple;
+	bh=iWRn8a9Y1mjUgeF6gGyOQxWDXjpbmQbGW3A5O/cxuZI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ggIL0vXJeQ1vpgsmPPTWbUFBMdC7UrqElcQKxRp4PG4MywYhvPNZXlFMmwVsQ7AcUG1qBm7qiyAXuAtsJeUf0pfioDE1yrLokk97G4y6TJCaV5DU1OrHM/ZVKsd5HwYgqssho/nO6s1FSBKZ3lZ80VXC3MpiXlayp4mFOP+gGfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K8jDnQ8y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="LBxmIe4j"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pNnSjlgqQ9mu64HM93qhv+j/BPmjKWq06Vw5FUl/MpiJK7O48Y5ZkdGpeDr+RLAsG3bD4m1MQj++jsqYHDhFLmSZ5zpMQ8jqAy3ZTKLMriPOi6faQk2E6kzM96L7OPWSvp+JWM085Q1lmk5RRrQOeSLk0xO4OiU7sqhrtqXPyJv2769muBydBuIzOb+Y2T+yCqqNpX1pq6fqhbmZCdZYovkoMLuMKF4YDRe44t5cNGg4sMDtGk6GXjcFlUhFIQuH5ZRhfaUs/tszMI47wKm5VvrDOVSo3B251R8iTs24txl8YlwZcJss91IFDm1kJbf+3HrOefgLyrqZ3jbW2NXd6g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mIyqoNMaqF7PcSsq3Vf4/2r/EknapHaMFFAC23Z0fWk=;
- b=u/5vHVU/ZwWk0vXcfhC+ZvVj8TSqXPilWXe4zkw8nJXsnptXkI4ThoxIr0qjkFcBaQrdNu3mgiq0LeVT7yP8R6450cWoARy9vT0s0FG6X1duwz1EmElLoN4b7Xu2ubhZ5ZVowjf2F2KcMlQlzrG4OQDlFwzRW3vJWVV4e/2+A0jL79gLCNsXVMdUW3e7PHOZzud3P2DXNv59hKBqcDMJDgKnD5ysdtOX27rA7t+RVsOZ0Kllrj/49y6yCyEqm4Faqh0KjsN1o/xAx/+iowsYAG6TSrNh9u/i+qZiOs3lJmEggz4Oxil30mlSG8yW5FEo36P9vhUhX4+fr8ujas7lJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mIyqoNMaqF7PcSsq3Vf4/2r/EknapHaMFFAC23Z0fWk=;
- b=LBxmIe4j4c0f8XCDOmIwHQsDwUevTUlG2XSG5rVjJwhpeujlIC35stBUnSYac3YgUbfWXU/Ium9MufmIzh/C+KhNrkBY1ZDnp4CYpRingmBtEGzB3SfBK52lARJku8VclM7COSg7ZsWfCvgZk2E4fYFebSvxLc+Q/yrR1Gl4kGJAEQloY9aurINdIdFPw0k9ZA36UuM5EBsnJtQcc9n4cbBYLXGLUsYbsmVfktuWW/kofa4hS2LLo7iYd9kWfAeKOQ6906aMVPLLYIP+Mi37NRoNNzDN/ToqimoCrHJ/Jbmdpw03gWsxeJwcgrSHG/XQtN77oHVntlLQXVY5+pxblQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
- by GV2PR04MB11800.eurprd04.prod.outlook.com (2603:10a6:150:2d1::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Mon, 4 May
- 2026 07:57:48 +0000
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9870.023; Mon, 4 May 2026
- 07:57:46 +0000
-Date: Mon, 4 May 2026 10:57:42 +0300
-From: Vladimir Oltean <vladimir.oltean@nxp.com>
-To: linux-phy@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org, netdev@vger.kernel.org,
-	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>
-Subject: Re: [PATCH v7 phy-next 08/27] PCI: Remove device links to PHY
-Message-ID: <20260504075742.ixt7phu4cpp433q5@skbuf>
-References: <20260430110652.558622-1-vladimir.oltean@nxp.com>
- <20260430110652.558622-1-vladimir.oltean@nxp.com>
- <20260430110652.558622-9-vladimir.oltean@nxp.com>
- <20260430110652.558622-9-vladimir.oltean@nxp.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260430110652.558622-9-vladimir.oltean@nxp.com>
- <20260430110652.558622-9-vladimir.oltean@nxp.com>
-X-ClientProxiedBy: WA2PEPF000008AF.POLP291.PROD.OUTLOOK.COM
- (2603:10a6:1d8::657) To AM9PR04MB8585.eurprd04.prod.outlook.com
- (2603:10a6:20b:438::13)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K8jDnQ8y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69669C2BCB8;
+	Mon,  4 May 2026 08:09:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777882197;
+	bh=iWRn8a9Y1mjUgeF6gGyOQxWDXjpbmQbGW3A5O/cxuZI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=K8jDnQ8yHHG3rBBo5A6x955Bf+P29Eh1KITLihRnUnzL0nmDAs85LLt5Cdh5C5DFM
+	 JMf46St/3mKddxZSVZkCS6r9NrTBx+MAy9cZZ1HrWvk2/oKmx4EncuvFw6Tw/dP7F8
+	 YpPhpBZOcAmjoHUCPBPsd+BI802zoiNy27FGpnWHx0xqvOrXew03YS68AVd9rfdtoB
+	 G7MWv3gW/EuM2G8F8YXyIPpYFv+5llE54ycfTdRCPhhCZkAbq+VjLFBTGjzeylWHY5
+	 oSa/+VhheCQCx5MEeIGjrhnNSoGKPkzcfVz9p1PIUzTfeX5XuudTXJ6pNX8tF/9xqE
+	 W9y1//41iGMNw==
+Message-ID: <b06a2fec-441f-4be2-aae6-3796c1e45cfc@kernel.org>
+Date: Mon, 4 May 2026 10:09:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|GV2PR04MB11800:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4c875e1e-ca31-4828-710b-08dea9b2d44c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|19092799006|7416014|376014|10070799003|1800799024|56012099003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	HEAXu0UJ9P3VzL00TQ5M3z2crujXl382jiCiUZ8AjCp92Sg3OB/js+tp8eYXGFCwTg4KC58dkU749B4w9rSUDmOeHKbS0d1VunRrO+0OtdmhVfIDbyWfd68zd/UwthW2bRoM12WmYcfW+QITvv60QYEZ3Kg4C9ooCFWab7uNzFwTYCMVln/v4nDI7PA+84MsJRghdBRjtrzVdqUpokYrKrv/vPQ8UdETapxfYG4x02T8oJJuR8rwqlgl1y/1JCDwDYxOrDpVfe+N/b9b2OMuKXyU8kTLFDV2up3MVC5GOnlCnnlwO+8ZalNICpxGxx4yrr9ReK56HR7wQ+EleiGOwqmjXSseI4g7FzN/Bm4ILnOoxXySX1YImvrFAsqP2ONeZCRRLqDcEN2K+zjhQYoc9vIaUwwAH1owrJMiNqLPK1BBMV6XA4WG3u1dohQzwWRk9J6ZB3Mq9zeKK39RKMh7AVi9wOOTuYnE26otczBMnVKu7BD58vY6ONRIqYZiqnt/i1+rsMLaDWvZTybIZj8YOv22IJFCrUZq8pvT2T2vn4k5ykcL4wBm5+ReTtYtHnCrP7+s6kJjJcCVv/9pxQ51KpGJL1D7rMiYVbvAYjGTnZjLEkc3qSGjgZbvixZN6L75/bYZOjGOt6ePctFGSO6QX6HJX8OyaoKsPtRjRZPN33ZGE71bvSFRxzkCOrB5x2Bz
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(7416014)(376014)(10070799003)(1800799024)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?RsEOHz6cOvr61ub/jxNnNVotOrCIljo7elUReRA064caS/5whesT2J9KGG1W?=
- =?us-ascii?Q?0L4rUUrOsc6Ddsc0U9zeiJJ6LTVI5b1GVFb8eTU0+6LuW5h/yQgVUJr1EInh?=
- =?us-ascii?Q?h3qoiM4jWG/uDASftINhtbByfh3a6xoV/kg8gRbeKBjVV2gNyAry3SA5nj4N?=
- =?us-ascii?Q?KCjDY+RNqRFoI4CzsYBaA8Xtc3HoOPpWw4m7TCLeoVjN0SnCPZPUiHzUe0Ku?=
- =?us-ascii?Q?uEdZbRJoc0TSiSmy/v1wQ94hyS0eGVKAgbCemhE32p7jBBUgtIA0m8eTnakr?=
- =?us-ascii?Q?m0cP7Dg2Rgwdxn7Htvb29f2qN+h6gLjG+Z664xypN2PMh3YLasYwpaSw2/TU?=
- =?us-ascii?Q?bw5aX6pbPDj21gqqtcD307swHztnNZfL/1dTTTOyGSIk+QiGf5HJV3w0Mpry?=
- =?us-ascii?Q?JpJarUj9oRVOjrGtKp/vY9tpuo9YY3vnT8M3X+nfOsxTlKWyquIqkJPWpVmz?=
- =?us-ascii?Q?VOavSuUc4gC6hW7c9IcLsof89g+BkZd5zg5T5ERE7Ospd/knF6e9NLD5mTR7?=
- =?us-ascii?Q?jBOgYJoaUrf15GXhmW74pfE25hnfa9hP4J2aVQ5pwuTWEeN0LJqZRS39I129?=
- =?us-ascii?Q?3rIi4E5g5x4hDYkpoRt7001EdShWNGsyOkDcJ9H/+0syBS/du94bxvTKwLPH?=
- =?us-ascii?Q?Q4GnTHTU+7TxqRDrsv1QcAQIzI7jqQ3fT9B11Au82fQ8GuGLcpmBkRg+vut9?=
- =?us-ascii?Q?pH4YLzfQ95YVVl5v0/TYyT1S3CA/lQJ25Yqqug07H0lHJnmtxejGsraBekx5?=
- =?us-ascii?Q?y41Rcf2cbgkltnYu4p1dF0uMYh39FoeWXDtpN+ZIPtfJIwEcmcK2nptUQ4sW?=
- =?us-ascii?Q?3DzsXI4fwDver+dSZUKzoxLnMgBGix83Nz4yP3H591HzSGqCJq4Ahq6aoTwO?=
- =?us-ascii?Q?vdkKRgJFouBysTNrWXm3Dhzk4TnLnT9odECnZdpEQXPDPHJR3IP9bVK+zT1J?=
- =?us-ascii?Q?fLAVSpZnuQEMH5z5QzO/tQlLnYggNWfN/av4tmiEG5CnEop8o28JSu7G4Awa?=
- =?us-ascii?Q?up8YeGzW63waghEtGCWWKM/nzOeGz5zZpKi9SP/1pyp60N4GqqN22qQyhYzp?=
- =?us-ascii?Q?aCKS10hT18/N0yhdpk7jCf4i+yQ6DEEAq2pIERPpC84+uRhnZvl3ORsF/2K7?=
- =?us-ascii?Q?mWhMQBv5m16eu1/7qrqQY/YIG+HpoNDlyao1iUd1MlUjvKA9pYYsn0zBnzEr?=
- =?us-ascii?Q?r1/1FKCk64nnJ3XoYYg1n3aWkPPcrSSmZ/1bVrtxagz/tGXcS/mMFYMiVeag?=
- =?us-ascii?Q?wHnhQh64Gzqb3nJPvIkn36Fh08SWpSAziFlLTy0HZcxRbhHAkSGjGzUhuPYt?=
- =?us-ascii?Q?mGgO74dOzXOaE/PgSGHRsgx+VcvSa9fvXYMfTz4uqunO/H45oI6UyCu3J3ob?=
- =?us-ascii?Q?rYOgwDx7iyA4v/06pCB+/WSx3UQJn6x7h/Lbra8FvBlwTHLti7Tlf768GM91?=
- =?us-ascii?Q?zStbCV1u7IAwq7cFLKsf0tCdwLMzckOHhgor23phsP229u+/oB1kKARQWlsE?=
- =?us-ascii?Q?F4CeMARInjuQNYzC3iRUYHMZwA1WmAc34VPcgN/mRwZXJsRUKcY8Yf8fFdyL?=
- =?us-ascii?Q?1Gg/0tnWaNA7RjxqS5Tx9Ovad5xiHpTKJPEPofz6T7e0SU+svwcatycFidc/?=
- =?us-ascii?Q?HPIpeq7CsTfPh2qupxa/DBLR+lZiUAxA3J4I759eadMjgtywW2aXkJ9oQ5zX?=
- =?us-ascii?Q?7PG6hJ42ZnL1f97rlTIMOg5vJghuNVEfuxia/ORrTh1o5pTLCr87B8hulxXf?=
- =?us-ascii?Q?mpHVVmdt5W3ZcR65RWqjhzxD83ghUIQ56YzAk+fEVJPF4Vwe2/hEMHSwv46x?=
-X-MS-Exchange-AntiSpam-MessageData-1: qAbWhMSQ+tDz/g==
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4c875e1e-ca31-4828-710b-08dea9b2d44c
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 May 2026 07:57:46.6958
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: MKHLfxUQD4j6O1JnGXUiro3PKaKtFhDedU9fqi7AkBqWytZKCuHAp76HHMA+3Egs5mL1VqDhZ+adhJvqpx+FhQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB11800
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: Consistently define pci_device_ids using named
+ initializers
+To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig_=28The_Capable_Hub=29?=
+ <u.kleine-koenig@baylibre.com>, Niklas Cassel <cassel@kernel.org>
+Cc: Mikael Pettersson <mikpelinux@gmail.com>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Markus Schneider-Pargmann <msp@baylibre.com>
+References: <20260430170612.510869-2-u.kleine-koenig@baylibre.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260430170612.510869-2-u.kleine-koenig@baylibre.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Sashiko says:
-> commit e4f495a9118b40f8a77e8dc097821d2c846ed1fc
-> Author: Vladimir Oltean <vladimir.oltean@nxp.com>
+On 4/30/26 19:06, Uwe Kleine-König (The Capable Hub) wrote:
+> ... and PCI device helpers.
 > 
-> PCI: Remove device links to PHY
-> This commit removes device links between the PCIe controllers and PHY
-> providers across several drivers, since the PHY core already creates consumer
-> device links.
+> The .driver_data member in the various struct pci_device_id arrays were
+> initialized mostly by list expressions. This isn't easily readable if
+> you're not into PCI. Using named initializers is more explicit and thus
+> easier to parse.
 > 
-> > diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> > index b067a3296dd37..fc39c01b79648 100644
-> > --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> > +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> [ ... ]
-> > @@ -122,9 +121,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
-> >  	pm_runtime_put_sync(dev);
-> >  	pm_runtime_disable(dev);
-> >  	cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
-> > -	phy_count = cdns_plat_pcie->pcie->phy_count;
-> > -	while (phy_count--)
-> > -		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
-> >
-> >  	return 0;
+> Also use PCI_DEVICE to conveniently assign .vendor, .device, .subvendor
+> and .subdevice where appropriate.
 > 
-> This isn't a bug introduced by your patch, but I noticed the error path in
-> cdns_plat_pcie_probe() returns 0.
-> Does this cause the driver core to consider the probe successful even when
-> host or endpoint setup steps fail? It looks like the device would be left
-> in an uninitialized and disabled state while still being bound to the driver.
-> Should this return ret instead?
+> The secret plan is to make struct pci_device_id::driver_data an
+> anonymous union (similar to
+> https://lore.kernel.org/all/cover.1776579304.git.u.kleine-koenig@baylibre.com/)
+> and that requires named initializers. But it's also a nice cleanup on
+> its own.
 > 
+> This change doesn't introduce changes to the compiled pci_device_id
+> arrays. Tested on x86 and arm64.
+> 
+> Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
 
-The condition does not appear intentional. Commit bd22885aa188 ("PCI:
-cadence: Refactor driver to use as a core library") changed
-cdns_pcie_host_probe() which properly returned ret on error with
-cdns_plat_pcie_probe() which doesn't.
+This looks like a nice cleanup to me. A couple of nits below.
+With that, feel free to add:
 
-I will add a preparatory patch which replaces "return 0" with "return ret"
-in cdns_plat_pcie_probe(), blaming that commit.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-> >  }
-> > diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-> > index cd904659c3216..9c1aef4d0bd1c 100644
-> > --- a/drivers/pci/controller/dwc/pci-dra7xx.c
-> > +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-> [ ... ]
-> > @@ -852,10 +840,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
-> >  	pm_runtime_disable(dev);
-> >  	dra7xx_pcie_disable_phy(dra7xx);
-> >
-> > -err_link:
-> > -	while (--i >= 0)
-> > -		device_link_del(link[i]);
-> > -
-> >  	return ret;
-> >  }
-> 
-> This isn't a bug introduced by your changes, but looking closely at the error
-> path right above this hunk, there is a call to pm_runtime_put(dev) immediately
-> followed by pm_runtime_disable(dev):
-> err_gpio:
-> err_get_sync:
-> 	pm_runtime_put(dev);
-> 	pm_runtime_disable(dev);
-> Does this sequence create a power management race condition? The pending
-> asynchronous idle/suspend work can be abruptly cancelled by
-> pm_runtime_disable(), leaving the hardware in an incorrect or unpredictable
-> power state.
-> Should this use pm_runtime_put_sync() instead?
-> 
-> > diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-> > index fe4836925c4e3..cab9fad212add 100644
-> > --- a/drivers/pci/controller/dwc/pci-keystone.c
-> > +++ b/drivers/pci/controller/dwc/pci-keystone.c
-> [ ... ]
-> > @@ -1337,25 +1321,18 @@ static int ks_pcie_probe(struct platform_device *pdev)
-> >  	pm_runtime_disable(dev);
-> >  	ks_pcie_disable_phy(ks_pcie);
-> >
-> > -err_link:
-> > -	while (--i >= 0 && link[i])
-> > -		device_link_del(link[i]);
-> > -
-> > +err:
-> >  	return ret;
-> >  }
-> >
-> >  static void ks_pcie_remove(struct platform_device *pdev)
-> >  {
-> >  	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
-> > -	struct device_link **link = ks_pcie->link;
-> > -	int num_lanes = ks_pcie->num_lanes;
-> >  	struct device *dev = &pdev->dev;
-> >
-> >  	pm_runtime_put(dev);
-> >  	pm_runtime_disable(dev);
-> 
-> Similar to the question above, is it possible this asynchronous put causes
-> a race when immediately followed by pm_runtime_disable() during removal?
-> 
-> >  	ks_pcie_disable_phy(ks_pcie);
-> > -	while (num_lanes--)
-> > -		device_link_del(link[num_lanes]);
-> >  }
+[...]
 
-It seems plausible that the pm_runtime_put() -> pm_runtime_disable()
-pattern is ineffective, i.e. one of two things can happen: either
-pm_runtime_put() runs to completion by chance, or pm_runtime_disable()
-cancels it. However I am not very familiar with the runtime PM API and
-its effects, and unless a maintainer tells me to, I would prefer leaving
-these code paths alone.
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index 495fa096dd65..fac1266f7fa6 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -154,184 +154,186 @@ static unsigned int in_module_init = 1;
+>  
+>  static const struct pci_device_id piix_pci_tbl[] = {
+>  	/* Intel PIIX3 for the 430HX etc */
+> -	{ 0x8086, 0x7010, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_mwdma },
+> +	{ PCI_DEVICE(0x8086, 0x7010), .driver_data = piix_pata_mwdma },
+
+Please split the line before the .driver_data like for all the other changes.
+That will make things consistent...
+
+>  	/* VMware ICH4 */
+> -	{ 0x8086, 0x7111, 0x15ad, 0x1976, 0, 0, piix_pata_vmw },
+> +	{ PCI_DEVICE_SUB(0x8086, 0x7111, 0x15ad, 0x1976), .driver_data = piix_pata_vmw },
+
+...and avoid long lines like here.
+
+> +	{ PCI_DEVICE_SUB(0x8086, 0x2828, 0x106b, 0x00a0), .driver_data = ich8m_apple_sata },
+> +	{ PCI_DEVICE_SUB(0x8086, 0x2828, 0x106b, 0x00a1), .driver_data = ich8m_apple_sata },
+> +	{ PCI_DEVICE_SUB(0x8086, 0x2828, 0x106b, 0x00a3), .driver_data = ich8m_apple_sata },
+
+or here.
+
+> diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+> index a2fecadc927d..b8ae3eb0992b 100644
+> --- a/drivers/ata/pata_amd.c
+> +++ b/drivers/ata/pata_amd.c
+> @@ -597,27 +597,27 @@ static int amd_reinit_one(struct pci_dev *pdev)
+>  #endif
+>  
+>  static const struct pci_device_id amd[] = {
+> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_COBRA_7401),		0 },
+> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7409),		1 },
+> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7411),		3 },
+> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_OPUS_7441),		4 },
+> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_8111_IDE),		5 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_IDE),	7 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2S_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3S_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	8 },
+> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE),	8 },
+> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		9 },
+> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_DEV_IDE),	9 },
+> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_COBRA_7401),		.driver_data = 0 },
+> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7409),		.driver_data = 1 },
+> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7411),		.driver_data = 3 },
+> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_OPUS_7441),		.driver_data = 4 },
+> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_8111_IDE),		.driver_data = 5 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_IDE),	.driver_data = 7 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2S_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3S_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE),	.driver_data = 8 },
+> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		.driver_data = 9 },
+> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_DEV_IDE),	.driver_data = 9 },
+
+same comment here, and for a few other drivers after this.
+
+-- 
+Damien Le Moal
+Western Digital Research
