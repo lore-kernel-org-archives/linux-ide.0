@@ -1,162 +1,482 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012007.outbound.protection.outlook.com [52.101.66.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCAFD318B9C;
-	Mon,  4 May 2026 08:09:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777882198; cv=none; b=gEfhNQMAmgZbBRBcz076rID2uk7/vXw+e6lwXDxC+iYeenp8d4w46G79jhqbS22eKPeXsojimWYnaczYrQK0wOagltP3HveHGFibvSw67iT4vAtxppBBuCKM0vVsAc7BR+bzCM1IVO8SFq/ax6KmnEWgI3LOK6TKQ8gO5B3aLl4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777882198; c=relaxed/simple;
-	bh=iWRn8a9Y1mjUgeF6gGyOQxWDXjpbmQbGW3A5O/cxuZI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ggIL0vXJeQ1vpgsmPPTWbUFBMdC7UrqElcQKxRp4PG4MywYhvPNZXlFMmwVsQ7AcUG1qBm7qiyAXuAtsJeUf0pfioDE1yrLokk97G4y6TJCaV5DU1OrHM/ZVKsd5HwYgqssho/nO6s1FSBKZ3lZ80VXC3MpiXlayp4mFOP+gGfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K8jDnQ8y; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17AD212FAD;
+	Mon,  4 May 2026 11:48:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.7
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777895318; cv=fail; b=o8/XzwYye3d7+sHsOBbEy+3Fk7ypN3qw962rhv4n8WCkNEEWie6kqQPw6QwW+E+4ToyV+JUsMm4dowNAp5q2bMyMI5f3Q7XqG+PRxve/M5Gmdm6s3Qo2ODU+H3a8hzEqlyNJ6/9C3SIeFqyw0JOm0OWWSF5ajxKwDNd12ht/VP0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777895318; c=relaxed/simple;
+	bh=0z0usvvJxmIeP0lSVniP1a86lhKtOVSjXfvDBLv1V4Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=niPo/JmrbfmIAVwLgNfmagRz4pRtH13Q9FGq0/fKAo6Bt/6xmYYeIi6MRBvFBWwsFunLTVXQgsARJyUZwjIrVe/VQ9jlXF/S+4DbRtAR0pi78G1162WHqwfTFoopzbzZ2+Wk6O/m48k8YhEbw4BxjUQtDzwCX+w4AHa9LGbJRRs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=dYbtJvg7; arc=fail smtp.client-ip=52.101.66.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K8jDnQ8y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69669C2BCB8;
-	Mon,  4 May 2026 08:09:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777882197;
-	bh=iWRn8a9Y1mjUgeF6gGyOQxWDXjpbmQbGW3A5O/cxuZI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=K8jDnQ8yHHG3rBBo5A6x955Bf+P29Eh1KITLihRnUnzL0nmDAs85LLt5Cdh5C5DFM
-	 JMf46St/3mKddxZSVZkCS6r9NrTBx+MAy9cZZ1HrWvk2/oKmx4EncuvFw6Tw/dP7F8
-	 YpPhpBZOcAmjoHUCPBPsd+BI802zoiNy27FGpnWHx0xqvOrXew03YS68AVd9rfdtoB
-	 G7MWv3gW/EuM2G8F8YXyIPpYFv+5llE54ycfTdRCPhhCZkAbq+VjLFBTGjzeylWHY5
-	 oSa/+VhheCQCx5MEeIGjrhnNSoGKPkzcfVz9p1PIUzTfeX5XuudTXJ6pNX8tF/9xqE
-	 W9y1//41iGMNw==
-Message-ID: <b06a2fec-441f-4be2-aae6-3796c1e45cfc@kernel.org>
-Date: Mon, 4 May 2026 10:09:53 +0200
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="dYbtJvg7"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bQJulNwV79eiJkukHZtU177gTLEEzbXtSPnDwgYMvyne3+Mh8AQXCXx1dwJyVFeAcqpdKJ537BAq1bVtfJQkeiXQkbu5+yaGzI3cRfztQE0MVDPFa1gaNHRfFmp0E8WBnE1X6QVkBfcy8LdkcEBm388ADdHtB+g706Hz2ZyF5XCrjM5eF5O9lvEFLYaDCbHzPVcJFWtm5AnMmuK6eT3/GE9rlKPDnS6jJ6r+elcHDAZMO0OjIddJp7dPVKikPDK6jLndrGP9OwUgcjyvYNF/JPQ2XV4FdZiXKoVmfv/ahXiHXIUneSSdMyEuydzsgRRcHM+9hjjNL/BRNyloB484tQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=kuJ5TrsI/7xa0NUQqdrHUy+n3N/zC1iSMjSRl4BbBNs=;
+ b=uWmBYV8wL6vN/aaTb0heieb4Ntd7G3A9WXZUtaa2ueos5GMMffFcCCed8F75DOG1v6usXYwOyt/s8WZvpWz5Uo2IzhZPBR4cNWU7vrolT4esPg4L4Mv9J9bsVyCaoKSyQyIgLTvc9n/dB+lnN7x99bNKSjJ9pkueDeAHJeT/EL/++61MVyBW7ZfjCaWUYsxKYBmTht09rBt9eMiI5m/SO77TBef7PsNKPmtNvyYtRnFJRF9Qktj0S2kdz8WDHHEfLecKIZFrGnUaDmppwP/tp2tvXNgN1H6yFbzI61V5exyFXqP/714DSpW0Xs9wpJR/rSXTRlWOcBZ5X6988rec/A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=kuJ5TrsI/7xa0NUQqdrHUy+n3N/zC1iSMjSRl4BbBNs=;
+ b=dYbtJvg77mI8SWmWDrlL7pWGMAg96UvtIle1GKLgLMaNYc3UfmEaCPrVKCq5qOJ/pW6UXWZQTLwUhJNCd6eXodFZ0hnAHvGjXUOHg+jhnmsV45U7qU3L2QqpsP1GHw+mc4judm1guQy3i4SD7Ef/36Twlp1eZLQSgZ4gPN9J1CGoPq1C9L1ZnHaCqIp3lgKpqe+/sVGwQk3N11VtwkptDylaoCqCEHrNYj/c97b57icmY4SG/oH9xfG/SxC/yYz710AsBixGJkQP2H+r5dGBdKiqTAv/PV9VU1GfEPcLBIbUA0Sy35hnNEZOwN1bw+gHNaLtWKOGV8sMHbEKpET6xA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
+ by VI2PR04MB10286.eurprd04.prod.outlook.com (2603:10a6:800:21e::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Mon, 4 May
+ 2026 11:48:32 +0000
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9870.023; Mon, 4 May 2026
+ 11:48:32 +0000
+Date: Mon, 4 May 2026 14:48:28 +0300
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+To: linux-phy@lists.infradead.org
+Cc: Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
+	linux-usb@vger.kernel.org, netdev@vger.kernel.org,
+	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com,
+	Bart Van Assche <bvanassche@acm.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Peter Griffin <peter.griffin@linaro.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	Chanho Park <chanho61.park@samsung.com>
+Subject: Re: [PATCH v7 phy-next 09/27] scsi: ufs: exynos: stop poking into
+ struct phy guts
+Message-ID: <20260504114828.n7r7kujaegusdkbw@skbuf>
+References: <20260430110652.558622-1-vladimir.oltean@nxp.com>
+ <20260430110652.558622-10-vladimir.oltean@nxp.com>
+Content-Type: multipart/mixed; boundary="oquvkzttypru676v"
+Content-Disposition: inline
+In-Reply-To: <20260430110652.558622-10-vladimir.oltean@nxp.com>
+X-ClientProxiedBy: VIXP296CA0008.AUTP296.PROD.OUTLOOK.COM
+ (2603:10a6:800:2a9::7) To AM9PR04MB8585.eurprd04.prod.outlook.com
+ (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: Consistently define pci_device_ids using named
- initializers
-To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig_=28The_Capable_Hub=29?=
- <u.kleine-koenig@baylibre.com>, Niklas Cassel <cassel@kernel.org>
-Cc: Mikael Pettersson <mikpelinux@gmail.com>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, Markus Schneider-Pargmann <msp@baylibre.com>
-References: <20260430170612.510869-2-u.kleine-koenig@baylibre.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260430170612.510869-2-u.kleine-koenig@baylibre.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|VI2PR04MB10286:EE_
+X-MS-Office365-Filtering-Correlation-Id: fad5a451-f99b-4b4e-5a49-08dea9d310da
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+ BCL:0;ARA:13230040|366016|6049299003|19092799006|7416014|376014|10070799003|1800799024|4053099003|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+ qDLPZu5qYj9KN27LUIv3EUhwOORB6LjoJgGq88OqyxSbx4QbMN6GWl4xaxhh7CBm6Paj9Nb3+Fb0q6S8UhgFEti0SUMIINjAafDJWeUWD9OPiVrlPEeFeLW7IRyshjpySWcoFlTOLOXGA6jTmV8r9Ri4YOBI9hP060w0ViigKdG0vp9owYHWlpRQ3/fPWwpPfK3CrmUr+ZwmfrTE+OduX3EjD3fVoV7y5nJZ4H5jgAMN9YikY0LCVj87hKi5gqoiEdcs4STC9WZEHeOuUA9uuqGcYgYmIH6Xc6CP2E7NFo/t+5TXCSEfTtnx0MS1mf3Jm2WZrd9vySsMe6mWHJBwoFC2HebuAWSEvSF57fbSp/HdDSiD0Lm9q54Irea2rnSwUItMSJMFz4xt68ZGiayi+a/qHWF7Pa2kRUMaLkoZe2doMtXvSuWRYpH2IDOL6zb/6sMwSWUXjESKQNciEcCyqjQZwfFNOdeWVoB8S523MMUvqOBRvqrQcAjvj3RnN5EGeDHh/5+1AzA5Qiuppwa7Omge/+17eAjJUGKkvwNkuJzEz5etCinwDvwJo2kyXS0cSxrw/PnozTkX6xtaVb16u6LQwDKypVszkDZJza17dx++i09FW4qClFDT2zaHPO+L/J3M/dp8ILU+ANb/MThLmMu7a0OZWp4Cp11PqVuIyGG6iMrKUxxz4Ez+8nbyKELh
+X-Forefront-Antispam-Report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(6049299003)(19092799006)(7416014)(376014)(10070799003)(1800799024)(4053099003)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+ =?us-ascii?Q?b+vjs4nLpKCTHK7OBy8RtNuxJBaaLoShYtumy2aCVMblYmFrZR86GQUXpSK6?=
+ =?us-ascii?Q?oepI6W2vxB8SANoZEkfaWJcwYFznGh3Kom6KmvFkPXhQnsAJyyG9i4YXt6Nq?=
+ =?us-ascii?Q?H4eheO3rSp2c/XcceJJMWETW3qOppAAa87+4exocQPiKkmo6EG9Dtl2Ap4iG?=
+ =?us-ascii?Q?QTSR5XHeOaphAHzwNbeq2dBObQh2aiM9vbtSvmDdHBYkz8zxVSdgxmXkbEQ6?=
+ =?us-ascii?Q?9Wn63hI2PBL+dHzHMqn3xET61VSq63SElL8bctKPNFg1n2RJz2+KSONlGiIo?=
+ =?us-ascii?Q?kpM6k+QoDqqIQw5DqMEpeg3hIkinVNDZEOwsFpqPlAObq9/KSRrBBIWNlD5e?=
+ =?us-ascii?Q?/ymSAT9uUjVL6fsIy/qT8B+7d91L2uNyDeNxI3F9MARXODDF0xsZ4fnVOJ8V?=
+ =?us-ascii?Q?jsUwMLLrmxB28Vcu5ZSAlmkCrW7QLnEFAKTb/dF0BRoh6fMBMACMHp/TVFM3?=
+ =?us-ascii?Q?WC+Sxw3PFtHLNw9/DA43E47HY2gUv2T5pVwsk48CqZjBnd7QZVPlewf8ezw7?=
+ =?us-ascii?Q?iov1MplVQc2xgtTOnbT425h0UBUzaVW0WWnbwc5Pa0lQDbOazNqhxU/ha0UM?=
+ =?us-ascii?Q?imlUpbK7NPmZYv/p9mQXW+uQiVaT94AFeE0Mz2ZkZKeJqJbZnI3ZcYJ77w2B?=
+ =?us-ascii?Q?pGm7J26qYV2KtPekkjSHAz+v79JyEn+V1PbzJFdZc2vaiAh+tcmWdG/6066p?=
+ =?us-ascii?Q?chBIdIkiexDzS1SxRQzkMZelQIUAH54/ZF7SJOd4mWQmABasusKuLF2zmXrI?=
+ =?us-ascii?Q?ivBquIRIIRE3pKLQBaYaGxTU+HeiZzN9DknUbUglEYFLGOMeEOnTz3DzdAl2?=
+ =?us-ascii?Q?CYH/Cd9JBo4iiDQ+9mywmQNKV1kz5mDAKh3u4StYUPXJac2m6iZP6qWup8o2?=
+ =?us-ascii?Q?lI2rlbxGekw4lqz0Q2agXYCrbsJwrjh9BWh1RhFG1bgH2Ra3upFgxSFYU+PM?=
+ =?us-ascii?Q?UDQoORL7wdHFEGIxukdtX7kIsr8cfRoYVpKupKwXOR6u3/SYQS9oW9ceJVJe?=
+ =?us-ascii?Q?QpEZFHQlA4UpOX7eUu9iFrVwFTNIFaJ0VxZQXB2Q6SSBUkbhmpZRlEal0Dff?=
+ =?us-ascii?Q?VtHJZH2SnaXnVAc1Rl1LmBimecCaaRwuZEpX19UvE5T575uX7/xmxL2ufTaf?=
+ =?us-ascii?Q?pydJBEyiayWk2nJ8FGEwVsJUUwTu+FEXFJXYHRlH2uQQG9JtRPI3oGhX8iF1?=
+ =?us-ascii?Q?AWNsvlmlc91oCSzaLRziIxFVXIkwhdTANxxEOkBcSbeOOBq4zyv+iRyi+eJ1?=
+ =?us-ascii?Q?69F092bXIedwiwJmbBErphD3pJQmdRLPgjOiE6c71m84kHFPX8IYVLXOC0bb?=
+ =?us-ascii?Q?cUvwfcYoN7HNS+eQQsfn3ugl5y1et5fCagCoN7eu7y1VgLrRDOEzO5hFwqRg?=
+ =?us-ascii?Q?NmSbNCDXn7PCT9v+xwy8wX2TnGG+Y2jhh6k6KnLhh090Y3pdy4xA02iwGvcH?=
+ =?us-ascii?Q?SXwWQ+Jchp1vOBpe091eSo6khn84VTZci0nSN7RmtoamNSsV3+mb7HZLf2Qm?=
+ =?us-ascii?Q?PPSCAgQfySin78HBVuaCJwsQC+saeTnat3ZNB121ZMrfYtItvBqGO8qMe9xz?=
+ =?us-ascii?Q?EzjOtmJU5T4nud/PxzZHWVILtmitdCI1XV88i4IzMvuf3tt3HyQ3GWav8Qn3?=
+ =?us-ascii?Q?g2lrLaEXN8UUxfWO2ocs6QvLAE3Rpg1vf0Hw1kvgRrjNoR2ZTRh29dOxjZb+?=
+ =?us-ascii?Q?/26ERto3tUOVzlIX793VFUu55jjQzzN0jVig9a2um6+MyRV6NF0ECiWjh1Jn?=
+ =?us-ascii?Q?wyjbhu/w9kEhsWkUq8XmeXThly4hrxUfLU1Mn1w+u419+L7DI3v23aMbEj92?=
+X-MS-Exchange-AntiSpam-MessageData-1: po77R0ECpxvMqA==
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fad5a451-f99b-4b4e-5a49-08dea9d310da
+X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 May 2026 11:48:32.1691
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: owIwq/kM2PqBPikT4lRxifucAefCEGeCRaQpBogOvxGbkXJcadWu7qrGZ9IJTp3cZ8/zuiJ1tGZGUaYa6Mx+pQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI2PR04MB10286
 
-On 4/30/26 19:06, Uwe Kleine-König (The Capable Hub) wrote:
-> ... and PCI device helpers.
+--oquvkzttypru676v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Sashiko says:
+> commit 76ded6c0290bdb192c2ae1af9a2e6a47fc39c9a1
+> Author: Vladimir Oltean <vladimir.oltean@nxp.com>
 > 
-> The .driver_data member in the various struct pci_device_id arrays were
-> initialized mostly by list expressions. This isn't easily readable if
-> you're not into PCI. Using named initializers is more explicit and thus
-> easier to parse.
+> scsi: ufs: exynos: stop poking into struct phy guts
+> This commit modifies the Exynos UFS driver to stop directly accessing the
+> generic PHY's power_count. Instead, it tracks the PHY power state internally
+> using a new phy_powered_on flag to properly handle link retries and
+> suspend/resume operations.
 > 
-> Also use PCI_DEVICE to conveniently assign .vendor, .device, .subvendor
-> and .subdevice where appropriate.
+> > diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+> > --- a/drivers/ufs/host/ufs-exynos.c
+> > +++ b/drivers/ufs/host/ufs-exynos.c
+> [ ... ]
+> > @@ -1513,6 +1516,9 @@ static void exynos_ufs_exit(struct ufs_hba *hba)
+> >  {
+> >  	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+> >
+> > +	if (!ufs->phy_powered_on)
+> > +		return;
+> > +
+> >  	phy_power_off(ufs->phy);
+> >  	phy_exit(ufs->phy);
+> >  }
 > 
-> The secret plan is to make struct pci_device_id::driver_data an
-> anonymous union (similar to
-> https://lore.kernel.org/all/cover.1776579304.git.u.kleine-koenig@baylibre.com/)
-> and that requires named initializers. But it's also a nice cleanup on
-> its own.
-> 
-> This change doesn't introduce changes to the compiled pci_device_id
-> arrays. Tested on x86 and arm64.
-> 
-> Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
+> Does this introduce a regression where initialization resources are leaked
+> if the driver is unbound while suspended?
+> Looking at exynos_ufs_suspend(), the PHY is powered off and phy_powered_on
+> is set to false, but phy_exit() is intentionally not called so the PHY
+> remains initialized:
+> exynos_ufs_suspend()
+>         if (!ufshcd_is_link_active(hba) && ufs->phy_powered_on) {
+>                 phy_power_off(ufs->phy);
+>                 ufs->phy_powered_on = false;
+>         }
+> If an unbind or fatal error occurs while in this suspended state,
+> exynos_ufs_exit() will see phy_powered_on as false and return immediately.
+> The initialization reference and any resources allocated by phy_init()
+> would never be released since phy_exit() is completely skipped.
+> [ ... ]
 
-This looks like a nice cleanup to me. A couple of nits below.
-With that, feel free to add:
+I think I've been looking at this issue all wrong, not considering why
+the UFS HCD driver calls phy_exit() -> phy_init() at runtime and what
+can be done about that.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+I have replaced this patch with the one attached, which I will be sending
+for v8.
 
-[...]
+--oquvkzttypru676v
+Content-Type: text/x-diff; charset=us-ascii
+Content-Disposition: attachment;
+	filename="0001-scsi-ufs-exynos-use-dedicated-API-for-updating-PHY-b.patch"
 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index 495fa096dd65..fac1266f7fa6 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -154,184 +154,186 @@ static unsigned int in_module_init = 1;
->  
->  static const struct pci_device_id piix_pci_tbl[] = {
->  	/* Intel PIIX3 for the 430HX etc */
-> -	{ 0x8086, 0x7010, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_mwdma },
-> +	{ PCI_DEVICE(0x8086, 0x7010), .driver_data = piix_pata_mwdma },
+From c687a8568c6c7837bb0bd539bf14343d7d0c63a1 Mon Sep 17 00:00:00 2001
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+Date: Mon, 4 May 2026 14:00:51 +0300
+Subject: [PATCH] scsi: ufs: exynos: use dedicated API for updating PHY bus
+ width
 
-Please split the line before the .driver_data like for all the other changes.
-That will make things consistent...
+I am trying to get rid of code instances where PHY consumers (like the
+Exynos UFS HCD) poke inside struct phy fields, in order to further turn
+struct phy into an opaque data structure.
 
->  	/* VMware ICH4 */
-> -	{ 0x8086, 0x7111, 0x15ad, 0x1976, 0, 0, piix_pata_vmw },
-> +	{ PCI_DEVICE_SUB(0x8086, 0x7111, 0x15ad, 0x1976), .driver_data = piix_pata_vmw },
+The ufs-exynos.c driver interacts with phy-samsung-ufs.c in order to
+power it on and to update the lane count. For the later purpose, it
+(ab)uses phy_set_bus_width().
 
-...and avoid long lines like here.
+The phy_set_bus_width() function is a PHY provider function, not a
+consumer one, and I am calling its use from ufs-exynos.c an abuse
+because
+(1) commit 8feed347d33b ("phy: add phy_get_bus_width()/phy_set_bus_width()
+    calls") clearly states so.
+(2) phy_set_bus_width() only alters phy->attrs.bus_width, and does not
+    call into phy_ops at all. So a consumer that makes a call to
+    phy_set_bus_width() will not produce any hardware change in the
+    provider at all.
 
-> +	{ PCI_DEVICE_SUB(0x8086, 0x2828, 0x106b, 0x00a0), .driver_data = ich8m_apple_sata },
-> +	{ PCI_DEVICE_SUB(0x8086, 0x2828, 0x106b, 0x00a1), .driver_data = ich8m_apple_sata },
-> +	{ PCI_DEVICE_SUB(0x8086, 0x2828, 0x106b, 0x00a3), .driver_data = ich8m_apple_sata },
+This is where the Exynos UFS HCD driver decided to be creative and
+hijacked phy_init() to pick up the bus_width attribute.
 
-or here.
+This requires a very careful dance where the PHY consumer needs to
+simultaneously juggle two requirements:
+- the UFS PHY needs to pick up the updated lane count in its
+  samsung_ufs_phy_init() handler for the phy_init() call
+- phy_init() calls need to be balanced with phy_exit(), otherwise
+  subsequent phy_init() calls don't make it into samsung_ufs_phy_init()
+  and just leave the PHY with an elevated init_count
+- phy_power_on() can't be called without phy_init()
 
-> diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-> index a2fecadc927d..b8ae3eb0992b 100644
-> --- a/drivers/ata/pata_amd.c
-> +++ b/drivers/ata/pata_amd.c
-> @@ -597,27 +597,27 @@ static int amd_reinit_one(struct pci_dev *pdev)
->  #endif
->  
->  static const struct pci_device_id amd[] = {
-> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_COBRA_7401),		0 },
-> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7409),		1 },
-> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7411),		3 },
-> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_OPUS_7441),		4 },
-> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_8111_IDE),		5 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_IDE),	7 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2S_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3S_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	8 },
-> -	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE),	8 },
-> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		9 },
-> -	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_DEV_IDE),	9 },
-> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_COBRA_7401),		.driver_data = 0 },
-> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7409),		.driver_data = 1 },
-> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7411),		.driver_data = 3 },
-> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_OPUS_7441),		.driver_data = 4 },
-> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_8111_IDE),		.driver_data = 5 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_IDE),	.driver_data = 7 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2S_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3S_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE),	.driver_data = 8 },
-> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		.driver_data = 9 },
-> +	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_DEV_IDE),	.driver_data = 9 },
+This is why the following bug fix commits exist:
+3d73b200f989 ("scsi: ufs: ufs-exynos: Change ufs phy control sequence")
+7f05fd9a3b6f ("scsi: ufs: exynos: Ensure consistent phy reference counts")
 
-same comment here, and for a few other drivers after this.
+Currently the UFS HCD driver tries to keep the PHY init_count and
+power_count in tight lockstep, but even this is error-prone. For
+example, if exynos_ufs_suspend() runs and then exynos_ufs_exit(),
+the PHY power_count will underflow.
 
+If we address the root issue first (phy_init() abused to pick up new
+lane count) by introducing a new PHY consumer method which actually does
+call into the PHY provider driver, then we are able to absorb the entire
+UFS HCD dance and update the lane count without altering the PHY
+init_count or power_count.
+
+Then we are much more free to call phy_init() from wherever we want, and
+same goes for phy_power_on().
+
+It is typical to call phy_init() right after phy_get(), and doing so
+will naturally balance it with phy_exit().
+
+We can also leave the phy_power_on() call to be on demand, placed inside
+exynos_ufs_pre_link(). Because this call can be made multiple times and
+is not balanced with anything else, we need a consumer-specific "bool
+phy_powered_on" which ensures that we call phy_power_on() at most once,
+and that exynos_ufs_exit() only calls phy_power_off() if phy_power_on()
+was previously called. Using the phy->power_count for this purpose is
+undesirable because
+(a) it is going away
+(b) the PHY API supports multiple consumers for the same provider, so it
+    cannot offer an equivalent helper because it doesn't want consumers
+    to interfere with each other
+
+Inside the new samsung_ufs_phy_request_bus_width(), I've sanity checked
+that the bus width is either 1 or 2 lanes. This coincides with
+samsung_ufs_phy_config() which only configures LANE_0 and LANE_1.
+
+Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+---
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Peter Griffin <peter.griffin@linaro.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Chanho Park <chanho61.park@samsung.com>
+
+v7->v8:
+- rewrote commit after Sashiko pointed out the new handling is still
+  not correct:
+  https://sashiko.dev/#/patchset/20260430110652.558622-1-vladimir.oltean@nxp.com
+- removed Reviewed-by, Tested-by and Acked-by tags from Alim, Bart and
+  Peter
+v6->v7: collect tags from Martin and Peter
+v5->v6: collect tags from Alim Akhtar
+v4->v5: collect tag, add "scsi: " prefix to commit title
+v3->v4: none
+v2->v3:
+- add Cc Chanho Park, author of commit 3d73b200f989 ("scsi: ufs:
+  ufs-exynos: Change ufs phy control sequence")
+v1->v2:
+- add better ufs->phy_powered_on handling in exynos_ufs_exit(),
+  exynos_ufs_suspend() and exynos_ufs_resume() which ensures we won't
+  enter a phy->power_count underrun condition
+---
+ drivers/phy/phy-core.c                | 18 +++++++++++
+ drivers/phy/samsung/phy-samsung-ufs.c | 30 ++++++++++++------
+ drivers/ufs/host/ufs-exynos.c         | 45 ++++++++++++++++++++++-----
+ drivers/ufs/host/ufs-exynos.h         |  1 +
+ 4 files changed, 77 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index 21aaf2f76e53..6305efe210d6 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -606,6 +606,24 @@ int phy_validate(struct phy *phy, enum phy_mode mode, int submode,
+ }
+ EXPORT_SYMBOL_GPL(phy_validate);
+ 
++int phy_request_bus_width(struct phy *phy, int bus_width)
++{
++	int ret;
++
++	if (!phy)
++		return -EINVAL;
++
++	if (!phy->ops->request_bus_width)
++		return -EOPNOTSUPP;
++
++	mutex_lock(&phy->mutex);
++	ret = phy->ops->request_bus_width(phy, bus_width);
++	mutex_unlock(&phy->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(phy_request_bus_width);
++
+ /**
+  * _of_phy_get() - lookup and obtain a reference to a phy by phandle
+  * @np: device_node for which to get the phy
+diff --git a/drivers/phy/samsung/phy-samsung-ufs.c b/drivers/phy/samsung/phy-samsung-ufs.c
+index 00e570d699f3..5d7b842bff1a 100644
+--- a/drivers/phy/samsung/phy-samsung-ufs.c
++++ b/drivers/phy/samsung/phy-samsung-ufs.c
+@@ -161,16 +161,6 @@ static int samsung_ufs_phy_clks_init(struct samsung_ufs_phy *phy)
+ 	return devm_clk_bulk_get(phy->dev, num_clks, phy->clks);
+ }
+ 
+-static int samsung_ufs_phy_request_bus_width(struct phy *phy, int bus_width)
+-{
+-	if (bus_width != 1 && bus_width != 2)
+-		return -EINVAL;
+-
+-	ss_phy->lane_cnt = phy->attrs.bus_width;
+-
+-	return 0;
+-}
+-
+ static int samsung_ufs_phy_init(struct phy *phy)
+ {
+ 	struct samsung_ufs_phy *ss_phy = get_samsung_ufs_phy(phy);
+@@ -213,6 +203,26 @@ static int samsung_ufs_phy_power_off(struct phy *phy)
+ 	return 0;
+ }
+ 
++static int samsung_ufs_phy_request_bus_width(struct phy *phy, int bus_width)
++{
++	struct samsung_ufs_phy *ss_phy = get_samsung_ufs_phy(phy);
++
++	if (bus_width != 1 && bus_width != 2)
++		return -EINVAL;
++
++	ss_phy->lane_cnt = phy->attrs.bus_width;
++
++	if (phy->init_count)
++		samsung_ufs_phy_init(phy);
++
++	if (phy->power_count) {
++		samsung_ufs_phy_power_off(phy);
++		return samsung_ufs_phy_power_on(phy);
++	}
++
++	return 0;
++}
++
+ static int samsung_ufs_phy_set_mode(struct phy *generic_phy,
+ 				    enum phy_mode mode, int submode)
+ {
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index fb616d1599eb..b90876b268db 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -959,6 +959,40 @@ static void exynos_ufs_phy_exit(struct exynos_ufs *ufs)
+ 	phy_exit(ufs->phy);
+ }
+ 
++static int exynos_ufs_phy_power_on(struct exynos_ufs *ufs)
++{
++	int ret;
++
++	if (ufs->phy_powered_on)
++		return 0;
++
++	ret = phy_power_on(ufs->phy);
++	if (ret) {
++		dev_err(ufs->hba->dev, "Failed to power on PHY: %pe\n",
++			ERR_PTR(ret));
++		return ret;
++	}
++
++	ufs->phy_powered_on = true;
++
++	return 0;
++}
++
++static void exynos_ufs_phy_power_off(struct exynos_ufs *ufs)
++{
++	int ret;
++
++	if (!ufs->phy_powered_on)
++		return;
++
++	ret = phy_power_off(ufs->phy);
++	if (ret)
++		dev_warn(ufs->hba->dev, "Failed to power off PHY: %pe\n",
++			 ERR_PTR(ret));
++
++	ufs->phy_powered_on = false;
++}
++
+ static int exynos_ufs_phy_update_bus_width(struct exynos_ufs *ufs)
+ {
+ 	struct ufs_hba *hba = ufs->hba;
+@@ -979,10 +1013,7 @@ static int exynos_ufs_phy_update_bus_width(struct exynos_ufs *ufs)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (generic_phy->power_count)
+-		phy_power_off(generic_phy);
+-
+-	return phy_power_on(generic_phy);
++	return exynos_ufs_phy_power_on(ufs);
+ }
+ 
+ static void exynos_ufs_config_unipro(struct exynos_ufs *ufs)
+@@ -1524,7 +1555,7 @@ static void exynos_ufs_exit(struct ufs_hba *hba)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 
+-	phy_power_off(ufs->phy);
++	exynos_ufs_phy_power_off(ufs);
+ 	exynos_ufs_phy_exit(ufs);
+ }
+ 
+@@ -1739,7 +1770,7 @@ static int exynos_ufs_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+ 		ufs->drv_data->suspend(ufs);
+ 
+ 	if (!ufshcd_is_link_active(hba))
+-		phy_power_off(ufs->phy);
++		exynos_ufs_phy_power_off(ufs);
+ 
+ 	return 0;
+ }
+@@ -1749,7 +1780,7 @@ static int exynos_ufs_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 
+ 	if (!ufshcd_is_link_active(hba))
+-		phy_power_on(ufs->phy);
++		exynos_ufs_phy_power_on(ufs);
+ 
+ 	exynos_ufs_config_smu(ufs);
+ 	exynos_ufs_fmp_resume(hba);
+diff --git a/drivers/ufs/host/ufs-exynos.h b/drivers/ufs/host/ufs-exynos.h
+index abe7e472759e..683b9150e2ba 100644
+--- a/drivers/ufs/host/ufs-exynos.h
++++ b/drivers/ufs/host/ufs-exynos.h
+@@ -227,6 +227,7 @@ struct exynos_ufs {
+ 	int avail_ln_rx;
+ 	int avail_ln_tx;
+ 	int rx_sel_idx;
++	bool phy_powered_on;
+ 	struct ufs_pa_layer_attr dev_req_params;
+ 	struct ufs_phy_time_cfg t_cfg;
+ 	ktime_t entry_hibern8_t;
 -- 
-Damien Le Moal
-Western Digital Research
+2.34.1
+
+
+--oquvkzttypru676v--
