@@ -1,112 +1,126 @@
-Received: from mail.tkel.ly (mail.tkel.ly [149.248.17.236])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D0F46FBF
-	for <linux-ide@vger.kernel.org>; Wed,  6 May 2026 00:13:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.248.17.236
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1571149C6F;
+	Wed,  6 May 2026 01:11:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778026436; cv=none; b=lHHrZdFMF6QeHsu9KOZGZeFwf4Z9w3mdNDIOG+skUgtUR/B75ifK1YlOuG/LQ5aCpG5+1I+mIpQwbvsc/D2eMp0A6f2Xc7bY6gkyy0mDeRnMVYBMpSTEQgndaD/xb4UYMXc0S+eBase+xNbSbkARu86wm/6ah3bODRiZKnOM4JM=
+	t=1778029862; cv=none; b=SbuyvHfBs3K+D66ctqR5XuC3lzPHrTyGr3UIFOteArTq+UGZbWceRe0ooy12XopuN8Yg/CQRVTlx0ruIlCycJt+ObwiTzokbJH1FwnTki7AUT9zLF7Ba6Z2W/00/ZAXw//o5wx0XBbqYfuulJPOVyY9PkFqaz41sf7wuYL8sfFY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778026436; c=relaxed/simple;
-	bh=I3ngZlwL6uX1E2q10xLszEaRMj0Lk3K3zRiDSw/ojOw=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=AtO0YVBtoLE5Ngh6cmxzj/NHzDY02yJwIRDS0vzsmNpvFxQS353XAMRKw3dKPJOK9smS8dCKtzFk/fWJF/J+HJsWM7NlPsB21Yj784wvoVMrKRPL82Nmetj9b0GQCrSc3f8kiioUHENkFOnC+hMzuF6VwQr34fTDkf+kjwlc0eQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tkel.ly; spf=pass smtp.mailfrom=tkel.ly; dkim=pass (2048-bit key) header.d=tkel.ly header.i=@tkel.ly header.b=Hlgj/1u0; arc=none smtp.client-ip=149.248.17.236
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tkel.ly
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tkel.ly
+	s=arc-20240116; t=1778029862; c=relaxed/simple;
+	bh=RkLhcLrXVauydYrKsrABqVXoD9Sb2pNbxPAsYYGUFfg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=i898LzW9DjzydupzW/YPhEEU8w27jEtGZ4qZ/O2K6Okc+VziWO0zCWP0BsjpLlAQyq+R/KR5ZtTU8bjLBrksYM43d15RIBXs2KWLZ29MyGJr2I++IfF/+hug87sNelOdorbgeUISX+Ig9flwIhXJ4kkc4k9NN2i05hyoQXA520o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=XVV73trR; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tkel.ly header.i=@tkel.ly header.b="Hlgj/1u0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tkel.ly; s=mail;
-	t=1778026428; bh=I3ngZlwL6uX1E2q10xLszEaRMj0Lk3K3zRiDSw/ojOw=;
-	h=Subject:From:To:Cc:References:In-Reply-To;
-	b=Hlgj/1u0KEDo2NRdNn6vfMuPJ7MwXVIN1WakuE1h695ynku69AYXOZ08eggyCeBKS
-	 TR7lyP5Cr1gASH6RPzCWBeFtzII3HjF/QVK5lwBe54vCeY+YnFCiNg+t6eEhxjAb2R
-	 o+Jl12cp0BVQA/ORGq2hYeCfkaoAJo3M+ObG5v2QB7+MreJdSq7Qeock6IK8C6TvPM
-	 /cApGNbXcZnF26pPjHQoRDKf1e+NZJQB1cM6tPNUjx0Nzt07BcAzCvscUOueMhCacm
-	 fZdvKGQTNZH6gozzFxUaLyAFTiP9UxVp71eoO4P4sOS1FluYi6U2AOxCHGab29rYzf
-	 NYSJtxo+Rs2Uw==
-Message-ID: <ec407a6d-2164-4252-90f0-0aebe8227290@tkel.ly>
-Date: Tue, 5 May 2026 17:13:41 -0700
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="XVV73trR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1778028756;
+	bh=RkLhcLrXVauydYrKsrABqVXoD9Sb2pNbxPAsYYGUFfg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=XVV73trRzWdgCF3a6jOKHNi9YwD8nQCerYqJ68Qvi8ECP+7lQTiHM9oThJtF0X+LZ
+	 hey4+u8ax+HJjuPZOhF9gAawTgJaraxqOyqmFBLQ8Gu1bA3CH+GJJeMwghTYUwzIwD
+	 8PbiQMAdRD/NEshJAtEGX556Ua8Qr7wA17vCXa9A=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id 3A7EFBE516;
+	Wed,  6 May 2026 00:52:36 +0000 (UTC)
+Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id AB6585F938;
+	Wed,  6 May 2026 01:52:35 +0100 (BST)
+Message-ID: <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
+Date: Wed, 6 May 2026 01:52:35 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
-From: Tommy Kelly <linux@tkel.ly>
-To: Niklas Cassel <cassel@kernel.org>, Heiko Stuebner <heiko@sntech.de>
-Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
- John Garry <john.g.garry@oracle.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20260501125410.1204490-5-cassel@kernel.org>
- <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
-Content-Language: en-US
-In-Reply-To: <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 7/7] scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to
+ MATSHITA and NEC PD-1 variants
+To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20260426190920.2051289-1-philpem@philpem.me.uk>
+ <20260426190920.2051289-8-philpem@philpem.me.uk>
+ <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
+Content-Language: en-GB
+From: Phil Pemberton <philpem@philpem.me.uk>
+In-Reply-To: <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 5/2/26 17:59, Tommy Kelly wrote:
+On 27/04/2026 12:56, Hannes Reinecke wrote:
+> On 4/26/26 21:09, Phil Pemberton wrote:
+>> The Panasonic LF-1095/LF-1195 PD/CD combo drive was sold under three
+>> OEM identities: COMPAQ "PD-1", MATSHITA "PD-1", and NEC "PD-1 ODX654P".
+>> All three are the same drive mechanism with the same firmware family,
+>> so they should share the BLIST_NO_LUN_1F quirk that was applied to the
+>> COMPAQ variant: PDT 0x1f / PQ 0 INQUIRY responses on non-existent LUNs
+>> are treated as "LUN not present" rather than as a phantom sdev.
+>>
+>> This patch is offered for completeness.  It has not been tested on the
+>> MATSHITA or NEC variants -- the author only has access to the COMPAQ
+>> unit -- but the drives are functionally identical and the flag is a
+>> no-op on devices that do not exhibit the PDT 0x1f response.  Drop or
+>> hold this patch if confirmation on real hardware is preferred before
+>> extending the quirk.
+>>
+>> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+>> ---
+>>   drivers/scsi/scsi_devinfo.c | 6 ++++--
+>>   1 file changed, 4 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+>> index bfc2cbd43897..ab1ffa9433b7 100644
+>> --- a/drivers/scsi/scsi_devinfo.c
+>> +++ b/drivers/scsi/scsi_devinfo.c
+>> @@ -201,7 +201,8 @@ static struct {
+>>       {"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
+>>       {"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
+>>       {"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
+>> -    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>> +    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
+>> +                   BLIST_NO_LUN_1F},
+>>       {"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | 
+>> BLIST_INQUIRY_36},
+>>       {"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | 
+>> BLIST_INQUIRY_36},
+>>       {"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
+>> @@ -212,7 +213,8 @@ static struct {
+>>       {"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+>>       {"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>>       {"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>> -    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>> +    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
+>> +                      BLIST_NO_LUN_1F},
+>>       {"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
+>>       {"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>>       {"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
 > 
-> I will also apply the FBS devicetree change (5918bf2) and test with that too.
+> Any specific reason why this patch is not merged with the previous one?
+> Otherwise:
 > 
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Special thank you to Heiko for the FBS support!
-His patch setting PxCMD.FBSCP works: https://lore.kernel.org/all/20260201191804.41421-2-heiko@sntech.de/
+Only that these are optional to the feature work and untested as I don't 
+have hardware. I believe these drives use the same PD-1 mechanism and 
+firmware so should behave the same, but I can't prove it.
 
-I compiled the FBS devicetree change into u-boot (which passes the fdt to linux),
-and running on unpatched linux 6.19.12,
-FBS works, and no regressions are present.
-Logs:
+The intent was to allow the 1-6 set to be merged (as these are tested) 
+without 7/7 (which is not) to minimise the risk of regressions.
 
-> Linux version 6.19.12-200.fc43.aarch64
-> ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
-> ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
-> platform fc800000.sata:sata-port@0: supply target not found, using dummy regulator
-> ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
-> ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
-> platform fc800000.sata:sata-port@0: supply target not found, using dummy regulator
-> ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
-> ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
-> platform fc800000.sata:sata-port@0: supply target not found, using dummy regulator
-> ahci-dwc fc800000.sata: PMPn is limited up to 5 ports
-> ahci-dwc fc800000.sata: forcing port_map 0x0 -> 0x1
-> ahci-dwc fc800000.sata: masking port_map 0x1 -> 0x1
-> ahci-dwc fc800000.sata: AHCI vers 0001.0300, 32 command slots, 6 Gbps, platform mode
-> ahci-dwc fc800000.sata: 1/1 ports implemented (port mask 0x1)
-> ahci-dwc fc800000.sata: flags: ncq sntf pm led clo only pmp fbs pio slum part ccc apst 
-> scsi host0: ahci-dwc
-> ata1: SATA max UDMA/133 mmio [mem 0xfc800000-0xfc800fff] port 0x100 irq 59 lpm-pol 0
-> ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> ata1.15: Port Multiplier 1.2, 0x197b:0x5755 r0, 5 ports, feat 0x5/0xf
-> ahci-dwc fc800000.sata: FBS is enabled
-> ata1.00: hard resetting link
-> ahci-dwc fc800000.sata: FBS is disabled
-> ahci-dwc fc800000.sata: FBS is enabled
-> ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> ata1.01: hard resetting link
-> ahci-dwc fc800000.sata: FBS is disabled
-> ahci-dwc fc800000.sata: FBS is enabled
-> ata1.01: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
-> ata1.02: hard resetting link
-> ahci-dwc fc800000.sata: FBS is disabled
-> ahci-dwc fc800000.sata: FBS is enabled
-> ata1.02: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> ata1.03: hard resetting link
-> ahci-dwc fc800000.sata: FBS is disabled
-> ahci-dwc fc800000.sata: FBS is enabled
-> ata1.03: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
-> ata1.04: hard resetting link
-> ahci-dwc fc800000.sata: FBS is disabled
-> ahci-dwc fc800000.sata: FBS is enabled
-> ata1.04: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
-
-
-Again, that is before this patch series, I see no queue_depth regression with FBS.
-As opposed to CBS which had a regression in the 6.19.x series.
-
-I can test with this patch series + FBS if you'd like.
-
-- Tommy
-
+Thanks,
+-- 
+Phil.
+philpem@philpem.me.uk
+https://www.philpem.me.uk/
