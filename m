@@ -1,84 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D82DD3F167C;
-	Wed,  6 May 2026 13:54:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53D5830F7F3
+	for <linux-ide@vger.kernel.org>; Wed,  6 May 2026 14:52:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778075649; cv=none; b=fINQcwyqLMO5H/8nd8nrOxQIINKHMqqAlFRjaz4ip+gHyFYUAvqeT5lgosu8P+YIX2tIKP58bMz6T18PydN59vy71Nl9A0OSC9hEykB7/1ktCvl9LrJ7OYNtzKfVEEZWjw0REH5Sg15ihre27n7oQrFfMMzi3zbh3Sy4Zt8H+Ko=
+	t=1778079145; cv=none; b=Ib/lcRvOJmvXFaPIrMAuTXl194reSTVWrPkjoS7h0n5oimxtrsLnEuQ7qEKtWxlqLssi81et/4TU7zlyxqAPW0nNvvz/3Ppj3V9X1pE6mTIUIsPBoQxHJHrUyzZQibcarOrNIsoynE2ziBr1RvlL6gXAH0EyBm/zOdn+jOLyZE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778075649; c=relaxed/simple;
-	bh=NoI8j3F1YW25tR0zL0cDFy/lvZ5oPDxPYyIFiIeRMtE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CqBEKQsuGIGcTbNa89Am2LPqvsN53iuRjyjkZirX9ITsJDTqtTb8WVvt+TGsl86o4Vw7gasEqAFAxpGIwJwXNe3Ddsa9sHwW3T7Erdk2nLYP2kQJPwalsn6kKCplgHHw729aXsJEZJneXQBGKVd7uHwsUUty7YM6o/pEwCF9/Lk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EztVb4Ma; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778079145; c=relaxed/simple;
+	bh=ybo0x2DELfoMClYUY2vQRsuY6NFMvUA+XvYna5IjC70=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sakTmTeOzWoGpBRmlmfgd92y//cn2ilQT+bdv5Tzt56iKpcvQXUaZ6/eQttcD/Cgy7qlx7ImfSj1hKQKD1F3lto4/76q2V+GUnjTzxO13rYsJQMmF35jAtNzG/yV2jXXzZubeg1VHl8VjPj+DVsvMtNR9HmRWATSS0BMu79XBb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mXYOcYfY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EztVb4Ma"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 134EFC2BCB2;
-	Wed,  6 May 2026 13:54:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mXYOcYfY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DD9AC2BCB0;
+	Wed,  6 May 2026 14:52:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778075648;
-	bh=NoI8j3F1YW25tR0zL0cDFy/lvZ5oPDxPYyIFiIeRMtE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=EztVb4MarZed7S8kuN33gAfdyd2gdT1d8RmOJSSFKQBihDeycyARB7Zhi+PL+C9yq
-	 R/+vcTzXRksxQ4zwZpvTD6wqftzB10Ga7gpdTM7GQ4zQrRzw55F+U/Nk3g+BS7rxAe
-	 yJCHf5Cgg2KVl/CRkbJt8CbMzRcsR7MngJkPDmLw+woqflg8wXWdWsAFF/dbk7Qj8z
-	 UAQfxxezNET+jbe/+3m39trZkzCd7adVhIZWKuPKj14mUbK2McYqK0Hc7M8eFXdL36
-	 HmN2psbcmeCn0x/fBlXNQFIMyKyq79uNEbKjV+Z+dYpIXcyygxbfPThvTvfgp9jFDM
-	 +nsbDI3QOR8xw==
-Message-ID: <758ab729-dc5a-4837-b255-9462aaa6b0a3@kernel.org>
-Date: Wed, 6 May 2026 15:54:00 +0200
+	s=k20201202; t=1778079144;
+	bh=ybo0x2DELfoMClYUY2vQRsuY6NFMvUA+XvYna5IjC70=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mXYOcYfY3+tHdqILq7/+sKYrqhLBFCVK98HhZ8D5yRsevGJa5kOaiK+PfIIJSVj1M
+	 Bi8EFpXJ9POD7GgJJ4gTOWh5W6XIlBtg7oud/lwhAvbwWYIe7u2RQlbEWFohop9ozK
+	 WPJTUpGfOl23DmhnhDeptgXG8hYLriPzV/UxjdxrH6M4QUpHUUWnl11vnyJAByosx5
+	 PPCTNF4EYzBI2TdxA3CdbaZH2fBIfysJJrFabHc+31+Tb058c3F9h0NkCczgEXUsRl
+	 zKvYCkQ/8z+Bz2sKVsRroxW3UBycOLJiaVXlsfgHhLQ23tBoulutDkrvekqI/DgNPg
+	 D679mBiz7Sv1A==
+Date: Wed, 6 May 2026 16:52:20 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Tommy Kelly <linux@tkel.ly>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Tejun Heo <htejun@gmail.com>, John Garry <john.g.garry@oracle.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
+Message-ID: <aftVpJMMtzZhKusF@fedora>
+References: <20260501125410.1204490-5-cassel@kernel.org>
+ <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/9] ata: ahci_tegra: Explicitly specify PMC instance to
- use
-To: Thierry Reding <thierry.reding@kernel.org>,
- Niklas Cassel <cassel@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>,
- Lyude Paul <lyude@redhat.com>, Danilo Krummrich <dakr@kernel.org>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- Mikko Perttunen <mperttunen@nvidia.com>, Dmitry Osipenko <digetx@gmail.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Mathias Nyman
- <mathias.nyman@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Philipp Zabel <p.zabel@pengutronix.de>
-Cc: linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org,
- linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
- nouveau@lists.freedesktop.org, linux-media@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
- Thierry Reding <treding@nvidia.com>
-References: <20260506-pmc-v1-0-a6de5da7216b@nvidia.com>
- <20260506-pmc-v1-1-a6de5da7216b@nvidia.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260506-pmc-v1-1-a6de5da7216b@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
 
-On 2026/05/06 15:41, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+Hello Tommy,
+
+On Sat, May 02, 2026 at 05:59:12PM -0700, Tommy Kelly wrote:
 > 
-> Currently the kernel relies on a global variable to reference the PMC
-> context. Use an explicit lookup for the PMC and pass that to the public
-> PMC APIs.
+> Yes, this patch series fixed the regression for me with a CBS Port Multiplier.
 > 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> Here are the commits I tested with:
+> 
+> > (HEAD -> fedora-7.0-libata) ata: libata-scsi: do not needlessly defer commands when using PMP with FBS
+> > ata: libata-scsi: do not use the deferred QC feature on PMPs with CBS
+> > ata: libata-pmp: fix ata_pmp_qc_defer_cmd_switch()
+> > ata: ahci: fail probe if BAR too small for claimed ports
+> > ata: libahci: use ahci_nr_ports() helper
+> > ata: pata_parport: switch to dynamic root device
+> > Merge remote-tracking branch 'libata/for-7.1' into fedora-7.0-libata
+> > (tag: kernel-7.0.3-0, kernel-ark/fedora-7.0, fedora-7.0) [redhat] kernel-7.0.3-0
+> > Merge Linux v7.0.3
+> > (tag: v7.0.3, kernel-ark/linux-7.0.y, linux-7.0.y) Linux 7.0.3
+> 
+> And here's some logs showing ata_id (non-NCQ) resolving immediately.
+> After, I'm able to boot and mount and use the filesystem no problem.
+> No errors and no timeouts.
+> 
+> > Mar 12 17:00:10 localhost kernel: ahci-dwc fc800000.sata: port 0 is not capable of FBS
+> > May 02 17:12:39 (udev-worker)[874]: sdd: Starting 'ata_id --export /dev/sdd'
+> > May 02 17:12:39 (udev-worker)[874]: sdd: 'ata_id --export /dev/sdd'(out) 'ID_ATA=1'
+> > May 02 17:12:39 (udev-worker)[874]: sdd: Process 'ata_id --export /dev/sdd' succeeded.
 
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
+This all looks normal to me.
 
-Applying this through the Tegra tree is fine with me.
+Thank you very much for testing!
 
 
--- 
-Damien Le Moal
-Western Digital Research
+Kind regards,
+Niklas
