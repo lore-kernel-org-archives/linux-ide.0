@@ -1,87 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC873EF0BE
-	for <linux-ide@vger.kernel.org>; Wed,  6 May 2026 15:00:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89F0F22F388;
+	Wed,  6 May 2026 23:45:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778079624; cv=none; b=FnSpgh41cHUxSOMbRkiZNSyT42WigKf5XqBDRj/tdbsqAVB/nxi/OUcs+hWte3Lw5evJ6AF/dd8F0D/pMCaq7xWIHIQn95B0pFECyriSqK+u2moEmDhdmDXkUiD7jQ+d+SrzbCK5FDcoZRYOfe5VkeNIE5ft5trBXRaXt05zseQ=
+	t=1778111157; cv=none; b=tcDuiXIr5ERtu+xs0xtyK6Km/syYAosYxloeAdJZdQs4zc0LFgCHQDi0nPUFuwVNL0DLjhOJgiPzUgLilXJLrhFwjph4MvJyCoKrBqgjyVxUajNT6yJj+njhAQihhtWf5nICWfPENivgyN9qe7adjE75AxZPFQUUKW1vpq0Np/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778079624; c=relaxed/simple;
-	bh=Ukc/tFdYxOAKLJVohv2yxpmIfqZ8YC3OKpt/HJ49FHs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EQg2xFufEu0/Hd+7L7qOXkd/6mA+teIuU9JOh6YCSyJWe9oHQ6a+r2HXZcvSgjVIIPEMfoRG9AoY0FAiJ0+oRXNpMWNr3BTSSSzZ1US9fPbicH+icObqhleTjWZ6f9rmwDv/9H1ASV2lMUHmRDjbtb6fB+atracLo9p9npxmR1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OoU76SDa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778111157; c=relaxed/simple;
+	bh=Ui1185AFfkku0MdzhMjt01W74TSAjdA+/L8qfGI0kN8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=PqxABAUyGSIYy7cxfyAD6fq6fVIdMRcdgLXzFQUCDXwrKGevHqq0C0QVbVM1gsBQOiwqTpe8buSz1CzoTVqBaQp5LD2Qj7Afqni6rmDSlNN9NtZxWJsnW1BhWcyAfImczHa8V+NEOWD6eQZ+mOFB26ozF3MC5tcSdaPAvyo7ORM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=AH6xv1RP; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OoU76SDa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20682C2BCB0;
-	Wed,  6 May 2026 15:00:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778079624;
-	bh=Ukc/tFdYxOAKLJVohv2yxpmIfqZ8YC3OKpt/HJ49FHs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OoU76SDauubUYRuTzEbE2w0rWbSO37YRgbdrvhHcrzAkIDaNcbxs5s+mGMU3XwJfL
-	 fhFCEAC0qhrRfyovPZERzXSAGIPP2XUHWW4xUDeBJE0gzwblQedn0VDULlNtmGczpD
-	 5raKYbKHw2iu9Yx0oYZaPgh5HGIeEiRKUKSnzATrs3iigfU6PsiiakMsByAra+a92B
-	 4svQvJsqhs2INqZugEKwcjYzg1ArLUYSvipGd0clTSENUMS+GaiqH8CAAZcGyVhchr
-	 qnuUoGt8HG4p/FVyxQA9h3M//HqYoit2plPOx4GfFkqslMmjZMn/KRscM6p7bAMqhW
-	 rI2Tl9b5FpjGA==
-Date: Wed, 6 May 2026 17:00:13 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Tommy Kelly <linux@tkel.ly>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-ide@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <htejun@gmail.com>,
-	John Garry <john.g.garry@oracle.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
-Message-ID: <aftXfTL98eqhpWLN@fedora>
-References: <20260501125410.1204490-5-cassel@kernel.org>
- <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
- <ec407a6d-2164-4252-90f0-0aebe8227290@tkel.ly>
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="AH6xv1RP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1778111155;
+	bh=Ui1185AFfkku0MdzhMjt01W74TSAjdA+/L8qfGI0kN8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=AH6xv1RPGN8Umfa77NGr2DOEJMdMmQr5g0yU12azBfK2J0qavGmIcFWUCa7nQV+gT
+	 wQiUJNIprDT3/631YBNT0kq0LImdMfJrI3UYhH/rxDyhUTmNkxP6wzUAE4B6U+xPRi
+	 kLFu3mV/HywvmDppuX/T70hayKF0r3YH+urVS02M=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id 3ABA3BD71D;
+	Wed,  6 May 2026 23:45:55 +0000 (UTC)
+Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 031995F8AD;
+	Thu,  7 May 2026 00:45:55 +0100 (BST)
+From: Phil Pemberton <philpem@philpem.me.uk>
+To: linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Phil Pemberton <philpem@philpem.me.uk>
+Subject: [PATCH v4 1/7] ata: libata-scsi: add atapi_max_lun module parameter
+Date: Thu,  7 May 2026 00:45:42 +0100
+Message-ID: <20260506234548.1974603-2-philpem@philpem.me.uk>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260506234548.1974603-1-philpem@philpem.me.uk>
+References: <20260506234548.1974603-1-philpem@philpem.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ec407a6d-2164-4252-90f0-0aebe8227290@tkel.ly>
+Content-Transfer-Encoding: 8bit
 
-Hello Tommy,
+Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
+so the SCSI layer never scans past LUN 0.  This blocks support for
+the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
+COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
+Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
 
-On Tue, May 05, 2026 at 05:13:41PM -0700, Tommy Kelly wrote:
-> > 
-> > I will also apply the FBS devicetree change (5918bf2) and test with that too.
-> > 
-> 
-> Special thank you to Heiko for the FBS support!
-> His patch setting PxCMD.FBSCP works: https://lore.kernel.org/all/20260201191804.41421-2-heiko@sntech.de/
-> 
-> I compiled the FBS devicetree change into u-boot (which passes the fdt to linux),
-> and running on unpatched linux 6.19.12,
-> FBS works, and no regressions are present.
+Introduce a libata module parameter, atapi_max_lun, that controls the
+upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
+current behaviour exactly: out-of-the-box only LUN 0 is scanned.
+Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling).
 
-Nice!
+Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
+device must both be on the SCSI device list (or carry the appropriate
+quirk) and run on a host whose atapi_max_lun has been raised before
+any extra LUNs are scanned.
 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+---
+ drivers/ata/libata-core.c | 5 +++++
+ drivers/ata/libata-scsi.c | 2 +-
+ drivers/ata/libata.h      | 1 +
+ include/linux/libata.h    | 1 +
+ 4 files changed, 8 insertions(+), 1 deletion(-)
 
-> Again, that is before this patch series, I see no queue_depth regression with FBS.
-> As opposed to CBS which had a regression in the 6.19.x series.
-> 
-> I can test with this patch series + FBS if you'd like.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 374993031895..8c279b6eb1fb 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -122,6 +122,11 @@ int atapi_passthru16 = 1;
+ module_param(atapi_passthru16, int, 0444);
+ MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+ 
++int atapi_max_lun = 1;
++module_param(atapi_max_lun, int, 0444);
++MODULE_PARM_DESC(atapi_max_lun,
++	"Maximum LUN to scan on ATAPI devices flagged BLIST_FORCELUN (1 [default] .. 7)");
++
+ int libata_fua = 0;
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 3b65df914ebb..d1665305b552 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4620,7 +4620,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const struct scsi_host_template *s
+ 		shost->transportt = ata_scsi_transport_template;
+ 		shost->unique_id = ap->print_id;
+ 		shost->max_id = 16;
+-		shost->max_lun = 1;
++		shost->max_lun = clamp(atapi_max_lun, 1, ATAPI_MAX_LUN);
+ 		shost->max_channel = 1;
+ 		shost->max_cmd_len = 32;
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index b5423b6e97de..96d804d02b99 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -33,6 +33,7 @@ enum {
+ #define ATA_PORT_TYPE_NAME	"ata_port"
+ 
+ extern int atapi_passthru16;
++extern int atapi_max_lun;
+ extern int libata_fua;
+ extern int libata_noacpi;
+ extern int libata_allow_tpm;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 00346ce3af5e..27b11577826e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -131,6 +131,7 @@ enum {
+ 	ATA_SHORT_PAUSE		= 16,
+ 
+ 	ATAPI_MAX_DRAIN		= 16 << 10,
++	ATAPI_MAX_LUN		= 8,	/* SCSI-2 cap (LUN values 0..7) */
+ 
+ 	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
+ 
+-- 
+2.43.0
 
-That would very much be appreciated if you could.
-
-Since:
-1) This series actually modifies PMP FBS behavior. Basically after this
-   series, the performance should be the same as with 6.19.
-   (We currently have a performance regression in mainline.)
-2) I do not have a PMP with FBS available to test with.
-3) I tried to reproduce your problem with a PMP with CBS, but was
-   unsuccessful to reproduce it.
-
-Thank you once again for your help!
-
-
-Kind regards,
-Niklas
