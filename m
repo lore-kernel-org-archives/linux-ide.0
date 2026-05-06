@@ -1,139 +1,142 @@
-Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7530E3D4114
-	for <linux-ide@vger.kernel.org>; Wed,  6 May 2026 08:45:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E8FF477982;
+	Wed,  6 May 2026 13:42:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778057122; cv=none; b=mFSEpnvem+JksyVjJusvKvdl/QXku9s9HB0idwvp3ujicsPCl1yeHBy67xigUxSef86p7coO7khMjTyRAfCz0mWWR9zfj0TsI8xFutCLElCiNAROJtfdd4R7nw/zz5GgNvZzvR+yGjgrg+habOjghLOCaGEHvZ7+5f2A6HJAgmc=
+	t=1778074932; cv=none; b=iXnhc+SU/tnYxsPm9n9XeesxW8FQ2VF21a8ZQ3KwWMAA+fbN4w+fSqY3Lr233cRVAbJ8oDRGlbYvwWg75Rfv5Pa238XVY185cCLImeY95tM3L/yPave/o/C/81wxGoNmfrtsVJF5b//mB15Zl9KeWXFG0cQ8lj0ijqaiKvKvUso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778057122; c=relaxed/simple;
-	bh=ph54DW5NZIihPoNhqngg51t7Y1MPaSLbd2O7x7VxF1E=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cqD4oiwh15YhvUYZj3QGEGkBFkQMBwa+0IvK+2aCJMxAryDWXzMui3/6fsMX20tI1j04ASEZfsxdgg1RZxKfVY+dFNmxKCNNgf1tbbXSFvuDa5/d26BOiQ47afPVuZflq0Hctera7QQ5cH0OR360aSlrBH55oJX/NKLezTiMYtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b=vjdhnAD+; arc=none smtp.client-ip=185.11.138.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
+	s=arc-20240116; t=1778074932; c=relaxed/simple;
+	bh=c3IdukSqkdizYR+nvOsMFSfRacrCTihLpGMwf0DytCw=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=cEtyFQzO4O6AA4LjXVzlBEYb7dTDuy8AwTzceEtJYelPo2GWmrprMI7x38knuiFste0EIuBZCvEX7apnyAkXLJr/TPOdPf0rtMLcd74uZcmTM83qbou9K5gdEUTa4JHVFPN1E1eaXRZxc0NDZQ2Fcl1Q/aRH80YiJefDsn05l/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IKJ4RV3L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b="vjdhnAD+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sntech.de;
-	s=gloria202408; h=Content-Type:Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To;
-	bh=ph54DW5NZIihPoNhqngg51t7Y1MPaSLbd2O7x7VxF1E=; b=vjdhnAD+KYWmsmAA08NwXr4Qsv
-	KDyg2xA5LpHzwV0/0y+QcbfUs+nktgCn86tgbKS76+cpE+JcxJVFtM66TX7l382hICguTX/qmqUod
-	LFd1G3NLV9fR87eGV7K2HYFmIRQ4ovYRmShTohxQdrzLtJYFAXkep1a2RpWvy97xYvgCf6Fh3K+aM
-	E4sbkcqkHsAswBNtmKz3FAqRJq5EoSfwr0CZS+cWwRI5Pc0CsUK9KW/9WAb20r8w39PPvROadatPf
-	ZphOsD4b+NRm7K8qKR/KqdivecDZJU5htO1vVfRC9YheXa/MMeK2edQ9ZpTXldwT0Cn8wvGn2V5dt
-	SNJxmr8A==;
-From: Heiko Stuebner <heiko@sntech.de>
-To: Niklas Cassel <cassel@kernel.org>, Tommy Kelly <linux@tkel.ly>
-Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
- John Garry <john.g.garry@oracle.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
-Date: Wed, 06 May 2026 10:45:08 +0200
-Message-ID: <8711044.4vTCxPXJkl@phil>
-In-Reply-To: <ec407a6d-2164-4252-90f0-0aebe8227290@tkel.ly>
-References:
- <20260501125410.1204490-5-cassel@kernel.org>
- <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
- <ec407a6d-2164-4252-90f0-0aebe8227290@tkel.ly>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IKJ4RV3L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BA64C2BCB8;
+	Wed,  6 May 2026 13:42:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778074932;
+	bh=c3IdukSqkdizYR+nvOsMFSfRacrCTihLpGMwf0DytCw=;
+	h=From:Subject:Date:To:Cc:From;
+	b=IKJ4RV3Lyv8oxdqtjJC6OIC/6rXY29IuJvTiT4NZTUHacP2c3bEAL5u8IO525gAAd
+	 GdHYJPixovH2tJ8+/ccpTRSbFwSioKJNQ0jfXXpXj62CSlxnJLfRrzPvFFZbyJH94k
+	 rmpOM5pmePtSKhc8yDNIiM9V0/1k6GFBaDGv+RMER+VjW6gNDG+AWSkPQLUlP3inFG
+	 uR9VwrRzsa+NntueV5w8T5/9dFLPyDU2dBoZYPsGuM40wjmmpeFzNxHoRadZPM8Hyv
+	 n3WTP6W9EXxusJxeDt6+bufGSq2+lKWQI3Lah8LnOBM4/ec9qAMzlA6hhQ83qfsP7o
+	 KCbzR1+7uhdcw==
+From: Thierry Reding <thierry.reding@kernel.org>
+Subject: [PATCH 0/9] soc/tegra: pmc: Clean up legacy code
+Date: Wed, 06 May 2026 15:41:51 +0200
+Message-Id: <20260506-pmc-v1-0-a6de5da7216b@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXM0QpAMBjF8VfRd201iymvIhfMwafM2pCSdzdc/
+ up/zkUBnhGoSi7yODjwaiOyNCEztXaE4D6alFRaFlILtxiRK/S5QamBgmLpPAY+v5e6+R32bob
+ Z3ind9wOZhJpCZwAAAA==
+X-Change-ID: 20260506-pmc-42ed4ce76ee5
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+ Thierry Reding <thierry.reding@kernel.org>, 
+ Jonathan Hunter <jonathanh@nvidia.com>, Lyude Paul <lyude@redhat.com>, 
+ Danilo Krummrich <dakr@kernel.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ Mikko Perttunen <mperttunen@nvidia.com>, Dmitry Osipenko <digetx@gmail.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Mathias Nyman <mathias.nyman@intel.com>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ nouveau@lists.freedesktop.org, linux-media@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-usb@vger.kernel.org, 
+ Thierry Reding <treding@nvidia.com>
+X-Mailer: b4 0.15.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2907; i=treding@nvidia.com;
+ h=from:subject:message-id; bh=c3IdukSqkdizYR+nvOsMFSfRacrCTihLpGMwf0DytCw=;
+ b=owEBbQKS/ZANAwAKAd0jrNd/PrOhAcsmYgBp+0UviFY8FRKErx+gWaVIw1aQqo3vpgLFBeSK2
+ QOwKU74fluJAjMEAAEKAB0WIQSI6sMIAUnM98CNyJ/dI6zXfz6zoQUCaftFLwAKCRDdI6zXfz6z
+ oSXDD/91cqDJQm1CmiDEX3o7Unl38MlUu/CfFtYMDWyUZ7eThkCtVRzHXCEt+Z5P92fpge0puXf
+ aQpRSV7kenNh18JhSWj/5+XyhAf6NgIP1IC7KvnU9Rb0ttmUPc44abwaGNIdl9JUY2P8a8DFwUb
+ B8olNHLzudEKDrxFtwQJuA+LbBT/B7LjdtvVTmjg6Hgpz82Lv4IwUJIIB9/rvGBz07pKPtvqNlF
+ 8AXnGwpWBSmJBVD/Bg5tMVlTFcI8CuWM0uSfqF7Fe8QjWgyPcAQ17+anPVPDUeflenhlEOrB8FH
+ d4hRnk3mE3bAsDflRt/8LQpkz4A6Vs/zwwcBVKwRDCXALnqI6jcpsUotp/Ub16lFCK5KYYd7VIa
+ uVd5k7E3ku4W5EFiLk26KGUyi6WPtbHXM8YphtwwrXaB9bNDnTUcKXG8o2AERJLO/9hKSqMys43
+ NtPtcMZXCS6SKQIFNR3QTOVTGrj+Bri3RAfwXpBeI7WXUuYjQLsKSe1sdC7fJfWfOusR7pdXLYA
+ zIVEx3IjPndD4GaTjdKJTopPr1a/M6afg8r63ZXCO4u6fwxTaC854gRdvm6J/yhFnE2JPjqRKK0
+ MSLNxv5xE1gMA37VuJq0jspEaXgC2N1nXEOBBMofoTN/HpGi8XfvXqzpfkn6YgWci9bGIj+8rZg
+ oJJjuQE+3aztG1A==
+X-Developer-Key: i=treding@nvidia.com; a=openpgp;
+ fpr=88EAC3080149CCF7C08DC89FDD23ACD77F3EB3A1
 
-Am Mittwoch, 6. Mai 2026, 02:13:41 Mitteleurop=C3=A4ische Sommerzeit schrie=
-b Tommy Kelly:
-> On 5/2/26 17:59, Tommy Kelly wrote:
-> >=20
-> > I will also apply the FBS devicetree change (5918bf2) and test with tha=
-t too.
-> >=20
->=20
-> Special thank you to Heiko for the FBS support!
-> His patch setting PxCMD.FBSCP works: https://lore.kernel.org/all/20260201=
-191804.41421-2-heiko@sntech.de/
+The Tegra PMC has accumulated a bit of cruft over the years. Most of the
+legacy code has since been replaced by standard APIs, but for certain 32
+bit platforms we cannot get rid of all remnants, unfortunately.
 
-well that is a pleasant surprise :-D .
+In addition, future SoC generations can have multiple instances of the
+PMC, making some of the old APIs unusable. Preliminary work was merged
+recently to allow passing a PMC instance to the custom PMC APIs to solve
+this problem.
 
-I just needed the port node to hook y phy-supply into, and therefore
-checked what capabilities were supported/which properties needed to go
-in there ... but really glad it helps you too :-)
+This series of patches is a final cleanup pass that makes use of the new
+APIs in existing drivers. At the end of the series, only some old 32-bit
+support code will use the old APIs, so they can be made exclusive to the
+32-bit ARM builds (which is about as good as it's going to get).
 
-Heiko
+Note that the first 6 patches can be applied to subsystem trees
+independently since they only rely on patches that were merged into 7.0.
+Patch 8 depends on these patches being applied, so some coordination is
+needed. The simplest solution would probably be to merge them all
+through the Tegra tree, if everyone agrees. Otherwise, maintainers
+should feel free to apply patches to their subsystems and I'll monitor
+things and apply the last three patches once all others have landed.
 
+Thanks,
+Thierry
 
-> I compiled the FBS devicetree change into u-boot (which passes the fdt to=
- linux),
-> and running on unpatched linux 6.19.12,
-> FBS works, and no regressions are present.
-> Logs:
->=20
-> > Linux version 6.19.12-200.fc43.aarch64
-> > ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
-> > ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
-> > platform fc800000.sata:sata-port@0: supply target not found, using dumm=
-y regulator
-> > ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
-> > ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
-> > platform fc800000.sata:sata-port@0: supply target not found, using dumm=
-y regulator
-> > ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
-> > ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
-> > platform fc800000.sata:sata-port@0: supply target not found, using dumm=
-y regulator
-> > ahci-dwc fc800000.sata: PMPn is limited up to 5 ports
-> > ahci-dwc fc800000.sata: forcing port_map 0x0 -> 0x1
-> > ahci-dwc fc800000.sata: masking port_map 0x1 -> 0x1
-> > ahci-dwc fc800000.sata: AHCI vers 0001.0300, 32 command slots, 6 Gbps, =
-platform mode
-> > ahci-dwc fc800000.sata: 1/1 ports implemented (port mask 0x1)
-> > ahci-dwc fc800000.sata: flags: ncq sntf pm led clo only pmp fbs pio slu=
-m part ccc apst=20
-> > scsi host0: ahci-dwc
-> > ata1: SATA max UDMA/133 mmio [mem 0xfc800000-0xfc800fff] port 0x100 irq=
- 59 lpm-pol 0
-> > ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> > ata1.15: Port Multiplier 1.2, 0x197b:0x5755 r0, 5 ports, feat 0x5/0xf
-> > ahci-dwc fc800000.sata: FBS is enabled
-> > ata1.00: hard resetting link
-> > ahci-dwc fc800000.sata: FBS is disabled
-> > ahci-dwc fc800000.sata: FBS is enabled
-> > ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> > ata1.01: hard resetting link
-> > ahci-dwc fc800000.sata: FBS is disabled
-> > ahci-dwc fc800000.sata: FBS is enabled
-> > ata1.01: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
-> > ata1.02: hard resetting link
-> > ahci-dwc fc800000.sata: FBS is disabled
-> > ahci-dwc fc800000.sata: FBS is enabled
-> > ata1.02: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> > ata1.03: hard resetting link
-> > ahci-dwc fc800000.sata: FBS is disabled
-> > ahci-dwc fc800000.sata: FBS is enabled
-> > ata1.03: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
-> > ata1.04: hard resetting link
-> > ahci-dwc fc800000.sata: FBS is disabled
-> > ahci-dwc fc800000.sata: FBS is enabled
-> > ata1.04: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
->=20
->=20
-> Again, that is before this patch series, I see no queue_depth regression =
-with FBS.
-> As opposed to CBS which had a regression in the 6.19.x series.
->=20
-> I can test with this patch series + FBS if you'd like.
->=20
-> - Tommy
->=20
->=20
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Thierry Reding (9):
+      ata: ahci_tegra: Explicitly specify PMC instance to use
+      drm/nouveau: tegra: Explicitly specify PMC instance to use
+      drm/tegra: Explicitly specify PMC instance to use
+      media: vde: Explicitly specify PMC instance to use
+      PCI: tegra: Explicitly specify PMC instance to use
+      usb: xhci: tegra: Explicitly specify PMC instance to use
+      soc/tegra: pmc: Create PMC context dynamically
+      soc/tegra: pmc: Remove unused legacy functions
+      soc/tegra: pmc: Move legacy code behind CONFIG_ARM guard
 
+ drivers/ata/ahci_tegra.c                           |  17 +-
+ drivers/gpu/drm/nouveau/include/nvkm/core/tegra.h  |   2 +
+ drivers/gpu/drm/nouveau/nvkm/engine/device/tegra.c |   9 +-
+ drivers/gpu/drm/tegra/dc.c                         |  14 +-
+ drivers/gpu/drm/tegra/dc.h                         |   1 +
+ drivers/gpu/drm/tegra/gr3d.c                       |   9 +-
+ drivers/gpu/drm/tegra/sor.c                        |  16 +-
+ drivers/media/platform/nvidia/tegra-vde/vde.c      |  15 +-
+ drivers/media/platform/nvidia/tegra-vde/vde.h      |   1 +
+ drivers/pci/controller/pci-tegra.c                 |  20 +-
+ drivers/soc/tegra/pmc.c                            | 412 +++++++++------------
+ drivers/usb/host/xhci-tegra.c                      |  38 +-
+ include/soc/tegra/pmc.h                            |  81 +---
+ 13 files changed, 305 insertions(+), 330 deletions(-)
+---
+base-commit: 7fd2df204f342fc17d1a0bfcd474b24232fb0f32
+change-id: 20260506-pmc-42ed4ce76ee5
 
-
+Best regards,
+--  
+Thierry Reding <treding@nvidia.com>
 
