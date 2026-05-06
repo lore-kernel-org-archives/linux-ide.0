@@ -1,125 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.tkel.ly (mail.tkel.ly [149.248.17.236])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3B0F3EE1C4;
-	Tue,  5 May 2026 16:26:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D0F46FBF
+	for <linux-ide@vger.kernel.org>; Wed,  6 May 2026 00:13:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=149.248.17.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777998391; cv=none; b=b2XqrhMSx9cgqNL5aIJy/EEMCa4y7XwGuepE7hurErLXRA/YP+qllxrFRA6frgYh6ik4XxdbRKMG3XxjzkJ5CpIYcU/98fjbb+v02TWZrWiYpLGc2cW3qHOoHeERPPSI7gFQjYbtQab9wwxkU+/yVJgo2bijO+gucVg7GiOaj/g=
+	t=1778026436; cv=none; b=lHHrZdFMF6QeHsu9KOZGZeFwf4Z9w3mdNDIOG+skUgtUR/B75ifK1YlOuG/LQ5aCpG5+1I+mIpQwbvsc/D2eMp0A6f2Xc7bY6gkyy0mDeRnMVYBMpSTEQgndaD/xb4UYMXc0S+eBase+xNbSbkARu86wm/6ah3bODRiZKnOM4JM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777998391; c=relaxed/simple;
-	bh=d9oRhAaRGwydDiDuK7BhCRvRWDp8pOBlU9+d0qcoLXY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=YjO8IVpMtSzCXGDC2g79qdmSNbTcXozg1SPKqgVjg/MPfo+j/eJYcAoIiSrMv0yC2XUaaLSE6CFwkfpe0i40Hb0Ukrk+jajW6M67+pxCmfcbur3xRzWfG3w1C/EKjxUMVnc8yjw1nBI3bv2L42x3uN9ljDkWbOiEsxuHHHZEPM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P3c57A43; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778026436; c=relaxed/simple;
+	bh=I3ngZlwL6uX1E2q10xLszEaRMj0Lk3K3zRiDSw/ojOw=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=AtO0YVBtoLE5Ngh6cmxzj/NHzDY02yJwIRDS0vzsmNpvFxQS353XAMRKw3dKPJOK9smS8dCKtzFk/fWJF/J+HJsWM7NlPsB21Yj784wvoVMrKRPL82Nmetj9b0GQCrSc3f8kiioUHENkFOnC+hMzuF6VwQr34fTDkf+kjwlc0eQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tkel.ly; spf=pass smtp.mailfrom=tkel.ly; dkim=pass (2048-bit key) header.d=tkel.ly header.i=@tkel.ly header.b=Hlgj/1u0; arc=none smtp.client-ip=149.248.17.236
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tkel.ly
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tkel.ly
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P3c57A43"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D7D5C2BCB4;
-	Tue,  5 May 2026 16:26:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777998391;
-	bh=d9oRhAaRGwydDiDuK7BhCRvRWDp8pOBlU9+d0qcoLXY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=P3c57A43Ly9U95oakv1tzSfsBDMAQvbGX3L5fDur0PPxN8g/BkGWOrF0IQ1vnb8kn
-	 q5FpFULXXt5CFm8Sy/qdB+pGfZ+595OPQ/+H2h/dpiAmaAvc14vlTx4Z7a774smhAG
-	 mRi8mWrUgi+n3TQ7klBwMiCHYz3eCKtTXeoo5Vugwd9W8wFUQWC/qxp4tUJmAVvLgS
-	 jHSgvFYD9WkXPVvCXJZvfwe/RjozMVbFHi4OoCu3mLeSQZDLHCSt79QQSlDeG2UmtL
-	 GPSyoqLckepvJjFkRnrQa3yfyKh+iIz18B0bEQzeLYkJERNnopW8hE0+mQWVZV5SLC
-	 bwYA1sJR8mQqw==
-Date: Tue, 5 May 2026 11:26:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org, netdev@vger.kernel.org,
-	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manikandan K Pillai <mpillai@cadence.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Tom Joseph <tjoseph@cadence.com>
-Subject: Re: [PATCH v8 phy-next 01/31] PCI: cadence: Preserve all error codes
- in cdns_plat_pcie_probe()
-Message-ID: <20260505162629.GA734488@bhelgaas>
+	dkim=pass (2048-bit key) header.d=tkel.ly header.i=@tkel.ly header.b="Hlgj/1u0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tkel.ly; s=mail;
+	t=1778026428; bh=I3ngZlwL6uX1E2q10xLszEaRMj0Lk3K3zRiDSw/ojOw=;
+	h=Subject:From:To:Cc:References:In-Reply-To;
+	b=Hlgj/1u0KEDo2NRdNn6vfMuPJ7MwXVIN1WakuE1h695ynku69AYXOZ08eggyCeBKS
+	 TR7lyP5Cr1gASH6RPzCWBeFtzII3HjF/QVK5lwBe54vCeY+YnFCiNg+t6eEhxjAb2R
+	 o+Jl12cp0BVQA/ORGq2hYeCfkaoAJo3M+ObG5v2QB7+MreJdSq7Qeock6IK8C6TvPM
+	 /cApGNbXcZnF26pPjHQoRDKf1e+NZJQB1cM6tPNUjx0Nzt07BcAzCvscUOueMhCacm
+	 fZdvKGQTNZH6gozzFxUaLyAFTiP9UxVp71eoO4P4sOS1FluYi6U2AOxCHGab29rYzf
+	 NYSJtxo+Rs2Uw==
+Message-ID: <ec407a6d-2164-4252-90f0-0aebe8227290@tkel.ly>
+Date: Tue, 5 May 2026 17:13:41 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260505100523.1922388-2-vladimir.oltean@nxp.com>
+Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
+From: Tommy Kelly <linux@tkel.ly>
+To: Niklas Cassel <cassel@kernel.org>, Heiko Stuebner <heiko@sntech.de>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
+ John Garry <john.g.garry@oracle.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20260501125410.1204490-5-cassel@kernel.org>
+ <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
+Content-Language: en-US
+In-Reply-To: <88ea5d12-520b-4022-9faa-3ea879a8bfb6@tkel.ly>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-[+cc Tom, author of bd22885aa188 in case there's something subtle here]
-
-On Tue, May 05, 2026 at 01:04:53PM +0300, Vladimir Oltean wrote:
-> The blamed commit functionally changed the error path of
-> cdns_pcie_host_probe(), now cdns_plat_pcie_probe().
+On 5/2/26 17:59, Tommy Kelly wrote:
 > 
-> When the old code path executed "goto err_get_sync", the PCIe controller
-> probe function propagated the pm_runtime_get_sync() error code. The new
-> code doesn't, and returns 0.
+> I will also apply the FBS devicetree change (5918bf2) and test with that too.
 > 
-> Similarly for the "goto err_init" previously triggered by
-> cdns_pcie_host_init() errors, and now triggered by
-> cdns_pcie_host_setup() and cdns_pcie_ep_setup() errors. These are not
-> propagated and will result in probing success, which is incorrect.
-> 
-> Fixes: bd22885aa188 ("PCI: cadence: Refactor driver to use as a core library")
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-> ---
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Manikandan K Pillai <mpillai@cadence.com>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
 
-I guess this driver is orphaned.
+Special thank you to Heiko for the FBS support!
+His patch setting PxCMD.FBSCP works: https://lore.kernel.org/all/20260201191804.41421-2-heiko@sntech.de/
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+I compiled the FBS devicetree change into u-boot (which passes the fdt to linux),
+and running on unpatched linux 6.19.12,
+FBS works, and no regressions are present.
+Logs:
 
-> v7->v8: patch is new, issue was flagged by Sashiko
-> https://sashiko.dev/#/patchset/20260430110652.558622-1-vladimir.oltean@nxp.com
-> ---
->  drivers/pci/controller/cadence/pcie-cadence-plat.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> index b067a3296dd3..8b12a46b5601 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> @@ -126,7 +126,7 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
->  	while (phy_count--)
->  		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
->  
-> -	return 0;
-> +	return ret;
+> Linux version 6.19.12-200.fc43.aarch64
+> ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
+> ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
+> platform fc800000.sata:sata-port@0: supply target not found, using dummy regulator
+> ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
+> ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
+> platform fc800000.sata:sata-port@0: supply target not found, using dummy regulator
+> ahci-dwc fc800000.sata: supply ahci not found, using dummy regulator
+> ahci-dwc fc800000.sata: supply phy not found, using dummy regulator
+> platform fc800000.sata:sata-port@0: supply target not found, using dummy regulator
+> ahci-dwc fc800000.sata: PMPn is limited up to 5 ports
+> ahci-dwc fc800000.sata: forcing port_map 0x0 -> 0x1
+> ahci-dwc fc800000.sata: masking port_map 0x1 -> 0x1
+> ahci-dwc fc800000.sata: AHCI vers 0001.0300, 32 command slots, 6 Gbps, platform mode
+> ahci-dwc fc800000.sata: 1/1 ports implemented (port mask 0x1)
+> ahci-dwc fc800000.sata: flags: ncq sntf pm led clo only pmp fbs pio slum part ccc apst 
+> scsi host0: ahci-dwc
+> ata1: SATA max UDMA/133 mmio [mem 0xfc800000-0xfc800fff] port 0x100 irq 59 lpm-pol 0
+> ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> ata1.15: Port Multiplier 1.2, 0x197b:0x5755 r0, 5 ports, feat 0x5/0xf
+> ahci-dwc fc800000.sata: FBS is enabled
+> ata1.00: hard resetting link
+> ahci-dwc fc800000.sata: FBS is disabled
+> ahci-dwc fc800000.sata: FBS is enabled
+> ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
+> ata1.01: hard resetting link
+> ahci-dwc fc800000.sata: FBS is disabled
+> ahci-dwc fc800000.sata: FBS is enabled
+> ata1.01: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
+> ata1.02: hard resetting link
+> ahci-dwc fc800000.sata: FBS is disabled
+> ahci-dwc fc800000.sata: FBS is enabled
+> ata1.02: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
+> ata1.03: hard resetting link
+> ahci-dwc fc800000.sata: FBS is disabled
+> ahci-dwc fc800000.sata: FBS is enabled
+> ata1.03: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
+> ata1.04: hard resetting link
+> ahci-dwc fc800000.sata: FBS is disabled
+> ahci-dwc fc800000.sata: FBS is enabled
+> ata1.04: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
 
-This affects cases where pm_runtime_get_sync(),
-cdns_pcie_host_setup(), or cdns_pcie_ep_setup() return failure.
 
-Seems right to me to fail the probe when these fail.
+Again, that is before this patch series, I see no queue_depth regression with FBS.
+As opposed to CBS which had a regression in the 6.19.x series.
 
-Not all users of pm_runtime_get_sync() check for failure, but I think
-all the other controller drivers that do check return failures from
-the .probe().
+I can test with this patch series + FBS if you'd like.
 
->  }
->  
->  static void cdns_plat_pcie_shutdown(struct platform_device *pdev)
-> -- 
-> 2.34.1
-> 
+- Tommy
+
