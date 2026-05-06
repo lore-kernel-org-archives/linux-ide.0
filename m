@@ -1,126 +1,102 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1571149C6F;
-	Wed,  6 May 2026 01:11:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 104C01DF27F;
+	Wed,  6 May 2026 02:23:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778029862; cv=none; b=SbuyvHfBs3K+D66ctqR5XuC3lzPHrTyGr3UIFOteArTq+UGZbWceRe0ooy12XopuN8Yg/CQRVTlx0ruIlCycJt+ObwiTzokbJH1FwnTki7AUT9zLF7Ba6Z2W/00/ZAXw//o5wx0XBbqYfuulJPOVyY9PkFqaz41sf7wuYL8sfFY=
+	t=1778034205; cv=none; b=VPRRdq13VsbBCobDt71oVG5ugbzPGLmpTqjFFWAG1sx7QkZUA2G1dxeXoJeAM35r9Vbdojk2aHOveYAumknjbj+9KUv98lehht5c9pLjsfy+Mxca3uZ7r7lnp3a+kb3bGCWPkcm+2+/KR8qYJFj4fHW3WD3FMilfPpgiCDS6tUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778029862; c=relaxed/simple;
-	bh=RkLhcLrXVauydYrKsrABqVXoD9Sb2pNbxPAsYYGUFfg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=i898LzW9DjzydupzW/YPhEEU8w27jEtGZ4qZ/O2K6Okc+VziWO0zCWP0BsjpLlAQyq+R/KR5ZtTU8bjLBrksYM43d15RIBXs2KWLZ29MyGJr2I++IfF/+hug87sNelOdorbgeUISX+Ig9flwIhXJ4kkc4k9NN2i05hyoQXA520o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=XVV73trR; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1778034205; c=relaxed/simple;
+	bh=eg/HUtRZV1OfB32Pl9hX1Wd/RgbyKgKq33zgOaab4gk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=FZ6VPFgV1Q+rl4dORkAc5S9CAXR64L0f/NnwDzoFyxHE98rY/SeFVYACmb4+QH+NqcFBAlYmpQZ2/WFqYqnziZmbiPZhfnQUcjCNQ/EhsDCpOl8aU4zoGaEFEc+Xe5IFKUj6s9vZ5SDNcJctIJQaOkQPZ2ljVCIaSdB7dhbh0Dg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=KPTe1jf9; arc=none smtp.client-ip=113.46.200.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="XVV73trR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1778028756;
-	bh=RkLhcLrXVauydYrKsrABqVXoD9Sb2pNbxPAsYYGUFfg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=XVV73trRzWdgCF3a6jOKHNi9YwD8nQCerYqJ68Qvi8ECP+7lQTiHM9oThJtF0X+LZ
-	 hey4+u8ax+HJjuPZOhF9gAawTgJaraxqOyqmFBLQ8Gu1bA3CH+GJJeMwghTYUwzIwD
-	 8PbiQMAdRD/NEshJAtEGX556Ua8Qr7wA17vCXa9A=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 3A7EFBE516;
-	Wed,  6 May 2026 00:52:36 +0000 (UTC)
-Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id AB6585F938;
-	Wed,  6 May 2026 01:52:35 +0100 (BST)
-Message-ID: <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
-Date: Wed, 6 May 2026 01:52:35 +0100
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="KPTe1jf9"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=ngKZ03eUekUOWNvvm7qOrxc0VTAY6W/3Fi1OVrsl050=;
+	b=KPTe1jf9Y7soOz806adleYvYOoZ1nD8ugbsyIlMWz2vdCYtOmW6f92Q2THxdEcSBbB+ijWebC
+	4ec8RiBQFaV1xzWA1FTsy07rq3cYIICbVo6ZCRJhUIu/IpKGExA3zZ66M3dNg6hod8wDD0yPGVo
+	/wnvpf43+B4J7nv34f31XOk=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4g9Js31hKQznTW4;
+	Wed,  6 May 2026 10:16:07 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id 374AB4048B;
+	Wed,  6 May 2026 10:23:14 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Wed, 6 May 2026 10:23:13 +0800
+Message-ID: <a6bd2366-dbea-f82b-92b5-fd038c3a768d@huawei.com>
+Date: Wed, 6 May 2026 10:23:13 +0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 7/7] scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to
- MATSHITA and NEC PD-1 variants
-To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260426190920.2051289-1-philpem@philpem.me.uk>
- <20260426190920.2051289-8-philpem@philpem.me.uk>
- <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
-Content-Language: en-GB
-From: Phil Pemberton <philpem@philpem.me.uk>
-In-Reply-To: <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH] ata: libata-sata: retry hardreset when device detected
+ but PHY not established
+Content-Language: en-CA
+To: Niklas Cassel <cassel@kernel.org>
+CC: Damien Le Moal <dlemoal@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<liuyonglong@huawei.com>, <kangfenglong@huawei.com>,
+	<linux-ide@vger.kernel.org>
+References: <20260425060447.1312763-1-yangxingui@huawei.com>
+ <e8d237bc-7191-4881-924b-86a34ff0f3b9@kernel.org>
+ <a118114e-9828-06d6-d38b-2b426c92bb14@huawei.com>
+ <33299d0d-d863-4e00-951e-4728ddc823e2@kernel.org>
+ <0539efac-d9b5-4f95-eecd-b88cb3cb8724@huawei.com>
+ <66bc004a-4a18-43d1-b296-463ea72cbc85@kernel.org>
+ <c78f6dad-b0fe-a2fb-8458-9fe182cd6b54@huawei.com> <afMW2scJrBSI_jLo@ryzen>
+ <afMgoFBFPWR0f4gK@ryzen>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <afMgoFBFPWR0f4gK@ryzen>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepemh100002.china.huawei.com (7.202.181.84) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-On 27/04/2026 12:56, Hannes Reinecke wrote:
-> On 4/26/26 21:09, Phil Pemberton wrote:
->> The Panasonic LF-1095/LF-1195 PD/CD combo drive was sold under three
->> OEM identities: COMPAQ "PD-1", MATSHITA "PD-1", and NEC "PD-1 ODX654P".
->> All three are the same drive mechanism with the same firmware family,
->> so they should share the BLIST_NO_LUN_1F quirk that was applied to the
->> COMPAQ variant: PDT 0x1f / PQ 0 INQUIRY responses on non-existent LUNs
->> are treated as "LUN not present" rather than as a phantom sdev.
+
+
+On 2026/4/30 17:28, Niklas Cassel wrote:
+> On Thu, Apr 30, 2026 at 10:46:22AM +0200, Niklas Cassel wrote:
+>> If that is the case ata_do_reset() would return 0, and
+>> ata_eh_followup_srst_needed() (returns true only if -EAGAIN) would return false.
 >>
->> This patch is offered for completeness.  It has not been tested on the
->> MATSHITA or NEC variants -- the author only has access to the COMPAQ
->> unit -- but the drives are functionally identical and the flag is a
->> no-op on devices that do not exhibit the PDT 0x1f response.  Drop or
->> hold this patch if confirmation on real hardware is preferred before
->> extending the quirk.
->>
->> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
->> ---
->>   drivers/scsi/scsi_devinfo.c | 6 ++++--
->>   1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
->> index bfc2cbd43897..ab1ffa9433b7 100644
->> --- a/drivers/scsi/scsi_devinfo.c
->> +++ b/drivers/scsi/scsi_devinfo.c
->> @@ -201,7 +201,8 @@ static struct {
->>       {"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
->>       {"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
->>       {"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
->> -    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->> +    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
->> +                   BLIST_NO_LUN_1F},
->>       {"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | 
->> BLIST_INQUIRY_36},
->>       {"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | 
->> BLIST_INQUIRY_36},
->>       {"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
->> @@ -212,7 +213,8 @@ static struct {
->>       {"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
->>       {"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>       {"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->> -    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->> +    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
->> +                      BLIST_NO_LUN_1F},
->>       {"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
->>       {"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>       {"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>> Which should eventually cause us to retry another hard reset, as long as
+>> tries <= max_tries.
 > 
-> Any specific reason why this patch is not merged with the previous one?
-> Otherwise:
+> I see now that max_tries is just set to 1.
 > 
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Only that these are optional to the feature work and untested as I don't 
-have hardware. I believe these drives use the same PD-1 mechanism and 
-firmware so should behave the same, but I can't prove it.
-
-The intent was to allow the 1-6 set to be merged (as these are tested) 
-without 7/7 (which is not) to minimise the risk of regressions.
+> I think I would prefer another hardreset (with a larger timeout) over
+> a follow-up softreset after the hardreset...
+> 
+> If -EAGAIN is reserved for "do an follow up SRST after the COMRESET",
+> because certain Port Multipliers need it.
+> 
+> Perhaps introduce another error code, which means, device detected,
+> overload max_tries to 3 and goto retry.
+> 
+> That way we will retry using COMRESET, with increasing timeouts, since:
+> deadline = ata_deadline(jiffies, ata_eh_reset_timeouts[try++]);
+> 
+Increasing the deadline of the debound does not solve the problem. 
+Additionally, we do not have a customer environment locally, so we are 
+not sure whether retry a hardreset can completely resolve the issue. 
+However, in this scenario, the SATA hard disk manufacturer has added a 
+mechanism to attempt to proactively trigger COMINIT for re-establishing 
+the link after an abnormal link establishment. Feedback from pressure 
+testing indicates that the issue has been resolved. ^-^
 
 Thanks,
--- 
-Phil.
-philpem@philpem.me.uk
-https://www.philpem.me.uk/
+Xingui
+.
