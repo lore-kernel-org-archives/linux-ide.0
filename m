@@ -1,197 +1,84 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C74436DA03
-	for <linux-ide@vger.kernel.org>; Fri,  8 May 2026 06:02:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 264ED37B41A
+	for <linux-ide@vger.kernel.org>; Fri,  8 May 2026 19:23:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778220141; cv=none; b=M91E/rAMCYXdn+vZloBvoK9+ydUXUCEqHy81/DeqMZxgIb0yDDtYYEUm2BdDqh0m83eHui6FIUif+3HWZfzyVWVRWkfOM+mweOqe1HAkD3dWNuy0zv5113Ipfv3DEZX9XKMTmlSc+EC/VUAL9N0TSK+dzXCYtQkrGVDA4RPt5HI=
+	t=1778268222; cv=none; b=UwbppDARdQNAPl6sqfQzcatcov3jNk6L12EBKKPix03xIE/mZXun2EKMKig7O/a4gyYloYQrl5JvAGejWsFzdZMdVCYTj9p1SW6CLcv8B4lQkiiR6HDsm9xcjSKrq3lI2zzOd28MVo3BM9EGXINZY3NDsDHufPHDb8eBbexyU1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778220141; c=relaxed/simple;
-	bh=FGLpgt0TrLuQTT0/E8yZosrOpE5j6cTvj0aALjoi95s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nnLhTMB5FaiwuqWNpPaBliTqvFgIQ209hgwcFpaqOqMzp/BXiTZukhd/3HoLGajWD7LlJtalNxD3wtCqSPTDTWFLjPbF2e/JoVuPUVm1dlBCpeAHSKq+V18BgH99cx1sc3tBwuXtFBebsPJ8cnw+cMzuTR2i8i2R7NgKvvcT73Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YxtnTZvt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rgxH3Etg; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YxtnTZvt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rgxH3Etg; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1778268222; c=relaxed/simple;
+	bh=Ui6v7ZYYV108+i/doDDUhMIYyfstgEMqKZnw483GfBo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jW4gFa2dG4CeOPpIQf3zb7hWeq+q1EpzpL0LNhmUbbG8ty1ImItTL9+7RUPqvCLf0Hxlb4vl09dfJgZtEZF4eT3kOWCdfvGeDK++pdhlRNNFwiSSXtf6xWTFa/xaah+4LiPMil9wBhEcsluLkQRt+2WsSbgT+MJY2TO388mAkQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ye+pBlBx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YxtnTZvt";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rgxH3Etg";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YxtnTZvt";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rgxH3Etg"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id C43785C4A6;
-	Fri,  8 May 2026 06:02:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1778220124; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
-	b=YxtnTZvtXxy33LeyVjcavsAUuIwGKwcPVpRtkzRVsRFusMz3znT3fpJRpzc2a+SkCVxeO2
-	ELThfBq4ezODVvtiyZfYL+XzknStgeyb7gegiOaddXE1DMIjovMrFSGdtDj1LijnFNuUqI
-	e9+K54ppUM8fcF64i+F3s0XDb3AjAag=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1778220124;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
-	b=rgxH3EtgtMAjAJYRhRFv0YVV+Y7ehbKMMo7q8mLqr9ZywvXeMH4AoT6L3piyR9ckTi1Ld7
-	ppGMVp/ec8acE4Dw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1778220124; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
-	b=YxtnTZvtXxy33LeyVjcavsAUuIwGKwcPVpRtkzRVsRFusMz3znT3fpJRpzc2a+SkCVxeO2
-	ELThfBq4ezODVvtiyZfYL+XzknStgeyb7gegiOaddXE1DMIjovMrFSGdtDj1LijnFNuUqI
-	e9+K54ppUM8fcF64i+F3s0XDb3AjAag=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1778220124;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
-	b=rgxH3EtgtMAjAJYRhRFv0YVV+Y7ehbKMMo7q8mLqr9ZywvXeMH4AoT6L3piyR9ckTi1Ld7
-	ppGMVp/ec8acE4Dw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 74A6E593A7;
-	Fri,  8 May 2026 06:02:04 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id sUNNGlx8/WmJPwAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 08 May 2026 06:02:04 +0000
-Message-ID: <ea4de81e-4c9b-48d0-bc6d-72f23c7fc831@suse.de>
-Date: Fri, 8 May 2026 08:02:03 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ye+pBlBx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69815C2BCB0;
+	Fri,  8 May 2026 19:23:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778268222;
+	bh=Ui6v7ZYYV108+i/doDDUhMIYyfstgEMqKZnw483GfBo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Ye+pBlBxEj91+llTIqxOK1CVYiVnTLJdusqHOEv2aX/jLyjSiVqmuJrPUdlsie+at
+	 iLzMxoOMZ1t2wfyz/3uF5RglZKTO+D8/70RHKpQeRZzb8jJtrN4VwypSyhAq7mKDfY
+	 aNDBks2f4CcDv5Hus7akkFRhdLP8rwDcyGV1scLQndhFQtngTFHKznrKhMnWO4rNTC
+	 nKaQzRccBx7437k4AaT8+RZtMyhlu4SibZSYhyanvtAE0L8asMy+GZ4YXapJuMoisB
+	 iQb7Zx2eS6xA+Tfd7pxb4TfygFDswUILVoSri9hxVsTsgcE1atSt+SP04/nVFiT8cp
+	 +1RZIE4DV1w/w==
+Date: Fri, 8 May 2026 21:23:36 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Tommy Kelly <linux@tkel.ly>, Damien Le Moal <dlemoal@kernel.org>,
+	Tejun Heo <htejun@gmail.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-ide@vger.kernel.org, hare@suse.de
+Subject: Re: [PATCH 0/3] ata: fix deferred QC handling for port multipliers
+Message-ID: <af44OKkuhWtlO3fU@ryzen>
+References: <20260501125410.1204490-5-cassel@kernel.org>
+ <4be77745-2b7d-416c-b01a-88669d9bbeb8@oracle.com>
+ <afT0INMUg7scssxk@fedora>
+ <0f4458e2-cdb3-463b-a25c-5b2147e4e442@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 7/7] scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to
- MATSHITA and NEC PD-1 variants
-To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260426190920.2051289-1-philpem@philpem.me.uk>
- <20260426190920.2051289-8-philpem@philpem.me.uk>
- <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
- <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0f4458e2-cdb3-463b-a25c-5b2147e4e442@oracle.com>
 
-On 5/6/26 02:52, Phil Pemberton wrote:
-> On 27/04/2026 12:56, Hannes Reinecke wrote:
->> On 4/26/26 21:09, Phil Pemberton wrote:
->>> The Panasonic LF-1095/LF-1195 PD/CD combo drive was sold under three
->>> OEM identities: COMPAQ "PD-1", MATSHITA "PD-1", and NEC "PD-1 ODX654P".
->>> All three are the same drive mechanism with the same firmware family,
->>> so they should share the BLIST_NO_LUN_1F quirk that was applied to the
->>> COMPAQ variant: PDT 0x1f / PQ 0 INQUIRY responses on non-existent LUNs
->>> are treated as "LUN not present" rather than as a phantom sdev.
->>>
->>> This patch is offered for completeness.  It has not been tested on the
->>> MATSHITA or NEC variants -- the author only has access to the COMPAQ
->>> unit -- but the drives are functionally identical and the flag is a
->>> no-op on devices that do not exhibit the PDT 0x1f response.  Drop or
->>> hold this patch if confirmation on real hardware is preferred before
->>> extending the quirk.
->>>
->>> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
->>> ---
->>>   drivers/scsi/scsi_devinfo.c | 6 ++++--
->>>   1 file changed, 4 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
->>> index bfc2cbd43897..ab1ffa9433b7 100644
->>> --- a/drivers/scsi/scsi_devinfo.c
->>> +++ b/drivers/scsi/scsi_devinfo.c
->>> @@ -201,7 +201,8 @@ static struct {
->>>       {"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
->>>       {"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
->>>       {"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
->>> -    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>> +    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
->>> +                   BLIST_NO_LUN_1F},
->>>       {"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | 
->>> BLIST_INQUIRY_36},
->>>       {"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | 
->>> BLIST_INQUIRY_36},
->>>       {"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
->>> @@ -212,7 +213,8 @@ static struct {
->>>       {"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
->>>       {"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>>       {"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>> -    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>> +    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
->>> +                      BLIST_NO_LUN_1F},
->>>       {"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
->>>       {"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>>       {"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>
->> Any specific reason why this patch is not merged with the previous one?
->> Otherwise:
->>
->> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> 
-> Only that these are optional to the feature work and untested as I don't 
-> have hardware. I believe these drives use the same PD-1 mechanism and 
-> firmware so should behave the same, but I can't prove it.
-> 
-> The intent was to allow the 1-6 set to be merged (as these are tested) 
-> without 7/7 (which is not) to minimise the risk of regressions.
-> 
-So drop it, then.
-We can always add it later once someone shows up who actually has the 
-hardware.
+Hello John,
 
-Cheers,
+On Mon, May 04, 2026 at 08:27:06AM +0100, John Garry wrote:
+> On 01/05/2026 19:42, Niklas Cassel wrote:
+> > On Fri, May 01, 2026 at 03:19:03PM +0100, John Garry wrote:
+> > > On 01/05/2026 13:54, Niklas Cassel wrote:
+> > > 
+> > > As I understand, this deferred QC scheme was intended to solve starvation
+> > > problems for multiqueue SAS HBAs (using libsas-based drivers). libsas has no
+> > > port multiplier support, so I wonder why we make deferred QC scheme work for
+> > > port multiplier, i.e. non-libsas scenario.
+> > 
+> > Are you certain that there are no libsas HBAs that support port
+> > multipliers?
+> 
+> No, I am just saying that libsas does not support port multipliers, see
+> earlier effort @ https://lore.kernel.org/linux-scsi/1398346023-10225-1-git-send-email-yxlraid@gmail.com/
+> 
+> See this today:
+> 
+> int sas_discover_sata(struct domain_device *dev)
+> {
+> 	if (dev->dev_type == SAS_SATA_PM)
+> 		return -ENODEV;
+>
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+I see, thank you for the information!
+
+Will send a V2 soon.
+
+
+Kind regards,
+Niklas
