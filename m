@@ -1,99 +1,197 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FBE33D565E;
-	Wed,  6 May 2026 23:45:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C74436DA03
+	for <linux-ide@vger.kernel.org>; Fri,  8 May 2026 06:02:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778111162; cv=none; b=uDwjMFUyfTFoVuAda/q2Mx/n1NsFonOAcjVvQWb1LuV74okd94+LwvlUblJT18xCsArnuWyHHazzgs8DU7N3DS+3PCm6b4rm03ud8ud3OxFOs2uxD1eSWng3kedkNYYRJkOXW9zn4tWCUVd+Mk7rsUOE6eh9M0Oo/F19hsT/8vQ=
+	t=1778220141; cv=none; b=M91E/rAMCYXdn+vZloBvoK9+ydUXUCEqHy81/DeqMZxgIb0yDDtYYEUm2BdDqh0m83eHui6FIUif+3HWZfzyVWVRWkfOM+mweOqe1HAkD3dWNuy0zv5113Ipfv3DEZX9XKMTmlSc+EC/VUAL9N0TSK+dzXCYtQkrGVDA4RPt5HI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778111162; c=relaxed/simple;
-	bh=NgI+BloTluXJ7eZWq4tfe6pWs03z++jaiAMs+De/a1I=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lGUrT4AJRFHslAPnFB6prIVlzTBIFK2uNxnCx1gPgQ1TBattvkxo8A5+YyVHioemMnLNL/3B+HS3ZzmVZ35Ydk/kR4sjMKUlhm1R9nLOnN7tbnswzMlUb9HEA2U7ZCQ+Tq3QYfA7lQq6WKJ08mE+tOy5hiC9XeUbPJlDr6Shfr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=gHOt6MzO; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1778220141; c=relaxed/simple;
+	bh=FGLpgt0TrLuQTT0/E8yZosrOpE5j6cTvj0aALjoi95s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nnLhTMB5FaiwuqWNpPaBliTqvFgIQ209hgwcFpaqOqMzp/BXiTZukhd/3HoLGajWD7LlJtalNxD3wtCqSPTDTWFLjPbF2e/JoVuPUVm1dlBCpeAHSKq+V18BgH99cx1sc3tBwuXtFBebsPJ8cnw+cMzuTR2i8i2R7NgKvvcT73Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YxtnTZvt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rgxH3Etg; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YxtnTZvt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rgxH3Etg; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="gHOt6MzO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1778111155;
-	bh=NgI+BloTluXJ7eZWq4tfe6pWs03z++jaiAMs+De/a1I=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=gHOt6MzOnbZcGUUVJDWsQ9SLZQ5mhw3VjCV6DnCqzh0YN/kzu9gWNoWaSHxWujIS4
-	 qNYd0gsvl7fJRtV07RHXGXfOWPR5jC4tRXEsSOGGckaB3ppA9E4uxdnC1CnZMJKgfW
-	 UxXTAnOxUkxKJ+HdIVZYeZv3WjkkW8aMNyqS4jJo=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YxtnTZvt";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rgxH3Etg";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YxtnTZvt";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rgxH3Etg"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 8EF82BE5BA;
-	Wed,  6 May 2026 23:45:55 +0000 (UTC)
-Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 4CC415FC56;
-	Thu,  7 May 2026 00:45:55 +0100 (BST)
-From: Phil Pemberton <philpem@philpem.me.uk>
-To: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>
-Subject: [PATCH v4 6/7] scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN ATAPI device quirk
-Date: Thu,  7 May 2026 00:45:47 +0100
-Message-ID: <20260506234548.1974603-7-philpem@philpem.me.uk>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260506234548.1974603-1-philpem@philpem.me.uk>
-References: <20260506234548.1974603-1-philpem@philpem.me.uk>
+	by smtp-out2.suse.de (Postfix) with ESMTPS id C43785C4A6;
+	Fri,  8 May 2026 06:02:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1778220124; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
+	b=YxtnTZvtXxy33LeyVjcavsAUuIwGKwcPVpRtkzRVsRFusMz3znT3fpJRpzc2a+SkCVxeO2
+	ELThfBq4ezODVvtiyZfYL+XzknStgeyb7gegiOaddXE1DMIjovMrFSGdtDj1LijnFNuUqI
+	e9+K54ppUM8fcF64i+F3s0XDb3AjAag=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1778220124;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
+	b=rgxH3EtgtMAjAJYRhRFv0YVV+Y7ehbKMMo7q8mLqr9ZywvXeMH4AoT6L3piyR9ckTi1Ld7
+	ppGMVp/ec8acE4Dw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1778220124; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
+	b=YxtnTZvtXxy33LeyVjcavsAUuIwGKwcPVpRtkzRVsRFusMz3znT3fpJRpzc2a+SkCVxeO2
+	ELThfBq4ezODVvtiyZfYL+XzknStgeyb7gegiOaddXE1DMIjovMrFSGdtDj1LijnFNuUqI
+	e9+K54ppUM8fcF64i+F3s0XDb3AjAag=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1778220124;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
+	b=rgxH3EtgtMAjAJYRhRFv0YVV+Y7ehbKMMo7q8mLqr9ZywvXeMH4AoT6L3piyR9ckTi1Ld7
+	ppGMVp/ec8acE4Dw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 74A6E593A7;
+	Fri,  8 May 2026 06:02:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id sUNNGlx8/WmJPwAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 08 May 2026 06:02:04 +0000
+Message-ID: <ea4de81e-4c9b-48d0-bc6d-72f23c7fc831@suse.de>
+Date: Fri, 8 May 2026 08:02:03 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 7/7] scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to
+ MATSHITA and NEC PD-1 variants
+To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20260426190920.2051289-1-philpem@philpem.me.uk>
+ <20260426190920.2051289-8-philpem@philpem.me.uk>
+ <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
+ <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-The COMPAQ PD-1 (OEM Panasonic/Matsushita LF-1195C) is a PD/CD combo
-drive that exposes two ATAPI LUNs: LUN 0 is a CD-ROM (TYPE_ROM),
-LUN 1 is a 650 MB PD (TYPE_DISK).
+On 5/6/26 02:52, Phil Pemberton wrote:
+> On 27/04/2026 12:56, Hannes Reinecke wrote:
+>> On 4/26/26 21:09, Phil Pemberton wrote:
+>>> The Panasonic LF-1095/LF-1195 PD/CD combo drive was sold under three
+>>> OEM identities: COMPAQ "PD-1", MATSHITA "PD-1", and NEC "PD-1 ODX654P".
+>>> All three are the same drive mechanism with the same firmware family,
+>>> so they should share the BLIST_NO_LUN_1F quirk that was applied to the
+>>> COMPAQ variant: PDT 0x1f / PQ 0 INQUIRY responses on non-existent LUNs
+>>> are treated as "LUN not present" rather than as a phantom sdev.
+>>>
+>>> This patch is offered for completeness.  It has not been tested on the
+>>> MATSHITA or NEC variants -- the author only has access to the COMPAQ
+>>> unit -- but the drives are functionally identical and the flag is a
+>>> no-op on devices that do not exhibit the PDT 0x1f response.  Drop or
+>>> hold this patch if confirmation on real hardware is preferred before
+>>> extending the quirk.
+>>>
+>>> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+>>> ---
+>>>   drivers/scsi/scsi_devinfo.c | 6 ++++--
+>>>   1 file changed, 4 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+>>> index bfc2cbd43897..ab1ffa9433b7 100644
+>>> --- a/drivers/scsi/scsi_devinfo.c
+>>> +++ b/drivers/scsi/scsi_devinfo.c
+>>> @@ -201,7 +201,8 @@ static struct {
+>>>       {"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
+>>>       {"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
+>>>       {"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
+>>> -    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>>> +    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
+>>> +                   BLIST_NO_LUN_1F},
+>>>       {"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | 
+>>> BLIST_INQUIRY_36},
+>>>       {"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | 
+>>> BLIST_INQUIRY_36},
+>>>       {"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
+>>> @@ -212,7 +213,8 @@ static struct {
+>>>       {"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+>>>       {"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>>>       {"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>>> -    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>>> +    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
+>>> +                      BLIST_NO_LUN_1F},
+>>>       {"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
+>>>       {"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>>>       {"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>>
+>> Any specific reason why this patch is not merged with the previous one?
+>> Otherwise:
+>>
+>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> 
+> Only that these are optional to the feature work and untested as I don't 
+> have hardware. I believe these drives use the same PD-1 mechanism and 
+> firmware so should behave the same, but I can't prove it.
+> 
+> The intent was to allow the 1-6 set to be merged (as these are tested) 
+> without 7/7 (which is not) to minimise the risk of regressions.
+> 
+So drop it, then.
+We can always add it later once someone shows up who actually has the 
+hardware.
 
-Add it to the SCSI device list with:
-  - BLIST_FORCELUN: tells the SCSI layer to scan past LUN 0
-  - BLIST_SINGLELUN: serialises commands across the two LUNs, since
-    the drive has a single transport and cannot handle concurrent
-    operations on both
-  - BLIST_NO_LUN_1F: the drive returns PQ=0/PDT=0x1f for unpopulated
-    LUNs instead of PQ=3; this flag tells scsi_probe_and_add_lun()
-    to silently skip them
+Cheers,
 
-The INQUIRY strings as reported by the device are:
-  Vendor:  "COMPAQ  " (T10 format, space-padded)
-  Product: "PD-1"
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
----
- drivers/scsi/scsi_devinfo.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 68a992494b12..bfc2cbd43897 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -150,6 +150,8 @@ static struct {
- 	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
- 	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
- 	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
-+	{"COMPAQ", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
-+				 BLIST_NO_LUN_1F},
- 	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
- 	{"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
- 	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
+Hannes
 -- 
-2.43.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
