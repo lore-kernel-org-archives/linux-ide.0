@@ -1,77 +1,128 @@
-Received: from out198-153.us.a.mail.aliyun.com (out198-153.us.a.mail.aliyun.com [47.90.198.153])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 755963D5228
-	for <linux-ide@vger.kernel.org>; Fri,  8 May 2026 21:19:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.90.198.153
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 051622DB789
+	for <linux-ide@vger.kernel.org>; Sun, 10 May 2026 19:46:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778275183; cv=none; b=OLZ85NRlsqRx4h2zr96JmbC9Qdkim/HSy466LsIdaNz3Z5PG+xbWBm1TyZGaoPTjgJMtVw4GzGQ4g+TP2fdnV012GvYewrM97Wv3dIPV9Qyr6j7mrwt7i5vmbPetGDXkIf5xJuZyLNrnAAxyAY3ZvfFjWxQ9a8pQyDH14NCy1v0=
+	t=1778442387; cv=none; b=NIWkaBltT/8RZfN36fNsDCFPxpPfKpiX6GUhhHqRuc/JPTonq9UK3VXJXIAAepd9JBhs+eJXQXHVzEtRLPrxPtS5dWhlDiwohX1SlkWzJ33xKr7il6heUghMy2N1O9zQYS0XI8rwEjQzzoynsQLNP3C4nNLqnDgymQ0VfcrAoXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778275183; c=relaxed/simple;
-	bh=7piiIsRXT8JmHb8nMCvH+6M/Q7awjo3D+ON4irlLqZY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jvRdRoFmcG8mK0pHFP2CaP0l0SiYwm1WW/NoQIf5m3L5lRRVRdYvrQXqoUcJbV0WsBn9IKZqeYWu+cp6AlDLPmh7xyMWNOGPujISqX9coBMB5Qv8tHqtVvP81spqn4seGOmr8qhH6JaVSj3LJz+a6giSFNdHpgo2MkbSuuN8qv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=alancui.cc; spf=pass smtp.mailfrom=alancui.cc; dkim=pass (2048-bit key) header.d=alancui.cc header.i=@alancui.cc header.b=Cilx/pfd; arc=none smtp.client-ip=47.90.198.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=alancui.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alancui.cc
+	s=arc-20240116; t=1778442387; c=relaxed/simple;
+	bh=dx7CTCdfgI9/VwOubrKjgKAV7j3wBdm3ATenpfZhl1I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nr4Zr71q3ri1F8uXWOR170op0CJUpS96rKrQh6LipiwXmnVrReJHeFwBiltVbxBvpXzyuCo6+gxqQXV2snmFu6qR4kMMvz8v1FQKEHibWR/bXRXI9OZqljf7fSBJzU/2MVw2B1pPuo0A8GgcT+lbncibjIBrOVdtNkLtu6OjywU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IT1DJnXa; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alancui.cc header.i=@alancui.cc header.b="Cilx/pfd"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=alancui.cc; s=default;
-	t=1778275170; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=7piiIsRXT8JmHb8nMCvH+6M/Q7awjo3D+ON4irlLqZY=;
-	b=Cilx/pfdxZTkBrpfQ6KJ6NzxVmfyrK7nmsgxeGrWpDtV5NAJrXkMaDItlIMLoUQL6hRgsamwG+uBMsSt4A+RgkvGlBNVIW+tlZ8LuNFOxZHFZqRaMo9TDf7OhUKFb+Ga6ueFfN4i8lDz3KCQ+hB4nlXJ3PYjwlGWzr5acAPdHgc6NJ8HMZNIwdzNOVLcRreUZv9PGXYbbnUxHuRhxxM/i8NajQku8ihB3XXCCa53QIm2XfmvQYqXSitUxYLi9aPVV0V95hPi2VVRY7lxd+cLB9dsVgtZFbBF6eFcb0jnby/9dq4GPzy5HrNdyN2/WwnwwD4MucVSjb+Y7HytDhgp3Q==
-X-Alimail-AntiSpam:AC=CONTINUE;BC=0.09131266|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_social|0.020264-0.000656191-0.97908;FP=13103378969437989735|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam011083013073;MF=me@alancui.cc;NM=1;PH=DS;RN=2;RT=2;SR=0;TI=SMTPD_---.hSovvfK_1778273315;
-Received: from alanarchdesktop.localnet(mailfrom:me@alancui.cc fp:SMTPD_---.hSovvfK_1778273315 cluster:ay29)
-          by smtp.aliyun-inc.com;
-          Sat, 09 May 2026 04:48:36 +0800
-From: AlanCui4080 <me@alancui.cc>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Subject:
- Re: Default IDENTIFY timeout is 5000ms which is too short for enterprise
- disks
-Date: Sat, 09 May 2026 04:48:35 +0800
-Message-ID: <DlZIztR2R7G4sZHRUgM9CA@alancui.cc>
-In-Reply-To: <aepGCyy5uXXxw6jT@ryzen>
-References:
- <14015677.uLZWGnKmhe@alanarchdesktop> <p9jLdz6RRGKjgu3OloMgWw@alancui.cc>
- <aepGCyy5uXXxw6jT@ryzen>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IT1DJnXa"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c8016d642b2so2069188a12.0
+        for <linux-ide@vger.kernel.org>; Sun, 10 May 2026 12:46:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778442385; x=1779047185; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=KNV1JSHPdfX4ad5c25kdBdSP0iYBWYMWxSLFq4BW90Y=;
+        b=IT1DJnXa8yWVENT0r3TgfTobsBRhDfyaoex0MMODU4U1hdM0n1urCGKmvJ/tcJgwo+
+         WRbhgxq0aMnRVewr1qgTgaIEvpgVkdW3nuiePvKwjR7NYShH923VICo0IDgcF2Tym4Ab
+         yw3tBVm271uuFtd6tW3yeZ4q4+/LBXJRK2j/v+m5EQOX3R+ofJSUkq6/icwsjvtnVXf7
+         OHFaLgMazrqHHCFBFgMNsbPhfOFVOULcKR1LdwtXD4Y15GHWLhgtumO6AY9KxquUItrs
+         VHEwW/V1/caK8LPPmsmCPFmolnnnZLwYMqajfS3wHMeOBxawDo00wMAI/Dx47/flFk66
+         To6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778442385; x=1779047185;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KNV1JSHPdfX4ad5c25kdBdSP0iYBWYMWxSLFq4BW90Y=;
+        b=se8MAY/0KM0QRyL9qmtEijgYwSXBk+RSczj1KqfvcEdxsaNDDyJ1FgohFV/lsTiJHk
+         cl8EQFk+mqsa18wHXJxYWzhz6NegB+MWKhTmqgh6oCWzmd8uWumum7xBlQ9DGAS2x5rj
+         YJmha5f6bqb4pTV/XgO5NBks3jDZ81odlU5ttFYg4iEvNLh1VKbI92soFaBR5iO8oPaM
+         kmrlvZ2UK0HwxIdAiJfpP4ZgxWmwplo1VwL4hpuF5HAage+ehvyw/FR52sEDxv0mfWti
+         U0hAFc07NZ/sy/m72KSpdxPuWeSFEGoxGnfe/uu/T0GuwaHbNfdEQUQW+SZH/URO4WtK
+         3WPQ==
+X-Gm-Message-State: AOJu0YwBebqv3kbnbV2Hded6kojHzF1DzO0b4XjcVcMHoDI54TYVwQ+q
+	Q11UzUSWDgKCWNQxxJIOZ7rQfvWIX+bC6VMiLwDsbbN3Z6HJi4QH7Un+HLM8wg==
+X-Gm-Gg: Acq92OEQs7AHtYR+M2ejn80DvNGazvt9fuJbXVhCTu0ncTspCyj7Q3xhZ3LpZU2ZGqJ
+	ZXmhRFVPaE0+GebMddBDmeTwYKbCWrnhqydePYLqj2hGxh2dTgMMqhJqvqKDFxctVBXbTYJ42kv
+	30YdYSxw0RntjbWWmN/6fasxQ8uefDZpyK7ZGq5jxEk5XuqvU87JBPKV1NlS71Mwg0j+5uaPh5l
+	v4lhpNJILQM4jTUeXFbX6BNQkC/sI5V0riPkZWDAw0SI4Jw72QaAloM0sq6rhOZt8TsI8DIWjN6
+	RKm5HNSqvCz1dL1303uKwDEzw43K/ZWzaOZQ7hRtlR2timhOvZmy/seEv6z+cY47kC5XZpzJNt4
+	zrzELGe4Uj9ydrCIfgVqyUcpf+ckJ+avYNx703MnutpSd7TT3khXTiXyFAoyrEPmEkzBUX6F88a
+	sPPN9qRMhSD6Es0xl7hOsy4pOCxhfgA22baBJy4koGcvDMJ9+f8zA8O+Of/5G87PpPhZOnEQWpw
+	TYvZiZFbGrv7CMvu6chmC2OJznmRAKWwlQ=
+X-Received: by 2002:a17:902:cf0e:b0:2ba:61dd:b41a with SMTP id d9443c01a7336-2babbcf5cc0mr137031195ad.0.1778442384777;
+        Sun, 10 May 2026 12:46:24 -0700 (PDT)
+Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2baf1e358b2sm77026115ad.54.2026.05.10.12.46.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 10 May 2026 12:46:24 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Viresh Kumar <vireshk@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] ata: pata_arasan_cf: simplify ioremap
+Date: Sun, 10 May 2026 12:46:07 -0700
+Message-ID: <20260510194607.9567-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-Hi Cassel,
+Use devm_platform_get_and_ioremap_resource() to combine
+platform_get_resource, request_mem_region, and ioremap.
 
-On Friday, 24 April 2026 00:17=EF=BC=8Cyou wrote=EF=BC=9A
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/ata/pata_arasan_cf.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-> So as far as I can tell, even increasing the timeout does not solve the
-> problem in all cases.
->=20
-> So, right now, I can't even think of a way to quirk the device so that it
-> works reliably.
-
-=46YI, After I replaced the motherboard from B550 to X570, this problem is
-completely gone. So It seems that's a corner case with this drive and my
-south bridge.
-
-The only message produced by kernel ata driver is:
-
-May 09 04:42:37 AlanArchDesktop kernel: ata6: link is slow to respond, plea=
-se be patient (ready=3D0)
-May 09 04:42:37 AlanArchDesktop kernel: ata2: link is slow to respond, plea=
-se be patient (ready=3D0)
-
-Looks pretty good to me :)
-
-Due to the B550 motherboard is taken down from my computer, I'm going
-to do more tests on ata driver once I got my new CPU.
-
-Alan.
-
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index b1e281b64f57..d5cb88ae2b76 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -803,16 +803,6 @@ static int arasan_cf_probe(struct platform_device *pdev)
+ 	irq_handler_t irq_handler = NULL;
+ 	int ret;
+ 
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	if (!res)
+-		return -EINVAL;
+-
+-	if (!devm_request_mem_region(&pdev->dev, res->start, resource_size(res),
+-				DRIVER_NAME)) {
+-		dev_warn(&pdev->dev, "Failed to get memory region resource\n");
+-		return -ENOENT;
+-	}
+-
+ 	acdev = devm_kzalloc(&pdev->dev, sizeof(*acdev), GFP_KERNEL);
+ 	if (!acdev)
+ 		return -ENOMEM;
+@@ -836,14 +826,14 @@ static int arasan_cf_probe(struct platform_device *pdev)
+ 		quirk |= CF_BROKEN_MWDMA | CF_BROKEN_UDMA;
+ 	}
+ 
+-	acdev->pbase = res->start;
+-	acdev->vbase = devm_ioremap(&pdev->dev, res->start,
+-			resource_size(res));
+-	if (!acdev->vbase) {
++	acdev->vbase = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
++	if (IS_ERR(acdev->vbase)) {
+ 		dev_warn(&pdev->dev, "ioremap fail\n");
+-		return -ENOMEM;
++		return PTR_ERR(acdev->vbase);
+ 	}
+ 
++	acdev->pbase = res->start;
++
+ 	acdev->clk = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(acdev->clk)) {
+ 		dev_warn(&pdev->dev, "Clock not found\n");
+-- 
+2.54.0
 
