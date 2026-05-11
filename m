@@ -1,128 +1,128 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 051622DB789
-	for <linux-ide@vger.kernel.org>; Sun, 10 May 2026 19:46:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E9893A1682;
+	Mon, 11 May 2026 12:48:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778442387; cv=none; b=NIWkaBltT/8RZfN36fNsDCFPxpPfKpiX6GUhhHqRuc/JPTonq9UK3VXJXIAAepd9JBhs+eJXQXHVzEtRLPrxPtS5dWhlDiwohX1SlkWzJ33xKr7il6heUghMy2N1O9zQYS0XI8rwEjQzzoynsQLNP3C4nNLqnDgymQ0VfcrAoXs=
+	t=1778503692; cv=none; b=NnfMgeMXiXx8psAYb6IRlwW9GHsaZEumNd3BemEwxOirpwBwKJoHHJZeTejV5zJCUTjWblcQeT5O+E3TYr+XfNrIji8fpKJbegH07S6I8qsjf6B4HQadOfiIDWRl6KYi3K40kbxWGH2I/XH3BSb49TqOY+7j0cvg13WG6Bbso8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778442387; c=relaxed/simple;
-	bh=dx7CTCdfgI9/VwOubrKjgKAV7j3wBdm3ATenpfZhl1I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nr4Zr71q3ri1F8uXWOR170op0CJUpS96rKrQh6LipiwXmnVrReJHeFwBiltVbxBvpXzyuCo6+gxqQXV2snmFu6qR4kMMvz8v1FQKEHibWR/bXRXI9OZqljf7fSBJzU/2MVw2B1pPuo0A8GgcT+lbncibjIBrOVdtNkLtu6OjywU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IT1DJnXa; arc=none smtp.client-ip=209.85.215.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778503692; c=relaxed/simple;
+	bh=2YKqzqRUm9tGipXIKZymSX/iJogufXuFSN5zxK9LSzM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dCS+qivGhISCTzk/0dzRcJt2qvWP5bTolA9vDDXATTy8XGqgn9ItA7ZvKH67vyNIr+y/zeu9vFkxIVKd9robWms10EDypafCUvI3ZDSPHRpn0k5LozJak3/0VZMQiQzUbdv2UCMs6fKrF2TWlZR+Kp9cmWJhf5cm/MLBFemvhQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iqz1kp8h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IT1DJnXa"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c8016d642b2so2069188a12.0
-        for <linux-ide@vger.kernel.org>; Sun, 10 May 2026 12:46:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778442385; x=1779047185; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=KNV1JSHPdfX4ad5c25kdBdSP0iYBWYMWxSLFq4BW90Y=;
-        b=IT1DJnXa8yWVENT0r3TgfTobsBRhDfyaoex0MMODU4U1hdM0n1urCGKmvJ/tcJgwo+
-         WRbhgxq0aMnRVewr1qgTgaIEvpgVkdW3nuiePvKwjR7NYShH923VICo0IDgcF2Tym4Ab
-         yw3tBVm271uuFtd6tW3yeZ4q4+/LBXJRK2j/v+m5EQOX3R+ofJSUkq6/icwsjvtnVXf7
-         OHFaLgMazrqHHCFBFgMNsbPhfOFVOULcKR1LdwtXD4Y15GHWLhgtumO6AY9KxquUItrs
-         VHEwW/V1/caK8LPPmsmCPFmolnnnZLwYMqajfS3wHMeOBxawDo00wMAI/Dx47/flFk66
-         To6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778442385; x=1779047185;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KNV1JSHPdfX4ad5c25kdBdSP0iYBWYMWxSLFq4BW90Y=;
-        b=se8MAY/0KM0QRyL9qmtEijgYwSXBk+RSczj1KqfvcEdxsaNDDyJ1FgohFV/lsTiJHk
-         cl8EQFk+mqsa18wHXJxYWzhz6NegB+MWKhTmqgh6oCWzmd8uWumum7xBlQ9DGAS2x5rj
-         YJmha5f6bqb4pTV/XgO5NBks3jDZ81odlU5ttFYg4iEvNLh1VKbI92soFaBR5iO8oPaM
-         kmrlvZ2UK0HwxIdAiJfpP4ZgxWmwplo1VwL4hpuF5HAage+ehvyw/FR52sEDxv0mfWti
-         U0hAFc07NZ/sy/m72KSpdxPuWeSFEGoxGnfe/uu/T0GuwaHbNfdEQUQW+SZH/URO4WtK
-         3WPQ==
-X-Gm-Message-State: AOJu0YwBebqv3kbnbV2Hded6kojHzF1DzO0b4XjcVcMHoDI54TYVwQ+q
-	Q11UzUSWDgKCWNQxxJIOZ7rQfvWIX+bC6VMiLwDsbbN3Z6HJi4QH7Un+HLM8wg==
-X-Gm-Gg: Acq92OEQs7AHtYR+M2ejn80DvNGazvt9fuJbXVhCTu0ncTspCyj7Q3xhZ3LpZU2ZGqJ
-	ZXmhRFVPaE0+GebMddBDmeTwYKbCWrnhqydePYLqj2hGxh2dTgMMqhJqvqKDFxctVBXbTYJ42kv
-	30YdYSxw0RntjbWWmN/6fasxQ8uefDZpyK7ZGq5jxEk5XuqvU87JBPKV1NlS71Mwg0j+5uaPh5l
-	v4lhpNJILQM4jTUeXFbX6BNQkC/sI5V0riPkZWDAw0SI4Jw72QaAloM0sq6rhOZt8TsI8DIWjN6
-	RKm5HNSqvCz1dL1303uKwDEzw43K/ZWzaOZQ7hRtlR2timhOvZmy/seEv6z+cY47kC5XZpzJNt4
-	zrzELGe4Uj9ydrCIfgVqyUcpf+ckJ+avYNx703MnutpSd7TT3khXTiXyFAoyrEPmEkzBUX6F88a
-	sPPN9qRMhSD6Es0xl7hOsy4pOCxhfgA22baBJy4koGcvDMJ9+f8zA8O+Of/5G87PpPhZOnEQWpw
-	TYvZiZFbGrv7CMvu6chmC2OJznmRAKWwlQ=
-X-Received: by 2002:a17:902:cf0e:b0:2ba:61dd:b41a with SMTP id d9443c01a7336-2babbcf5cc0mr137031195ad.0.1778442384777;
-        Sun, 10 May 2026 12:46:24 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2baf1e358b2sm77026115ad.54.2026.05.10.12.46.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 May 2026 12:46:24 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-ide@vger.kernel.org
-Cc: Viresh Kumar <vireshk@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] ata: pata_arasan_cf: simplify ioremap
-Date: Sun, 10 May 2026 12:46:07 -0700
-Message-ID: <20260510194607.9567-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iqz1kp8h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47D92C2BCB0;
+	Mon, 11 May 2026 12:48:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778503692;
+	bh=2YKqzqRUm9tGipXIKZymSX/iJogufXuFSN5zxK9LSzM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iqz1kp8hYRSuQYsUC5vArAeY1qDZGnx8oZVPC2jWsKI3IXJ03a9b06UVndDJle+W1
+	 Sxkip8E6xYwGW7GzN4D4k3zJmgA2mt2pTFtkkr77eYrlSXfdhIbeT5BIHawEt/qEb6
+	 V+ElCndf5/moypqdhT7gAP4uQoBpIZ3Lffl6W6Ajg2Hl5N+4GP6bCL2nuPatfiTINj
+	 qnVLYX7kIM/GTFmjERK76gSXvJMhi+dN6IIkU28qQ5lNS+xVbX4Sww55bvh9qtZpCb
+	 AY/3+8YY9/Zms7+15LMRbSRRAFdBoTmW0c++8PyxqW+xIvmHx0fbVGuE1cmkQySZnK
+	 PaE12PPzL2+Rw==
+Date: Mon, 11 May 2026 14:48:07 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Marco Crivellari <marco.crivellari@suse.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Michal Hocko <mhocko@suse.com>, Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [RFC PATCH] ata: libata-scsi: Move long delayed work on
+ system_dfl_long_wq
+Message-ID: <agHQBzVdIIPSTBah@ryzen>
+References: <20260430092947.128647-1-marco.crivellari@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260430092947.128647-1-marco.crivellari@suse.com>
 
-Use devm_platform_get_and_ioremap_resource() to combine
-platform_get_resource, request_mem_region, and ioremap.
+On Thu, Apr 30, 2026 at 11:29:47AM +0200, Marco Crivellari wrote:
+> Currently the code enqueue work items using {queue|mod}_delayed_work(),
+> using system_long_wq. This workqueue should be used when long works are
+> expected, but it is a per-cpu workqueue.
+> 
+> This is important because queue_delayed_work() queue the work using:
+> 
+>    queue_delayed_work_on(WORK_CPU_UNBOUND, ...);
+> 
+> Note that WORK_CPU_UNBOUND = NR_CPUS.
+> 
+> This would end up calling __queue_delayed_work() that does:
+> 
+>     if (housekeeping_enabled(HK_TYPE_TIMER)) {
+>     //      [....]
+>     } else {
+>             if (likely(cpu == WORK_CPU_UNBOUND))
+>                     add_timer_global(timer);
+>             else
+>                     add_timer_on(timer, cpu);
+>     }
+> 
+> So when cpu == WORK_CPU_UNBOUND the timer is global and is
+> not using a specific CPU. Later, when __queue_work() is called:
+> 
+>     if (req_cpu == WORK_CPU_UNBOUND) {
+>             if (wq->flags & WQ_UNBOUND)
+>                     cpu = wq_select_unbound_cpu(raw_smp_processor_id());
+>             else
+>                     cpu = raw_smp_processor_id();
+>     }
+> 
+> Because the wq is not unbound, it takes the CPU where the timer
+> fired and enqueue the work on that CPU.
+> The consequence of all of this is that the work can run anywhere,
+> depending on where the timer fired.
+> 
+> Recently, a new unbound workqueue specific for long running work has
+> been added:
+> 
+>     c116737e972e ("workqueue: Add system_dfl_long_wq for long unbound works")
+> 
+> So change system_long_wq with system_dfl_long_wq so that the work may
+> benefit from scheduler task placement.
+> 
+> Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
+> ---
+>  drivers/ata/libata-scsi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index f44612e269a4..6733f2b14521 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -4753,7 +4753,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+>  			     "WARNING: synchronous SCSI scan failed without making any progress, switching to async\n");
+>  	}
+>  
+> -	queue_delayed_work(system_long_wq, &ap->hotplug_task,
+> +	queue_delayed_work(system_dfl_long_wq, &ap->hotplug_task,
+>  			   round_jiffies_relative(HZ));
+>  }
+>  
+> -- 
+> 2.53.0
+> 
 
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/ata/pata_arasan_cf.c | 20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
+Looks good to me.
 
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index b1e281b64f57..d5cb88ae2b76 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -803,16 +803,6 @@ static int arasan_cf_probe(struct platform_device *pdev)
- 	irq_handler_t irq_handler = NULL;
- 	int ret;
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!res)
--		return -EINVAL;
--
--	if (!devm_request_mem_region(&pdev->dev, res->start, resource_size(res),
--				DRIVER_NAME)) {
--		dev_warn(&pdev->dev, "Failed to get memory region resource\n");
--		return -ENOENT;
--	}
--
- 	acdev = devm_kzalloc(&pdev->dev, sizeof(*acdev), GFP_KERNEL);
- 	if (!acdev)
- 		return -ENOMEM;
-@@ -836,14 +826,14 @@ static int arasan_cf_probe(struct platform_device *pdev)
- 		quirk |= CF_BROKEN_MWDMA | CF_BROKEN_UDMA;
- 	}
- 
--	acdev->pbase = res->start;
--	acdev->vbase = devm_ioremap(&pdev->dev, res->start,
--			resource_size(res));
--	if (!acdev->vbase) {
-+	acdev->vbase = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
-+	if (IS_ERR(acdev->vbase)) {
- 		dev_warn(&pdev->dev, "ioremap fail\n");
--		return -ENOMEM;
-+		return PTR_ERR(acdev->vbase);
- 	}
- 
-+	acdev->pbase = res->start;
-+
- 	acdev->clk = devm_clk_get(&pdev->dev, NULL);
- 	if (IS_ERR(acdev->clk)) {
- 		dev_warn(&pdev->dev, "Clock not found\n");
--- 
-2.54.0
+Any particular reason that you sent this as an RFC?
 
+I can see similar patches queued up in linux-next already.
+
+Do you want us to pick this one up?
+
+
+Kind regards,
+Niklas
