@@ -1,71 +1,54 @@
-Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DBA53BB124
-	for <linux-ide@vger.kernel.org>; Tue, 12 May 2026 20:23:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEF5D3CF04E;
+	Tue, 12 May 2026 20:27:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778617396; cv=none; b=AgbwlFnE8xVJF+NGNH+ZHWySBmcZ/mStFsLYhK3sbA0HyOgCy+Fec6EkIARTYXumax2JVrkw2n55g13LZEatN0oJYRBqXxwGOJc8E/peom/fMytHdRusrC3BvmMSMa8c6aHfjUHNf7qhnEGxBwrPMX/M7IMi8lyz4RX+wtCZX0Q=
+	t=1778617657; cv=none; b=adzGeX8GrY8LAMSciZnQVCAxvvYd8aB10WOCr6CdaQVerhftxZt8TwP9ZgHKs/PQpKQs4J2j7zOX86ikc9i8y7P/rmRu8swqwz75qpbBfe+q97DyUYDDTzZQUYhig3fPhZWLja4ak3k2XWByIMtYAdD0xATnfAeUSvA5euJlxAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778617396; c=relaxed/simple;
-	bh=uI3m2lowB5Dl3Y/igicn36nVTjsXMEfps+6eZzxAWOc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FpduqgYFRtepGdygvvZSUCk1kxm7WE2LWszoN3vhqpT1x/bqN/qSeZ1ZxIOFljJ2BbedA9Urww0+ZZhs7gsO3ALH6Byt+0V6cMrKaQJRIsDFbogzGbocLWzhzWKr85a5Xx7dXhjmtoRS06Te9xeVTXoSBVqjyx8173EM/FYJuU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pXbco2n1; arc=none smtp.client-ip=209.85.219.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778617657; c=relaxed/simple;
+	bh=x6f8CJNbI915EJ13DABGEvOBY0TFxfB2QN6TGIZA5KE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=RTTxtJsz36tTau7qpSMs2WAin1fFNTESAm14Fw798tTC4mfricCwAmReQrMwNchkZWUluDcpNIV+bc/4UUFXnrQ8/PQZxQzcazy79jB3tVQTaDdlkmRC0ryH1xotJuDrXkg8nKbCmNKMd0EF5XKjdxTarYcllPIV0ePwX9FgQLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=rCBoCd03; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pXbco2n1"
-Received: by mail-qv1-f44.google.com with SMTP id 6a1803df08f44-8b5cda2dab9so57336586d6.0
-        for <linux-ide@vger.kernel.org>; Tue, 12 May 2026 13:23:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778617394; x=1779222194; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=GnLxUC/iZwT1ghX2Qa1SQ+YBxWphqMru259ZubExWMk=;
-        b=pXbco2n1mjFUYtzLJ8War3owwppnupVUttWq0aPotijXYzxqoC/4h2BY/t+holo9yn
-         UvLIBo2WDBeGo/BSv9tWrCsCwjoZKgZD6N1RrhGUPvBiPvqk6VQJ2+DAKRrTpbFdiP0s
-         6CRY/GcbEHZRomdzdxw92v4xZeWFLS3kUBlIr76kDEX98z1cDFFeOwyi+Y78MJjbfzzJ
-         3frdv6TLcN2CipvdWUp3Lp80uS2CJ2reMEpB/Qn/9W4mUXXUGe0v+v79uORDhfUrpcQm
-         yfucLBdYM8YcVLqkxn7y4NcQQMcwvO5FHoNbYgwwI3qV9O5UqusfUR8A6kUxEEQmLkJG
-         kgsQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778617394; x=1779222194;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GnLxUC/iZwT1ghX2Qa1SQ+YBxWphqMru259ZubExWMk=;
-        b=Jrlh/VTIJkJiaQkCKoXoud6B+Nt7JyykGN4VCleJV3QoT8WvPALhxUV2kyQjcmKRlA
-         5X2n12+8IjDHQ6PxObprvmoUAYhhlc1RcQJow3Q3ziI6dbiCzmMfGNSPzk2UVgQnKDlJ
-         2IzPwjeA3JIKjCgSukuNZKD6OVU63lMgFXpxI9WfYaxvb4vGumpqq8sVCw0t4ALt9+rA
-         Cv1vPnFdSPudIBwYr6gDVOCveMSY7KYUFasFSjVD06danL5htoMyJjkoCe/G2RExlNWB
-         czpbyCxhYijM5c3UBlz51UBI3T2J/0DpbZEbFzcTu+HND2P/Ejux4ZIqq2D5sux0i7cZ
-         U2Bw==
-X-Gm-Message-State: AOJu0YzXhUwd5h3qwljoA9/ngKbrYhSIXz2kJF2kDbjrHXReyGGlv8uX
-	IMv2B25bXd1L3YF4x9Glelmx2DMD+aWE+1MHIAmhXUKPMXaNzgR7IEsKQc1+7YJg
-X-Gm-Gg: Acq92OF/zP0cLhwa6Dlw1mAujNK4eyWGRplBEL5KFlwRS64DdxZNXsVL+Fzl7z3Drva
-	/Sd4fOjTJWzlju2BFak6QF1OzU1tvp3T7p6rcfOzTVBAxHGsnoeWqOZrrMh9hx06xDHIQh49aJv
-	a8koMk46KqQ94eljR/bTLhljX/sRN1+j81dRKVspSiRSRyCfi0JOlS8TDwTnsnqyLm8SrZWG8PS
-	Czs0RG3ctFvoqHbW4GWYG9dMUGKe8frIQKYIskvjSK50JPpC7ta/RRCHmEMBuSYyO3XZZ3pLv1K
-	SSbPF4whjVDmQHMIGzwwCmIX46TBt7FW9jkcmMQfr1LTMmybQPPjYx6246h7hmtj8KZqKCGpWJI
-	Z/xaQcIIE7HstT707B+UtHTdx058W/5moc8NWfJA/fFozQn7TUU4KUcUSneWmRzkxbFTbLV9NCt
-	SoSbXk3X2qC1D6LM9j9p6GjwuvI+nTJHZ5ZKf0AcP89j/2rs2g5Wv3KMV328l9AGATNazJ4zASL
-	vt/a56gcRMeSHSTIwYMvmROmoCjmEklND0XHcchhx2scg==
-X-Received: by 2002:a05:6214:4f1a:b0:8ac:a91c:c8d with SMTP id 6a1803df08f44-8c7b1926dedmr7909376d6.14.1778617393884;
-        Tue, 12 May 2026 13:23:13 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8bf88247a3csm129124806d6.11.2026.05.12.13.23.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 May 2026 13:23:13 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-ide@vger.kernel.org
-Cc: Viresh Kumar <vireshk@kernel.org>,
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="rCBoCd03"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1778617653;
+	bh=x6f8CJNbI915EJ13DABGEvOBY0TFxfB2QN6TGIZA5KE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=rCBoCd03gcBzTTRxW0dDLtoBdqYMn4/6UfZ3vaidNOYjZTO1qlxKJAR7LhHegq/EZ
+	 joxOABv3GfCmqS7j/zJPolrnx6I+rPVG3TMqpIIkE5cX6/6glHXMg27+din2v/uUWi
+	 Sd8aBfyCdEkaKxAj+NHdBJ6X2yu6Qu7bMwbdIHlo=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id DB274BD0F8;
+	Tue, 12 May 2026 20:27:33 +0000 (UTC)
+Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 805D15FC0F;
+	Tue, 12 May 2026 21:27:33 +0100 (BST)
+From: Phil Pemberton <philpem@philpem.me.uk>
+To: linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv2] ata: pata_arasan_cf: simplify ioremap
-Date: Tue, 12 May 2026 13:22:55 -0700
-Message-ID: <20260512202255.18484-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Phil Pemberton <philpem@philpem.me.uk>
+Subject: [PATCH v5 1/6] ata: libata-scsi: add atapi_max_lun module parameter
+Date: Tue, 12 May 2026 21:27:23 +0100
+Message-ID: <20260512202728.299414-2-philpem@philpem.me.uk>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260512202728.299414-1-philpem@philpem.me.uk>
+References: <20260512202728.299414-1-philpem@philpem.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -74,66 +57,84 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Use devm_platform_get_and_ioremap_resource() to combine
-platform_get_resource, request_mem_region, and ioremap.
+Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
+so the SCSI layer never scans past LUN 0.  This blocks support for
+the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
+COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
+Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
 
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Introduce a libata module parameter, atapi_max_lun, that controls the
+upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
+current behaviour exactly: out-of-the-box only LUN 0 is scanned.
+Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling).
+
+Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
+device must both be on the SCSI device list (or carry the appropriate
+quirk) and run on a host whose atapi_max_lun has been raised before
+any extra LUNs are scanned.
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
 ---
- v2: remove dev_warn
- drivers/ata/pata_arasan_cf.c | 24 ++++++------------------
- 1 file changed, 6 insertions(+), 18 deletions(-)
+ drivers/ata/libata-core.c | 5 +++++
+ drivers/ata/libata-scsi.c | 2 +-
+ drivers/ata/libata.h      | 1 +
+ include/linux/libata.h    | 1 +
+ 4 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index b1e281b64f57..a77fefd320c2 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -803,16 +803,6 @@ static int arasan_cf_probe(struct platform_device *pdev)
- 	irq_handler_t irq_handler = NULL;
- 	int ret;
-
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!res)
--		return -EINVAL;
--
--	if (!devm_request_mem_region(&pdev->dev, res->start, resource_size(res),
--				DRIVER_NAME)) {
--		dev_warn(&pdev->dev, "Failed to get memory region resource\n");
--		return -ENOENT;
--	}
--
- 	acdev = devm_kzalloc(&pdev->dev, sizeof(*acdev), GFP_KERNEL);
- 	if (!acdev)
- 		return -ENOMEM;
-@@ -827,22 +817,20 @@ static int arasan_cf_probe(struct platform_device *pdev)
- 	 * support only PIO
- 	 */
- 	ret = platform_get_irq(pdev, 0);
-+	if (ret == -EPROBE_DEFER)
-+		return ret;
- 	if (ret > 0) {
- 		acdev->irq = ret;
- 		irq_handler = arasan_cf_interrupt;
--	} else	if (ret == -EPROBE_DEFER) {
--		return ret;
- 	} else	{
- 		quirk |= CF_BROKEN_MWDMA | CF_BROKEN_UDMA;
- 	}
-
-+	acdev->vbase = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
-+	if (IS_ERR(acdev->vbase))
-+		return PTR_ERR(acdev->vbase);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e76d15411e2a..4408b1fb48c7 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -122,6 +122,11 @@ int atapi_passthru16 = 1;
+ module_param(atapi_passthru16, int, 0444);
+ MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+ 
++int atapi_max_lun = 1;
++module_param(atapi_max_lun, int, 0444);
++MODULE_PARM_DESC(atapi_max_lun,
++	"Maximum LUN to scan on ATAPI devices flagged BLIST_FORCELUN (1 [default] .. 7)");
 +
- 	acdev->pbase = res->start;
--	acdev->vbase = devm_ioremap(&pdev->dev, res->start,
--			resource_size(res));
--	if (!acdev->vbase) {
--		dev_warn(&pdev->dev, "ioremap fail\n");
--		return -ENOMEM;
--	}
-
- 	acdev->clk = devm_clk_get(&pdev->dev, NULL);
- 	if (IS_ERR(acdev->clk)) {
---
-2.54.0
+ int libata_fua = 0;
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index f44612e269a4..32c6a0e497cf 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4627,7 +4627,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const struct scsi_host_template *s
+ 		shost->transportt = &ata_scsi_transportt;
+ 		shost->unique_id = ap->print_id;
+ 		shost->max_id = 16;
+-		shost->max_lun = 1;
++		shost->max_lun = clamp(atapi_max_lun, 1, ATAPI_MAX_LUN);
+ 		shost->max_channel = 1;
+ 		shost->max_cmd_len = 32;
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index b5423b6e97de..96d804d02b99 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -33,6 +33,7 @@ enum {
+ #define ATA_PORT_TYPE_NAME	"ata_port"
+ 
+ extern int atapi_passthru16;
++extern int atapi_max_lun;
+ extern int libata_fua;
+ extern int libata_noacpi;
+ extern int libata_allow_tpm;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 5c085ef4eda7..3e33ee30628d 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -131,6 +131,7 @@ enum {
+ 	ATA_SHORT_PAUSE		= 16,
+ 
+ 	ATAPI_MAX_DRAIN		= 16 << 10,
++	ATAPI_MAX_LUN		= 8,	/* SCSI-2 cap (LUN values 0..7) */
+ 
+ 	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
+ 
+-- 
+2.43.0
 
