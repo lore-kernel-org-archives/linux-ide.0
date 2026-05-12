@@ -1,131 +1,114 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5237E4D9909;
-	Tue, 12 May 2026 12:31:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F51C39060B;
+	Tue, 12 May 2026 15:12:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778589091; cv=none; b=qLcC/Fg3QVVP95u6JT952Imkxjr3L1mYu9/SpSfOpAEJfFkvE/VW6ckMKR/tf42Uhl73AOonZSxVfBOtCA7/ZZlWaw1Hey5pCDh31PTxYzbewk3z0AArfD2cZbLhKkM82bBSvpJpNbPd86wbm1ZZUVvA4/mIgmVf1aBqa7rgMQo=
+	t=1778598737; cv=none; b=qTqX7ptoAjCNEAF58fuMxnmoQFtN3VTHdUD67s42q22h5P6N/wy/gEFWhe4uWLbBwOaazdeoZpeVeAuDfF5kGk9HQcDP5PpeAlKT2spWnTWaXKxkJyVX6QSi4qNXXTee9UsnFGuicz6RbhHwGVV0FZMaESam6zTfwXTCcqkcezg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778589091; c=relaxed/simple;
-	bh=W98F7KTZKUZ6W2N2kn1s2TDbEMTKnaWQLHSmKOx+qg0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lQYNJazoaaUv9gk4bvByTqRjYYROGZMv3QSNjlnSf+XWn3IIQvYo306WGV1EyQWwbjky8kV0Iq1U1CNZ5k7EGRANTu+1FR1l3T0w7pKg8VAGE9W1HmKrrCTjmhJYAfnwPn2NAiA3AW9fjFBGn0upLCvnwQCDV+0nNaS0owdPBlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AErKxdEn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778598737; c=relaxed/simple;
+	bh=Wa4dKKiW2Oo3LzEjzTkXopNujWyAkKB4u27BZYXjI7g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ajdyLOur+Khx9jEXRWwMPav7dScDw1Qc/7A24UnauD63kPJGZzgN80xm3aakDrlOeCqubz8+gcbACi6+VF9fQ/Lg+F1JIkYVBAjbySIJRmlRz8PyCT6E9sxwgiLLaZeMMcl9J3GLn/C5aAU6tFf/By+sxuXEiajGqvycUeYDe0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=aDHGJviI; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AErKxdEn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B1DDC2BCFA;
-	Tue, 12 May 2026 12:31:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778589089;
-	bh=W98F7KTZKUZ6W2N2kn1s2TDbEMTKnaWQLHSmKOx+qg0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AErKxdEnWaHlCiDPFAjnW80rqMVTfqwRuF0ynrrlKjZklu9P5OYJz8RDF9tF8EXcW
-	 oeAIXVPIa6N0SVWWKoZZDFYa0hOMW+1DccVNew5IEcafbFyynHT6ocO5legaaSxb/0
-	 LjIQm3zkifUqf2A1jJDi4liUhXZrf0Qvbk7yK7XW+zKI5wrZqkmNkTsAX1tpjhaRHL
-	 muY3OdYHGGvG8F6KsAcAnscgcJfYF6uufI2Cv34UAgzcOgUmyitu8MdXRu4pTuhKYa
-	 ScPW1dgpyz41I7XntEcsPaz0OPfig0goXZCctsNWO6K36DE9OxK/Ym/gubsZNsuIsz
-	 PE3FUICzV4A3w==
-Date: Tue, 12 May 2026 14:31:26 +0200
-From: Frederic Weisbecker <frederic@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Marco Crivellari <marco.crivellari@suse.com>,
-	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Michal Hocko <mhocko@suse.com>, Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [RFC PATCH] ata: libata-scsi: Move long delayed work on
- system_dfl_long_wq
-Message-ID: <agMdnnbD6Oep-iKR@localhost.localdomain>
-References: <20260430092947.128647-1-marco.crivellari@suse.com>
- <agHQBzVdIIPSTBah@ryzen>
- <CAAofZF7NhFUHKhp-HdvSx2doFRc4XFERCL22V+BZXrQVjmxugw@mail.gmail.com>
- <agIGSYxbK3FX2mXK@ryzen>
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="aDHGJviI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1778598728;
+	bh=Wa4dKKiW2Oo3LzEjzTkXopNujWyAkKB4u27BZYXjI7g=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=aDHGJviImheqMsZ8ukTK3iKMIIMEvFow9C/bVe6ybQyFUOAXKd8ki4lYU1nZoW4h6
+	 8GZ4Y/1Fs1lM0TfgJjUD+SXBG5OiZ4nSdDtt3oMcfgMLC7dBESGUl1VBQIN+9sEozX
+	 r5qCwNa6fQ6jwzL0bwpqO67S2kHLHme9CxxkGY/M=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id 62666BD345;
+	Tue, 12 May 2026 15:12:08 +0000 (UTC)
+Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 25F305FADA;
+	Tue, 12 May 2026 16:12:08 +0100 (BST)
+Message-ID: <6223b3e1-9aee-496d-8d56-071263282de9@philpem.me.uk>
+Date: Tue, 12 May 2026 16:12:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <agIGSYxbK3FX2mXK@ryzen>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 1/7] ata: libata-scsi: add atapi_max_lun module
+ parameter
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Hannes Reinecke <hare@suse.de>
+References: <20260506234548.1974603-1-philpem@philpem.me.uk>
+ <20260506234548.1974603-2-philpem@philpem.me.uk>
+ <7f7126d4-0c8d-4f88-9ece-5bbfac2b47c7@kernel.org> <agL6n9aXd84YPgFA@ryzen>
+Content-Language: en-GB
+From: Phil Pemberton <philpem@philpem.me.uk>
+In-Reply-To: <agL6n9aXd84YPgFA@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Le Mon, May 11, 2026 at 06:39:37PM +0200, Niklas Cassel a écrit :
-> On Mon, May 11, 2026 at 02:54:26PM +0200, Marco Crivellari wrote:
-> > On Mon, May 11, 2026 at 2:48 PM Niklas Cassel <cassel@kernel.org> wrote:
-> > > [...]
-> > > Looks good to me.
-> > >
-> > > Any particular reason that you sent this as an RFC?
-> > >
-> > > I can see similar patches queued up in linux-next already.
-> > 
-> > I just wanted to be sure I didn't miss any other reason for being
-> > per-cpu, and in case
-> > receive comments on it.
+On 12/05/2026 11:02, Niklas Cassel wrote:
+> On Tue, May 12, 2026 at 10:46:39AM +0900, Damien Le Moal wrote:
+>> On 5/7/26 08:45, Phil Pemberton wrote:
+>>> Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
+>>> so the SCSI layer never scans past LUN 0.  This blocks support for
+>>> the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
+>>> COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
+>>> Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
+>>>
+>>> Introduce a libata module parameter, atapi_max_lun, that controls the
+>>> upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
+>>> current behaviour exactly: out-of-the-box only LUN 0 is scanned.
+>>> Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling).
+>>>
+>>> Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
+>>> device must both be on the SCSI device list (or carry the appropriate
+>>> quirk) and run on a host whose atapi_max_lun has been raised before
+>>> any extra LUNs are scanned.
+>>>
+>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>>> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+>>
+>> Looks good, but this does not apply to libata tree for-7.2 / for-next branch.
+>> What is this based on ? Please rebase and resend as I would like to run some tests.
 > 
-> Hmm... I can see that:
-> drivers/ata/libata-eh.c:ata_scsi_port_error_handler()
-> does:
-> 
-> schedule_delayed_work(&ap->hotplug_task, 0);
-> 
-> schedule_delayed_work() does:
-> queue_delayed_work(system_percpu_wq, dwork, delay);
-> 
-> So this will schedule the work on a per-cpu workqueue.
+> Tip:
+> When using "git format-patch" you can specify --base <SHA1> and
+> then the base SHA1 will be added at the end of the cover-letter.
 
-Hmm, yes by accident because the delay is 0 so it will queue
-to the current CPU.
+Thanks for the tip Niklas, I'll do that on the next round.
 
- 
-> It seems that we are already queueing the same work (&ap->hotplug_task)
-> on different workqueues, so I guess that is fine.
-> 
-> Right now, both workqueues are per-cpu. Is it fine to change one of them
-> to be not be bound to a specific CPU?
+This is the base for the patch set:
 
-Well, is there a reason why it is scheduled to the long work pool on one
-hand and to the default pool on the other end? Should the behaviour be
-consolidated to always use the unbound long work pool?
+commit 3036cd0d3328220a1858b1ab390be8b562774e8a
+Merge: 86782c16a81f 105c42566a55
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue Apr 7 10:33:49 2026 -0700
 
-> From looking at the work, ata_scsi_hotplug(), I can't think of a reason
-> why this would have to run on the same CPU as the CPU that queued the
-> work.
-> 
-> From looking at workqueue.h:
-> 
->  * system_dfl_wq is unbound workqueue.  Workers are not bound to
->  * any specific CPU, not concurrency managed, and all queued works are
->  * executed immediately as long as max_active limit is not reached and
->  * resources are available.
-> 
->  [...]
-> 
->  * system_dfl_long_wq is similar to system_dfl_wq but it may host long running
->  * works.
-> 
-> "not concurrency managed"
-> 
-> That sounds like a big change, since the per-cpu workqueues do seem to be
-> concurrency managed (unlike the _dfl_ ones).
-> 
-> However, considering that the work (&ap->hotplug_task / ata_scsi_hotplug())
-> does:
-> mutex_lock(&ap->scsi_scan_mutex);
-> 
-> I also don't see a problem with the workqueue not being concurrency managed,
-> since the work is taking a mutex anyway.
-> 
-> 
-> 
-> If anyone sees a problem, please say something, otherwise intend to queue
-> this up in a few days.
+     Merge tag 'ata-7.0-final' of 
+git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux
 
-Thanks!
+     Pull ata fix from Niklas Cassel:
 
+
+I'm just rebasing it onto for-7.2/for-next and will send shortly.
+
+Damien: Thanks for the offer to test.
+
+Thanks.
 -- 
-Frederic Weisbecker
-SUSE Labs
+Phil.
+philpem@philpem.me.uk
+https://www.philpem.me.uk/
