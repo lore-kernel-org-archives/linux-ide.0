@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77ADF395AF6;
-	Tue, 12 May 2026 10:16:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48316349CEE
+	for <linux-ide@vger.kernel.org>; Tue, 12 May 2026 10:37:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778580984; cv=none; b=QPPQ0xK7mWLRqk/gjONmny/xQvS6TSTI6nsHbuSRUScdmIDe66W9xAcM32JUagerphIFJkgGoAZMqS+QMiJSNo/cAgFEUXv7Q+dcbhg9qwSQDV8pQDqeRQRy2daBaZpnrAg3Rk/T08df/i8OVeXc6YC6teZGBsm6+tkP9UaLqVE=
+	t=1778582272; cv=none; b=LkhPnC3KUTQH4uNtIq5tGJdqeUoDeYEqOtNpH6F16lZMZKqOsYM4fWcxLiNcadT+6jLsLdiMOrAtuVKnfVN62ApGxTsFoQ7uXCVvJoXu/G+xavGvKKbPepOqFniJWRJUBoTmPZtd9ZAjQkHaWW5P6psdpmUbFL7/cA/2GiRw96w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778580984; c=relaxed/simple;
-	bh=4pF9k+UAkA7vibw9TQGKoW4s0o80NhgjPlh6QAtm3f0=;
+	s=arc-20240116; t=1778582272; c=relaxed/simple;
+	bh=oV5/WCfStg4rAtzCm3SUX07/pMz1B3x/pETzyq5sAuI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HEv1F/acrMRsf72vlEyD4ki6odSejrP4r/4vmEQoa8mH1252Sr0fq0/7eyRPVAtenlZpcsb+CMQCQhuZokbOYT1yu0CTlodCaZ+CN6Uc5UUJ5BMBR4d3QDcvD+3t8Yv0Wsae1osTQSoSgqw2iMlPkXdmiXdrVXsKd/NzPZh9L9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGh9sYKS; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=UQxvnZrj1g0sHYIxUaf1MtnpDKnjCYWp9K9ySKDY3/lVUrkyJ7R+rhWpGmWZsXsuSIatEzQIgYimFvsCVmsd6CRwIajKEBh14ECiKpLzfZ2yj0VLsWo7ZT9obrzLX+agTelcph4TS18MuvZBK13DLS8+84/dspx+PsnGju7RSmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nMj2xzuZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGh9sYKS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEFE3C2BCB0;
-	Tue, 12 May 2026 10:16:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nMj2xzuZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B09BCC2BCF5;
+	Tue, 12 May 2026 10:37:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778580984;
-	bh=4pF9k+UAkA7vibw9TQGKoW4s0o80NhgjPlh6QAtm3f0=;
+	s=k20201202; t=1778582272;
+	bh=oV5/WCfStg4rAtzCm3SUX07/pMz1B3x/pETzyq5sAuI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HGh9sYKSButGyYizj/HGVOGAEiLNdjO/Ke32uq7kRs815Vd3HlbUHds+QITxKet7I
-	 yvn9GSd5KNvasliBxbPXyP00hTnke1tEv8jZbnSvYD2xwnTwGr69MvTkdPFGHKJUM/
-	 /AF9SYON+JqQznxDug1Zu/eXlWDqpHh33XomxAUG3D0V194Io5bmPiclLZSqJXEQ6+
-	 cZxO59HWickz0RMmh6MH1o79yVLqZi9xY9dUGDu59rvjfFAtEqCOK9+WyIfgfpb1C8
-	 nBNEsOW2XTn9MXCb+B/PlkOHp20XuZhj2GmKxSSRhlKRU+BO6k6Nj5QbFgQQJC/c3L
-	 TrHwy7VPrZkNw==
-Date: Tue, 12 May 2026 12:16:20 +0200
+	b=nMj2xzuZ1fA0UDIfueVwP22AlKpOsNViNox9b29B7labCuPyRuywqJYwRZH91jVLU
+	 RgbYN9uugcS+X3D0NuiuNitpGExCUCSzVbbn3H8lMAVFzDf68sXNUZkmuGlhN/gsTw
+	 YHpeyKUz++ADnlVtVWarSH7e6GnkDBJVl5xBMNwFbMe3TmtHN0+avYoNPnzQLvu7/w
+	 wIQ7DaBPAAk/wNGU5s19PFRklYMJEmCYXWRwe8S883Oo4a6w0/8rOXQYl7+iWu9KJH
+	 MNzLy/hawHvOUagwikc1nMUWIeb9mzA6t/bpIykXuEN+EvJXWv75sQMmaX9KHX6+KF
+	 5d+/yunilFUaA==
+Date: Tue, 12 May 2026 12:37:47 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Rosen Penev <rosenp@gmail.com>
-Cc: linux-ide@vger.kernel.org, Viresh Kumar <vireshk@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ata: pata_arasan_cf: simplify ioremap
-Message-ID: <agL99NtOLX_4Y8qV@ryzen>
-References: <20260510194607.9567-1-rosenp@gmail.com>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Tommy Kelly <linux@tkel.ly>, John Garry <john.g.garry@oracle.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v3 0/2] ata: fix deferred QC handling for port multipliers
+Message-ID: <agMC-0JrfMxsarzC@ryzen>
+References: <20260508195051.188207-4-cassel@kernel.org>
+ <9a0b2636-1411-4ce1-bd7c-6fc265a1901f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -43,72 +44,55 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260510194607.9567-1-rosenp@gmail.com>
+In-Reply-To: <9a0b2636-1411-4ce1-bd7c-6fc265a1901f@kernel.org>
 
-On Sun, May 10, 2026 at 12:46:07PM -0700, Rosen Penev wrote:
-> Use devm_platform_get_and_ioremap_resource() to combine
-> platform_get_resource, request_mem_region, and ioremap.
+On Tue, May 12, 2026 at 10:58:04AM +0900, Damien Le Moal wrote:
+> On 5/9/26 04:50, Niklas Cassel wrote:
+> > Hello all,
+> > 
+> > Tommy Kelly reported a regression with PMP that use CBS:
+> > https://lore.kernel.org/linux-ide/ce09cc21-a8e9-4845-b205-35411e22fba9@tkel.ly/
+> > 
+> > It turns out that the ap->excl_link logic used for PMP that use CBS is
+> > incompatible with the deferred qc issuing via a workqueue.
+> > This is fixed in patch 1/2.
+> > 
+> > While looking at the code, it turns out that the deferred qc issuing via
+> > workqueue is misdesigned. It assumed that we can't mix NCQ and non-NCQ
+> > commands on the same port. The limitation is that you can not mix NCQ and
+> > non-NCQ commands on the same drive. However, with a PMP with FBS, you can
+> > issue (mixed NCQ and non-NCQ commands) to the different drives. Thus, move
+> > the saved deferred QC from struct ata_port to struct ata_link. This is
+> > fixed in patch 2/2.
+> > 
+> > 
 > 
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
-> ---
->  drivers/ata/pata_arasan_cf.c | 20 +++++---------------
->  1 file changed, 5 insertions(+), 15 deletions(-)
+> What are the changes from v2 ?
+
+There are the changes since v2, I simply forgot to change v1 to v2.
+
+
 > 
-> diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-> index b1e281b64f57..d5cb88ae2b76 100644
-> --- a/drivers/ata/pata_arasan_cf.c
-> +++ b/drivers/ata/pata_arasan_cf.c
-> @@ -803,16 +803,6 @@ static int arasan_cf_probe(struct platform_device *pdev)
->  	irq_handler_t irq_handler = NULL;
->  	int ret;
->  
-> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> -	if (!res)
-> -		return -EINVAL;
-> -
-> -	if (!devm_request_mem_region(&pdev->dev, res->start, resource_size(res),
-> -				DRIVER_NAME)) {
-> -		dev_warn(&pdev->dev, "Failed to get memory region resource\n");
-> -		return -ENOENT;
-> -	}
-> -
->  	acdev = devm_kzalloc(&pdev->dev, sizeof(*acdev), GFP_KERNEL);
->  	if (!acdev)
->  		return -ENOMEM;
-> @@ -836,14 +826,14 @@ static int arasan_cf_probe(struct platform_device *pdev)
->  		quirk |= CF_BROKEN_MWDMA | CF_BROKEN_UDMA;
->  	}
->  
-> -	acdev->pbase = res->start;
-> -	acdev->vbase = devm_ioremap(&pdev->dev, res->start,
-> -			resource_size(res));
-> -	if (!acdev->vbase) {
-> +	acdev->vbase = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
-> +	if (IS_ERR(acdev->vbase)) {
->  		dev_warn(&pdev->dev, "ioremap fail\n");
-
-Please remove the dev_warn().
-
-devm_platform_get_and_ioremap_resource() itself already prints an error
-on failure.
-
-Then since it will only be a single statement, you can also remove the
-braces.
-
-
-Kind regards,
-Niklas
-
-
-> -		return -ENOMEM;
-> +		return PTR_ERR(acdev->vbase);
->  	}
->  
-> +	acdev->pbase = res->start;
-> +
->  	acdev->clk = devm_clk_get(&pdev->dev, NULL);
->  	if (IS_ERR(acdev->clk)) {
->  		dev_warn(&pdev->dev, "Clock not found\n");
+> > Changes since v1:
+> > -Avoid a local variable in sata_pmp_qc_defer_cmd_switch(), call
+> >  ata_std_qc_defer(qc) inside the switch() directly instead.
+> > -Fix a typo, such that the the code actually compiles... Sorry for that.
+> > 
+> > 
+> > Niklas Cassel (2):
+> >   ata: libata-scsi: do not use the deferred QC feature on PMPs with CBS
+> >   ata: libata-scsi: do not needlessly defer commands when using PMP with
+> >     FBS
+> > 
+> >  drivers/ata/libata-core.c | 16 ++++---
+> >  drivers/ata/libata-eh.c   |  8 ++--
+> >  drivers/ata/libata-pmp.c  | 26 +++++++++--
+> >  drivers/ata/libata-scsi.c | 95 ++++++++++++++++++++++++---------------
+> >  include/linux/libata.h    |  8 ++--
+> >  5 files changed, 101 insertions(+), 52 deletions(-)
+> > 
+> 
+> 
 > -- 
-> 2.54.0
-> 
+> Damien Le Moal
+> Western Digital Research
