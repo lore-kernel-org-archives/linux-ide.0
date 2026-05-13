@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4FC947DD6C
-	for <linux-ide@vger.kernel.org>; Wed, 13 May 2026 15:14:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01431494A00
+	for <linux-ide@vger.kernel.org>; Wed, 13 May 2026 15:14:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778685250; cv=none; b=WpRRvVMWDTYtqwhrcjn2ZKTbgv1NvnURmD4y/914GaPJFYq4jS/fkiWGegG/oxuPb0clB5U9n1SUvPgzPUE3Pb+D+H1OQbODGn8Y1oWiXvK3q2Z1iBiezQjNcw1PYWa0yBlOuQAYpXMuGgZhCqahMW/KGbWKZXOfts2WF54VGD4=
+	t=1778685253; cv=none; b=aHViWVeERm4g2KYU4nIkEGBX9ruwZAe1gkylYDo6tpA8jv0TxNKql+uTBgehXPpBXzte9EAJpiOiuXXSSo4pwHQXST6tl8P6NOB3ofo9Jh4TVKjfQtLmqImcXyjASbmPE74PzxyNz3uQNqg6s56aj4lEmPLHH98nN6GT2JXhamI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778685250; c=relaxed/simple;
-	bh=7XVAuWe9jwMAcS2atGTSKlwZh4NFZXOJ0YhwSzZ0zxk=;
+	s=arc-20240116; t=1778685253; c=relaxed/simple;
+	bh=QL1hgyowVfja/vcJIALXSKCDzjwmNt42m3BowKG8WeQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DDU1LonXtTZFPP7/CpdCmbIlGcuijWLCSaz7OlZpDt49UiUmcfNDEWHva6Ps5xFiENX0RJaKxQTf1bMABwhcR80cebzVWtyoEq/mXuSL2GwBAb4Q6K1MVw9lfMCKB0HovY6oB+OH3bMmHN2VSkulhiEaoe4Sbo1TWLzk1GUM5oc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ldmgscwt; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=t3Bh1JliCfNHSXjeS8v3DPiesUWIT35Y+iK8h/RMitngb6R+GBbmKjEFhTFPNeG++RrYb/Dxx9wtSvnxB3+2j4K1ihGrVdup56EmD7/FnozVbxhECGZ9vBxdB/TnAW6um0W5Cu8ZGTV+MtuXBWBARk2Yt7KTI52mDcnqOJjhB0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AaJw5sJV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ldmgscwt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 256DDC19425;
-	Wed, 13 May 2026 15:14:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AaJw5sJV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3025AC19425;
+	Wed, 13 May 2026 15:14:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778685250;
-	bh=7XVAuWe9jwMAcS2atGTSKlwZh4NFZXOJ0YhwSzZ0zxk=;
+	s=k20201202; t=1778685252;
+	bh=QL1hgyowVfja/vcJIALXSKCDzjwmNt42m3BowKG8WeQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ldmgscwthOdxdOSzASrAjOIKYsvyvocO9ydrtrFfXWRgCuNXLwgDR6EfGUWDxPSG2
-	 W0W6Vj94dKTKssXXF3DNpIr6fnA+EktspMlwZfiBFbMXxQoIWsYj/IGE+M7JYRGLPE
-	 +ez35GP6ppCrTH5UoRH6E6tvKYsU2G13IFV4Czy9Wq6Ktlf9deXB4ltyknb9BVR6Wu
-	 k5TFWMnP6VXfeMZliYCtF7/aK+tOslv+HTezi6/vQJwfCG8esSQRoPraPwGX2vWiAf
-	 UbxCEhghNWzmSBjcd9nv89nxK6id0YI3HbBpO5Ce4DY3ob5rH9vvB09tERo3j7Lxal
-	 TIVXnyafycqVw==
+	b=AaJw5sJVaOCRaU2hB4vvcQajcqQjX7ruecf55JaFFubL0BZnwjFDDM8GOB2+2nAVt
+	 FJTPB83Qaw8AniTQKZJvBqbCFhEaSi7xjyYZXtQcaMhqfQhJJwYdXcml+Z3uQrFru3
+	 hGUs3ZQcPc2By2WRNj6sd/hgXoNiKp+4CQlRMcEdsgcbM+Opee6V5F9nmVBSYVd2eh
+	 GPrCSfkKeXyQU/ju9+HRqZDUYjHLYb9S1TunPqSotTh6plMP7dNRSejVaMtjJmGKMU
+	 7JhpbrpbdrLN+/GZNr2fRDgLw7gJ1pOyfMhGQmDZG1qfBPrl7pQhLoxhdjT7qxOYjh
+	 xul/W9GXQaFuQ==
 From: Niklas Cassel <cassel@kernel.org>
 To: Tommy Kelly <linux@tkel.ly>,
 	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH v4 1/4] ata: libata-scsi: improve readability of ata_scsi_qc_issue()
-Date: Wed, 13 May 2026 17:14:00 +0200
-Message-ID: <20260513151359.1075403-7-cassel@kernel.org>
+	Niklas Cassel <cassel@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org
+Subject: [PATCH v4 2/4] ata: libata-scsi: do not use the deferred QC feature for ATA_DEFER_PORT
+Date: Wed, 13 May 2026 17:14:01 +0200
+Message-ID: <20260513151359.1075403-8-cassel@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260513151359.1075403-6-cassel@kernel.org>
 References: <20260513151359.1075403-6-cassel@kernel.org>
@@ -44,91 +45,54 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2217; i=cassel@kernel.org; h=from:subject; bh=7XVAuWe9jwMAcS2atGTSKlwZh4NFZXOJ0YhwSzZ0zxk=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJYpppf7Ft/1q1wo/q/lzyMv60+nVnnkTwnUutw2rc1H yY+P/onuaOUhUGMi0FWTJHF94fL/uJu9ynHFe/YwMxhZQIZwsDFKQAT6VRg+J960ljxBcti7fMr UuOrOUt3SZW18ThbmV09ynFvxp+CJhuG/75zOFZNfv0qYIOln9XtGqmUOd4W3UnLOZj23bx7auK rTxwA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1567; i=cassel@kernel.org; h=from:subject; bh=QL1hgyowVfja/vcJIALXSKCDzjwmNt42m3BowKG8WeQ=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJYppq7PlbM0Fq6gOfF3uPrcoJeVP3jqLzVU8r6VXweh /fNErN9HaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjIX0FGhj3PuXafd3/++J/p 9/JeofMrWXx8lOY67ePYbGXS2th2ZRsjw4OwaRWZsplp1o+YJA53vDTPWZaQOOtMwix2J+0FiyV 5OAE=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-Improve readability of ata_scsi_qc_issue().
+The deferred QC feature was meant to handle mixed NCQ and non-NCQ commands,
+i.e. for return value ATA_DEFER_LINK.
 
-No functional changes.
+ATA_DEFER_PORT is returned by PATA drivers, but also certain SATA drivers
+like sata_mv and sata_sil24 that uses ap->excl_link to workaround hardware
+bugs in these HBAs. Regardless of the reason, using the deferred QC feature
+for ATA_DEFER_PORT is always wrong, and will break the ap->excl_link usage
+of the SATA drivers that rely on that feature.
 
+Modify ata_scsi_qc_issue() to only use the deferred QC feature when mixing
+NCQ and non-NCQ commands, i.e. ATA_DEFER_LINK.
+
+Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/ata/libata-scsi.c | 43 +++++++++++++++++++--------------------
- 1 file changed, 21 insertions(+), 22 deletions(-)
+ drivers/ata/libata-scsi.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 6733f2b14521..b9064dd4390c 100644
+index b9064dd4390c..22642a0e6b84 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -1767,7 +1767,7 @@ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
- 	int ret;
- 
- 	if (!ap->ops->qc_defer)
--		goto issue;
-+		goto issue_qc;
- 
- 	/*
- 	 * If we already have a deferred qc, then rely on the SCSI layer to
-@@ -1786,38 +1786,37 @@ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
- 		break;
- 	case ATA_DEFER_LINK:
- 		ret = SCSI_MLQUEUE_DEVICE_BUSY;
--		break;
-+		goto defer_qc;
+@@ -1789,11 +1789,11 @@ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 		goto defer_qc;
  	case ATA_DEFER_PORT:
  		ret = SCSI_MLQUEUE_HOST_BUSY;
--		break;
-+		goto defer_qc;
+-		goto defer_qc;
++		goto free_qc;
  	default:
  		WARN_ON_ONCE(1);
  		ret = SCSI_MLQUEUE_HOST_BUSY;
--		break;
-+		goto defer_qc;
+-		goto defer_qc;
++		goto free_qc;
  	}
  
--	if (ret) {
--		/*
--		 * We must defer this qc: if this is not an NCQ command, keep
--		 * this qc as a deferred one and report to the SCSI layer that
--		 * we issued it so that it is not requeued. The deferred qc will
--		 * be issued with the port deferred_qc_work once all on-going
--		 * commands complete.
--		 */
--		if (!ata_is_ncq(qc->tf.protocol)) {
--			ap->deferred_qc = qc;
--			return 0;
--		}
-+issue_qc:
-+	ata_qc_issue(qc);
-+	return 0;
- 
--		/* Force a requeue of the command to defer its execution. */
--		ata_qc_free(qc);
--		return ret;
-+defer_qc:
-+	/*
-+	 * We must defer this qc: if this is not an NCQ command, keep
-+	 * this qc as a deferred one and report to the SCSI layer that
-+	 * we issued it so that it is not requeued. The deferred qc will
-+	 * be issued with the port deferred_qc_work once all on-going
-+	 * commands complete.
-+	 */
-+	if (!ata_is_ncq(qc->tf.protocol)) {
-+		ap->deferred_qc = qc;
-+		return 0;
+ issue_qc:
+@@ -1813,6 +1813,7 @@ static int ata_scsi_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 		return 0;
  	}
  
--issue:
--	ata_qc_issue(qc);
-+	/* Force a requeue of the command to defer its execution. */
-+	ata_qc_free(qc);
++free_qc:
+ 	/* Force a requeue of the command to defer its execution. */
+ 	ata_qc_free(qc);
  
--	return 0;
-+	return ret;
- }
- 
- /**
 -- 
 2.54.0
 
