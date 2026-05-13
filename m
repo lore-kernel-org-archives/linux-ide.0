@@ -1,131 +1,70 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 058733D0BED;
-	Tue, 12 May 2026 20:27:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BFD23D5258;
+	Wed, 13 May 2026 07:43:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778617660; cv=none; b=s9B5x/hjetcbMCnO8pMtZubI1Ry1ZZzjMUsqXXFBQz7I4ljS9aghpNJFe4nQNc63T7vHEXI2h5HBvDIRBEtni8TNt5ZOyjk+JHeETnFMVOKxoPhvxAoCc08z8hg5YGuUa0bH/CqXSnVWV97IEYdF6jO00kqwEhlg4GwcvpwE6UY=
+	t=1778658186; cv=none; b=O/l0xFP4iU2Y4UAQzSzz1O4oiGeZVri4fMM2rSLgDouSfSErlMBV0X+fZ95WzDjTbF9mriHLg/hiRq0b5VeH8f+iqewjx0RoEpyHG4rGw8v3/vaMMrfwFbSQgHD+C5r/8g3fwSN7lgqp31DcUFk6MI6ctR4ClFsOJzixroUJPVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778617660; c=relaxed/simple;
-	bh=2Zw3vbvV8x4GK8JZGJ5RHUORMcfvOnvV4537sQAvgsk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Kjv4IsXOB/GPuxMXhBHsk8J5ay1bGXG3e3O+hTopodA68v2fx76OWweR3fLcSrgdYwAMd680auKDX7y5sBE0wJ2ekHR8Kl6Qx341GJjEqMVE8eZwYRSarQ8Dm82K/wwsEXHarzr4By5yJZ7exIHeW9b+flWX+z5/TLhngrjoCbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=FkVNAKLm; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1778658186; c=relaxed/simple;
+	bh=nyYSr1NSQmHg/Qas0D9ocjX288HuS7GJLW22dd7ygAA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=e6LdFoQTJD7zMx/CmTbjZ2gqNNOe3LapPETA6ubVRvSu0XmpS+ac3G1GsqI5MqGyiM4LJh1lh+73LHIgWSt8ePmkXwTmMP94jGuYet8TIyNAeO+obgH9j/d0N9fQ/zPX7BuTT/YJSDtWHBAr0nmm7YeZ5hW0KUQMjqroyM/4oO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vBbQhG7A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="FkVNAKLm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1778617654;
-	bh=2Zw3vbvV8x4GK8JZGJ5RHUORMcfvOnvV4537sQAvgsk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=FkVNAKLmfq46lws+14zZ4Pit1RlyavkwINB/gf3yzPO5H7KXPk7tS4XL/OrByolpX
-	 zrlOnG3P0D5XSYZluJ/4uGI3bvW1y8Ls0V66pppmZGu5OisNYBptCmb0TQK+GTsEDR
-	 6cL91xBM6pBtPSRsVZ1Op2p2abGxaNwiQp7536CI=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 30D71BD423;
-	Tue, 12 May 2026 20:27:34 +0000 (UTC)
-Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id B75655FC4E;
-	Tue, 12 May 2026 21:27:33 +0100 (BST)
-From: Phil Pemberton <philpem@philpem.me.uk>
-To: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>
-Subject: [PATCH v5 5/6] ata: libata-scsi: probe additional LUNs for multi-LUN ATAPI devices
-Date: Tue, 12 May 2026 21:27:27 +0100
-Message-ID: <20260512202728.299414-6-philpem@philpem.me.uk>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260512202728.299414-1-philpem@philpem.me.uk>
-References: <20260512202728.299414-1-philpem@philpem.me.uk>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vBbQhG7A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51142C2BCB7;
+	Wed, 13 May 2026 07:43:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778658186;
+	bh=nyYSr1NSQmHg/Qas0D9ocjX288HuS7GJLW22dd7ygAA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=vBbQhG7ADXvZZOhDMeat690cbnaFihQU3JGoXSCnbVN/TiVbA4t+fOtPyAVx2TFNX
+	 7F3MZU3eRhJ9+EjWxoseLGxYrsJHQ08q40vryFaqwCTKsNt2K4lNFVThSSL+nylx22
+	 MO0UdFuOr42/Me8sEaWLip5abLEJvZPV+szpUZb6J4KQiF+RaYbK3Br5UnlRdtMZ/N
+	 g7Ptkbb7uWK6CVZnmeh1b+mBI2qkCapZkiz5So4nNDyEyAhX1KNMMYKFvSG4MAGWoM
+	 UxXA43clIycsb2PFG0KdU+5kn79i9PipSDQxjhsc2mw58mkOsNFDOeLor7szNE28Qd
+	 /eD08LgUenIOQ==
+From: Niklas Cassel <cassel@kernel.org>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
+ Marco Crivellari <marco.crivellari@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
+ Frederic Weisbecker <frederic@kernel.org>, 
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+ Michal Hocko <mhocko@suse.com>, Damien Le Moal <dlemoal@kernel.org>
+In-Reply-To: <20260430092947.128647-1-marco.crivellari@suse.com>
+References: <20260430092947.128647-1-marco.crivellari@suse.com>
+Subject: Re: [RFC PATCH] ata: libata-scsi: Move long delayed work on
+ system_dfl_long_wq
+Message-Id: <177865818406.650802.13202534059090445731.b4-ty@b4>
+Date: Wed, 13 May 2026 09:43:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-After LUN 0 is added for an ATAPI device, check its BLIST_FORCELUN
-flag.  If set, bump dev->nr_luns to the host's max_lun so the LUN
-routing in atapi_xlat() accepts the probe INQUIRYs, then call
-scsi_scan_target() with SCAN_WILD_CARD to trigger the SCSI layer's
-built-in sequential LUN scan for that target only.  This probes
-LUNs 1..shost->max_lun, driven by the libata atapi_max_lun module
-parameter.
+On Thu, 30 Apr 2026 11:29:47 +0200, Marco Crivellari wrote:
+> Currently the code enqueue work items using {queue|mod}_delayed_work(),
+> using system_long_wq. This workqueue should be used when long works are
+> expected, but it is a per-cpu workqueue.
+> 
+> This is important because queue_delayed_work() queue the work using:
+> 
+>    queue_delayed_work_on(WORK_CPU_UNBOUND, ...);
+> 
+> [...]
 
-Devices without BLIST_FORCELUN (the vast majority of ATAPI devices)
-are left with only LUN 0 -- no sequential scan is triggered, so
-single-LUN devices like the iHAS124 DVD writer are completely
-unaffected.
+Applied to libata/linux.git (for-7.2), thanks!
 
-Non-responding LUNs (PQ=0/PDT=0x1f) are silently skipped by
-scsi_probe_and_add_lun() when BLIST_NO_LUN_1F is set on the device
-via scsi_devinfo.
+[1/1] ata: libata-scsi: Move long delayed work on system_dfl_long_wq
+      https://git.kernel.org/libata/linux/c/79b6e4dd
 
-Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
----
- drivers/ata/libata-scsi.c | 27 +++++++++++++++++++++++----
- 1 file changed, 23 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2d714efc855f..a6f5557014c7 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -26,6 +26,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_devinfo.h>
- #include <linux/libata.h>
- #include <linux/hdreg.h>
- #include <linux/uaccess.h>
-@@ -4745,12 +4746,30 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
- 						 NULL);
- 			if (!IS_ERR(sdev)) {
--				dev->sdev[0] = sdev;
--				ata_scsi_assign_ofnode(dev, ap);
-+				/*
-+				 * For multi-LUN ATAPI (BLIST_FORCELUN), bump
-+				 * dev->nr_luns to the host max so the LUN
-+				 * routing in atapi_xlat() accepts the probe
-+				 * INQUIRYs to LUN > 0, then trigger the
-+				 * sequential scan.  pdt_1f_for_no_lun, set
-+				 * during LUN 0 configure, ensures
-+				 * non-responding LUNs are silently skipped;
-+				 * dev->sdev[] is populated by
-+				 * ata_scsi_dev_config() during the scan.
-+				 */
-+				if (dev->class == ATA_DEV_ATAPI &&
-+				    sdev->sdev_bflags & BLIST_FORCELUN) {
-+					dev->nr_luns = ap->scsi_host->max_lun;
-+					scsi_scan_target(
-+						&ap->scsi_host->shost_gendev,
-+						channel, id, SCAN_WILD_CARD,
-+						SCSI_SCAN_RESCAN);
-+				}
- 				scsi_device_put(sdev);
--			} else {
--				dev->sdev[0] = NULL;
- 			}
-+
-+			if (dev->sdev[0])
-+				ata_scsi_assign_ofnode(dev, ap);
- 		}
- 	}
- 
--- 
-2.43.0
+Kind regards,
+Niklas
 
