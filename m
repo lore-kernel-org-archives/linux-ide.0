@@ -1,113 +1,223 @@
-Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com [209.85.167.43])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 015AF3DBD77
-	for <linux-ide@vger.kernel.org>; Wed, 13 May 2026 08:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778660075; cv=pass; b=PIis3IF/uLE6eljUoOEnC0fThbexsuiKIophGrYNvzz4V7JrijQnGevcQCQtOm93PfhtONurjA89enHzx0Oc3Q1QspLRjBcI7ZTqR8uwFGUqC1k57fbro6sQoyWA5ad2+n6P6lRL9uMnJ1xZ6Rpbifeiwr5zoiZJW5Rc570Joz0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778660075; c=relaxed/simple;
-	bh=QBu1KzxWLIy8y0OH+PFug6W3a2NOnzvT2ZhYdeQjlx4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AYDZrRkaEN09QhiQZCtTGQOxXrVZ/SkP/1m0AXAIWuL5BEB0H6fHIjbkof1nQf8JhSS47fxzAjWjwuxizddarvf189WMSssLFaHokiF8wBysUVNeRqXtuPi79jL2uusWpkcha4B/H6WLV1FSPRA7Gu24KlKOMy68+9kClBK028g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=UjVEhVNu; arc=pass smtp.client-ip=209.85.167.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1B62797AC
+	for <linux-ide@vger.kernel.org>; Wed, 13 May 2026 13:07:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778677665; cv=none; b=bR2NhxeM8uPR6Kjm/P6yfitZlreOT+YgiwIa8zC/lI/j2cC6ELjaogr3AGzMNJPRf6JLlPTgr4Cv3DGNbOlpmrB9loG8ZsWbS9mXuG8rYRUW6K21866xoN9jpRbKSWCux+mmqW+BrW1/v+lEerNfU2xOI4APvkEQ82XZrxsuzUY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778677665; c=relaxed/simple;
+	bh=jpJ8jiK9qSPMmtsxq7fGXJiJpUt1/XcLckJgMei7/8c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OESIvqxFrt5M0HE5j75glMBcp9LCuc9bGuKT0vrZPBPIhEMjHzIPUAmSszza/0EBua8r112sc5qWbtr0jBHqvJofS56AjjbTT4sfnWxeQQKAjrXyOnJObV2vaZKKBe0e/Vq3NHR6vPMic9x56laEyXTjrgjI0EzAt32B9YQtNwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=wY+yLra3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=LD1Z/9m3; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=wY+yLra3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=LD1Z/9m3; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="UjVEhVNu"
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-5a742b8b72eso6412879e87.1
-        for <linux-ide@vger.kernel.org>; Wed, 13 May 2026 01:14:31 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778660070; cv=none;
-        d=google.com; s=arc-20240605;
-        b=c/MSDaAcyuzVgIlPbBAtDrPyM/sWPSiUzq8aBc7KX5Oi8Yuxt4Un9zFeV1gQtFm/qI
-         BVpl+EE3uYJy6pvH9IHPGSRGqPK2GUZxrumjSlbRa9z71vUYsEeUssHP77gsz9gE5bZ7
-         w+A/Suwj03jhxCpbH2GYEkA4ghmsvLIVSAh0YG2joqFyHyHyd3b7nvhfnB6oF3wBJbdt
-         4NPINB5GNMb52QHmsOhSti1+YzX0zzdMaSe0vB4n6ix7rborrMEf0MJmYGyW/qJOJy3q
-         Un4cKq0umrJ5iAVRu8lJUk5AIXYtRrpKW6v58J6+2k4OKWvgnvIT+8vDlowoxWQUUR7L
-         e1+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=xeyRwVBQ8CXB/UL9xuw1LlngIuEVoxSB7uulrvRHfsE=;
-        fh=J5AVt5OkFaL1JJVEyYTWLcfRrrbhzAweIzQhY7jS2+8=;
-        b=YTxa2FKHgYw/3eCHCikRS+EUFtUPt2Cwd5yDDCNe0wja5504fWpiWXPlHKL6RihgkC
-         1M7qBPND0gQIAs5qeANBAK5T4EyDezAdjMC/LG7WlgFr5NxcNBC41FHodgkb8lEwrjjx
-         Xg26qPnpJM1JRraCbPCzC0YXBhyzaW3VagJ4fN9Zvj+y3G6xhCY00zGVzY6c6LLOg65/
-         NEDkyxV2dXRj4gxXTf7asjZ1UD2msk1Wb9G6tnY8IsJgBeD1eJDGIMNwFHxcVr4VVHGO
-         KEptsIevWQGBAhwR7ZsSz5M80k0yp9CYOBfOYxwC2ohJctQd88rHSrXkDMNCfXuUztCA
-         uIuA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1778660070; x=1779264870; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xeyRwVBQ8CXB/UL9xuw1LlngIuEVoxSB7uulrvRHfsE=;
-        b=UjVEhVNuGemu9vrZdSeyJUUne5hAflSQnaTH0XRwGpk+pLNo7NtbSmzhuk4/jyWY1p
-         gcS88XCX6b29jfjgMrVPePk3UfysmUIohnVQ9Aw42O93wc2gvsvQrnPmdzqhAY51ywjN
-         +1Mgq2WiWWpB3o/lmPibirCVdb3tJkBrGcRbbCAP+Y9AO7zUJn8Yj6f4WZ13EmeaL30+
-         PNQSz+9A+/FVwNyk4kz2UX3IpPXiqaDSNYQDhRmykU3mEuM8S0GCRYk2342+aGpS0gym
-         7BYTXaYdzOc4fRpoUoQIKYlfjsSBpc2aw4L0CA354LTKMzvJflNOkH+KLB04NqoiLEpF
-         qKdQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778660070; x=1779264870;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=xeyRwVBQ8CXB/UL9xuw1LlngIuEVoxSB7uulrvRHfsE=;
-        b=AnC4VYExVpGQzPm5Sf0UFjgA6gp+ZwZpoC5pJb1nZOnqsqgiC01PxRZA63WqBIrAie
-         BaUdzmpsmk0CcuuPy8JHKu0DY4Lk0qD+PJlafzNwep09+/AzlQ4BbZuLqa71CEKle5Pl
-         KvYF/fzpqUWlaH57/EWRcqi7my5kLxDjsKtUifSWSbtiinGGhwg2bSM2dc9dnPcVl8Z9
-         OV+arCYPfxo38MHagvy9IKzr2arElj8AVPeXVEQ//3YP3DphaEtwRt3AxkFXmqCJfleO
-         OG6UMMFQ5hHSmjUGYQkvGSnAbP+NH3LdD0xrtASPpPDKm9TAGFyWbnvVf1yCf9GOngA3
-         6v5A==
-X-Forwarded-Encrypted: i=1; AFNElJ+p8giwA5kg9/5LTfXh9MUjDKJdwOj+Fbk2iREZ4LkwowqKZfDt0VQN2j+7qjoIYrOF3RbqbiKTP6Q=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy41AodhAByl/rvnl2xNyAZ9s7khrRasPCZTU530LSJYVGONRv1
-	Oo9vqqb1zEti3qaE6D4zbeaIEGY/AjmX63OXmfwchXViBmG48uK66fGft+y/GSzqmZ3ONl+RezB
-	m5L7CXy2CTmGyJlQLWLuKW1JBm3AgpMs0Z/n9k90teA==
-X-Gm-Gg: Acq92OHgTLchsyEnUq+OY5NzSVR0NsRs5prdNZZLaEPLmH2rWdMfMpCMWG3qZwLUa2X
-	UI8FO9Wv9SCjGSpjRm8QgNK/F8YfaDegSwtHvuHexVDQhN7SKJMoOy4R0Kzh04OSU71CD/6LwNj
-	32FMhM3Sk7hP/lV97wr5YON1PBPe+qippMtxsD4JAxKTbAsQ4aDbECpCUU5KiemsepCP/x1KrHi
-	oxRiacIsj9NDiBtylXjIx0nugwvfzSvZzTOcY4uP6x0ksLCe6oAWXQfSZu6EDYd6HmRUW0qgFp6
-	xTfgcfMbqc2+0wx0QO+AUKMl60NzbiJLI4pRUVxI
-X-Received: by 2002:a05:6512:31c9:b0:5a8:8eda:bed5 with SMTP id
- 2adb3069b0e04-5a8ef9978c3mr925970e87.32.1778660069592; Wed, 13 May 2026
- 01:14:29 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="wY+yLra3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="LD1Z/9m3";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="wY+yLra3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="LD1Z/9m3"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 38B9D6A9A5;
+	Wed, 13 May 2026 13:07:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1778677661; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uNWGbcmeBE1N0Cw7hhgmCqKp1+dV7l6/0y+bdpcAjdA=;
+	b=wY+yLra3UZ8MsA44i4RXugSBm3tUf80U//spY1Udhy1v+2x0RfIdrdp78j+AKY7gWMjg2O
+	hxxWvTG3XvqHxP3tSKa6swL9iak2wolIgry+h0YKIYLkxybUK+kYt5VV1RM4SjX3Ml8j+v
+	FFia/VULsiZl1HuxZiEWRqaKzhFygoU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1778677661;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uNWGbcmeBE1N0Cw7hhgmCqKp1+dV7l6/0y+bdpcAjdA=;
+	b=LD1Z/9m3L/ZaIqoonfZlgB3lGlWWOhegk1FTsRDh67lVCGGybnsz9XmOk2IPVGSJnEaxue
+	NWb1G6QM5hv1CfCg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1778677661; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uNWGbcmeBE1N0Cw7hhgmCqKp1+dV7l6/0y+bdpcAjdA=;
+	b=wY+yLra3UZ8MsA44i4RXugSBm3tUf80U//spY1Udhy1v+2x0RfIdrdp78j+AKY7gWMjg2O
+	hxxWvTG3XvqHxP3tSKa6swL9iak2wolIgry+h0YKIYLkxybUK+kYt5VV1RM4SjX3Ml8j+v
+	FFia/VULsiZl1HuxZiEWRqaKzhFygoU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1778677661;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uNWGbcmeBE1N0Cw7hhgmCqKp1+dV7l6/0y+bdpcAjdA=;
+	b=LD1Z/9m3L/ZaIqoonfZlgB3lGlWWOhegk1FTsRDh67lVCGGybnsz9XmOk2IPVGSJnEaxue
+	NWb1G6QM5hv1CfCg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 12023593A9;
+	Wed, 13 May 2026 13:07:41 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id hhX0A513BGrESAAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 13 May 2026 13:07:41 +0000
+Message-ID: <3ac8578f-e6c4-4655-ac1e-5e61763ab023@suse.de>
+Date: Wed, 13 May 2026 15:07:40 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260430092947.128647-1-marco.crivellari@suse.com> <177865818406.650802.13202534059090445731.b4-ty@b4>
-In-Reply-To: <177865818406.650802.13202534059090445731.b4-ty@b4>
-From: Marco Crivellari <marco.crivellari@suse.com>
-Date: Wed, 13 May 2026 10:14:16 +0200
-X-Gm-Features: AVHnY4K1z06dFd-hkTgMKtfytC4RG5tqC1YdABtGr5MoYvOk9osTdFDcgFdJN_8
-Message-ID: <CAAofZF69w3FncXrQ6VMv8SsqhyS0+z47VgB9WpJFNUi27q13pA@mail.gmail.com>
-Subject: Re: [RFC PATCH] ata: libata-scsi: Move long delayed work on system_dfl_long_wq
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
-	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
-	Michal Hocko <mhocko@suse.com>, Damien Le Moal <dlemoal@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 2/6] ata: libata-scsi: convert dev->sdev to per-LUN
+ array
+To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20260512202728.299414-1-philpem@philpem.me.uk>
+ <20260512202728.299414-3-philpem@philpem.me.uk>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260512202728.299414-3-philpem@philpem.me.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	ARC_NA(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-On Wed, May 13, 2026 at 9:43=E2=80=AFAM Niklas Cassel <cassel@kernel.org> w=
-rote:
-> [...]
-> Applied to libata/linux.git (for-7.2), thanks!
->
-> [1/1] ata: libata-scsi: Move long delayed work on system_dfl_long_wq
->       https://git.kernel.org/libata/linux/c/79b6e4dd
+On 5/12/26 22:27, Phil Pemberton wrote:
+> Multi-LUN ATAPI devices (PD/CD combos, CD changers) share a single
+> ata_device but expose multiple scsi_devices.  The previous single
+> dev->sdev pointer could only track one LUN, making all other LUNs
+> invisible to code that operates on sdevs: port detach, suspend/resume,
+> ACPI uevent, ZPODD, media change notification, and EH teardown.
+> 
+> Replace the scalar struct scsi_device *sdev with a fixed-size array
+> dev->sdev[ATAPI_MAX_LUN] indexed by LUN number, where ATAPI_MAX_LUN
+> is 8 (the SCSI-2 ceiling, LUN values 0..7).  Add a companion field
+> dev->nr_luns recording the number of valid entries -- defaults to 1
+> during ata_dev_init() and is bumped during multi-LUN probe -- so the
+> common single-LUN case iterates one slot, not eight.
+> 
+> Add an inline helper ata_dev_scsi_device(dev, lun) that returns
+> dev->sdev[lun] guarded by a WARN_ON_ONCE(lun >= dev->nr_luns) bounds
+> check.  Use it for the hardcoded LUN-0 references in libata-acpi
+> (uevent kobj), libata-zpodd (disk events, wake notify), and the
+> door-lock and OF-node paths in libata-scsi.
+> 
+> Key changes per call site:
+>    - ata_scsi_dev_config:  assign sdev to dev->sdev[sdev->lun]
+>    - ata_scsi_sdev_destroy: clear dev->sdev[sdev->lun]; only trigger
+>      ATA-level detach when LUN 0 is destroyed, since removing a higher
+>      LUN should not tear down the underlying ATA device
+>    - ata_port_detach:  iterate dev->nr_luns slots (high->low)
+>    - ata_scsi_offline_dev:  iterate dev->nr_luns slots
+>    - ata_scsi_remove_dev:  snapshot and remove all LUN slots, then
+>      scsi_remove_device each one outside the lock
+>    - ata_scsi_media_change_notify:  send event to all populated LUNs
+>    - ata_scsi_dev_rescan:  resume and rescan each populated LUN
+>    - ACPI, ZPODD, ofnode, door-lock:  use ata_dev_scsi_device(dev, 0)
+> 
+> For single-LUN devices (the vast majority) only dev->sdev[0] is ever
+> populated and dev->nr_luns stays at 1, so existing call paths see no
+> change in behaviour.
+> 
+> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+> ---
+>   drivers/ata/libata-acpi.c  |   6 +-
+>   drivers/ata/libata-core.c  |  11 ++-
+>   drivers/ata/libata-scsi.c  | 151 +++++++++++++++++++------------------
+>   drivers/ata/libata-zpodd.c |   6 +-
+>   include/linux/libata.h     |  11 ++-
+>   5 files changed, 103 insertions(+), 82 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index 4433f626246b..8af35d0b1053 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -153,8 +153,10 @@ static void ata_acpi_uevent(struct ata_port *ap, struct ata_device *dev,
+>   	char *envp[] = { event_string, NULL };
+>   
+>   	if (dev) {
+> -		if (dev->sdev)
+> -			kobj = &dev->sdev->sdev_gendev.kobj;
+> +		struct scsi_device *sdev = ata_dev_scsi_device(dev, 0);
+> +
+> +		if (sdev)
+> +			kobj = &sdev->sdev_gendev.kobj;
+>   	} else
+>   		kobj = &ap->dev->kobj;
+>   
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 4408b1fb48c7..1cb159d9dbc7 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5564,6 +5564,7 @@ void ata_dev_init(struct ata_device *dev)
+>   	dev->pio_mask = UINT_MAX;
+>   	dev->mwdma_mask = UINT_MAX;
+>   	dev->udma_mask = UINT_MAX;
+> +	dev->nr_luns = 1;
+>   }
+>   
+>   /**
+> @@ -6275,11 +6276,15 @@ static void ata_port_detach(struct ata_port *ap)
+>   	/* Remove scsi devices */
+>   	ata_for_each_link(link, ap, HOST_FIRST) {
+>   		ata_for_each_dev(dev, link, ALL) {
+> -			if (dev->sdev) {
+> +			int lun;
+> +
+> +			for (lun = dev->nr_luns - 1; lun >= 0; lun--) {
+ > +				if (!dev->sdev[lun])> +					continue;
 
-Many thanks!
+That looks so weird.
+The 'sdev' array has the size ATAPI_MAX_LUN, so ->nr_luns should
+never be larger than that.
+_And_ you are checking for the pointer directly.
+So why do you have 'dev->nr_luns'?
+Wouldn't it be easier to use ATAPI_MAX_LUN as the upper limit,
+and do away with 'nr_luns' completely?
 
---=20
+Cheers,
 
-Marco Crivellari
-
-SUSE Labs
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
