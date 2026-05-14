@@ -1,72 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79CF3AB480
-	for <linux-ide@vger.kernel.org>; Thu, 14 May 2026 06:49:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8338F1ACEDF
+	for <linux-ide@vger.kernel.org>; Thu, 14 May 2026 07:10:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778741355; cv=none; b=rEGrRRFR3mz6nJ9oDUA85G8BDRzRHWyh1aObPSZSLypVlkGc4xi030yfFx6ddTcU+RVV2puJ+4YQA7TsxUB3dPjlhO6PZoyBa7vg7V+fNJcRXE0bqiFWNRz9z3rM++3ihTQ8z6EGyuecQxc8eOGV3E5BYWTNiSqW8enEl8pvR7s=
+	t=1778742602; cv=none; b=sFMe4rDDmBbj+jEAjybk4/m3B9M3ldzVSFws278aI00sDkKbENpBWDnBQ2DuZsXaWfLMXL2F0pt3EvB8yEvXNmhC/W54bsEZqCBvn64zeqjx7NGbF9W+Mpfpq0saMUuIsqHE9OkdHrUuki29urRMhwuWv6pNWybSrp3wqse2J9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778741355; c=relaxed/simple;
-	bh=7nVJkMjT9OLPGOinxVhfyggpv/5wrKPGZmAakhZNjqw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=geqfvh3qfTq+DvtFVfnE0W6hiHCJHNd1ZXncRJtvDstX2mB2vhbpiYefwpe731/5M+CCyldvKv4Cn+SmDhEpQwvPcZ0Yv8mqf0SHS9KlR8cXGdAU8x5OK7IPwM/0LQN5Z5BLwn9Nw5KU4ziv+9r4IuODS1B/Ge6ID4ah2UIskZ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kouSdQEw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778742602; c=relaxed/simple;
+	bh=vYufZySQ/LOTbo3lxYSxPyYKBUEDvULXnBFjDfkT8oU=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=R9fbbQkGoXWUaoagcTcHBuftjNZSbOCo0/wtBsLH836X/RBK8s8u7On0gDFgUbIHq2cX4TfV7F/64Hm8dLhlvtzXt4o0fVJw38HuCnHe83oNECj1z9xonoz23N+gtkVIoPJThuq/lqrZPwKrt6T5BdWf8if55RF4nzWDX+lEfUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bwOwl5KZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kouSdQEw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A9C8C2BCB7;
-	Thu, 14 May 2026 06:49:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bwOwl5KZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDA12C2BCB7;
+	Thu, 14 May 2026 07:10:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778741355;
-	bh=7nVJkMjT9OLPGOinxVhfyggpv/5wrKPGZmAakhZNjqw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kouSdQEwRlf9jKm0Asl4WFm44bFWtCUO7fVqtpigC5AcHblzxt5o/S1d9Z/dVeJaA
-	 /BGMNTJHLyc1wfP9BOpBAqyDeUJQlhS0KVMyTSfRQoPk9UsaAsMmJhB64uvEuRvimy
-	 WH/qaWFUxLmX/QEkr0+i9YEcUfIgcY7Iu6kulQiSpMubw4Ecz0HebVui72FEzT0lLg
-	 Xu6ogTMTER8LEER9R1O+m0tmnnYz1KwwIk+g3fgLIn/KMYb9WJ5uwk4bGVJcA4P8ym
-	 32tPsAeGSocfKXcHADv4jOk/J8pZ/Citb3gswoNO/6vaF87l5W436ah7T+lM9snFjW
-	 M7aMflmP1794w==
-Date: Thu, 14 May 2026 08:49:11 +0200
+	s=k20201202; t=1778742602;
+	bh=vYufZySQ/LOTbo3lxYSxPyYKBUEDvULXnBFjDfkT8oU=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=bwOwl5KZOntUoDX8K69ggNAPWExMYTn21pXCpDliRKtre7DJz9BTAw2Jovvefwtod
+	 fZ2DM9XCRMzJ8RcTu7QOqe9xXj28seNEg4ELoGlxp51nZrxzCO2+xn3mVVg8dqLYkb
+	 GoOi1nCzhP7tRb8Lpg6+TO7e+FvugI/D2QAHkYWxo+R/PcCUyPtfHDBzjoScD+dZMX
+	 0AAaGaM1omwJKsT/tIWYb02fLgz/oT55lQEA9VcsAQ7ty8ZHvDnaxSRCjybT8yiDO/
+	 zR22MJDpCRm3NrlnaGwUPXzp0/hVILTk0ixTQYZxhJCKlcKuGDYIra7em39zGwRC12
+	 dpm3N698Amnsw==
 From: Niklas Cassel <cassel@kernel.org>
-To: Tommy Kelly <linux@tkel.ly>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	John Garry <john.g.garry@oracle.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 0/4] ata: fix deferred QC handling for port multipliers
-Message-ID: <agVwZ6wPDdtIYhOI@fedora>
-References: <20260513151359.1075403-6-cassel@kernel.org>
- <5ef17ab9-5941-4268-b537-9e4f6cf7e602@tkel.ly>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: Frederic Weisbecker <frederic@kernel.org>, 
+ Marco Crivellari <marco.crivellari@suse.com>, Tejun Heo <tj@kernel.org>, 
+ Lai Jiangshan <jiangshanlai@gmail.com>, linux-ide@vger.kernel.org
+In-Reply-To: <20260513081001.714630-2-cassel@kernel.org>
+References: <20260513081001.714630-2-cassel@kernel.org>
+Subject: Re: [PATCH] ata: libata-eh: queue hotplug work on the
+ system_dfl_long_wq workqueue
+Message-Id: <177874260053.1169940.5505533088481611885.b4-ty@b4>
+Date: Thu, 14 May 2026 09:10:00 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5ef17ab9-5941-4268-b537-9e4f6cf7e602@tkel.ly>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-On Wed, May 13, 2026 at 09:09:35PM -0700, Tommy Kelly wrote:
+On Wed, 13 May 2026 10:10:01 +0200, Niklas Cassel wrote:
+> ata_scsi_port_error_handler() uses schedule_delayed_work() to queue
+> the ap->hotplug_task work.
 > 
-> Then, some power issue(?) caused the system to go read-only and I can't debug
-> anything because I can't execute any programs. This has happened in the past a
-> few times. The system crashes after a few minutes in this state. No logs are
-> available because the log system fails. Unsure if its related to these patches
-> but seems to happen when I build my own kernels. For these CBS tests I'm using the
-> unpatched fdt from u-boot v2026.04.
-> My root/boot filesystems are on an nvme drive, not the SATA PMP.
+> schedule_delayed_work() always uses the system_percpu_wq per-cpu
+> workqueue.
+> 
+> ata_scsi_scan_host() queues the ap->hotplug_task work on the unbound
+> system_dfl_long_wq workqueue.
+> 
+> [...]
 
-FWIW, if you want to build using the same kernel config as your distro,
-you can do:
+Applied to libata/linux.git (for-next), thanks!
 
-$ cp /boot/config-$(uname -r) .config
-$ make olddefconfig
-
-or
-
-$ zcat /proc/config.gz > .config
-$ make olddefconfig
-
+[1/1] ata: libata-eh: queue hotplug work on the system_dfl_long_wq workqueue
+      https://git.kernel.org/libata/linux/c/9e5137b9
 
 Kind regards,
 Niklas
+
