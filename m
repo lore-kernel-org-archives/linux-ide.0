@@ -1,136 +1,187 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 278021C84D7
-	for <linux-ide@vger.kernel.org>; Thu, 14 May 2026 00:12:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09C962D29C8
+	for <linux-ide@vger.kernel.org>; Thu, 14 May 2026 00:36:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778717539; cv=none; b=G0A9CSy1rdQl16Wq1IqbYcs7V293Dn655/M1lPPugCppsJ0piTIXhV0Ypmqu+ex06pOShktFzMw+RPSHssEU0Q4JH66KJxLcqAslAXXCNrdwHwqc2slNDHtG3dVRxBybHof8XWMeI0VvkfAJjBBcX4zS91hejMwHrHyqpAFo5X8=
+	t=1778718989; cv=none; b=JW2G/ziQJSKZUIP395VIcobbD/TbBDYiLCFQ4svyapu5n6jC8xyIJvWtzPdnjmksp2A0v4uJ4pATNBv4pGsIBdCt9zoql2dDrlvVGg8zT2G/KT1Iu1fVpvzBqQKF3TIuAUS7jZNqwSLhQJ9duL+L4728FskW87IVywNPExHOctg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778717539; c=relaxed/simple;
-	bh=itUvQc6SHifVf5/iG2YGQ7b4LEGjRDPg4seHTDS240E=;
+	s=arc-20240116; t=1778718989; c=relaxed/simple;
+	bh=JVFVN0S04GdX3I2uCPXrMwoH2JJ/RmeIBcufMKKDBY0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=a4Yf91mXDWsVp9cBqMc4PdT5GQXLJNd2K+ag6H2Jfc9P9KRkJsFb9xERTxzaGvWWm0MIKNTnlF9dTtiJA/HpbX3v9cTBiUG9G7dwcYz11wUKqvUKM1qKTnKjfrweLfckLOJLbEbj6qLousDz/nUxoPl/1Hi2nUmKFCQwfvzQp8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hprClYby; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=pTxkTYIgmRPL7rGB/zUYwtap+gxr8FNKXhol6cd5Ol8RSKu1hidDAu/MWbos98wHsAeVIY28ydFMMF2vUHqQ65glq73khmg6glpKEqVWKmAFO6DkWVJME9i88RtXEhuPZ1+3VVQ6c9z8aEeh2MbbkXvS1pYBNnSP7h6vU28keg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hcdP738N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hprClYby"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86235C19425;
-	Thu, 14 May 2026 00:12:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hcdP738N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89577C19425;
+	Thu, 14 May 2026 00:36:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778717538;
-	bh=itUvQc6SHifVf5/iG2YGQ7b4LEGjRDPg4seHTDS240E=;
+	s=k20201202; t=1778718988;
+	bh=JVFVN0S04GdX3I2uCPXrMwoH2JJ/RmeIBcufMKKDBY0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=hprClYbyGOYB6n/Adg62eC2a51k9SAiVWxUv0uc9uDf1vKl3ZVDSv7qBlHiQfcVti
-	 CYNkLgbZYrVm1OzQUajD3FFsk6j7Lm8dPmg8kjKc7pPINyRy/TNEwrhaVfPgdra/kH
-	 fMa7U0u4NQY6+/5sT64YZo7Q/17lm9BAiQHQWkW6RsTgyovpugMLZXklz2lJGwZ5fd
-	 wH5f1i40vp8FpdPqIVE3dXtquFaeVVb/wBZuOboDl9QYdYDXayHuiKVwlf4GxwEQwm
-	 DTNRaZqrw+ashqHorqqvt479lWq1Cp/N8nNnaVGi88uH92z6ay2AXCE8U1K9cnPi8l
-	 yXM/HfvfwK1DA==
+	b=hcdP738NfuXF8wKEFFwjhyH6ur+gMERDUKqVNCMIQWTM+FwXyIoJKdtkvRmQJxa1L
+	 hUdXEG7yvQ00oyPv2xPec2IUkFTe8Urs4aegysrJP7tvAVoXQyNeHhaHR8RpWV/CCj
+	 Rhvxr2qw1pA3eE8ogUxhZmprNYhrqlXIc5r4e25OkzjxhHuPMqvVZPJNJHYvyf6OUJ
+	 lPJQoewZgYjmtFmBsWT8MHXiCE198WQRNb+xa+9FTS/PnfDQbkVRgHeQ4rKHAx9fF+
+	 Ye1Oc0vfJA+D14JHka/UcjTUqk9NsgKMJa8Qu9QVBMXxw+7q0cUBa5lvs6qK25ZayZ
+	 PX8zCCtYKqu9A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 1/6] ata: libata-scsi: add atapi_max_lun module
- parameter
+Subject: Re: [PATCH v5 2/6] ata: libata-scsi: convert dev->sdev to per-LUN
+ array
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Phil Pemberton" <philpem@philpem.me.uk>
-Cc: linux-ide@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260512202728.299414-2-philpem@philpem.me.uk>
-References: <20260512202728.299414-2-philpem@philpem.me.uk>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, cassel@kernel.org
+In-Reply-To: <20260512202728.299414-3-philpem@philpem.me.uk>
+References: <20260512202728.299414-3-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 14 May 2026 00:12:18 +0000
-Message-Id: <20260514001218.86235C19425@smtp.kernel.org>
+Date: Thu, 14 May 2026 00:36:28 +0000
+Message-Id: <20260514003628.89577C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Medium] Unnecessary introduction of a global module parameter for a hard=
-ware quirk.
-- [Medium] Off-by-one mismatch between the `atapi_max_lun` parameter descri=
-ption and its application as an exclusive upper bound.
+- [Critical] Out-of-bounds array write in `ata_scsi_dev_config()` and `ata_=
+scsi_sdev_destroy()` via unvalidated `sdev->lun` index.
+- [High] Semantic error in `atapi_qc_complete()` clears `locked` flag for L=
+UN 0 on failures originating from other LUNs.
+- [High] TOCTOU race condition in `ata_port_detach()` leading to NULL point=
+er dereference or Use-After-Free.
 --
 
-commit 4a1228303dd79171832c9f9e8bbe33af4d0fc449
+commit 1302443818a8bc8d7f9a9c01d075139291e28886
 Author: Phil Pemberton <philpem@philpem.me.uk>
+Subject: ata: libata-scsi: convert dev->sdev to per-LUN array
 
-ata: libata-scsi: add atapi_max_lun module parameter
-
-This commit introduces the atapi_max_lun module parameter to control the
-upper bound of the per-host SCSI LUN scan for ATAPI devices. This enables
-scanning past LUN 0 for multi-LUN devices.
+This commit converts the single dev->sdev pointer into an array to support
+multi-LUN ATAPI devices. It replaces hardcoded single-LUN logic with loops
+over valid LUN slots and adds helpers to safely access the per-LUN SCSI
+devices.
 
 > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index e76d15411e2ae..4408b1fb48c77 100644
+> index 4408b1fb48c77..1cb159d9dbc75 100644
 > --- a/drivers/ata/libata-core.c
 > +++ b/drivers/ata/libata-core.c
 [ ... ]
-> @@ -122,6 +122,11 @@ int atapi_passthru16 =3D 1;
->  module_param(atapi_passthru16, int, 0444);
->  MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI dev=
-ices (0=3Doff, 1=3Don [default])");
-> =20
-> +int atapi_max_lun =3D 1;
-> +module_param(atapi_max_lun, int, 0444);
-> +MODULE_PARM_DESC(atapi_max_lun,
-> +	"Maximum LUN to scan on ATAPI devices flagged BLIST_FORCELUN (1 [defaul=
-t] .. 7)");
+> @@ -6275,11 +6276,15 @@ static void ata_port_detach(struct ata_port *ap)
+>  	/* Remove scsi devices */
+>  	ata_for_each_link(link, ap, HOST_FIRST) {
+>  		ata_for_each_dev(dev, link, ALL) {
+> -			if (dev->sdev) {
+> +			int lun;
+> +
+> +			for (lun =3D dev->nr_luns - 1; lun >=3D 0; lun--) {
+> +				if (!dev->sdev[lun])
+> +					continue;
+>  				spin_unlock_irqrestore(ap->lock, flags);
+> -				scsi_remove_device(dev->sdev);
+> +				scsi_remove_device(dev->sdev[lun]);
 
-Is this module parameter strictly necessary?
+Can this cause a NULL pointer dereference or use-after-free?
 
-The commit message notes that LUN>0 probing is securely gated behind the
-BLIST_FORCELUN SCSI device quirk. Because this safeguard exists, requiring a
-global kernel command-line parameter in addition to the quirk seems redunda=
-nt
-and defeats the automatic detection philosophy of the quirk system.
+The argument dev->sdev[lun] is evaluated after the lock is released. If a
+concurrent sysfs device removal invokes ata_scsi_sdev_destroy(), it will
+acquire the lock and set dev->sdev[lun] =3D NULL.
 
-Could the code dynamically increase shost->max_lun when the BLIST_FORCELUN
-quirk is detected on LUN 0, eliminating the need for a global parameter?
+When the original thread resumes, it might pass NULL to scsi_remove_device(=
+),
+which unconditionally dereferences sdev->host. Even if it reads a non-NULL
+pointer, no reference is held via scsi_device_get(), so the device could be
+freed concurrently.
 
-Furthermore, does the documentation introduce an off-by-one mismatch?
+Should the pointer be cached and refcounted under the lock, similarly to how
+it is done in ata_scsi_remove_dev()?
 
-The parameter is documented as "Maximum LUN to scan ... (1 [default] .. 7)",
-which implies an inclusive maximum LUN ID. However, this value is assigned
-directly to shost->max_lun:
-
+>  				spin_lock_irqsave(ap->lock, flags);
+> -				dev->sdev =3D NULL;
+> +				dev->sdev[lun] =3D NULL;
+>  			}
+>  		}
+>  	}
 > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index f44612e269a4d..32c6a0e497cf9 100644
+> index 32c6a0e497cf9..7c3d31dc49a17 100644
 > --- a/drivers/ata/libata-scsi.c
 > +++ b/drivers/ata/libata-scsi.c
 [ ... ]
-> @@ -4627,7 +4627,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const=
- struct scsi_host_template *s
->  		shost->transportt =3D &ata_scsi_transportt;
->  		shost->unique_id =3D ap->print_id;
->  		shost->max_id =3D 16;
-> -		shost->max_lun =3D 1;
-> +		shost->max_lun =3D clamp(atapi_max_lun, 1, ATAPI_MAX_LUN);
-
-Because the SCSI midlayer treats shost->max_lun as an exclusive limit,
-setting atapi_max_lun=3D7 based on the documentation will cause a regression
-where the scanner stops at LUN 6, completely missing LUN 7.
-
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 5c085ef4eda7b..3e33ee30628d0 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-[ ... ]
-> @@ -131,6 +131,7 @@ enum {
->  	ATA_SHORT_PAUSE		=3D 16,
+> @@ -1131,7 +1131,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, s=
+truct queue_limits *lim,
+>  	if (dev->flags & ATA_DFLAG_TRUSTED)
+>  		sdev->security_supported =3D 1;
 > =20
->  	ATAPI_MAX_DRAIN		=3D 16 << 10,
-> +	ATAPI_MAX_LUN		=3D 8,	/* SCSI-2 cap (LUN values 0..7) */
+> -	dev->sdev =3D sdev;
+> +	dev->sdev[sdev->lun] =3D sdev;
 
-Since the clamp function bounds the value to ATAPI_MAX_LUN (which is 8), the
-value 8 is required to scan all 8 SCSI-2 LUNs, making the documentation
-suggesting 7 as the maximum misleading.
+Could this cause an out-of-bounds write?
 
-Should the documentation be updated to clarify that it controls the total
-number of LUNs (an exclusive bound), or should the parameter be treated as =
-an
-inclusive maximum?
+The dev->sdev array has a fixed size of ATAPI_MAX_LUN (8), so valid indices
+are 0 to 7. The SCSI layer's shost->max_lun is 8, and scsi_report_lun_scan()
+checks if (lun > sdev->host->max_lun), which allows lun =3D=3D 8.
+
+If an ATAPI device returns LUN 8, could dev->sdev[8] =3D sdev overwrite
+dev->nr_luns, leading to further stack buffer overflows during teardown pat=
+hs
+that use dev->nr_luns?
+
+>  	return 0;
+>  }
+> =20
+[ ... ]
+> @@ -1220,11 +1220,12 @@ void ata_scsi_sdev_destroy(struct scsi_device *sd=
+ev)
+> =20
+>  	spin_lock_irqsave(ap->lock, flags);
+>  	dev =3D __ata_scsi_find_dev(ap, sdev);
+> -	if (dev && dev->sdev) {
+> -		/* SCSI device already in CANCEL state, no need to offline it */
+> -		dev->sdev =3D NULL;
+> -		dev->flags |=3D ATA_DFLAG_DETACH;
+> -		ata_port_schedule_eh(ap);
+> +	if (dev && dev->sdev[sdev->lun] =3D=3D sdev) {
+
+Could this also cause an out-of-bounds access if sdev->lun is 8?
+
+> +		dev->sdev[sdev->lun] =3D NULL;
+> +		if (sdev->lun =3D=3D 0) {
+> +			dev->flags |=3D ATA_DFLAG_DETACH;
+> +			ata_port_schedule_eh(ap);
+> +		}
+>  	}
+>  	spin_unlock_irqrestore(ap->lock, flags);
+> =20
+[ ... ]
+> @@ -2911,10 +2912,15 @@ static void atapi_qc_complete(struct ata_queued_c=
+md *qc)
+>  		 * avoid this infinite loop.
+>  		 *
+>  		 * This may happen before SCSI scan is complete.  Make
+> -		 * sure qc->dev->sdev isn't NULL before dereferencing.
+> +		 * sure the LUN-0 sdev isn't NULL before dereferencing.
+>  		 */
+> -		if (qc->cdb[0] =3D=3D ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
+> -			qc->dev->sdev->locked =3D 0;
+> +		if (qc->cdb[0] =3D=3D ALLOW_MEDIUM_REMOVAL) {
+> +			struct scsi_device *sdev =3D
+> +				ata_dev_scsi_device(qc->dev, 0);
+> +
+> +			if (sdev)
+> +				sdev->locked =3D 0;
+> +		}
+
+Does this clear the locked flag for LUN 0 even if the failed command was
+issued to a different LUN?
+
+If the command was issued to LUN 1, its locked flag would remain set, which
+could cause an infinite retry loop in SCSI EH for multi-LUN devices.
+
+Should this use qc->scsicmd->device->locked =3D 0 instead to clear the flag=
+ on
+the actual target device?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512202728.2994=
-14-1-philpem@philpem.me.uk?part=3D1
+14-1-philpem@philpem.me.uk?part=3D2
