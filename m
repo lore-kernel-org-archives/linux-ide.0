@@ -1,52 +1,39 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-4325.protonmail.ch (mail-4325.protonmail.ch [185.70.43.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E73513BFAD4;
-	Fri, 15 May 2026 16:58:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7078318871F;
+	Sat, 16 May 2026 10:53:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778864285; cv=none; b=Te0++CG79iaZBPGHlPBRkpsrC0gZ/L9gY/uJRSDGr0QHBgdiOe5BcRclv6thsH4fp/qQm+VrQMJ86wmmNcoaJnun3qBIM95lht7JRViJK41t1VhwaFsx3eJiNPSC8ewmf597xUyB30Dd3JSx0tb4zsKaAuddRpv4WTjDMd3/OVY=
+	t=1778928793; cv=none; b=M4HIbzQaYuGKBBWdDhrjIZidf7TWDaOyNwjDHrCYydz3Ic/pD0DzIaFyRLqGu91G1EciAjigSoiOJbg9I4fdndBwOfN0zIQSFVQtc/pur12iWS364lAKW+TQlLVJ5UGIYfyEhGgZCmK+YyNGhSWfWfjrwp41xTwNHE8K/D8zA04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778864285; c=relaxed/simple;
-	bh=2z5dLIWyL/gV1rAo31oirSt/RVWW0XQ4DifQczJePGI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FgNPqKE5fv05x0Sra9ZYGtUhBTVGv9CA+h5Gg6ATi8bO0j3/r03LLckbRZTh2P2IvCGf88BGUu3WAGs+G5XXgCuNjz2Aezb8aSXfQOmaI3kwKVncKPWBv7xzV00XKbES0hZknBi9BHnniMB3IaA1OhNjw3jieXgm5yAP3+0Wc2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HnufnKRZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778928793; c=relaxed/simple;
+	bh=HMN0Opx70ZpbUamtCMUOUexTMQIX0j6dZQegMJ7oDS8=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=kXApv7BOVp5jo/mvB6MR3G5+YV1VLVhOdUQMZ8rv4eBbySSKwS2bEi29aIW7ekvouAtNLc2j1kGBOwo/WLIzgiEPoZXUaXQbKM+fJuoegzvgg8FrAMABn+zL2BiLyd9+v9REFrwahFrUqes3jBsDPh5p5qLxkWFK+LME9QDPT0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=drX/5pBc; arc=none smtp.client-ip=185.70.43.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HnufnKRZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EE8AC2BCB3;
-	Fri, 15 May 2026 16:57:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778864283;
-	bh=2z5dLIWyL/gV1rAo31oirSt/RVWW0XQ4DifQczJePGI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HnufnKRZfSdE7NKiVIkh8SzMZ2amgPWr0mdJncaBe+aG4KWO/zp+vLxAajbedi7FS
-	 b0zrl4MVSTnTtguuW9Ns0M+VFlzwwLo3mG2DkbaeExbvnlsaSNWLOQdhX8hQzbZo/Y
-	 lrM699UVFIkjtTtEEKz4+o4n/y9ZJVRdTKvoesVlNAeQmjXNWiSyWcPuXYQVCCnF/r
-	 kDZx/6/JrTSufawkMoMXxYUpVZj8M34oR9RtwMweLiVt+Tp2KPyYemeBpW8ecASvQU
-	 RBXPYe6XMGQezQvP2wa+/fslwbs1mVIqj4dyikM619smxSRzaHRitYfR4vTpqNqohH
-	 fE+JrFZQ5w45w==
-Date: Fri, 15 May 2026 22:27:48 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	Jonathan Hunter <jonathanh@nvidia.com>, Lyude Paul <lyude@redhat.com>, 
-	Danilo Krummrich <dakr@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Mikko Perttunen <mperttunen@nvidia.com>, Dmitry Osipenko <digetx@gmail.com>, 
-	Mauro Carvalho Chehab <mchehab@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Mathias Nyman <mathias.nyman@intel.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org, linux-media@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org, Thierry Reding <treding@nvidia.com>
-Subject: Re: [PATCH 5/9] PCI: tegra: Explicitly specify PMC instance to use
-Message-ID: <5gtqxwkjw6adv65tz7ji5wxdyscqe5zlk2ugkogrsrnwituhhm@f3iaamhyxdcm>
-References: <20260506-pmc-v1-0-a6de5da7216b@nvidia.com>
- <20260506-pmc-v1-5-a6de5da7216b@nvidia.com>
- <rt3tpcu7eucylbxurtvraghnyljkv52zau75jwkkbtyfslc2ox@2bjkryjd4nqp>
+	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="drX/5pBc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
+	s=q4wozfbm5rafhoxcupfh3w4bli.protonmail; t=1778928787; x=1779187987;
+	bh=HMN0Opx70ZpbUamtCMUOUexTMQIX0j6dZQegMJ7oDS8=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=drX/5pBczQkIt+yBQRTDCiJvlYrRwo8rb3J3nasnx700OrlYFLG/L7ry+/2V1gb2W
+	 uvC0fUB0Vj7fdCXpGIshHEnqrJXtxUw6SM2a/Tselr8wjRVvmlPytLu4AGQh1R5K8V
+	 Ejq0ubl20j6iJrY8kPedUUB1tQaN7Ze0W2PJuPCTIZtVZlXlnpXTXR9nO2k8IMrk7z
+	 XMFmAu1u5eyEVoJxniOx95cv9y8f9ZjQWBuGWQuzV34ogHyrtGchVoidjqDB+fPbYC
+	 T6XXHt0ESGWoo+V1hzgNoiibHzWUT6yDXa3jyBLQkPz47FYZWeloAR8P0SzLQYPxMl
+	 9VNUE9oYfTusg==
+Date: Sat, 16 May 2026 10:53:02 +0000
+To: "cassel@kernel.org" <cassel@kernel.org>, "ipylypiv@google.com" <ipylypiv@google.com>, "dlemoal@kernel.org" <dlemoal@kernel.org>
+From: Christoph Wiese <charon56@proton.me>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] ata: libata-scsi: fix requeue of deferred ATA PASS-THROUGH commands
+Message-ID: <-LfISXRga4ryMCYwCMNrhBwgNW6mZ9xx8AWX-Y7B0WwEyZr_8BHlTEgNarxj36MY0Yu-79B93UH7ISr1OmMrRqAbO_LYmZjUgtkE0MoxB5M=@proton.me>
+Feedback-ID: 197824547:user:proton
+X-Pm-Message-ID: 78acbf9fcc5fbe869f251213226c6e693ac12275
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -54,99 +41,27 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <rt3tpcu7eucylbxurtvraghnyljkv52zau75jwkkbtyfslc2ox@2bjkryjd4nqp>
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, May 15, 2026 at 10:26:12PM +0530, Manivannan Sadhasivam wrote:
-> On Wed, May 06, 2026 at 03:41:56PM +0200, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> > 
-> > Currently the kernel relies on a global variable to reference the PMC
-> > context. Use an explicit lookup for the PMC and pass that to the public
-> > PMC APIs.
-> > 
-> > Signed-off-by: Thierry Reding <treding@nvidia.com>
-> > ---
-> >  drivers/pci/controller/pci-tegra.c | 20 +++++++++++++++-----
-> >  1 file changed, 15 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-> > index 512309763d1f..2c6c521e6901 100644
-> > --- a/drivers/pci/controller/pci-tegra.c
-> > +++ b/drivers/pci/controller/pci-tegra.c
-> > @@ -340,6 +340,8 @@ struct tegra_pcie {
-> >  	struct reset_control *afi_rst;
-> >  	struct reset_control *pcie_xrst;
-> >  
-> > +	struct tegra_pmc *pmc;
-> > +
-> >  	bool legacy_phy;
-> >  	struct phy *phy;
-> >  
-> > @@ -1165,7 +1167,7 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-> >  	clk_disable_unprepare(pcie->afi_clk);
-> >  
-> >  	if (!dev->pm_domain)
-> > -		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> > +		tegra_pmc_powergate_power_off(pcie->pmc, TEGRA_POWERGATE_PCIE);
-> >  
-> >  	err = regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
-> >  	if (err < 0)
-> > @@ -1183,7 +1185,7 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-> >  	reset_control_assert(pcie->pex_rst);
-> >  
-> >  	if (!dev->pm_domain)
-> > -		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> > +		tegra_pmc_powergate_power_off(pcie->pmc, TEGRA_POWERGATE_PCIE);
-> >  
-> >  	/* enable regulators */
-> >  	err = regulator_bulk_enable(pcie->num_supplies, pcie->supplies);
-> > @@ -1191,12 +1193,14 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-> >  		dev_err(dev, "failed to enable regulators: %d\n", err);
-> >  
-> >  	if (!dev->pm_domain) {
-> > -		err = tegra_powergate_power_on(TEGRA_POWERGATE_PCIE);
-> > +		err = tegra_pmc_powergate_power_on(pcie->pmc,
-> > +						   TEGRA_POWERGATE_PCIE);
-> >  		if (err) {
-> >  			dev_err(dev, "failed to power ungate: %d\n", err);
-> >  			goto regulator_disable;
-> >  		}
-> > -		err = tegra_powergate_remove_clamping(TEGRA_POWERGATE_PCIE);
-> > +		err = tegra_pmc_powergate_remove_clamping(pcie->pmc,
-> > +							  TEGRA_POWERGATE_PCIE);
-> >  		if (err) {
-> >  			dev_err(dev, "failed to remove clamp: %d\n", err);
-> >  			goto powergate;
-> > @@ -1234,7 +1238,7 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-> >  	clk_disable_unprepare(pcie->afi_clk);
-> >  powergate:
-> >  	if (!dev->pm_domain)
-> > -		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> > +		tegra_pmc_powergate_power_off(pcie->pmc, TEGRA_POWERGATE_PCIE);
-> >  regulator_disable:
-> >  	regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
-> >  
-> > @@ -1432,6 +1436,12 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
-> >  		return err;
-> >  	}
-> >  
-> > +	pcie->pmc = devm_tegra_pmc_get(dev);
-> > +	if (IS_ERR(pcie->pmc)) {
-> > +		dev_err_probe(dev, PTR_ERR(pcie->pmc), "failed to get PMC\n");
-> > +		return err;
-> 
-> As Sashiko pointed out, you need to return dev_err_probe() directly.
-> 
+(my orginal email was html formated, sorry about that)
 
-With the change,
+Hi Niklas,
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+I notice you already flagged this for backporting to 7.0 stable. Please=
+=C2=A0also include 6.12.y - the buggy parent commit 0ea84089dbf6 was backpo=
+rted to 6.12.77 as 5d61a38a60e6, and the bug reproduces there.
 
-Feel free to take it through Tegra tree.
+Symptom: parallel sedutil-cli --setLockingRange against multiple ATA=C2=
+=A0OPAL SEDs causes one random drive per invocation to receive a zero-lengt=
+h TRUSTED RECEIVE response ("One or more header fields have 0 length / Sess=
+ion start failed rc =3D 136"). The OPAL session is opened on the drive by t=
+he TRUSTED SEND but the matching TRUSTED RECEIVE is failed at the SCSI mid-=
+layer (scmd->allowed =3D=3D 0 for SG_IO), leaving an orphan session that on=
+ly a cold power cycle clears.
 
-- Mani
+Bisect on Debian's 6.12.y kernel (which carries 5d61a38a60e6 unmodified):=
+=C2=A06.12.74 works, 6.12.86 broken. I've been running 8ebf408 locally as a=
+ cherry-pick on 6.12.88 for ~24h; six OPAL SEDs unlock cleanly on every boo=
+t.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Thanks for the fix.
