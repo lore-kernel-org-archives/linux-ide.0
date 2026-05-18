@@ -1,69 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A30462F8E92
-	for <linux-ide@vger.kernel.org>; Mon, 18 May 2026 10:33:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0EF83EFD25
+	for <linux-ide@vger.kernel.org>; Mon, 18 May 2026 10:37:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779100405; cv=none; b=cCaJOPiaARhYJbOtQ3+PTx3mygI26Y6OBE+CB9kjgP7rSRW66C3f5EUxVgZHe56aQAPORwj53sejqp8Xo5qXqH0QmC46T1JC3iFDEgxhlAimyXuPxUXS84i5DP9+uVKyYjGPsDZQ9KTqnzoHYyGdy0pV7Bqp81MPaf5wHUXc++c=
+	t=1779100626; cv=none; b=VE361wGK3BP3uudMT2Xss6NgbQWOBnKzoyWcipWAmf1ekrYNZxI6+VZ+B+kr9QUyGRlElYPklkovp9k2LIhBeZAMqzP0arBKOxixFsU0KQc1xnVY78EEaon8Z+sw6UnPIjS2ZzZ0/hxEqWCKQUY2MzYteSTTxNb2kgqNGhA5csc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779100405; c=relaxed/simple;
-	bh=IBDngdYpOgMFq+khGljNaKiNd2thWSZl85fX1lwcH5g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ipa8CLOhXc7Hz0wLDjjGmLh0mnx45S3Tx78GCa+xF70I1Rzw0hO4hy5Dgrw+k6jVPCaaMQLc2dniiX21+4801C/UBv9JtoGb9nAN4YcwckBkMiCErdtzL5yMcy43XdbJuUdFiVjMGsO2gIO+Cmp93ixfY/7ISXm7xg0jLoYBNgI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qpJnSWxT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779100626; c=relaxed/simple;
+	bh=kz8YfP5J+en9b+BmFFVVrz/4T0u+fCW6vCD96hE5b/I=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=qe9pL3gf0GuYCVpdDuAg19GF1x4FPNLDCyMCG5VyZr2+9IOuM+/omYvhVsP5zQO7bO2BZgA5jskTLpitSGfYDmvm2ulI99tokzi6crILDfwh68aptDeztVDb4hbd29WX3PA+iEMN6ZRInDdrXdFNfsQPZtioQjblJK6d3TWaJT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dhYqE7An; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qpJnSWxT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3B99C2BCC6;
-	Mon, 18 May 2026 10:33:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dhYqE7An"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F93CC2BCC6;
+	Mon, 18 May 2026 10:37:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779100404;
-	bh=IBDngdYpOgMFq+khGljNaKiNd2thWSZl85fX1lwcH5g=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qpJnSWxTOiAsgDmB9CwFGQPAhTTY6lztqMQVgUnLHpUCVBTRBTAMsNYjW5nyZD0LB
-	 3IaDkJjACTufQ8rGv95OCzdfutoy0ji8sTsnsNcj1Lz3UA9eViTMxy0d3r3gPG2Sx3
-	 8SgbXQ6ezG6E4tqyWACQItau5rBH4CNYzBqWhtLihKDISPEHlTKZB7o0HQGoky9WAi
-	 hW8J0GaLTufZ9ZrSUvBMtpfsEmP/kxgr0pcurYAN8sbBchlWyxiPp2M+Xt6iYLy7HA
-	 mOAWo5qoQFsAdVZ+ziZicM6icZOdvFRsDrri5uvD76diWPPzZgRd9UY+R0SjLMbOxO
-	 LWRNPM6FpQ8aA==
-Date: Mon, 18 May 2026 12:33:20 +0200
+	s=k20201202; t=1779100625;
+	bh=kz8YfP5J+en9b+BmFFVVrz/4T0u+fCW6vCD96hE5b/I=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=dhYqE7AnGLwAFBmkumKvaKgBOaT/wJmWFenVmh3vR36knz+TwW+tCmOWyrQ+BENP8
+	 KhsxrlHj1l7cjWAl+fexw2bz99tzpM+SC5E5SbuBdNKcn6Id2xIBNaL0EFAJKblijW
+	 NdcT/cdL2kdgfYexV5UriW7SDdRIhpFaZ6/xukLZu6uwYmv/HL37qT0A8MYj8hw3ff
+	 t2JlH07uwX/z+1N7hiU+Alg6i9tgqO9w5O62DO0Z0RngPfNOL3UcqOCmteTrIR6SUT
+	 cnz1Ywjt1s1dVmrGVkU5zvV7TXuGwaVCb5KQCR9D56qhi46CdoDrprDqbYBbauxtAP
+	 s43fgYaAAz1pA==
 From: Niklas Cassel <cassel@kernel.org>
-To: Tommy Kelly <linux@tkel.ly>
-Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v5 0/4] ata: fix deferred QC handling for port multipliers
-Message-ID: <agrq8PaA3yWc6xzw@ryzen>
+To: Tommy Kelly <linux@tkel.ly>, Damien Le Moal <dlemoal@kernel.org>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ John Garry <john.g.garry@oracle.com>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+In-Reply-To: <20260514073858.1175072-6-cassel@kernel.org>
 References: <20260514073858.1175072-6-cassel@kernel.org>
- <87402a36-57ef-40a5-8668-988f58e31ca9@tkel.ly>
+Subject: Re: [PATCH v5 0/4] ata: fix deferred QC handling for port
+ multipliers
+Message-Id: <177910062425.1864447.6530208133656638274.b4-ty@b4>
+Date: Mon, 18 May 2026 12:37:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87402a36-57ef-40a5-8668-988f58e31ca9@tkel.ly>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-Hello Tommy,
-
-On Thu, May 14, 2026 at 03:43:30AM -0700, Tommy Kelly wrote:
-> On 5/14/26 00:38, Niklas Cassel wrote:
-> > Changes since v4:
-> > -Fix ATA_DEFER_LINK_EXCL to use the correct goto label. While refactoring,
-> >  I accidentally used the wrong label goto defer_qc instead of goto free_qc,
-> >  which of course broke PMP CBS in v4.
-> > 
+On Thu, 14 May 2026 09:38:58 +0200, Niklas Cassel wrote:
+> Tommy Kelly reported a regression with PMP that use CBS:
+> https://lore.kernel.org/linux-ide/ce09cc21-a8e9-4845-b205-35411e22fba9@tkel.ly/
 > 
-> Good news!
+> It turns out that the ap->excl_link logic used for PMP that use CBS is
+> incompatible with the deferred qc issuing via a workqueue.
+> This is fixed in patch 3/4.
 > 
-> Tested with Linux v7.1-rc3 + v5 patch series.
-> 
-> Both FBS + CBS worked fine, no errors/warnings or visible issues.
+> [...]
 
-I added your Tested-by: on all patches while applying, thank you!
+Applied to libata/linux.git (for-7.1-fixes), thanks!
 
+[1/4] ata: libata-scsi: improve readability of ata_scsi_qc_issue()
+      https://git.kernel.org/libata/linux/c/360190bd
+[2/4] ata: libata-scsi: do not use the deferred QC feature for ATA_DEFER_PORT
+      https://git.kernel.org/libata/linux/c/ce454880
+[3/4] ata: libata-scsi: do not use the deferred QC feature on PMPs with CBS
+      https://git.kernel.org/libata/linux/c/f233124f
+[4/4] ata: libata-scsi: do not needlessly defer commands when using PMP with FBS
+      https://git.kernel.org/libata/linux/c/759e8756
 
 Kind regards,
 Niklas
+
