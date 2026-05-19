@@ -1,147 +1,63 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE5E932B116;
-	Tue, 19 May 2026 16:37:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0360A383C6C
+	for <linux-ide@vger.kernel.org>; Tue, 19 May 2026 19:03:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779208626; cv=none; b=D8pU2Su6guyngI6skJIdeR8vIBYTkJdcjmkQKeopixTR/fkqzxecZru5F/gnz2Ne+CYCatAQ4CIirprRCJ1E5QycbB63J/7+FX58BJywM1YGJIPZc1ek1rQ4Q6uaEumhtANyCRltxmdQbttERdUHk5m0sjpbYBZcSphdaWOrMSU=
+	t=1779217408; cv=none; b=bg5W7Yyqu1Nz30HeljDtKcsh7QT05PP2Y9TkBWy+uC6xYJhSLoo66C+cjOs2Lv6RDQLdEfu6ZlwntbRIAD0p7qpOgaAKEsTy+EB3FeZK+IZ4mpo6JboV6IGJMTkihZWYQtbq6rBaERow6d4m0939dmF1ZzU2dd+RvNWSn5hrg0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779208626; c=relaxed/simple;
-	bh=Gdghk+MZjnZXo8YtnLWvMk2Ms40s8zJKGg4lYjsfmnU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k9Lmxt0zTrdGlHHtlrWq7zSjDCjhLhn+jXVG1nNijY93xNPbKYjagGu27VmcySLI+fPbkDcx7bDqLXZroiSoRDidrVcTdh/76ZveeTl3loY8TvQJrNIxKEUujc2fUFU9yBkXdlYmK9pU44YWXj1Bh+NTjku55s5e7sYopzMMCPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eczbGY5r; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779217408; c=relaxed/simple;
+	bh=70+ZkCG0VFE4r0uFw4non8cqAByIXo4Hrj4FrSFKeAM=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=LSu8rdkNU7hLOmU7qc9pGBmEGVw/of8RH31wV32A+NV/wcHs2a1AwuqGiz6bUSm+dmbsnhAAafxIumCvAWwPfWaapKR+/GpnXlaVt3BKyuTsOkGffuCf4Yk2xUjPfui9HO6Kvu30efwkmPvwmFxZjDib7rukC+aU7sOxvgLlNe8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IpJfJt7F; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eczbGY5r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6A85C2BCB3;
-	Tue, 19 May 2026 16:37:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779208626;
-	bh=Gdghk+MZjnZXo8YtnLWvMk2Ms40s8zJKGg4lYjsfmnU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eczbGY5rwwuA6NkuR0zLT4BxSVMLXhAeCAovn6xlS40A1E5weEDhNloEkQ8OndkGF
-	 LNdXnow0ihFXy7L+p/6DYGrqqu1nvt0RSyGDa0wEWBXRQHX90pLcqvie8GvSDGki1V
-	 x+/9wXIDy9oBTClXlNcd4GK51d+vVHF7qepuafEA+EkbXCpDx5MiCOGStyMnV69oq2
-	 EnKY8cwgKHD8aK5sHbPfxqoobU2vQ4/uUO7taJHsUa/Em2DBKUGX0dO0lDnfRv/wWf
-	 iYA/kfSDKBgjyUDt8yO+iYqMNVLPASQtk0kZphEQAqEu/eGm6iGXI3Mbfg58Y7NJkW
-	 eK3d1Ftogl86w==
-Date: Tue, 19 May 2026 18:37:02 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sasha Levin <sashal@kernel.org>
-Cc: "ipylypiv@google.com" <ipylypiv@google.com>,
-	"dlemoal@kernel.org" <dlemoal@kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Christoph Wiese <charon56@proton.me>
-Subject: stable backport request: [PATCH v2] ata: libata-scsi: fix requeue of
- deferred ATA PASS-THROUGH commands
-Message-ID: <agyRrnU_Oyh79_d8@ryzen>
-References: <-LfISXRga4ryMCYwCMNrhBwgNW6mZ9xx8AWX-Y7B0WwEyZr_8BHlTEgNarxj36MY0Yu-79B93UH7ISr1OmMrRqAbO_LYmZjUgtkE0MoxB5M=@proton.me>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IpJfJt7F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D794A1F00897;
+	Tue, 19 May 2026 19:03:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779217407;
+	bh=bDTec6Ch3fFqnm8z0Xlg/XLpNCFL8pR1Zj1y9ymAF4A=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc;
+	b=IpJfJt7FqJu5x6Z9O9/xAHeZ20LyC0FP1B8lIw8+um9tD5PXNtAUSdpiXnlC7fTod
+	 BG6r66HcYpxxMrOdZToNi6EX+8EKDwND2s5SnWSYjFZdbsDVDx/BGBL7kzCqig9C+n
+	 Bvifax08B60+G6W34m2lGYbH41fYB2WikE8euer4/Ucy2oRvEcgYNSJ7ZyWn2bY8ir
+	 02kpDk3znlMrYVt+hzugGjpi6G/wVdRGiceapkh9u1WSQjSi2af/wo1GTO9EB5LgUi
+	 qYCdfcK4a9YMWUXMHzm2Qlah7OmXed9e6LkejMAWsnGAYRbIUzgkO6h8Mqt8wcngri
+	 TgOf6/NFW+fnA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 19A39383B276;
+	Tue, 19 May 2026 19:03:40 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 7.1-rc5
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20260519160746.2087727-1-cassel@kernel.org>
+References: <20260519160746.2087727-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20260519160746.2087727-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.1-rc5
+X-PR-Tracked-Commit-Id: 759e8756da00aa115d504a18155b1d1ee1cc12e8
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 27fa82620cbaa89a7fc11ac3057701d598813e87
+Message-Id: <177921741863.2846164.10787621454073743804.pr-tracker-bot@kernel.org>
+Date: Tue, 19 May 2026 19:03:38 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="hV/uP8JWeTuWMGxa"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <-LfISXRga4ryMCYwCMNrhBwgNW6mZ9xx8AWX-Y7B0WwEyZr_8BHlTEgNarxj36MY0Yu-79B93UH7ISr1OmMrRqAbO_LYmZjUgtkE0MoxB5M=@proton.me>
 
+The pull request you sent on Tue, 19 May 2026 18:07:46 +0200:
 
---hV/uP8JWeTuWMGxa
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.1-rc5
 
-On Sat, May 16, 2026 at 10:53:02AM +0000, Christoph Wiese wrote:
-> (my orginal email was html formated, sorry about that)
-> 
-> Hi Niklas,
-> 
-> I notice you already flagged this for backporting to 7.0 stable. Please also include 6.12.y - the buggy parent commit 0ea84089dbf6 was backported to 6.12.77 as 5d61a38a60e6, and the bug reproduces there.
-> 
-> Symptom: parallel sedutil-cli --setLockingRange against multiple ATA OPAL SEDs causes one random drive per invocation to receive a zero-length TRUSTED RECEIVE response ("One or more header fields have 0 length / Session start failed rc = 136"). The OPAL session is opened on the drive by the TRUSTED SEND but the matching TRUSTED RECEIVE is failed at the SCSI mid-layer (scmd->allowed == 0 for SG_IO), leaving an orphan session that only a cold power cycle clears.
-> 
-> Bisect on Debian's 6.12.y kernel (which carries 5d61a38a60e6 unmodified): 6.12.74 works, 6.12.86 broken. I've been running 8ebf408 locally as a cherry-pick on 6.12.88 for ~24h; six OPAL SEDs unlock cleanly on every boot.
-> 
-> Thanks for the fix.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/27fa82620cbaa89a7fc11ac3057701d598813e87
 
-Dear stable maintainers,
+Thank you!
 
-Could you please help with backporting commit 8ebf408e7d46 ("ata:
-libata-scsi: fix requeue of deferred ATA PASS-THROUGH commands")
-
-to the relevant stable kernels?
-
-It gets a conflict when cherry-picking, so I have attached a version
-that can be applied without conflicts.
-
-
-Kind regards,
-Niklas
-
---hV/uP8JWeTuWMGxa
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment;
-	filename=0001-ata-libata-scsi-fix-requeue-of-deferred-ATA-PASS-THR.patch
-
-From b80ea77afafdc0205abd9026a6ced59f618dbd62 Mon Sep 17 00:00:00 2001
-From: Igor Pylypiv <ipylypiv@google.com>
-Date: Sun, 12 Apr 2026 08:36:37 -0700
-Subject: [PATCH] ata: libata-scsi: fix requeue of deferred ATA PASS-THROUGH
- commands
-
-Commit 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-introduced ata_scsi_requeue_deferred_qc() to handle commands deferred
-during resets or NCQ failures. This deferral logic completed commands
-with DID_SOFT_ERROR to trigger a retry in the SCSI mid-layer.
-
-However, DID_SOFT_ERROR is subject to scsi_cmd_retry_allowed() checks.
-ATA PASS-THROUGH commands sent via SG_IO ioctl have scmd->allowed set
-to zero. This causes the mid-layer to fail the command immediately
-instead of retrying, even though the command was never actually issued
-to the hardware.
-
-Switch to DID_REQUEUE to ensure these commands are inserted back into
-the request queue regardless of retry limits.
-
-Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-(cherry picked from commit 8ebf408e7d463eee02c348a3c8277b95587b710d)
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-scsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3b65df914ebb..cd607911d724 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1692,7 +1692,7 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
- 	/*
- 	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
- 	 * do not try to be smart about what to do with this deferred command
--	 * and simply retry it by completing it with DID_SOFT_ERROR.
-+	 * and simply requeue it by completing it with DID_REQUEUE.
- 	 */
- 	if (!qc)
- 		return;
-@@ -1701,7 +1701,7 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
- 	ap->deferred_qc = NULL;
- 	cancel_work(&ap->deferred_qc_work);
- 	ata_qc_free(qc);
--	scmd->result = (DID_SOFT_ERROR << 16);
-+	scmd->result = (DID_REQUEUE << 16);
- 	scsi_done(scmd);
- }
- 
 -- 
-2.54.0
-
-
---hV/uP8JWeTuWMGxa--
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
