@@ -1,63 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0360A383C6C
-	for <linux-ide@vger.kernel.org>; Tue, 19 May 2026 19:03:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFEB62C15AB;
+	Wed, 20 May 2026 00:54:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779217408; cv=none; b=bg5W7Yyqu1Nz30HeljDtKcsh7QT05PP2Y9TkBWy+uC6xYJhSLoo66C+cjOs2Lv6RDQLdEfu6ZlwntbRIAD0p7qpOgaAKEsTy+EB3FeZK+IZ4mpo6JboV6IGJMTkihZWYQtbq6rBaERow6d4m0939dmF1ZzU2dd+RvNWSn5hrg0I=
+	t=1779238470; cv=none; b=MV7MHH/W59IRICVmgUa5V2BT68OSW8mCzIM4QylIetNE+/V3av7Z1SW9Co1ovZMhYC4lZPIRnqm76Ta3M2OJhj/kLItk5jxBlRU+lTqYI4Q/8b4Fv38rOBQGf89PmqSYEU0xJozLN2o7un3L37tUnsIh9sRwGOuy8bAc22vBe+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779217408; c=relaxed/simple;
-	bh=70+ZkCG0VFE4r0uFw4non8cqAByIXo4Hrj4FrSFKeAM=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=LSu8rdkNU7hLOmU7qc9pGBmEGVw/of8RH31wV32A+NV/wcHs2a1AwuqGiz6bUSm+dmbsnhAAafxIumCvAWwPfWaapKR+/GpnXlaVt3BKyuTsOkGffuCf4Yk2xUjPfui9HO6Kvu30efwkmPvwmFxZjDib7rukC+aU7sOxvgLlNe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IpJfJt7F; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779238470; c=relaxed/simple;
+	bh=FBqxazzWQqaalrtGYtYtsegcmYC6KYG1STstqiWM94Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=C6+pY5tHU+x/Y0/jreCejpEgTQ+B5UHgtiVZM/YJUyPcG14fP4kIwSpGNkoF4z/ycOgfBolStRMBsNjcKDNsVyzyywzdc19Cbfx2+HWemxlLLj1HJQhGkW+yzS2/Rbljs80rygCCwUT3xgaw+wLJjaGtfdK9fz3ke4ClVGh/kR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FteeT4dn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IpJfJt7F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D794A1F00897;
-	Tue, 19 May 2026 19:03:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FteeT4dn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF71E1F00894;
+	Wed, 20 May 2026 00:54:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779217407;
-	bh=bDTec6Ch3fFqnm8z0Xlg/XLpNCFL8pR1Zj1y9ymAF4A=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc;
-	b=IpJfJt7FqJu5x6Z9O9/xAHeZ20LyC0FP1B8lIw8+um9tD5PXNtAUSdpiXnlC7fTod
-	 BG6r66HcYpxxMrOdZToNi6EX+8EKDwND2s5SnWSYjFZdbsDVDx/BGBL7kzCqig9C+n
-	 Bvifax08B60+G6W34m2lGYbH41fYB2WikE8euer4/Ucy2oRvEcgYNSJ7ZyWn2bY8ir
-	 02kpDk3znlMrYVt+hzugGjpi6G/wVdRGiceapkh9u1WSQjSi2af/wo1GTO9EB5LgUi
-	 qYCdfcK4a9YMWUXMHzm2Qlah7OmXed9e6LkejMAWsnGAYRbIUzgkO6h8Mqt8wcngri
-	 TgOf6/NFW+fnA==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 19A39383B276;
-	Tue, 19 May 2026 19:03:40 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 7.1-rc5
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20260519160746.2087727-1-cassel@kernel.org>
-References: <20260519160746.2087727-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20260519160746.2087727-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.1-rc5
-X-PR-Tracked-Commit-Id: 759e8756da00aa115d504a18155b1d1ee1cc12e8
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 27fa82620cbaa89a7fc11ac3057701d598813e87
-Message-Id: <177921741863.2846164.10787621454073743804.pr-tracker-bot@kernel.org>
-Date: Tue, 19 May 2026 19:03:38 +0000
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+	s=k20260515; t=1779238469;
+	bh=FBqxazzWQqaalrtGYtYtsegcmYC6KYG1STstqiWM94Y=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=FteeT4dnR50bM/aMOXObonsHu3ytruZVQtxv3p3SGdENkaUHmqp5kMsa1QB7iay0c
+	 ka0at6PEPOZsGJriHKjFPbqn4nzoBVbcGd2MecSiSRJHWi7/lvykxYVQY5pIw7znMJ
+	 8eM0scEaFzsILpQmjIvK2WxuLqK6oICGo2x6ALdUtLVUUdbnhJGr3DLbOaOL6CwBMq
+	 Oown+kN4ST895dNlTUE//Y7F+QqDfvYw5xzJcfjzPNp0RSdKewSd+AsOSNOo/nJM+u
+	 KoMDdp9YnW0tiWKi4ZxQzs/j6MqLl7hZrbGhKZw1HKnyaJyZolOShGX9Q8pI7JEIjH
+	 +AXJiqHwUaVEQ==
+From: Sasha Levin <sashal@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Sasha Levin <sashal@kernel.org>,
+	ipylypiv@google.com,
+	dlemoal@kernel.org,
+	linux-ide@vger.kernel.org,
+	stable@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Wiese <charon56@proton.me>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: Re: stable backport request: [PATCH v2] ata: libata-scsi: fix requeue of deferred ATA PASS-THROUGH commands
+Date: Tue, 19 May 2026 20:54:18 -0400
+Message-ID: <20260519220508.reply-0004@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <agyRrnU_Oyh79_d8@ryzen>
+References: <-LfISXRga4ryMCYwCMNrhBwgNW6mZ9xx8AWX-Y7B0WwEyZr_8BHlTEgNarxj36MY0Yu-79B93UH7ISr1OmMrRqAbO_LYmZjUgtkE0MoxB5M=@proton.me> <agyRrnU_Oyh79_d8@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-The pull request you sent on Tue, 19 May 2026 18:07:46 +0200:
+On Tue, May 19, 2026 at 06:37:02PM +0200, Niklas Cassel wrote:
+> Dear stable maintainers,
+>
+> Could you please help with backporting commit 8ebf408e7d46 ("ata:
+> libata-scsi: fix requeue of deferred ATA PASS-THROUGH commands")
+>
+> to the relevant stable kernels?
+>
+> It gets a conflict when cherry-picking, so I have attached a version
+> that can be applied without conflicts.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.1-rc5
+Queued for 7.0, 6.18 and 6.12, thanks.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/27fa82620cbaa89a7fc11ac3057701d598813e87
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+--
+Thanks,
+Sasha
