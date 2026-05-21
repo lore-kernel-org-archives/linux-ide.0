@@ -1,72 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0637B19CC14;
-	Thu, 21 May 2026 14:04:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D43833D7D86
+	for <linux-ide@vger.kernel.org>; Thu, 21 May 2026 17:34:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779372277; cv=none; b=BPefvcwuIb8zu3VfTg0ySf4O57cHPiw3ScemXCnDU9dnyOG5g1n9WSYRpSD6wn83Ko1hprZ0HVIl8vhszx7IuftVx3HgiAWd7I+qpS2fhq47cUF/N+E6p0AWOpuLxGgA4lEK6nPkqfG1DauG/oGIgXVWlZuRyKThIzurF++Nio4=
+	t=1779384847; cv=none; b=Dm3QFeJc2kg0emEsGNB+nYxRpMw0nHQQQkjnueMkHkkHOWUR8RYL4Gie3t47Q0BrBlaP8IkuXJIsH6xex4cOEAimCSaX1uWOmpCV3NC1W+eC2D+hJnoIo+xeT1IAaSIqhh4tOg3/jsMTOUCKj4LNaa4w1ki2YV5yVPSw0ulXXjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779372277; c=relaxed/simple;
-	bh=FWH/NGzx2LGqb08RC7u+pA/G/lGYe9fGPgpUL1yfjKg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W4/1ruluatN6DG2veANtv6TbMzC7ddln8C24Vl+Zt39Fnvr0IKZR6wFOAfOYB27lfNGHqgbub9mXglFbGbR7eh6n1uBm8CRwQyBXQKnPr9lGVs0qBX0WbFeshNDddJBpG8TaFyBZlUkp91lrPPOceQu2zfP7qT6Q4R+6MN/dUcA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ndpLNb9V; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779384847; c=relaxed/simple;
+	bh=yUPSB47foYrk6iBzHfcAxwnQY0qb7PRXCycBC5mAmP0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SWOyviGPOKlAUPSQkfrEwn3EJVtLPtUF6fwe1CWrpYQk0nWyszh4OFvJBAnYpt2/xtD9d0CSstX1QDyD+UyQrNRk7P1z2uf89Cqf+ag5rz1krHOjT6rqWeDMqjAbVjOikKBWb9vBb4D4/rr1Y51fpwe2TaH+kwD+l1fqckoGT3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Zs2bViCD; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ndpLNb9V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEC561F000E9;
-	Thu, 21 May 2026 14:04:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779372275;
-	bh=FWH/NGzx2LGqb08RC7u+pA/G/lGYe9fGPgpUL1yfjKg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ndpLNb9V31MDOCE51O07TD0paBjDV8FdPPZQ+IHalbYt8bq8rT9j/AHMbdxgOtraC
-	 7BrZ435+uFru4pZ4iNvPoVLnSTxlZROImDvan6wJVdHRGjojciQd15bS4sJ8jDfMvN
-	 Aa7Ae91gv7DHSrsu5X1IN2gY91aNR/WkC0vKKIS+wAnnGILLEL12ssqhhK1R0Asixq
-	 5LGHrO/gsSNJUYbZyz/aQbW0iSduIb9+nH+/NSq3K6o0wJH3Kup1y//wStU1gXUN4V
-	 paZs57YiA7PIjomPJ7SgHp+wJ6CzQWec8M5ytY4Mp8lGz9RiQqC7wt0Vjn4g1acY4v
-	 bIZE+MsooL2Hw==
-Message-ID: <f08c6164-78d4-4c79-b4d9-d7e883e5a0c0@kernel.org>
-Date: Thu, 21 May 2026 16:04:28 +0200
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Zs2bViCD"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gLwWC6WmXz1XM0pD;
+	Thu, 21 May 2026 17:33:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1779384836; x=1781976837; bh=6Oblpt6wlZUaoeVcMo5+Thr/aCpLjRcRZVu
+	ap5J4buY=; b=Zs2bViCDobPbQvCOQOQuv48qjfNx7HswIT50dxL8LXCkok94ii6
+	wRA2JgZrzQP9GO124e0mm5lyekTUDpLsiFfrJ0AwAd6T/oMrKNcfSnK4ILmhVZ8U
+	JZ7Herw/mRoJGcFhBjfAcMzUQhHfPfP2SS5oRqNDHcj6w4xFYarC4oFVN/N26X31
+	ULyI4EM/2mYMENNZVAdAMjcdnrz8l/Y6TaCjO6QbH3p8DBvH14U523C0cZhxT0ZD
+	VqsnIa273luJe+nOMNcZ4h5pc2f0Kzftxe1ga9e2ln2m2Wq98Ab7yGJj8OJ5jXLz
+	S2SzjvHcdKVU7WGm01aPWd0Qf3TaMmqIktg==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id rTxmyTREbQEc; Thu, 21 May 2026 17:33:56 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gLwW73NhCz1XM0ns;
+	Thu, 21 May 2026 17:33:55 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Marco Elver <elver@google.com>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/9] ata: libata-core: Enable context analysis
+Date: Thu, 21 May 2026 10:33:28 -0700
+Message-ID: <20260521173347.2079560-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.54.0.746.g67dd491aae-goog
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/9] drm/nouveau: tegra: Explicitly specify PMC instance
- to use
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Lyude Paul <lyude@redhat.com>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Jonathan Hunter <jonathanh@nvidia.com>, Maxime Ripard <mripard@kernel.org>,
- Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>, Mikko Perttunen <mperttunen@nvidia.com>,
- Dmitry Osipenko <digetx@gmail.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Mathias Nyman
- <mathias.nyman@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Philipp Zabel <p.zabel@pengutronix.de>, linux-ide@vger.kernel.org,
- linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
- dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
- linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-usb@vger.kernel.org, Thierry Reding <treding@nvidia.com>
-References: <20260506-pmc-v1-0-a6de5da7216b@nvidia.com>
- <20260506-pmc-v1-2-a6de5da7216b@nvidia.com> <ag67dmFtSDBC6aPK@orome>
-From: Danilo Krummrich <dakr@kernel.org>
-Content-Language: en-US
-In-Reply-To: <ag67dmFtSDBC6aPK@orome>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 5/21/26 10:00 AM, Thierry Reding wrote:
-> would any of you mind giving an Acked-by so I can pick this up into the
-> Tegra tree with the rest of the series?
-Sorry, I thought I already replied to this.
+Hi Niklas,
 
-Acked-by: Danilo Krummrich <dakr@kernel.org>
+This patch series enables context analysis for the ATA subsystem. Please
+consider this patch series for the next merge window.
+
+Thanks,
+
+Bart.
+
+Changes compared to v1:
+ - Expanded a single patch into a series of nine patches.
+ - Included a bug fix for ata_exec_internal() and several refactoring pat=
+ches.
+ - Added a patch for annotating the code that uses the host lock.
+
+Bart Van Assche (9):
+  ata: libata: Fix ata_exec_internal()
+  ata: libata: Pass the ATA port argument directly to
+    __ata_scsi_queuecmd()
+  ata: libata: Pass the ATA port argument directly to
+    ata_qc_schedule_eh()
+  ata: libata: Pass the ATA port argument directly to ata_qc_complete()
+  ata: libata: Pass the ATA port argument directly to ata_qc_issue()
+  ata: libata: Pass the ATA port argument directly to
+    __ata_qc_complete()
+  ata: libata: Pass the ATA port argument directly to ata_link_abort()
+  ata: libata: Enable context analysis
+  ata: Annotate the code that uses the host lock
+
+ drivers/ata/Makefile          |  2 ++
+ drivers/ata/ahci.h            |  6 +++--
+ drivers/ata/ahci_imx.c        |  1 +
+ drivers/ata/ahci_xgene.c      |  1 +
+ drivers/ata/libahci.c         | 11 +++++++-
+ drivers/ata/libata-core.c     | 51 ++++++++++++++++++++++++-----------
+ drivers/ata/libata-eh.c       | 23 +++++++++++-----
+ drivers/ata/libata-pmp.c      |  5 ++++
+ drivers/ata/libata-sata.c     |  4 +--
+ drivers/ata/libata-scsi.c     | 18 +++++++++----
+ drivers/ata/libata-sff.c      | 12 +++++++--
+ drivers/ata/libata.h          | 28 ++++++++++++-------
+ drivers/ata/pata_arasan_cf.c  |  1 +
+ drivers/ata/pdc_adma.c        | 16 ++++++++---
+ drivers/ata/sata_dwc_460ex.c  |  9 ++++++-
+ drivers/ata/sata_fsl.c        | 12 +++++++--
+ drivers/ata/sata_inic162x.c   | 10 +++++--
+ drivers/ata/sata_mv.c         | 18 +++++++++++--
+ drivers/ata/sata_nv.c         | 18 +++++++++++++
+ drivers/ata/sata_promise.c    | 16 +++++++++--
+ drivers/ata/sata_qstor.c      | 20 ++++++++++++--
+ drivers/ata/sata_rcar.c       |  5 ++++
+ drivers/ata/sata_sil.c        |  4 +++
+ drivers/ata/sata_sil24.c      | 10 ++++++-
+ drivers/ata/sata_sx4.c        | 11 +++++---
+ drivers/ata/sata_via.c        |  1 +
+ drivers/ata/sata_vsc.c        |  7 +++++
+ drivers/scsi/libsas/sas_ata.c |  4 +--
+ include/linux/libata.h        | 50 ++++++++++++++++++++++------------
+ 29 files changed, 293 insertions(+), 81 deletions(-)
+
