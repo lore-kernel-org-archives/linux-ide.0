@@ -1,55 +1,57 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA53B38331D
-	for <linux-ide@vger.kernel.org>; Thu, 21 May 2026 17:34:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 670E13DD506
+	for <linux-ide@vger.kernel.org>; Thu, 21 May 2026 17:34:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779384849; cv=none; b=BmxXoCcAgwNJSl6M5yKpOYmwrYA+X4xHjiY9ZUk0h5QYO49ew0ywpwq6HsMBdtBVRxHQxIt1Lp682bMGX6wXISPefzCrwf50KVVZ5y7D8VUN9tZTuDEx9QLpf8vuTu62tiQ5tOSgOE90ggOUfQPG9yV5ajQ6AwIb6GusNFNqDY0=
+	t=1779384850; cv=none; b=l/g094oMw+1cPCACkPRyJU+cgwMX64Q/60s+hI46D2Q7Up6jvvIVbonmZ0qOEZLy2uBP7/q9QZW7dzvhaORR7R8b0TGjFkwRUtiiYwlhmVG+1moN1ID5Vsn8mBppa1LSMI4FBGUkyLxnVkTmsSBth46sjnZ9pFRr+2zYOQvSDVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779384849; c=relaxed/simple;
-	bh=/PMLbBhlW6fjAV247Mig+zobbG4Tr8++wEtnED4bmKk=;
+	s=arc-20240116; t=1779384850; c=relaxed/simple;
+	bh=xZ/20xRY9rkMfVfVWT9afrKjoJpX/S37hhAcMBRnuJ0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=g6Ey0dKhiz2Rer5X+ylWgbN4RF59GV4+qtf9OZxdPyg6xdNqmf5PkosZ9pJ+4XPCO+2Risui+vPow7Z264B7/IG9BlWJvQXJmoLaC/79QJEBsKne5eC/f/aJfwDclQgMn+mJ1D3rLEcBB9qHFhn0c62qt/5CBVR0WVDeJCcONhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=LouXx67Z; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=iYT0nsavKtjWnpziZOXEd3RwlMnX6tcRJ/BGrIVuv2s1tXxhxgE60AvJhMUzB2qC7TIfn/YUZImyysdu6Jdir1OBg6WC7XCxgvHpnVdUEGM8kDWNjskZs5yg+BO0m+bjvXjyM/CDF8dJCn0uo1zjDbzmVHOzTfbB6FDE15xJbeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nmO8iVTy; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="LouXx67Z"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nmO8iVTy"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gLwWJ0pSTz1XM0p0;
-	Thu, 21 May 2026 17:34:04 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gLwWH0vpSz1XM0pN;
+	Thu, 21 May 2026 17:34:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1779384840; x=1781976841; bh=FOzXL
-	5B0Gaqf6c4R3EXkQpGAwMzxxBCloMfpFoIbwV4=; b=LouXx67ZXfzRfmtFwBA8r
-	p1tcKC6oQoG0nBvxCXrLwvx5qw5RJeWR/cL5HTZwoACmbmlmAZTj+jNf4kV01PWh
-	WPuPGhBgW+ugqGzBn0WSPS5zip1aLRiJ/WULugIidTxOZ45EwDxuone5cla/yFwO
-	K89gcnwyJe22C0ZDGD28oE0ZiWOMWsaaquhqagzOdcwd48594OAlJ4xvD3H1rH6B
-	jlhIVaRUyO5psB0lMJTVfld/OQpCrURUaTes5IatB5sCZ2SUi1erDCLWR5Qx0NTc
-	gsST8THB0+HP0hHMeqxxBku6ZKaE/ivktV/M+goIEZGocARlPT+3OoWjwMrps/2x
-	w==
+	:received:received; s=mr01; t=1779384838; x=1781976839; bh=EQTig
+	5WMUy1ezJ8buvOk1NgB2asANxw4gZ/WuVQgpCA=; b=nmO8iVTy28+1q4GgAnkgU
+	/cbl5jICuAY+oV4flWT912pr5TjhAeo01oDFtpeOS1+rxPD7NUA7/RNe5VhL+QS8
+	9bAEJ2XN/1KF5mzokB7rfu0aBC7sE2PC2dORjbgepA7OIuh3xJQDA3EoHgXCf7O8
+	wZe51IKcZlyYI//BSHA3ti0sYOn0Xgivh3jzeRenoTpTISWSanV/OlKY4KPs031D
+	JXyV1if8yMb+PgDCrTF82yDh1shRFu+SbeP6qq6HFtAaliubLEiPG8+X8e8VFV8r
+	Pi+ZuA1QhiqIdkw4By437bD3WQIFzWeKiLUMZajtn1NYm4tx3X5D3ImmaJ/dddP1
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id kHklC4xcigsG; Thu, 21 May 2026 17:34:00 +0000 (UTC)
+ id cbuaGrg2nPEJ; Thu, 21 May 2026 17:33:58 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gLwWC1rVDz1XM0p8;
-	Thu, 21 May 2026 17:33:58 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gLwW90THmz1XM0p0;
+	Thu, 21 May 2026 17:33:56 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Marco Elver <elver@google.com>,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2 2/9] ata: libata: Pass the ATA port argument directly to __ata_scsi_queuecmd()
-Date: Thu, 21 May 2026 10:33:30 -0700
-Message-ID: <20260521173347.2079560-3-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>,
+	Jeff Garzik <jgarzik@redhat.com>,
+	Tejun Heo <htejun@gmail.com>
+Subject: [PATCH v2 1/9] ata: libata: Fix ata_exec_internal()
+Date: Thu, 21 May 2026 10:33:29 -0700
+Message-ID: <20260521173347.2079560-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.746.g67dd491aae-goog
 In-Reply-To: <20260521173347.2079560-1-bvanassche@acm.org>
 References: <20260521173347.2079560-1-bvanassche@acm.org>
@@ -61,68 +63,61 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Prepare for adding lock context annotations that refer to the ATA port
-argument (ap). No functionality has been changed.
+Some but not all ata_exec_internal() calls happen from the context of
+the ATA error handler. Commit c0c362b60e25 ("libata: implement cross-port
+EH exclusion") added ata_eh_release() and ata_eh_acquire() calls in
+ata_exec_internal(). Calling these functions is necessary if the caller
+holds the eh_mutex but is not allowed if the caller doesn't hold that
+mutex. Fix this by only calling ata_eh_release() and ata_eh_acquire() if
+the caller holds the eh_mutex. An example of an indirect caller of
+ata_exec_internal() that does not hold the eh_mutex is
+ata_host_register().
 
+Fixes: c0c362b60e25 ("libata: implement cross-port EH exclusion")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ata/libata-sata.c | 2 +-
- drivers/ata/libata-scsi.c | 6 +++---
- drivers/ata/libata.h      | 3 ++-
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/ata/libata-core.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 2ee54d60ea4b..5e5be6bbf32a 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1379,7 +1379,7 @@ EXPORT_SYMBOL_GPL(ata_sas_sdev_configure);
- int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e76d15411e2a..3d25dec6ac6c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1540,6 +1540,7 @@ unsigned int ata_exec_internal(struct ata_device *d=
+ev, struct ata_taskfile *tf,
  {
- 	if (likely(ata_dev_enabled(ap->link.device)))
--		return __ata_scsi_queuecmd(cmd, ap->link.device);
-+		return __ata_scsi_queuecmd(cmd, ap->link.device, ap);
+ 	struct ata_link *link =3D dev->link;
+ 	struct ata_port *ap =3D link->ap;
++	const bool owns_eh_mutex =3D ap->host->eh_owner =3D=3D current;
+ 	u8 command =3D tf->command;
+ 	struct ata_queued_cmd *qc;
+ 	struct scatterlist sgl;
+@@ -1617,11 +1618,25 @@ unsigned int ata_exec_internal(struct ata_device =
+*dev, struct ata_taskfile *tf,
+ 		}
+ 	}
 =20
- 	cmd->result =3D (DID_BAD_TARGET << 16);
- 	scsi_done(cmd);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 6733f2b14521..55380a9d873a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -4506,9 +4506,9 @@ static void ata_scsi_simulate(struct ata_device *de=
-v, struct scsi_cmnd *cmd)
- }
+-	ata_eh_release(ap);
++	if (owns_eh_mutex) {
++		/*
++		 * To prevent that the compiler complains about the
++		 * ata_eh_release() call below.
++		 */
++		__acquire(&ap->host->eh_mutex);
++		ata_eh_release(ap);
++	}
 =20
- enum scsi_qc_status __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
--					struct ata_device *dev)
-+					struct ata_device *dev,
-+					struct ata_port *ap)
- {
--	struct ata_port *ap =3D dev->link->ap;
- 	u8 scsi_op =3D scmd->cmnd[0];
- 	ata_xlat_func_t xlat_func;
+ 	rc =3D wait_for_completion_timeout(&wait, msecs_to_jiffies(timeout));
 =20
-@@ -4595,7 +4595,7 @@ enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_H=
-ost *shost,
+-	ata_eh_acquire(ap);
++	if (owns_eh_mutex) {
++		ata_eh_acquire(ap);
++		/*
++		 * To prevent that the compiler complains about the above
++		 * ata_eh_acquire() call.
++		 */
++		__release(&ap->host->eh_mutex);
++	}
 =20
- 	dev =3D ata_scsi_find_dev(ap, scsidev);
- 	if (likely(dev))
--		rc =3D __ata_scsi_queuecmd(cmd, dev);
-+		rc =3D __ata_scsi_queuecmd(cmd, dev, ap);
- 	else {
- 		cmd->result =3D (DID_BAD_TARGET << 16);
- 		scsi_done(cmd);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index b5423b6e97de..3940dd33efb9 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -166,7 +166,8 @@ void ata_scsi_sdev_config(struct scsi_device *sdev);
- int ata_scsi_dev_config(struct scsi_device *sdev, struct queue_limits *l=
-im,
- 		struct ata_device *dev);
- enum scsi_qc_status __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
--					struct ata_device *dev);
-+					struct ata_device *dev,
-+					struct ata_port *ap);
- void ata_scsi_deferred_qc_work(struct work_struct *work);
- void ata_scsi_requeue_deferred_qc(struct ata_port *ap);
+ 	ata_sff_flush_pio_task(ap);
 =20
