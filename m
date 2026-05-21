@@ -1,173 +1,124 @@
-Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC35376A10;
-	Thu, 21 May 2026 09:38:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D92437D10E;
+	Thu, 21 May 2026 11:22:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779356329; cv=none; b=MfZj7393sxePZLF46o74pxuI+etB9G+ZLIlImEnprP51KLfYraJPD6WO5Oo1b7sC7FhHoZUqPfx/gJY/kHJm1J4Epe8ci6dkmtr9Q/tDB7Dr2QBmVJc0fmzLfPJcyAvO+8oADzKJQ3VSkVsEhBxj6PEvgljPH2dmUWCX5kGTlaE=
+	t=1779362556; cv=none; b=JnQgZEm6YaazIiLLhTL5cEubngNYpRWnYnfi/mRNYA6FAFhwouHT7O4wQSxAr3Ib8yvC5gprf5foYYxM0NmRYQ2vVrFwbbFgQ4rHuqAM52jt75MHMT6Q3MZj9JFz2YmQqqX+c+0D2Xh/FworLalioyJ5sGwdNQhxpEkoAh8ONyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779356329; c=relaxed/simple;
-	bh=KfGfTyFVL31vdUdOn+76p0c9asI51Kz6rpZ61Tm62g8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cEw3imQRhQn+KYwmqNMyGexNEwoS8UClVayeQ8FU6aYTc7vLw9cT0dHrvKadL0dWY25OaH6PiqmNjUujhbbyKHKqXHs1P/3GlDl/SRcOlfRY07DLXei3h5gEVSetrHh29J6PMt5hF86TC/vlW30M+D2Y0rnR84Z8UH+hZf9cdL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b=0I4tMOaq; arc=none smtp.client-ip=185.11.138.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
+	s=arc-20240116; t=1779362556; c=relaxed/simple;
+	bh=np4WTssUm98ZjxmaB945fxRtC0Roq2PQ0Toc5+gPBCE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PKdsmEM+F7oaKFJhafGA92Tt4JF5TPisD0rspeHmWUG9cl5GY551yGWNBJEDys5ktcuSpStpxzFwqBXBh3ZCkp8qd5emfvjU6SPeZVCwlGa5b3lo4EahkshAj5HM788cjnHFXgqAs3OGKa2/WBIuSRb0WPp+8Ok+FZUX15MwOl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PY2juhUv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b="0I4tMOaq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sntech.de;
-	s=gloria202408; h=Content-Transfer-Encoding:Content-Type:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To;
-	bh=82qSLImWzSWwJwDL4P56RDhSxB/3/+bLg3x1B6/8Vyo=; b=0I4tMOaqwxFvPcLAyXC1tGPrfE
-	HXHaVV7+wYwVP4UGjSNoFDd1VfRVRwKpSUpdi+/cM0lBIFBOtW57RPkKHZJ6gSZa57lZaOJNQszdB
-	j5MhP9nNF2ZBC5XTLEZLefqvWnNibulepEtkV4okP/kU2AAENM/x1cT5yntunk8HjnN93yJVk0KhD
-	4BGKyKzwZYIhS+icC3RQoCP/xlaXk2zQuPvKHmUwXbld7xPg620UPcbli2n9Nu98+Jo3ggiseSwXX
-	f5u71NtNcCGIkISy1Bu3AzX1ANpj9jp2f9+W1J8qexkOfVBSIDSPhC21GfXXPezuckw1Oq9h13vk1
-	Ke/2S4sA==;
-From: Heiko Stuebner <heiko@sntech.de>
-To: linux-phy@lists.infradead.org,
-	Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: Heiko Stuebner <heiko@sntech.de>,
-	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org,
-	freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev,
-	linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org,
-	spacemit@lists.linux.dev,
-	UNGLinuxDriver@microchip.com,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	Andrzej Hajda <andrzej.hajda@intel.com>,
-	Andy Yan <andy.yan@rock-chips.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	Chanho Park <chanho61.park@samsung.com>,
-	Chen-Yu Tsai <wens@kernel.org>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Daniel Machon <daniel.machon@microchip.com>,
-	David Airlie <airlied@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Eric Dumazet <edumazet@google.com>,
-	Fabio Estevam <festevam@gmail.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Inki Dae <inki.dae@samsung.com>,
-	Jagan Teki <jagan@amarulasolutions.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	JC Kuo <jckuo@nvidia.com>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Jessica Zhang <jesszhan0024@gmail.com>,
-	Joe Perches <joe@perches.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Jonas Karlman <jonas@kwiboo.se>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kevin Xie <kevin.xie@starfivetech.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
-	Linus Walleij <linusw@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	Markus Schneider-Pargmann <msp@baylibre.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Maxime Ripard <mripard@kernel.org>,
-	Michael Dege <michael.dege@renesas.com>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Peter Chen <peter.chen@kernel.org>,
-	Peter Griffin <peter.griffin@linaro.org>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Robert Foss <rfoss@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	"Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
-	Samuel Holland <samuel@sholland.org>,
-	Sandy Huang <hjc@rock-chips.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Paul <sean@poorly.run>,
-	Sebastian Reichel <sre@kernel.org>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Steen Hegelund <Steen.Hegelund@microchip.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Tudor Ambarus <tudor.ambarus@linaro.org>,
-	Vincent Mailhol <mailhol@kernel.org>,
-	Xu Yang <xu.yang_2@nxp.com>,
-	Yixun Lan <dlan@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: Re: (subset) [PATCH v8 phy-next 00/31] Split Generic PHY consumer and provider API
-Date: Thu, 21 May 2026 11:38:18 +0200
-Message-ID: <177935628872.1653123.15514691751947313571.b4-ty@sntech.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
-References: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PY2juhUv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A130E1F00A3B;
+	Thu, 21 May 2026 11:22:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779362555;
+	bh=gqWO/E9FZuX5uI7p0ZHJIvqOuSUO87k+WS98B6/AV1c=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=PY2juhUvoHdlpyPWuSiJqyREh7oZ3EzkQvBLsZiurH2XCo2/MkoPPkqyhEH45tLAe
+	 LpDHSkpe4B2NqKdc8iigcs9QW7dux/S9Id968PWAw0p2RLywrwb1uwAaYxXWRs3Z4T
+	 0ccd9XPY82+TRzaKMG63n7XQudiiXaOLPI85et+cnPAyXvsXp9j8ejnTF+ZMcajhzn
+	 SKjFrIRSC3zVrrnVtHUd2j25fVH0l7Dt1nrEeamjwEpFzAxtNb3o43XmEfDqlYqX6s
+	 VNY0tRL83hRLOPRO4i4g69PizfOuBjymOY24DwxWR54u9g3AnvsenX9GKAC6uz1Cmt
+	 nBlWzu6+6Lzdw==
+Message-ID: <6499a394-25f8-479e-aea1-a69b86657982@kernel.org>
+Date: Thu, 21 May 2026 13:22:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: Consistently define pci_device_ids using named
+ initializers
+To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig_=28The_Capable_Hub=29?=
+ <u.kleine-koenig@baylibre.com>
+Cc: Niklas Cassel <cassel@kernel.org>,
+ Mikael Pettersson <mikpelinux@gmail.com>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Markus Schneider-Pargmann <msp@baylibre.com>
+References: <20260430170612.510869-2-u.kleine-koenig@baylibre.com>
+ <b06a2fec-441f-4be2-aae6-3796c1e45cfc@kernel.org>
+ <ag16iA6JLwGGLR8_@monoceros>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ag16iA6JLwGGLR8_@monoceros>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-
-On Tue, 05 May 2026 13:04:52 +0300, Vladimir Oltean wrote:
-> The biggest problem requiring this split is the fact that consumer
-> drivers poke around in struct phy, accessing fields which shouldn't be
-> visible to them. Follow the example of mux, gpio, iio, spi offload,
-> pwrsec, pinctrl and regulator, which each expose separate headers for
-> consumers and providers.
+On 2026/05/20 11:12, Uwe Kleine-König (The Capable Hub) wrote:
+> On Mon, May 04, 2026 at 10:09:53AM +0200, Damien Le Moal wrote:
+>> On 4/30/26 19:06, Uwe Kleine-König (The Capable Hub) wrote:
+>>> ... and PCI device helpers.
+>>>
+>>> The .driver_data member in the various struct pci_device_id arrays were
+>>> initialized mostly by list expressions. This isn't easily readable if
+>>> you're not into PCI. Using named initializers is more explicit and thus
+>>> easier to parse.
+>>>
+>>> Also use PCI_DEVICE to conveniently assign .vendor, .device, .subvendor
+>>> and .subdevice where appropriate.
+>>>
+>>> The secret plan is to make struct pci_device_id::driver_data an
+>>> anonymous union (similar to
+>>> https://lore.kernel.org/all/cover.1776579304.git.u.kleine-koenig@baylibre.com/)
+>>> and that requires named initializers. But it's also a nice cleanup on
+>>> its own.
+>>>
+>>> This change doesn't introduce changes to the compiled pci_device_id
+>>> arrays. Tested on x86 and arm64.
+>>>
+>>> Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
+>>
+>> This looks like a nice cleanup to me. A couple of nits below.
+>> With that, feel free to add:
+>>
+>> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+>>
+>> [...]
+>>
+>>> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+>>> index 495fa096dd65..fac1266f7fa6 100644
+>>> --- a/drivers/ata/ata_piix.c
+>>> +++ b/drivers/ata/ata_piix.c
+>>> @@ -154,184 +154,186 @@ static unsigned int in_module_init = 1;
+>>>  
+>>>  static const struct pci_device_id piix_pci_tbl[] = {
+>>>  	/* Intel PIIX3 for the 430HX etc */
+>>> -	{ 0x8086, 0x7010, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_mwdma },
+>>> +	{ PCI_DEVICE(0x8086, 0x7010), .driver_data = piix_pata_mwdma },
+>>
+>> Please split the line before the .driver_data like for all the other changes.
+>> That will make things consistent...
 > 
-> Some off-list discussions were had with Vinod Koul regarding the 3 PHY
-> providers outside the drivers/phy/ subsystem. It was agreed that it is
-> desirable to relocate them to drivers/phy/, rather than to publish
-> phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
-> (new) phy-props.h - consumer-facing headers - stay there.
+> I would go for
 > 
-> [...]
+> 	{
+> 		PCI_DEVICE(0x8086, 0x7010),
+> 		.driver_data = piix_pata_mwdma,
+> 	}, {
+> 		...
 
-Applied, thanks!
+Yes, I think this is nice.
 
-[15/31] drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
-        commit: 9392e7340bffb406a705de755adfb44eab547d40
+> 
+> then. Or would you prefer something more compact like:
+> 
+> 	{ PCI_DEVICE(0x8086, 0x7010),
+> 	  .driver_data = piix_pata_mwdma },
+> 
+> ?
+> 
+> Best regards
+> Uwe
 
-Best regards,
+
 -- 
-Heiko Stuebner <heiko@sntech.de>
+Damien Le Moal
+Western Digital Research
