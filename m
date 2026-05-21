@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFE4636D9F5
-	for <linux-ide@vger.kernel.org>; Thu, 21 May 2026 18:56:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3FF537EFF6
+	for <linux-ide@vger.kernel.org>; Thu, 21 May 2026 19:14:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779389796; cv=none; b=fCc4CI3ZZRmBVbuXGw9WY9YbFH2D28+jkK+eBQVXr7ZJ2ExlQuJXqSQARjtGnIwRcXyL9E0NOpiDKVB64iiKcILLVvb+JqqteS0KP8+25Env/8dZw7M5Gb4+7bjVDo5RIKlBESkHdfgQHZAIbM9mqxwgKRgE9xmm7Hgwp/bAums=
+	t=1779390877; cv=none; b=LIssWv/x7Bk7BNjGzOnzjplHCsNL6FqmDTAL9GkhrtyQQvk4zbgG3bs9NKRszjQ8TwHiCW2F728N1MV/PPbnldLLl01qXYWDXePO5439boA+T18/IO6qIv/h/iHsq0qkcz9SK/uhuFb/hE8sOg1m6ZVCrY4Xt6S38mCmkwyM29Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779389796; c=relaxed/simple;
-	bh=oVZHRGJ0zBD9j8SgZs0+X0AaBOuvx2WyVzd5UBZh9k4=;
+	s=arc-20240116; t=1779390877; c=relaxed/simple;
+	bh=vTviAb8XiBSxXL/YRMz+UZ6CLwUNqJIBsoaitrqqpKs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PPiDV2xj5OajmNd07o0ZQ3mi4JXY9HruCN7I6QTaPkCIwaaee53Aq0JCVnG5oNmM5sm8MkjLXlQVZ7epeHgPMu9Flq/yCMim8ym7No0CmoiJamiQcgHkjeRgEMh/d67DcW1DgEG4vhdjy8REQfSllQyHkH5w5tSBY55RK5ZEtOI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QExt5aJJ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=EjMtp3sl90o3Lc+A69tB1WQ6ViQy/TUTAtZ8naskthW6gLc927eKXTtWP+Q7bYlrjKsyE7yruGwOQsWjQsWm/ddumfNqISv/lEGqVVb1abFUb/NwV4fR/UD0ah07KAlUF56YiStk+KQhfs4XaYC5HOBOeutOWdii6aC4jtsTMAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jnaZ1PGN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QExt5aJJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4809E1F000E9;
-	Thu, 21 May 2026 18:56:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jnaZ1PGN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42F3E1F000E9;
+	Thu, 21 May 2026 19:14:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779389795;
-	bh=q3ELa1p8e1F09nJcrUzCKu4icIZpsaYG1CAHQ33ZGPE=;
+	s=k20260515; t=1779390876;
+	bh=ElAT7/aNF8w/3PUbiwU56H/UwJ8NrairOh+piJbgtQU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QExt5aJJJj+09tg2sqdpzpPXrEjGRt2FoYRme+/1Mzk+JfbWBzP1IRlaDtXpKl5nl
-	 eYUlDGETBYV71jFza+WI6yByim49XHnaOaB4lgu9YuF7f+tOw9uNsiuJ4R0FmLnEZO
-	 R98nUVgJiikDJk4ugc37mIBVkfBJYJ+fVy8s5gk/9URWokLm16V7HlTpgOd08wZM1s
-	 0aR72xTbPStB2pL4RIB5sgADQjIjtZ8Od6GalHrNWZ8dKOmElCYItik9cGv+5z5csw
-	 x3cOixYsmMrPfyBTtONn/M1hvaaNz00I+a5lXlhtm2vLO9zh+ZWx5raaZT3uRwSPyp
-	 n2kYosgVVEnVw==
+	b=jnaZ1PGNJeFMOJ81YHbdRyLT865VJJWze+RVPA8COIiDzXihkCMWoFwYcIG2ZlUMX
+	 ORnhYA4eZPJYgD8LwpETop5LOqr6a9BdYpFluEUq0oVrCYhohP2fYM9xmm/SdVKm44
+	 wMI6EQJB9z0hPLMKAbePj3r0bLNrA6EX0D3zdsNFev8ywtzJ6By507EHpVcYuvUWVg
+	 wrT2EyeUj5/adinBRiZ/3sFYSK18ZfMd2vHUCC4Z2Ybx3n1+21egJ41ESkm8oSdQW5
+	 IkidwsoV/E0S6nknaK8tlDbQOgMHB1hmeeEoRsvkKmQ/J22apoBPWet6NoIPN+qolQ
+	 e82ECy+kg4K0A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 5/9] ata: libata: Pass the ATA port argument directly
- to ata_qc_issue()
+Subject: Re: [PATCH v2 7/9] ata: libata: Pass the ATA port argument directly
+ to ata_link_abort()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
-Cc: cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260521173347.2079560-6-bvanassche@acm.org>
-References: <20260521173347.2079560-6-bvanassche@acm.org>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260521173347.2079560-8-bvanassche@acm.org>
+References: <20260521173347.2079560-8-bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 21 May 2026 18:56:34 +0000
-Message-Id: <20260521185635.4809E1F000E9@smtp.kernel.org>
+Date: Thu, 21 May 2026 19:14:35 +0000
+Message-Id: <20260521191436.42F3E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -46,38 +46,42 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] Missing kernel-doc parameter documentation for 'ap'.
+- [Low] Missing kernel-doc parameter documentation for the newly added 'ap'=
+ argument in ata_link_abort().
 --
 
-commit b81f096dbed2ff9052d6614eac11c53f07517937
+commit f5db400cd9dab3479ff54c3d92701ede91c3836c
 Author: Bart Van Assche <bvanassche@acm.org>
 
-ata: libata: Pass the ATA port argument directly to ata_qc_issue()
+ata: libata: Pass the ATA port argument directly to ata_link_abort()
 
-This commit prepares for adding lock context annotations by passing the ATA
-port argument directly to ata_qc_issue(). No functionality has been changed.
+This patch modifies ata_link_abort() to take the ATA port as a direct
+argument, preparing for future lock context annotations. No functional
+changes are introduced.
 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index fb790e8b6b57b..7528831bb59a4 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
 [ ... ]
-> @@ -5159,9 +5159,8 @@ EXPORT_SYMBOL_GPL(ata_qc_get_active);
->   *	LOCKING:
->   *	spin_lock_irqsave(host lock)
+> @@ -1081,9 +1081,9 @@ static int ata_do_link_abort(struct ata_port *ap, s=
+truct ata_link *link)
+>   *	RETURNS:
+>   *	Number of aborted qc's.
 >   */
-> -void ata_qc_issue(struct ata_queued_cmd *qc)
-> +void ata_qc_issue(struct ata_port *ap, struct ata_queued_cmd *qc)
+> -int ata_link_abort(struct ata_link *link)
+> +int ata_link_abort(struct ata_port *ap, struct ata_link *link)
 
 [Severity: Low]
-This isn't a bug, but should the kernel-doc comment block above this
-function be updated to document the new ap parameter? It looks like this
-might trigger a warning during documentation builds.
+Does this kernel-doc block need an update to document the new ap parameter?
+Adding the parameter to the function signature without adding it to the
+documentation will trigger a kernel-doc warning.
 
 >  {
-> -	struct ata_port *ap =3D qc->ap;
->  	struct ata_link *link =3D qc->dev->link;
->  	u8 prot =3D qc->tf.protocol;
+> -	return ata_do_link_abort(link->ap, link);
+> +	return ata_do_link_abort(ap, link);
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521173347.2079=
-560-1-bvanassche@acm.org?part=3D5
+560-1-bvanassche@acm.org?part=3D7
