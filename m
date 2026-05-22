@@ -1,187 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0982250BEC
-	for <linux-ide@vger.kernel.org>; Thu, 21 May 2026 20:38:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92A3A3C5DB8
+	for <linux-ide@vger.kernel.org>; Fri, 22 May 2026 10:15:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779395886; cv=none; b=BFgxCqYKlaDufkgzzNYfLBaGjbLle4/BmNJieq/WJ+FXSvLqtJVTSjxoUcvnnWgJVGn/yNLG0wJB25ENlqdRjheCu6TtEWyQ0NmiQJpcuBLkKhHmBPoyUKtynsWPef/x0wj77DjMSnzblEiXmwlGiUcrPabDkCqP98lzGlycKtg=
+	t=1779444939; cv=none; b=TguSo+t4u+7Bzhmb7MJBeAQ2/B0S3T8BLMm70+x1vKi9IVvuBAMhwOlGFjB3w0u056e/1uPJQBZpsT6AHKlQKI+lsC01ZyHbelb96IbHsxotwgFCiFT7Oc7/uSsVIltg+3+YQAB5CoOJUIdZbb61f5pKy+tYUyJsyIUspzsz6fc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779395886; c=relaxed/simple;
-	bh=wAC9yoipWOxjv0drVoCMlUC6gdgSueQnnx/cP/gbb/4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RpFOtc9+1OKj/qHBoRfpPI2ntSehasOPJczb2Xpre214wEjG7eSd6VDdLcRHW/Fh+m6j/NEhXSWaLCj5QZuWrPAQvnY6GfXYk4wpKXo+GhJe7yr0ji9Y/cwEyAnSNJGwcktd/p+tiHDeLjrlo6JcClh2N9UXS4E0DBiFZymw+m8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g13UDb5b; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779444939; c=relaxed/simple;
+	bh=hFoNmBbf70FRqGV5pmUwMEHTZE5OKrs8CbDRqYE1oiQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rSpWA7eRhfCmE22rSEaoY/eflx5GySjiq5BvnirI/sfl2aRy6330eYXPx4TUOpRnHb40G68ednOwhmHUTCB13O2Ze9FqG9dXC14ElZmo5b5RwzNUt/NOM4NiotHu9mUJRkXHHh/1GtO4wWS35J19Kquf4LEnVWJVK2myYzN6nQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T3xQEC3n; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g13UDb5b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3F2B1F000E9;
-	Thu, 21 May 2026 20:38:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779395884;
-	bh=cJeGOaP0ooGUhz22l6+zoCZpvnb1P9ZBpphJLQCbsDY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=g13UDb5b41jRj8/9IPkmyDdnjX71Skbtno7up2HDxjDsK4GbIVX1z2Hou+Ddxu9KW
-	 /bG7CD7qnebhMSqNwdfz3aEJr4DM/WhXxjnFfw8IS9oiwQoGaW06te7aIHpCV7Fuzs
-	 Y7Mbxrdn/p5ipxOa5HlgGcnXefZTm0tWD2Fd1toZYVeWUW97aSac+c4jg0cL/upzo5
-	 zD3VVO2qWrTxdSsOIPkkFBCC1SAETD7lMY9sbceVJrEUQY6VGFq82vNreZeZXvIMDY
-	 uVTRZYgsrevFBBuoFs9dr8pp91a9jAbkIR6ePdBQiKJb8g6cWHfyaw4tSekaZBBg9A
-	 5rncRjhnoBIYA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 9/9] ata: Annotate the code that uses the host lock
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bart Van Assche" <bvanassche@acm.org>
-Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260521173347.2079560-10-bvanassche@acm.org>
-References: <20260521173347.2079560-10-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 21 May 2026 20:38:03 +0000
-Message-Id: <20260521203803.B3F2B1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T3xQEC3n"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-48fde648a71so49804105e9.0
+        for <linux-ide@vger.kernel.org>; Fri, 22 May 2026 03:15:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779444936; x=1780049736; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=hFoNmBbf70FRqGV5pmUwMEHTZE5OKrs8CbDRqYE1oiQ=;
+        b=T3xQEC3nEmnuLNZ3gZBTSC6yv6J03YL5MQt5irY5+v0SH1VGr2ThripFTNPGJzedAy
+         1NBFLUpwv/1+E5Er5joEdIxPy32+FRJHLV5Sa27SYP3SzRSDbQcj0XQzOxfQACrQqL5O
+         9B0NVhsHm2ZWwdr2mgqHeHKPxK9sSEphmgbk43ut5rXFH4bPIuqWsGm2UaddkUVcHpxO
+         sB9CchfsQaVOCQzcTWgOexjNztzauzE5fj+CjuW9PgT3QedCCzSCy7aXY+V+PnSAG7Qw
+         YKrrI8mT+KjHtdr0lP2oZklUNhqKn8WudBpWzJUBepA9VX0wjBrT+Fk9qblPZhIpkF6y
+         KMLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779444936; x=1780049736;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=hFoNmBbf70FRqGV5pmUwMEHTZE5OKrs8CbDRqYE1oiQ=;
+        b=TI3YbmMY9xsSje9j4TdyPHs6CDJ3tLQW/58R7yM/yua6OgOasKV273cmVBx25NWPfc
+         CheixQU+7ud+bgnnsLaxsGi+uL0hFPSijvpvUxZy2vwBRLQhXG5pDCliwphNGPDNsVT+
+         WeoEuFSYZM+lQx8XW2w+PIY6G6HWD5yLCj9FXpkRdF3MEZPpx1WqEaOazkcZnN2AIbrP
+         VDI0nyFJlxmHlHRhPzCe411vHd5fcwyzD/yKYtpFY0o4vFipJHwmLTnsY08Ydg1HiuK9
+         K08Yf5zzm89n0TcuPOlNlyz+92/KPcfWUv2dXgGWFXFUC+UcPDir6/Pli1/DH6AI9B3v
+         YXxA==
+X-Forwarded-Encrypted: i=1; AFNElJ/TReC7/9YekSfDKnI1JnDXB3XwgJw865eJKREQ2Pvxs/5tCGKka38H64+Utw0KXhn2UUZtZ/eiP4U=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1xOyIWY9JpWq72L08VrHADa2cubA6AzgIBegBSFqgRLl2KJVT
+	HfBIskPPrdEyRwH/ZKniU43tYJzL86HQFThJ4DjjHlyWEQQrQnFF/Pnd
+X-Gm-Gg: Acq92OF5j5HiGHQcUi+rZi8saZw56sD64ZznA5awyaWHYpKJlcHcmR3kCD9EqZv+mBS
+	aoi2+3TGdzey3DgoxIs8y9m6mpLuVpSKaSeAo7UaB9HyyqbKV214itZhT5hnSHYDUysJxMzbR+u
+	iY5+6I99sEjyQsSUmbRM+FBTuKK6yjDSa1PAh4TYs1YaO4xdfwdsU9kT/kgc6AITpge4o81DItL
+	rkyhysG03ak/YmOpYSn3a+NhjMy1Hyf95C+TyN53n2txmQw4OhEo56eB5R6geWGSDNHK4cPeiiS
+	EBJshOlAhJGEZHobtbRa67r0Hwy2b4Go916fGDGnPXxUrXEYjXIeWpS2NINCtFRVq9M09YMHYo6
+	9aKwDPNRKHcKF415NoFp2oVi90G9w5TD4iANxJpznzo4gLr957CZXz7AlVx4P2ETACfKkxj/mIi
+	x93veaB9ZTTdl4hzC+cWOBQum7E/s2zXpeYxoHE4VxGjTpbHuWDjZlKms6A9gs3+Qv9i3DgJI+w
+	0LHIOLHCLhdSu1Gd/oHfLWe
+X-Received: by 2002:a05:600c:a402:b0:48f:e230:29f5 with SMTP id 5b1f17b1804b1-490426b0c92mr24655565e9.16.1779444935807;
+        Fri, 22 May 2026 03:15:35 -0700 (PDT)
+Received: from orome (p200300e41f291e00f22f74fffe1f3a53.dip0.t-ipconnect.de. [2003:e4:1f29:1e00:f22f:74ff:fe1f:3a53])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4904527dbf3sm30624875e9.6.2026.05.22.03.15.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 22 May 2026 03:15:29 -0700 (PDT)
+Date: Fri, 22 May 2026 12:15:25 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: Lyude Paul <lyude@redhat.com>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, 
+	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Mikko Perttunen <mperttunen@nvidia.com>, Dmitry Osipenko <digetx@gmail.com>, 
+	Mauro Carvalho Chehab <mchehab@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Mathias Nyman <mathias.nyman@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org, 
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-usb@vger.kernel.org, 
+	Thierry Reding <treding@nvidia.com>
+Subject: Re: [PATCH 2/9] drm/nouveau: tegra: Explicitly specify PMC instance
+ to use
+Message-ID: <ahAst802sjuJr7-l@orome>
+References: <20260506-pmc-v1-0-a6de5da7216b@nvidia.com>
+ <20260506-pmc-v1-2-a6de5da7216b@nvidia.com>
+ <ag67dmFtSDBC6aPK@orome>
+ <f08c6164-78d4-4c79-b4d9-d7e883e5a0c0@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="qtz3f4pwlb7uchwq"
+Content-Disposition: inline
+In-Reply-To: <f08c6164-78d4-4c79-b4d9-d7e883e5a0c0@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
-- [High] Evasion of static analysis through `__assume_ctx_lock` and dangero=
-us TO DO comments.
-- [Medium] The `qc_issue` annotation incorrectly takes the address of a loc=
-k pointer, creating a double pointer.
-- [Medium] Missing address-of operator in `__must_hold(host->lock)` annotat=
-ions.
-- [Medium] `ata_do_link_abort` asserts the wrong lock (`eh_mutex` instead o=
-f the port lock).
-- [Low] Misleading comment refers to `scsi_host` instead of `lock`.
---
 
-commit 1c3594816cc461100251a14c8ea9e6b3febb1a63
-Author: Bart Van Assche <bvanassche@acm.org>
+--qtz3f4pwlb7uchwq
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 2/9] drm/nouveau: tegra: Explicitly specify PMC instance
+ to use
+MIME-Version: 1.0
 
-ata: Annotate the code that uses the host lock
+On Thu, May 21, 2026 at 04:04:28PM +0200, Danilo Krummrich wrote:
+> On 5/21/26 10:00 AM, Thierry Reding wrote:
+> > would any of you mind giving an Acked-by so I can pick this up into the
+> > Tegra tree with the rest of the series?
+> Sorry, I thought I already replied to this.
+>=20
+> Acked-by: Danilo Krummrich <dakr@kernel.org>
 
-This commit adds __must_hold() annotations for functions requiring the host
-lock, along with context assertions to help the compiler understand lock
-equivalencies. It identifies missing locks in ata_port_freeze() and
-nv_do_interrupt().
+Thanks!
 
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-[ ... ]
-> @@ -450,7 +450,8 @@ void ahci_error_handler(struct ata_port *ap)
->  	__must_hold(&ap->host->eh_mutex);
-> -u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked);
-> +u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
-> +	__must_hold(host->lock);
+Thierry
 
-[Severity: Medium]
-Since host->lock is an embedded struct (spinlock_t lock) rather than a
-pointer, should this be __must_hold(&host->lock)? As written, passing the
-struct by value might cause the static analyzer to fail when matching it
-against spin_lock(&host->lock). This same pattern appears in
-xgene_ahci_handle_broken_edge_irq, adma_intr_pkt, and other host->lock
-annotations in this patch.
+--qtz3f4pwlb7uchwq
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-[ ... ]
-> @@ -1057,6 +1059,9 @@ static int ata_do_link_abort(struct ata_port *ap, s=
-truct ata_link *link)
->  	/* include internal tag in iteration */
->  	ata_qc_for_each_with_internal(ap, qc, tag) {
->  		if (qc && (!link || qc->dev->link =3D=3D link)) {
-> +			/* Tell the compiler that link->ap =3D=3D ap. */
-> +			__assume_ctx_lock(&link->ap->host->eh_mutex);
-> +
->  			qc->flags |=3D ATA_QCFLAG_EH;
->  			ata_qc_complete(ap, qc);
+-----BEGIN PGP SIGNATURE-----
 
-[Severity: Medium]
-The comment indicates the intent is to assert that link->ap =3D=3D ap for t=
-he
-port lock, but the code asserts the sleepable eh_mutex is held instead.
-Could this be a copy-paste error that will prevent the static analyzer from
-verifying ap->lock for the inner ata_qc_complete() call?
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmoQLL0ACgkQ3SOs138+
+s6G6mg//ZTSVOV0O5XnlSqUo1fdyiV44Qxo3ysbWUv2+O3w+r5WwMjgdyUM9yAbS
+cdsRz3LHOAYcXBxYZhtdkLh5KhhvjdkUk4e1fdo/5QSGjRPARHPS3bQAZbnpZy46
+tWvdiKwj2fM2rZ5JQHvYEjGCSQ9hGa/9Ri3OnGti51rcUbCJhJS/J1KgyJ/UOmyn
+ZKLr/2FfTbmC8w0Ukki+CV3d4JV/pxY1UNjyt7x568o6JlebDPK6M7PKMI/IM6GW
+fHt0U+f335ljan2LD8HZfSia4sa2nZJnbJDtIEj1ov6suhrowY9Mne4JQTEwjuLX
+db6abSI9ox3O3vkx7Zd1G795TZUWTXKlw2SHr5vMyOBXhJHtipm7y0bAwj4ZJiAp
+5ghmBQzl9HdBVy8x8x8SjmVCygxrt2rOVocYDG1/Uc5DSZWa8aa3VQJMK6WZy9gB
+9G47X1VZPs9B/KeqE5TWRwB05OHuLeCIVQz8Nd06DjN0IEUStecgDWXm0bs4UNWZ
+zMwz/HPgK4zp59HRlVqgoYRNrIRXCd5wmz5t+JdqDwbytna2YVTV7u/3FOGgn/rD
+HgxwYqtJsO3KosQ3UN/HKPoEk67noCBWMrSzZbwFhw/DziZwEn4mr+slHKizUvrF
+40Ir94vEC6DhMDCNJClxmU6S9zhRoKUOqW3FLyPgC1Ghfp5RQrQ=
+=MZIt
+-----END PGP SIGNATURE-----
 
-> @@ -1149,6 +1154,9 @@ static void __ata_port_freeze(struct ata_port *ap)
->   */
->  int ata_port_freeze(struct ata_port *ap)
->  {
-> +	/* TO DO: fix all callers of this function that do not hold ap->lock. */
-> +	__assume_ctx_lock(ap->lock);
-> +
->  	__ata_port_freeze(ap);
-
-[Severity: High]
-Does using __assume_ctx_lock() here and in nv_do_interrupt() to silence
-static analysis warnings defeat the purpose of the locking annotations?
-If there are missing locks, it might be safer to fix the actual locking
-bugs or use __must_hold() to properly flag the missing lock context.
-
-> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-> --- a/drivers/ata/sata_nv.c
-> +++ b/drivers/ata/sata_nv.c
-[ ... ]
-> @@ -1465,7 +1473,10 @@ static irqreturn_t nv_do_interrupt(struct ata_host=
- *host, u8 irq_stat)
->  {
->  	int i, handled =3D 0;
-> =20
-> +	/* TO DO: protect the code below with &host->lock. */
-> +
->  	for (i =3D 0; i < host->n_ports; i++) {
-> +		__assume_ctx_lock(host->ports[i]->lock);
->  		handled +=3D nv_host_intr(host->ports[i], irq_stat);
->  		irq_stat >>=3D NV_INT_PORT_SHIFT;
->  	}
-
-[Severity: High]
-If future developers follow this TO DO comment and add a lock acquisition
-here, will it introduce a guaranteed hard deadlock? Existing callers like
-nv_nf2_interrupt and nv_ck804_interrupt already hold host->lock before
-calling this function, as it is a non-recursive spinlock.
-
-> diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-> --- a/drivers/ata/sata_qstor.c
-> +++ b/drivers/ata/sata_qstor.c
-[ ... ]
-> @@ -376,6 +381,11 @@ static inline unsigned int qs_intr_pkt(struct ata_ho=
-st *host)
->  				continue;
->  			qc =3D ata_qc_from_tag(ap, ap->link.active_tag);
->  			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
-> +				/*
-> +				 * Tell the compiler that qc->dev->link->ap->
-> +				 * scsi_host =3D=3D host.
-> +				 */
-> +				__assume_ctx_lock(qc->dev->link->ap->lock);
-
-[Severity: Low]
-This isn't a bug, but the comment mentions scsi_host =3D=3D host while the
-code asserts the lock context. Is this a leftover copy-paste from another
-annotation?
-
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-[ ... ]
-> @@ -962,7 +962,8 @@ struct ata_port_operations {
->  	int (*qc_defer)(struct ata_queued_cmd *qc);
->  	int (*check_atapi_dma)(struct ata_queued_cmd *qc);
->  	enum ata_completion_errors (*qc_prep)(struct ata_queued_cmd *qc);
-> -	unsigned int (*qc_issue)(struct ata_queued_cmd *qc);
-> +	unsigned int (*qc_issue)(struct ata_queued_cmd *qc)
-> +		__must_hold(&qc->dev->link->ap->lock);
-
-[Severity: Medium]
-Since ap->lock is already a pointer (spinlock_t *lock), does taking its
-address with & here yield a spinlock_t **? This double pointer won't
-match the lock context expression expected by the static analyzer when
-spin_lock(ap->lock) is used. Should this be updated to drop the & operator?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521173347.2079=
-560-1-bvanassche@acm.org?part=3D9
+--qtz3f4pwlb7uchwq--
