@@ -1,107 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CFE7356761
-	for <linux-ide@vger.kernel.org>; Tue, 26 May 2026 15:07:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C2F0403156
+	for <linux-ide@vger.kernel.org>; Tue, 26 May 2026 15:08:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779808031; cv=none; b=O8eeGU4JmhWnQHygk1TehoYArpV46h3WgO35UpMWtApQU8px1LMYEslVYDm/52bkMHoqpEi/IpyX0SG4Fg5yhOUE6nQ1CpqT2lwMnEh9s37tPJgZnGC1L4bjllXE7F8xsJKc73GctfIiLS/ZsiMf5OTo4SKBWwpX0Xzjt8n8EdQ=
+	t=1779808131; cv=none; b=ZGPthq3WUiJ6i829aPQcWo+WNBQ602/4jUA+aiDBA1ndNcrH//1YzMXSAPEfqa8MdviLvTCavGtijOcXIAdfT/g+HRsMUfpY6s+i38i0jaAaQFk+wpbkoZ9Frm4fBMJKhhrOeBRQnb5xeUxFJUDFlNTDX4bxgexXvhmdTZ1jR9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779808031; c=relaxed/simple;
-	bh=ObLBmFZnZgWLmL8Co1fEJip3eKzbPH8VpSkCXcIo7Vc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fZy1nba6M+yEhg3Pah/gbQP21G+xEyKXJbE6mP2soyOfLU6TnxMiFREAgMh8prpL97807IlK062ORSZroubYlXMsF4uJGIW407wGaWo2mKFAWszH+N3KyY1zispXrYZ+0GWHpZBJUfWmyPwy6T5wISkxGoq21cZicESAfZbYPfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ifhOfu/D; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ifhOfu/D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B33141F000E9;
-	Tue, 26 May 2026 15:07:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779808029;
-	bh=fH11Vg3lyfkhnIe4Wtt7kUzhDVdn0HAGnEnsSj5cHug=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ifhOfu/Dt7TAldz/Ne1Q9ng+Ybo1W3AcXI5H2Cke+Xlk4JURDcFAoObhNAgQ+YwoT
-	 5igoAXyZ7K9otqem4mvNrtfv45eTWJuRsqEar3yc1kJb9C0fi/e9/bQeq0V7PfMv3L
-	 k7USgIslRzZ4L/4LjOfrCUmNgNOYid7w/bCNvMK5wXCaom7m6rNS400CXyoh0Bn5UR
-	 VepHbOk1RBhAFmcky2kZTYV15aMstnrBqltAvNeOFB5wS5M9v1EpWCbldbzklZsM5k
-	 vtVYw7nQ78fW2OfBSUX/dUAjgmYbScs+Xv7b9Dep0MWEYTvoq7bX/uJwTAX++5K/j5
-	 wq9BygcsSSY/w==
-Date: Tue, 26 May 2026 17:07:06 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
-	Marco Elver <elver@google.com>
-Subject: Re: [PATCH v2 2/9] ata: libata: Pass the ATA port argument directly
- to __ata_scsi_queuecmd()
-Message-ID: <ahW3GuCDCz1wnp3H@ryzen>
-References: <20260521173347.2079560-1-bvanassche@acm.org>
- <20260521173347.2079560-3-bvanassche@acm.org>
+	s=arc-20240116; t=1779808131; c=relaxed/simple;
+	bh=yb+0omux6d1zyLgvLzeZABk2GNuWtKQ1yrpCoQCsmR0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Dr1LvWNfYIZjeT/KrAshPyGi75z+6vvYXCUeMTg41s+YF8cB1VQibyJTyZMwPCYKShTtzLJql0BajWNCaFBxOFGjm16Nu4/OKnN1AhcmgBW6RdD6Pcd3adpPnQSUGsqH8P6cR+fHnESW/Ngia7M1rHWLCO4jr0rW/AERVLRSPv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.208.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-687d82dd690so4866980a12.2
+        for <linux-ide@vger.kernel.org>; Tue, 26 May 2026 08:08:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779808128; x=1780412928;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=MLTPgXz6PTE+WNmbiors/d1TQS2Sqmrm+U6hNBea8hs=;
+        b=MkZaxIeULCysmB7i8uhI/jyIDMQUJyxtJcSyyh0T5kxl/9T3fTNd97HmtFbOaTvuyO
+         vxhzYDu4MVPsmKqWX7PLjoI/WNKPD/CIf2YnHd0bwab22N2dmnDR5RFlBPieC5ykiHsy
+         BPkmB+3V/ftgCayN8ygm2cZssHxHxH1Q++kic/Fi9CRdTr0v7ZuEEk2cZ4jPV7332IA0
+         yaU8afhjbyuqTZmIntHUb11yVSAuRn7BsMfg61OMZjwdUeZe6kau2nltCq07vNLDG3GO
+         gOssRD7zSV95atgoxvAuFivYOFpd0r6asyg1ZJTKlnVAAeJ5lub6l5AzHdSeLfVu6gzl
+         JxNw==
+X-Forwarded-Encrypted: i=1; AFNElJ9A3iPUKYPzlqShS7EqIDjNeI+X+WKRwf6BPt1rzxPsTkeeiM+04xqCRLrqt8SgzqvLsspA51/KJgE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzW3Mn81IC07ycBGvxey91FQfRGNw4SJymichE3MtvklMgdqZnx
+	609U4SptyOER2jJnc2S80N9tNXpfdrnrwSgicyrwFSf+XxkmDfq1ZEbbknXNxV9iSvw=
+X-Gm-Gg: Acq92OGI64gwi6sbS6ZjMjITBw928nI3OA70hLf6blWBoOZIrGsyq6nWl3Fv8t3Ek4C
+	Z81ASlVcGAX+AKB1Y3DPn5ui8GfvraKJCeWo/4SsrLpPOCCf4QwHAt4CgRWggqGYVqnLn2h1rUh
+	Pa5u/JqMfGZhyMyQ4wKGKDwkMj+2KJcPUKhABj9bsNgnnxqV6DoM2qVXGQZkpCTykEIb5xl8sPW
+	403CgA0xbCMBLcaRWsr1WVu4qLg7IUKAJOSSAa6tMlyVZUbMQ+WchkPLJl14oS+aSS8MFWFpHUN
+	A4vuGLueHehr6VMfeZDCqmfixleJMiFwGYdX7vYnTX96zO85g2s6aWnpl9Z58TLFOjr7mLvmfc2
+	8KZ6aWjhrXfIuiOLQKN5h+FJYTxY+c4H+T9vgfwsTrZCGW1p6db1NK72R/a8mGXIGN6jCfSMTep
+	cdObMciYBLxj6+RbjvAC+51kOzN4aqUjJQasrEiTxO66c3nYkyVPT9uqp0BYSnXqgSBA67ADY=
+X-Received: by 2002:a05:6402:360a:b0:674:40c3:f047 with SMTP id 4fb4d7f45d1cf-6889ca4520cmr9413016a12.12.1779808128341;
+        Tue, 26 May 2026 08:08:48 -0700 (PDT)
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com. [209.85.208.50])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-688baf1eb98sm5157209a12.16.2026.05.26.08.08.48
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 May 2026 08:08:48 -0700 (PDT)
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-687e7edaafeso6711465a12.1
+        for <linux-ide@vger.kernel.org>; Tue, 26 May 2026 08:08:48 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ+qs+jT0e5mbyhCpDUyfmzuaxedNvZDrf1LM19K6LiaNBe19e3BlBJhmKiLz9dVNIgOoYiGqLWP9ZA=@vger.kernel.org
+X-Received: by 2002:a05:6402:360a:b0:674:40c3:f047 with SMTP id
+ 4fb4d7f45d1cf-6889ca4520cmr9385916a12.12.1779807721391; Tue, 26 May 2026
+ 08:02:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260521173347.2079560-3-bvanassche@acm.org>
+References: <cover.1779803053.git.u.kleine-koenig@baylibre.com>
+In-Reply-To: <cover.1779803053.git.u.kleine-koenig@baylibre.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 26 May 2026 17:01:48 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdUVoNg-rSV_hDcvi6KCosmE=SMcxUj2Y8fkoJ=33zMSXw@mail.gmail.com>
+X-Gm-Features: AVHnY4KG1TJnpMipnk7rqdd9LGhhF-uK_MvXjYFynbh1jLKZ-eyBikYr9yO02y4
+Message-ID: <CAMuHMdUVoNg-rSV_hDcvi6KCosmE=SMcxUj2Y8fkoJ=33zMSXw@mail.gmail.com>
+Subject: Re: [PATCH v1 0/8] zorro: Improve handling of pointers in zorro_device_id::driver_data
+To: =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Thomas Gleixner <tglx@kernel.org>, 
+	Ingo Molnar <mingo@kernel.org>, Max Staudt <max@enpas.org>, Andi Shyti <andi.shyti@kernel.org>, 
+	Helge Deller <deller@gmx.de>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	netdev@vger.kernel.org, linux-i2c@vger.kernel.org, 
+	linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	"Christian A. Ehrhardt" <christian.ehrhardt@codasip.com>, "Christian A. Ehrhardt" <lk@c--e.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello Bart,
+Hi Uwe,
 
-On Thu, May 21, 2026 at 10:33:30AM -0700, Bart Van Assche wrote:
-> Prepare for adding lock context annotations that refer to the ATA port
-> argument (ap). No functionality has been changed.
+On Tue, 26 May 2026 at 16:17, Uwe Kleine-K=C3=B6nig (The Capable Hub)
+<u.kleine-koenig@baylibre.com> wrote:
+> this series is about improving the handling of pointers in struct
+> zorro_device_id's driver_data.
+>
+> While it's ok on all current Linux platforms to store a pointer in an
+> unsigned long variable, it involves casting that loses type information.
+> This can be nicely seen in patch #7 where after profiting from patch #6
+> the compiler notices a missing const.
+>
+> Preparing for that change, all zorro_device_ids are converted to use
+> named initializers, which is also a nice cleanup that could stand for
+> itself, as it improves readability for humans. (That is necessary
+> because an anonymous union can be initialized by name, but not using a
+> list initializer.)
+>
+> My motivation for this series is the CHERI hardware extension. With that
+> pointers are bigger than longs and thus you cannot store pointers in
+> zorro_device_id::driver_data. So this series is also about getting
+> support for CHERI into the mainline, but I hope the clean up effects
+> mentioned above are justification enough to accept this series.
 
-For this and the other preparation patches:
-Please add some additional text explaining why this change is required for
-us to add lock context annotations.
+Thanks for your series!
 
-I guess it is not possible to simply add __must_hold(dev->link->ap->lock)
-annotation to __ata_scsi_queuecmd() ?
+> The dependencies in this series are as follows:
+>
+>  - Patch #5 depends on #1, #2
 
-But at the same time, you do add __must_hold(dev->link->ap->lock) to e.g.
-ata_scsi_translate().
+s/5/6/?
 
+>  - Patches #7 and #8 depend on patch #6.
+>
+> So if the ata maintainers agreed to merge their patch #1 via scsi, and
+> Geert agrees to patch #5 and that it's also merged via scsi, patches #1,
 
+s/5/6/?
 
-Looking at the C-file, I can see that patch 9/9 adds:
+> #2, #6 and #7 can go in without further coordination.
+>
+> Patches #3, #4 and #5 are only about using the same initialization style
+> for all zorro_device_id and can go in without coordination.
+>
+> Best regards
+> Uwe
+>
+> Uwe Kleine-K=C3=B6nig (The Capable Hub) (8):
+>   ata: pata_budda: Use named initializer for zorro_device_id
+>   scsi: Use named initializer for zorro_device_id
+>   net: Use named initializer for zorro_device_id arrays
+>   i2c: icy: Use named initializer for zorro_device_id arrays
+>   video: fm2fb: Use named initializer for zorro_device_id array
+>   zorro: Simplify storing pointers in device id struct
+>   scsi: zorro7xx: Make use of struct zorro_device_id::driver_data_ptr
+>   video: cirrusfb: Make use of struct zorro_device_id::driver_data_ptr
 
-+	/* Tell the compiler that dev->link->ap == ap. */
-+	__assume_ctx_lock(dev->link->ap->lock);
+Gr{oetje,eeting}s,
 
-to __ata_scsi_queuecmd().
-
-but, that annotation is using dev->link->ap and not ap directly.
-
-
-Patch 9/9 also adds a __must_hold(ap->lock) annotation to the declaration
-of __ata_scsi_queuecmd(), i.e. in the header file.
-
-Personally, I think that it makes more sense to have the annotation in the
-definition (C-file), since that is what we most often read.
-If clang requires us to also add the annotation to the declaration, then
-perhaps we can have the annotation both in the C-file and the header file?
-(Especially since you do annotate the function definition for those functions
-that do not have a declaration in the header file.)
-
-
-
-Not strictly needed, but assuming that we still need to grow an ap parameter
-to many functions, would it perhaps be possible to restructure the series like:
-1) Pass the ATA port argument directly to __ata_scsi_queuecmd()
-2) Add annotations to __ata_scsi_queuecmd()
-3) Pass the ATA port argument directly to ata_qc_schedule_eh()
-4) Add annotations to ata_qc_schedule_eh()
-5) Pass the ATA port argument directly to ata_qc_complete()
-6) Add annotations to ata_qc_complete()
-...
-
-That should be possible, right?
-(I guess you might need to reorder some patches.)
+                        Geert
 
 
-Thank you for spending time on this!
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
 
-
-Kind regards,
-Niklas
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
