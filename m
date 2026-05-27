@@ -1,81 +1,66 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99BAF391E7F;
-	Wed, 27 May 2026 09:17:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12B9F3E5EEB
+	for <linux-ide@vger.kernel.org>; Wed, 27 May 2026 09:20:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779873479; cv=none; b=m3GcdIRXewQFRJVAJiZQr7pmsj4VArE1gjtX/X8h0FCDEWaJSoLVU2qeNgZk4XnilMdVo7CrcaJjVf/nLN29qeu5WV6X7OmPWyn74EhxOpvtu3Fa4xm4vYDjweWo0JOlrEkm5tym361KPV5ohWWgbpNR5XK/k3SDtaAvE3+kBzE=
+	t=1779873610; cv=none; b=Zbkpp7j8XtDb8QOL5/U3Il53XDpKAS2gtQVDHpoik0G9AqYM6YOS6xdqoHge2h0N63D+MBQdXvake87dN6ANNtLqrPI60umv3gyBBHmR44NIjvNjrcLON1tba0gwVkk9FCZuPYpJomqOCxkx2skndZLC78a3Nb1gxsOVOrM3pko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779873479; c=relaxed/simple;
-	bh=eKiJa5SgNaOIBuyetgXHqRTlg5khvkt47VjLifUDtjc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oArTXNQNwZZhzhgVlkk2z8cLFQIZPH13q7B6IYwRjfKPR4Oki2DkHdJM7UVjkldQcVzoUiczimwhWfQBSZEEA4yi4MaVWEFuE0uwIiYZBFd1KBjQlPXnByE/zractyDD9Lh1f2j+gqgxFN9UoSgQu5e6foZHN+2SMlhaBmqjLfY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=jZ3KYdvr; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1779873610; c=relaxed/simple;
+	bh=zgKqI7KZARDsZTvoHB3tZuWM2fJMKVJxwbGocXZP334=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=diW+AAsEoXnye92dePywoZ8+0hZMizgKAwdMZmxlpJpTuRk0/taGueju2gYX1hfNx/UQPRb1U0xYZ6Mmzftk1B0gi/+Qwk7F5bFK60qxPHQ6TmUQSNQLQVQI5pH/yYVLJa6ekFbioV9jd7ZnDeuH7YMIDXxtOKUKalGADSb8rWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C90P1ZSt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="jZ3KYdvr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Yx
-	kX3OdJGlXGLu1h7eU4lfdefQrW50uPRZC7Qoail8A=; b=jZ3KYdvrziIoiKACZm
-	lGfNcGZFrY/VRmMYUOD2ANz0koT8NcrEvG31kc01QzUuQy2AtDRAwqTe5s1ltFZR
-	GYFtjVqsAhs0M4fkI+fnJ64Gcq6oeK9Z/NGWzbFEgNZjQIITFWcXQZuHnN3sKrKt
-	DClU9qjDXCe3IgTPvmwj+DDkk=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wAHYsiwthZqoyQdDw--.9093S2;
-	Wed, 27 May 2026 17:17:38 +0800 (CST)
-From: kensanya@163.com
-To: dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	TanZheng <tanzheng@kylinos.cn>
-Subject: [PATCH] ahci: use hweight_long() to count port_map bits
-Date: Wed, 27 May 2026 17:17:29 +0800
-Message-Id: <20260527091729.266582-1-kensanya@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C90P1ZSt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F1DE1F000E9;
+	Wed, 27 May 2026 09:20:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779873608;
+	bh=enK2rB8fc+jvubPIWX8m1FORXpA9N/7pnNGUL8OXorA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=C90P1ZStwF5Nd2sh9FrO4nQGw/AIbfN815V0DQjGXj+ihQhKfxmkRydzcLp3UoeNX
+	 JhJRNaGrG9Nru+kzTmrFXeouii5MS5iMIpBkUC0b2MdJpuYTMkr5s0Z5mjR8eU46Ed
+	 dudo5we3vj8qGLCrQ2hJwb2vZuiR8K7vp/f5gnD0Na47Xmq1eQz7WZt0jdO4e8bFbC
+	 0Y4r8yn0D2z2h7xIc8LMVZLzYI6eXAdxmgrU8EPgLaHUxN4Zn3g61q+vOpHQkit3BN
+	 4V4oOD/gkCworjEsl8P2eGsfGvu+swr0uQgzLtCJ3+Xfh2DFD9EZ7cA/8v3vy24Mfz
+	 V1AK7HbSpAKuQ==
+From: Niklas Cassel <cassel@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
+ Marco Elver <elver@google.com>
+In-Reply-To: <20260521173347.2079560-1-bvanassche@acm.org>
+References: <20260521173347.2079560-1-bvanassche@acm.org>
+Subject: Re: (subset) [PATCH v2 0/9] ata: libata-core: Enable context
+ analysis
+Message-Id: <177987360731.213219.9853747215937352347.b4-ty@b4>
+Date: Wed, 27 May 2026 11:20:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAHYsiwthZqoyQdDw--.9093S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrZr4fXw47XrWUCw4xCr15Jwb_yoWfKrc_CF
-	9xXa1xW345Can3Gw12kF43Gryjk34rurs8ZFsYkrZ3Gry3Xws5W3Z7Z3Zrta1YyFnY9F1r
-	AF45J34akw48KjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUeUl13UUUUU==
-X-CM-SenderInfo: 5nhq2txq1dqiywtou0bp/xtbCwRL51WoWtrLtngAA30
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-From: TanZheng <tanzheng@kylinos.cn>
+On Thu, 21 May 2026 10:33:28 -0700, Bart Van Assche wrote:
+> This patch series enables context analysis for the ATA subsystem. Please
+> consider this patch series for the next merge window.
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> [...]
 
-Replace the open loop used to calculate the number of set bits
-in the port mapping with the `hweight_long()` function, which
-simplifies the code without altering its functionality.
+Applied to libata/linux.git (for-next), thanks!
 
-Signed-off-by: TanZheng <tanzheng@kylinos.cn>
----
- drivers/ata/libahci.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+[1/9] ata: libata: Fix ata_exec_internal()
+      https://git.kernel.org/libata/linux/c/6e0ce123
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index c79abdfcd7a9..15d44266c9df 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -552,11 +552,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 
- 	/* cross check port_map and cap.n_ports */
- 	if (port_map) {
--		int map_ports = 0;
--
--		for (i = 0; i < AHCI_MAX_PORTS; i++)
--			if (port_map & (1 << i))
--				map_ports++;
-+		int map_ports = hweight_long(port_map);
- 
- 		/* If PI has more ports than n_ports, whine, clear
- 		 * port_map and let it be generated from n_ports.
--- 
-2.25.1
+Kind regards,
+Niklas
 
