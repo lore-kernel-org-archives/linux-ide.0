@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE01F44B662
-	for <linux-ide@vger.kernel.org>; Wed, 27 May 2026 18:15:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 997664611CF;
+	Wed, 27 May 2026 18:18:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779905750; cv=none; b=PBH5/d1S7In9xbYqgzfwiyxofzp6/DhE9qtJpIuA/TW3Rxtl4Vmp5Sw985Xf9W/BClnON1rSgabiVT0O9uq7Kepl0wT3fCeFk0JjVjMlp+WgG5akivhiX+Y5YLr0KAMiOYxJY2MM96Iem1dP/GlaA7VISOFXWKSdTnPaQmUBHXU=
+	t=1779905898; cv=none; b=AMBYvpE2yyl5eNSByyncwUMAeGlMAZ/qO3XZ59p9JJUPTbSvGfJUFOX9kct4ga9tTFSbbvvfPkVjtjHUfI1qjjuHTsL6+1r/fgTfgf5mGo4QQkgCG2LBWzO5dvVAjoZMPMqe39rWgxzJd7/f6QRkaWFuzUOyyD8Tepnh/b6LJTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779905750; c=relaxed/simple;
-	bh=j0pxhamw7PruY0FAkQecTJcnG1F9XLV5rvlkOSPgnvw=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=X32+/rrvfDD1aNtGWdQySVAHhvuvtxZyLvpijjgefBValpXJcc3jB6zAFxhRX0HxaJA21PK6Kro1/G82y6aVf1zvN+1CS3WKXJZZdl5R5PUZ/VcqmHrtaeg2eZTDHu/3H/Ql5qLRo3sp7v62VCh64FbWQw/37hqXqthbhkNUx8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o1wmVugW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779905898; c=relaxed/simple;
+	bh=jRZ+oB2r0ICYZ4egi58cPvFNtDBREC4vRyomBemW2UU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dFZIMA5NwUhQWFdL5ggbzC4H5PuAOYhgE7ePHduDjLrAgm8pQ0A3pV0PDcJSQ1pZNwxKN5yt5MHTWX6vaX/uWwd3cuc1Wr97yAH++l9EOjrZGFnW+G+1jhlvefM/lx/Wcon79cc1yURT4fM9wWmf+2aqd/QgHS8ry2+0U63jTkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ffR2xd1U; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o1wmVugW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60A621F000E9;
-	Wed, 27 May 2026 18:15:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ffR2xd1U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB36E1F000E9;
+	Wed, 27 May 2026 18:18:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779905749;
-	bh=c6r7bsdYfYgYC7lg/KSTG5WJI5KruPrNd3P3tMd42rQ=;
-	h=Date:Subject:From:To:References:In-Reply-To;
-	b=o1wmVugWBt/DJnO9Wj96anLyWdERmp1zvosgYKHyjoTqgRWznVrBhGmZBCtzwq3zp
-	 Nnpi1XyTPlXrL5HxpwP0gs7ketU+7BNJ5gqRK9UFT4l8wsx5wXLBNyLab5o/5LN4LZ
-	 p9zpQcIiJP4JoyQe5RWvkAXBNLdvmhDfvv3qyQ4YORKYW+adbKdV9t4TGreLXO4YBZ
-	 vBcdYKBG2xG40oaoJ9adT0UhACiErH+3JSXxUXIC3JbmXmXKlcpWH4wuoaiTNFyyoO
-	 WDAFyfmu2aa0OiEVTVmmU21wqQJ3HeMA2HGlHyM4Ej5bilJiZ+ZrhcFKRByWAWg9QK
-	 Ry4wUo0yiIFMw==
-Message-ID: <d069d5c1-6b6a-4be6-a1e3-a875fe5c6eb5@kernel.org>
-Date: Thu, 28 May 2026 03:15:47 +0900
+	s=k20260515; t=1779905897;
+	bh=DsBPDEPLa4a42XhXh7va6YxCIjG8SfdnT9RBSiTIv7E=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=ffR2xd1UMk9cwe3j0Dg3jgwRWPYd4CLNy0IZa9tmECSgetoFi+1nhWhwWUavz5RZv
+	 XrIfQx7lNohH9XrQdRHL6Ysnw+Ni8KBtB3dqoeoAk3qA5pAkXh1EKlob80pBswPqc8
+	 EzZwkBnL/Z5MhKs+L02SQvLMof9g9/kSyxf59Il7QZrXJvvbIAJoqQVio43v9kxItp
+	 mZSYZO9RSUcmmGh+lsgFN6lY0dY9kHEbZqKBP+yrO6V7sN8xA2M4BcNh5cVphdZdWc
+	 0KLwJZ9I0vLIRFvKq6NQkSmImvZvQqmNY5Be/KI/hX8aUnRNZzDhDNFhO/tMAGJB+T
+	 UkE8PRxEMyDWg==
+Message-ID: <cd21e56b-04de-4b29-bc4a-d936ac8d29bb@kernel.org>
+Date: Thu, 28 May 2026 03:18:15 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,77 +35,31 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC] libata/ahci: three MMIO trust boundary issues under hostile
- hardware model
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Michael Lazin <microlaser@gmail.com>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-References: <CALdcr8dMyX+ZRj3ARv6iFkLKXL2+onQbhCkX+=rnXKX3o4SDUw@mail.gmail.com>
- <6c4af01f-f57c-4b40-bd99-9746bb062bcf@kernel.org>
+Subject: Re: [PATCH] ahci: use hweight_long() to count port_map bits
+To: kensanya@163.com, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ TanZheng <tanzheng@kylinos.cn>
+References: <20260527091729.266582-1-kensanya@163.com>
 Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <6c4af01f-f57c-4b40-bd99-9746bb062bcf@kernel.org>
+In-Reply-To: <20260527091729.266582-1-kensanya@163.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 2026/05/27 17:27, Damien Le Moal wrote:
-> On 5/27/26 12:38 PM, Michael Lazin wrote:
->> To the linux-ide maintainers and list,
->>
->> Apologies in advance if this hits a moderation queue — I am sending
->> from Gmail and am in the process of subscribing to the list. I am a
->> Debian developer (debian-devel) with a background in network security.
->> I would ask that you judge the technical content on its merits rather
->> than the sending domain.
->>
->> I have been auditing the AHCI driver against a zero-trust hardware
->> model — specifically the threat of malicious or malfunctioning PCIe
->> peripherals. I have mapped three issues I believe warrant discussion.
->> I can send patches for issues 1 and 2; issue 3 requires broader IOMMU
->> policy discussion. All references are against drivers/ata/ in the
->> current mainline tree.
->>
->> ---
->>
->> ISSUE 1: Port map not bounded against cap.np (libahci.c,
->> ahci_save_initial_config)
->>
->> The driver reads HOST_CAP and HOST_PORTS_IMPL as independent MMIO
->> values without enforcing consistency between them. A hostile device
->> returning HOST_CAP.np = 0 (implying 1 port) alongside HOST_PORTS_IMPL
->> = 0xFFFFFFFF (32 ports asserted) causes the host struct to be
->> allocated for one port while the activation loop walks 32, producing
->> out-of-bounds reads and writes into adjacent kernel heap objects.
->>
->> Proposed fix: after reading both registers, clamp port_map to the
->> range implied by cap.np before any allocation or iteration depends on
->> it:
->>
->>     u32 cap_ports = min((cap & 0x1f) + 1, AHCI_MAX_PORTS);
->>     port_map &= GENMASK(cap_ports - 1, 0);
->>     if (hweight32(port_map) > cap_ports)
->>         port_map = (1U << cap_ports) - 1;
+On 2026/05/27 18:17, kensanya@163.com wrote:
+> From: TanZheng <tanzheng@kylinos.cn>
 > 
-> Looks sensible, but we should WARN about a device that has a weird port_map
-> that shows ports beyond the number of ports.
-> Note that the reverse is common: number of ports is high, but the port_map is
-> only a small subset of the max ports.
+> Replace the open loop used to calculate the number of set bits
+> in the port mapping with the `hweight_long()` function, which
+> simplifies the code without altering its functionality.
+> 
+> Signed-off-by: TanZheng <tanzheng@kylinos.cn>
 
-Checking the code again, ahci_save_initial_config() has the following code:
+This looks good to me. But as Niklas commented, if this needs a Suggested-by
+tag, please add it.
 
-
-/* If PI has more ports than n_ports, whine, clear
- * port_map and let it be generated from n_ports.
- */
-if (map_ports > ahci_nr_ports(cap)) {
-	dev_warn(dev,
-		 "implemented port map (0x%lx) contains more ports than nr_ports (%u), using
-nr_ports\n",
-		 port_map, ahci_nr_ports(cap));
-	port_map = 0;
-}
-
-So this issue #1 cannot happen I think.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
