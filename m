@@ -1,109 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF5143783D1
-	for <linux-ide@vger.kernel.org>; Wed, 27 May 2026 13:42:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE01F44B662
+	for <linux-ide@vger.kernel.org>; Wed, 27 May 2026 18:15:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779889367; cv=none; b=J0MgH7qPNvJC26JvzPCBBPrpoFnV0sqebvS6mHv3M/ao27+88STfg2KwVe89a4oqqm7Sl+7hVD03T3RkmHEf2pfmicpeWfpbpAT7iAwvFIUO8fx1JACCxa+5Xj1k+OmFsG6EI+z0ObwB13SnXeH1eiBW/8xnrE/OKCv+d4XyqVU=
+	t=1779905750; cv=none; b=PBH5/d1S7In9xbYqgzfwiyxofzp6/DhE9qtJpIuA/TW3Rxtl4Vmp5Sw985Xf9W/BClnON1rSgabiVT0O9uq7Kepl0wT3fCeFk0JjVjMlp+WgG5akivhiX+Y5YLr0KAMiOYxJY2MM96Iem1dP/GlaA7VISOFXWKSdTnPaQmUBHXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779889367; c=relaxed/simple;
-	bh=8YYaqhcFn9pguJ2njGd8t0vEBRkR7p2951hpmkH0RUs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dQ1fnhmpeAVQ8oYtb4lX6ni+Ih9FKbC/uTKARI1kjnYgJ/OtCTf3cLRDbJhVGO+5k0iZS/DMes43d1wxX0+SCGG+HOfCCIlb61AqAmnZQ7NFWx/7F5gcSdyK/trkPVgyrBRXfOJYr1C2LafTwdKkRokLGCkaspoenaFp/IH0t8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gxSzIIIK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779905750; c=relaxed/simple;
+	bh=j0pxhamw7PruY0FAkQecTJcnG1F9XLV5rvlkOSPgnvw=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
+	 In-Reply-To:Content-Type; b=X32+/rrvfDD1aNtGWdQySVAHhvuvtxZyLvpijjgefBValpXJcc3jB6zAFxhRX0HxaJA21PK6Kro1/G82y6aVf1zvN+1CS3WKXJZZdl5R5PUZ/VcqmHrtaeg2eZTDHu/3H/Ql5qLRo3sp7v62VCh64FbWQw/37hqXqthbhkNUx8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o1wmVugW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxSzIIIK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 132F21F000E9;
-	Wed, 27 May 2026 13:42:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o1wmVugW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60A621F000E9;
+	Wed, 27 May 2026 18:15:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779889361;
-	bh=PqssrBACSJ5iHkrABxEeADrC5aLYAsfjHZEGF8YtIwA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=gxSzIIIKmGWM4STC7gidGMB4FMFVVDNp3HKONB2+mxyiVVE8LXfbu4J1f2/jCPaqK
-	 5sOgy0Z5EdiF9/rruPjHj+uHi0NoqNquxOSxKrZP89RSLsMc856dXOgLNtkBuHMCPJ
-	 tHOTf1Rw97CDb+A/v3JIZod8tFWGop5SXHKEd90ngD/uZ1lK2AzDokNDJ5N9wbDUPJ
-	 VGCViSRai2PMebVhxqUh+qP8tdwkTivnMyzUiRv0WJdiXcVluNunyWYWk1I5YlW6Rb
-	 jzrukMHgagNmRahpwIdgDOCZBKlFcygIp+fWyLcfIUOXvByIVBesk4f5R7sEh1X4yA
-	 ZaAFRUcYJvYQg==
-Date: Wed, 27 May 2026 15:42:37 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Marco Elver <elver@google.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-ide@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Mikael Pettersson <mikpelinux@gmail.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>
-Subject: Re: [PATCH v2 9/9] ata: Annotate the code that uses the host lock
-Message-ID: <ahb0zRlRGMI0_WwT@ryzen>
-References: <20260521173347.2079560-1-bvanassche@acm.org>
- <20260521173347.2079560-10-bvanassche@acm.org>
- <ahW5MI_05l2bpKBN@ryzen>
- <e1e8b05d-6dc1-47c9-8b85-bfb2d756a204@acm.org>
- <CANpmjNMU4nwg==7pn0UAXY9Z5s-4dZFgPwxEHHhwvhiynSi_cA@mail.gmail.com>
+	s=k20260515; t=1779905749;
+	bh=c6r7bsdYfYgYC7lg/KSTG5WJI5KruPrNd3P3tMd42rQ=;
+	h=Date:Subject:From:To:References:In-Reply-To;
+	b=o1wmVugWBt/DJnO9Wj96anLyWdERmp1zvosgYKHyjoTqgRWznVrBhGmZBCtzwq3zp
+	 Nnpi1XyTPlXrL5HxpwP0gs7ketU+7BNJ5gqRK9UFT4l8wsx5wXLBNyLab5o/5LN4LZ
+	 p9zpQcIiJP4JoyQe5RWvkAXBNLdvmhDfvv3qyQ4YORKYW+adbKdV9t4TGreLXO4YBZ
+	 vBcdYKBG2xG40oaoJ9adT0UhACiErH+3JSXxUXIC3JbmXmXKlcpWH4wuoaiTNFyyoO
+	 WDAFyfmu2aa0OiEVTVmmU21wqQJ3HeMA2HGlHyM4Ej5bilJiZ+ZrhcFKRByWAWg9QK
+	 Ry4wUo0yiIFMw==
+Message-ID: <d069d5c1-6b6a-4be6-a1e3-a875fe5c6eb5@kernel.org>
+Date: Thu, 28 May 2026 03:15:47 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CANpmjNMU4nwg==7pn0UAXY9Z5s-4dZFgPwxEHHhwvhiynSi_cA@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC] libata/ahci: three MMIO trust boundary issues under hostile
+ hardware model
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Michael Lazin <microlaser@gmail.com>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
+References: <CALdcr8dMyX+ZRj3ARv6iFkLKXL2+onQbhCkX+=rnXKX3o4SDUw@mail.gmail.com>
+ <6c4af01f-f57c-4b40-bd99-9746bb062bcf@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <6c4af01f-f57c-4b40-bd99-9746bb062bcf@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Wed, May 27, 2026 at 12:40:24AM +0200, Marco Elver wrote:
-> On Tue, 26 May 2026 at 23:33, Bart Van Assche <bvanassche@acm.org> wrote:
+On 2026/05/27 17:27, Damien Le Moal wrote:
+> On 5/27/26 12:38 PM, Michael Lazin wrote:
+>> To the linux-ide maintainers and list,
+>>
+>> Apologies in advance if this hits a moderation queue — I am sending
+>> from Gmail and am in the process of subscribing to the list. I am a
+>> Debian developer (debian-devel) with a background in network security.
+>> I would ask that you judge the technical content on its merits rather
+>> than the sending domain.
+>>
+>> I have been auditing the AHCI driver against a zero-trust hardware
+>> model — specifically the threat of malicious or malfunctioning PCIe
+>> peripherals. I have mapped three issues I believe warrant discussion.
+>> I can send patches for issues 1 and 2; issue 3 requires broader IOMMU
+>> policy discussion. All references are against drivers/ata/ in the
+>> current mainline tree.
+>>
+>> ---
+>>
+>> ISSUE 1: Port map not bounded against cap.np (libahci.c,
+>> ahci_save_initial_config)
+>>
+>> The driver reads HOST_CAP and HOST_PORTS_IMPL as independent MMIO
+>> values without enforcing consistency between them. A hostile device
+>> returning HOST_CAP.np = 0 (implying 1 port) alongside HOST_PORTS_IMPL
+>> = 0xFFFFFFFF (32 ports asserted) causes the host struct to be
+>> allocated for one port while the activation loop walks 32, producing
+>> out-of-bounds reads and writes into adjacent kernel heap objects.
+>>
+>> Proposed fix: after reading both registers, clamp port_map to the
+>> range implied by cap.np before any allocation or iteration depends on
+>> it:
+>>
+>>     u32 cap_ports = min((cap & 0x1f) + 1, AHCI_MAX_PORTS);
+>>     port_map &= GENMASK(cap_ports - 1, 0);
+>>     if (hweight32(port_map) > cap_ports)
+>>         port_map = (1U << cap_ports) - 1;
 > 
-> Then the assumption is checked at runtime when running with lockdep.
-> This is by design, because it goes both ways: every time you now add
-> __assume_ctx_lock(), someone just has to move that code around and
-> suddenly the assumption no longer holds and you have a bug. If you
-> were using lockdep_assert_held() you're at least ensuring that someone
-> running with lockdep (e.g. syzkaller) will catch the bad assumption.
+> Looks sensible, but we should WARN about a device that has a weird port_map
+> that shows ports beyond the number of ports.
+> Note that the reverse is common: number of ports is high, but the port_map is
+> only a small subset of the max ports.
 
-My biggest worry/issue with this series is all the __assume_ctx_lock()
-annotations it adds. Because __assume_ctx_lock() seems to tell the compiler:
-"trust me, I have taken this lock". It seems quite fragile, and if someone
-refactors the code, the annotation might no longer be valid.
-
-I suggested something similar to what Bart suggested, a:
-__objects_are_equal(dev->link->ap->lock, ap->lock) annotation.
-But as Bart said, that would probably require additions to Clang.
-
-But here Marco says that pointer-equality is unsound, since it can't be
-verified statically and would have to be verified at rutime...
+Checking the code again, ahci_save_initial_config() has the following code:
 
 
-> 
-> > Whether lockdep_assert_held() or __assume_ctx_lock() is used to help the
-> > compiler alias analysis, there is a risk that these annotations are
-> > incorrect. My preferred solution is that a new macro would be added that
-> > supports expressing pointer equality in a direct way to the compiler
-> > alias analysis engine and also that evaluates pointer equality at
-> > runtime. However, I'm afraid this requires compiler changes and changing
-> > Clang is out-of-scope for me.
-> 
-> Telling the compiler about pointer-equality is also unsound, because
-> there's no way to verify our assumption statically. The only way to
-> recover soundness is to again introduce runtime checks of some sort.
-> 
-> > I chose __assume_ctx_lock() because it is evaluated only at compile time
-> > and a compile time annotation is sufficient in this context.
-> 
-> There's a real risk that your assumption may become stale, and if it
-> were my codebase, I'd prefer lockdep_assert_held() just to make sure
-> we check our assumption at runtime. This is not my subsystem -- just
-> my 2c.
+/* If PI has more ports than n_ports, whine, clear
+ * port_map and let it be generated from n_ports.
+ */
+if (map_ports > ahci_nr_ports(cap)) {
+	dev_warn(dev,
+		 "implemented port map (0x%lx) contains more ports than nr_ports (%u), using
+nr_ports\n",
+		 port_map, ahci_nr_ports(cap));
+	port_map = 0;
+}
 
-Right now, I think my ideal solution would be to, to the furthest extent
-possible, try to avoid adding __assume_ctx_lock().
-Sure, a few special cases might be acceptable, if there are no reasonable
-way to avoid it.
+So this issue #1 cannot happen I think.
 
-And if there is no reasonable way to avoid it, at least with the current
-behavior in linux-next/master, I would prefer a lockdep_assert_held() over
-a __assume_ctx_lock().
-
-
-Kind regards,
-Niklas
+-- 
+Damien Le Moal
+Western Digital Research
