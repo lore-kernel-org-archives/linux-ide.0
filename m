@@ -1,33 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2BB118FDBD
-	for <linux-ide@vger.kernel.org>; Wed, 27 May 2026 18:51:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 457DD329E6A
+	for <linux-ide@vger.kernel.org>; Wed, 27 May 2026 18:54:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779907870; cv=none; b=L4W0ZncRO9shoISb8zTcyMYtcby51/rYTv7BaQrFG8YTaZ1pydBtqcpdtmJrXwQz+O521gm7ZuPa6Y9HUyeWTH08ah/csLDN3d5+SVjXhTbHxxkyxiWccRLQ/YIKMFD4P+6WFtqqeR48MFCSX0owWiZ4OmJ4N3xEgbZ0tCV+YrQ=
+	t=1779908076; cv=none; b=i0naON9gadSWOdUh83iy4I1k3W18qo+A+eUL+zO9Oz6jO4H7RWxOcSqsZBJ/8dR9YYMp+LqzP/zPcj1cVMELE0zJ2yI+j4aWAZLFQ63WimH+FY3LEKMqSRVFPZcKC1ZNUTjpsBX/YJYJ5vJ9kxsmggdJLJxOyL+NOY63pfQ87pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779907870; c=relaxed/simple;
-	bh=OA4kcteOsazZOX4DtHkXjkwp8FqZ74/Z7tWSYjvkdOM=;
+	s=arc-20240116; t=1779908076; c=relaxed/simple;
+	bh=OvDNvJlmBESXFS3MsHlUutW09QwToLRNb5KBIQJxLcI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=joGwNJdeyTU3eMrZgDwmrgnpYq2SPuoYWAa3yXkGUP09hqBgsL8Jqz1rehcOf8zJvKQZwKqlpFU7ewI4tFxyOFp2nPIQCjgLqIpkPMHJPeDx9u4Qj9CUaE73hHoNm6e8eov067elYyOLoYq/sUpGTAnF3EYCOMrhkvPMuXJCLuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dwIE9+bs; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=nlmQ8vj2hshqNrqVD5YLok45QMWP2ea+8yKEkji1ibA4dY4rdn1eps/ydUrgY50TbC6B/PKPibNGU+fZzCCKJwPLqWY9G/ORap/IS1Y5Jng29z07v9X2+Kpz+U8RN+OTUv+xjkIbwak0Xk6EuXXq3SR2DrjRiXdSN5TXmStZnu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=INfcy7id; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dwIE9+bs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8739F1F000E9;
-	Wed, 27 May 2026 18:51:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779907869;
-	bh=34swYXaiag6WOoZabd5HtBCXgI4UUKJMdjer7xReBVM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=dwIE9+bsDfAHldwNh0ClByaCsI43rRL251iFTDfvmHlljAh1yNH9Yb7iB8F4CARLY
-	 DQ4RFtsIZBFFHnpz1PV6BAx5ELMFDisWT2Vheybvcwdj64zmgCWKH+brIhS8w8Jj2n
-	 HDdSA4jNXocZHz6flHlgaCDdsrpIwJlw5mFthxTBH+rr3mS4Xe3ZThIhVuMFUJUx3W
-	 nKriER53dfktisIiw88u1pkScjixOP5pc43mSvKBM/G8IVoLsWdmi094PIBYrbmNHE
-	 6qRJRv5XxcltFE4E/zb28j1UBOnnxXRJtwuNcx7hBogpF0h77C0E53kN/EzG1a2JEi
-	 2cWISelqounUQ==
-Message-ID: <28915fc8-f2a1-4372-9f09-25f638585e0c@kernel.org>
-Date: Thu, 28 May 2026 03:51:07 +0900
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="INfcy7id"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gQf1M1kvnz1XM0ny;
+	Wed, 27 May 2026 18:54:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1779908067; x=1782500068; bh=WMsSoy5zvNQkjmVtyRqiVRWV
+	RgPUgGjAygwqOGNbUvA=; b=INfcy7idhLuqmdU1rUTV0VnEjLPQu2oMuBk8MFcO
+	ZZ28bEI9xSgRdUdjWwolRrQZucfzPN6SskyX3stxMQFs7LHp7nkITUI/HcS0TT7l
+	JU9sOZMzmPxLlo60cxJ5Nm7B/KIN4ghQq1Qhu0xrkhLu+nX8qkGb2TYEAhNWqST7
+	RScmBhrw3gmSC2qIeVcvwaPa0eKoS4TzXXwKwoM85/DgMllkwiRFeKcYJUSngYjz
+	O3yPoH5eck13JMu8ljI1131Us1zJtUnsBj4MnoeaVvObvdlSR9fbMRtPE4YsYvJE
+	++IA/gpxbQSWksK6G3hUb+JrRL80XunZqYZWEJDrsfSWGg==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id DoFq1amOJwt3; Wed, 27 May 2026 18:54:27 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gQf1F555hz1XM0nl;
+	Wed, 27 May 2026 18:54:25 +0000 (UTC)
+Message-ID: <b3ef2857-2023-415c-bddf-09c8b115b4f5@acm.org>
+Date: Wed, 27 May 2026 11:54:24 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -36,51 +51,34 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v2 9/9] ata: Annotate the code that uses the host lock
-To: Bart Van Assche <bvanassche@acm.org>, Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org, Marco Elver <elver@google.com>,
  Mikael Pettersson <mikpelinux@gmail.com>,
  Geert Uytterhoeven <geert+renesas@glider.be>,
  Magnus Damm <magnus.damm@gmail.com>
 References: <20260521173347.2079560-1-bvanassche@acm.org>
  <20260521173347.2079560-10-bvanassche@acm.org>
+ <28915fc8-f2a1-4372-9f09-25f638585e0c@kernel.org>
 Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260521173347.2079560-10-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <28915fc8-f2a1-4372-9f09-25f638585e0c@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 2026/05/22 2:33, Bart Van Assche wrote:
-> Annotate all functions and also their direct and indirect callers with
-> __must_hold() that have a lockdep_assert_held() statement in their
-> function body for the host lock. As one can see in the comments added by
-> this patch, locking is missing from the following two functions:
->  * Some of the ata_port_freeze() callers.
->  * nv_do_interrupt().
+On 5/27/26 11:51 AM, Damien Le Moal wrote:
+> On 2026/05/22 2:33, Bart Van Assche wrote:
+>> Annotate all functions and also their direct and indirect callers with
+>> __must_hold() that have a lockdep_assert_held() statement in their
+>> function body for the host lock. As one can see in the comments added by
+>> this patch, locking is missing from the following two functions:
+>>   * Some of the ata_port_freeze() callers.
+>>   * nv_do_interrupt().
+> 
+> What do you mean with locking is missing ? Do you mean we have locking problems
+> and bugs ? Clarify please.
 
-What do you mean with locking is missing ? Do you mean we have locking problems
-and bugs ? Clarify please.
+Yes. It means that there is a call chain from the code where I wrote 
+that locking is missing to a lockdep_assert_held() statement for that
+particular synchronization object.
 
-I am not a big fan of all the __assume_ctx_lock() calls because I do not really
-understand them, especially together with the comments you have that do things like:
-
-+			/* Tell the compiler that link->ap == ap. */
-+			__assume_ctx_lock(&link->ap->host->eh_mutex);
-
-Form the name __assume_ctx_lock(), I do not see the relevance of the comment. My
-understanding is that __assume_ctx_lock() tells the compiler to assume that a
-particular lock is being held. But if that's the case, and the addition of these
-__assume_ctx_lock() are bogus, what do we endup checking here ?
-
-Back to my previous comment on patch 2, I would prefer, at least for now, a
-lighter version of this that adds more lockdep annotations, and simple/obvious
-static checks with __must_hold() annotations. Ideally, as suggested, a
-locked_must_hold() function doing both would be nice :)
-
-I am all for improving lock checking in the ata code. But We have been doing
-fine without it until now. So let's not take this too far from the start and
-improve annotations step by step.
-
--- 
-Damien Le Moal
-Western Digital Research
+Bart.
