@@ -1,81 +1,81 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67EEC3191D3
-	for <linux-ide@vger.kernel.org>; Thu, 28 May 2026 06:11:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F5B31F993
+	for <linux-ide@vger.kernel.org>; Thu, 28 May 2026 06:12:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779948711; cv=none; b=XNs3uCvXEjU71Xa9ib6bGMxzaxX8GOr3fZPYQdG24ntoR7LmnbtL73lrb3UJfH32SvHwrrak+WjdC3JmmE3lJFr+ICifYCrofK6rWU4WtCTdVV3ZLVcmGpBPefh50Wl0WvADSDsGJVKnyIrOFA0Tsh9vGUu1oecCmScoXiZ53Dw=
+	t=1779948756; cv=none; b=QYoB10BVMQ1gseDp8bIOgW2qaDM1fl0ers2i9GhmLqVlohbjn+AK3aHbUsLrI9pgI9jO1B1m/bwXddDLM9ODfeS9NUaOBmWmReocspqZZMbDJl8rDblwfvEECDjhjZPSDQA6HBUKRhzt5bZnQVBOlEwQXW42uXhp5cly6u1RmvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779948711; c=relaxed/simple;
-	bh=wIu3fD79Atza0+EJgYUwqS62FzN2FYHKmzCxoZ9twjw=;
+	s=arc-20240116; t=1779948756; c=relaxed/simple;
+	bh=Op3ZL/egZlKXRGi5MJu9DlMejaGvZGZqhdWzzpMmxF8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WBLrBfUUDEfZlWbT7b6vMh7DWSkLBD7K7OWYYc72Nf1cGszAeGcU7Eht+pfz526bUxkfzqMn+URC1A20MpZnfy+OFdV5D4aw+KeY0xC7QqbAy5wQjcPcoo88LYF7Wo7ksIFChlxoHP8Y4kt/UQmDkwVRbok33X1E+ylGhZ0mJtg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MoDM1W3P; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AfNTKcV4; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MoDM1W3P; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AfNTKcV4; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=N5MZTm6oIjKQyNW26iTWsV52I8P1JtBkbowisU9pvDvku8CCNgFaOlA4ntewUb7uuhuD+l3i+Ha59gPWw+YdBJI+MSq7qgTtF4TByD8xDndo5b31j71h+TyyRQq4H4ZAru+2Gnm1XZcARXD87J8nS8erK49sb3rCFzABHooRor0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=tkdhoaR4; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=r603KczN; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=RcwIdEhT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=hUAXGohq; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MoDM1W3P";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AfNTKcV4";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MoDM1W3P";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AfNTKcV4"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="tkdhoaR4";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="r603KczN";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="RcwIdEhT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="hUAXGohq"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 71026672AF;
-	Thu, 28 May 2026 06:11:48 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 6361D672AF;
+	Thu, 28 May 2026 06:12:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1779948708; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1779948753; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=l9XId4b5fyWOvY4FlSx0A9qipb4ndINLfk3HF3+XweI=;
-	b=MoDM1W3PoCnDoyTBC4wOalHDPpcvkl+eD0EjA1YvWwgdWh70NmTqFIp215ZMoq7aSGOmco
-	W6ASpUgJJ+ZktregB21P8f+jiC0Y6x5nQtzkjz5PZeLVNC25Elb1NhHsueK7PmcC2W4YRh
-	nKjm+UDIZA6H+k7EnUDNDAA/eIIQAZI=
+	bh=NfkkfZ2+oxss3J0ImiMltftDMhjYlTQOJcumc12gars=;
+	b=tkdhoaR43BfgpEbQyLJcjzxd+xzO2Yq5gZadJHpCmeaI2JjDSDc7UgrzF2PvorFHfSM47+
+	V/6IprfYH5fhWatCas8CCO2CtTnP/AJILXJWWN7h9BoGxypTpoAzfrvINetapbrQyuly9s
+	vEiGcCDUayNCEppR+fbOS/ykYoCJsxA=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1779948708;
+	s=susede2_ed25519; t=1779948753;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=l9XId4b5fyWOvY4FlSx0A9qipb4ndINLfk3HF3+XweI=;
-	b=AfNTKcV4Gg44AGPF9OGOXOflV5uAY4wW049wNZmVewmRYUn6BqmRnYgSDkLVIAZBNnQbu7
-	9a6EHt19e5b1oRBA==
+	bh=NfkkfZ2+oxss3J0ImiMltftDMhjYlTQOJcumc12gars=;
+	b=r603KczN/8pn7rrgGCVYr9YsXz6XeTawprDuCePEqyWnTUf9/3VUp2wj9evHYSHheRcMjT
+	1nwT/Wt0HB6NehCg==
 Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=MoDM1W3P;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=AfNTKcV4
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=RcwIdEhT;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=hUAXGohq
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1779948708; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1779948752; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=l9XId4b5fyWOvY4FlSx0A9qipb4ndINLfk3HF3+XweI=;
-	b=MoDM1W3PoCnDoyTBC4wOalHDPpcvkl+eD0EjA1YvWwgdWh70NmTqFIp215ZMoq7aSGOmco
-	W6ASpUgJJ+ZktregB21P8f+jiC0Y6x5nQtzkjz5PZeLVNC25Elb1NhHsueK7PmcC2W4YRh
-	nKjm+UDIZA6H+k7EnUDNDAA/eIIQAZI=
+	bh=NfkkfZ2+oxss3J0ImiMltftDMhjYlTQOJcumc12gars=;
+	b=RcwIdEhTGu1GvQ6NkKbSKMJq6ihwRLP6RpX2kw77D7m2Vn6piE9iikOD293lGpjq5XWZce
+	Nlm1kTxvMrFKa6xjcVRHv+h3IcYX2DmvkyCfv9a3OD8/FxMsBXcGFmfm0Mxwh8KIB8A8a5
+	exCRe7FdX1UNMXQyu5H9HztqFmf+rH0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1779948708;
+	s=susede2_ed25519; t=1779948752;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=l9XId4b5fyWOvY4FlSx0A9qipb4ndINLfk3HF3+XweI=;
-	b=AfNTKcV4Gg44AGPF9OGOXOflV5uAY4wW049wNZmVewmRYUn6BqmRnYgSDkLVIAZBNnQbu7
-	9a6EHt19e5b1oRBA==
+	bh=NfkkfZ2+oxss3J0ImiMltftDMhjYlTQOJcumc12gars=;
+	b=hUAXGohqGPvjjuEoDFootJwhAafdiuOWCx4FKL1YOLPMxVOvFk0Alm2oK3GrOCJAghYhCH
+	Eo5fxF1h4Puwf9Bg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3DE6C5AC33;
-	Thu, 28 May 2026 06:11:48 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2BD8A5AC35;
+	Thu, 28 May 2026 06:12:32 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id nJMQDaTcF2q8fwAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 28 May 2026 06:11:48 +0000
-Message-ID: <a2a226bb-2638-4e64-a1d7-7642367678ed@suse.de>
-Date: Thu, 28 May 2026 08:11:47 +0200
+	id M18pCdDcF2o3AQAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 28 May 2026 06:12:32 +0000
+Message-ID: <e8048c96-4205-4399-aef2-b0b15277a5b3@suse.de>
+Date: Thu, 28 May 2026 08:12:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -83,24 +83,20 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/9] ata: libata: Pass the ATA port argument directly
- to __ata_scsi_queuecmd()
-To: Bart Van Assche <bvanassche@acm.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Marco Elver <elver@google.com>
-References: <20260521173347.2079560-1-bvanassche@acm.org>
- <20260521173347.2079560-3-bvanassche@acm.org>
+Subject: Re: [PATCH v2] ata: ahci: use hweight_long() to count port_map bits
+To: kensanya@163.com, dlemoal@kernel.org, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ TanZheng <tanzheng@kylinos.cn>
+References: <20260528060050.743599-1-kensanya@163.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260521173347.2079560-3-bvanassche@acm.org>
+In-Reply-To: <20260528060050.743599-1-kensanya@163.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Rspamd-Queue-Id: 71026672AF
-X-Spam-Flag: NO
-X-Spam-Score: -4.51
 X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 6361D672AF
+X-Rspamd-Action: no action
 X-Spamd-Result: default: False [-4.51 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
@@ -109,31 +105,38 @@ X-Spamd-Result: default: False [-4.51 / 50.00];
 	MIME_GOOD(-0.10)[text/plain];
 	MX_GOOD(-0.01)[];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[163.com];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
 	TO_DN_SOME(0.00)[];
+	FREEMAIL_TO(0.00)[163.com,kernel.org];
 	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
+	RCPT_COUNT_FIVE(0.00)[6];
+	RCVD_TLS_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,kylinos.cn:email,suse.de:email,suse.de:dkim,suse.de:mid];
 	RCVD_COUNT_TWO(0.00)[2];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email,suse.de:mid];
 	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
 
-On 5/21/26 19:33, Bart Van Assche wrote:
-> Prepare for adding lock context annotations that refer to the ATA port
-> argument (ap). No functionality has been changed.
+On 5/28/26 08:00, kensanya@163.com wrote:
+> From: TanZheng <tanzheng@kylinos.cn>
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Replace the open loop used to calculate the number of set bits
+> in the port mapping with the `hweight_long()` function, which
+> simplifies the code without altering its functionality.
+> 
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Signed-off-by: TanZheng <tanzheng@kylinos.cn>
 > ---
->   drivers/ata/libata-sata.c | 2 +-
->   drivers/ata/libata-scsi.c | 6 +++---
->   drivers/ata/libata.h      | 3 ++-
->   3 files changed, 6 insertions(+), 5 deletions(-)
+> v2:
+> - Add the prefix "ata:" to the patch title
 > 
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
