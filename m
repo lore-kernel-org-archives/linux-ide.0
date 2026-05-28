@@ -1,566 +1,96 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414B03FB7C1
-	for <linux-ide@vger.kernel.org>; Thu, 28 May 2026 17:48:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8A203F7A83
+	for <linux-ide@vger.kernel.org>; Thu, 28 May 2026 17:51:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779990494; cv=none; b=gzPbtxUk8QUH4IzncxpbXtfs63LwVrWkIr8EetR+WlivQM31qsPXcDXWsSOPxPdYXfRuaFO1rOcx8mbyBKLVUFRyZBWobQJEu4nCOqgL51lhR1tjJffTWIZXDjk64iimITp5tvwAyH63JbmV3L3NXrDbSorECjXlx15uv9OxHDQ=
+	t=1779990678; cv=none; b=FddQ+RTM+X40Aofzt0iAyY1pAMXUN23ZK5TrqyeZZBQQtGi4n3utCEr8Npb/I8jnq8jdKyL0O/MVnsIm/+dvHLSal7ybaXqgh/sLV3j8vw0N+I/XUa4/DR1U9yz4kU1YcDMEGDK6oEcaaWfInSggBgN/SMN27NUWsDkMXdoFzVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779990494; c=relaxed/simple;
-	bh=BiB4PZl6szVoxkjC3sHqNWz2YfHLlEWlHGK/P5BveiA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Vwk0SdbSfk0EycDa/7MqW/tCl321LISuhfNHlIL1f66kzXvILJbuQ9xOvp9SrbHzo+tLHJVwrghRF8Ta6v8RWsdShOwMU051IjuFtXFv+0JApkmKv7IfDFeRs85+rOV29/JS9jKyt/q4FK1GReiOBuGBeFxMj1WuEUX2IP2xT88=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=epzjtxRv; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1779990678; c=relaxed/simple;
+	bh=EZ0i7j/DuXZP1BQixSeLNcZ9u/pDFqNWbDlygTWL+qo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=OKwe55NuL+9W76Hsn2oa0yRtW7lBvPgnESuWQ7Dq8tbKBqOGY4+VaOQA5MdMXNeY0yAHSFYa4cEKvSH10QwkE/W6D97jmClj2bDwhOgIuoQTp5HfMxgIhroDyx/Qey1gi7ovVVQQIuGla1lfrnEJuxLi2MtcyE1fXei6amVDUyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k98qgAgl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="epzjtxRv"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gRDVG4Xwjzlfl8H;
-	Thu, 28 May 2026 17:48:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1779990462; x=1782582463; bh=I+FMNxYmUEjCTzIvr+TKbWPlLUK1FCnLpMH
-	/RmVx6kQ=; b=epzjtxRve52SGzbHreHdcD95uS1cZPWBpm6PxyRVy5Kbi1DnZsR
-	ThFaQPQSMLPYB46ruRHl2+4FwF6HKqD5AF9mBMzlks7CbN/xOPKosiGwsrM6pJyh
-	Pu02IulbCjWxJ5uCVDxbzKSFLwJUZDtzKvnE9JY1mBoAVwPRRTGQCtp31T1W8ZiB
-	fSM+QeJqcqy/i0962qSQwKDsiHq8tNM+Rzf9f99r/lt/jWGR8pDovCtuhP9tqXFc
-	f3tfrpxR3q3rIV7Bj78kM1T/Y1yjKN54Xrx6iTr1kvHEQJeoz0TM3fycj4qq5NKi
-	puU9uYj1abHSyHoDODcMjrBpJQTMs/dhj0A==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ufuSaQU0fxr5; Thu, 28 May 2026 17:47:42 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gRDTm17T6zlh1VF;
-	Thu, 28 May 2026 17:47:39 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Marco Elver <elver@google.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Hannes Reinecke <hare@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Viresh Kumar <vireshk@kernel.org>,
-	Mikael Pettersson <mikpelinux@gmail.com>,
-	Nathan Chancellor <nathan@kernel.org>
-Subject: [PATCH v4] ata: libata: Document when host->eh_mutex should be held
-Date: Thu, 28 May 2026 10:47:26 -0700
-Message-ID: <230fb523796cd9c1643c5673bddb45fc48eb9514.1779990228.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.54.0.823.g6e5bcc1fc9-goog
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k98qgAgl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4408A1F000E9;
+	Thu, 28 May 2026 17:51:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779990676;
+	bh=qm/McJiuZB8zTwZAJRTFLezCbhkVPr2zJx62rVvKJ/A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=k98qgAglmVJQE1r6SUApDPiKLi0tSJwkcaBREnbXt5lznoF12gnOtYt4pgeznu3cU
+	 jagaNT/bywSe1nR5slVep+g0MpwmXM5Gp66o3QO9sjSG/LrA1Y4HC/CgWVYTgQRfoX
+	 /+2X8YcpGxWk7Om3TW7Eo2cgjohz2GXdvE2w8GmPaNIPkwLbibIEApu3klXVfDBVLI
+	 QgeMSXGgWSPwpWjegjxv2wwQBRAZjX/926BBY6bfgt/otS5Cwq/parHwKzQwLB6tjA
+	 bvjfusnhdxthEmCiZJrvwPhuL2SI/S7461291LReJZXRg3hxsgQHLKpCPvhqMHj4zo
+	 bBaHfLrnBx0JQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/3] ata: libata-scsi: Remove lockdep_assert_held() in
+ ata_scsi_translate()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Niklas Cassel" <cassel@kernel.org>
+Cc: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260528172855.703631-6-cassel@kernel.org>
+References: <20260528172855.703631-6-cassel@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 28 May 2026 17:51:15 +0000
+Message-Id: <20260528175116.4408A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 
-Annotate the following functions with __must_hold(&host->eh_mutex):
- * All ata_port_operations.error_handler() implementations.
- * ata_eh_reset() and ata_eh_recover() because these functions call
-   ata_eh_release() and ata_eh_acquire().
- * All callers of ata_eh_reset() and ata_eh_recover().
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] Removing the runtime `lockdep_assert_held()` assertion weakens d=
+ynamic lock verification in favor of static analysis.
+--
 
-Enable Clang's context analysis. This will cause the build to fail if
-e.g. a locking bug would be introduced in an error path. This patch
-should not affect the generated assembler code.
+commit 5b34afedb186c216f09eff8d76c27e0b405885ea
+Author: Niklas Cassel <cassel@kernel.org>
 
-Note: although the Linux kernel documentation specifies 22 as minimal
-version for Clang for context analysis support, annotating function
-pointers is a Clang 23 feature. As one can see here, a patch has been
-queued that fixes the kernel documentation:
-https://lore.kernel.org/all/177926568868.711.3058599932884307249.tip-bot2=
-@tip-bot2/
+ata: libata-scsi: Remove lockdep_assert_held() in ata_scsi_translate()
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
+This commit removes the lockdep_assert_held() check from
+ata_scsi_translate(), stating that it suppresses context analysis by
+indirectly calling __assume_ctx_lock(). The commit message notes this
+will be replaced with context analysis in a follow-up commit.
 
-Changes compared to v3:
- - Removed two source code comments.
- - Annotated ata_dummy_error_handler().
- - Addressed Sashiko's that the address of a synchronization object shoul=
-d be
-   passed to __acquires() and __releases().
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index f44612e269a4d..c31267091662a 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1852,8 +1852,6 @@ static int ata_scsi_translate(struct ata_device *de=
+v, struct scsi_cmnd *cmd,
+>  	struct ata_port *ap =3D dev->link->ap;
+>  	struct ata_queued_cmd *qc;
+> =20
+> -	lockdep_assert_held(ap->lock);
+> -
 
-Changes compared to v2:
- - Instead of annotating only function declarations, annotate both functi=
-on
-   declarations and function definitions.
- - Changed __assume_ctx_lock() into lockdep_assert_held().
- - Left out the host lock changes because there is no agreement about how=
- to
-   annotate functions that expect that the host lock is held.
+[Severity: Medium]
+Is it safe to completely remove this runtime assertion instead of combining
+it with the static analysis annotation?
 
-Changes compared to v1:
- - Expanded a single patch into a series of nine patches.
- - Included a bug fix for ata_exec_internal() and several refactoring pat=
-ches.
- - Added a patch for annotating the code that uses the host lock.
+While __assume_ctx_lock() tells the compiler the lock is assumed held inside
+the function, the standard practice to statically enforce that the caller
+holds the lock is to add __must_hold(ap->lock) to the function signature
+while retaining lockdep_assert_held() in the body. Retaining both provides
+valuable run-time validation alongside compile-time checks.
 
- drivers/ata/Makefile         |  2 ++
- drivers/ata/ahci.h           |  3 ++-
- drivers/ata/ahci_imx.c       |  1 +
- drivers/ata/libahci.c        |  1 +
- drivers/ata/libata-core.c    |  2 ++
- drivers/ata/libata-eh.c      |  7 +++++++
- drivers/ata/libata-pmp.c     |  5 +++++
- drivers/ata/libata-sff.c     |  2 ++
- drivers/ata/libata.h         | 12 ++++++++----
- drivers/ata/pata_arasan_cf.c |  1 +
- drivers/ata/sata_dwc_460ex.c |  1 +
- drivers/ata/sata_fsl.c       |  1 +
- drivers/ata/sata_inic162x.c  |  1 +
- drivers/ata/sata_mv.c        |  1 +
- drivers/ata/sata_nv.c        |  2 ++
- drivers/ata/sata_promise.c   |  1 +
- drivers/ata/sata_qstor.c     |  1 +
- drivers/ata/sata_sil24.c     |  1 +
- drivers/ata/sata_sx4.c       |  1 +
- drivers/ata/sata_via.c       |  1 +
- include/linux/libata.h       | 15 ++++++++++-----
- 21 files changed, 52 insertions(+), 10 deletions(-)
+Additionally, does removing this check here and introducing the static cont=
+ext
+analysis in a follow-up commit temporarily leave this function without any
+locking verification during intermediate bisect steps?
 
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 20e6645ab737..b96025abd45e 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -1,5 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
-=20
-+CONTEXT_ANALYSIS :=3D y
-+
- obj-$(CONFIG_ATA)		+=3D libata.o
-=20
- # non-SFF interface
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 9e8b6319025c..b57cca352faa 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -448,7 +448,8 @@ void ahci_set_em_messages(struct ahci_host_priv *hpri=
-v,
- int ahci_reset_em(struct ata_host *host);
- void ahci_print_info(struct ata_host *host, const char *scc_s);
- int ahci_host_activate(struct ata_host *host, const struct scsi_host_tem=
-plate *sht);
--void ahci_error_handler(struct ata_port *ap);
-+void ahci_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex);
- u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked);
-=20
- static inline void __iomem *__ahci_port_base(struct ahci_host_priv *hpri=
-v,
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 3d26595524d3..6aaa18e29abc 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -598,6 +598,7 @@ static void imx_sata_disable(struct ahci_host_priv *h=
-priv)
- }
-=20
- static void ahci_imx_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	u32 reg_val;
- 	struct ata_device *dev;
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index e0af4b5716b3..6d72eb017b49 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2208,6 +2208,7 @@ static void ahci_thaw(struct ata_port *ap)
- }
-=20
- void ahci_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct ahci_host_priv *hpriv =3D ap->host->private_data;
-=20
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3d25dec6ac6c..e9ebcfe20fc4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6832,6 +6832,7 @@ EXPORT_SYMBOL_GPL(ata_ratelimit);
-  *	Might sleep.
-  */
- void ata_msleep(struct ata_port *ap, unsigned int msecs)
-+	__context_unsafe(conditional locking)
- {
- 	bool owns_eh =3D ap && ap->host->eh_owner =3D=3D current;
-=20
-@@ -6906,6 +6907,7 @@ static unsigned int ata_dummy_qc_issue(struct ata_q=
-ueued_cmd *qc)
- }
-=20
- static void ata_dummy_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	/* truly dummy */
- }
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 6cb79a09423d..8b5fd2a48660 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -469,6 +469,7 @@ static void ata_eh_clear_action(struct ata_link *link=
-, struct ata_device *dev,
-  *	EH context.
-  */
- void ata_eh_acquire(struct ata_port *ap)
-+	__acquires(&ap->host->eh_mutex)
- {
- 	mutex_lock(&ap->host->eh_mutex);
- 	WARN_ON_ONCE(ap->host->eh_owner);
-@@ -486,6 +487,7 @@ void ata_eh_acquire(struct ata_port *ap)
-  *	EH context.
-  */
- void ata_eh_release(struct ata_port *ap)
-+	__releases(&ap->host->eh_mutex)
- {
- 	WARN_ON_ONCE(ap->host->eh_owner !=3D current);
- 	ap->host->eh_owner =3D NULL;
-@@ -2833,6 +2835,7 @@ static bool ata_eh_followup_srst_needed(struct ata_=
-link *link, int rc)
-=20
- int ata_eh_reset(struct ata_link *link, int classify,
- 		 struct ata_reset_operations *reset_ops)
-+	__must_hold(&link->ap->host->eh_mutex)
- {
- 	struct ata_port *ap =3D link->ap;
- 	struct ata_link *slave =3D ap->slave_link;
-@@ -3816,6 +3819,7 @@ static int ata_eh_handle_dev_fail(struct ata_device=
- *dev, int err)
-  */
- int ata_eh_recover(struct ata_port *ap, struct ata_reset_operations *res=
-et_ops,
- 		   struct ata_link **r_failed_link)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct ata_link *link;
- 	struct ata_device *dev;
-@@ -3879,6 +3883,8 @@ int ata_eh_recover(struct ata_port *ap, struct ata_=
-reset_operations *reset_ops,
- 	ata_for_each_link(link, ap, EDGE) {
- 		struct ata_eh_context *ehc =3D &link->eh_context;
-=20
-+		lockdep_assert_held(&link->ap->host->eh_mutex);
-+
- 		if (!(ehc->i.action & ATA_EH_RESET))
- 			continue;
-=20
-@@ -4112,6 +4118,7 @@ void ata_eh_finish(struct ata_port *ap)
-  *	Kernel thread context (may sleep).
-  */
- void ata_std_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct ata_reset_operations *reset_ops =3D &ap->ops->reset;
- 	struct ata_link *link =3D &ap->link;
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index e3adc008fed1..bf40633f8fb2 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -742,6 +742,7 @@ static int sata_pmp_revalidate_quick(struct ata_devic=
-e *dev)
-  */
- static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 				   struct ata_reset_operations *reset_ops)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct ata_link *link =3D &ap->link;
- 	struct ata_eh_context *ehc =3D &link->eh_context;
-@@ -750,6 +751,8 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *a=
-p,
- 	int detach =3D 0, rc =3D 0;
- 	int reval_failed =3D 0;
-=20
-+	lockdep_assert_held(&ap->link.ap->host->eh_mutex);
-+
- 	if (dev->flags & ATA_DFLAG_DETACH) {
- 		detach =3D 1;
- 		rc =3D -ENODEV;
-@@ -907,6 +910,7 @@ static int sata_pmp_handle_link_fail(struct ata_link =
-*link, int *link_tries)
-  *	0 on success, -errno on failure.
-  */
- static int sata_pmp_eh_recover(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct ata_port_operations *ops =3D ap->ops;
- 	int pmp_tries, link_tries[SATA_PMP_MAX_PORTS];
-@@ -1084,6 +1088,7 @@ static int sata_pmp_eh_recover(struct ata_port *ap)
-  *	Kernel thread context (may sleep).
-  */
- void sata_pmp_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	ata_eh_autopsy(ap);
- 	ata_eh_report(ap);
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 785b6e371abf..734e7c88439a 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2053,6 +2053,7 @@ EXPORT_SYMBOL_GPL(ata_sff_drain_fifo);
-  *	Kernel thread context (may sleep)
-  */
- void ata_sff_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct ata_queued_cmd *qc;
- 	unsigned long flags;
-@@ -2769,6 +2770,7 @@ EXPORT_SYMBOL_GPL(ata_bmdma_interrupt);
-  *	Kernel thread context (may sleep)
-  */
- void ata_bmdma_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct ata_queued_cmd *qc;
- 	unsigned long flags;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index b5423b6e97de..501a7362602a 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -173,8 +173,10 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *a=
-p);
- /* libata-eh.c */
- extern unsigned int ata_internal_cmd_timeout(struct ata_device *dev, u8 =
-cmd);
- extern void ata_internal_cmd_timed_out(struct ata_device *dev, u8 cmd);
--extern void ata_eh_acquire(struct ata_port *ap);
--extern void ata_eh_release(struct ata_port *ap);
-+extern void ata_eh_acquire(struct ata_port *ap)
-+	__acquires(&ap->host->eh_mutex);
-+extern void ata_eh_release(struct ata_port *ap)
-+	__releases(&ap->host->eh_mutex);
- extern void ata_scsi_error(struct Scsi_Host *host);
- extern void ata_eh_fastdrain_timerfn(struct timer_list *t);
- extern void ata_qc_schedule_eh(struct ata_queued_cmd *qc);
-@@ -188,10 +190,12 @@ extern void ata_eh_autopsy(struct ata_port *ap);
- const char *ata_get_cmd_name(u8 command);
- extern void ata_eh_report(struct ata_port *ap);
- extern int ata_eh_reset(struct ata_link *link, int classify,
--			struct ata_reset_operations *reset_ops);
-+			struct ata_reset_operations *reset_ops)
-+	__must_hold(&link->ap->host->eh_mutex);
- extern int ata_eh_recover(struct ata_port *ap,
- 			  struct ata_reset_operations *reset_ops,
--			  struct ata_link **r_failed_disk);
-+			  struct ata_link **r_failed_disk)
-+	__must_hold(&ap->host->eh_mutex);
- extern void ata_eh_finish(struct ata_port *ap);
- extern int ata_ering_map(struct ata_ering *ering,
- 			 int (*map_fn)(struct ata_ering_entry *, void *),
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index a77fefd320c2..e05a4847e037 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -658,6 +658,7 @@ static void arasan_cf_freeze(struct ata_port *ap)
- }
-=20
- static void arasan_cf_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct arasan_cf_dev *acdev =3D ap->host->private_data;
-=20
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 64cb544903d8..4fc22ce4bd9a 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -1041,6 +1041,7 @@ static unsigned int sata_dwc_qc_issue(struct ata_qu=
-eued_cmd *qc)
- }
-=20
- static void sata_dwc_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	ata_sff_error_handler(ap);
- }
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index be829fcc584d..70b210afd291 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1035,6 +1035,7 @@ static int sata_fsl_softreset(struct ata_link *link=
-, unsigned int *class,
- }
-=20
- static void sata_fsl_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	sata_pmp_error_handler(ap);
- }
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 46a8c20daf18..065408975f5b 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -660,6 +660,7 @@ static int inic_hardreset(struct ata_link *link, unsi=
-gned int *class,
- }
-=20
- static void inic_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	void __iomem *port_base =3D inic_port_base(ap);
-=20
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index ffb396f61731..f6942fd80bae 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2398,6 +2398,7 @@ static struct ata_queued_cmd *mv_get_active_qc(stru=
-ct ata_port *ap)
- }
-=20
- static void mv_pmp_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	unsigned int pmp, pmp_map;
- 	struct mv_port_priv *pp =3D ap->private_data;
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 841e7de2bba6..19b927065868 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -1626,6 +1626,7 @@ static void nv_mcp55_thaw(struct ata_port *ap)
- }
-=20
- static void nv_adma_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct nv_adma_port_priv *pp =3D ap->private_data;
- 	if (!(pp->flags & NV_ADMA_PORT_REGISTER_MODE)) {
-@@ -1795,6 +1796,7 @@ static void nv_swncq_ncq_stop(struct ata_port *ap)
- }
-=20
- static void nv_swncq_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct ata_eh_context *ehc =3D &ap->link.eh_context;
-=20
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index 2a005aede123..c5fad448bafc 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -816,6 +816,7 @@ static int pdc_sata_hardreset(struct ata_link *link, =
-unsigned int *class,
- }
-=20
- static void pdc_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	if (!ata_port_is_frozen(ap))
- 		pdc_reset_port(ap);
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index cfb9b5b61cd7..1add7a7d5ff6 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -220,6 +220,7 @@ static int qs_scr_read(struct ata_link *link, unsigne=
-d int sc_reg, u32 *val)
- }
-=20
- static void qs_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	qs_enter_reg_mode(ap);
- 	ata_sff_error_handler(ap);
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index d642ece9f07a..89a10704e98e 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -1167,6 +1167,7 @@ static irqreturn_t sil24_interrupt(int irq, void *d=
-ev_instance)
- }
-=20
- static void sil24_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct sil24_port_priv *pp =3D ap->private_data;
-=20
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index 0986ebd1eb4e..227dc1d4e85b 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -853,6 +853,7 @@ static int pdc_softreset(struct ata_link *link, unsig=
-ned int *class,
- }
-=20
- static void pdc_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	if (!ata_port_is_frozen(ap))
- 		pdc_reset_port(ap);
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 68e9003ec2d4..b672a1e05867 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -573,6 +573,7 @@ static irqreturn_t vt642x_interrupt(int irq, void *de=
-v_instance)
- }
-=20
- static void vt6421_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex)
- {
- 	struct svia_priv *hpriv =3D ap->host->private_data;
- 	struct pci_dev *pdev =3D to_pci_dev(ap->host->dev);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 5c085ef4eda7..5f6bbe5d504f 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -983,7 +983,8 @@ struct ata_port_operations {
- 	void (*thaw)(struct ata_port *ap);
- 	struct ata_reset_operations reset;
- 	struct ata_reset_operations pmp_reset;
--	void (*error_handler)(struct ata_port *ap);
-+	void (*error_handler)(struct ata_port *ap)
-+		__must_hold(&ap->host->eh_mutex);
- 	void (*lost_interrupt)(struct ata_port *ap);
- 	void (*post_internal_cmd)(struct ata_queued_cmd *qc);
- 	void (*sched_eh)(struct ata_port *ap);
-@@ -1418,7 +1419,8 @@ extern void ata_eh_thaw_port(struct ata_port *ap);
- extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
- extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
-=20
--extern void ata_std_error_handler(struct ata_port *ap);
-+extern void ata_std_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex);
- extern void ata_std_sched_eh(struct ata_port *ap);
- extern void ata_std_end_eh(struct ata_port *ap);
- extern int ata_link_nr_enabled(struct ata_link *link);
-@@ -1998,7 +2000,8 @@ extern void ata_timing_merge(const struct ata_timin=
-g *,
- extern const struct ata_port_operations sata_pmp_port_ops;
-=20
- extern int sata_pmp_qc_defer_cmd_switch(struct ata_queued_cmd *qc);
--extern void sata_pmp_error_handler(struct ata_port *ap);
-+extern void sata_pmp_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex);
-=20
- #else /* CONFIG_SATA_PMP */
-=20
-@@ -2062,7 +2065,8 @@ extern int sata_sff_hardreset(struct ata_link *link=
-, unsigned int *class,
- 			       unsigned long deadline);
- extern void ata_sff_postreset(struct ata_link *link, unsigned int *class=
-es);
- extern void ata_sff_drain_fifo(struct ata_queued_cmd *qc);
--extern void ata_sff_error_handler(struct ata_port *ap);
-+extern void ata_sff_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex);
- extern void ata_sff_std_ports(struct ata_ioports *ioaddr);
- #ifdef CONFIG_PCI
- extern int ata_pci_sff_init_host(struct ata_host *host);
-@@ -2092,7 +2096,8 @@ extern enum ata_completion_errors ata_bmdma_dumb_qc=
-_prep(struct ata_queued_cmd *
- extern unsigned int ata_bmdma_port_intr(struct ata_port *ap,
- 				      struct ata_queued_cmd *qc);
- extern irqreturn_t ata_bmdma_interrupt(int irq, void *dev_instance);
--extern void ata_bmdma_error_handler(struct ata_port *ap);
-+extern void ata_bmdma_error_handler(struct ata_port *ap)
-+	__must_hold(&ap->host->eh_mutex);
- extern void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc);
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
- extern void ata_bmdma_setup(struct ata_queued_cmd *qc);
+>  	/*
+>  	 * ata_scsi_qc_new() calls scsi_done(cmd) in case of failure. So we
+>  	 * have nothing further to do when allocating a qc fails.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260528172855.7036=
+31-5-cassel@kernel.org?part=3D1
