@@ -1,71 +1,86 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC71D5477E;
-	Thu, 28 May 2026 05:57:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95A46238150;
+	Thu, 28 May 2026 06:01:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779947883; cv=none; b=m01qGzacpRbbcdQal5uZ+aa300qljOqfGxWsuBLU8fSM2f80S06aNr0FMgCkRp7QFVzfIs/CdtFExuiIerwBrNAyK0ArpFnFV9HPhdHjLPDJT9obmLfFaTj35ajcRjyFJXxkIWhJoZxlj+Ibq0eOVPtj7FZaMN+hHBLkIL4R9lA=
+	t=1779948076; cv=none; b=M6zMD9kvUcrv6ZnbIHM1IVpSQJiJRVgnKMik6/taJtUKYoNIh+0MJ/fwAlCCpuUF67Cv93BZziQwF2xYjk8tsMDN5JKLUWgOJ3YOOY6cXHq8DSwutqKk0R4Orb3Awcnvx7+VlB1K/3a1NPAoccaV5FCW3SeADCxGqiMgJIe9Y00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779947883; c=relaxed/simple;
-	bh=mA/6LUsDIkO5ykclnr9YeEcCnz77qYZIakSjVTfRcHE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=q0jISdqi7EBgdsq27wBGOi22vA5xPdCEQi3RXJbL/N1k/og53HwRPHR1E+Bm20RKSdkzBC1lmB25EePI1pLbcAfOJLriI1Zjxhk9up6mY//Iw5t+yDV0Thp5MW3vVmIbHBM84lhl5MQOVnoxkb0IbxmbDjLyt+ZIFaOuzDZyCS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VW7ATB3m; arc=none smtp.client-ip=220.197.31.5
+	s=arc-20240116; t=1779948076; c=relaxed/simple;
+	bh=6ZdYvGGo7dkpXJexiPRObrVxRoNaV6NkFEYvUj6oACw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=eQKXUPQHVklduT4UhSqVNtSahcjV8kX9YVOvad7W0wCkodbtOn4xM+64J/j+l5OhPvtIUZfzb4sJwdoCr+pOGq6CEiFUfTZ7219qeH4v5HzuEHWm5aGDLpsGZdfmcIqyhb8x96wfBh5y4UxAKH0Fwwj8Ok1cnEWPW8hi1kyT1sk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=EFJZtn0e; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VW7ATB3m"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="EFJZtn0e"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=mA/6LUsDIkO5ykclnr9YeEcCnz77qYZIakSjVTfRcHE=; b=V
-	W7ATB3mD6T0rOhUI63P6YcAy5yfBv8OM/7smHqEBnGiMNmIVYgT2em59GxIqMIpl
-	rA/PSATqtiqwyrp6ezjp7ts/J8JWp9rQPGDPnq/bZfflvHjiSwt3I8IvXY1G1rE0
-	SHfw1RRCgsV1UsoFkpiFheE2CzuvRhu4Ws3tO0Ai7k=
-Received: from kensanya$163.com ( [116.128.244.169] ) by
- ajax-webmail-wmsvr-40-112 (Coremail) ; Thu, 28 May 2026 13:57:39 +0800
- (CST)
-Date: Thu, 28 May 2026 13:57:39 +0800 (CST)
-From: kensanya  <kensanya@163.com>
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: cassel@kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, TanZheng <tanzheng@kylinos.cn>
-Subject: Re:Re: [PATCH] ahci: use hweight_long() to count port_map bits
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20260403(27802f6d) Copyright (c) 2002-2026 www.mailtech.cn 163com
-In-Reply-To: <ca92885c-0a61-4574-9136-bed6596dd72a@kernel.org>
-References: <20260527091729.266582-1-kensanya@163.com>
- <cd21e56b-04de-4b29-bc4a-d936ac8d29bb@kernel.org>
- <ca92885c-0a61-4574-9136-bed6596dd72a@kernel.org>
-X-NTES-SC: AL_Qu2cC/WfuEAu7yCaZukcnkcTg+k8WMW1ufsg2Ydec/gEqgToxyEnckByMFHp/sm2FjGVtSqPcz1W89RYd4VmWLNnBWPor0NWE3sOlhGh1g==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Kn
+	d9ItpHPFwk6gNUVHcf+8PWYR3N2Reae1ckHzH/Ajo=; b=EFJZtn0e+5JN8VXyCJ
+	9T8FjdEEYpOOKhLhv9dDq5l6AKZInkvEUzhEEEOBdw3DixSDzc8RPc1uC3AZxo9B
+	lFxwMUK38+55p5n7TkF95u7tF1/Pm9VBKYq2WwZ3RocUSDqPmhW9qr3hAediCNV7
+	qrIZTA7hHEjUzVdq86Y2w6BRw=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgD3n0EV2hdqcrSPGg--.35007S2;
+	Thu, 28 May 2026 14:00:53 +0800 (CST)
+From: kensanya@163.com
+To: dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	TanZheng <tanzheng@kylinos.cn>
+Subject: [PATCH v2] ata: ahci: use hweight_long() to count port_map bits
+Date: Thu, 28 May 2026 14:00:50 +0800
+Message-Id: <20260528060050.743599-1-kensanya@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <707006bc.4805.19e6d28ec5b.Coremail.kensanya@163.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:cCgvCgD3B2pU2Rdq2l2tAA--.10567W
-X-CM-SenderInfo: 5nhq2txq1dqiywtou0bp/xtbC6RTrx2oX2VRHdAAA3S
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PSgvCgD3n0EV2hdqcrSPGg--.35007S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrZr4fXw47XrWUCw4xCr15Jwb_yoWDuFc_CF
+	47Xan7W345Can3tw1IkF47Cr1jk34rurn8ZFsYkrZ3Gry3X3s8X3Z7Z3ZFqa1Yv3ZYvFn5
+	AFn8J3yayr48KjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUnP5r7UUUUU==
+X-CM-SenderInfo: 5nhq2txq1dqiywtou0bp/xtbC6RUc92oX2hVcUAAA3p
 
-CgoKCgoKCgoKCgoKCgoKCgpBdCAyMDI2LTA1LTI4IDEzOjI3OjE1LCAiRGFtaWVuIExlIE1vYWwi
-IDxkbGVtb2FsQGtlcm5lbC5vcmc+IHdyb3RlOgo+T24gNS8yOC8yNiAwMzoxOCwgRGFtaWVuIExl
-IE1vYWwgd3JvdGU6Cj4+IE9uIDIwMjYvMDUvMjcgMTg6MTcsIGtlbnNhbnlhQDE2My5jb20gd3Jv
-dGU6Cj4+PiBGcm9tOiBUYW5aaGVuZyA8dGFuemhlbmdAa3lsaW5vcy5jbj4KPj4+Cj4+PiBSZXBs
-YWNlIHRoZSBvcGVuIGxvb3AgdXNlZCB0byBjYWxjdWxhdGUgdGhlIG51bWJlciBvZiBzZXQgYml0
-cwo+Pj4gaW4gdGhlIHBvcnQgbWFwcGluZyB3aXRoIHRoZSBgaHdlaWdodF9sb25nKClgIGZ1bmN0
-aW9uLCB3aGljaAo+Pj4gc2ltcGxpZmllcyB0aGUgY29kZSB3aXRob3V0IGFsdGVyaW5nIGl0cyBm
-dW5jdGlvbmFsaXR5Lgo+Pj4KPj4+IFNpZ25lZC1vZmYtYnk6IFRhblpoZW5nIDx0YW56aGVuZ0Br
-eWxpbm9zLmNuPgo+PiAKPj4gVGhpcyBsb29rcyBnb29kIHRvIG1lLiBCdXQgYXMgTmlrbGFzIGNv
-bW1lbnRlZCwgaWYgdGhpcyBuZWVkcyBhIFN1Z2dlc3RlZC1ieQo+PiB0YWcsIHBsZWFzZSBhZGQg
-aXQuCj4+IAo+PiBSZXZpZXdlZC1ieTogRGFtaWVuIExlIE1vYWwgPGRsZW1vYWxAa2VybmVsLm9y
-Zz4KPgo+Tm90ZTogdGhlIHBhdGNoIHRpdGxlIHNob3VsZCBiZToKPgo+YXRhOiBsaWJhaGNpOiB1
-c2UgaHdlaWdodF9sb25nKCkgdG8gY291bnQgcG9ydF9tYXAgYml0cwo+Cj5NYXliZSBOaWtsYXMg
-Y2FuIGZpeCB0aGlzIHdoZW4gYXBwbHlpbmcuCj4KPgo+LS0gCj5EYW1pZW4gTGUgTW9hbAo+V2Vz
-dGVybiBEaWdpdGFsIFJlc2VhcmNoCgpIaQoKSSB3aWxsIG1vZGlmeSB0aGUgcGF0Y2ggdGl0bGUg
-YW5kIHJlc2VuZCB0aGUgcGF0Y2guCgpCc2V0IHJlZ2FyZHMsClRhblpoZW5nCgo=
+From: TanZheng <tanzheng@kylinos.cn>
+
+Replace the open loop used to calculate the number of set bits
+in the port mapping with the `hweight_long()` function, which
+simplifies the code without altering its functionality.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: TanZheng <tanzheng@kylinos.cn>
+---
+v2:
+- Add the prefix "ata:" to the patch title
+
+---
+ drivers/ata/libahci.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index c79abdfcd7a9..15d44266c9df 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -552,11 +552,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 
+ 	/* cross check port_map and cap.n_ports */
+ 	if (port_map) {
+-		int map_ports = 0;
+-
+-		for (i = 0; i < AHCI_MAX_PORTS; i++)
+-			if (port_map & (1 << i))
+-				map_ports++;
++		int map_ports = hweight_long(port_map);
+ 
+ 		/* If PI has more ports than n_ports, whine, clear
+ 		 * port_map and let it be generated from n_ports.
+-- 
+2.25.1
+
