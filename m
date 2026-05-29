@@ -1,89 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B26AA2877DA
-	for <linux-ide@vger.kernel.org>; Fri, 29 May 2026 06:42:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65ED73612F8
+	for <linux-ide@vger.kernel.org>; Fri, 29 May 2026 18:03:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780036954; cv=none; b=tgczFleeBv/XhTveCTAJIshuh/BRTa1oVW9Dqmyijc5lM2T2ExkKOaLJaZbiXQm2RUvONR3VlKDjknqFtstd2buJ7aI+FOJdA0OPn59MbaBJbyhdxzHGHeOHZz6ZLQPEdSoGnlNhyIJ+lSFlYtu/tfsOq2OGu/HixpB/pKEegzM=
+	t=1780077809; cv=none; b=iz/i4lDJVTiaj/DN0q4wz69KgodvgNzqEm/iW259HdL9eeuF3ZSVDU4G17v8nqWlb3Zkrqzf0ImvMSf4C3tEPbk0cbrXn44r8Bzhn4wFCTf+1n5h2Z6dHvHmY+7ESexCDyhoxNtwh3ra7ah1yxlH/qHq9Y6lw9EDiZrv19nTJv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780036954; c=relaxed/simple;
-	bh=k03ohX/mREfgW1MTNwquucjbu4RJDQL4TjyG84lcJC0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=symGe1C87tDoZiu3DKmZGGVQBSrqMC5/IVEqe9fRsApiIRP/7e/REnNb/UtTdo/0fXliZPi9dLveTVSXE9mapIAx9YiMZB8fdgOcwNQjekOnpEmR9hvzuI7M5F2w9DitV4dsBvH24yYRve0AVDsdgxBxfkCF4rRSFpX/t1X8gJc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Of1iBgQo; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780077809; c=relaxed/simple;
+	bh=zkWN7XO+2xNFUxdPKmMKTUacMt1mZ5vdiBlqZWteu8E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=B9bos7A76zWEnenEsbLZeJK1zvzWAzYKMBCHBonYoKUaKIftqBJ2UIx9xPafeqARpoe9o/C9mFdH5cKCxthmSlsaaOhfFwcz97pz03+PR9jgd0Nj18MdaHRkgETXpbAEaEDtzbpWYcn38eZaaqCNZPOb6ujRYuY/mOspj7v26y4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=us4TjhUk; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Of1iBgQo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE6311F00898;
-	Fri, 29 May 2026 06:42:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780036953;
-	bh=OsAlCgAYv0EwyfSG+efQ38vrHtqnMug+/SzXmJcaAC0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Of1iBgQotdy6qP+U+JRl36bISe9EUURZm9KYKsxsZKSA+zhKJcb07m4Fd8PnJJc2G
-	 VTOcxJghrv1emzgG2oipg9khI/EHiRExiJsEhBfYTgyd8mEwkYILewm/PmWrAR+Bzi
-	 RRlHGUVVL6WPsfPsc9Y3UgVEShcBa8YpSv7tg3ulbXwShBf7Qcp9kVPRqB6EAEslWL
-	 JZw5svttnuU+NQyKH5XP+KK0RrH7msXfSYZg46p0LcCoD3HeJJkV4EAntfn9PX+9zv
-	 Y5aK1p8MXCVl8yWg4s6sAtO/89Gjc3JI/U00ZnpjaNuRUl6kdYfVkMDDZoVf8FsrsV
-	 yldiTO1KT8h2w==
-Message-ID: <07a727ab-7f0a-4574-8cac-a9e876b1e6be@kernel.org>
-Date: Fri, 29 May 2026 15:42:31 +0900
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="us4TjhUk"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gRrnW6zt9zlgy1t;
+	Fri, 29 May 2026 18:03:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1780077803; x=1782669804; bh=xDp89UkCRihoOkghaR/m8Ve7WWalw5MoHX5
+	FggSkVFg=; b=us4TjhUk8D+r4KtycRjrNFR3T5bNFnCLIn5ZlR0KuFUru2wiAPP
+	SQz4CaxHTRbIYteCpS6kMLIXKWWbbOMgi2TnELUp4GA/spzqe38TGeLofPD2+Ex4
+	qitZgaUOIPEFn9TINSEE2qAvbhmSm4mCdT2OkPQKmZlf8mmtN6qHugJqdOr1G2pT
+	GTtVL8Q6a0S7QcdynBxtO2BNzJvmmGvEdfORRRqiaCEKxjpJr4aQHpb3TDXFDjjg
+	+QiRyHq8ZLwZ7SH2nVn64TR9FpLgImSoPXqfJPPytW48SiPpar5ww5U0HO7gA4Vr
+	PHXVOd84OlFNcPJBHdZ6HNsIH7L6tffkb6A==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id r-2EYq2eohlI; Fri, 29 May 2026 18:03:23 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gRrnQ0KhYzlfl6N;
+	Fri, 29 May 2026 18:03:21 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Hannes Reinecke <hare@suse.com>,
+	Marco Elver <elver@google.com>,
+	linux-ide@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v5 0/2] ata: libata: Enable context analysis
+Date: Fri, 29 May 2026 11:03:08 -0700
+Message-ID: <cover.1780077008.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.54.0.823.g6e5bcc1fc9-goog
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] ata: libata-scsi: Remove lockdep_assert_held() in
- ata_scsi_translate()
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, Marco Elver <elver@google.com>,
- linux-ide@vger.kernel.org
-References: <20260528172855.703631-5-cassel@kernel.org>
- <20260528172855.703631-6-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260528172855.703631-6-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 2026/05/29 2:28, Niklas Cassel wrote:
-> lockdep_assert_held() indirectly calls __assume_ctx_lock(), which will
-> suppress any real context analysis from being performed.
-> 
-> Remove the lockdep_assert_held(). This will be replaced with context
-> analysis in a follow-up commit.
+Hi Niklas,
 
-I am not really liking the idea of removing runtime checks and replacing them
-with compile time checks that work only with clang. What about gcc ? And are we
-sure that the compile time checks are as solid as the runtime ones ?
+This patch series enables context analysis for the ATA subsystem. Please
+consider this patch series for the next merge window.
 
-As the sashiko comment mentions, can't we keep this and simply add a
-__must_hold() annotation in the declaration ?
+Thanks,
 
-> 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/ata/libata-scsi.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 6733f2b14521..8bfd3ffd8b89 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1852,8 +1852,6 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
->  	struct ata_port *ap = dev->link->ap;
->  	struct ata_queued_cmd *qc;
->  
-> -	lockdep_assert_held(ap->lock);
-> -
->  	/*
->  	 * ata_scsi_qc_new() calls scsi_done(cmd) in case of failure. So we
->  	 * have nothing further to do when allocating a qc fails.
+Bart.
 
+Changes compared to v4:
+ - Added a patch that adds the ATA port argument to ata_eh_reset().
+ - Removed the lockdep_assert_held() statements.
 
--- 
-Damien Le Moal
-Western Digital Research
+Changes compared to v3:
+ - Removed two source code comments.
+ - Annotated ata_dummy_error_handler().
+ - Addressed Sashiko's that the address of a synchronization object shoul=
+d be
+   passed to __acquires() and __releases().
+
+Changes compared to v2:
+ - Instead of annotating only function declarations, annotate both functi=
+on
+   declarations and function definitions.
+ - Changed __assume_ctx_lock() into lockdep_assert_held().
+ - Left out the host lock changes because there is no agreement about how=
+ to
+   annotate functions that expect that the host lock is held.
+
+Changes compared to v1:
+ - Expanded a single patch into a series of nine patches.
+ - Included a bug fix for ata_exec_internal() and several refactoring pat=
+ches.
+ - Added a patch for annotating the code that uses the host lock.
+
+Bart Van Assche (2):
+  ata: libata: Add an argument to ata_eh_reset()
+  ata: libata: Document when host->eh_mutex should be held
+
+ drivers/ata/Makefile         |  2 ++
+ drivers/ata/ahci.h           |  3 ++-
+ drivers/ata/ahci_imx.c       |  1 +
+ drivers/ata/libahci.c        |  1 +
+ drivers/ata/libata-core.c    |  2 ++
+ drivers/ata/libata-eh.c      | 11 ++++++++---
+ drivers/ata/libata-pmp.c     |  5 ++++-
+ drivers/ata/libata-sff.c     |  2 ++
+ drivers/ata/libata.h         | 14 +++++++++-----
+ drivers/ata/pata_arasan_cf.c |  1 +
+ drivers/ata/sata_dwc_460ex.c |  1 +
+ drivers/ata/sata_fsl.c       |  1 +
+ drivers/ata/sata_inic162x.c  |  1 +
+ drivers/ata/sata_mv.c        |  1 +
+ drivers/ata/sata_nv.c        |  2 ++
+ drivers/ata/sata_promise.c   |  1 +
+ drivers/ata/sata_qstor.c     |  1 +
+ drivers/ata/sata_sil24.c     |  1 +
+ drivers/ata/sata_sx4.c       |  1 +
+ drivers/ata/sata_via.c       |  1 +
+ include/linux/libata.h       | 15 ++++++++++-----
+ 21 files changed, 53 insertions(+), 15 deletions(-)
+
