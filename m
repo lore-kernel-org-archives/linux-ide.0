@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B3622367DF
-	for <linux-ide@vger.kernel.org>; Sat, 30 May 2026 04:49:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EA1F33A70F
+	for <linux-ide@vger.kernel.org>; Sat, 30 May 2026 04:57:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780116568; cv=none; b=lgCF21Ox6lTeLiL1ewbZnBqo/EeAsa0VIOeYFhbIjmh+u+r2V7Wfge153a70uwP+HAbFroYAFw1YHTlekSMNLERlgeE64AlbQPFTLUrzJk39Gs7z75qVA0pyiOhwZUoEKvZNVbsYMAD1pyDMbokg/wllN/WvQcDAcXKjO1CNLlw=
+	t=1780117023; cv=none; b=aH33riuMYqSNHCU7JvzpmL8VmER8u9sEUk+9G/U/zbCY7HScPo0m78JnDFsJG++KH1bpUe/JXR5U5P8NXHkG05TcQGwFBeAaBl4z9DKHhfurS+hu3Cl/djeqFh9r+3t3pC3H2Iw5OS4BOAieGn673YB9CVjQKsXhlnWVAl4WOvE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780116568; c=relaxed/simple;
-	bh=Qpq5tLICs3cIZ4Lvhd4K3zW2ptt5CMA3QW7CXsVsRz8=;
+	s=arc-20240116; t=1780117023; c=relaxed/simple;
+	bh=ZXD8GUhg9Gz03M+rBUAT0xxt1HoqDhA+c7m9jipnExo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bXasDkjSbwsiiD5+wgVvob76mVUHcqDK+oWQxotLM4KkhAyRY9ire/YPuIKLLBEudhT/bJ7MjA/iLUcofH4gi0dZzIWxp7xiEcawybabfOIF0VzKYe30WzqWJfaBHLZlmdFc79b+jsH/5+AhDC257BSQt6IMAbKBspVYYAQKuEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B52EYTU8; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=oDlFlrfoSYQSf43Gv1PMdQoFsx4u2pv5Eidoo+Mcl+z1oT8bkQKbRJCNfVWhoKWbo6dYVoca7BLWyL+5I+ffmZ/vyWapO2sS0Uj0mmXbFhGTFFNmYYVSW46zqY6I1HbO7jy0iAJdP2Unyfq65UJWdj0WijKvi0TkDhUQ4hnFcSo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OtIOtj8J; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B52EYTU8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 674851F00893;
-	Sat, 30 May 2026 04:49:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OtIOtj8J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EEFE1F00893;
+	Sat, 30 May 2026 04:57:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780116566;
-	bh=YjvB7lnVzcE9kiSS9L/N2JCWer6QjJ/tp5pFbjfSZsE=;
+	s=k20260515; t=1780117021;
+	bh=AbDPgN1Z28XAVASQb4Dy6su/BfIAVFSNHltT/LllSWQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=B52EYTU8XF2aAuqla14/BxXb4fJlBNWFJkGPiupBEbvqnKfszCRh+NObSELaaB7k5
-	 WxBgltCA3ibiefrWcs1Nm4WMRVFoO29tWYmKncKGtLzr9SVwWuBcAf5cY91MLLKwu+
-	 F+eQmtfzOBc5Kbr6ladSugOtCHtnqw3TWwJTIYbuW0b3c3T/vJvimx55IcXB7R7nqt
-	 7jyUltF2R28G3KUILTf4LbifYXaWEdlywadPPP5XaFulBQJRmKQ2rN7ouzvM49VXwK
-	 /jvmfExYzVoQTdfhJd1ZFqpSEDyhtXNxlugtPJfefFhhD230AXESEFOoNKTrZWs/f2
-	 r+XD+Acx3S5yQ==
+	b=OtIOtj8Jdru5+P2CexMuqSmYcjJ4MXhAeeDyn+75SVs5HDctnzvrZwhSS3meNB3Ay
+	 XiVRRG326aig3qznC70vJ2vs0mNvtduvm0vIGUBIXktX5maKMccakachpEb9Lax1gi
+	 +0yjz2RU65fIn9UOCfk2/U4uXnORO0roECPNEuDYyqPZ7O53bmiueSN9HqaK4SGNl6
+	 FYzvlJJN64/nWJcfQkmZhhnIr6zaJXmVP7vlhYYSM2MZrjgYFMVOFQ59SOzEbJznz+
+	 Kn5uSfX6bqqIQkkcluLYj6Or3w+LasIf4RN2dhJUeg0o6C1YFndd4MQVicIla2yR0D
+	 WG7cNN765M18A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] ata: pata_ep93xx: use unsigned long for data
+Subject: Re: [PATCH 3/3] ata: pata_ep93xx: add COMPILE_TEST support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Rosen Penev" <rosenp@gmail.com>
-Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260530003627.42473-3-rosenp@gmail.com>
-References: <20260530003627.42473-3-rosenp@gmail.com>
+Cc: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260530003627.42473-4-rosenp@gmail.com>
+References: <20260530003627.42473-4-rosenp@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 30 May 2026 04:49:26 +0000
-Message-Id: <20260530044926.674851F00893@smtp.kernel.org>
+Date: Sat, 30 May 2026 04:57:01 +0000
+Message-Id: <20260530045701.6EEFE1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,38 +47,36 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Double free and invalid pointer dereference on DMA TX channel requ=
-est failure
+- [High] Double free of 'rx' DMA channel and invalid pointer dereference of=
+ `ERR_PTR` in the 'tx' DMA channel error path.
 --
 
-commit 29937e8c8082c869105691e9f38d16e45bbd37fb
+commit b636a1b70934f2b41b7dce1e54946eb6d1bed3b4
 Author: Rosen Penev <rosenp@gmail.com>
 
-ata: pata_ep93xx: use unsigned long for data
+ata: pata_ep93xx: add COMPILE_TEST support
 
-An int is being encoded as a void pointer but that breaks on 64-bit
-systems as the type needs to match pointer size.
+This commit enables COMPILE_TEST support for the Cirrus Logic EP93xx PATA
+controller. This allows the buildbots to compile the driver on other
+architectures to find potential issues.
 
-> diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-> index f7e87d6af2641..1663dcd00a932 100644
-> --- a/drivers/ata/pata_ep93xx.c
-> +++ b/drivers/ata/pata_ep93xx.c
-> @@ -977,7 +977,7 @@ static int ep93xx_pata_probe(struct platform_device *=
-pdev)
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index fff305ec1e788..28ca856ecc754 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -692,7 +692,7 @@ config PATA_EFAR
 > =20
->  		match =3D soc_device_match(ep93xx_soc_table);
->  		if (match)
-> -			ap->udma_mask =3D (unsigned int) match->data;
-> +			ap->udma_mask =3D (unsigned long) match->data;
+>  config PATA_EP93XX
+>  	tristate "Cirrus Logic EP93xx PATA support"
+> -	depends on ARCH_EP93XX
+> +	depends on ARCH_EP93XX || COMPILE_TEST
 
 [Severity: High]
-This is a pre-existing issue, but while reviewing this file I noticed a
-potential double free and invalid pointer dereference in the DMA error
-handling paths.
+This isn't a bug introduced by this patch, but enabling COMPILE_TEST might
+expose a pre-existing error handling issue in drivers/ata/pata_ep93xx.c.
 
-If dma_request_chan() for the "tx" channel fails in ep93xx_pata_dma_init(),
-it returns an ERR_PTR which is stored in drv_data->dma_tx_channel, and jumps
-to fail_release_rx:
+In ep93xx_pata_dma_init(), if dma_request_chan() for "tx" fails, it stores
+the ERR_PTR in drv_data->dma_tx_channel and jumps to fail_release_rx:
 
 drivers/ata/pata_ep93xx.c:ep93xx_pata_dma_init() {
     ...
@@ -93,13 +91,22 @@ fail_release_rx:
 	dma_release_channel(drv_data->dma_rx_channel);
 fail_release_dma:
 	ep93xx_pata_release_dma(drv_data);
+
+	return ret;
 }
 
-The fail_release_rx path calls dma_release_channel() on the rx channel but
-doesn't set drv_data->dma_rx_channel to NULL. It then falls through to
-fail_release_dma which calls ep93xx_pata_release_dma():
+Could this sequence lead to a double-free and an invalid pointer dereferenc=
+e?
+
+The fail_release_rx path releases dma_rx_channel but doesn't clear the
+pointer to NULL before falling through to ep93xx_pata_release_dma(). Also,
+dma_tx_channel holds an ERR_PTR which is non-NULL.
+
+When ep93xx_pata_release_dma() is called, it checks if the pointers are
+non-NULL:
 
 drivers/ata/pata_ep93xx.c:ep93xx_pata_release_dma() {
+    ...
 	if (drv_data->dma_rx_channel) {
 		dma_release_channel(drv_data->dma_rx_channel);
 		drv_data->dma_rx_channel =3D NULL;
@@ -108,19 +115,16 @@ drivers/ata/pata_ep93xx.c:ep93xx_pata_release_dma() {
 		dma_release_channel(drv_data->dma_tx_channel);
 		drv_data->dma_tx_channel =3D NULL;
 	}
+    ...
 }
 
-Will this cause dma_release_channel() to be called a second time on the rx
-channel?
+Would this result in dma_release_channel() being called a second time on
+the rx channel, and being called with the ERR_PTR for the tx channel?
 
-Also, since drv_data->dma_tx_channel holds an ERR_PTR rather than NULL,
-won't the second if block try to dereference that ERR_PTR when
-dma_release_channel() is called on it?
-
->  		else
->  			ap->udma_mask =3D ATA_UDMA2;
->  	}
+>  	select PATA_TIMINGS
+>  	help
+>  	  This option enables support for the PATA controller in
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260530003627.4247=
-3-1-rosenp@gmail.com?part=3D2
+3-1-rosenp@gmail.com?part=3D3
