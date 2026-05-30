@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8C6D23BCE3
-	for <linux-ide@vger.kernel.org>; Sat, 30 May 2026 00:52:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B3622367DF
+	for <linux-ide@vger.kernel.org>; Sat, 30 May 2026 04:49:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780102352; cv=none; b=sH7JsasRRTHWf+5E6knuyGfwoQ5XhhyEmyqEEeh8iu7oq0GWzlLvocCZ84bv3F8ddT82fauSjmJ2UrKsBb4qU0nY76VXuyQyXs8XWXvVQQiiHz+yFhYGiOXMte8JjnHNpfcoz6WrvwFMFESPO0tpZ+k0qnxZXvaOZ0EfyiPZor4=
+	t=1780116568; cv=none; b=lgCF21Ox6lTeLiL1ewbZnBqo/EeAsa0VIOeYFhbIjmh+u+r2V7Wfge153a70uwP+HAbFroYAFw1YHTlekSMNLERlgeE64AlbQPFTLUrzJk39Gs7z75qVA0pyiOhwZUoEKvZNVbsYMAD1pyDMbokg/wllN/WvQcDAcXKjO1CNLlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780102352; c=relaxed/simple;
-	bh=Gnc+mQlbPvlTrEBn+z7gn41sU+dD2WWJQ/VRoahiL1w=;
+	s=arc-20240116; t=1780116568; c=relaxed/simple;
+	bh=Qpq5tLICs3cIZ4Lvhd4K3zW2ptt5CMA3QW7CXsVsRz8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SfOEBSfUq8Em8t5ntlpOLj2C667xlRrYFzIOuIkKh3++fr9lZsB/XP6lExauQP3L8G/uxRPCIwSvJvPUK6rwmyxEjqiahUsEzF6hWHxsNV0wsaY9MKSMOuVrrZ9ROPVQLCPZmr/CyCjl2jyIzgz0iaSomGNivzlHxhe+tZPpfbI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b47w5nnV; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=bXasDkjSbwsiiD5+wgVvob76mVUHcqDK+oWQxotLM4KkhAyRY9ire/YPuIKLLBEudhT/bJ7MjA/iLUcofH4gi0dZzIWxp7xiEcawybabfOIF0VzKYe30WzqWJfaBHLZlmdFc79b+jsH/5+AhDC257BSQt6IMAbKBspVYYAQKuEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B52EYTU8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b47w5nnV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A50A11F00893;
-	Sat, 30 May 2026 00:52:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B52EYTU8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 674851F00893;
+	Sat, 30 May 2026 04:49:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780102351;
-	bh=8FDlgoitC6eGyZi9jUi79K1sWzBKi9zY6wlchGOFrkU=;
+	s=k20260515; t=1780116566;
+	bh=YjvB7lnVzcE9kiSS9L/N2JCWer6QjJ/tp5pFbjfSZsE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b47w5nnVEGvuw9CpKkDYW8F8hWz/hl+neeLCHcDFjRXZWBCwcFV2a91dLW8OydYsc
-	 lRWJMYtYcI5bitxYlie6aJtkrHOCK0NA3tJriifKUlrIncZOhPJvxbdSbn4xl7CB/a
-	 /hiutCTKZcjDhI/xOiFxNe8xhcgwOxbCjrgTU6gJSWf4BmliNmo9z3i4hfNufNsUov
-	 sAaza1mzIJJOX3mGpmOoR2+f8p0V/In8BbM/55r1iIMHBbAun1luxy1QO8/TnCeap9
-	 WjMItmEXyfop0MD3DTuIYzU1Ynt+9amAMBG2gVs7C7EzMgklJAECx438PJB4r+W6gi
-	 y1S3+9uNxMw1A==
+	b=B52EYTU8XF2aAuqla14/BxXb4fJlBNWFJkGPiupBEbvqnKfszCRh+NObSELaaB7k5
+	 WxBgltCA3ibiefrWcs1Nm4WMRVFoO29tWYmKncKGtLzr9SVwWuBcAf5cY91MLLKwu+
+	 F+eQmtfzOBc5Kbr6ladSugOtCHtnqw3TWwJTIYbuW0b3c3T/vJvimx55IcXB7R7nqt
+	 7jyUltF2R28G3KUILTf4LbifYXaWEdlywadPPP5XaFulBQJRmKQ2rN7ouzvM49VXwK
+	 /jvmfExYzVoQTdfhJd1ZFqpSEDyhtXNxlugtPJfefFhhD230AXESEFOoNKTrZWs/f2
+	 r+XD+Acx3S5yQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCHv2] ata: ahci_tegra: remove devm_kcalloc()
+Subject: Re: [PATCH 2/3] ata: pata_ep93xx: use unsigned long for data
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Rosen Penev" <rosenp@gmail.com>
-Cc: cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260530004135.43088-1-rosenp@gmail.com>
-References: <20260530004135.43088-1-rosenp@gmail.com>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260530003627.42473-3-rosenp@gmail.com>
+References: <20260530003627.42473-3-rosenp@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 30 May 2026 00:52:31 +0000
-Message-Id: <20260530005231.A50A11F00893@smtp.kernel.org>
+Date: Sat, 30 May 2026 04:49:26 +0000
+Message-Id: <20260530044926.674851F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,62 +47,80 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Unchecked dereference of `soc` when retrieving `soc->num_supplies`=
- during memory allocation, leading to an immediate kernel panic if `of_devi=
-ce_get_match_data()` returns NULL.
+- [High] Double free and invalid pointer dereference on DMA TX channel requ=
+est failure
 --
 
-commit bf92e6df451c5a93edb05970118c13a24829ffcf
+commit 29937e8c8082c869105691e9f38d16e45bbd37fb
 Author: Rosen Penev <rosenp@gmail.com>
 
-ata: ahci_tegra: remove devm_kcalloc()
+ata: pata_ep93xx: use unsigned long for data
 
-This commit combines the allocation for the tegra_ahci_priv structure and
-its supplies flexible array into a single allocation to remove the use of
-devm_kcalloc().
+An int is being encoded as a void pointer but that breaks on 64-bit
+systems as the type needs to match pointer size.
 
-> diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-> index 554f05e09f983..142ba2ae1c831 100644
-> --- a/drivers/ata/ahci_tegra.c
-> +++ b/drivers/ata/ahci_tegra.c
-
-[ ... ]
-
-> @@ -514,6 +515,7 @@ static const struct scsi_host_template ahci_platform_=
-sht =3D {
+> diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+> index f7e87d6af2641..1663dcd00a932 100644
+> --- a/drivers/ata/pata_ep93xx.c
+> +++ b/drivers/ata/pata_ep93xx.c
+> @@ -977,7 +977,7 @@ static int ep93xx_pata_probe(struct platform_device *=
+pdev)
 > =20
->  static int tegra_ahci_probe(struct platform_device *pdev)
->  {
-> +	const struct tegra_ahci_soc *soc;
->  	struct ahci_host_priv *hpriv;
->  	struct tegra_ahci_priv *tegra;
->  	struct resource *res;
-> @@ -523,14 +525,15 @@ static int tegra_ahci_probe(struct platform_device =
-*pdev)
->  	if (IS_ERR(hpriv))
->  		return PTR_ERR(hpriv);
-> =20
-> -	tegra =3D devm_kzalloc(&pdev->dev, sizeof(*tegra), GFP_KERNEL);
-> +	soc =3D of_device_get_match_data(&pdev->dev);
-> +	tegra =3D devm_kzalloc(&pdev->dev, struct_size(tegra, supplies, soc->nu=
-m_supplies), GFP_KERNEL);
+>  		match =3D soc_device_match(ep93xx_soc_table);
+>  		if (match)
+> -			ap->udma_mask =3D (unsigned int) match->data;
+> +			ap->udma_mask =3D (unsigned long) match->data;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but can of_device_get_match_data=
-()
-return NULL if the driver is probed via sysfs bind with driver_override?
+This is a pre-existing issue, but while reviewing this file I noticed a
+potential double free and invalid pointer dereference in the DMA error
+handling paths.
 
-If it returns NULL, the immediate dereference of soc->num_supplies in the
-struct_size() macro will cause a NULL pointer dereference. While this
-vulnerability existed in the codebase before this patch, this patch shifts
-the dereference earlier in the probe sequence.
+If dma_request_chan() for the "tx" channel fails in ep93xx_pata_dma_init(),
+it returns an ERR_PTR which is stored in drv_data->dma_tx_channel, and jumps
+to fail_release_rx:
 
-Could a NULL check be added for soc before it is dereferenced?
+drivers/ata/pata_ep93xx.c:ep93xx_pata_dma_init() {
+    ...
+	drv_data->dma_tx_channel =3D dma_request_chan(&pdev->dev, "tx");
+	if (IS_ERR(drv_data->dma_tx_channel)) {
+		ret =3D dev_err_probe(dev, PTR_ERR(drv_data->dma_tx_channel),
+				    "tx DMA setup failed\n");
+		goto fail_release_rx;
+	}
+    ...
+fail_release_rx:
+	dma_release_channel(drv_data->dma_rx_channel);
+fail_release_dma:
+	ep93xx_pata_release_dma(drv_data);
+}
 
->  	if (!tegra)
->  		return -ENOMEM;
->
+The fail_release_rx path calls dma_release_channel() on the rx channel but
+doesn't set drv_data->dma_rx_channel to NULL. It then falls through to
+fail_release_dma which calls ep93xx_pata_release_dma():
+
+drivers/ata/pata_ep93xx.c:ep93xx_pata_release_dma() {
+	if (drv_data->dma_rx_channel) {
+		dma_release_channel(drv_data->dma_rx_channel);
+		drv_data->dma_rx_channel =3D NULL;
+	}
+	if (drv_data->dma_tx_channel) {
+		dma_release_channel(drv_data->dma_tx_channel);
+		drv_data->dma_tx_channel =3D NULL;
+	}
+}
+
+Will this cause dma_release_channel() to be called a second time on the rx
+channel?
+
+Also, since drv_data->dma_tx_channel holds an ERR_PTR rather than NULL,
+won't the second if block try to dereference that ERR_PTR when
+dma_release_channel() is called on it?
+
+>  		else
+>  			ap->udma_mask =3D ATA_UDMA2;
+>  	}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260530004135.4308=
-8-1-rosenp@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260530003627.4247=
+3-1-rosenp@gmail.com?part=3D2
