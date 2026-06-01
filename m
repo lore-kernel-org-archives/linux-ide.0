@@ -1,70 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD3363C1F
-	for <linux-ide@vger.kernel.org>; Sun, 31 May 2026 14:00:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B9AA349CE7;
+	Mon,  1 Jun 2026 08:47:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780236035; cv=none; b=lpmBXldNccbK57Dp9CVm16iG7/Rh+/pqV7cr9kE1DKZrPbp/5bmHadml4l9uoGqZz1rJPW495eTlXioYwhPm093FN594F3fFgFWkeRQ1ic1AhvJUlV+xDEpAxmUWw162651cR7uxdQdJ53IqKJ1sp5mHJkdqN8SUsOTh3wb+ZUw=
+	t=1780303636; cv=none; b=puY+fU/a7kNpqQXqgUSt7H7p7Z1fQ4cNjKLfDUQmPZLbL5GbAKtOJalmTti9gRdKHyBmbPN5QZkTF0kstsl0Maw+HhO5V5Sa63mgQWKX1118WvVt9zpViqm8wljnYXIev2rrA+9hyxU4usYNj+5+wne5+J8xmHlNMtQVYiz58uM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780236035; c=relaxed/simple;
-	bh=lO4T7LpxBBEzg0rslFTrMKJE2H4aLnLgKs7j5/nF7AI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AtsnH4Gj7GeWtE3bvIo28t8eAHBk4vuiHtC2Xetx7hzhxm1q6x6yJt9k+2OInnpvpbES6V77SXdhiYK+s4HpaJvAUpkBjudkvLru0WZtOt0+fRqLKKEu6my2HgSaipvfn65q5fjypRcDujotaSB+xr009LUu1A+f1SMrhLUHVuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DEhUBg+M; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780303636; c=relaxed/simple;
+	bh=20NpGxCjbe0n+m8Gv+yd1iv15QR7kAOI4KRcr2I83bE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XDXT2OJXxGtDQzMbLv27PRWxAOHLJH8ygrPTS5fiDzT7gYbVsHn2tRQUB8YKa1vJO2UZI4eZiIEKtp8V91AfcOkRx8PlRIaUyJZr1lzbo7nqDGcfh5FsZiEswt3x2WIniFg/z/dQ2zRd5qiZr1W7INlnbGVwBLfYb8out4mjSZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XFIF2a8V; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DEhUBg+M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C3911F00893;
-	Sun, 31 May 2026 14:00:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XFIF2a8V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A3621F00899;
+	Mon,  1 Jun 2026 08:47:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780236034;
-	bh=ptztKX4rKWtHQPhOy8Os9N7vzcQ/uvh6jeMno/dGunY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=DEhUBg+MYepKzT+6MFfQ2rbzx0IWun3OSUBhp2H+Yrfv24kivdcpNqHAyJ6ub1JS1
-	 8JWbZY4MAmW5cHCQDuZMYZSYpADgILXMVj1E9gLzEO+3ZTPRgR0GUYe06DMiIsWPEF
-	 JSzhVRuVlATl3CoAqgkaMdygMEMJJl3gSb2AElUjvqqiA1Tnh4VNCkOqjhdP2BALt8
-	 p0srfHf2LyOFTyO+TWnGmXEXsHn3E0b9colcyLhsNer8cAnNtTnSrU2w6YrSaIAvSJ
-	 1hwEjROQN0iCcL5KyZpZ7g2tJzjIeUxDunYDIXpXAZN/MkIB0kWIsID3BWAr0Slh98
-	 v1aU2hd85wAtQ==
+	s=k20260515; t=1780303635;
+	bh=oNsrgp5DQ9LWzj7wab8/emIHi1D2wcX+XgNUEl23dCE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=XFIF2a8Vqw7mfC3L3una0n8gt2baZE99DrCYgCCtuP0ilOczEZjWTTKifNNe3U6wR
+	 vxSTCEmwdO+uD5s6KuIf01TXNGPnQ6Ey4CR4MS1hZNuAW1d1Vxaq5Dt69X9XsdBOeV
+	 AlmU0hM2M/H7vkq8rPzPZHu6SKaVOF8s5e4jDF7K6jrx41JkwszoYM8P0/OKyTbvf+
+	 iM2KqSKLqWwmE+75xssHMwwKzKxelqivlnYBScs5IKIANNw5m3tdd5M96fx61I5wsv
+	 HnGNv04A4u8u8ero7TuN1JrRbQBE/+fOle9i7db19J9JjSXiifaKEtRez7RFCtlyr6
+	 L45aEgW9CI0RQ==
+Date: Mon, 1 Jun 2026 10:47:11 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Marco Elver <elver@google.com>,
-	linux-ide@vger.kernel.org
-Subject: Re: (subset) [PATCH 0/3] ata: add __must_hold(ap->lock) annotations in issuing path
-Date: Sun, 31 May 2026 16:00:23 +0200
-Message-ID: <178023548968.927595.14698720079448094581.b4-ty@b4>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260528172855.703631-5-cassel@kernel.org>
-References: <20260528172855.703631-5-cassel@kernel.org>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Thierry Reding <thierry.reding@kernel.org>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	"open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCHv2] ata: ahci_tegra: remove devm_kcalloc()
+Message-ID: <ah1HD1aOyTnMBEqD@ryzen>
+References: <20260530004135.43088-1-rosenp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=649; i=cassel@kernel.org; h=from:subject:message-id; bh=lO4T7LpxBBEzg0rslFTrMKJE2H4aLnLgKs7j5/nF7AI=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJk7H68Tl4x2bz9qmFTq/yNWc/+b5JmzL7uHdLH8OzTx r26G+RDOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjARgxSGP/zTFvrLu+qw+n1Y PoHVXX916fSXjDby6tvClG9YPM/+tZDhv++8tjV3uTmCJp2/vSFP+dQ3qWUG1+pkDMo7LnQejD2 zmw8A
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260530004135.43088-1-rosenp@gmail.com>
 
-On Thu, 28 May 2026 19:28:56 +0200, Niklas Cassel wrote:
-> This series is meant to be applied on top of Bart's patch that already sets:
-> CONTEXT_ANALYSIS := y
-> and adds __must_hold(ap->host->eh_mutex) for EH functions.
+On Fri, May 29, 2026 at 05:41:35PM -0700, Rosen Penev wrote:
+> Combine allocations into one by using a flexible array member.
 > 
-> 
-> This adds __must_hold(ap->lock) annotations in the issuing path.
-> 
-> [...]
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> ---
+>  v2: Rebase
 
-Applied to libata/linux.git (for-7.2), thanks!
+V1: https://lore.kernel.org/linux-ide/20260324211629.26924-1-rosenp@gmail.com/
 
-[2/3] ata: libata: Pass ap parameter directly to functions in the issuing path
-      https://git.kernel.org/libata/linux/c/ebfb3924
-[3/3] ata: Annotate functions in the issuing path with __must_hold()
-      https://git.kernel.org/libata/linux/c/28cee4cb
+Jon Hunter said that he (in addition to myself) was not a fan of this:
+https://lore.kernel.org/linux-ide/63d71f4c-97c0-4c2f-ac92-0a643fcdf75f@nvidia.com/
+
+Since there are no changes since V1 (except for a rebase), and no new
+motivation/reasoning in the commit log, I intend to ignore this patch,
+unless Jon feels otherwise.
+
 
 Kind regards,
 Niklas
