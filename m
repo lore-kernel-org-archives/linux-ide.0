@@ -1,124 +1,151 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A134377EAF
-	for <linux-ide@vger.kernel.org>; Wed,  3 Jun 2026 19:20:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4502348BD4E
+	for <linux-ide@vger.kernel.org>; Wed,  3 Jun 2026 19:30:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780514447; cv=none; b=dL72zHx3z3dAEA+eKa/cvbbx+97RACZO+jifOLWiNV+/UO3fiOWGPTdWF1miy3EpgF/iweQ88JLIe6fHZcHxC95PcKIzOEEstWkXxX1mlMQC5380azWVi9xjlYltGNFjtoVMxyqqLwLlhE+IaOw7YId1jtyd3MZWVwQx2J1oVDg=
+	t=1780515048; cv=none; b=bvXUii8SUnW/NdV2GT/un2s6f7N5jB0GwM6rVVjup1Jdl4YSFCuYck2i5SH1P3g/n5eiYtYGSbY/ZEyV2F/hZJe4MI9zyXkZnJP+lDCQX0Pdc5NBc3xaKOViaRSqnkTX/17tgl7obvabKGvnVNSnz6fAvDKE8h53r+jV+5TYoJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780514447; c=relaxed/simple;
-	bh=ijmaX6yjn0sjj+ZH2BwxSTAcQxqvHChiB2fGgdIuH1k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OeJlsXYTUBQOPneA1qPZSjDnj3ufzCWR07aP9H1qnb+XmHvrl7G5CuEiRy5MyvSBdXCKVcaP4tJWNB+FVTd2mgRAU3PKhrHKz+pOjQdqHqhjsgmLe+cnqllS9gsmWzvB7Q/nsFZZQZc+DSRLwoxJVphFZ2eF6ulkJchfJFcLyRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PFXnnSjs; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780515048; c=relaxed/simple;
+	bh=2hHfuQdGhO8Kc1YBieSJ5Fj/6Xxgc7I7eMu85bW55f0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Lufda7CeOdUbVkjTttp0oTYb29VR7bcaoX6doxTCCz1EQU2jURya0C4asZbEcRhtBFMKpSlGsLlvwB1C8XEZTQvD/L40Z/plCgHVJHQweqn0sjX0GkVZVpdHPeQjJ17DW3TRCS+8objV7tHue4tLU+NI8lfXho4LtcPZzanLJ0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U7oX9RMa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PFXnnSjs"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2c0c20f0c0aso29389035ad.0
-        for <linux-ide@vger.kernel.org>; Wed, 03 Jun 2026 12:20:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780514446; x=1781119246; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=2reQ/jQ0gAFpocim60ixJg6bzQabB3U5DqHmXs7odF8=;
-        b=PFXnnSjs2Mwq1IED6Wmd+HySyL4SeuBYBxAP+tP0aIZzna5pyKsIO+mCuYe7JQEoF0
-         wSWGHBeDxC2lgqs/3s7HMtusHxl7jtumtdiW+buCBiZp1yg0a2KZWF5H5XuWyWggyLPP
-         sXjw47HIWSZ7LZarKuvxYh2gJRcfLeUW6wwgnO+AY+tS/NbmxyQDWrqM3Z4CTtVON3jD
-         M7S+KtgByH9BaxNpXL9EXWFQutgDoQ5HJ0S7sfbyHw1CJMcz0ZruF8CL6B+0MjwvZQkT
-         dT8etRp0EZzpnmAWHYN3+MeQk3SVAZFcMMlPZsxFPzC0nWTlGr6LEL/0lg40R5shtJ/A
-         H68Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780514446; x=1781119246;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2reQ/jQ0gAFpocim60ixJg6bzQabB3U5DqHmXs7odF8=;
-        b=QzhzT+syMy8LKXYaWV/IqTEt//5123J/yG8A4v/JNGyRpmKczqkHfCmgDGmL5vWCuf
-         C0j7Q6MvZ88rKIkkMij9vfNvKmuJrFmT9xGJE4iQ+wA26WD41/DAOLZL0neej5/3hF8e
-         p33PC8sO3n6asm3dASyjEcn3lDOJojT+uaP7SB1as7VbYK7AfvFJEDyMUZrxFukUvq8o
-         Uyp1SmI4cseEmQIQBmbM2wiLj9hRKaOw0rcjYM0kuo9T7K4JAae2Thvezvs9ZSSmSM3e
-         9fEwjIHLNzgZxm5zpnItU9EYgMrI1Tmjp5OxFrbjdj6rU0XXe0jXEx5D/baMrPT5lg/8
-         O8cg==
-X-Gm-Message-State: AOJu0YwvXHkq+/56B+j0t1y6JkzVuNd3NGuXRD9TSeJstX82I0Qek/Ig
-	2giutFm3K1eWMS3+yBGe3b5+JMNYBKIs5gj3v6apfCmxSE+E8uA52hW7gMA4pgJi
-X-Gm-Gg: Acq92OFOxhD4TUeTM0z4r68ZTGMj6NbK7MwoOBjUNcZyXYmU9AwAPZ7CZe17HGgImj3
-	yn18KVjMiNevEIu2SeL3l4MklireeJkry26wcCxmgNGUCLy5neNjHIAYNcNuoJgOcGf6TB2y+mJ
-	f59PA6XDCjcBsL+fdCVTkPFjMIuXwa2z6D1XmmZq8XR04aEPRAeNR85Hi9xW76qXH8j9d9XjlgJ
-	dEPOPEe579rGbStpE7qHFZH/Eil77x3MVzpwWBDn71a9G7SynoQVlhZJoy+kPS7ptdwetazQSsQ
-	OWXN38q46nOqTRDz/RkfVhv2ZQqTMzvsb6xh3Qa0OW74V43N2fnin6c1/1+YtjBKwiDX3hI5FCn
-	LPlpiy/GtamPTyIEOzyjgwhSuy1RJLP6OcZ7Yc2MGS8jSpa8m8UvQrAeWf0yJ6P6WliLfGwYTR/
-	6uMr9wseKivG92V9l++btQY3dJODhtu+hTNf/MQeR/JOb3FkXa/foXlBsHEJrTh6IHYHUJHxUzp
-	CWw0T86MDxZwFBRzFu46Y9Yunp2ptNPWQq0GoWHLqlWQQ==
-X-Received: by 2002:a17:903:4b46:b0:2c0:c262:b925 with SMTP id d9443c01a7336-2c163d8c0f7mr51784905ad.25.1780514445760;
-        Wed, 03 Jun 2026 12:20:45 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c166391d53sm45512105ad.65.2026.06.03.12.20.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Jun 2026 12:20:44 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] ata: pata_mpc52xx: convert to platform_get_irq()
-Date: Wed,  3 Jun 2026 12:20:28 -0700
-Message-ID: <20260603192028.5818-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U7oX9RMa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5C801F00893;
+	Wed,  3 Jun 2026 19:30:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780515047;
+	bh=RHXz1wgEJDe1wlyDk2ltcdMXAARkXJIi8v7ZQjnO+1U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=U7oX9RMaAhFCj5U/nfKK5coRE2aK27VMB27ScK1qjaiIVjQzjLSVtI7qEb51P0ZF5
+	 qMjQ63PghzL+Gs9QmyqBGi8gHAZCIhwjN540Jm24ALDx6LX8s0jPK9FcWc2rWQlV9Q
+	 LkT5MP3DioNVIK5WhZHWbTdXot+zU1m7IFoSvr+KSGWeQ7HTrjNVRYQoNzJ3oogntQ
+	 UeLcR4hmKV/l0DcbP/Aa2fHn/8fEjpb8trtit3BRtMgI4/tGVW0TqnMpofXl0E6ycS
+	 4apciErnYSdJh2zJ7K1JxF7Z1xIUW/kE/q4LToDv+ks7RV9coXPG1YStF05dgEsK0n
+	 2SJSoi5krvkbg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ata: pata_mpc52xx: convert to platform_get_irq()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rosen Penev" <rosenp@gmail.com>
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
+In-Reply-To: <20260603192028.5818-1-rosenp@gmail.com>
+References: <20260603192028.5818-1-rosenp@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 03 Jun 2026 19:30:45 +0000
+Message-Id: <20260603193046.B5C801F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+
+New issues:
+- [Medium] Redundant error logging after `platform_get_irq()` breaks probe =
+deferral silence.
+
+Pre-existing issues:
+- [High] Teardown inversion and double-free vulnerabilities due to manual c=
+leanup of resources before `devm`-managed IRQ handler deregistration.
+--
+
+commit ffac71fcd5afc61a5b03a064fe40da6b52105e95
+Author: Rosen Penev <rosenp@gmail.com>
+
+ata: pata_mpc52xx: convert to platform_get_irq()
 
 Replace irq_of_parse_and_map() with platform_get_irq(), which returns
 a negative errno on failure and integrates with the platform device
-model. Since platform_get_irq() does not create a separately managed
-mapping, the corresponding irq_dispose_mapping() calls in the probe
+model. The corresponding irq_dispose_mapping() calls in the probe
 error path and remove function are no longer needed.
 
-Assisted-by: opencode:big-pickle
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/ata/pata_mpc52xx.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+> diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+> index 210a63283f62b..f8ecd58765dd3 100644
+> --- a/drivers/ata/pata_mpc52xx.c
+> +++ b/drivers/ata/pata_mpc52xx.c
+[ ... ]
+> @@ -730,10 +730,10 @@ static int mpc52xx_ata_probe(struct platform_device=
+ *op)
+>  	if ((prop) && (proplen >=3D 4))
+>  		udma_mask =3D ATA_UDMA2 & ((1 << (*prop + 1)) - 1);
+> =20
+> -	ata_irq =3D irq_of_parse_and_map(op->dev.of_node, 0);
+> -	if (!ata_irq) {
+> +	ata_irq =3D platform_get_irq(op, 0);
+> +	if (ata_irq < 0) {
+>  		dev_err(&op->dev, "error mapping irq\n");
 
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 210a63283f62..f8ecd58765dd 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -730,10 +730,10 @@ static int mpc52xx_ata_probe(struct platform_device *op)
- 	if ((prop) && (proplen >= 4))
- 		udma_mask = ATA_UDMA2 & ((1 << (*prop + 1)) - 1);
- 
--	ata_irq = irq_of_parse_and_map(op->dev.of_node, 0);
--	if (!ata_irq) {
-+	ata_irq = platform_get_irq(op, 0);
-+	if (ata_irq < 0) {
- 		dev_err(&op->dev, "error mapping irq\n");
--		return -EINVAL;
-+		return ata_irq;
- 	}
- 
- 	/* Prepare our private structure */
-@@ -796,7 +796,6 @@ static int mpc52xx_ata_probe(struct platform_device *op)
- 	irq_dispose_mapping(task_irq);
- 	bcom_ata_release(dmatsk);
-  err1:
--	irq_dispose_mapping(ata_irq);
- 	return rv;
- }
- 
-@@ -813,7 +812,6 @@ static void mpc52xx_ata_remove(struct platform_device *op)
- 	task_irq = bcom_get_task_irq(priv->dmatsk);
- 	irq_dispose_mapping(task_irq);
- 	bcom_ata_release(priv->dmatsk);
--	irq_dispose_mapping(priv->ata_irq);
- }
- 
- #ifdef CONFIG_PM_SLEEP
--- 
-2.54.0
+[Severity: Medium]
+Since platform_get_irq() already logs errors internally using dev_err_probe=
+(),
+which correctly silences -EPROBE_DEFER, does leaving this manual dev_err()
+call in place cause redundant log spam during probe deferral?
 
+> -		return -EINVAL;
+> +		return ata_irq;
+>  	}
+> =20
+>  	/* Prepare our private structure */
+[ ... ]
+> @@ -796,7 +796,6 @@ static int mpc52xx_ata_probe(struct platform_device *=
+op)
+>  	irq_dispose_mapping(task_irq);
+>  	bcom_ata_release(dmatsk);
+
+[Severity: High]
+This is a pre-existing issue, but does manually cleaning up the resources h=
+ere
+cause a use-after-free and teardown inversion?
+
+Because the driver requests task_irq using devm_request_irq(), the interrupt
+handler remains active until devres frees it after the probe error path
+returns.
+
+If bcom_ata_release(dmatsk) frees the memory while the devm-managed IRQ
+handler is still registered, could an incoming interrupt access freed memor=
+y?
+
+Additionally, disposing the IRQ mapping while the interrupt action is still
+registered breaks the IRQ subsystem, as devm_free_irq() will later fail to
+locate the descriptor.
+
+Finally, since bcom_ata_release() internally calls bcom_task_free(), which
+also calls irq_dispose_mapping(tsk->irq), does this sequence trigger a
+double-free of the IRQ mapping?
+
+>  err1:
+> -	irq_dispose_mapping(ata_irq);
+>  	return rv;
+>  }
+> =20
+> @@ -813,7 +812,6 @@ static void mpc52xx_ata_remove(struct platform_device=
+ *op)
+>  	task_irq =3D bcom_get_task_irq(priv->dmatsk);
+>  	irq_dispose_mapping(task_irq);
+>  	bcom_ata_release(priv->dmatsk);
+
+[Severity: High]
+This is a pre-existing issue, but does this pattern present the same
+use-after-free, teardown inversion, and double-free risks as the probe error
+path?
+
+Since the IRQ handler is managed by devm, it is still active when this remo=
+ve
+function returns. Manually releasing the task resources and IRQ mapping bef=
+ore
+devres unregisters the handler seems problematic.
+
+> -	irq_dispose_mapping(priv->ata_irq);
+>  }
+> =20
+>  #ifdef CONFIG_PM_SLEEP
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260603192028.5818=
+-1-rosenp@gmail.com?part=3D1
