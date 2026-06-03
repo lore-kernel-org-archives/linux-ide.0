@@ -1,117 +1,135 @@
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19D83F23B6
-	for <linux-ide@vger.kernel.org>; Wed,  3 Jun 2026 19:38:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7AD14A2E07;
+	Wed,  3 Jun 2026 21:39:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780515515; cv=none; b=ajgj5zMpeRcloO6ScBSq5nh5jGLggvsSLDk55cRCITMq57GnOUJRhH4rEW9Q9ZKpU+CWlBt15RyC2YUjPvOAyPox/lGgR6dZrhSOcMM/DgrC5Bzm+BwRr1+ssKB8s+h0dy1RWY7jgGnT56svjh2srcsG30e2kLTc0F9pAmCBxUQ=
+	t=1780522774; cv=none; b=C5Ibx7KZSdSjPrRdNDwHEYUpk7E3YDWijoRddn4CwtGE1G6ZdW+9bs/sOO/nCg0Qe199ip/GL4pNZfS7uLutvDoRzPgztUHMLTPGbMBuHtC4c5eKCROdwgacJMIkJD9zDBeyLyq1MFjvcIHmRBzhQaceBxixEtsIsLDTC65LPFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780515515; c=relaxed/simple;
-	bh=+1XQ3Szm38rXGThGP1fTq4I/sypwvXRUOmHF1pwSyM4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QMMYd6HWVKM/Mf9ZCiVh6S5919mr0CMHXRTa47Qa0WH0Fj9APGyOgWGDzpayrQPIOVAxgv3mzNEK92LJieuHvgkbVyVxKdlG9vp1eIfA63VDyNYHBjRtoQ/ZbZShceq+ishIASWxDc0HksHDXfahE0vv6uALkd/F3HrX5xOtSuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ol5Ng5WS; arc=none smtp.client-ip=209.85.208.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ol5Ng5WS"
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-39664fe2dd8so37883651fa.3
-        for <linux-ide@vger.kernel.org>; Wed, 03 Jun 2026 12:38:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780515512; x=1781120312; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/hQkIO6GXdfrVuD2j4hh87FXMA2VWe2X4YdQxcNyjzY=;
-        b=Ol5Ng5WSfDNLEGLnBfpVmoS6JYDzXkeya/KlGlDQwCqKmPReznCcwpb5L+jK+lH0f0
-         3U2KboA1rKtZ4RdSa5b32DUUlQKCL6sKEDb6dtsu/wdcJvzRvUcvZsSYmMisflxaK+07
-         NXjxCfB4NS0ic0BjWEAckn+RKY6mg2LdTimyrio1reetHOUoq8kqYLGUFUw9q9L1zm1w
-         gaEAHg0GiTV1VYDdV1Z/QtqB/6byc6aM5ZGAJuvpBYccZDa/1cAIcAnhfSpNSsi6mTgR
-         Ecc8+/NJR6EeWiVwHdR5Cu93KUIC97t+38XSTa891XPxYQ49v5J6mHDEjoyXXj20Rj6X
-         mOew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780515512; x=1781120312;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/hQkIO6GXdfrVuD2j4hh87FXMA2VWe2X4YdQxcNyjzY=;
-        b=Mo40wbkSHxGWxqZjf2qWzoTCUH30TSSMPmg6sNKQ9YjnLcZcSG7eO1lL8l7rBQrQk0
-         MID4pKz9/SsrKmv2spAFJwQ3jZqS0NeYDbYkhz5zcq1FrGR+e57JkDZ5o/Z63VJNSo9P
-         v6G7CJm1PT1xhnAvDagGawefzZDNl4OLbkcDacM8smNoInalREPJh4ThH7bRynHi3nby
-         vMf2qDwl21QXhUIViTtUwIyN6trK226KWN69UL+xMXP20X6MbRrV4vD0fRnoJW9eOmKZ
-         3nwraiQGFohwaYFwYJ+xx1yhSAEOKep3GlxiiAzbSExUgVN4jXJ3AYIhxqZUxwvxdsnk
-         IPPQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9fLCTOLBoD+5rrOEeFOjhOZd86bXkNXDFpUpJV+2ncMVFquYQGARYwNErz41Z1HJNtQf8U2WAwuaQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxiA9moXcTgViYGnz2mHuB69MK8F8YUzG38IMc0kCtDiwmakXrD
-	K9WMSvWRUDn6Cv/TgrMOzWb3on1dwXAU7krV5A8Iz2t3zLmH+asf91hy
-X-Gm-Gg: Acq92OF+lDgHqZ6JfIbjI5lRd2syYwcH8h2aZ0jk59IFUWlN4VfqHjb7GrcRR90UTKc
-	UQUCyaHa/UMI4FYlsexrYVK90svddZhz9Ptw8Ov2CQFr+3E5Mra4dsalJsiHMJJR8dy1CfPFtqH
-	j8H9mcP7Bt5EeMgIz9QUn4zm2mfSv5jypxmHp6dq4/34SQ/CAhHyQYqv9yU5m65gxlU1N1xfVOp
-	u7eh0GiTzK+OXroh6rjbXuYaiOQA0UkXM8JVj7ZCVOJmA9Nz44vgX/clrJov5mnizY5ocZ3QM3D
-	DMPZEOmsSru41wxMHJs0x0DqqykDZSMz5jXuZzZdvtzz/mExsFHBGpJo+VvdwJH6cqjGVo9XXK7
-	MIXSl8t77osk6dycPL00y67JhmO8mCVXuCYtD1F5CVu5gBuGQXjYJ0GZdazJypSpxsUR6cRHBzD
-	QagT8HP69b0ZvQNRBRy7BLFoIEM8XnlpbYAbBDqqkuTY92bs572iPDZ576ghrGMxU0hPkBeGJxJ
-	2bL6qMpo73jZ0xVFc9Wi+1N
-X-Received: by 2002:a05:6512:3e12:b0:5aa:6603:5256 with SMTP id 2adb3069b0e04-5aa7c0dc6e8mr1586061e87.28.1780515511635;
-        Wed, 03 Jun 2026 12:38:31 -0700 (PDT)
-Received: from ?IPV6:2a00:1fa0:4322:28:5bcf:7f50:ed88:1440? ([2a00:1fa0:4322:28:5bcf:7f50:ed88:1440])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5aa7b8fbe1dsm812806e87.27.2026.06.03.12.38.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Jun 2026 12:38:31 -0700 (PDT)
-Message-ID: <1379ffa1-ccb8-4ca7-991f-b9a55d519baf@gmail.com>
-Date: Wed, 3 Jun 2026 22:38:29 +0300
+	s=arc-20240116; t=1780522774; c=relaxed/simple;
+	bh=4ixFSV/12Id5tf/md9aSMpcT24U/Cz8Zv3drM0rLg14=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=SFQB5u1wrQ6bk0OIbhMPSA427JzkCvRvmRzFA6kMc5oOBL7fPw63LEIsHjjTeDWb23rEfGliLS0hcJzKF110BIlEaQxb0tgFCQgH396gRGw8w7gvZCKKTFuTuqnwDKCssF03ccmH5bk5ANFlnwoCn6YQ/2EVmNa89GYwHM6Dc0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A3131F0089B;
+	Wed,  3 Jun 2026 21:39:31 +0000 (UTC)
+Received: by venus (Postfix, from userid 1000)
+	id 7F4B0181D83; Wed, 03 Jun 2026 23:39:29 +0200 (CEST)
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+To: linux-phy@lists.infradead.org, 
+ Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
+ freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, 
+ linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+ linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+ linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org, 
+ linux-usb@vger.kernel.org, netdev@vger.kernel.org, spacemit@lists.linux.dev, 
+ UNGLinuxDriver@microchip.com, Abhinav Kumar <abhinav.kumar@linux.dev>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, 
+ =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
+ Andrew Lunn <andrew+netdev@lunn.ch>, 
+ Andrzej Hajda <andrzej.hajda@intel.com>, Andy Yan <andy.yan@rock-chips.com>, 
+ Bart Van Assche <bvanassche@acm.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Can Guo <quic_cang@quicinc.com>, Chanho Park <chanho61.park@samsung.com>, 
+ Chen-Yu Tsai <wens@kernel.org>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
+ Damien Le Moal <dlemoal@kernel.org>, 
+ Daniel Machon <daniel.machon@microchip.com>, 
+ David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
+ Dmitry Baryshkov <lumag@kernel.org>, Eric Dumazet <edumazet@google.com>, 
+ Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.Li@nxp.com>, 
+ Geert Uytterhoeven <geert+renesas@glider.be>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ =?utf-8?q?Heiko_St=C3=BCbner?= <heiko@sntech.de>, 
+ Inki Dae <inki.dae@samsung.com>, Jagan Teki <jagan@amarulasolutions.com>, 
+ Jakub Kicinski <kuba@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ JC Kuo <jckuo@nvidia.com>, Jernej Skrabec <jernej.skrabec@gmail.com>, 
+ Jessica Zhang <jesszhan0024@gmail.com>, Joe Perches <joe@perches.com>, 
+ Johan Hovold <johan+linaro@kernel.org>, Jonas Karlman <jonas@kwiboo.se>, 
+ Jonathan Hunter <jonathanh@nvidia.com>, 
+ Kevin Xie <kevin.xie@starfivetech.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Laurent Pinchart <Laurent.pinchart@ideasonboard.com>, 
+ Linus Walleij <linusw@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Magnus Damm <magnus.damm@gmail.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Marc Kleine-Budde <mkl@pengutronix.de>, 
+ Marek Szyprowski <m.szyprowski@samsung.com>, 
+ Marijn Suijten <marijn.suijten@somainline.org>, 
+ Markus Schneider-Pargmann <msp@baylibre.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Mathias Nyman <mathias.nyman@intel.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Maxime Ripard <mripard@kernel.org>, Michael Dege <michael.dege@renesas.com>, 
+ Nicolas Ferre <nicolas.ferre@microchip.com>, 
+ Niklas Cassel <cassel@kernel.org>, Nitin Rawat <quic_nitirawa@quicinc.com>, 
+ Paolo Abeni <pabeni@redhat.com>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Peter Chen <peter.chen@kernel.org>, 
+ Peter Griffin <peter.griffin@linaro.org>, 
+ Rob Clark <robin.clark@oss.qualcomm.com>, Robert Foss <rfoss@kernel.org>, 
+ Rob Herring <robh@kernel.org>, 
+ "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>, 
+ Samuel Holland <samuel@sholland.org>, Sandy Huang <hjc@rock-chips.com>, 
+ Sascha Hauer <s.hauer@pengutronix.de>, Sean Paul <sean@poorly.run>, 
+ Sebastian Reichel <sre@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, 
+ Shawn Lin <shawn.lin@rock-chips.com>, Simona Vetter <simona@ffwll.ch>, 
+ Steen Hegelund <Steen.Hegelund@microchip.com>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ Thinh Nguyen <Thinh.Nguyen@synopsys.com>, 
+ Thomas Zimmermann <tzimmermann@suse.de>, 
+ Tudor Ambarus <tudor.ambarus@linaro.org>, 
+ Vincent Mailhol <mailhol@kernel.org>, Xu Yang <xu.yang_2@nxp.com>, 
+ Yixun Lan <dlan@kernel.org>, 
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+In-Reply-To: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
+References: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
+Subject: Re: (subset) [PATCH v8 phy-next 00/31] Split Generic PHY consumer
+ and provider API
+Message-Id: <178052276949.2678508.3221123153750103034.b4-ty@collabora.com>
+Date: Wed, 03 Jun 2026 23:39:29 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: pata_mpc52xx: convert to platform_get_irq()
-To: Rosen Penev <rosenp@gmail.com>, linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20260603192028.5818-1-rosenp@gmail.com>
-Content-Language: en-US
-From: Sergey Shtylyov <sergei.shtylyov@gmail.com>
-In-Reply-To: <20260603192028.5818-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On 6/3/26 10:20 PM, Rosen Penev wrote:
 
-> Replace irq_of_parse_and_map() with platform_get_irq(), which returns
-> a negative errno on failure and integrates with the platform device
-> model. Since platform_get_irq() does not create a separately managed
-> mapping, the corresponding irq_dispose_mapping() calls in the probe
-> error path and remove function are no longer needed.
+On Tue, 05 May 2026 13:04:52 +0300, Vladimir Oltean wrote:
+> The biggest problem requiring this split is the fact that consumer
+> drivers poke around in struct phy, accessing fields which shouldn't be
+> visible to them. Follow the example of mux, gpio, iio, spi offload,
+> pwrsec, pinctrl and regulator, which each expose separate headers for
+> consumers and providers.
 > 
-> Assisted-by: opencode:big-pickle
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
-> ---
->  drivers/ata/pata_mpc52xx.c | 8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
+> Some off-list discussions were had with Vinod Koul regarding the 3 PHY
+> providers outside the drivers/phy/ subsystem. It was agreed that it is
+> desirable to relocate them to drivers/phy/, rather than to publish
+> phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
+> (new) phy-props.h - consumer-facing headers - stay there.
 > 
-> diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-> index 210a63283f62..f8ecd58765dd 100644
-> --- a/drivers/ata/pata_mpc52xx.c
-> +++ b/drivers/ata/pata_mpc52xx.c
-> @@ -730,10 +730,10 @@ static int mpc52xx_ata_probe(struct platform_device *op)
->  	if ((prop) && (proplen >= 4))
->  		udma_mask = ATA_UDMA2 & ((1 << (*prop + 1)) - 1);
->  
-> -	ata_irq = irq_of_parse_and_map(op->dev.of_node, 0);
-> -	if (!ata_irq) {
-> +	ata_irq = platform_get_irq(op, 0);
-> +	if (ata_irq < 0) {
->  		dev_err(&op->dev, "error mapping irq\n");
+> [...]
 
-   s/mapping/getting/?
-   But actually platform_get_irq() loudly curses on error already... :-)
+Applied, thanks!
 
-[...]
+[26/31] power: supply: cpcap-charger: include missing <linux/property.h>
+        commit: a9e36028b688d693d8aefbf84a9899f31a20fcf0
 
-MBR, Sergey
+Best regards,
+-- 
+Sebastian Reichel <sebastian.reichel@collabora.com>
 
