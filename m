@@ -1,135 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7AD14A2E07;
-	Wed,  3 Jun 2026 21:39:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C71A2BF3F4;
+	Thu,  4 Jun 2026 10:03:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780522774; cv=none; b=C5Ibx7KZSdSjPrRdNDwHEYUpk7E3YDWijoRddn4CwtGE1G6ZdW+9bs/sOO/nCg0Qe199ip/GL4pNZfS7uLutvDoRzPgztUHMLTPGbMBuHtC4c5eKCROdwgacJMIkJD9zDBeyLyq1MFjvcIHmRBzhQaceBxixEtsIsLDTC65LPFg=
+	t=1780567441; cv=none; b=iQKfYp3yuSxp3aiSKdymH0Qt3E7BbubOeuDPwxAgwAx4Xt2vmJYiNQuTNPOTkScvJ9LVUDLbSedG7xKDn+JjKXhCZ9m5lpmLcOKBzQHymJc3R8RJcEiOzbX+sNluloF2mKcrgcoBjCfize5PVRaPvUojUpnTGUriY29GKeTNfzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780522774; c=relaxed/simple;
-	bh=4ixFSV/12Id5tf/md9aSMpcT24U/Cz8Zv3drM0rLg14=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=SFQB5u1wrQ6bk0OIbhMPSA427JzkCvRvmRzFA6kMc5oOBL7fPw63LEIsHjjTeDWb23rEfGliLS0hcJzKF110BIlEaQxb0tgFCQgH396gRGw8w7gvZCKKTFuTuqnwDKCssF03ccmH5bk5ANFlnwoCn6YQ/2EVmNa89GYwHM6Dc0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A3131F0089B;
-	Wed,  3 Jun 2026 21:39:31 +0000 (UTC)
-Received: by venus (Postfix, from userid 1000)
-	id 7F4B0181D83; Wed, 03 Jun 2026 23:39:29 +0200 (CEST)
-From: Sebastian Reichel <sebastian.reichel@collabora.com>
-To: linux-phy@lists.infradead.org, 
- Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: Vinod Koul <vkoul@kernel.org>, 
- Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
- freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, 
- linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
- linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
- linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
- linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
- linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org, 
- linux-usb@vger.kernel.org, netdev@vger.kernel.org, spacemit@lists.linux.dev, 
- UNGLinuxDriver@microchip.com, Abhinav Kumar <abhinav.kumar@linux.dev>, 
- Alexandre Belloni <alexandre.belloni@bootlin.com>, 
- Alim Akhtar <alim.akhtar@samsung.com>, 
- =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- Andrzej Hajda <andrzej.hajda@intel.com>, Andy Yan <andy.yan@rock-chips.com>, 
- Bart Van Assche <bvanassche@acm.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Can Guo <quic_cang@quicinc.com>, Chanho Park <chanho61.park@samsung.com>, 
- Chen-Yu Tsai <wens@kernel.org>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
- Damien Le Moal <dlemoal@kernel.org>, 
- Daniel Machon <daniel.machon@microchip.com>, 
- David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
- Dmitry Baryshkov <lumag@kernel.org>, Eric Dumazet <edumazet@google.com>, 
- Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.Li@nxp.com>, 
- Geert Uytterhoeven <geert+renesas@glider.be>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- =?utf-8?q?Heiko_St=C3=BCbner?= <heiko@sntech.de>, 
- Inki Dae <inki.dae@samsung.com>, Jagan Teki <jagan@amarulasolutions.com>, 
- Jakub Kicinski <kuba@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- JC Kuo <jckuo@nvidia.com>, Jernej Skrabec <jernej.skrabec@gmail.com>, 
- Jessica Zhang <jesszhan0024@gmail.com>, Joe Perches <joe@perches.com>, 
- Johan Hovold <johan+linaro@kernel.org>, Jonas Karlman <jonas@kwiboo.se>, 
- Jonathan Hunter <jonathanh@nvidia.com>, 
- Kevin Xie <kevin.xie@starfivetech.com>, 
- Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Laurent Pinchart <Laurent.pinchart@ideasonboard.com>, 
- Linus Walleij <linusw@kernel.org>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Magnus Damm <magnus.damm@gmail.com>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Marc Kleine-Budde <mkl@pengutronix.de>, 
- Marek Szyprowski <m.szyprowski@samsung.com>, 
- Marijn Suijten <marijn.suijten@somainline.org>, 
- Markus Schneider-Pargmann <msp@baylibre.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Mathias Nyman <mathias.nyman@intel.com>, 
- Mauro Carvalho Chehab <mchehab@kernel.org>, 
- Maxime Ripard <mripard@kernel.org>, Michael Dege <michael.dege@renesas.com>, 
- Nicolas Ferre <nicolas.ferre@microchip.com>, 
- Niklas Cassel <cassel@kernel.org>, Nitin Rawat <quic_nitirawa@quicinc.com>, 
- Paolo Abeni <pabeni@redhat.com>, 
- Pengutronix Kernel Team <kernel@pengutronix.de>, 
- Peter Chen <peter.chen@kernel.org>, 
- Peter Griffin <peter.griffin@linaro.org>, 
- Rob Clark <robin.clark@oss.qualcomm.com>, Robert Foss <rfoss@kernel.org>, 
- Rob Herring <robh@kernel.org>, 
- "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>, 
- Samuel Holland <samuel@sholland.org>, Sandy Huang <hjc@rock-chips.com>, 
- Sascha Hauer <s.hauer@pengutronix.de>, Sean Paul <sean@poorly.run>, 
- Sebastian Reichel <sre@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, 
- Shawn Lin <shawn.lin@rock-chips.com>, Simona Vetter <simona@ffwll.ch>, 
- Steen Hegelund <Steen.Hegelund@microchip.com>, 
- Thierry Reding <thierry.reding@gmail.com>, 
- Thinh Nguyen <Thinh.Nguyen@synopsys.com>, 
- Thomas Zimmermann <tzimmermann@suse.de>, 
- Tudor Ambarus <tudor.ambarus@linaro.org>, 
- Vincent Mailhol <mailhol@kernel.org>, Xu Yang <xu.yang_2@nxp.com>, 
- Yixun Lan <dlan@kernel.org>, 
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-In-Reply-To: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
-References: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
-Subject: Re: (subset) [PATCH v8 phy-next 00/31] Split Generic PHY consumer
- and provider API
-Message-Id: <178052276949.2678508.3221123153750103034.b4-ty@collabora.com>
-Date: Wed, 03 Jun 2026 23:39:29 +0200
+	s=arc-20240116; t=1780567441; c=relaxed/simple;
+	bh=vcg/q8QPQ363sZVmhpov0b4BLBC9751058fX8ZL4XGs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gQ6FRR+JTxsHvtlIDxEr3HPxq9o267ndcA5WmMRNpxtALRbypOIorEALhI0fvH3ht44ssUCC4yXSaGn19YzeniFl+r2Vrp6KR5xnSYdct/ee/UXuEFnmjQhOYPV86MJRKRdup57Ue2OeoHiGzn8zwODK+eRF1y1LcL7uzOWClHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nLuUZRGS; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nLuUZRGS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3B3F1F00893;
+	Thu,  4 Jun 2026 10:03:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780567438;
+	bh=2ofRwHTLn/12l/fT2KWbpQRZ9Zj+qKy2X84oj6OTDoU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=nLuUZRGSVBsFqHiOE0OS7Na1bclGW0ulONzASXaRihd1Ov0+tSvKBr4ynRvzQ6Kkj
+	 xW2uF48bC9wl4xI3zLvbuxsKCy/IuXsxgbUcQidCmczP73AT0vWM9FU9H+Ka8vgVTg
+	 Sgeddng5pVcBkAwBCvdtTVivwPjgY6EEb0WrGgDLVUUdUva63+RZIVfCzuBWjX0o6L
+	 KzFjzTPV4m7/Ie7ve3miCQs/AkPrmKyOBYtFlvQGEGUhcHZ8wCX7ipk9L+hGq3w9Ee
+	 x1SZ8dJIMCxs+IJjmbHF3pJxs11edK0oczVuxlnEU/U9Ko9yv8I8THxbD85+g6FlKQ
+	 MT4ucuuR+unQw==
+Date: Thu, 4 Jun 2026 12:03:53 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Wentao Liang <vulab@iscas.ac.cn>,
+	Florian Fainelli <f.fainelli@gmail.com>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] ata: ahci_brcm: fix reset refcount leak in
+ brcm_ahci_resume()
+Message-ID: <aiFNiWf7bs2pmPFh@ryzen>
+References: <20260603102420.3735032-1-vulab@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260603102420.3735032-1-vulab@iscas.ac.cn>
 
-
-On Tue, 05 May 2026 13:04:52 +0300, Vladimir Oltean wrote:
-> The biggest problem requiring this split is the fact that consumer
-> drivers poke around in struct phy, accessing fields which shouldn't be
-> visible to them. Follow the example of mux, gpio, iio, spi offload,
-> pwrsec, pinctrl and regulator, which each expose separate headers for
-> consumers and providers.
+On Wed, Jun 03, 2026 at 10:24:20AM +0000, Wentao Liang wrote:
+> When brcm_ahci_resume() succeeds with reset_control_reset(), any
+> subsequent failure in ahci_platform_enable_clks(),
+> ahci_platform_enable_regulators(), ahci_platform_enable_phys(),
+> or ahci_platform_resume_host() leaves the shared reset line's
+> triggered_count incremented by one. On the next attempt to reset
+> the hardware, atomic_inc_return() sees a count greater than one
+> and the reset is silently skipped, potentially causing data
+> corruption or device malfunction.
 > 
-> Some off-list discussions were had with Vinod Koul regarding the 3 PHY
-> providers outside the drivers/phy/ subsystem. It was agreed that it is
-> desirable to relocate them to drivers/phy/, rather than to publish
-> phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
-> (new) phy-props.h - consumer-facing headers - stay there.
+> Add a reset_control_rearm() call in the common error path after
+> brcm_sata_phys_disable() and ahci_platform_disable_regulators()
+> to properly balance the triggered_count, matching what the probe
+> error path already does.
 > 
-> [...]
+> Fixes: c0cdf2ac4b5b ("ata: ahci_brcm: Fix AHCI resources management")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+> ---
+>  drivers/ata/ahci_brcm.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+> index 29be74fedcf0..38c63d73d210 100644
+> --- a/drivers/ata/ahci_brcm.c
+> +++ b/drivers/ata/ahci_brcm.c
+> @@ -415,6 +415,7 @@ static int __maybe_unused brcm_ahci_resume(struct device *dev)
+>  out_disable_phys:
+>  	brcm_sata_phys_disable(priv);
+>  	ahci_platform_disable_regulators(hpriv);
+> +	reset_control_rearm(priv->rcdev_rescal);
+>  out_disable_clks:
+>  	ahci_platform_disable_clks(hpriv);
+>  	return ret;
 
-Applied, thanks!
+When writing a fix that has a Fixes-tag, please CC the author of the offending
+commit. Note that if you use ./scripts/get_maintainer.pn on a a patch, it will
+automatically include the author of the offending commit in the list of people
+to CC.
 
-[26/31] power: supply: cpcap-charger: include missing <linux/property.h>
-        commit: a9e36028b688d693d8aefbf84a9899f31a20fcf0
 
-Best regards,
--- 
-Sebastian Reichel <sebastian.reichel@collabora.com>
+Now you are adding reset_control_rearm() before disabling clocks to the error
+handling in brcm_ahci_resume(), however in the error handing in
+brcm_ahci_probe(), we call reset_control_rearm() after disabling clocks.
+Why should the error handling in brcm_ahci_resume() not match that of
+brcm_ahci_probe() ?
 
+
+I am confused as to why the error handling in brcm_ahci_probe() is calling both
+reset_control_rearm() and reset_control_reset().
+
+The documentation for reset_control, explicitly says not to do this:
+https://github.com/torvalds/linux/blob/v7.1-rc6/drivers/reset/core.c#L365-L366
+
+And in libahci_platform.c, we always do either:
+return reset_control_rearm() or return reset_control_reset():
+https://github.com/torvalds/linux/blob/v7.1-rc6/drivers/ata/libahci_platform.c#L188-L193
+
+Too bad that this driver is not using the generic AHCI functions in
+libahci_platform.c.
+
+
+Kind regards,
+Niklas
