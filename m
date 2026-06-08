@@ -1,111 +1,128 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B31837AA9E
-	for <linux-ide@vger.kernel.org>; Mon,  8 Jun 2026 21:59:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A811F30E0FB
+	for <linux-ide@vger.kernel.org>; Mon,  8 Jun 2026 22:10:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780955969; cv=none; b=oOn/dRyf/9ChqVCHt7LL4EansQYNvbQ8SUJ7B6xniwP/b9RCPjhc25W7WMqJFHv4FwWEdsmbLa4uswRP2JlPHO+ixkZnLTK4yGAacX4nMmKeVsW9zUhcHinRvoeh8TDiB39VNibj7ooERJmGJmBGRhkZcVlTI+SfVqQdYlK3dq8=
+	t=1780956604; cv=none; b=JXki9rf8tkWGdE/zVBRmSm9HYpHCT79vhqvli81Do8VWz6k91AJ6gAcZ+Jt9lLEfnV5f1dtWswrPtRHYme14EMQKqtoRVlzhqsnwfAnOxiXO9rzW/XK9qtgxswRXlM8p9z+4/MDw9nEsXsBDaIthoaAUbzOZQH0HUYmi9rmtl3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780955969; c=relaxed/simple;
-	bh=sEmYonIqEX80gQ+bTX7o5XF2YbrA8F8CTNVuw3qWfJs=;
+	s=arc-20240116; t=1780956604; c=relaxed/simple;
+	bh=sC9RVZERONyGrpPlbeupzUdRrJhWj2VHV49ddD4MUKI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h/Qnqhlpw9zEiPJCZkDQ77eSF8upvpFJHceqXbRF+k/CiAKqEJaskCqKor97+1Pf1QpEiuRvpwyxTRlpGhAECjN1lZoHepVJz9FhQSOr/2Zkrr5+2ZAX+/zTWL39e6QikPfRcERvGBd22sa3wxYwHfKJZLthkVii9ED0eDnYV6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j+r6QpEa; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=c6bR021JbUykvY6hmXUHpNfn4JZm0UDnl5O1QP55HhFr0bZ8wUOaQIfxdvAMXEdMVve3rmSVc/JUKxHChL9ozHULhQGrZ+FV6zqA/g7xATHWfq/jOmQybR1MckbUuYkqwaMOLOrVUIytrdrvvnlxiB05q5n31TPWKDC3Vof1yXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q9NUzXLB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j+r6QpEa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D625B1F00893;
-	Mon,  8 Jun 2026 21:59:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q9NUzXLB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1ECFE1F00893;
+	Mon,  8 Jun 2026 22:10:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780955968;
-	bh=vnXdiQXK60JHjmZTKSGasvmiuO0PkNgXPPZLc/5Xeqc=;
+	s=k20260515; t=1780956603;
+	bh=T/9sE18/vr4th8xaQMw/XteIjDgTKlWS8V6a9iUnHBM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=j+r6QpEabphX66ePTSugmKPsGEXWp3ifZ46EzJtOJFm35GFrrZTTomQVaPd/IRV1p
-	 r4YveOMnR6H2d4/W9PACEH/CPDfpTAnP6o4d9GeWVI574ozA3zTrEn49Drnzy3ub8X
-	 m5ZeLIVSrjFx2RGxjFmnv8BJ7kboEv1HfvqhxQrZWllb/9QyRn4sAMJJE4xUC+RA5U
-	 k6GEgvDnbEZClQ4yTLSCiS4DnRvV+FLuizQCC/ltGj1Qy5QcwQpXSymBG/IYyHnwOd
-	 9OGgl6PHBtI1R/KnUM7ue6HlmsGWazoObma7MTbO+C2Qzvwzlx8lkGYOibsUS72XN4
-	 7kfviaHumHorA==
+	b=Q9NUzXLBXPzaOEFiMluwdKOIu40+KwA9RuzywTHk5oSnVz8hxYdIeQreTWeAXkBwA
+	 V26Njj6PLyBFFddisnA4OxUiAvtRhaOjUN3puiMXNdFp6c77KWvADhlNzCwRDJMbJI
+	 AAAAAW881G44WhrsVBFRPl72an1HqM6ritR5Cl6oRrEb1wkY+eGZ6v/Pjav2xtl9Fs
+	 aHUJTRqgNrct2qLjH+amcIPtrQx+xrXaznJgcE0/QZFQFQBuCGfn7/yFqejnHRvRA7
+	 WBztKXDgVIwxAUyc7lycCBaVgxX4UFqg2+6bFLNDk9BXBwcyn6jMzIzY8K8+gG6c2K
+	 x5v/CsPQgxJDA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/4] ata: pata_mpc52xx: switch to non-devm request_irq
- for proper ordering
+Subject: Re: [PATCH v6 4/6] scsi: add BLIST_NO_LUN_1F blacklist flag
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rosen Penev" <rosenp@gmail.com>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20260608214718.49503-2-rosenp@gmail.com>
-References: <20260608214718.49503-2-rosenp@gmail.com>
+To: "Phil Pemberton" <philpem@philpem.me.uk>
+Cc: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260608213443.2296614-5-philpem@philpem.me.uk>
+References: <20260608213443.2296614-5-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 08 Jun 2026 21:59:26 +0000
-Message-Id: <20260608215927.D625B1F00893@smtp.kernel.org>
+Date: Mon, 08 Jun 2026 22:10:02 +0000
+Message-Id: <20260608221003.1ECFE1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
+New issues:
+- [Medium] The BLIST_NO_LUN_1F flag fails to suppress the initial unpopulat=
+ed LUN (usually LUN 0) from being added as a spurious 'No Device' entry.
+
 Pre-existing issues:
-- [High] The IRQ handler `mpc52xx_ata_task_irq` is registered and unmasked =
-before the driver's private state (`priv->dmatsk`) is fully initialized, cr=
-eating a window where an immediate interrupt could trigger a NULL pointer d=
-ereference.
+- [High] Concurrent read-modify-write on `struct scsi_target` bitfields cau=
+ses data races and lost updates.
 --
 
-commit 51800f0b7ed178011074a74c7015353a1624d9fd
-Author: Rosen Penev <rosenp@gmail.com>
+commit 10038c8d1287bfd2d8ba061ac2b0a14d56b4076e
+Author: Phil Pemberton <philpem@philpem.me.uk>
+scsi: add BLIST_NO_LUN_1F blacklist flag
 
-ata: pata_mpc52xx: switch to non-devm request_irq for proper ordering
+This commit introduces the BLIST_NO_LUN_1F blacklist flag to suppress spuri=
+ous
+"No Device" entries on certain multi-LUN devices. It modifies scsi_add_lun()
+to set the pdt_1f_for_no_lun flag during LUN scan based on the new blacklist
+flag.
 
-This patch replaces devm_request_irq with request_irq for the BestComm
-task IRQ to ensure the interrupt is unregistered before bcom_ata_release()
-tears down the task. This fixes a race condition during device removal or
-error paths where the handler could access freed memory.
-
-> diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-> index 210a63283f62b..9af0aa89a5c66 100644
-> --- a/drivers/ata/pata_mpc52xx.c
-> +++ b/drivers/ata/pata_mpc52xx.c
-> @@ -767,11 +767,11 @@ static int mpc52xx_ata_probe(struct platform_device=
- *op)
->  	}
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index ef22a4228b855..bfbbf9be05d21 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1069,6 +1069,8 @@ static int scsi_add_lun(struct scsi_device *sdev, u=
+nsigned char *inq_result,
+>  	transport_configure_device(&sdev->sdev_gendev);
 > =20
->  	task_irq =3D bcom_get_task_irq(dmatsk);
-> -	rv =3D devm_request_irq(&op->dev, task_irq, &mpc52xx_ata_task_irq, 0,
-> -				"ATA task", priv);
-> +	rv =3D request_irq(task_irq, &mpc52xx_ata_task_irq, 0,
-> +			  "ATA task", priv);
->  	if (rv) {
->  		dev_err(&op->dev, "error requesting DMA IRQ\n");
-> -		goto err2;
-> +		goto err_free_task;
->  	}
->  	priv->dmatsk =3D dmatsk;
+>  	sdev->sdev_bflags =3D *bflags;
+> +	if (sdev->sdev_bflags & BLIST_NO_LUN_1F)
+> +		sdev->sdev_target->pdt_1f_for_no_lun =3D 1;
+
+[Severity: Medium]
+Will this actually suppress the spurious entry for the first scanned LUN
+(typically LUN 0)?
+
+Looking at scsi_probe_and_add_lun(), the suppression check evaluates
+starget->pdt_1f_for_no_lun before scsi_add_lun() is called:
+
+scsi_probe_and_add_lun() {
+    ...
+    if (((result[0] >> 5) =3D=3D 1 || starget->pdt_1f_for_no_lun) &&
+        ...
+        /* skip LUN */
+        return SCSI_SCAN_TARGET_PRESENT;
+    ...
+    scsi_add_lun(...);
+}
+
+If LUN 0 is unpopulated, does it bypass the suppression check since the flag
+is only set here in scsi_add_lun() afterward?
 
 [Severity: High]
-This is a pre-existing issue, but could this ordering cause a NULL pointer
-dereference if an interrupt fires immediately after registration?
+This is a pre-existing issue, but does adding another non-atomic bitfield
+modification here expand a race window?
 
-In mpc52xx_ata_probe(), the IRQ is requested and enabled before the DMA
-task pointer is assigned to the driver's private state. Since priv is
-allocated with devm_kzalloc(), priv->dmatsk is NULL during the
-request_irq() call.
+The fields pdt_1f_for_no_lun, single_lun, and expecting_lun_change are
+adjacent bitfields in struct scsi_target that share the same memory word.
+Modifying a bitfield performs a non-atomic read-modify-write.
 
-If a pending or spurious interrupt fires before the priv->dmatsk assignment
-completes, the handler is invoked and dereferences the uninitialized pointe=
-r:
+Since scsi_add_lun() modifies pdt_1f_for_no_lun and single_lun from process
+context (e.g., during a rescan), and an I/O completion on an already-active
+LUN encountering a Unit Attention might call scsi_report_lun_change() which
+modifies expecting_lun_change from softirq context, can this concurrent
+read-modify-write cause updates to be lost?
 
-mpc52xx_ata_task_irq()
-    while (bcom_buffer_done(priv->dmatsk))
-        bcom_retrieve_buffer(priv->dmatsk, NULL, NULL);
+If expecting_lun_change is lost, does it result in failing commands with
+spurious I/O errors instead of retrying them?
 
-Should priv->dmatsk be assigned to the private structure before registering
-the interrupt handler to avoid this window?
+If single_lun is lost, could it allow concurrent I/O to devices that do not
+support it, potentially causing device hangs or data corruption?
+
+> =20
+>  	if (scsi_device_is_pseudo_dev(sdev))
+>  		return SCSI_SCAN_LUN_PRESENT;
 
 [ ... ]
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260608214718.4950=
-3-1-rosenp@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260608213443.2296=
+614-1-philpem@philpem.me.uk?part=3D4
