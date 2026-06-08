@@ -1,54 +1,72 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D97072E9729;
-	Mon,  8 Jun 2026 21:34:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E553339E9B0
+	for <linux-ide@vger.kernel.org>; Mon,  8 Jun 2026 21:47:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780954502; cv=none; b=EObORNGKhVvmWp6THv4VizxNg6f2hlnNCK9e9bH9cyg28siFLEbaIMIfYqrryUEPKDQnR+X0EOzJCHLVKl2ePuJaPjSxsCm2Ue94DgPhmUg5FiqFrkbhXfkFOg82Zo1RjY4kPVDO3tlqGNFZkX6RFzeStKN1RDICl7buiPLMHJk=
+	t=1780955259; cv=none; b=UII0q6XWN87VbZa4n13xQ4OzLJy3TNyMq7KgZRQsoj1PuXfMTky1nNTAs4V/jmUh/AuufhB7y4bkx4oHS3ANKBjfen6MF8a3weNj77e6SwTG30ECuQjC55guQwZuVGMEeF1SdE3Wf7hb07/Zy9n7TfxFbFLyGC63gSLpTgu6hXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780954502; c=relaxed/simple;
-	bh=2Zw3vbvV8x4GK8JZGJ5RHUORMcfvOnvV4537sQAvgsk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lUzIpDHMY9rMMmuT41946lcyG98P7RPnITNHx2h+a70ehW7M0UFwNo0nV0m0x52kKbQZEyboya/ADBfZEVralcsfuAg39dfJAy7OvischzFZMWmctH41KqWbfjuD4EJc1Ef7Pq8UlDCJigjiFIwbViXEOozHhGndkb+FuMMTHLg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=U6TBUtIB; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1780955259; c=relaxed/simple;
+	bh=Cs8RF66VXH0FZvNEec15nNUfJ+jOAg4nrbIAlIRIjWI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=d1n1Lq7slPzJs+slJ32jSMNLhMSg1Sz/yIwE/3ymmMb1zMoxm2JwYAQFo6ZvoxU759BqvvJmGZcky87gf7obQYsdtbCScDpVGI4hI3greW8jsMg92LH6McUSb6DUrtpUusFDrYJw8FX6agyzPOw6vhYgaWDru8Rm71rVVgeYLX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L1yDOYJp; arc=none smtp.client-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="U6TBUtIB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1780954491;
-	bh=2Zw3vbvV8x4GK8JZGJ5RHUORMcfvOnvV4537sQAvgsk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=U6TBUtIBmVrjngcikqOas574rgOrKoEECqKy1zZoLX3+ZtoTQtSbSFGdC9t1nIXfv
-	 r5bGWJuMC7cEqkWmrou9znw/U0tGzHI0o1u1Fyafo3YLf3xYpPhpOwSQzcO7uxwe4w
-	 2WwI20Ir/yJfqKqSJZjO7s5VrTcoMNVfEBLbW4Oc=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 81A10BE731;
-	Mon,  8 Jun 2026 21:34:51 +0000 (UTC)
-Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 1ABA65FC4F;
-	Mon,  8 Jun 2026 22:34:51 +0100 (BST)
-From: Phil Pemberton <philpem@philpem.me.uk>
-To: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L1yDOYJp"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-36d630c0e35so4980021a91.3
+        for <linux-ide@vger.kernel.org>; Mon, 08 Jun 2026 14:47:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780955256; x=1781560056; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=UNWgux0XZGrYmGXRTAW1HdM7Fq4xDAdijXCv4nyh8y0=;
+        b=L1yDOYJpYG2jl23KJu4avl87wwfrle2Mr6VS2anIRRzuzR3I3DQWFjUcsNo3fnWshu
+         c6jK2ePuSi5HorAEpsavXd8sGky+tITeJD6aFdPvb4arzGBGZdjX4kFPgBBQFtHBijmc
+         xYV4pl7k6ldN4sp9LnvwnXwzrP0p5lkpgPbOrQu0kQR8rYHVR6WXWQM7N38Y2IPwYd0B
+         +zOoBsjV5HDnkLQEfE8a/+Op4RRCFeJZPUO+NucCmI9TSAAjotXrlSOzN2Z3KOqeRpt9
+         F5jcnhrMmnFmgo7meTMSNUPlnmpSOu71BZILD+81NsqrWB+G7bTPk4FvSfvKsIQb4rw7
+         KYPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780955256; x=1781560056;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UNWgux0XZGrYmGXRTAW1HdM7Fq4xDAdijXCv4nyh8y0=;
+        b=d8tWYfsp1vjRikqS6wX+wWa0SpfDGsKwclqQ+ZZ4VXuPt9Mj2RKuHEo6B7xH6UdKYf
+         GtYJYeFZduSe6BzEbD4RCTWgqKEkNFkIeJF6mnR86NtAbL8kx5A29/mdipdqSEgkIFh0
+         jl7fzVo20QFORTzH1Ub3Q3/BR+ks+w5+XPTjc8caGNMV47CzHXJP8BVf1iMNM7N4Fsmg
+         WojYzA8em25UFvKXwf+DJeCW09hAFZcSW1I7v7V3RWOIwFwAGwvIegEzdc5jWqHC4QqM
+         pARTzUXFRvVBUAHRzWaj9H6Qf9CV6iP9AU2L0cQnoILTkKxrVm7md0BL3TKkIKZVoVxH
+         CUnQ==
+X-Gm-Message-State: AOJu0YxAubTUa9Xi1M/WIJlaed8pLC1beMt1Y3MbIkt7ax82N4yKbrnQ
+	c9730tYZF8JVQDHQE6JxoIOzVbY0bOiuoTF1xRy681saeWeDC++LbjN0QlzAtz2n
+X-Gm-Gg: Acq92OHOY8S/xcV2shojpqed55UyBpM9USqKFFX7QCo7D363wrwj/ZmkMKYnXIG5HAs
+	2cIVK2wJe1Gw4eBHGIFnEmadqvR1LyETpSLI4LI65O9cNJzBByfXs6h4dSH3BVOjFYyEi+c/NXv
+	G+6XiMy0t7rZWCLeLvcEQqvf39nm4z7p2jNOZ4ABeKZry/2v4JOiOxVsZFVGvdCDQd0kRneDZCX
+	ie55X22KepqhhKXwNibiJs9633pk2clMPZ9sCv0z0bHtPNOuPL4gEgXssOEvXoJRquPTGTHbUXb
+	2nXvhn8IgoqSbZozTD6AtGeDyUbqDZlcpo/tVW73dDjPKfHGOOStKAqv1N+m8RIWPab4GWUgFXv
+	55h2xGbMlOCaS+8RmnPNdau3atcguWvEzQ+jwNx42IvS2SMItvSZdmTqTBhiEurogbuNZmVsER0
+	oIUHA2GOZpbPlkvKwKxAGSusf/0mOkInyBHVwldh3b0z7QFeVxWxzu3OtGCYBoGBOLty5snX11l
+	+5fueq8Q6KuE7FScYs71o3CLKhp56PdhYMw41VZZYbHLw==
+X-Received: by 2002:a17:90b:554c:b0:36b:9512:871b with SMTP id 98e67ed59e1d1-370eed0b682mr18481983a91.11.1780955256253;
+        Mon, 08 Jun 2026 14:47:36 -0700 (PDT)
+Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c85df0b2ddbsm16016505a12.24.2026.06.08.14.47.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 Jun 2026 14:47:35 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>
-Subject: [PATCH v6 5/6] ata: libata-scsi: probe additional LUNs for multi-LUN ATAPI devices
-Date: Mon,  8 Jun 2026 22:34:42 +0100
-Message-ID: <20260608213443.2296614-6-philpem@philpem.me.uk>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260608213443.2296614-1-philpem@philpem.me.uk>
-References: <20260608213443.2296614-1-philpem@philpem.me.uk>
+	Jeff Garzik <jgarzik@redhat.com>,
+	Julia Lawall <Julia.Lawall@lip6.fr>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 0/4] ata: pata_mpc52xx: fix cleanup ordering and modernize
+Date: Mon,  8 Jun 2026 14:47:14 -0700
+Message-ID: <20260608214718.49503-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -57,75 +75,29 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-After LUN 0 is added for an ATAPI device, check its BLIST_FORCELUN
-flag.  If set, bump dev->nr_luns to the host's max_lun so the LUN
-routing in atapi_xlat() accepts the probe INQUIRYs, then call
-scsi_scan_target() with SCAN_WILD_CARD to trigger the SCSI layer's
-built-in sequential LUN scan for that target only.  This probes
-LUNs 1..shost->max_lun, driven by the libata atapi_max_lun module
-parameter.
+Fix several lifecycle bugs in the MPC52xx ATA driver:
 
-Devices without BLIST_FORCELUN (the vast majority of ATAPI devices)
-are left with only LUN 0 -- no sequential scan is triggered, so
-single-LUN devices like the iHAS124 DVD writer are completely
-unaffected.
+ - The BestComm task IRQ was managed by devm, creating a use-after-free
+   and teardown inversion.  Switch to non-devm request_irq/free_irq so
+   the interrupt is unregistered before the task is freed.
 
-Non-responding LUNs (PQ=0/PDT=0x1f) are silently skipped by
-scsi_probe_and_add_lun() when BLIST_NO_LUN_1F is set on the device
-via scsi_devinfo.
+ - The error and remove paths called irq_dispose_mapping() explicitly,
+   duplicating the one in bcom_task_free().  Remove the redundant calls.
 
-Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
----
- drivers/ata/libata-scsi.c | 27 +++++++++++++++++++++++----
- 1 file changed, 23 insertions(+), 4 deletions(-)
+ - Replace irq_of_parse_and_map() with platform_get_irq() for proper
+   error handling and integration with the platform device model.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2d714efc855f..a6f5557014c7 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -26,6 +26,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_devinfo.h>
- #include <linux/libata.h>
- #include <linux/hdreg.h>
- #include <linux/uaccess.h>
-@@ -4745,12 +4746,30 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
- 						 NULL);
- 			if (!IS_ERR(sdev)) {
--				dev->sdev[0] = sdev;
--				ata_scsi_assign_ofnode(dev, ap);
-+				/*
-+				 * For multi-LUN ATAPI (BLIST_FORCELUN), bump
-+				 * dev->nr_luns to the host max so the LUN
-+				 * routing in atapi_xlat() accepts the probe
-+				 * INQUIRYs to LUN > 0, then trigger the
-+				 * sequential scan.  pdt_1f_for_no_lun, set
-+				 * during LUN 0 configure, ensures
-+				 * non-responding LUNs are silently skipped;
-+				 * dev->sdev[] is populated by
-+				 * ata_scsi_dev_config() during the scan.
-+				 */
-+				if (dev->class == ATA_DEV_ATAPI &&
-+				    sdev->sdev_bflags & BLIST_FORCELUN) {
-+					dev->nr_luns = ap->scsi_host->max_lun;
-+					scsi_scan_target(
-+						&ap->scsi_host->shost_gendev,
-+						channel, id, SCAN_WILD_CARD,
-+						SCSI_SCAN_RESCAN);
-+				}
- 				scsi_device_put(sdev);
--			} else {
--				dev->sdev[0] = NULL;
- 			}
-+
-+			if (dev->sdev[0])
-+				ata_scsi_assign_ofnode(dev, ap);
- 		}
- 	}
- 
+ - Replace the open-coded of_address_to_resource()/devm_request_mem_region()
+   /devm_ioremap() sequence with the standard helper.
+
+Rosen Penev (4):
+  ata: pata_mpc52xx: switch to non-devm request_irq for proper ordering
+  ata: pata_mpc52xx: remove redundant irq_dispose_mapping calls
+  ata: pata_mpc52xx: convert to platform_get_irq()
+  ata: pata_mpc52xx: use devm_platform_get_and_ioremap_resource
+
+ drivers/ata/pata_mpc52xx.c | 67 ++++++++++++--------------------------
+ 1 file changed, 21 insertions(+), 46 deletions(-)
+
 -- 
-2.43.0
-
+2.54.0
