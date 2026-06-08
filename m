@@ -1,165 +1,153 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E715330C157
-	for <linux-ide@vger.kernel.org>; Mon,  8 Jun 2026 22:13:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2084128B4E2
+	for <linux-ide@vger.kernel.org>; Mon,  8 Jun 2026 22:17:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780956799; cv=none; b=a099TeAr3zzQ5GwDNROWZ5qHQtcWbLlIIwXAa69rstOTisJx3ZW/9y1Nk2D6rRRe7SlLIdIijAuXpKZLoE7zIeyBGX5D88tBP6K4QjB1UFgaRN3xOxytVS2RYerDxdw9+yCEURd1dcKf5Ds+wBK4aMMa6jQJMcidyNXru4tzUmk=
+	t=1780957047; cv=none; b=Cu2BQX73tYdiTmz8ehgokXrfLCiQaR/1A23XuHBswBdMAriPxOHREkktX3VleXZ+GJo9fudOH3RDMIKRWXKEPKonEJVwRAf/YniDAHIUxCKLMn+He0gwH0NgmHs92QI5PzWJyP0Dlgzx+Ol4rm78y8/qjvnDo4PcAGUrH/27pHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780956799; c=relaxed/simple;
-	bh=PvsOcSQ8PA1qTv/5MOwsBS23J7y3He9wwxGWx07A1N4=;
+	s=arc-20240116; t=1780957047; c=relaxed/simple;
+	bh=UZiOQTdjouwAZpJ5Y1GgSTwWRA56cRnLbRj4+kSJ/C0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lUUlcU3+4pzcAD3lr4IMwN88fraQM+cj3ZhmvOdROMukT8j/qt7vEJNSi7ey6N4yjIoSV+FcW7tmMiM9Nl+FIOyyLIGtQHXEFxbfILDswLM9Def5Nmc04bkwSUb2nHTGc4NxfjUfaZIUH0GphKTpJm+zffvLgs5ah1XWr2w3aT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fhvd3x80; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=YpQEhy/i9c3zq5YMm7v53vVaY1j6/2aBILsYN6kVznBj9xsdkYDcp5SGkJnVFQ8ph1kNzZEgDPmkzfFMuFgtoqYlJs5lq7TpdpskPv1etUOf7BxetVbl1ABm+yFm5R3LHAUp/y0BadbijPnzJvsiUDS75mhtZdnBdCddTVN4lJ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ievUYzbc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fhvd3x80"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C5F11F00893;
-	Mon,  8 Jun 2026 22:13:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ievUYzbc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 734D71F00893;
+	Mon,  8 Jun 2026 22:17:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780956797;
-	bh=f0IxgdYlZ+R7rIcCags0BawOzF9adNTLp9tXViC8tpw=;
+	s=k20260515; t=1780957045;
+	bh=3SLmuuAyjMsfJJboBxItsZTbcePzNE5UfrbiuFSjUhI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Fhvd3x80HuGQSDP3Tp48LKyqeLh94xNx0xpWKdSHIrmcHPej8/w00wG5ZguXb+4kh
-	 mjSgML4SvDtuc3jfFdtcoBAm9JRVMfT0jW2WnQlWcY0ulz5lTtMBhziK481/fYdesP
-	 QKibb3lKT/2wTmMwQPs+9IaPU7X+UMj75hyTWUP+ddkoplXP6F9lIVy9Q0MFbu+/EA
-	 I9b5tDvbtEyYWs235HnpnGDkgi64wqnlTsCCzYHpWZixM0/Pgl4kqk6U2m6bvaW87U
-	 zC3OJOuvyjXnvU2KRWdBYK5Y8ywXMf3SoVOzon6KBiCxVkXIlfMnHBEKfTrb04+3XW
-	 j0WGx1NxHg1TA==
+	b=ievUYzbcAIfG/awCP8Y2uS76KfcjpW5p2bZqruiuDD361myqywKnYz42n2Oufa+oz
+	 2ALZdWSdd0urdCVu4MtyKP/Dfcp1w7L8bW61GwNBLSJ4uEuk5XyRfneKtNvDFnZSLj
+	 M6GU1ROXdKDwwgSOMGyc8xTe09FIn47a6n635nWlMvIvTgN6mHH8eLBDkmv+9btxp0
+	 jmUmE2zivp/Gh70YCwto4/fpn0b0VxHkUldECG4ils+LvpDsFzXLIfCjELH8cDMnpD
+	 HDOhZyENCRMsFfwp8jDXM0OTJAMzpIg7daISqZLmL98eVYXkRS241wJpwzlyzxrKi4
+	 w1Mr0vGYDofMA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 3/6] ata: libata-scsi: route non-zero LUN commands
- for multi-LUN ATAPI
+Subject: Re: [PATCH v6 5/6] ata: libata-scsi: probe additional LUNs for
+ multi-LUN ATAPI devices
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Phil Pemberton" <philpem@philpem.me.uk>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, cassel@kernel.org
-In-Reply-To: <20260608213443.2296614-4-philpem@philpem.me.uk>
-References: <20260608213443.2296614-4-philpem@philpem.me.uk>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260608213443.2296614-6-philpem@philpem.me.uk>
+References: <20260608213443.2296614-6-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 08 Jun 2026 22:13:17 +0000
-Message-Id: <20260608221317.9C5F11F00893@smtp.kernel.org>
+Date: Mon, 08 Jun 2026 22:17:25 +0000
+Message-Id: <20260608221725.734D71F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Returning AC_ERR_INVALID without setting scmd->result causes the S=
-CSI layer to treat the aborted command as a success.
-- [High] Unconditional modification of CDB byte 1 clears parameter bits for=
- valid MMC and SCSI commands, corrupting them.
-- [Medium] The __ata_scsi_find_dev() function accepts non-zero LUNs for all=
- ATAPI devices, leading to WARN_ON_ONCE triggers and phantom devices during=
- manual SCSI scans.
+- [Critical] Moving `ata_scsi_assign_ofnode()` after `scsi_device_put()` in=
+troduces a TOCTOU race leading to a NULL pointer dereference or Use-After-F=
+ree.
+- [High] Hot-unplugging a multi-LUN ATAPI device fails to detach and free L=
+UNs > 0, resulting in memory leaks and zombie SCSI devices.
 --
 
-commit 23cd1ea8143d086cbe9cf8a4825c18b4ede2d943
+commit 6a6b71770a262841f2823d6eb0dbe90bb0dcb456
 Author: Phil Pemberton <philpem@philpem.me.uk>
+ata: libata-scsi: probe additional LUNs for multi-LUN ATAPI devices
 
-ata: libata-scsi: route non-zero LUN commands for multi-LUN ATAPI
-
-This patch updates libata-scsi to route commands to non-zero LUNs for ATAPI
-devices. It modifies __ata_scsi_find_dev() to allow non-zero LUNs for ATAPI
-devices and updates atapi_xlat() to encode the LUN into bits 7:5 of CDB byt=
-e 1.
+After LUN 0 is added for an ATAPI device, this commit checks the BLIST_FORC=
+ELUN
+flag. If set, it bumps the LUN count to the host's maximum and triggers a
+sequential SCSI scan for that target. Non-responding LUNs are silently skip=
+ped.
 
 > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 7c3d31dc49a17..2d714efc855f0 100644
+> index 2d714efc855f0..a6f5557014c70 100644
 > --- a/drivers/ata/libata-scsi.c
 > +++ b/drivers/ata/libata-scsi.c
-> @@ -2953,6 +2953,15 @@ static unsigned int atapi_xlat(struct ata_queued_c=
-md *qc)
->  	memset(qc->cdb, 0, dev->cdb_len);
->  	memcpy(qc->cdb, scmd->cmnd, scmd->cmd_len);
-> =20
-> +	/*
-> +	 * SCSI-2 CDB LUN encoding: bits 7:5 of byte 1 (3-bit field).
-> +	 * The SCSI layer caps the LUN at shost->max_lun (<=3D ATAPI_MAX_LUN),
-> +	 * so this should never trip; warn and reject if it does.
-> +	 */
-> +	if (WARN_ON_ONCE(scmd->device->lun >=3D dev->nr_luns))
-> +		return AC_ERR_INVALID;
-
-[Severity: High]
-Does returning AC_ERR_INVALID here without setting scmd->result cause the
-SCSI layer to treat the aborted command as a success?
-
-The caller, ata_scsi_translate(), drops the command and calls scsi_done(cmd)
-when xlat_func returns an error, but it doesn't set cmd->result to an error
-status:
-
-drivers/ata/libata-scsi.c:ata_scsi_translate() {
-    ...
-done:
-    ata_qc_free(qc);
-    scsi_done(cmd);
-    return 0;
-}
-
-Since scmd->result defaults to SAM_STAT_GOOD (0), the SCSI midlayer will
-believe the command succeeded.
-
-This can cause the INQUIRY command to succeed, resulting in phantom LUNs.
-For write operations, it can cause silent data corruption as the data is
-dropped but reported as successfully written.
-
-> +	qc->cdb[1] =3D (qc->cdb[1] & 0x1f) | ((u8)scmd->device->lun << 5);
-
-[Severity: High]
-Does this unconditionally overwrite CDB byte 1 and corrupt parameter bits f=
-or
-valid MMC and SCSI commands?
-
-Some modern SCSI commands use bits 7:5 of byte 1 for actual parameters, such
-as RDPROTECT in READ (16) and WRITE (16), or MULTIPLE_COUNT in ATA
-PASS-THROUGH (16).
-
-If this overwrites those bits, the parameters will be silently corrupted. Is
-it possible to rely on sdev->lun_in_cdb which the SCSI midlayer uses to
-handle LUN injection safely for legacy devices?
-
 [ ... ]
+> @@ -4745,12 +4746,30 @@ void ata_scsi_scan_host(struct ata_port *ap, int =
+sync)
+>  			sdev =3D __scsi_add_device(ap->scsi_host, channel, id, 0,
+>  						 NULL);
+>  			if (!IS_ERR(sdev)) {
+> -				dev->sdev[0] =3D sdev;
+> -				ata_scsi_assign_ofnode(dev, ap);
+> +				/*
+> +				 * For multi-LUN ATAPI (BLIST_FORCELUN), bump
+> +				 * dev->nr_luns to the host max so the LUN
+> +				 * routing in atapi_xlat() accepts the probe
+> +				 * INQUIRYs to LUN > 0, then trigger the
+> +				 * sequential scan.  pdt_1f_for_no_lun, set
+> +				 * during LUN 0 configure, ensures
+> +				 * non-responding LUNs are silently skipped;
+> +				 * dev->sdev[] is populated by
+> +				 * ata_scsi_dev_config() during the scan.
+> +				 */
+> +				if (dev->class =3D=3D ATA_DEV_ATAPI &&
+> +				    sdev->sdev_bflags & BLIST_FORCELUN) {
+> +					dev->nr_luns =3D ap->scsi_host->max_lun;
 
-> @@ -3063,6 +3072,29 @@ static struct ata_device *__ata_scsi_find_dev(stru=
-ct ata_port *ap,
->  {
->  	int devno;
-> =20
-> +	/*
-> +	 * Non-zero LUN is only legal for ATAPI devices, since they can
-> +	 * legitimately expose more than one LUN (PD/CD combos, CD changers).
-> +	 * Handle that case up front so the LUN-0 path below stays unchanged.
-> +	 */
-> +	if (unlikely(scsidev->lun)) {
-> +		struct ata_device *dev;
+[Severity: High]
+Does bumping dev->nr_luns here cause a memory leak during a device
+hot-unplug or fatal error reset?
+
+During those events, the libata error handler synchronously calls
+ata_eh_detach_dev() followed by ata_dev_init(), which unconditionally resets
+dev->nr_luns =3D 1 without clearing the dev->sdev[] array.
+
+When the asynchronous SCSI hotplug task later calls ata_scsi_remove_dev(),
+it bounds its cleanup loop using the newly reset count:
+
+for (lun =3D dev->nr_luns - 1; lun >=3D 0; lun--) { ... }
+
+Since dev->nr_luns was reset to 1, any active SCSI devices populated in
+dev->sdev[1..7] appear to be skipped. Could this permanently leak the
+scsi_device structures and leave unresponsive zombie block devices exposed
+to userspace?
+
+> +					scsi_scan_target(
+> +						&ap->scsi_host->shost_gendev,
+> +						channel, id, SCAN_WILD_CARD,
+> +						SCSI_SCAN_RESCAN);
+> +				}
+>  				scsi_device_put(sdev);
+> -			} else {
+> -				dev->sdev[0] =3D NULL;
+>  			}
 > +
-> +		if (!sata_pmp_attached(ap)) {
-> +			if (unlikely(scsidev->channel))
-> +				return NULL;
-> +			devno =3D scsidev->id;
-> +		} else {
-> +			if (unlikely(scsidev->id))
-> +				return NULL;
-> +			devno =3D scsidev->channel;
-> +		}
-> +		dev =3D ata_find_dev(ap, devno);
-> +		if (!dev || dev->class !=3D ATA_DEV_ATAPI)
-> +			return NULL;
-> +		return dev;
+> +			if (dev->sdev[0])
+> +				ata_scsi_assign_ofnode(dev, ap);
 
-[Severity: Medium]
-Does permitting non-zero LUNs for all ATAPI devices here allow users to
-trigger the WARN_ON_ONCE() in atapi_xlat()?
+[Severity: Critical]
+Is there a race condition here between dropping the local reference and
+checking dev->sdev[0]?
 
-Since dev->nr_luns remains 1 for standard single-LUN ATAPI devices that do
-not have the BLIST_FORCELUN quirk, a manual SCSI scan (e.g., via sysfs) on a
-non-zero LUN will reach atapi_xlat() and hit the WARN_ON_ONCE().
+By calling scsi_device_put(sdev) before checking dev->sdev[0] and executing
+ata_scsi_assign_ofnode(dev, ap), the object's lifetime relies solely on sys=
+fs
+since shost->scan_mutex is not held here.
 
-> +	}
-> +
+If a concurrent device removal happens (such as userspace writing to the
+delete attribute), the concurrent path executes:
+
+sdev_store_delete()
+  scsi_remove_device()
+    ata_scsi_sdev_destroy()
+
+This path sets dev->sdev[0] =3D NULL and drops the sysfs reference.
+
+If this concurrent sysfs removal happens exactly between the unprotected
+if (dev->sdev[0]) check and its use inside ata_scsi_assign_ofnode(), could
+it result in a NULL pointer dereference, or a Use-After-Free if the object
+is freed before accessing sdev->sdev_gendev.of_node?
+
+>  		}
+>  	}
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260608213443.2296=
-614-1-philpem@philpem.me.uk?part=3D3
+614-1-philpem@philpem.me.uk?part=3D5
