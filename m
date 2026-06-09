@@ -1,164 +1,192 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0EA73E44F2
-	for <linux-ide@vger.kernel.org>; Tue,  9 Jun 2026 19:43:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60CA83BE16F
+	for <linux-ide@vger.kernel.org>; Tue,  9 Jun 2026 19:56:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781034218; cv=none; b=AdZMfZUTJ1W7TlBoZaPJPkPGlblApJM7BjXpali8buzxNdN5wk46IkiAxLoTIVW6jGaDBOGjtkzSmvY2XTaVuNN2EoioVd4bsJ1Wp0mWYc3dyNChvelNxcJV+ksydC/L/fdbldHRjcxDAFbMIEkT2O9TidkaBuUJMbLilfXHvZs=
+	t=1781035017; cv=none; b=mP6F8QdJo2xFFZsTw6W6kbXY7Re/QvzkrhR0opd3HWXHwYzHKjbUMxjTfyLPYXh2jDhxUIFJVq5V/WyF9yC20RBdnL2Y0hu1FjZSv7f3dVMhOlOMsmQQkBe+Rjb6UmW2knpLcvD0FHlsOphX0vBXw/qCrAZQpP9jP+8RGR3dNhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781034218; c=relaxed/simple;
-	bh=A60/IlY5mxmQ0wnyvpXzKbJztytw11vUFaZY6i9pLf8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cs3wU56zgIdIP3qIAaMpj9npJpFe0H2N/zITi74g5i/SnqVQZM+nlhNB3rz/6x84MVMrNV8KmG9MAQ+m2cBgrBJI1oeOt38Fo3wJrI1hmr9F8bfNF7m9EcXYSDCr5eO/InlFY1eCXWhe8KYa1ArbhzJdziW3ZmpgxEFm+L5EOZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PJSeQ6YG; arc=none smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781035017; c=relaxed/simple;
+	bh=svSO92hAArlmYr4vjAfy1qKAEZyj8QupZPQr19nTFDE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=A9AHeTUJ8SVprRksb077E4BKDnM2p3Dj1zeyGpIvpzftxJh5ktX27fjQTqPQq8B7jFwHR3vG/AA8DCkc0XGnVkxDUY5b/1SN89AVLKLWoGYnXhXJqAq11HzlfkRsX6KXCJiUeOw2uaAZ00rQlEcYP4dQ+l4De6LAEcWQ5Cu3oC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MUbwma8V; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PJSeQ6YG"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-36b903567fdso6020084a91.1
-        for <linux-ide@vger.kernel.org>; Tue, 09 Jun 2026 12:43:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781034216; x=1781639016; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FXKs8PNsUNepHHdJ0PnVTocrirWWsDcSWefxYJT2Kv0=;
-        b=PJSeQ6YG752moRdmlHJJcrvcuy9/pPyg3fvoGC0qH1PCgKnPgSNrzVHNfE7JYEYkW8
-         TkGrwuX30WvdgalbHgOZnG7j7X4XmHwoWUj6Q30KYJ/fVh/ryBvWi9a6IJbOo0JXp4Zg
-         OydiLNlwMz5vvLkRRO91qOfePRaR/NUujn5FYlO3xSDzxmVPf7wHnoL3cePppgw0Osln
-         zQTtvoblplA2XDc09LFDREunFG5kXNR/Y3ZuVXIq7GY2VTbEXgbZAzrxaeAezd4sZ0Fo
-         Pynzz2CSQghs4RvXzAccrj9WRSm7bNPTZmyCcs0bhVnHl5HMq/g7vJWTBKRCinEv9qjp
-         riRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781034216; x=1781639016;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=FXKs8PNsUNepHHdJ0PnVTocrirWWsDcSWefxYJT2Kv0=;
-        b=T52WWnvSfEePTTWqQvqoWYASAUpaF4VWkdAvKqjwaLN0/VfUW62LBaIcV2CODiYNvH
-         rTcG32pfSx7L7bSUtyOEPvxXqG7kSF3BY10W/bzCzWd7tC04Zu2dAGMO7MZvjF9ieJzu
-         kGnMZuuNI3FpM3kIiUGNCwK2XnoIAes3q2znX9GUqQMoW1HXzoQks2e+3WoeCehAAfmv
-         x+riUJP90JC4FbMLS/7dFUvENBl97Ls9KrmL/sAOTl1Zg+RlcrI3+2mGVXKJCZp5T1un
-         WkmC0A9F1zbrVF/s6/BYoazWbH/tOQTtUHqyezpsgPrvEj3aSbekZHR2ty4DQb7uPzKO
-         RztQ==
-X-Gm-Message-State: AOJu0YzNWua/4vnr/t2nJP+gDbMzPJG/dPr/hv4VrAG0JODeQcevnNss
-	uuH0B7D+r2YmIl5Arabj1m0j5Y173EAWj27pzX7jzyrHp1EquyHieoaW6GVSlTn8
-X-Gm-Gg: Acq92OEQatys4cQ2kD2YYblkf/MCA4dm9aqRPl2tDYKQ6AJ6gK45BsdA1mziZbGozl/
-	Lx3ImzUav9kMrY18y9al3u0qhy0F+gJpcMqeXjD+zYxv1gQ3xIXJ/5/vb67xhPZwBsE4YGIBKK+
-	GZURyMSncjhBFR98Gxy2wO0GP69QblUmNt1rdq3TrvAhdKqXP7OlzJtK3Uw31cwDjG3CtffOAHv
-	7pSCcVxG9lSbFt7vay6xnFUYseW7g4EkuLrfjrfJE8C5pMquC9LGBKAh+2n7MOmNFjXdzl2OMJe
-	oPnfBKhF7vB/mTbAZX4M3lizeqkCGYODdX/HE6CQCI2PRLQ8Lncms0WJGG256pfaL1WOTWkXiYJ
-	if+jXIyCZReF8RSO+yb+g0wxi0qNwWxdaSSUStrIOfsMpyK+JIjug6DfyPlIggE59hQFTeeErnm
-	vTlCMgQUEpElvCX8Qih1MS+Gzg/UDUQ6XtJwmhpeRZMcVC0RvLxrU9aWv2I9JizqLfJzAvXOLeT
-	fLdYDzqC099s4+NHj2DCZ7E5rR/Mn9NRRRRFbehqJBdOQ==
-X-Received: by 2002:a17:90a:d44f:b0:369:69f8:ad6b with SMTP id 98e67ed59e1d1-370ec3d60cemr24915048a91.0.1781034216041;
-        Tue, 09 Jun 2026 12:43:36 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-842828daf76sm22715683b3a.42.2026.06.09.12.43.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 12:43:35 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Tim Yamin <plasm@roo.me.uk>,
-	Julia Lawall <Julia.Lawall@lip6.fr>,
-	Jeff Garzik <jgarzik@redhat.com>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv2 5/5] ata: pata_mpc52xx: use devm_platform_get_and_ioremap_resource
-Date: Tue,  9 Jun 2026 12:43:11 -0700
-Message-ID: <20260609194311.6217-6-rosenp@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260609194311.6217-1-rosenp@gmail.com>
-References: <20260609194311.6217-1-rosenp@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MUbwma8V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38DFF1F00898;
+	Tue,  9 Jun 2026 19:56:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781035016;
+	bh=FiH7a4UC2Qk0pClqOeVOFmKmdZl1rb8Lu0Mn/xAIi+U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=MUbwma8VIuAeEnR0X8W4catK1MuNLUUyVUYCGiBXvbOmexbt53pQbBnJrYaEY9Rmh
+	 WJ+ypk1WCIgUyQyiOPrgKO/OdakYtZS4ljNiN8lx7L6BCaN308SiN4o/YwrnFUGg4T
+	 cXPK7rJX3A5rX7/gVoIh54iNGvAN2PNlnhww0F6hm4Q5ec08ff6rqW0rDUFo8ViHeA
+	 TkaM/+CxNrueNHH+7jOrFL73o3dcbltd2jxBVpYQX1BsIgM+knOaSZkgwnjQmAzy1t
+	 tYwqLfqcV48vLdfwjqQT1GNdsAerULy+3splzkbohAVmCss5V3jQIXGYPj/SrWncVp
+	 nrduWDvfpNSdA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCHv2 1/5] ata: pata_mpc52xx: fix NULL pointer dereference
+ in IRQ handler
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rosen Penev" <rosenp@gmail.com>
+Cc: linux-ide@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
+In-Reply-To: <20260609194311.6217-2-rosenp@gmail.com>
+References: <20260609194311.6217-2-rosenp@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 09 Jun 2026 19:56:54 +0000
+Message-Id: <20260609195655.38DFF1F00898@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Replace the open-coded sequence of of_address_to_resource(),
-devm_request_mem_region(), and devm_ioremap() with the standard
-devm_platform_get_and_ioremap_resource() helper.
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+s) to consider:
 
-Assisted-by: opencode:big-pickle
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/ata/pata_mpc52xx.c | 29 ++++++-----------------------
- 1 file changed, 6 insertions(+), 23 deletions(-)
+Pre-existing issues:
+- [High] Double free of the `task_irq` mapping due to redundant `irq_dispos=
+e_mapping()` calls during error handling and removal.
+- [High] Premature destruction of devres-managed IRQ mappings (`task_irq` a=
+nd `ata_irq`), causing Use-After-Free of `irq_desc` and memory leaks of `st=
+ruct irqaction`.
+- [High] The `dmatsk` structure is freed during driver removal or probe fai=
+lure while the devres-managed `task_irq` handler is still active, causing a=
+ potential Use-After-Free.
+- [High] Data race between the BestComm IRQ handler (`mpc52xx_ata_task_irq`=
+) and `mpc52xx_bmdma_stop`.
+- [High] The DMA FIFO configuration state is not reset upon system resume, =
+causing potential DMA transfer failures.
+--
 
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 84a4cf42ef54..d3ee117b8aa0 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -20,7 +20,6 @@
- #include <linux/delay.h>
- #include <linux/libata.h>
- #include <linux/of.h>
--#include <linux/of_address.h>
- #include <linux/platform_device.h>
- #include <linux/types.h>
- 
-@@ -671,7 +670,7 @@ static int mpc52xx_ata_init_one(struct device *dev,
- static int mpc52xx_ata_probe(struct platform_device *op)
- {
- 	unsigned int ipb_freq;
--	struct resource res_mem;
-+	struct resource *res_mem;
- 	int ata_irq = 0;
- 	struct mpc52xx_ata __iomem *ata_regs;
- 	struct mpc52xx_ata_priv *priv = NULL;
-@@ -688,25 +687,9 @@ static int mpc52xx_ata_probe(struct platform_device *op)
- 		return -ENODEV;
- 	}
- 
--	/* Get device base address from device tree, request the region
--	 * and ioremap it. */
--	rv = of_address_to_resource(op->dev.of_node, 0, &res_mem);
--	if (rv) {
--		dev_err(&op->dev, "could not determine device base address\n");
--		return rv;
--	}
--
--	if (!devm_request_mem_region(&op->dev, res_mem.start,
--				     sizeof(*ata_regs), DRV_NAME)) {
--		dev_err(&op->dev, "error requesting register region\n");
--		return -EBUSY;
--	}
--
--	ata_regs = devm_ioremap(&op->dev, res_mem.start, sizeof(*ata_regs));
--	if (!ata_regs) {
--		dev_err(&op->dev, "error mapping device registers\n");
--		return -ENOMEM;
--	}
-+	ata_regs = devm_platform_get_and_ioremap_resource(op, 0, &res_mem);
-+	if (IS_ERR(ata_regs))
-+		return PTR_ERR(ata_regs);
- 
- 	/*
- 	 * By default, all DMA modes are disabled for the MPC5200.  Some
-@@ -740,7 +723,7 @@ static int mpc52xx_ata_probe(struct platform_device *op)
- 
- 	priv->ipb_period = 1000000000 / (ipb_freq / 1000);
- 	priv->ata_regs = ata_regs;
--	priv->ata_regs_pa = res_mem.start;
-+	priv->ata_regs_pa = res_mem->start;
- 	priv->ata_irq = ata_irq;
- 	priv->csel = -1;
- 	priv->mpc52xx_ata_dma_last_write = -1;
-@@ -778,7 +761,7 @@ static int mpc52xx_ata_probe(struct platform_device *op)
- 	}
- 
- 	/* Register ourselves to libata */
--	rv = mpc52xx_ata_init_one(&op->dev, priv, res_mem.start,
-+	rv = mpc52xx_ata_init_one(&op->dev, priv, res_mem->start,
- 				  mwdma_mask, udma_mask);
- 	if (rv) {
- 		dev_err(&op->dev, "error registering with ATA layer\n");
--- 
-2.54.0
+commit f162c405b149dd0edca235c5f6814afd5a7a1efd
+Author: Rosen Penev <rosenp@gmail.com>
 
+ata: pata_mpc52xx: fix NULL pointer dereference in IRQ handler
+
+Assign priv->dmatsk before request_irq() to ensure the IRQ handler
+does not dereference a NULL pointer. The handler accesses priv->dmatsk
+via bcom_retrieve_buffer().
+
+> diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+> index 210a63283f62b..fe445d6aaff62 100644
+> --- a/drivers/ata/pata_mpc52xx.c
+> +++ b/drivers/ata/pata_mpc52xx.c
+> @@ -766,6 +766,8 @@ static int mpc52xx_ata_probe(struct platform_device *=
+op)
+>  		goto err1;
+>  	}
+> =20
+> +	priv->dmatsk =3D dmatsk;
+> +
+>  	task_irq =3D bcom_get_task_irq(dmatsk);
+>  	rv =3D devm_request_irq(&op->dev, task_irq, &mpc52xx_ata_task_irq, 0,
+>  				"ATA task", priv);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but looking at the error path
+for devm_request_irq(), does the cleanup order create a use-after-free?
+
+If the probe fails and jumps to err2, or during driver removal in
+mpc52xx_ata_remove(), bcom_ata_release(dmatsk) is called while the IRQ
+is still managed by devres.
+
+Because devm_request_irq() won't unregister the handler until after probe
+returns or the device is removed, could a spurious interrupt trigger during
+this window and cause mpc52xx_ata_task_irq() to dereference the freed
+priv->dmatsk pointer?
+
+[Severity: High]
+This is a pre-existing issue, but does manually disposing of devm-managed
+IRQ mappings cause a use-after-free of the IRQ descriptor?
+
+Both task_irq and ata_irq are requested using devm_request_irq().
+However, the driver explicitly calls irq_dispose_mapping() on both IRQs
+during err2, err1, and in mpc52xx_ata_remove().
+
+Because irq_dispose_mapping() destroys the underlying irq_desc while the
+devres-managed handler is still active, could this lead to a use-after-free
+when devres eventually executes free_irq()?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the cleanup code cause
+a double free of the task_irq mapping?
+
+In both the err2 path and mpc52xx_ata_remove(), the driver does:
+
+	irq_dispose_mapping(task_irq);
+	bcom_ata_release(dmatsk);
+
+Since bcom_ata_release() calls bcom_task_free(), which also executes
+irq_dispose_mapping(tsk->irq) for the same IRQ, doesn't this result in
+the irqdomain API being called twice for the same mapping?
+
+[Severity: High]
+This is a pre-existing issue, but is there a data race between the DMA
+stop function and the IRQ handler?
+
+The mpc52xx_ata_task_irq() handler accesses the task descriptors without
+locks and performs a read-modify-write on priv->waiting_for_dma:
+
+mpc52xx_ata_task_irq() {
+    ...
+	while (bcom_buffer_done(priv->dmatsk))
+		bcom_retrieve_buffer(priv->dmatsk, NULL, NULL);
+
+	priv->waiting_for_dma |=3D ATA_DMA_INTR;
+    ...
+}
+
+Concurrently, mpc52xx_bmdma_stop() can reset the DMA buffers and zero
+out priv->waiting_for_dma:
+
+mpc52xx_bmdma_stop() {
+    ...
+	bcom_disable(priv->dmatsk);
+	bcom_ata_reset_bd(priv->dmatsk);
+	priv->waiting_for_dma =3D 0;
+    ...
+}
+
+If these run concurrently without synchronization, could they corrupt the
+DMA descriptor state or lose updates to waiting_for_dma?
+
+[Severity: High]
+This is a pre-existing issue, but does the resume path properly reset the
+DMA FIFO direction cache?
+
+During normal operation, mpc52xx_bmdma_setup() caches the transfer direction
+to avoid unnecessary register writes:
+
+mpc52xx_bmdma_setup() {
+    ...
+		/* Setup FIFO if direction changed */
+		if (priv->mpc52xx_ata_dma_last_write !=3D 0) {
+    ...
+}
+
+When the system suspends, the hardware loses this FIFO state. On resume,
+mpc52xx_ata_resume() calls mpc52xx_ata_hw_init() to reconfigure the
+hardware, but it does not invalidate priv->mpc52xx_ata_dma_last_write
+(e.g., setting it to -1).
+
+If the first DMA transfer after resume matches the pre-suspend direction,
+could this skip writing the necessary FIFO configuration registers and
+break ATA I/O?
+
+> @@ -773,7 +775,6 @@ static int mpc52xx_ata_probe(struct platform_device *=
+op)
+>  		dev_err(&op->dev, "error requesting DMA IRQ\n");
+>  		goto err2;
+>  	}
+> -	priv->dmatsk =3D dmatsk;
+> =20
+>  	/* Init the hw */
+>  	rv =3D mpc52xx_ata_hw_init(priv);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260609194311.6217=
+-2-rosenp@gmail.com?part=3D1
