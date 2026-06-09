@@ -1,61 +1,63 @@
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 210713043B2
-	for <linux-ide@vger.kernel.org>; Tue,  9 Jun 2026 19:43:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CC1C365A0B
+	for <linux-ide@vger.kernel.org>; Tue,  9 Jun 2026 19:43:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781034211; cv=none; b=b8prdp0tkB4OcBQdDZCrv7r9KI6uhqM0GSZWrwn8huhKkiO9QNBiTXl/Ocz2o0zVxuO0Oae6NfNMqKm2AihHk6qLQK5IbcM9i4kisod2qgcTpKA9STHIJ9xWBrdP2jRTyq3sqJd2BMzHz3RGVKeMcNBFQ1p+5UjA7Fgp9OeZN3I=
+	t=1781034212; cv=none; b=OM4k5zPER5R2BhsHc+d+af1OWsk+EzhwgIFbC1tfzY6MWwso42knSMCdL8P44mPQUrHXnlJmyBrllQLf2XLS1mPS5i1bxGmMS61dIL2G/1kZBmPsIuR5G6D24kxQYt/lj/+i1cQLXzxxHXDCElp9plCck41T3ll/utpbCSxo8os=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781034211; c=relaxed/simple;
-	bh=l1ykvUUpEJo6EqEuoK+oqDet2hWtHxKreBVHfSGY8F4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nYFjhZ52Pj2Is9WYlBSk+U5MUv2VRZ5k3h6Pbck3zqtqz2SyKHuedXiYrnw0PZwZeoyzZYE+Yq7Rg80x4ZartlkJfyeCzvD6GyjWljEfx3rbYcRP/KQC2mgr78PfAeF1LZWHlyjfFTfTmFq4TQVY3V/+gKwKISq00mf1weOz8Yw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V/tjfsJy; arc=none smtp.client-ip=209.85.215.178
+	s=arc-20240116; t=1781034212; c=relaxed/simple;
+	bh=hhKYJazjJge73y6yNe5PGiyzjbkw4XoIZrmixT/ypn0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=JChZA2NFfWRZVCvVxvrffYBxRL3tcYWhZgb5+/7oRil3SvUynwM4H6eI9XK230LHthNJ3yE30Ar+52MTO4M/5txkIYba69n1HAY4uL2Nqe5szaZmisX1bibp13KWzoX+8En9qDTPifrfToJ34NWRVams3orGDlzZoaVjbP2gmkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gBmzPx22; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V/tjfsJy"
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-c858961a8efso2248375a12.2
-        for <linux-ide@vger.kernel.org>; Tue, 09 Jun 2026 12:43:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gBmzPx22"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-8423f626a65so2578780b3a.2
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jun 2026 12:43:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781034209; x=1781639009; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=MKaybrpTNEWH0SVVMDdhd24L2LW5a4rMsS7LvjsoFKk=;
-        b=V/tjfsJydJDysj2O+IMh5NbEaaU7ynW98WBtkzcomxJdQWqS3fg065diK2XCF5z0fw
-         mIEmmg6T86NJGoCTy3OR1KfSwvplDGMuFI8evjeLdG6OXbEV2a0IAIZTTYNMHF/Iq1pK
-         6g3Fkvwn+z6erB4T3IHTQKp+R68Y60Np2yRiIlj60CHlUJr0MJtGwx9L3gO/Wmj6kHIa
-         L2iPOxacZjti41wf3kUVZkDvAX80uo8esBICILiaxwvaXKvbDSkEvb24AclKsM0c9rRW
-         xdYHMdU4/y4jnj2DmEnGQe8F+dG/IR1psXtvw2GXaUY95aCde/e7G9DHDGgJwG2QeHVj
-         3IZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781034209; x=1781639009;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1781034210; x=1781639010; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=MKaybrpTNEWH0SVVMDdhd24L2LW5a4rMsS7LvjsoFKk=;
-        b=lfCqVgWANMkbiw3eEFVYrZoW2K4Bmh67/pexO+XyoOSNKSDu6VmJVanccK3496UtfG
-         qodVWlJ2PCH6/yphtB6Z7ynyWD7aVnfbC18tpa2c7lxsX4elACokX3o3NC16HuR42wkT
-         j+5k+X05bHovAIqamtk1KSHDkJiFC2Jku6NiaWC8JqCU3Ottz7eQupcL3rnRMfN1J0Bb
-         p5T87QryFTShsraXyIUPMCOGxxxQAJ9kUjMFHOkDm27UkoD/Iqx0N4njfE00DNloR6CK
-         brdIy9fe89qhJ0wLrk8wHXcc55J7sGDtFBconReZKF+J9vjV5eyEe/CDUCCKeFiVeyi2
-         w3xQ==
-X-Gm-Message-State: AOJu0Yz4bgH+jn4SGv0C2OozxcwyrW3MT7Da+uqsqMmlxKKVnYqwIbge
-	eBa0nIWfZ7QP3wFYrbcO77pc04keUY5/0FnuM19LgWXTysgdccH7T93OncWr2uzg
-X-Gm-Gg: Acq92OFh0k31yx+sLnqk9pILFkPFsF1ryk5U+if+sGAdtAxrH0Vck9G9Ff9bFPfbK6m
-	Xc211bdLBg+VUwj8VlmjH+X9h/ic5RdeyAxsoDcn/5rpZiCf6hufS2Aez8cyrfUnVwbXZJ9wFJe
-	a7cVOWyI0aV4DHeeThYPdoNnJPnhBeh5idRJnXYCQ5nwJDIy4YSxf4S2zSoE/Vhh5Mo8e07PIHY
-	gitBQ3XAdvJp3qaNTpRf3Eku+i4g3JvtF6ijQgzJSUuHTi8/4rLAQ4pip0DaZcOa4eRmgDPTutD
-	MFr/xI33R50H74zwiDnMREeMvjlm4y6bc9nZhv5om+BHcoweFrHG98UgzFJXtwErn37XnUXm8OE
-	wztxLkfLG3jo+a7cUoC2A7l1h2MlZ8LsbJYgO5TswADurlIF5kf7ZMyl7VXkoyAbe0tl3DJ0PeV
-	xHcZnGZX7mOrM6avTdBwEFBP0in1DYh5HyYNsYmCP92sK8P0xQ3YU0Gffae6cdYfCyNTWi60nGi
-	x9AEl3Z1Kg+RTmUu6nvmZuhVwxSkavBuVT0+9LVHnWCXZE4k3O7Zhvs
-X-Received: by 2002:a05:6a00:4407:b0:82c:e692:1f91 with SMTP id d2e1a72fcca58-842b0fba9abmr23673035b3a.39.1781034209352;
-        Tue, 09 Jun 2026 12:43:29 -0700 (PDT)
+        bh=ZebOJ0xoX4ZIU1H13OA9Ye3a+JpFQ7aYIL/Bsme9n2s=;
+        b=gBmzPx22MlQpYpYHd29TKdRfdFF/p7/923B4uJVe0IUcozOwJ4M01v4mDrl7qWckV2
+         z5M/ueUSIcRZL6QvzLKDLXMd+PgZEtR1eQD6MBqmkowfFR6CsalDN7iFViYieqXDdNps
+         imp85y3Uct89Xn8swIHx8lLysFdOUqd+HkLJvTHMaJOH/C5WWs64vSo2kR0rQOaaoID1
+         pkq03/1JwZIk5/07gA8DZoLPWP/VfDMsEAAs2QzfBuNKIdCDxOcTThufLnb6va7rrUXn
+         O93/9trNYXXsZS0dLXGlnwsfFLqTqcb4sxDUgM5Iw2Mk/UUtjB3jQemdYUE+dxZXC8/U
+         gBaA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781034210; x=1781639010;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=ZebOJ0xoX4ZIU1H13OA9Ye3a+JpFQ7aYIL/Bsme9n2s=;
+        b=ZKpawe/kLR7u4bS+jtHJwKIr4TPmk9OXzCXUMHKAhqL9/9ZyoE0neSkBTQUhOIL66m
+         TU0bxRsFTmmZjmIE5qTw/QfMXW7YXSjYfzs+fJYqfS7ma2tEZ76AHz7uqR52nNNIXgxl
+         Dq18CM67CrVexLK1I7my47VwIo5GI2JF7vW0KhFzD/dxYyC1m//xUT6Fd6+kGNAsHIbL
+         VKPZXHAa3aJNOtbvGnQX9EgwYNmXVyX6rklISt6kuHZNHgAqaq1thTOJjVZJKT10eEzi
+         WvBFd5KLhZ7SRt6SwNT8mbqESN2+9U03qRzZu3pHUdwJFatLsy7sUk+IVq8Hz8U1yih+
+         59EA==
+X-Gm-Message-State: AOJu0YzWNMekQpe92/YnllLQ1imLqoYvs76T5efdz8SXfcSrE5cFlhqF
+	n/sCmXamN1DMxhFw9wmvB8/ddO/v/r7bHbokubR2mGJSro11NnOjB0zvCYGhwDDW
+X-Gm-Gg: Acq92OEcdPxe/QLEamGayJnxjueZMsVC0hoNiEEVHwfWBew4f6V6Mb+l0i49jWExM2d
+	sQ8aeT6gk28Z8+AAdizj86tbkrGaZI1iz7rSmBq2LdRFzgaEODiSidFVDfQPueykksVDaXS/XQe
+	JDzibFLPr62h16KPfH2vRHqbZsqHh7JXlBWSgA5OqLxRucS6f6bHdqCohM4J3QT3IJgNtiCHJ0p
+	ZA/zWqrJZq+Vv6Cp/C0Hi6Y5lCZMQuv+GqNX3O+DP0Elix6bI05FOJ0t/I2Fgdd08ZoN36JgPTj
+	/wSCQcA0s+CmNur8eRwUkOYtV8MFOHEqa9b+proOHBvIZLxp3jLWXcriDNAlV3xaBsUocPvicWX
+	gBj8p2lT1soJUfNrpruR3bqqdOm+kI/7TB+IS0uhbud3XcN1mn3TBp648foh29tXkFWCyQ9OKsG
+	LhWnsJCFWD/3ReTjKkef+bQXcXkDF6N6qiq1GrOEZexp5/BQpByfZiFPtFU48qYUBKhELi9FTqd
+	eoya7EISUnE3KmjtXeUSvTzCFkgwGNaDPnsUwpLyMngmA==
+X-Received: by 2002:a05:6a00:b807:b0:82a:5d55:5807 with SMTP id d2e1a72fcca58-842b0e1c8b1mr21630502b3a.6.1781034210504;
+        Tue, 09 Jun 2026 12:43:30 -0700 (PDT)
 Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-842828daf76sm22715683b3a.42.2026.06.09.12.43.28
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-842828daf76sm22715683b3a.42.2026.06.09.12.43.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 12:43:28 -0700 (PDT)
+        Tue, 09 Jun 2026 12:43:30 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-ide@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -65,10 +67,12 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Julia Lawall <Julia.Lawall@lip6.fr>,
 	Jeff Garzik <jgarzik@redhat.com>,
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv2 0/5] ata: pata_mpc52xx: fix cleanup ordering and modernize
-Date: Tue,  9 Jun 2026 12:43:06 -0700
-Message-ID: <20260609194311.6217-1-rosenp@gmail.com>
+Subject: [PATCHv2 1/5] ata: pata_mpc52xx: fix NULL pointer dereference in IRQ handler
+Date: Tue,  9 Jun 2026 12:43:07 -0700
+Message-ID: <20260609194311.6217-2-rosenp@gmail.com>
 X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260609194311.6217-1-rosenp@gmail.com>
+References: <20260609194311.6217-1-rosenp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -77,33 +81,38 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Fix several lifecycle bugs in the MPC52xx ATA driver:
+Assign priv->dmatsk before request_irq() to ensure the IRQ handler
+does not dereference a NULL pointer. The handler accesses priv->dmatsk
+via bcom_retrieve_buffer().
 
- - The BestComm task IRQ was managed by devm, creating a use-after-free
-   and teardown inversion.  Switch to non-devm request_irq/free_irq so
-   the interrupt is unregistered before the task is freed.
+Assisted-by: opencode:big-pickle
+Fixes: 6b61e69e7bc1 ("powerpc/mpc5200: Add MDMA/UDMA support to MPC5200 ATA driver")
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/ata/pata_mpc52xx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- - The error and remove paths called irq_dispose_mapping() explicitly,
-   duplicating the one in bcom_task_free().  Remove the redundant calls.
-
- - Replace irq_of_parse_and_map() with platform_get_irq() for proper
-   error handling and integration with the platform device model.
-
- - Replace the open-coded of_address_to_resource()/devm_request_mem_region()
-   /devm_ioremap() sequence with the standard helper.
-
-v2: add extra patch from sashiko review.
-
-Rosen Penev (5):
-  ata: pata_mpc52xx: fix NULL pointer dereference in IRQ handler
-  ata: pata_mpc52xx: switch to non-devm request_irq for proper ordering
-  ata: pata_mpc52xx: remove redundant irq_dispose_mapping calls
-  ata: pata_mpc52xx: convert to platform_get_irq()
-  ata: pata_mpc52xx: use devm_platform_get_and_ioremap_resource
-
- drivers/ata/pata_mpc52xx.c | 70 +++++++++++++-------------------------
- 1 file changed, 23 insertions(+), 47 deletions(-)
-
---
+diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+index 210a63283f62..fe445d6aaff6 100644
+--- a/drivers/ata/pata_mpc52xx.c
++++ b/drivers/ata/pata_mpc52xx.c
+@@ -766,6 +766,8 @@ static int mpc52xx_ata_probe(struct platform_device *op)
+ 		goto err1;
+ 	}
+ 
++	priv->dmatsk = dmatsk;
++
+ 	task_irq = bcom_get_task_irq(dmatsk);
+ 	rv = devm_request_irq(&op->dev, task_irq, &mpc52xx_ata_task_irq, 0,
+ 				"ATA task", priv);
+@@ -773,7 +775,6 @@ static int mpc52xx_ata_probe(struct platform_device *op)
+ 		dev_err(&op->dev, "error requesting DMA IRQ\n");
+ 		goto err2;
+ 	}
+-	priv->dmatsk = dmatsk;
+ 
+ 	/* Init the hw */
+ 	rv = mpc52xx_ata_hw_init(priv);
+-- 
 2.54.0
 
