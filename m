@@ -1,156 +1,141 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADDBB367F40
-	for <linux-ide@vger.kernel.org>; Tue,  9 Jun 2026 07:25:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 565F23EF65D;
+	Tue,  9 Jun 2026 08:36:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780989953; cv=none; b=F463NufUC9kE98NMF+OwyMO0ahnQqmZPHdrZPHk7CmScp4TIXZ9bswAFuA43nJwpXJOWNGk0tCqsYaQ+gDcp0tCT7hwidVxL6TR4wv7UFSr7UTPHLTL4WgKKK3q6J54wNOLWO0o69ll15XM4RLCX9BUznKJx54lCfVyn3hvPQWo=
+	t=1780994186; cv=none; b=ELdcotg5FL4RjsQhPkXYYX4zCngOSSBOuMK1wOC6F1qXZpWDdNZ1A6n71JRL5a6eTIDH0Pn1pUU/o6aQo9Z9GVPgpIC//4rcWzAhcpWuGUGvOAUfOD0bGrystwRGskGP7H06p5oHx2Z7FVMftzhSt90oMDtKLMO308X6OrhPMzQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780989953; c=relaxed/simple;
-	bh=q42eXoHCR7YgfO4/3gUva36dm3zZlWYGKQ1tE5CkdSM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZeNI8WjY+WOjp2RuL9kVQW/t0Gh63Bo+LzQz+waBkojxZTeu1gCFd+NnV9wbORAMeaVfXE91y6oCFz/ITnp/EoLKugVRfoaQmUbAlkur19AuhpaMAWdMzyVv2NcbDkqbuSaqpNkceR/VFzM9ltMVUbtvmDX4ktwhw8boFamjrwc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=0+mSiSSK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=p/S/nggy; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=NhB0sBUS; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=panRXV2l; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1780994186; c=relaxed/simple;
+	bh=Kixn9ir4ald59LCBFzIzgAUsegxekWY9QVkQFf60GEg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=r9wHJVJpEbZw0UHXeASJtMvT15GL+iEZHOl1AkPO3k7KsRrahVloCRdy2l1/H21Ku53TXjIwm4bp+L6kkqdz+7JKJmezxVK93GTBqsQnaogG4Kj1Lbb3WI5QWq/Q0pY4iBdlmOTtr8PByzSAFpW9pE6rvG9q2FoX7BzCzXMMN78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kjLicdqO; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="0+mSiSSK";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="p/S/nggy";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="NhB0sBUS";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="panRXV2l"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id E8D72758A0;
-	Tue,  9 Jun 2026 07:25:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1780989949; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=y1c597nURKM193IqO1P0MsCFlL07GhCIzg4dHpv/0H4=;
-	b=0+mSiSSKzNLB0VdVT0bTyg2oLpuG8G074YEFrpSJ6XRjUPibQa6sKN/W8xZZskCX9IAaOT
-	nobuxDRb+z01cBvGGxC8BvAkmHII/AXPdA2nB2egIFjQemoe3ATScqzeLv/83b0GSvmwYS
-	Ixh+zii6KN3MF4lREUnrIInEn/LiAvE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1780989949;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=y1c597nURKM193IqO1P0MsCFlL07GhCIzg4dHpv/0H4=;
-	b=p/S/nggyX0FAQyt26yxm9HAMYPB1unIsK1ks+W4jtZ3UU+9PXHOn91cdA72V+8pD1FNQHi
-	SRVJ5Oi/EFcu7dBQ==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1780989948; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=y1c597nURKM193IqO1P0MsCFlL07GhCIzg4dHpv/0H4=;
-	b=NhB0sBUSgT1yw/CBF6juJLc326xGC+vTvEyMNFsNtifORkhdwCJWI9/DEkGHLyPucSpbrk
-	8iKsWFg+x6n/xMleMUCNb+Wu4kiivcJXUst/u3H9MhofIdgiVHnpoG7NE/tx9MsL+XHtv3
-	Lze5l3LlJQwc3YQ5/2MoSQe1yYjMkSk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1780989948;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=y1c597nURKM193IqO1P0MsCFlL07GhCIzg4dHpv/0H4=;
-	b=panRXV2lIZlX9uQ8xzaOTHPDiA3uoEVdwVvEewgeRO8jApgopVyco2ZI5FjF7+7F1yY8Vi
-	JrqprB7KGIYabIDA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A508C779A7;
-	Tue,  9 Jun 2026 07:25:48 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 4VfCJvy/J2psHAAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 09 Jun 2026 07:25:48 +0000
-Message-ID: <36b3d49f-7ad3-4b8d-9d74-a7ee9b9c429f@suse.de>
-Date: Tue, 9 Jun 2026 09:25:48 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kjLicdqO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1780994182; x=1812530182;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Kixn9ir4ald59LCBFzIzgAUsegxekWY9QVkQFf60GEg=;
+  b=kjLicdqODGUBzcl0t5YsRrasNy1eJxgzCpVa4YUiJ4XXO4w8jp9SprSp
+   bbeW50RIQnl55lj1Ru1pcrARCzFOeDS2JI7pBxxW5EZjcN8CQKyY/YkWk
+   DVNvMkrMUs0+InBnTX9PcxCwf3Px6zerSFM3a+5bcoA3D05srHJy8YnzD
+   7BcVy+8z8XBchgvjdg6kq/BKN884emZYwQkbQuscZw5KLifzH7ZVDhUpD
+   rNgB5erkWNr6g2BNbaFMGeE318xLyqLyg83sBUToGIFMZWUhUBuN/1B/b
+   sQvHipal+5BmeOsehgsPo6eezZ6mXUQrgIgytA8iQF6C8Kz3Im0FFyxiT
+   g==;
+X-CSE-ConnectionGUID: OwBl/FbCTwWJO4+P5vnQoQ==
+X-CSE-MsgGUID: /Tyhv+u0R12G1XPd6fcbUQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11811"; a="99166464"
+X-IronPort-AV: E=Sophos;i="6.24,195,1774335600"; 
+   d="scan'208";a="99166464"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2026 01:36:21 -0700
+X-CSE-ConnectionGUID: PtVMkNKHRkKJuNo3EkyfQQ==
+X-CSE-MsgGUID: wN79FF5NStSMs6i9a3f/hA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,195,1774335600"; 
+   d="scan'208";a="250884020"
+Received: from egrumbac-mobl6.ger.corp.intel.com (HELO localhost) ([10.245.245.39])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2026 01:36:19 -0700
+Date: Tue, 9 Jun 2026 11:36:17 +0300
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Rosen Penev <rosenp@gmail.com>, Andy Shevchenko <andy@kernel.org>,
+	linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Julia Lawall <Julia.Lawall@lip6.fr>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ata: pata_mpc52xx: switch to non-devm request_irq
+ for proper ordering
+Message-ID: <aifQgZwd8KzUOuKl@ashevche-desk.local>
+References: <20260608214718.49503-1-rosenp@gmail.com>
+ <20260608214718.49503-2-rosenp@gmail.com>
+ <aie-w7BTHYYwTKvq@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 5/6] ata: libata-scsi: probe additional LUNs for
- multi-LUN ATAPI devices
-To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260608213443.2296614-1-philpem@philpem.me.uk>
- <20260608213443.2296614-6-philpem@philpem.me.uk>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260608213443.2296614-6-philpem@philpem.me.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid,philpem.me.uk:email];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,philpem.me.uk:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Level: 
-X-Spam-Score: -4.30
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aie-w7BTHYYwTKvq@ryzen>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On 6/8/26 23:34, Phil Pemberton wrote:
-> After LUN 0 is added for an ATAPI device, check its BLIST_FORCELUN
-> flag.  If set, bump dev->nr_luns to the host's max_lun so the LUN
-> routing in atapi_xlat() accepts the probe INQUIRYs, then call
-> scsi_scan_target() with SCAN_WILD_CARD to trigger the SCSI layer's
-> built-in sequential LUN scan for that target only.  This probes
-> LUNs 1..shost->max_lun, driven by the libata atapi_max_lun module
-> parameter.
-> 
-> Devices without BLIST_FORCELUN (the vast majority of ATAPI devices)
-> are left with only LUN 0 -- no sequential scan is triggered, so
-> single-LUN devices like the iHAS124 DVD writer are completely
-> unaffected.
-> 
-> Non-responding LUNs (PQ=0/PDT=0x1f) are silently skipped by
-> scsi_probe_and_add_lun() when BLIST_NO_LUN_1F is set on the device
-> via scsi_devinfo.
-> 
-> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
-> ---
->   drivers/ata/libata-scsi.c | 27 +++++++++++++++++++++++----
->   1 file changed, 23 insertions(+), 4 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+On Tue, Jun 09, 2026 at 09:20:35AM +0200, Niklas Cassel wrote:
+> On Mon, Jun 08, 2026 at 02:47:15PM -0700, Rosen Penev wrote:
+> > The BestComm task IRQ handler accesses priv->dmatsk, which is freed
+> > by bcom_ata_release().  With devm_request_irq(), the handler remains
+> > registered until devres unwinds after the error/remove function
+> > returns, creating a window where the handler can access freed memory.
+> > 
+> > Switch to request_irq() / free_irq() so that the interrupt is
+> > unregistered before bcom_ata_release() tears down the task.
 
-Cheers,
+...
 
-Hannes
+> >  	task_irq = bcom_get_task_irq(dmatsk);
+> > -	rv = devm_request_irq(&op->dev, task_irq, &mpc52xx_ata_task_irq, 0,
+> > -				"ATA task", priv);
+> > +	rv = request_irq(task_irq, &mpc52xx_ata_task_irq, 0,
+> > +			  "ATA task", priv);
+> >  	if (rv) {
+
+> >  		dev_err(&op->dev, "error requesting DMA IRQ\n");
+
+Side note: In case we leave devm_request_irq(), this message is a dup
+and may be removed.
+
+> > -		goto err2;
+> > +		goto err_free_task;
+
+Now, devm_*() should be never followed by goto. If we want to keep devm
+approach, the original code has more issues.
+
+> >  	}
+
+...
+
+> Andy, since you gave a talk about this recently.
+> Surely there must be a better way than to migrate away from the device
+> managed APIs.
+
+Thank for Cc'ing me.
+
+> Do you have some suggestion?
+
+This patch either way (are we going to devm fully or rollback to non-devm)
+is half-baked.
+
+What I may suggest here is to extend this patch to cover the second
+problematic place (*) and make it as a fix for backporting.
+
+After that one may carefully go and finish converting probe to devm_*().
+
+*) https://elixir.bootlin.com/linux/v7.1-rc7/source/drivers/ata/pata_mpc52xx.c#L733
+The call of irq_of_parse_and_map() should be moved after devm_kzalloc().
+So, this fix should do what it does + the above.
+
+P.S.
+Someone may tide up this driver a lot, but this is out of the scope of
+this patch. FWIW, the brief list of potential refactoring patches
+based on probe (in unsorted order):
+- use devm_platform_ioremap_resource()
+- moving towards device_property_read_*()
+- using dev_err_probe()
+- use temporary variable to hold struct device pointer
+- use fwnode_irq_get()
+- apply multipliers from units.h and time.h (like HZ_PER_MHZ)
+- moving to a new struct dev_pm_ops and pm_sleep_ptr() macro
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+With Best Regards,
+Andy Shevchenko
+
+
