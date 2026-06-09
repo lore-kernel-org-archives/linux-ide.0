@@ -1,110 +1,109 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 246803B14B1
-	for <linux-ide@vger.kernel.org>; Tue,  9 Jun 2026 16:51:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 210713043B2
+	for <linux-ide@vger.kernel.org>; Tue,  9 Jun 2026 19:43:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781023884; cv=none; b=mP8PHMf8SYx3pErlUDBA9PukdC4ednrngtwpEs+1V2zcSShkxpH3OBuHDT73moZhOspnFQfQWklLxVE6Xw3gsUTCOz4TZTZApphBuz13SXpFaQtAcl7CBN9Yj0BcKOHDmhC5UV2Oo7ptIz0pGoFNOwSzZHjRe0C1ZLyJUVdDk1U=
+	t=1781034211; cv=none; b=b8prdp0tkB4OcBQdDZCrv7r9KI6uhqM0GSZWrwn8huhKkiO9QNBiTXl/Ocz2o0zVxuO0Oae6NfNMqKm2AihHk6qLQK5IbcM9i4kisod2qgcTpKA9STHIJ9xWBrdP2jRTyq3sqJd2BMzHz3RGVKeMcNBFQ1p+5UjA7Fgp9OeZN3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781023884; c=relaxed/simple;
-	bh=7OD9K7+PNTgv5lAGwwVgIYfdG+FDenvDnOS94Nkdhc8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uNPLtXOmewIFidF87tPfK0EeVuGgxUBmmtBGURasKIolCMjDoBoleiWy+43NrutVUQ4Id6J17MU/ygGK/PdLwuKt09RTXk4QA2m3K/SDMMpwV+O4GVamXR65I1yAdoGWiLYxrErI7B8g9j426yDpoVXhivhOX0kYOJclyJHi5IU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=b9moRLsV; arc=none smtp.client-ip=209.85.221.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	s=arc-20240116; t=1781034211; c=relaxed/simple;
+	bh=l1ykvUUpEJo6EqEuoK+oqDet2hWtHxKreBVHfSGY8F4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nYFjhZ52Pj2Is9WYlBSk+U5MUv2VRZ5k3h6Pbck3zqtqz2SyKHuedXiYrnw0PZwZeoyzZYE+Yq7Rg80x4ZartlkJfyeCzvD6GyjWljEfx3rbYcRP/KQC2mgr78PfAeF1LZWHlyjfFTfTmFq4TQVY3V/+gKwKISq00mf1weOz8Yw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V/tjfsJy; arc=none smtp.client-ip=209.85.215.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="b9moRLsV"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-45eedcdaeaaso3981871f8f.3
-        for <linux-ide@vger.kernel.org>; Tue, 09 Jun 2026 09:51:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V/tjfsJy"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-c858961a8efso2248375a12.2
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jun 2026 12:43:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre.com; s=google; t=1781023880; x=1781628680; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1781034209; x=1781639009; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=4I0rjoZYTJVgl6imeeh01+FWB7oZu1PLy/VEN6Jb68w=;
-        b=b9moRLsVFzNk9U4CKOI+pyeuu/bES8n6+ZUk/tvo2Xan/40iLj7KCSDz9WQEEF7Fbc
-         hS6WF6i1sDpl6P5jbC1pB9WiZWvXjXFIzW4EHjn+Q+gc+xo69E4khr4uaAby6XIZSVsE
-         Tzl9dph32U8rZ+ZCuMk+fi80UnTXGypOucyCeIKNohB5VNye9vg1LU5zdiPsB1lPlrsf
-         IRfwTr22bM5uPs4thYo7vkHmzJjNKDU0sl+GEb2Pv8sRUbcqo4I3KxqwFTctV44KncSd
-         u58DXFELPuWTPAFkujYbB+iKG3SBniTTQYedyQuRJ7PS5Yc0EX1rWbirbEdhzTXN24zO
-         8XpQ==
+        bh=MKaybrpTNEWH0SVVMDdhd24L2LW5a4rMsS7LvjsoFKk=;
+        b=V/tjfsJydJDysj2O+IMh5NbEaaU7ynW98WBtkzcomxJdQWqS3fg065diK2XCF5z0fw
+         mIEmmg6T86NJGoCTy3OR1KfSwvplDGMuFI8evjeLdG6OXbEV2a0IAIZTTYNMHF/Iq1pK
+         6g3Fkvwn+z6erB4T3IHTQKp+R68Y60Np2yRiIlj60CHlUJr0MJtGwx9L3gO/Wmj6kHIa
+         L2iPOxacZjti41wf3kUVZkDvAX80uo8esBICILiaxwvaXKvbDSkEvb24AclKsM0c9rRW
+         xdYHMdU4/y4jnj2DmEnGQe8F+dG/IR1psXtvw2GXaUY95aCde/e7G9DHDGgJwG2QeHVj
+         3IZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781023880; x=1781628680;
+        d=1e100.net; s=20251104; t=1781034209; x=1781639009;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=4I0rjoZYTJVgl6imeeh01+FWB7oZu1PLy/VEN6Jb68w=;
-        b=Rt5GkzMCNVYvDns0mk9LOV6aWVFaQ2WoAaEScngiBHlJWcvjSw8W7YA35z/ptMhlah
-         6BIuQwrXWIPdcdvKuGxSu76g5hhzQ7horvxibQijHcAbk64e/91p1s285qqB1f9bdzXG
-         M8/l3h1ohj6ym4Ez4k5DctNEqiLUaoJWYcVAVpIaiAs9399UgP+xelul6PTlzZ21FLQI
-         twe0I19tUAc7tr5ns9gi2+vFtUOpDz3+iIc5YLOssPT6R+i5KLfupgRmfk+8QISvsba+
-         Cl/Ln8ZX9k49RO6SnV9qphk2L9M0L6m8vV5QjShCZHwIH0Ro1kjWRdQ4CX8l6aBeDvUk
-         Y66g==
-X-Gm-Message-State: AOJu0Yy4itLHs3psowJq4JnxaRD/1kEFN0xhn34zUTlb6xbKN7/TBVFR
-	Rxvj0eVoqu/LwodTZmWGbRVY58c0rzXrAtns0KBii84vYa9Qpityw68u8XVzzLg9/RI=
-X-Gm-Gg: Acq92OHqk2bzHhJ8hALX9bUTyo6RuQQKOz2RHLLBjKKs7NbS0kfGXzJADXocZ+eNX52
-	cBgPPVXvYKEdrODErbAbI1Az8A3IrjdPfQSrbgp9UrKxgbZpZLaJ9xHuM/eMbd6WWZXYiZJfDXy
-	dwdRSEUzEsV+kNcCngU9iuhETCw/D9HpYDer2hMalcp67a++ntiroGTpzgfddnjCO5KFZNfNGLb
-	0mSWC1O2ZfHNvr6QX3945MhSq43bLQdJJOxyHkbJKGMcNUrdOppaPKb7SUTeYXYje61WWJY0CNg
-	0Tld6/O03enFDPDo6b2dLKU2WeN/UGSh/Ttf4EoX3VgW6xLF+pxtTU7zpz1Q1xN5gysDZ7Z1bWL
-	DLvAOSaQDbnnRprlJQpyGMhTYCJplHuARevgjUstGzUhnrpZeaOBCZMlYgDNTy5BzNHlbODar1w
-	kk/6rmp/x94hcenaDtE9wjVpVH2XXvwiEdKb4ztsOl0gZX7lDQfEYRgz6gbcPqyuLAJv30fW0mc
-	1OW8PyZ6ur+YuEqL+d5Gn4+Hg==
-X-Received: by 2002:adf:ec0f:0:b0:45e:db3b:921d with SMTP id ffacd0b85a97d-460307563f0mr23190912f8f.31.1781023880539;
-        Tue, 09 Jun 2026 09:51:20 -0700 (PDT)
-Received: from localhost (p200300f65f47db045b0dbdd314d8a71f.dip0.t-ipconnect.de. [2003:f6:5f47:db04:5b0d:bdd3:14d8:a71f])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4601f344148sm61176450f8f.19.2026.06.09.09.51.19
+        bh=MKaybrpTNEWH0SVVMDdhd24L2LW5a4rMsS7LvjsoFKk=;
+        b=lfCqVgWANMkbiw3eEFVYrZoW2K4Bmh67/pexO+XyoOSNKSDu6VmJVanccK3496UtfG
+         qodVWlJ2PCH6/yphtB6Z7ynyWD7aVnfbC18tpa2c7lxsX4elACokX3o3NC16HuR42wkT
+         j+5k+X05bHovAIqamtk1KSHDkJiFC2Jku6NiaWC8JqCU3Ottz7eQupcL3rnRMfN1J0Bb
+         p5T87QryFTShsraXyIUPMCOGxxxQAJ9kUjMFHOkDm27UkoD/Iqx0N4njfE00DNloR6CK
+         brdIy9fe89qhJ0wLrk8wHXcc55J7sGDtFBconReZKF+J9vjV5eyEe/CDUCCKeFiVeyi2
+         w3xQ==
+X-Gm-Message-State: AOJu0Yz4bgH+jn4SGv0C2OozxcwyrW3MT7Da+uqsqMmlxKKVnYqwIbge
+	eBa0nIWfZ7QP3wFYrbcO77pc04keUY5/0FnuM19LgWXTysgdccH7T93OncWr2uzg
+X-Gm-Gg: Acq92OFh0k31yx+sLnqk9pILFkPFsF1ryk5U+if+sGAdtAxrH0Vck9G9Ff9bFPfbK6m
+	Xc211bdLBg+VUwj8VlmjH+X9h/ic5RdeyAxsoDcn/5rpZiCf6hufS2Aez8cyrfUnVwbXZJ9wFJe
+	a7cVOWyI0aV4DHeeThYPdoNnJPnhBeh5idRJnXYCQ5nwJDIy4YSxf4S2zSoE/Vhh5Mo8e07PIHY
+	gitBQ3XAdvJp3qaNTpRf3Eku+i4g3JvtF6ijQgzJSUuHTi8/4rLAQ4pip0DaZcOa4eRmgDPTutD
+	MFr/xI33R50H74zwiDnMREeMvjlm4y6bc9nZhv5om+BHcoweFrHG98UgzFJXtwErn37XnUXm8OE
+	wztxLkfLG3jo+a7cUoC2A7l1h2MlZ8LsbJYgO5TswADurlIF5kf7ZMyl7VXkoyAbe0tl3DJ0PeV
+	xHcZnGZX7mOrM6avTdBwEFBP0in1DYh5HyYNsYmCP92sK8P0xQ3YU0Gffae6cdYfCyNTWi60nGi
+	x9AEl3Z1Kg+RTmUu6nvmZuhVwxSkavBuVT0+9LVHnWCXZE4k3O7Zhvs
+X-Received: by 2002:a05:6a00:4407:b0:82c:e692:1f91 with SMTP id d2e1a72fcca58-842b0fba9abmr23673035b3a.39.1781034209352;
+        Tue, 09 Jun 2026 12:43:29 -0700 (PDT)
+Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-842828daf76sm22715683b3a.42.2026.06.09.12.43.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 09:51:19 -0700 (PDT)
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v1] ata: pata_isapnp: Drop unused assignments from pnp_device_id array
-Date: Tue,  9 Jun 2026 18:51:13 +0200
-Message-ID:  <395c2f2ed11614410956337fd0e10b7adb47f8d1.1781023750.git.u.kleine-koenig@baylibre.com>
-X-Mailer: git-send-email 2.47.3
+        Tue, 09 Jun 2026 12:43:28 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Tim Yamin <plasm@roo.me.uk>,
+	Julia Lawall <Julia.Lawall@lip6.fr>,
+	Jeff Garzik <jgarzik@redhat.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCHv2 0/5] ata: pata_mpc52xx: fix cleanup ordering and modernize
+Date: Tue,  9 Jun 2026 12:43:06 -0700
+Message-ID: <20260609194311.6217-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1046; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=7OD9K7+PNTgv5lAGwwVgIYfdG+FDenvDnOS94Nkdhc8=; b=owGbwMvMwMXY3/A7olbonx/jabUkhiwNl6aCwAmm7CmLxHMqQ0/NfbSpXm1v1rwfakyTm+8Yz H2uW2jayWjMwsDIxSArpshi37gm06pKLrJz7b/LMINYmUCmMHBxCsBE3qiz/1PJaNsk+jX60FSt Vz4hMvVf2y2yPM9+WfHR9Z287r3qQ45v/2bX+Pq+qpzo3X7ff0LGvVMvYmwuPrHMDpiR/jStsOn CE5GA5XbOpx8IbPj+OUNH6P2sZpnMjJVW2Wc7W+4b98ZVOJZ+mswmf9pn8YGJEYe+aXdN5k9K0l zRsLw+6EVF85Hnm72v905pK5/pOOfx4z0rHbk6v1863Twt1C3AfHE0I5+NVOaPQ+8k0qMNFgsZe B6xc/Y2iQhgFuOPaSi+4PlT6rZDVZzmth1tTOXxOcyt6Vyf9Wpe64hbnGefPkW3ySz45/79e7SX 3NG3nDehn5s13W7nlh0pbqI6Vyb+SckIbn96+aNGqv1jAA==
-X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 
-Explicitly assigning .driver_data in drivers that don't use this member
-is silly and a bit irritating. Drop it. Also simplify the list
-terminator entry to be just empty to match what most other device_id
-tables do.
+Fix several lifecycle bugs in the MPC52xx ATA driver:
 
-There is no changed semantic, not even a change in the compiled result.
+ - The BestComm task IRQ was managed by devm, creating a use-after-free
+   and teardown inversion.  Switch to non-devm request_irq/free_irq so
+   the interrupt is unregistered before the task is freed.
 
-Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
----
- drivers/ata/pata_isapnp.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ - The error and remove paths called irq_dispose_mapping() explicitly,
+   duplicating the one in bcom_task_free().  Remove the redundant calls.
 
-diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
-index 0f77e0424066..23139009c40e 100644
---- a/drivers/ata/pata_isapnp.c
-+++ b/drivers/ata/pata_isapnp.c
-@@ -119,8 +119,8 @@ static void isapnp_remove_one(struct pnp_dev *idev)
- 
- static struct pnp_device_id isapnp_devices[] = {
-   	/* Generic ESDI/IDE/ATA compatible hard disk controller */
--	{.id = "PNP0600", .driver_data = 0},
--	{.id = ""}
-+	{ .id = "PNP0600" },
-+	{ }
- };
- 
- MODULE_DEVICE_TABLE(pnp, isapnp_devices);
+ - Replace irq_of_parse_and_map() with platform_get_irq() for proper
+   error handling and integration with the platform device model.
 
-base-commit: a87737435cfa134f9cdcc696ba3080759d04cf72
--- 
-2.47.3
+ - Replace the open-coded of_address_to_resource()/devm_request_mem_region()
+   /devm_ioremap() sequence with the standard helper.
+
+v2: add extra patch from sashiko review.
+
+Rosen Penev (5):
+  ata: pata_mpc52xx: fix NULL pointer dereference in IRQ handler
+  ata: pata_mpc52xx: switch to non-devm request_irq for proper ordering
+  ata: pata_mpc52xx: remove redundant irq_dispose_mapping calls
+  ata: pata_mpc52xx: convert to platform_get_irq()
+  ata: pata_mpc52xx: use devm_platform_get_and_ioremap_resource
+
+ drivers/ata/pata_mpc52xx.c | 70 +++++++++++++-------------------------
+ 1 file changed, 23 insertions(+), 47 deletions(-)
+
+--
+2.54.0
 
