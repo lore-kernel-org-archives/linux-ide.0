@@ -1,92 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F7733EDAD9;
-	Wed, 10 Jun 2026 09:47:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 081913F23BD;
+	Wed, 10 Jun 2026 10:39:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781084840; cv=none; b=qgz5ahD0rIrzBKKTrte5qnhPdD4tDhN8o6sS/uByzd5cDzrxeW6oaTi2HLh2VwFtqTmK9wTGfpQT4929bxihk/Q+F9WF3ptJkkMawHdhN1DhbvBBA3e4NKwBJVdk99h6+0lQLc3aaPXzHnhvKWg/fqeFEh7dDgJmDbGexp+Apmw=
+	t=1781087996; cv=none; b=mPwzfpWCyY9w6t/QTEfT2mcAoYh/olFx6qrCZR8vjU9ENBg14KxlaPPMXV/VMMdw2+JEwkLP6W9EoxMbeqNeeTwz9OUV1dwoAILcxJFDV6lSyYYnHAKrMMt1j4FC/8G1ExHladEueML4g3RbE8luqQvo/0DU7DVMm19b2k3m5jw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781084840; c=relaxed/simple;
-	bh=Z/yr/OL7lhy3qInP0uCQvu5mbD7gbXZT6o3R98zYuZE=;
+	s=arc-20240116; t=1781087996; c=relaxed/simple;
+	bh=7W020RJn6vBn+npx2sgIfaFnVt8KsG299v5awVt9aio=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qm4akxCji4c9nzdrLdwlavSONMSe1wihL9oAOXWBSjwuJQkjYCErTbJnX+yucept1q8B+5BXITb38s/Gl9yZwmRh4ZTN41t/8cTwCzAR7MFxyi0f6qp3hxk1+hgdYG7vGyUI3UKZO7Cb50qH1beA7vnixbeoL5Uao+R0rJINBRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H05an8lO; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=TSOBoWidyO5vYuJNpySR+eDjZ51WoJ7l/HPJe6JNLTaU6wZJFJL4YDEYx25hnaDMQlL31ikdZetRpvr8H7RI6CCldPIyk6ZB08p569EgbbjEyG1S84oSWU3BraLRtQsbunXhvrpmtNrE9D8mStvt/CQx0DOOIydoys0x0t36KTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KfmQgsMI; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H05an8lO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C8181F00893;
-	Wed, 10 Jun 2026 09:47:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781084837;
-	bh=+cleo8mhLB2DXzGPg9B9Im9fzQ/vJoE754q8ZfA1Big=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=H05an8lOVQ0gRTit8GCl++i6CIkamVFDJKXc4PZ2wua3YTG5+sk/9uznzUvRX99nC
-	 lgDX5tfGkfF5cauTj6KWEzWAXAo3mKvSiwD64KvPLgugtLpbCu4MN61IbGk3jAb6pe
-	 lmZZ9SuyF1UPheiV3+QwOpCGYGLtYdqRHAGieb4HAMHt5c0sWtmCgeZiTbXTdADLns
-	 k3pa8D1MFZjYf3wcS2Al7AXu8gVq9lNk0ryM+CVsRLkwndC1m2e3xKIg8sCDpwA1AZ
-	 DTInT1RPm5C31pVs2oOvhiwSRb2h7J251LNDTl37b8iiSfKtZmbgP4EsKKsW/ZrzI5
-	 VpJDbocoMbwcg==
-Date: Wed, 10 Jun 2026 11:47:13 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: raoxu <raoxu@uniontech.com>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] ata: libata-pmp: add JMicron JMS562 quirk
-Message-ID: <aikyoSdB6Vwhkiy5@ryzen>
-References: <71B4D0BBEC4F886F+20260610052835.1111181-1-raoxu@uniontech.com>
- <6a5f24b3-4777-4ed6-bcaa-a65740046ae6@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KfmQgsMI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1781087993; x=1812623993;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=7W020RJn6vBn+npx2sgIfaFnVt8KsG299v5awVt9aio=;
+  b=KfmQgsMIVqG+Ypmc8M6/oAGgFWHOI1yX1O33ct+h8DK00HnPxwGldZF0
+   Audgme2OyiTwJCkL5ObkCzp71ZulmOkfIJcRKlccQhTlhsXNJUL7NPSMf
+   3W02so6rkUKHJAFWQinf+ciuGByfaUlXMeJ7nWvqFIUgKpRbCqm2xqdOa
+   aJyItAhq3Tqfok7CiJv+ibgm/JYrL6uZDArkC+yynS816Wpiq1BSRLHyt
+   Xsx/vTKwTPhDxsij1H1yrkoXZwKMSZ2x6bwK8zOFWpRaCvFAkm41yNKp8
+   lZhwfSG/wpDjQ3UI/LCX4EvpfEmk4xqTcpNfkD9QIgiLGiIYTyklHBCQ4
+   w==;
+X-CSE-ConnectionGUID: m2slhPpfQ52EgDtG4+JKiw==
+X-CSE-MsgGUID: 8sSfbqMuTo2e4ABV3vE0/Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11812"; a="69410799"
+X-IronPort-AV: E=Sophos;i="6.24,197,1774335600"; 
+   d="scan'208";a="69410799"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2026 03:39:52 -0700
+X-CSE-ConnectionGUID: 4KzpZI0bRBCy5INo+gH7JA==
+X-CSE-MsgGUID: HI7L/v7OQcSQyjoSPAuCbw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,197,1774335600"; 
+   d="scan'208";a="241999995"
+Received: from hrotuna-mobl2.ger.corp.intel.com (HELO localhost) ([10.245.244.38])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2026 03:39:50 -0700
+Date: Wed, 10 Jun 2026 13:39:44 +0300
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: Niklas Cassel <cassel@kernel.org>, Andy Shevchenko <andy@kernel.org>,
+	linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Julia Lawall <Julia.Lawall@lip6.fr>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ata: pata_mpc52xx: switch to non-devm request_irq
+ for proper ordering
+Message-ID: <aik-8EhMkKFz8tyX@ashevche-desk.local>
+References: <20260608214718.49503-1-rosenp@gmail.com>
+ <20260608214718.49503-2-rosenp@gmail.com>
+ <aie-w7BTHYYwTKvq@ryzen>
+ <aifQgZwd8KzUOuKl@ashevche-desk.local>
+ <CAKxU2N9kAe4Yc1iE7r0Gw=CyQWuaWwwN5uUBV_J0szAF90G3BQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <6a5f24b3-4777-4ed6-bcaa-a65740046ae6@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAKxU2N9kAe4Yc1iE7r0Gw=CyQWuaWwwN5uUBV_J0szAF90G3BQ@mail.gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Wed, Jun 10, 2026 at 05:09:34PM +0800, Damien Le Moal wrote:
-> On 2026/06/10 13:28, raoxu wrote:
-> > From: Xu Rao <raoxu@uniontech.com>
-> > 
-> > JMicron JMS562, as used in QNAP QDA-A2AR RAID1 adapters, may
-> > keep the exported ATA device not ready while the array is rebuilding.
-> > 
-> > In this state, libata may repeatedly try to softreset and classify
-> > the fan-out link.  On the affected adapter, this can time out, make
-> > PMP/SCR access fail, and eventually disable the fan-out link before
-> > the RAID volume is exported.
-> > 
-> > A failing boot shows the fan-out link failing SRST, PMP access
-> > timing out, SCR read failing, and the link being disabled:
-> > 
-> >   ata4.00: softreset failed (device not ready)
-> >   ata4.15: qc timeout after 3000 msecs (cmd 0xe4)
-> >   ata4.00: failed to read SCR 0 (Emask=0x4)
-> >   ata4.00: failed to recover link after 3 tries, disabling
-> > 
-> > After that, the root filesystem on the exported RAID volume cannot
-> > be found.
-> > 
-> > Add JMS562 to the existing JMicron PMP quirk that disables LPM,
-> > avoids softreset on fan-out links, and assumes an ATA device.  This
-> > prevents libata from dropping the exported RAID volume during rebuild
-> > recovery.
-> > 
-> > Signed-off-by: Xu Rao <raoxu@uniontech.com>
-> 
-> It is really unfortunate that JMicron keeps having these issues. But I do not
-> see any way around this, so:
+On Tue, Jun 09, 2026 at 02:17:24PM -0700, Rosen Penev wrote:
+> On Tue, Jun 9, 2026 at 1:36 AM Andy Shevchenko
+> <andriy.shevchenko@intel.com> wrote:
+> > On Tue, Jun 09, 2026 at 09:20:35AM +0200, Niklas Cassel wrote:
+> > > On Mon, Jun 08, 2026 at 02:47:15PM -0700, Rosen Penev wrote:
 
-I don't really like that this patch disables LPM unconditionally for all
-the fanout links.
+...
 
-However, this PMP chip seems to be of an older generation compared to the
-most popular JMicron JMB575 and JMB585, and seems to be connected using
-eSATA interface only (which means external port, which means LPM will be
-disabled anyway):
-https://www.jmicron.com/file/download/1024/JMS562_Product+Brief.pdf
+> > > Andy, since you gave a talk about this recently.
+> > > Surely there must be a better way than to migrate away from the device
+> > > managed APIs.
+> >
+> > Thank for Cc'ing me.
+> >
+> > > Do you have some suggestion?
+> >
+> > This patch either way (are we going to devm fully or rollback to non-devm)
+> > is half-baked.
+> Note the fixes tag. The purpose is to get this backported.
+
+See what I wrote below.
+
+> > What I may suggest here is to extend this patch to cover the second
+> > problematic place (*) and make it as a fix for backporting.
+
+^^^
+
+> > After that one may carefully go and finish converting probe to devm_*().
+> >
+> > *) https://elixir.bootlin.com/linux/v7.1-rc7/source/drivers/ata/pata_mpc52xx.c#L733
+> > The call of irq_of_parse_and_map() should be moved after devm_kzalloc().
+> > So, this fix should do what it does + the above.
+> Doesn't matter much. task_irq gets requested, not ata_irq.
+
+It matters, it's about memory allocation. It should go after devm_kzalloc().
+
+> > P.S.
+> > Someone may tide up this driver a lot, but this is out of the scope of
+> > this patch. FWIW, the brief list of potential refactoring patches
+> > based on probe (in unsorted order):
+> > - use devm_platform_ioremap_resource()
+
+> Done in later patch in this series.
+
+Cool! Any plans for the rest?
+
+> > - moving towards device_property_read_*()
+> > - using dev_err_probe()
+> > - use temporary variable to hold struct device pointer
+> > - use fwnode_irq_get()
+> > - apply multipliers from units.h and time.h (like HZ_PER_MHZ)
+> > - moving to a new struct dev_pm_ops and pm_sleep_ptr() macro
+
+-- 
+With Best Regards,
+Andy Shevchenko
 
 
-Kind regards,
-Niklas
