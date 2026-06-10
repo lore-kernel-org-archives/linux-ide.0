@@ -1,46 +1,70 @@
-Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9613023393E;
-	Wed, 10 Jun 2026 05:29:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DFF5372B57
+	for <linux-ide@vger.kernel.org>; Wed, 10 Jun 2026 06:35:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781069351; cv=none; b=ry/6GvonlMTzuRHZT8JNXEG8gXAY7QTElOe8NqcnSviY3W5Op3G+ht2VPidHJhsYeA1wbhPaHeCicUWowErOMd6Xh86dsyDfifYz6JzKvmm0+KMzClxK3XkUXpt5+x8/ne9rkF8YqAaU1MqA5NglsL/BX1sINMIV+6engMYlf6k=
+	t=1781073332; cv=none; b=ZMpp/NpOGWCefBOKCeGUnokOc8rZ6J5BUFK8uh4f2Td7slqzikq25yAgc7psSABelZuiiyvYLhpZah2011a0KmLthxMwOgnCnePaELIubL1lnYrsS7vr5Iac02Jyj2fA8qQPx6h6F9muw2lAlum0qUS2115A4mpOu7bAD9B10J4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781069351; c=relaxed/simple;
-	bh=/fYK+z6hcVz/jfBxDLmRAWzVlsqKxE431O2KrUM+U/k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mgEysJV9ACY4vDIo1s7eN/aFoKwrW/W2e4lWDjh6AfniVD4k95+tx0JDT5A0SonXpSF2FuqfixPMAiBZcpx9rszm2CYgKw21Z/jk5c7M/ka4GFg1DOQQTUOPougOY+FFx/lfjvfRPW0Oj8ZI3yko0PuAe8KVgy5jW/KWtje5mAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=ROXi9Xgw; arc=none smtp.client-ip=54.92.39.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1781073332; c=relaxed/simple;
+	bh=xKbnNbZnqB2nd85SrmMAVGWPLWF5LKQ/BFwrABZk+2M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VSkr3t1lOVxhZ6JlbVgrmEjk1dDHEQhfnN3NFaSDBt+X12w58PtwA5qvr2dDrXOnwci9pYuP6183QI+OCIWBwkY9YMuoEcrz9lvcq6GuVu8CJ6ekz1m3U8tvoLLtSlHHp3VlS8+XJcty8Ar+3Ql1P9bmmsOqeMUjQOObq9Nb0Dc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hK8pCXR3; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="ROXi9Xgw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1781069332;
-	bh=UZx1rvuAxKvdMM2VWqpPoZjV9Y70UNLv8999OcpLA5Y=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=ROXi9XgwvzCFk/BCfpZHRbkwlW7xmJs9utbgI+mju1mUaRVOQHE4egrrtwA0s2hm9
-	 Ae0bmUY2Ch+sr09onvk+gZ93jHDsRKs3ouS77rRao04Byo1io9p1Om5cMaX1zv52vj
-	 wsNiGeG/TBUvsytVRXTpAsJW1W8OETYNTjXS/H3k=
-X-QQ-mid: esmtpgz15t1781069318tcd428808
-X-QQ-Originating-IP: vLtlpk080OCEjYjNvJHYHoBHsUZiMgwiU1sSbLE7SK8=
-Received: from PEN202512010004 ( [113.57.152.160])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Wed, 10 Jun 2026 13:28:36 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 1920330270598300247
-EX-QQ-RecipientCnt: 5
-From: raoxu <raoxu@uniontech.com>
-To: dlemoal@kernel.org
-Cc: cassel@kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	raoxu@uniontech.com
-Subject: [PATCH v2] ata: libata-pmp: add JMicron JMS562 quirk
-Date: Wed, 10 Jun 2026 13:28:35 +0800
-Message-ID: <71B4D0BBEC4F886F+20260610052835.1111181-1-raoxu@uniontech.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hK8pCXR3"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2c0b9328c4aso44339465ad.0
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jun 2026 23:35:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1781073330; x=1781678130; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bJ8wGY3Oxo53ZMrvTeyzLuOS7slHbJkEn0sMzVfN/G0=;
+        b=hK8pCXR3JULSoEd+BykI19j90bR+Ea/54gWySeZqBWI5nWTery4Ltlga8ktHcDT7un
+         jVNEi6wbAO/fgoAlz7O6tQ2nVbFPelWZX18zcg+jnSUme/HR/187dYyNVVIbTVV2jLNP
+         9tgsXH9gZOAkXNmBrGkt4vx8XGIfaZHGIxVQG8V5i5gtt1XZdL/oD+xYUoSQhl68ODcQ
+         owVzaYqp2PYhUYoj8W+RGay6UwghDfc5EGPmYEnU0JfhEUbHZL1sEvT9GjFdd4tebU78
+         2nJjlhmUpGVKrNNKbzOaq8CqI6IZlAVIpqkyKYNkBxYOqBJHVFFH14gBTNLLJQJ/NYRI
+         Krng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781073330; x=1781678130;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bJ8wGY3Oxo53ZMrvTeyzLuOS7slHbJkEn0sMzVfN/G0=;
+        b=kMVnMBPRhdx+qaPmbaQHVJlr9pyU85SQad2RqPVvYyTypQ6y38vIWjDR00cZF7sL+N
+         DrWQpcn6TSUu18Wr4byHSRZp1wFKtmxlYSmYdaxHHoaWF9lrKUSDVTMGIemgKCEamePi
+         m+2UprjbkVAlh/php5fOtxPTEQGUAVAeug48um2DlmB1c+bOqe8TzRnOs7QV7Rj6wGyi
+         GkQ2P1xvH1pnt3UnepfnqxF1rbqjjI2L0kY4ZUdsXrnLeYaKF491gdAFiXnTtPQ0EQa5
+         OWWpTYOEMAFiYOKYOnThv1/gyS6Bo+cjVmIND1M1HGRYqMZtLdNXwQEuqEzLpU5TiGz2
+         cyOg==
+X-Gm-Message-State: AOJu0YxrA9SBqwJC9UmoRWFdN2x0bScIsNpKbeSjmhUDT/QeCXnXuKek
+	0/VERsGqFoRHfFVtLwSCGgRSkAe0T8Oe6kW4xmil3pm5fX77B7NsuDq5EtkXlVRL
+X-Gm-Gg: Acq92OESvfIzWsN8798/5VjhzOzMZubN0yJrRZlBqaVxJz9W6/0/6pbYoB4BHVWqvGJ
+	HwOBfFFy8GIQrHQCNOhjFYrmm6qvG7YDauIkTucuEM5awpN0qx3ZXOPrPOZjeOqi4P/sHSOcayz
+	905WpKH5XNfSb7x4oOsiTx50mPLnliHfCXESNlXdxbp3+KIaqwS2MPKV6bHnPh4FotLwo8gBHdV
+	liUqm5kEA8muvHdjqmw3z75115hBTg2aG40znNKrsqNZYBNz+7CLk3oBUXyAy+9UJbxegX1Jcn+
+	zVYW4gZHsdlSsEai5VzhcczfIKjTpwfqosIHxYjFs+0Y6rfAEKj4x3ql+Ru8BSBDW/hdLkVM9ze
+	zuqnemYSfjY9fC8BbnV1BY53dak840es96EkJCDeeXrIpAx0xpmqKd36c7hbXbva+IAYe8ITNYS
+	MpcLZKSdsYakZ+nZjH5JNv/pCdrz1CBX4xqx8A+y2+BZHHsRKKEhSvjN5BmlzWhoarjtCDA1nIc
+	+9PoIQX6kYf49jqU+eTi/q7N8TXRRiMmT/irSb5qnq8Al5DoXG/G5bj
+X-Received: by 2002:a17:902:c40e:b0:2c1:e9f8:758d with SMTP id d9443c01a7336-2c2a1c65e95mr78126335ad.22.1781073330036;
+        Tue, 09 Jun 2026 23:35:30 -0700 (PDT)
+Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c1664950aesm226488825ad.69.2026.06.09.23.35.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Jun 2026 23:35:29 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] ata: sata_mv: use devm clock helpers
+Date: Tue,  9 Jun 2026 23:35:12 -0700
+Message-ID: <20260610063512.109464-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -48,83 +72,104 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: esmtpgz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
-X-QQ-XMAILINFO: NQDSFSrlZSaigABYnT2wkiz7ewHDqOIiQozFdSmObqWCFsV44p6ZjcD+
-	64/lBoilqXFNkRte9anA2t6MvHW7yjzH+4c6Uf2YhzR+JcsCD3LCYyYAO5hRog/8Bfb1or8
-	QTWGgdiKOjMoYacVZVQshrebE1nPbLjrtqCccaTxP+NDsGPP7ise6JoYFEvQRb2DTZwtvZu
-	sUrLXMLhKz3BnXeeXHhoKUgFtiJ8cFdBx4TtLw2SvTE1DewzWtRFYKHbC2qRkHUxhUA9TuD
-	/aMPt3CRLEQCopJdKtUKrQj2NdnhwmK6h8YPsoN2fBZ+HGh5SFTbkQ2fHQyDgwJRRaNsd5w
-	2DI5xM5QEBwU03iGfkO/Lokrj2fnwQsYeOOx1fD3YNH+091vBNTzhGZ/jNV1Mp4fgPf04WZ
-	wdzzlffOyFwXBh7vV+2S+PQX7S2kt+BgXNmt2fI8C3EQRRqWaPBGrr1vHoip/Jjp5CefURz
-	yLFKZtGls+vCXGhX5RTaHAOj54+uJfkqWGjntMsBqHsnIneAsfRDnL021iIHUh5hr4fuioH
-	FOQcldHxMilLh5+f2FThvDOxevvmwpnAHZTOiojkHakCH6tqUKjVpOIDT5aDMPElvX0/o73
-	FIJxFuec1JnyVWJsDnGxoLuEVb2e7Ie3ts3l3rD170DFsGDlJ2z5Vfru2xDlB7mcuPqsj3G
-	sDoPNWemkaJIi3P/cgV1NDVj/tA8Jvihg7AraDcfiq/8VFToZcHEUiRpLaZqdokQN9BcXO+
-	syUTYwOEGtUpgKxBaWdh3YVpoWb41TSNDq3D5ttwocHNUhUi2ThPvbCE7oNDYf52SiCgf6l
-	lBimddz+FvjQEF9p4SclHKVIirruoB7dWFOPm0CLXv7bT8w3nJDLGfUk8wkkAeHEtYdi24U
-	0MdIo8U4XqsQ3C/rCTInCaWHupvOJPMaR/cas2j/hjziZYNeaJHBLyuJZEuqKUbKi20krmB
-	99mVKNBpx8tfrjHb+5IBuA+piqkEqIqf4ndZ/P34X0YV8KlyD8BBx+CJduqKfDo1CZ7UHqf
-	xjL9Y7w7sAp+p/Unz10HOkmxRIoYgricfRcHqR2v102SKpyQxqBBlwBhiXd6wx1fYDaneAG
-	c1r3AMIenApVb1mTDqEGRk=
-X-QQ-XMRINFO: OD9hHCdaPRBwH5bRRRw8tsiH4UAatJqXfg==
-X-QQ-RECHKSPAM: 0
 
-From: Xu Rao <raoxu@uniontech.com>
+Replace clk_get/clk_prepare_enable/clk_put with
+devm_clk_get_optional_enabled for both the main clock and
+per-port clocks. This eliminates the need for manual clock
+cleanup in probe error and remove paths.
 
-JMicron JMS562, as used in QNAP QDA-A2AR RAID1 adapters, may
-keep the exported ATA device not ready while the array is rebuilding.
+The err label is retained for phy_power_off cleanup, since
+devm_phy_optional_get does not manage phy power state.
 
-In this state, libata may repeatedly try to softreset and classify
-the fan-out link.  On the affected adapter, this can time out, make
-PMP/SCR access fail, and eventually disable the fan-out link before
-the RAID volume is exported.
-
-A failing boot shows the fan-out link failing SRST, PMP access
-timing out, SCR read failing, and the link being disabled:
-
-  ata4.00: softreset failed (device not ready)
-  ata4.15: qc timeout after 3000 msecs (cmd 0xe4)
-  ata4.00: failed to read SCR 0 (Emask=0x4)
-  ata4.00: failed to recover link after 3 tries, disabling
-
-After that, the root filesystem on the exported RAID volume cannot
-be found.
-
-Add JMS562 to the existing JMicron PMP quirk that disables LPM,
-avoids softreset on fan-out links, and assumes an ATA device.  This
-prevents libata from dropping the exported RAID volume during rebuild
-recovery.
-
-Signed-off-by: Xu Rao <raoxu@uniontech.com>
+Assisted-by: opencode:big-pickle
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
-v2:
-- Fix the subject prefix.  The previous submission was incorrectly
-  sent as [PATCH 6/6], but this is a standalone patch.
-- No code changes.
+ drivers/ata/sata_mv.c | 45 +++++++++++--------------------------------
+ 1 file changed, 11 insertions(+), 34 deletions(-)
 
- drivers/ata/libata-pmp.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index e3adc008fed1..f4103438ac7d 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -446,8 +446,13 @@ static void sata_pmp_quirks(struct ata_port *ap)
- 		 * otherwise.  Don't try hard to recover it.
- 		 */
- 		ap->pmp_link[ap->nr_pmp_links - 1].flags |= ATA_LFLAG_NO_RETRY;
--	} else if (vendor == 0x197b && (devid == 0x2352 || devid == 0x0325)) {
-+	} else if (vendor == 0x197b &&
-+		   (devid == 0x0562 || devid == 0x2352 || devid == 0x0325)) {
- 		/*
-+		 * 0x0562: JMicron JMS562, as used in QNAP QDA-A2AR RAID1
-+		 *         adapters.  The exported device may stay not ready
-+		 *         while the array is rebuilding, and SRST/classify can
-+		 *         time out before the RAID volume is exported.
- 		 * 0x2352: found in Thermaltake BlackX Duet, jmicron JMB350?
- 		 * 0x0325: jmicron JMB394.
- 		 */
---
-2.50.1
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index ecf1653321e5..fdd86573a823 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4090,21 +4090,16 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 
+ 	hpriv->base -= SATAHC0_REG_BASE;
+ 
+-	hpriv->clk = clk_get(&pdev->dev, NULL);
+-	if (IS_ERR(hpriv->clk)) {
+-		dev_notice(&pdev->dev, "cannot get optional clkdev\n");
+-	} else {
+-		rc = clk_prepare_enable(hpriv->clk);
+-		if (rc)
+-			goto err;
+-	}
++	hpriv->clk = devm_clk_get_optional_enabled(&pdev->dev, NULL);
++	if (IS_ERR(hpriv->clk))
++		return PTR_ERR(hpriv->clk);
+ 
+ 	for (port = 0; port < n_ports; port++) {
+ 		char port_number[16];
+ 		sprintf(port_number, "%d", port);
+-		hpriv->port_clks[port] = clk_get(&pdev->dev, port_number);
+-		if (!IS_ERR(hpriv->port_clks[port]))
+-			clk_prepare_enable(hpriv->port_clks[port]);
++		hpriv->port_clks[port] = devm_clk_get_optional_enabled(&pdev->dev, port_number);
++		if (IS_ERR(hpriv->port_clks[port]))
++			return PTR_ERR(hpriv->port_clks[port]);
+ 
+ 		sprintf(port_number, "port%d", port);
+ 		hpriv->port_phys[port] = devm_phy_optional_get(&pdev->dev,
+@@ -4117,9 +4112,9 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 
+ 			/* Cleanup only the initialized ports */
+ 			hpriv->n_ports = port;
+-			goto err;
+-		} else
+-			phy_power_on(hpriv->port_phys[port]);
++			return rc;
++		}
++		phy_power_on(hpriv->port_phys[port]);
+ 	}
+ 
+ 	/* All the ports have been initialized */
+@@ -4158,17 +4153,8 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 		return 0;
+ 
+ err:
+-	if (!IS_ERR(hpriv->clk)) {
+-		clk_disable_unprepare(hpriv->clk);
+-		clk_put(hpriv->clk);
+-	}
+-	for (port = 0; port < hpriv->n_ports; port++) {
+-		if (!IS_ERR(hpriv->port_clks[port])) {
+-			clk_disable_unprepare(hpriv->port_clks[port]);
+-			clk_put(hpriv->port_clks[port]);
+-		}
++	for (port = 0; port < hpriv->n_ports; port++)
+ 		phy_power_off(hpriv->port_phys[port]);
+-	}
+ 
+ 	return rc;
+ }
+@@ -4188,17 +4174,8 @@ static void mv_platform_remove(struct platform_device *pdev)
+ 	int port;
+ 	ata_host_detach(host);
+ 
+-	if (!IS_ERR(hpriv->clk)) {
+-		clk_disable_unprepare(hpriv->clk);
+-		clk_put(hpriv->clk);
+-	}
+-	for (port = 0; port < host->n_ports; port++) {
+-		if (!IS_ERR(hpriv->port_clks[port])) {
+-			clk_disable_unprepare(hpriv->port_clks[port]);
+-			clk_put(hpriv->port_clks[port]);
+-		}
++	for (port = 0; port < host->n_ports; port++)
+ 		phy_power_off(hpriv->port_phys[port]);
+-	}
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+-- 
+2.54.0
 
