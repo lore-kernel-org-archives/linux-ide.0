@@ -1,75 +1,71 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9D622F6931
-	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 07:35:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FED63803D6
+	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 07:35:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781249729; cv=none; b=kMGIgnBo4eirvwWrl+rKdrjiRfFwFJCxVpqW8faD9RIv2IW4w6Ar4et6EZ5Pk25g2Sn2al5uuON8FEa7gPZsQ8dVwBDT70upTXqyS/vlexd801dFUOsnYeQWL8sxT1bNjgUVJu1S8UGH0Io0/K7olP2FEWE9Mh3lhuCzKDlD73E=
+	t=1781249730; cv=none; b=RvFmn5z72TBlCtFVaML7XUWuMnB2fHADfKVd1UahQQeVE5iCaTCCE6cZnIZuDWkwSVer7GEQwow2au179vTO39In0HbfZS5XLEyoYScc1JRoHVjFrhnurtAHTNzzJldgUoLex51eI7O1lVT4ojYz0f099Ucl62aJOQZaj4eZDUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781249729; c=relaxed/simple;
-	bh=De2hq3YnW5qs2FWHM2zV2NrbH8imiF81sp5XeUKauYk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=deub6NCqcCoRSLdBOVpxFCvbSu7HPsZjecVvUU0LBwaOHHiqLGZRbfE2M+gdIGiUumMnzXUXWbXTI042MWqs7TApfQVSXj+ROt1mFjKp/dx4/E3NXaU0WNueH1bBIQzSBYlrfsawZThLXpIsmGFCt7TEu2zhQNevetZb3NBPNa8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=X0MgWe9r; arc=none smtp.client-ip=209.85.221.43
+	s=arc-20240116; t=1781249730; c=relaxed/simple;
+	bh=e74+mO3o8yFR5T4aqUaigSBYb4srPz5o/JdlXm4KiHY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=G5cpdHQM9Y88oeHVstQaz2JE+KhZzuyYby+agUyg6JvJwHrAuQjcSbXXSvib4p7wkEdQT1iL1vlEGl9dpEuxY+GYuaPtX5ieO81fFs/qJgxKUG5N/mnr0SrEKMDkQdKXgUgMJQ4Z66Bx6d/0UZYLX1XTj7fWNRyJJ3bw/A/ui9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=L46TD4UV; arc=none smtp.client-ip=209.85.128.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="X0MgWe9r"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-46013161068so287800f8f.2
-        for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 00:35:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="L46TD4UV"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-490bb83a3f6so4584965e9.0
+        for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 00:35:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre.com; s=google; t=1781249726; x=1781854526; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hgxHaZ28asbAlKFnJXZL33XuIM5akG4qzu9IOMVomtM=;
-        b=X0MgWe9reCg6mvFMq2W0WhDTqd+Un1LstplgmrebnuVzoBn7EP9tqJrCtIUnc17C+i
-         qlvlVmTCV7iRlhSgh/YIgdg4w2N77WJuaP1XOO9THqfmfLn7th+Xb2ijdnsJV2grK5WA
-         uIWd0Xn+nqOsHOj99lv4XPdpMojUcWnBYXtKd7l2JI3wswSozCV83R4t1nPAM2ZVK4v9
-         op4NEn6blSgBOuIs94RWJZ9M2arT99qHGB7XpBbHj6kdc+GiNf0d/tyGySXp3mkR+nkq
-         w4mnkTHDyfGkc/Dz//CYHh/qoQzULqA91uFaoEciDOS3j0tomf3Pib9WP0iMlXBzwB5p
-         5xiw==
+        d=baylibre.com; s=google; t=1781249725; x=1781854525; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Cd2qiEs7KRoM05F9e6f99tVJfUrCWRjcFNOBIPGO+LI=;
+        b=L46TD4UVVbshCrh2Fpmrl0+30UCyD3WHpmd5nDHNqOXjRESjc0BfWStV6WUEaNbC+6
+         VrFI76P9EVz85SZ+KxDcyr+oJ5F3jW/waSaDJgBYqFDhrNiR8vXDunl7KS4bFED5o4D5
+         iYk0RgEjeznjm7SgDPJIcmejf0oE2RQfWUsOTorRxMFB+pR+jjI7GNeZcS506fqQJ9Ba
+         2AJdlthH9DVi+84XnzuNUUzhWRsrtyczotBnAQ3L/KXFPzsJKiYUSQNT02gcX9pPISA8
+         7aBp3PzjEpNh86tQAfigKU7DCfyJn63owwCbKgY9WRnKf9v6Nv0mp7RMolZOAKvdF1am
+         WkIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781249726; x=1781854526;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=hgxHaZ28asbAlKFnJXZL33XuIM5akG4qzu9IOMVomtM=;
-        b=NK57OqGAgK2dz/QLJ01ahvLPF1AJqQlHSFz/l7XWPPAqaSwmyWW6o08JBZFF+DY2wc
-         SSQeWKVNXfCezQCv3+7GxjVwWYi+G7CznPL1Bg3tN6O01zTPOy3p29yqVsL7ktwMGhVp
-         aE40Ukh4QejwxXmHLtJTNKeKxe6BgEMBbNUQOeZJd2DdaIzWDswOc2Hii3SM68tm2b7M
-         ohRcpS6iWX1VKS/nfkkpymV7QTTS+/psCSJWcWa0IDnyMOVCMbFK04U+hq0euibXSDwn
-         Q45Kr0shJWCjspZFxQafwG9xPXF0q5IcNRJvS+jJCnhnMet55gnPs/RJCj9C9QU6PFv8
-         5DHA==
-X-Gm-Message-State: AOJu0YznWPDUsI6G7vEk539RJJusapEBlSt2/MH1Sf8IwD0t4kEVhh7p
-	BSuS2MjGKbOzdTpzokM+tFPVYU88RuSpVLbQlVRrPPdqqAsN3HkkgCIJkrBkWu1KAexJv3DGCBF
-	DG/iA
-X-Gm-Gg: Acq92OEftoWYQy05aEK6Bq3hdWauGddh1SL1HQFhbeAfghgUmY/WRvH8uJfM4U7aO3d
-	DZrKMoLpzfRo/ycT0qwnaRv/6EbcF5RHz4T3XakGam7PB9fv1Xie96rVRk2NKIbeA6B1SaYvzFq
-	DEAjsSiSmXU2mQoVeJm2QatU0fn9WMnuL5oUNS9kEoJm0XEUHNOTQfKnnjlgGpv7sH1LQYjcuA9
-	D4FTIy3FYcIqo/B1zhTS33CgQzw6oO7Q8jMiDnweeEDpY16nS3AjzehIyiKs9JaCpHWIgnzPPkZ
-	1ABdjLS6zC/Bak8EZ2q+m79EXBCyq1TXMlYnwbP9FGc3cWiZId+yTCCf0CjmXq44K+SVYAES8nX
-	BuU8xf8p80aTJr0ru9qfNT991cbqJBomn7YOFlwcsVvQ01vhCtuAIKWmfIjT+OKIXEDAmAtQ8cv
-	dePddYj/DHRaqYy814SP0nWEfdAxrWHJRZBBatllcz17433VvmwFvKJn4makhr5l04o+Y6GSqNQ
-	kn0vT5+LHKj+g==
-X-Received: by 2002:a05:6000:1842:b0:45e:f381:cd7f with SMTP id ffacd0b85a97d-4606da8cc8cmr2497181f8f.5.1781249726286;
-        Fri, 12 Jun 2026 00:35:26 -0700 (PDT)
-Received: from localhost (p200300f65f47db040e4e5c1e98e7f0ff.dip0.t-ipconnect.de. [2003:f6:5f47:db04:e4e:5c1e:98e7:f0ff])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4606f263945sm3380474f8f.8.2026.06.12.00.35.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        d=1e100.net; s=20251104; t=1781249725; x=1781854525;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Cd2qiEs7KRoM05F9e6f99tVJfUrCWRjcFNOBIPGO+LI=;
+        b=PY6fyOzdpmL02AValUBeh2PoTlmRD9uh8ZNs/xAL2lckD+5LNK9ph9mJXTPd1TwdVS
+         YeegS6yeMvGny6w0xsQm7U4BcMtfXxqGzl2yIkSOINLSH+duXgQ55cMZ4Qxluxo+4nBD
+         bFmdWB4e1ySARKRp5ag0BK/9k5xlM7FBFJS9mKx6rTvPFq9y2TodH+q52RIVLxDKl9yu
+         CdJ7Zt6qrDRKISkCphpjoIf3Eo4Qnk8keUE/ra3vtSLrMeZkl0NyXRqQ7Atgz7/oHEHW
+         N41SW5EAX7DkZWJvCH2pRQYpNcBOS4pG6qx+FBFthuAc0rl8HKBrZUZH6vG2UWiVIDGO
+         3HKg==
+X-Gm-Message-State: AOJu0Yy9JtWgVyHQyqkBJXtjlSGrRuOC7EoVrwcY0qgqJ88t2EWryE+4
+	XgOkPYvwsu3pvFVTmz1GIVsjh+BRuRq1YQmf9d8vv1nsk9+EXIHnc9DC64Yi90hvCXo=
+X-Gm-Gg: Acq92OErNlFkfHP8RcBgXolAeqNenZoPjicDVbcEY0c1HiUS+HpAoXb7xNESMpBeOxc
+	jYp5ipVXc8uMXu/rGtQ+rPYWGLkskK6K9Ic4DURaOwgylTd54JH/a1B0Ayb7WQJcK1KVgyMuaUw
+	PubU8UQjTYku1uF6iEkKjl5VYQgNxjcqPRatNNUhSXPg0NnANCfzhr1NP6V/Widxj6rt1JgvKm2
+	1tSP5pvOEdYtDS89A/yGF9ovgjDnGyoVctdwDUknl/jOD3Z1CmqnwINH5Et9OZFZhDArrj3EzPt
+	FoMVYsz36XiNRZUWpJMYj2ye8BKa+a2J0TZEvdQWmVrYTnr32ai7V1AK8yIGMzvP712lY38E4ry
+	GmX5SaEWovxxC/bIzeeXMOY+cVUXGkfiZLpDKiJTmLQfpBEx9yimvM3hjBsn66pwBfsrrwCFIkG
+	mRKpQ6c3ZT4XgViJv2HCAvqvQ9pYO/YNBMtoj4+5EQ/JVQF2BHbNBeFEuLPbbWzC6zFj5jsfAcD
+	MK18IapyPfV6Q==
+X-Received: by 2002:a05:600c:4fc5:b0:490:e5c1:b8b9 with SMTP id 5b1f17b1804b1-490ec3388c8mr19393335e9.0.1781249725036;
         Fri, 12 Jun 2026 00:35:25 -0700 (PDT)
+Received: from localhost (p200300f65f47db040e4e5c1e98e7f0ff.dip0.t-ipconnect.de. [2003:f6:5f47:db04:e4e:5c1e:98e7:f0ff])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4606f26f309sm3814490f8f.14.2026.06.12.00.35.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jun 2026 00:35:24 -0700 (PDT)
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>
 To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
+	Niklas Cassel <cassel@kernel.org>,
+	Mikael Pettersson <mikpelinux@gmail.com>
 Cc: linux-ide@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] ata: Drop unused assignments of pci_device_id driver data
-Date: Fri, 12 Jun 2026 09:35:11 +0200
-Message-ID:  <75fcd02edb42a71cbd83f2de24ebeca70f978003.1781248923.git.ukleinek@kernel.org>
+Subject: [PATCH v2 0/2] ata: Consistently define pci_device_ids using named initializers
+Date: Fri, 12 Jun 2026 09:35:10 +0200
+Message-ID: <cover.1781248922.git.ukleinek@kernel.org>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cover.1781248922.git.ukleinek@kernel.org>
-References: <cover.1781248922.git.ukleinek@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -77,170 +73,75 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5860; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=De2hq3YnW5qs2FWHM2zV2NrbH8imiF81sp5XeUKauYk=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBqK7axnANFq6ZjpPW1YN2r+tTXF6FtP0YOnPgGa 57ZuyVz5BKJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCaiu2sQAKCRCPgPtYfRL+ TgTIB/9OaUn4xJVy0gj8VXHcsZ30x/yuPorHWlV2yoH61Htwqv5wJ9Zlqu3rraUe6IaTmDMjB9Q +DrCP3WY9PRS33l5mLfiQRmtSIE+iyrHTfOWc9wYu/acJnffFIi2vwmGwQwKTbuTbAbkuajGaad 4cJYbXPKiaqAcRFo61ei516jg2FyS7mld0GTLulAmYvnL6OsROwE6rSnLS6eDELYPq/y4cN4brs h55jL/QD7AfHfEi/CKhKDqsyszLvQgdGHQuTGimZVZd8JsF9PMdyNBIn2RaksW1FTS08NcYrgnx PfRvrj76qYcSoDswCQ9lysjLSVIEefVs2fiOSRoid+ElvsFC
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2675; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=e74+mO3o8yFR5T4aqUaigSBYb4srPz5o/JdlXm4KiHY=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBqK7auttCkLwMoFwIX+gqTgQXzhncruqR/RIO4t ZlkPKLVFB6JATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCaiu2rgAKCRCPgPtYfRL+ TuCJB/9GLUjiDQRgYu6jQqyrVWAF49vUi2fleVBPyfdaeKxS9zo6fjFkD2rIxSmAUQGZ1rc1jJk AkkISXk31pVPAgUG+t6S0/rbiVfmK1lOnveQoOs6/HroYuLEiY9+xoQFvmc5VSW1RUZtitl493u 7SQm/wC52cRC0l/1TRHW4oxUrz9n+zZtiMUsxZ0dAVbRDJej6pD1MGdarXM+RJokyEyJ8yZVrW8 Tme3ve/fTXYAxdvy03xjXbjQFJspqHcQHLtlo1vGJTcXg/C8dgosfe3P6Jju5Wba+S3lY/WIFDP v4PdS+iUIwzqtwvPwAddEU6xkX26sfx5M9c3wVz+qD3gsxXj
 X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 
-The drivers explicitly set the .driver_data member of struct
-pci_device_id to zero without relying on that value. Drop these unused
-assignments.
+Hello,
 
-While touching these arrays, convert the one driver not using PCI_DEVICE
-to use that macro and align the array's coding style to what is used
-most for these. (i.e. break very long lines, a single space in the list
-terminator and no trailing comma.)
+(implicit) v1 of this series can be found at
+https://lore.kernel.org/linux-ide/20260430170612.510869-2-u.kleine-koenig@baylibre.com
 
-This patch doesn't modify the compiled array, only its representation in
-source form benefits. The former was confirmed with builds on x86 and
-arm64.
+Damien asked to rework the patch adding more line breaks to make the
+resulting lines shorter. I didn't rewrap all arrays, only those that
+appeared too long to me; the longest line I kept is:
 
-Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
----
- drivers/ata/pata_atp867x.c |  6 +++---
- drivers/ata/pata_cmd640.c  |  4 ++--
- drivers/ata/pata_jmicron.c |  7 +++++--
- drivers/ata/pata_macio.c   | 12 ++++++------
- drivers/ata/pata_ninja32.c | 14 +++++++-------
- drivers/ata/pata_sch.c     |  2 +-
- drivers/ata/sata_vsc.c     | 14 +++++++++-----
- 7 files changed, 33 insertions(+), 26 deletions(-)
++	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3), .driver_data = GENERIC },
 
-diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
-index 308f86f9e2f0..6154a2bf19be 100644
---- a/drivers/ata/pata_atp867x.c
-+++ b/drivers/ata/pata_atp867x.c
-@@ -526,9 +526,9 @@ static int atp867x_reinit_one(struct pci_dev *pdev)
- #endif
- 
- static const struct pci_device_id atp867x_pci_tbl[] = {
--	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867A),	0 },
--	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867B),	0 },
--	{ },
-+	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867A) },
-+	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867B) },
-+	{ }
- };
- 
- static struct pci_driver atp867x_driver = {
-diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
-index 45a7217b136e..84eb36d02d7d 100644
---- a/drivers/ata/pata_cmd640.c
-+++ b/drivers/ata/pata_cmd640.c
-@@ -248,8 +248,8 @@ static int cmd640_reinit_one(struct pci_dev *pdev)
- #endif
- 
- static const struct pci_device_id cmd640[] = {
--	{ PCI_VDEVICE(CMD, 0x640), 0 },
--	{ },
-+	{ PCI_VDEVICE(CMD, 0x0640) },
-+	{ }
- };
- 
- static struct pci_driver cmd640_pci_driver = {
-diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-index b885f33e8980..d18286cbca1b 100644
---- a/drivers/ata/pata_jmicron.c
-+++ b/drivers/ata/pata_jmicron.c
-@@ -148,8 +148,11 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
- }
- 
- static const struct pci_device_id jmicron_pci_tbl[] = {
--	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 0 },
-+	{
-+		PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID),
-+		.class = PCI_CLASS_STORAGE_IDE << 8,
-+		.class_mask = 0xffff00
-+	},
- 	{ }	/* terminate list */
- };
- 
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 9eefdc5df5df..dd93f613f959 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -1368,12 +1368,12 @@ static struct macio_driver pata_macio_driver =
- };
- 
- static const struct pci_device_id pata_macio_pci_match[] = {
--	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_UNI_N_ATA),	0 },
--	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID_ATA100),	0 },
--	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_K2_ATA100),	0 },
--	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_SH_ATA),	0 },
--	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID2_ATA),	0 },
--	{},
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_UNI_N_ATA) },
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID_ATA100) },
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_K2_ATA100) },
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_SH_ATA) },
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID2_ATA) },
-+	{ }
- };
- 
- static struct pci_driver pata_macio_pci_driver = {
-diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
-index 76a91013d27d..88db9bd271e8 100644
---- a/drivers/ata/pata_ninja32.c
-+++ b/drivers/ata/pata_ninja32.c
-@@ -166,13 +166,13 @@ static int ninja32_reinit_one(struct pci_dev *pdev)
- #endif
- 
- static const struct pci_device_id ninja32[] = {
--	{ 0x10FC, 0x0003, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ 0x1145, 0x8008, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ 0x1145, 0xf008, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ 0x1145, 0xf024, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ 0x1145, 0xf02C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ },
-+	{ PCI_DEVICE(0x10FC, 0x0003) },
-+	{ PCI_DEVICE(0x1145, 0x8008) },
-+	{ PCI_DEVICE(0x1145, 0xf008) },
-+	{ PCI_DEVICE(0x1145, 0xf021) },
-+	{ PCI_DEVICE(0x1145, 0xf024) },
-+	{ PCI_DEVICE(0x1145, 0xf02C) },
-+	{ }
- };
- 
- static struct pci_driver ninja32_pci_driver = {
-diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
-index 8356f1f2a025..fadb5377371b 100644
---- a/drivers/ata/pata_sch.c
-+++ b/drivers/ata/pata_sch.c
-@@ -42,7 +42,7 @@ static void sch_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- 
- static const struct pci_device_id sch_pci_tbl[] = {
- 	/* Intel SCH PATA Controller */
--	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_SCH_IDE), 0 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_SCH_IDE) },
- 	{ }	/* terminate list */
- };
- 
-diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
-index a53a2dfc1e17..606284a6d387 100644
---- a/drivers/ata/sata_vsc.c
-+++ b/drivers/ata/sata_vsc.c
-@@ -400,11 +400,15 @@ static int vsc_sata_init_one(struct pci_dev *pdev,
- }
- 
- static const struct pci_device_id vsc_sata_pci_tbl[] = {
--	{ PCI_VENDOR_ID_VITESSE, 0x7174,
--	  PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
--	{ PCI_VENDOR_ID_INTEL, 0x3200,
--	  PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
--
-+	{
-+		PCI_DEVICE(PCI_VENDOR_ID_VITESSE, 0x7174),
-+		.class = 0x10600,
-+		.class_mask = 0xFFFFFF,
-+	}, {
-+		PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x3200),
-+		.class = 0x10600,
-+		.class_mask = 0xFFFFFF,
-+	},
- 	{ }	/* terminate list */
- };
- 
+which is short enough to not trigger a checkpatch warning.
+
+I also split the patch in two, in the first patch there are all hunks
+that remove explicit assignments of zero, that are not used in the
+respective drivers. That doesn't introduce changes to the resulting binary,
+because the compiler fills in these zeros.
+
+I didn't add the Reviewed-by: tag for Damien because I'm not completely
+sure that the rework really matches what he intended and I did some more
+changes.
+
+Best regards
+Uwe
+
+Uwe Kleine-König (The Capable Hub) (2):
+  ata: Drop unused assignments of pci_device_id driver data
+  ata: Use named initializers for pci_device_id arrays
+
+ drivers/ata/acard-ahci.c        |    8 +-
+ drivers/ata/ahci.c              | 1626 ++++++++++++++++++++++++-------
+ drivers/ata/ata_piix.c          |  532 ++++++----
+ drivers/ata/pata_acpi.c         |    5 +-
+ drivers/ata/pata_amd.c          |   88 +-
+ drivers/ata/pata_artop.c        |   11 +-
+ drivers/ata/pata_atp867x.c      |    6 +-
+ drivers/ata/pata_cmd640.c       |    4 +-
+ drivers/ata/pata_cmd64x.c       |   11 +-
+ drivers/ata/pata_jmicron.c      |    7 +-
+ drivers/ata/pata_macio.c        |   12 +-
+ drivers/ata/pata_ninja32.c      |   14 +-
+ drivers/ata/pata_opti.c         |    7 +-
+ drivers/ata/pata_pdc2027x.c     |   15 +-
+ drivers/ata/pata_pdc202xx_old.c |   13 +-
+ drivers/ata/pata_sch.c          |    2 +-
+ drivers/ata/pata_serverworks.c  |   13 +-
+ drivers/ata/pata_sis.c          |    1 -
+ drivers/ata/pata_via.c          |   19 +-
+ drivers/ata/pdc_adma.c          |    3 +-
+ drivers/ata/sata_mv.c           |   34 +-
+ drivers/ata/sata_nv.c           |   29 +-
+ drivers/ata/sata_promise.c      |   34 +-
+ drivers/ata/sata_qstor.c        |    3 +-
+ drivers/ata/sata_sil.c          |   15 +-
+ drivers/ata/sata_sil24.c        |   15 +-
+ drivers/ata/sata_sis.c          |   12 +-
+ drivers/ata/sata_svw.c          |   15 +-
+ drivers/ata/sata_sx4.c          |    3 +-
+ drivers/ata/sata_uli.c          |    7 +-
+ drivers/ata/sata_via.c          |   17 +-
+ drivers/ata/sata_vsc.c          |   14 +-
+ 32 files changed, 1870 insertions(+), 725 deletions(-)
+
+
+base-commit: abe651837cb394f76d738a7a747322fca3bf17ba
 -- 
 2.47.3
 
