@@ -1,161 +1,246 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BADAA356A38
-	for <linux-ide@vger.kernel.org>; Thu, 11 Jun 2026 06:22:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9D622F6931
+	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 07:35:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781158936; cv=none; b=uRo0E1wKE1KSLtTZh8Is7GPezpQE453B665dImRHHld4mAT1N7uix0QQ9hIku6Kh5oEadJwiJ5mC5MCUJCFwd9rzyoSbFBBiztiJgNIsQInm07+oM0ajEzCeAeWgIwNT+KXqAT2lbb6raqswUfmF3tJrqzTw4M0wN65f8mhZsWA=
+	t=1781249729; cv=none; b=kMGIgnBo4eirvwWrl+rKdrjiRfFwFJCxVpqW8faD9RIv2IW4w6Ar4et6EZ5Pk25g2Sn2al5uuON8FEa7gPZsQ8dVwBDT70upTXqyS/vlexd801dFUOsnYeQWL8sxT1bNjgUVJu1S8UGH0Io0/K7olP2FEWE9Mh3lhuCzKDlD73E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781158936; c=relaxed/simple;
-	bh=OfSFJnsiWpPNdzVOwRUzv6mJVNHRdZFxxejcPMVgGsU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TRjb4b0Yq6224neOUZ26AIcLBU5NtdhBSsuzb+SgiVAWRrFbQ1ginvYv1hTca8++Cd1UyERdM5DjeTgjkmqRW4xVsV4AL8wlDMNQzZXWqMcGBo4h1MnhMCxQi9NxxtsasbPfOe+2BcQ7uzW5tZnrwQVdrnm3paCOs3Jp2a8RYsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=q/5s1/KJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SCyGubdH; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=uEAucPak; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=N8uM98vE; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1781249729; c=relaxed/simple;
+	bh=De2hq3YnW5qs2FWHM2zV2NrbH8imiF81sp5XeUKauYk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=deub6NCqcCoRSLdBOVpxFCvbSu7HPsZjecVvUU0LBwaOHHiqLGZRbfE2M+gdIGiUumMnzXUXWbXTI042MWqs7TApfQVSXj+ROt1mFjKp/dx4/E3NXaU0WNueH1bBIQzSBYlrfsawZThLXpIsmGFCt7TEu2zhQNevetZb3NBPNa8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=X0MgWe9r; arc=none smtp.client-ip=209.85.221.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="q/5s1/KJ";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SCyGubdH";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="uEAucPak";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="N8uM98vE"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id C84956AF23;
-	Thu, 11 Jun 2026 06:22:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1781158933; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GaPVAJKQE+WamK90I3PEnWONi9ufq8nA3zt2PV9zgE0=;
-	b=q/5s1/KJT3Rp1JX1LhI6CYkPcyqMXm8UuGGpqMN5fuA4yWOZ9gE1y9uz2EqiQQkv45I7YO
-	M/wml8pcLVjTGbmMEVqGQS+27DDAvTP257qzVB/j251KrjJRPPTvvRwUVKciZ4/t2NGGrl
-	eYLle68RqLfeQH1blxxusCCFpyZMM2g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1781158933;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GaPVAJKQE+WamK90I3PEnWONi9ufq8nA3zt2PV9zgE0=;
-	b=SCyGubdH8HzdG0iQ+9DflpBd5gGnmxjjw6Rd7eTYGYlF3c50Arwjd7o4zjl36g+FvuT4dj
-	6Sf+Ec5VpVJoYhDA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1781158931; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GaPVAJKQE+WamK90I3PEnWONi9ufq8nA3zt2PV9zgE0=;
-	b=uEAucPak39hEi4haK/A/nLMETNdwDXjmd+7CvZhN0e4LbY0QYP23/VMbLqqgcVvhG8s9vr
-	WwPr8lC+an8zkKNbujSu+L/RPmMpZU89kRAaUNucZvitRY1m1ymDd7yw0hpqlvy5w7JzkP
-	Te/wvyWgC/OHMMbUjLCglHhxz8NaeA0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1781158931;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GaPVAJKQE+WamK90I3PEnWONi9ufq8nA3zt2PV9zgE0=;
-	b=N8uM98vEwDMWKcnfbJOJnE0aM8+pOKnh9MJFa3s34e/LVUfJR5vIZ6DzwCmYmnauONtBU4
-	ZPQFth9RqxaMzsCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7F646779A7;
-	Thu, 11 Jun 2026 06:22:11 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 5GMxHRNUKmoIcAAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 11 Jun 2026 06:22:11 +0000
-Message-ID: <da054cb5-2899-44f0-91b3-967f12feaa38@suse.de>
-Date: Thu, 11 Jun 2026 08:22:11 +0200
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="X0MgWe9r"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-46013161068so287800f8f.2
+        for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 00:35:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre.com; s=google; t=1781249726; x=1781854526; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hgxHaZ28asbAlKFnJXZL33XuIM5akG4qzu9IOMVomtM=;
+        b=X0MgWe9reCg6mvFMq2W0WhDTqd+Un1LstplgmrebnuVzoBn7EP9tqJrCtIUnc17C+i
+         qlvlVmTCV7iRlhSgh/YIgdg4w2N77WJuaP1XOO9THqfmfLn7th+Xb2ijdnsJV2grK5WA
+         uIWd0Xn+nqOsHOj99lv4XPdpMojUcWnBYXtKd7l2JI3wswSozCV83R4t1nPAM2ZVK4v9
+         op4NEn6blSgBOuIs94RWJZ9M2arT99qHGB7XpBbHj6kdc+GiNf0d/tyGySXp3mkR+nkq
+         w4mnkTHDyfGkc/Dz//CYHh/qoQzULqA91uFaoEciDOS3j0tomf3Pib9WP0iMlXBzwB5p
+         5xiw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781249726; x=1781854526;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=hgxHaZ28asbAlKFnJXZL33XuIM5akG4qzu9IOMVomtM=;
+        b=NK57OqGAgK2dz/QLJ01ahvLPF1AJqQlHSFz/l7XWPPAqaSwmyWW6o08JBZFF+DY2wc
+         SSQeWKVNXfCezQCv3+7GxjVwWYi+G7CznPL1Bg3tN6O01zTPOy3p29yqVsL7ktwMGhVp
+         aE40Ukh4QejwxXmHLtJTNKeKxe6BgEMBbNUQOeZJd2DdaIzWDswOc2Hii3SM68tm2b7M
+         ohRcpS6iWX1VKS/nfkkpymV7QTTS+/psCSJWcWa0IDnyMOVCMbFK04U+hq0euibXSDwn
+         Q45Kr0shJWCjspZFxQafwG9xPXF0q5IcNRJvS+jJCnhnMet55gnPs/RJCj9C9QU6PFv8
+         5DHA==
+X-Gm-Message-State: AOJu0YznWPDUsI6G7vEk539RJJusapEBlSt2/MH1Sf8IwD0t4kEVhh7p
+	BSuS2MjGKbOzdTpzokM+tFPVYU88RuSpVLbQlVRrPPdqqAsN3HkkgCIJkrBkWu1KAexJv3DGCBF
+	DG/iA
+X-Gm-Gg: Acq92OEftoWYQy05aEK6Bq3hdWauGddh1SL1HQFhbeAfghgUmY/WRvH8uJfM4U7aO3d
+	DZrKMoLpzfRo/ycT0qwnaRv/6EbcF5RHz4T3XakGam7PB9fv1Xie96rVRk2NKIbeA6B1SaYvzFq
+	DEAjsSiSmXU2mQoVeJm2QatU0fn9WMnuL5oUNS9kEoJm0XEUHNOTQfKnnjlgGpv7sH1LQYjcuA9
+	D4FTIy3FYcIqo/B1zhTS33CgQzw6oO7Q8jMiDnweeEDpY16nS3AjzehIyiKs9JaCpHWIgnzPPkZ
+	1ABdjLS6zC/Bak8EZ2q+m79EXBCyq1TXMlYnwbP9FGc3cWiZId+yTCCf0CjmXq44K+SVYAES8nX
+	BuU8xf8p80aTJr0ru9qfNT991cbqJBomn7YOFlwcsVvQ01vhCtuAIKWmfIjT+OKIXEDAmAtQ8cv
+	dePddYj/DHRaqYy814SP0nWEfdAxrWHJRZBBatllcz17433VvmwFvKJn4makhr5l04o+Y6GSqNQ
+	kn0vT5+LHKj+g==
+X-Received: by 2002:a05:6000:1842:b0:45e:f381:cd7f with SMTP id ffacd0b85a97d-4606da8cc8cmr2497181f8f.5.1781249726286;
+        Fri, 12 Jun 2026 00:35:26 -0700 (PDT)
+Received: from localhost (p200300f65f47db040e4e5c1e98e7f0ff.dip0.t-ipconnect.de. [2003:f6:5f47:db04:e4e:5c1e:98e7:f0ff])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4606f263945sm3380474f8f.8.2026.06.12.00.35.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jun 2026 00:35:25 -0700 (PDT)
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/2] ata: Drop unused assignments of pci_device_id driver data
+Date: Fri, 12 Jun 2026 09:35:11 +0200
+Message-ID:  <75fcd02edb42a71cbd83f2de24ebeca70f978003.1781248923.git.ukleinek@kernel.org>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <cover.1781248922.git.ukleinek@kernel.org>
+References: <cover.1781248922.git.ukleinek@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 6/6] scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN
- ATAPI device quirk
-To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260611024356.2769320-1-philpem@philpem.me.uk>
- <20260611024356.2769320-7-philpem@philpem.me.uk>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260611024356.2769320-7-philpem@philpem.me.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5860; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=De2hq3YnW5qs2FWHM2zV2NrbH8imiF81sp5XeUKauYk=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBqK7axnANFq6ZjpPW1YN2r+tTXF6FtP0YOnPgGa 57ZuyVz5BKJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCaiu2sQAKCRCPgPtYfRL+ TgTIB/9OaUn4xJVy0gj8VXHcsZ30x/yuPorHWlV2yoH61Htwqv5wJ9Zlqu3rraUe6IaTmDMjB9Q +DrCP3WY9PRS33l5mLfiQRmtSIE+iyrHTfOWc9wYu/acJnffFIi2vwmGwQwKTbuTbAbkuajGaad 4cJYbXPKiaqAcRFo61ei516jg2FyS7mld0GTLulAmYvnL6OsROwE6rSnLS6eDELYPq/y4cN4brs h55jL/QD7AfHfEi/CKhKDqsyszLvQgdGHQuTGimZVZd8JsF9PMdyNBIn2RaksW1FTS08NcYrgnx PfRvrj76qYcSoDswCQ9lysjLSVIEefVs2fiOSRoid+ElvsFC
+X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.998];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[philpem.me.uk:email,imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
-X-Spam-Level: 
-X-Spam-Score: -4.30
 
-On 6/11/26 04:43, Phil Pemberton wrote:
-> The Compaq PD-1 (and equivalent Panasonic LF-1195C) is a combination
-> PD/CD-ROM drive that exposes two LUNs: LUN 0 is the CD-ROM and LUN 1
-> is the PD (Phase-change rewritable) drive.
-> 
-> Add a scsi_devinfo entry with BLIST_FORCELUN to enable multi-LUN
-> scanning, BLIST_SINGLELUN to prevent issuing LUN-aware commands
-> simultaneously, and BLIST_NO_LUN_1F to suppress spurious "No Device"
-> entries for unpopulated LUNs (which respond with PQ=0/PDT=0x1f).
-> 
-> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
-> ---
->   drivers/scsi/scsi_devinfo.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-> index 68a992494b12..bfc2cbd43897 100644
-> --- a/drivers/scsi/scsi_devinfo.c
-> +++ b/drivers/scsi/scsi_devinfo.c
-> @@ -150,6 +150,8 @@ static struct {
->   	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
->   	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
->   	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
-> +	{"COMPAQ", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
-> +				 BLIST_NO_LUN_1F},
->   	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
->   	{"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
->   	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
+The drivers explicitly set the .driver_data member of struct
+pci_device_id to zero without relying on that value. Drop these unused
+assignments.
 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+While touching these arrays, convert the one driver not using PCI_DEVICE
+to use that macro and align the array's coding style to what is used
+most for these. (i.e. break very long lines, a single space in the list
+terminator and no trailing comma.)
 
-Cheers,
+This patch doesn't modify the compiled array, only its representation in
+source form benefits. The former was confirmed with builds on x86 and
+arm64.
 
-Hannes
+Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
+---
+ drivers/ata/pata_atp867x.c |  6 +++---
+ drivers/ata/pata_cmd640.c  |  4 ++--
+ drivers/ata/pata_jmicron.c |  7 +++++--
+ drivers/ata/pata_macio.c   | 12 ++++++------
+ drivers/ata/pata_ninja32.c | 14 +++++++-------
+ drivers/ata/pata_sch.c     |  2 +-
+ drivers/ata/sata_vsc.c     | 14 +++++++++-----
+ 7 files changed, 33 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
+index 308f86f9e2f0..6154a2bf19be 100644
+--- a/drivers/ata/pata_atp867x.c
++++ b/drivers/ata/pata_atp867x.c
+@@ -526,9 +526,9 @@ static int atp867x_reinit_one(struct pci_dev *pdev)
+ #endif
+ 
+ static const struct pci_device_id atp867x_pci_tbl[] = {
+-	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867A),	0 },
+-	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867B),	0 },
+-	{ },
++	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867A) },
++	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP867B) },
++	{ }
+ };
+ 
+ static struct pci_driver atp867x_driver = {
+diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
+index 45a7217b136e..84eb36d02d7d 100644
+--- a/drivers/ata/pata_cmd640.c
++++ b/drivers/ata/pata_cmd640.c
+@@ -248,8 +248,8 @@ static int cmd640_reinit_one(struct pci_dev *pdev)
+ #endif
+ 
+ static const struct pci_device_id cmd640[] = {
+-	{ PCI_VDEVICE(CMD, 0x640), 0 },
+-	{ },
++	{ PCI_VDEVICE(CMD, 0x0640) },
++	{ }
+ };
+ 
+ static struct pci_driver cmd640_pci_driver = {
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index b885f33e8980..d18286cbca1b 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -148,8 +148,11 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+ }
+ 
+ static const struct pci_device_id jmicron_pci_tbl[] = {
+-	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 0 },
++	{
++		PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID),
++		.class = PCI_CLASS_STORAGE_IDE << 8,
++		.class_mask = 0xffff00
++	},
+ 	{ }	/* terminate list */
+ };
+ 
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 9eefdc5df5df..dd93f613f959 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -1368,12 +1368,12 @@ static struct macio_driver pata_macio_driver =
+ };
+ 
+ static const struct pci_device_id pata_macio_pci_match[] = {
+-	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_UNI_N_ATA),	0 },
+-	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID_ATA100),	0 },
+-	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_K2_ATA100),	0 },
+-	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_SH_ATA),	0 },
+-	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID2_ATA),	0 },
+-	{},
++	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_UNI_N_ATA) },
++	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID_ATA100) },
++	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_K2_ATA100) },
++	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_SH_ATA) },
++	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID2_ATA) },
++	{ }
+ };
+ 
+ static struct pci_driver pata_macio_pci_driver = {
+diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
+index 76a91013d27d..88db9bd271e8 100644
+--- a/drivers/ata/pata_ninja32.c
++++ b/drivers/ata/pata_ninja32.c
+@@ -166,13 +166,13 @@ static int ninja32_reinit_one(struct pci_dev *pdev)
+ #endif
+ 
+ static const struct pci_device_id ninja32[] = {
+-	{ 0x10FC, 0x0003, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+-	{ 0x1145, 0x8008, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+-	{ 0x1145, 0xf008, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+-	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+-	{ 0x1145, 0xf024, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+-	{ 0x1145, 0xf02C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+-	{ },
++	{ PCI_DEVICE(0x10FC, 0x0003) },
++	{ PCI_DEVICE(0x1145, 0x8008) },
++	{ PCI_DEVICE(0x1145, 0xf008) },
++	{ PCI_DEVICE(0x1145, 0xf021) },
++	{ PCI_DEVICE(0x1145, 0xf024) },
++	{ PCI_DEVICE(0x1145, 0xf02C) },
++	{ }
+ };
+ 
+ static struct pci_driver ninja32_pci_driver = {
+diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
+index 8356f1f2a025..fadb5377371b 100644
+--- a/drivers/ata/pata_sch.c
++++ b/drivers/ata/pata_sch.c
+@@ -42,7 +42,7 @@ static void sch_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+ 
+ static const struct pci_device_id sch_pci_tbl[] = {
+ 	/* Intel SCH PATA Controller */
+-	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_SCH_IDE), 0 },
++	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_SCH_IDE) },
+ 	{ }	/* terminate list */
+ };
+ 
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index a53a2dfc1e17..606284a6d387 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -400,11 +400,15 @@ static int vsc_sata_init_one(struct pci_dev *pdev,
+ }
+ 
+ static const struct pci_device_id vsc_sata_pci_tbl[] = {
+-	{ PCI_VENDOR_ID_VITESSE, 0x7174,
+-	  PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
+-	{ PCI_VENDOR_ID_INTEL, 0x3200,
+-	  PCI_ANY_ID, PCI_ANY_ID, 0x10600, 0xFFFFFF, 0 },
+-
++	{
++		PCI_DEVICE(PCI_VENDOR_ID_VITESSE, 0x7174),
++		.class = 0x10600,
++		.class_mask = 0xFFFFFF,
++	}, {
++		PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x3200),
++		.class = 0x10600,
++		.class_mask = 0xFFFFFF,
++	},
+ 	{ }	/* terminate list */
+ };
+ 
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.47.3
+
