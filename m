@@ -1,63 +1,63 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D930634CFDA
-	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 18:32:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AE323769F9
+	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 18:32:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781289171; cv=none; b=JiW4KcS4YxW/PlS+Jwy5LzGxhZ39P4hbTFabo6GdWrVc6MtPHVrN5SJbmvxPIoF2qLJjtSlXslpJJjayRYSvWlGHvjUkyz2qcp2/8xpJFWIDZLLD1Jm/0OBC9yX4KhZ4CPUniGVn3easYIHNa2iGQKQgAxDHrW1A7m7u4rV11fA=
+	t=1781289171; cv=none; b=F5fjmkk0zFL0Quci6rHAB35UREqHcLXnS586NUcPbbHHJe4kdvMheoRHzwLMAEPPfJmx7MD10c7bOn+ns0keKV2hcN7iqa6hftf+fmUHtoDFFeYCVLvr16xIeYxgfBalxn35hBY6ZCu9ZzvNtRj2gK+Ni5dzK7dsDQeXV0fl+6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1781289171; c=relaxed/simple;
-	bh=lgccTGsaibWbGYrgiSBRBT3uAGaakFBX/Csibv5T0pk=;
+	bh=hhKYJazjJge73y6yNe5PGiyzjbkw4XoIZrmixT/ypn0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CMsPLzkB1xrYICEW0qD2GikdStyotQbdPDl36fBXNuUp+6mnUdcJ9Se7NDpIHIk93f+03M0z4AWZEYT6Emh5mjUKgfObmr7M2Jw6Ax2ivPXO+5vSRmbT3l6tHFB8Y8sgMIjZbPP5ZBAYgqIGTZgi528xrq3Ki8qXVGA9VnXBZsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CTKYnTKO; arc=none smtp.client-ip=209.85.215.171
+	 MIME-Version; b=u++rD/xWE/qwTHr8MnbUyAqkqEA+FmRwUbiQ6PfWg2JCr1BJGwnYWhFB/cltt1hb+GPk/SAXqSbPlkUxzNxk6+3acF/ggpHbOiKavyFfiQVpBbnIEYArt9XW5gi50YooFvb4xww7gLS0VjBhZmtET8Kd8t/lbionwaC6T5lWLWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YR+xgSxZ; arc=none smtp.client-ip=209.85.215.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CTKYnTKO"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-c858961a8efso575589a12.2
-        for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 11:32:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YR+xgSxZ"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-c86214eead7so624759a12.0
+        for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 11:32:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781289168; x=1781893968; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1781289167; x=1781893967; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=paVBip7d4bA/4l1GnzUS+7HmxQ3RS/Ae+nq1ju4rOJE=;
-        b=CTKYnTKOmAZLLH8heRtBiWLLBqL8SxJ8TWaoefvJOQe+lpmfwwRBFZa7FhftZNH4H2
-         BxH8NWZGVQOjwGDViyWj0tTHzMO/YVV5o3alW+ChSazS2YNjVbWnxJ0dEPjS6FDd2mTS
-         vQ7ZbxtbCgtbJahPW+r/9UaczjrysFnt//SYXnKuxvnE2bSjWe65AYNXEXHHXeoa6ovT
-         NtjLkc++6Ce+wLF9tzjdoUd/akH6xinJAekzbimvBXOAAgYMvftUoTIn+iyUf9X/4HVS
-         s61v1YucWbaMnRuR+Iko2LTxfBR6NmQckJkij0AUU8Vxr0W7alUbjpq8TCxFCI2nMb8o
-         mV8A==
+        bh=ZebOJ0xoX4ZIU1H13OA9Ye3a+JpFQ7aYIL/Bsme9n2s=;
+        b=YR+xgSxZSU4mOefGtwS49bjeUgBorpbMT7Jn4qLcBCCnjh6SngBgx6ETUtZHn5gDg4
+         /TmSgqd6cDfBU3jnKJn04mgOhhl7YBljk0bbFBC2MKjFA5IS93g6K0o1gcygnx1o/p70
+         7NoIbjeq80XyCY9vMkV33nGF3DUBQr0VZHwOte3WMNkDtoE+RWFg5PHaxbjTjcbDq+9c
+         QcWiPtmTldJ8CJRGZxjtVXDb/eu2JWo15F2L3FeHWGIrioVBHKOn/HKxKjiZo1XVmxGA
+         D2AX7UxWvAtIXwdKMZ4WMyLfybC8mqOIG4Vhk7wgEjhXBK0BCrhKS93QY/zyzP+vexr2
+         0qoA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781289168; x=1781893968;
+        d=1e100.net; s=20251104; t=1781289167; x=1781893967;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=paVBip7d4bA/4l1GnzUS+7HmxQ3RS/Ae+nq1ju4rOJE=;
-        b=XCtsHs7vj6uuIfDHs1zvc4QPgBT4YOv2rw4T7VegfyCNJ3DIZY9Jtpu97fMjGZTDGO
-         YEmivIUkeF9+3te64gLngdwgQWRR16iHpvRpi/FqXffqEMyQqRnlLne+7yMYg1txKf75
-         iPIfMnCGMafyy/x2vFmjRPKx4Uk2ujmxOOYxnH4iME0U81kSMpXT/dpnAhTscx3A/HWy
-         XD8SgOaS1V+7gvjHMF/nnTxfbKGPTSW8M7UjyVdBkpJ1HR8X3i9xms67HdlZQ+6sC/Ic
-         +UujIMlX7WO9JiXhd+FBaz1/TMTgvNxh0IrjjgyOgHd59yk8+I1qunKTlZ9CzUS72nSH
-         VJeQ==
-X-Gm-Message-State: AOJu0Yy+f5YVyCudsXFeRvaPLi6tURh8mXgodKsw9OKmnzoWe2FJ4s3P
-	IuhwAvRQ3Z55+ALJmXLk0Mw9dbAu5j0uwWkvK4D4qRhi+4LVNDYWFI5brNFkFg==
-X-Gm-Gg: Acq92OHf/RMJnvCrXeoE7FFAwj0XMV/JrqUJSL1CMMmQ2hTKwBfy7WF8bFr+HTPCKhX
-	7j8HwHCwDoya4iW9gZpHmj1v2aXRBm99+gkkuqVbrop9m7FpE+fTIcHEPZ2DeNTmHnQIaELVRc1
-	OgMVeLvFw/uD2tYYpy4baa/h51nrvkMbJ5KQY7mT+0pKBUSP5Y5KNS2/VhSqMBislnISX2eRofJ
-	xAMZdY2+Zad1lZ+koyQupGwBAFwaU/ycqfm5AqWLcxS4iA4g1oLsFyTi5qTlunbfb3fZXyUQsdX
-	AjnpS4NHZUy1KsFIRRhPkuCAfsRDvJP1chyGpP9KE+7j2Udfw4HbD9wI2K/AzDJ2G0M35L0ifVY
-	nALPqk01kuBNlIo5RlwdG3nCvTBYsE0V2MK070gUXECQYO3EDe5j1aW6hjOsxo7/TNRGbosVCre
-	Ku4DAn/ArxuZsB//xoX1p04FXwhlYnM70PZx+c+qWRHAsoA61U3E1miH/A8mgBFIy5MMOiRl77a
-	lyKFae9TfF6N+zXB31krkeAV4MrQYVvdw==
-X-Received: by 2002:a05:6a21:6b0f:b0:39c:235:c5ec with SMTP id adf61e73a8af0-3b783fb3210mr4906265637.34.1781289168172;
-        Fri, 12 Jun 2026 11:32:48 -0700 (PDT)
+        bh=ZebOJ0xoX4ZIU1H13OA9Ye3a+JpFQ7aYIL/Bsme9n2s=;
+        b=QOqFJnnWSMWY4mg6LLkJlGtysrAiDUBZTnargpgBOTnRZ8atj94gQjKlwXoN2B83Ge
+         /xeuCYkUewQX41/U3NasTt4CQb9dBn9gdFCnCNUVy5xY37phMw6edYI/5hueTkQMQWcV
+         w/hFee4ExOrVPFC79Qq9dosnIJDHzUxO1+IwQ6m0Ji48bi5E7WmKr8jX0x9Wcp5RABf6
+         GwKTzwrpdspSLfuQDUs9EcEKDWPM0+qX7LDW/MwpuUGcju/1mTIBVKfvpnjdtNpU982n
+         izOGZ38/IPMOLrhgwhUNWu0F1H7PJ7OauE9vFoIq9j+GV/jnQp/yu4qBm0od1s/Mb+Xr
+         fIoA==
+X-Gm-Message-State: AOJu0Yz5gw9zaKdIAaW6j16bLfRwW8j5GzZ/lYCmDyTbOIaLd2CejKYe
+	v76g9NyugGAqkzJydSazZbpJJmJP5KkM5WIuGwLIghh0sYks80SKYSJQ//2jMA==
+X-Gm-Gg: Acq92OEUmRVKmd0uo2PvjNffsKoBatWgpxMQbi8z5New/ZolUQfK3YnXnUNagv5WekZ
+	VZODH1hbfs9ElAm/mOzbuxTMySpPG4kf63IAOe8l393TNoNWMLM5E3V+PDjhkUQTG3/2RB4/Os+
+	SFZxxDkVDsF2XlV79Xm5KokG/libraBEwNB6l6gIz7ijhyzrgcy7Fi8mbxrPYTN+b/2nyV9nJ38
+	9haDLpfX8IMwExnPb8XgsobvYN/YO6m3+yLrX7oguktKQ7IEzNx8f39U1JN7XBH321PhYlgF1HS
+	772CPXF97pqT6bVEcmHnLgzdsDh/dqFjKGS9a9MS/FsgXGWAr1Gh1s776n0GzG7G6CJIE9g9Mb+
+	kSWC/eLMl0iTCsjTbTr0T4GbRbAlaQ8DK6w04hQhPN1cbHYV0wqyo9a8pS6L1zlQvYBcmK4LU+P
+	HAYRSSeTEe9pjDaumMyw4E3WIgoObWjX1yZXwqI/szUvrBM4ZE3EEnc5l3jTBXieVx+XZFAhrBw
+	Gdo6fwtF6qvIfBSvbkRBT09YSt+YA8rPw==
+X-Received: by 2002:a05:6a20:d4c:b0:3a2:ed4a:5d7e with SMTP id adf61e73a8af0-3b7811d18a7mr3956904637.22.1781289166579;
+        Fri, 12 Jun 2026 11:32:46 -0700 (PDT)
 Received: from ryzen ([2601:644:8000:5b5d:a073:5e58:ab5:a167])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c8661b5b207sm2795034a12.5.2026.06.12.11.32.46
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c8661b5b207sm2795034a12.5.2026.06.12.11.32.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Jun 2026 11:32:47 -0700 (PDT)
+        Fri, 12 Jun 2026 11:32:45 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-ide@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -67,9 +67,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Julia Lawall <Julia.Lawall@lip6.fr>,
 	Jeff Garzik <jgarzik@redhat.com>,
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv3 2/6] ata: pata_mpc52xx: synchronize with task IRQ before resetting DMA state
-Date: Fri, 12 Jun 2026 11:32:23 -0700
-Message-ID: <20260612183227.20446-3-rosenp@gmail.com>
+Subject: [PATCHv3 1/6] ata: pata_mpc52xx: fix NULL pointer dereference in IRQ handler
+Date: Fri, 12 Jun 2026 11:32:22 -0700
+Message-ID: <20260612183227.20446-2-rosenp@gmail.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260612183227.20446-1-rosenp@gmail.com>
 References: <20260612183227.20446-1-rosenp@gmail.com>
@@ -81,53 +81,38 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mpc52xx_bmdma_stop() calls bcom_disable() to stop the BestComm task,
-but an already-pending task completion IRQ can still fire and execute
-mpc52xx_ata_task_irq() concurrently. The handler iterates the BD ring
-via bcom_buffer_done()/bcom_retrieve_buffer() and writes to
-priv->waiting_for_dma, while bmdma_stop resets the BD ring with
-bcom_ata_reset_bd() and clears waiting_for_dma -- all without
-synchronization.
-
-Add a task_irq field to priv, store it during probe, and call
-synchronize_irq() after bcom_disable() and before bcom_ata_reset_bd()
-to ensure the handler has completed and cannot race with the BD ring
-reset or the waiting_for_dma clear.
+Assign priv->dmatsk before request_irq() to ensure the IRQ handler
+does not dereference a NULL pointer. The handler accesses priv->dmatsk
+via bcom_retrieve_buffer().
 
 Assisted-by: opencode:big-pickle
+Fixes: 6b61e69e7bc1 ("powerpc/mpc5200: Add MDMA/UDMA support to MPC5200 ATA driver")
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
- drivers/ata/pata_mpc52xx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/ata/pata_mpc52xx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index fe445d6aaff6..72a2b677bc90 100644
+index 210a63283f62..fe445d6aaff6 100644
 --- a/drivers/ata/pata_mpc52xx.c
 +++ b/drivers/ata/pata_mpc52xx.c
-@@ -58,6 +58,7 @@ struct mpc52xx_ata_priv {
+@@ -766,6 +766,8 @@ static int mpc52xx_ata_probe(struct platform_device *op)
+ 		goto err1;
+ 	}
  
- 	/* DMA */
- 	struct bcom_task		*dmatsk;
-+	int				task_irq;
- 	const struct udmaspec		*udmaspec;
- 	const struct mdmaspec		*mdmaspec;
- 	int 				mpc52xx_ata_dma_last_write;
-@@ -571,6 +572,7 @@ mpc52xx_bmdma_stop(struct ata_queued_cmd *qc)
- 	struct mpc52xx_ata_priv *priv = ap->host->private_data;
- 
- 	bcom_disable(priv->dmatsk);
-+	synchronize_irq(priv->task_irq);
- 	bcom_ata_reset_bd(priv->dmatsk);
- 	priv->waiting_for_dma = 0;
- 
-@@ -769,6 +771,7 @@ static int mpc52xx_ata_probe(struct platform_device *op)
- 	priv->dmatsk = dmatsk;
- 
++	priv->dmatsk = dmatsk;
++
  	task_irq = bcom_get_task_irq(dmatsk);
-+	priv->task_irq = task_irq;
  	rv = devm_request_irq(&op->dev, task_irq, &mpc52xx_ata_task_irq, 0,
  				"ATA task", priv);
- 	if (rv) {
+@@ -773,7 +775,6 @@ static int mpc52xx_ata_probe(struct platform_device *op)
+ 		dev_err(&op->dev, "error requesting DMA IRQ\n");
+ 		goto err2;
+ 	}
+-	priv->dmatsk = dmatsk;
+ 
+ 	/* Init the hw */
+ 	rv = mpc52xx_ata_hw_init(priv);
 -- 
 2.54.0
 
