@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB08330BB97
-	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 18:45:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EF7822B8DF
+	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2026 18:46:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781289902; cv=none; b=HSZR7DTboQXQdN7sbHI77969mVVNaBBWC1cF8tpoPIkVNRol7f4kSpX/BfEL3nN16FcmgoTTOyQdAAZN70JadJb3nfl60C5Th2H0vz+DRDa0xRPm0kbsbIkuzHfPDF3+fxDoTDnh3dyoyYC0O4+1OZWN0Kkr5NeJ/9WZ8ZTz6yU=
+	t=1781290005; cv=none; b=Uvi4GpfMPmn7zU5GadfWPYJVbEhpUHePHnu0vZjGLowjBlFkrDMGCx5aCRPcJ7QYe0nwe/oQ8md9sIf4Xc/u5Sn0JghjibWwMS9ruPTJfvcPdgJ0nEwuWviAWjBTlhh1/ean3vlXPue3Kz/X0b6HYBUrOAZTLgn/LruHH906mNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781289902; c=relaxed/simple;
-	bh=DUkuqK0ufTMsvvXGLENrLXo7Pw0C0T/4A1TtRCOnBos=;
+	s=arc-20240116; t=1781290005; c=relaxed/simple;
+	bh=GvuzuYPt1xxjg0nQOtVOh3iO/Dq5hu/UT37Zh6z9hG4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Wt1RqpnqVmsx6b3eAS/+tSQSGwfIT6ms9gOvvzKDvoPYKSgjRwVq8i8kuVxsPJHOL+RRmtc7jiBwM8cYWo2M4Yjg1/DEqrqBeVzPjBSqUrViuK6AV9QD4ePyi5xYx4DJmvrRbMuQvrjoB02eCFEtzgGUzj7Woebw0KVGrHgZDXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=js9w1orK; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=nYtr30NBGqdssmgGQvyLcSmBm5m/5Y1sWRGcIlQL0+rfGWB1FlOu3C3/HZp4wI0vZZtxhqlMI5s6rFuBnTFmRDQuoygCIO2383JOUBgvMAjRMCgAcjoGeURfdB/6Upv719tu4R5HM9xqQTT2Ke0EkcuQ6shf5h9gwrcb0xp+jnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JXPOWZ8h; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="js9w1orK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 154E61F000E9;
-	Fri, 12 Jun 2026 18:45:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JXPOWZ8h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF93C1F000E9;
+	Fri, 12 Jun 2026 18:46:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781289901;
-	bh=amyaxqjzxYkejPacI7QdVvKlNeBzwJWXR9cpWTDmmFA=;
+	s=k20260515; t=1781290004;
+	bh=bcoKiYnRk11BLId2NXM1SggEIAfMOdRoiKQGk9atIjo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=js9w1orK9QCGFzyZQ+xxVdujR4UUrn1YYDfkFKKlHIXSDiI01PKrNzMuvqZKUYdWc
-	 5RITsPX6W5it5/7r3Qx7wrZPr/5IjTS3tqf9skjVLNOAMhUOCB4+5cfYkJDQzs822n
-	 JCO5zmNLqV1Byp+cIVEUPrJMQiDiBpCA5co60bfTASZdow7Ni+DdgEXlmVhWWTfESg
-	 o8/6p0+usR+gZO/rygma8wvS5ttG+XTxR2wxaUeWot1apnCcrjESWGyegEkUTcI6np
-	 88vxdpEGOCGDc30LaiprM3XmWyDCIhhwvFt8MTOswfrS4MfWZJL5dZHBpa1vM17E+H
-	 QChws2VCnZK0Q==
+	b=JXPOWZ8hgDdavoaEP0WndlBL4gGV0NRkzNRFWaOqKTBGrzXyr6pzvbGXIh4upT/8L
+	 Nmk+dpinkiDq4Y0+cAzQYvpCkqNc1b5r2f7abJmjx5WvK4BxrFYclmh/fjR0vvC7En
+	 BHPXtMVdPsUp17AoEVGJVpFsLSU7QQ9NiUjd+YtyzkmP097qgKJdPPDHgKLzJd88LL
+	 sd/dE5PUMG8NTAfzBMK0IOz2OgpwHqrjPyB8UX90sQjxmzaoV53Uia67rFs5Np3/3v
+	 P2atsfks/001SMTHaM2H+oph4B3vKj7xsIEi7vP+GgVBc/IVFUf/dKyJ6tP5NxtdeD
+	 v1yl7meQ4vNeA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCHv3 4/6] ata: pata_mpc52xx: remove redundant
- irq_dispose_mapping calls
+Subject: Re: [PATCHv3 1/6] ata: pata_mpc52xx: fix NULL pointer dereference
+ in IRQ handler
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Rosen Penev" <rosenp@gmail.com>
-Cc: linux-ide@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260612183227.20446-5-rosenp@gmail.com>
-References: <20260612183227.20446-5-rosenp@gmail.com>
+Cc: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260612183227.20446-2-rosenp@gmail.com>
+References: <20260612183227.20446-2-rosenp@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 18:45:00 +0000
-Message-Id: <20260612184501.154E61F000E9@smtp.kernel.org>
+Date: Fri, 12 Jun 2026 18:46:43 +0000
+Message-Id: <20260612184643.CF93C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -48,75 +48,83 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Calling `irq_dispose_mapping()` on devres-managed IRQs destroys th=
-e IRQ descriptor before `devm_free_irq()` can execute, leading to a memory =
-leak of `struct irqaction` and bypassing interrupt synchronization.
+- [High] Improper resource teardown of the devm-managed BestComm DMA task I=
+RQ, leading to Double Dispose and devres Use-After-Free.
 --
 
-commit 22d637bd9ec3129e235484c8f8f7b01af8844e9d
+commit a85012a47d328b796b5de199b02e054be9b1d391
 Author: Rosen Penev <rosenp@gmail.com>
 
-ata: pata_mpc52xx: remove redundant irq_dispose_mapping calls
+ata: pata_mpc52xx: fix NULL pointer dereference in IRQ handler
 
-bcom_ata_release() calls bcom_task_free(), which already calls
-irq_dispose_mapping(tsk->irq).  The explicit irq_dispose_mapping()
-calls in the probe error path and remove function are redundant
-and cause a double-free of the same mapping.
+Assign priv->dmatsk before request_irq() to ensure the IRQ handler does not
+dereference a NULL pointer. The handler accesses priv->dmatsk via
+bcom_retrieve_buffer().
 
 > diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-> index 210a63283f62b..408b1cb75d1e7 100644
+> index 210a63283f62b..fe445d6aaff62 100644
 > --- a/drivers/ata/pata_mpc52xx.c
 > +++ b/drivers/ata/pata_mpc52xx.c
-> @@ -793,7 +793,6 @@ static int mpc52xx_ata_probe(struct platform_device *=
+> @@ -766,6 +766,8 @@ static int mpc52xx_ata_probe(struct platform_device *=
 op)
->  	return 0;
+>  		goto err1;
+>  	}
 > =20
->   err2:
-> -	irq_dispose_mapping(task_irq);
->  	bcom_ata_release(dmatsk);
->   err1:
->  	irq_dispose_mapping(ata_irq);
+> +	priv->dmatsk =3D dmatsk;
+> +
+>  	task_irq =3D bcom_get_task_irq(dmatsk);
+>  	rv =3D devm_request_irq(&op->dev, task_irq, &mpc52xx_ata_task_irq, 0,
+>  				"ATA task", priv);
+> @@ -773,7 +775,6 @@ static int mpc52xx_ata_probe(struct platform_device *=
+op)
+>  		dev_err(&op->dev, "error requesting DMA IRQ\n");
+>  		goto err2;
 
 [Severity: High]
-This is a pre-existing issue, but does calling irq_dispose_mapping() on the=
-se
-IRQs bypass the devres cleanup mechanisms?
+This is a pre-existing issue, but I noticed a potential problem with the
+resource teardown when jumping to the err2 label.
 
-Because task_irq and ata_irq are managed via devm_request_irq(), their=20
-free_irq() calls are deferred to the devres cleanup phase.
+When failures occur later in mpc52xx_ata_probe() (like hw_init failing), the
+code jumps to the err2 label and manually disposes the IRQ mapping:
 
-If irq_dispose_mapping() (called explicitly for ata_irq, and implicitly via
-bcom_ata_release() for task_irq) destroys the IRQ descriptor before devres
-cleanup runs, the subsequent devm_irq_release() -> free_irq() will fail to
-find the descriptor when irq_to_desc() returns NULL.
+drivers/ata/pata_mpc52xx.c:mpc52xx_ata_probe() {
+    ...
+ err2:
+	irq_dispose_mapping(task_irq);
+	bcom_ata_release(dmatsk);
+    ...
+}
 
-This causes free_irq() to return immediately without cleaning up, which
-leaks the struct irqaction memory.=20
+Because the IRQ was successfully requested with devm_request_irq() earlier,
+does manual disposal destroy the IRQ descriptor before devres runs its own
+cleanup, leading to a use-after-free when the IRQ core attempts to free
+the action?
 
-More importantly, it skips the call to __synchronize_irq(). Could this allow
-the interrupt handler to continue running concurrently while devres tears
-down the driver's mapped registers, posing a use-after-free risk?
+Additionally, right after this manual disposal, bcom_ata_release() is calle=
+d,
+which delegates to bcom_task_free(). This function also disposes the mapping
+natively:
 
-> @@ -804,14 +803,11 @@ static void mpc52xx_ata_remove(struct platform_devi=
-ce *op)
->  {
->  	struct ata_host *host =3D platform_get_drvdata(op);
->  	struct mpc52xx_ata_priv *priv =3D host->private_data;
-[ ... ]
->  	/* Clean up DMA */
-> -	task_irq =3D bcom_get_task_irq(priv->dmatsk);
-> -	irq_dispose_mapping(task_irq);
->  	bcom_ata_release(priv->dmatsk);
->  	irq_dispose_mapping(priv->ata_irq);
->  }
+drivers/dma/bestcomm/bestcomm.c:bcom_task_free() {
+    ...
+	/* Free everything */
+	irq_dispose_mapping(tsk->irq);
+	bcom_sram_free(tsk->bd);
+    ...
+}
 
-[Severity: High]
-This is also a pre-existing issue, but the same devres synchronization conc=
-ern
-applies here in mpc52xx_ata_remove() when disposing the mappings prior to t=
-he
-device devres teardown.
+Since task_irq and tsk->irq are the same, could this double disposal of the
+IRQ mapping corrupt the IRQ domain state and trigger internal kernel warnin=
+gs?
+The same pattern appears to exist in mpc52xx_ata_remove() during module
+removal.
+
+>  	}
+> -	priv->dmatsk =3D dmatsk;
+> =20
+>  	/* Init the hw */
+>  	rv =3D mpc52xx_ata_hw_init(priv);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612183227.2044=
-6-5-rosenp@gmail.com?part=3D1
+6-2-rosenp@gmail.com?part=3D1
