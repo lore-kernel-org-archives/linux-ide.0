@@ -1,63 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF18E31E827
-	for <linux-ide@vger.kernel.org>; Thu, 18 Jun 2026 15:23:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391FA4C6D;
+	Sat, 20 Jun 2026 02:36:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781796194; cv=none; b=XiGGzq7GMgShrWDuBae9o3cOEKVjbMq/olFYDdsKEP3E8jT2bQrqfO9opSAfEgPXJJaVCU+2hT303nTBvkm3zLsc0YTgg80OSSVhP6woYG7UZr7uKWL3JUTe9C5XLV62HCI1aJwVzuQzf22q8dSJyMHAXgdoMci4OBVJJ6reA+c=
+	t=1781922990; cv=none; b=KrBFQLdZlT5wxPWRSSpFUi7BY2z7do/uYDzy3GZzGbaK4DvrbPST7QCCuGwdfmcUIKQSb++l83mR7fV1htFDjXtuGgxJHU7i7Q8u0Fr6nBi0sT4fIJxBhFsF2R4UE8AEDlAewaSp3SX5k4rO+TQzAWk/sHFv82YHX+lPmT30f1s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781796194; c=relaxed/simple;
-	bh=Z0+X6eNEvlbSaLa4isBimtrDECbWzG67DN0TgUIeZLU=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=SRNcsKbKTcq+zD/Lkb8AoWD8ZiingSqzhdh/MXp2iGRWj1LURRgZdUUo2/yHB9bfSKCEFIBk1Q7tQS6ixRF37THdj6EP2TYitxYcmaZT2EjjZQgl9e1K/Y79eXAhTj4XYGIETBAibHRLJRas6LqO84sS6jT68wqZR7ziU8TCWAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KzMdDQmh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781922990; c=relaxed/simple;
+	bh=+f5QQ8EfeQdyatB+pUXBIfKbkRNqfv/khhUjWCFgPGo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=O6Q6w1Q3qoRdw/4a9Ua0wJDAm8XS8dmaSFOem7UEFgp0nMQ9mSDvrhIOvVRCX5ccX7fIQX+iRDMgwyyupYvlxXTvUfJ1Epkme7/WOVY9B/5kICq8lHtQdrROfnTRLu7HBwgrvRKWDBGgJEqRzIHQRTNB/SXjzQfSTEUsR2MM6HI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LqGVsczJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KzMdDQmh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57A581F000E9;
-	Thu, 18 Jun 2026 15:23:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781796193;
-	bh=z+wJseJ3itV7vIIIL6lQaRaW3v3XyAaA9EgElw6NyA8=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc;
-	b=KzMdDQmhOQIxZnonTcRs2Ahgobc3ghvb77IPiROyzg/UfyYpTXzZ3o11sBW+H2JSz
-	 EQozf7T+HEchaoB0UiOw13Cr+m2k3qL0IlhvXAwUdLF+H2Z7HIjHZLfGe4CQWfRrFt
-	 dbFTMm6pc3jv0hn4+hUv4W38WQ+1fAhJ6MiDowYbwkELKqU6++wPBfX1y+o+R4jHdH
-	 RHel3RHDEanhovEBTj/y/g3rFQKDPpWZclNM0JzQAVP7jTOul1xyCLn8BvXPaMjlbF
-	 F2liDQpGVXsQptHEuzSR6tio4z5Yg/R54HGKWuoImBAHHFI0Im4nLieirjjfIyEL4J
-	 VC0Yin4iF9Aug==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 1999E3A566DE;
-	Thu, 18 Jun 2026 15:23:08 +0000 (UTC)
-Subject: Re: [GIT PULL] ata changes for 7.2-rc1
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20260616143223.1829869-1-cassel@kernel.org>
-References: <20260616143223.1829869-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20260616143223.1829869-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.2-rc1
-X-PR-Tracked-Commit-Id: 21e7b9710a24bd7688c02f136923c89bee2fda5a
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 00d07402df810b4dce0ae6828f4a292c20bab916
-Message-Id: <178179618666.2947725.8657249240678838828.pr-tracker-bot@kernel.org>
-Date: Thu, 18 Jun 2026 15:23:06 +0000
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LqGVsczJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id ECA71C2BCC7;
+	Sat, 20 Jun 2026 02:36:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1781922990;
+	bh=+f5QQ8EfeQdyatB+pUXBIfKbkRNqfv/khhUjWCFgPGo=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=LqGVsczJF15MqrmDuAKjPXhkpGH/oG8z0kJuWhP6o8pF2MzOKGp+igVx9Eg4jrzSM
+	 T4q3GtkwO6DL8SG9Rwf9+eI0n2SOHKvlCZDbVstdOEJ1B54l3c0XhxsjMXJwwdyIDH
+	 5GZtBLxvIhO9czeVPAULYYpKIyWpZ7+SewIyO8S14A2sCplZwgEtFISbz/iMniCOQo
+	 9wxozYNq2tU15zJfXcEQ3+PjB7WfTpufYqFVe3G4JugPxrxOh4Cu5Ptqz/CIdJQDvq
+	 ecCqQV+s21wAiouBefxSgpsL4fHfcpSfSQGPJwFn/VWjYawqSTfycyP1G3sD0z6s7k
+	 uZH5sqxEMIavw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC354CD98F2;
+	Sat, 20 Jun 2026 02:36:29 +0000 (UTC)
+From: Bryam Vargas via B4 Relay <devnull+hexlabsecurity.proton.me@kernel.org>
+Date: Fri, 19 Jun 2026 21:36:30 -0500
+Subject: [PATCH 2/2] ata: libata-scsi: Bound the VPD B9h ranges to the
+ response buffer
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260619-b4-disp-6200c44e-v1-2-4624a4707d9e@proton.me>
+References: <20260619-b4-disp-6200c44e-v1-0-4624a4707d9e@proton.me>
+In-Reply-To: <20260619-b4-disp-6200c44e-v1-0-4624a4707d9e@proton.me>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1781922988; l=2123;
+ i=hexlabsecurity@proton.me; s=proton; h=from:subject:message-id;
+ bh=etuEVYLjhJ1FT+81wFk8q9Lg1k6MxM4NwywWjYbfzbc=;
+ b=5qN0S5L3QVPbKFwwEJSUL8skJpsnwJX8mO+Eg7n3G9ubCEDKtTMKNd8lEwhwe33gjJhKcfonW
+ DLfIDhYdb8yBTgZs6d/DHw4KFUy8A2YvXVrmjbgLYuTs/GQd7mzBHxO
+X-Developer-Key: i=hexlabsecurity@proton.me; a=ed25519;
+ pk=dmppBMZNLLoPzxHi9l8tZDzEZUunPbgsYqIZYXeUrL0=
+X-Endpoint-Received: by B4 Relay for hexlabsecurity@proton.me/proton with
+ auth_id=814
+X-Original-From: Bryam Vargas <hexlabsecurity@proton.me>
+Reply-To: hexlabsecurity@proton.me
 
-The pull request you sent on Tue, 16 Jun 2026 16:32:21 +0200:
+From: Bryam Vargas <hexlabsecurity@proton.me>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.2-rc1
+ata_scsiop_inq_b9() writes one 32-byte range descriptor per
+cpr_log->nr_cpr into the fixed 2048-byte ata_scsi_rbuf with no bound.
+The count originates from the device (concurrent positioning ranges log
+0x47, up to 255), so an INQUIRY VPD page B9h to a drive whose log
+advertises more than 62 ranges overflows the static buffer by up to 6168
+bytes: a global out-of-bounds write into adjacent kernel data.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/00d07402df810b4dce0ae6828f4a292c20bab916
+Emit only as many descriptors as the response buffer can hold and size
+the page length to match. The companion core fix bounds the stored count
+against the device log, but a large self-consistent log still yields
+nr_cpr up to 255, so the emitter needs its own bound.
 
-Thank you!
+Fixes: fe22e1c2f705 ("libata: support concurrent positioning ranges log")
+Cc: stable@vger.kernel.org
+Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
+---
+ drivers/ata/libata-scsi.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d43207c6e467..d43306c5d375 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2355,18 +2355,24 @@ static unsigned int ata_scsiop_inq_b9(struct ata_device *dev,
+ {
+ 	struct ata_cpr_log *cpr_log = dev->cpr_log;
+ 	u8 *desc = &rbuf[64];
+-	int i;
++	int i, nr_cpr;
+ 
+ 	if (!cpr_log) {
+ 		ata_scsi_set_invalid_field(dev, cmd, 2, 0xff);
+ 		return 0;
+ 	}
+ 
++	/*
++	 * The page is built in the fixed-size ata_scsi_rbuf, so the number of
++	 * range descriptors returned is bounded by that buffer's size.
++	 */
++	nr_cpr = min_t(int, cpr_log->nr_cpr, (ATA_SCSI_RBUF_SIZE - 64) / 32);
++
+ 	/* SCSI Concurrent Positioning Ranges VPD page: SBC-5 rev 1 or later */
+ 	rbuf[1] = 0xb9;
+-	put_unaligned_be16(64 + (int)cpr_log->nr_cpr * 32 - 4, &rbuf[2]);
++	put_unaligned_be16(64 + nr_cpr * 32 - 4, &rbuf[2]);
+ 
+-	for (i = 0; i < cpr_log->nr_cpr; i++, desc += 32) {
++	for (i = 0; i < nr_cpr; i++, desc += 32) {
+ 		desc[0] = cpr_log->cpr[i].num;
+ 		desc[1] = cpr_log->cpr[i].num_storage_elements;
+ 		put_unaligned_be64(cpr_log->cpr[i].start_lba, &desc[8]);
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.43.0
+
+
