@@ -1,142 +1,185 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D6F3233722
-	for <linux-ide@vger.kernel.org>; Sun, 21 Jun 2026 10:21:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2A4472621
+	for <linux-ide@vger.kernel.org>; Sun, 21 Jun 2026 12:48:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782037313; cv=none; b=I4MyW4A8YiH8WwHKTGV7+VRl1gOtjPv20hRciQw25dgaLRNIV6pxt8A7izm5TySonG73SOtrkBzdHhG2Mja9dxFQ3LUjJM/l2gfURWgosBTLk+9WIVSd/9M6mJkh69YKGElEh0lvvnWAj+PvuCiuc/d/Laemm+TCwouuV2/Jy4M=
+	t=1782046096; cv=none; b=DGRO8pCyyp9b7Oc2+esdNrM1qZ7xUMpRT7H1zFmZoYuTP+BWSEmaspNmztjPuT59gkbSU8Wui13S0vPyv2L0ebUf0YhMbK4Xjj0rSCiGbVYhHziLHqtmmMeOtUA+wx4Mio/msLq3pPLzl40pcGdHtPUsECg+yjsZ8yJzf4+4svM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782037313; c=relaxed/simple;
-	bh=N+a0MLrSshPDh2XG1wqAygiBo1tMzAz6L8HogcNk6s4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uu4W1v6jl1qh2L6kAKZDOOVmym8gZ1CUAlVibstvZzK+MrIo5yZrU36850890fEesIpfg6n7hfqTsJi1VhYZ0n2zWDHm51NzIGcLQupfbaH73BtLc9GU2UnZGMJzYKNsrARUG/L021AppLC+PGOjX+s6nJYFi4b0ZKoit5L9FRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CpMwv0Fn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782046096; c=relaxed/simple;
+	bh=dwd1k+IJABctYDLMq+DgsmYr4JGdBw799Gys1m4tQ18=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=FtsE/YelsubAk+VzVU152pc3h+MGyXEKxKIl37BkZIxMAi19zUFDa4smHw6wu9ZZp7dVb0GigX+SbJCIfg4pyNU3B/h7T/JJ9Nxb8xiUxUzUdgxmaDpKFB9oFLV+4F8/e6HVpVQT+T4oq9Hl50pG94lqkJN0vvzrIpnjmeVAa5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TmRJ7Mw3; arc=none smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CpMwv0Fn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9CE51F000E9;
-	Sun, 21 Jun 2026 10:21:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782037312;
-	bh=rg89VG8iTDzmChg1Ck4UmwFalYI/XbF2OuiqRMGVZyc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CpMwv0Fn2Zps9sRelGAxtgAVBShddqRNKd84sNCye/3xqX9d4m1xYjx3H1sxv1sAf
-	 UqNkMgJcVGkbgEP1eqeG0Ws4srfugqse9PZq5SHtLNYFeX9w5ugda2wjyaMzrTdx8h
-	 5t4XUE2TtoN8OZPD3RmW2s2mNgIuSQa38exNhJbHizFG93etJKr0JzX4YM3ff9AMXo
-	 IuHYDDu12wg2Au+RUOdy9zjCXvLNKasv2vsPeHdGRhSEdb3wau66qKSK7QQA/iu1ZL
-	 YMq3HvwbJSxGLwp/EH1szqlYGlYAWl0f3wfClsE+v12gR5WxTdTstedZumPnKgCXpt
-	 28661ve/qOswA==
-From: sashiko-bot@kernel.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TmRJ7Mw3"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-4629051c946so2558296f8f.1
+        for <linux-ide@vger.kernel.org>; Sun, 21 Jun 2026 05:48:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782046093; x=1782650893; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hIV4b3lS40cEQDNqNshmkXrtRoxu1KZxLASIPEaidyw=;
+        b=TmRJ7Mw3ssz0jHRsOE4DmrKY8wZ+O9MbfvmkbD4nqbAepu27S/aKfukCDJXkxljJhi
+         7GFHLI13DOaock28j5Ot/Sr/KBikm266U2s8IcCd4YyxHt0aDEfdu9XHkamEgAIZcwUD
+         wXR79MzNKlkte79k3gCnsUZdDf6AHe5AArQul+i4N4drFaXptcPzlVB0KssREAK+7bHl
+         7xpkyBeMp+qZtwCtkVBDdtX49o9FwoyUiOIAc/0+m371/+4nPterh3GJxLbrUngomdKY
+         F/ALR/nBkvgGwURn0Aq2xzqNtri8zrECsx5uvuDJI0EyZWqrDC7KEC5018789IUhmbex
+         UBQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782046093; x=1782650893;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=hIV4b3lS40cEQDNqNshmkXrtRoxu1KZxLASIPEaidyw=;
+        b=YW/8jU0DSpUUIR8RqwGgpf17v8OYSZRxMUIl03ZDHKi9Om1Q6BCBh3NESBba6rcdwg
+         D/fZD7y2Ax2QksfFgqXuvOX+1YaVy9yXTmww+9+inaS86gqPzCS89Mb1Cc/eY1MH2vdt
+         Swp96ZMKYf1tFG1KOEJL+6ovFiKUs1oFX+8iMKXgXqtbxLFj195jJrrMhRl3Ut4pd/w4
+         KjsqVq+Lk1bLOVAuRaCejMiiNrxQFLp7V0bMvv7EgKelwG3NC0bt5BJHLHPrhbeb/Myq
+         K9hz3jltXUKg58UKe1I7fJhQhUbGdrxDHO5cwmBF9VrpH4KGKZ1wAJJkYTDlYvI7M80g
+         vR+Q==
+X-Gm-Message-State: AOJu0Yzb5ykYqV3n92cRJjooYBgGK9MT1bIyJ05E/K2rTcqBeW18AzV3
+	fyb4it6TeNT4oXyCMYEm48gX22M3w7kRaKd9ZzbohBnMwYOAL5HFbavT
+X-Gm-Gg: AfdE7cmlnKiob8vJWs8LcxVpDaiMsBY6XvKHmyYQ76ZmZmDxJTT6X8SKqUc4I3J6UR1
+	jqrIjjI2NYhLcEDa0S5o0Rpx2BzZZ5KaUnN4W1JbImhKz1y7aE+VHsYo695r8UFXhSC6UUqpmua
+	UMT/4Wd/rlWPjarGkNbMwII7Y9R60drtEDBd9whkRgqf7Di9w+mg8xCBae5AaBJFsvog7Cv0FNl
+	YCNOjBSewsOUkuDA9IoUlGTcgiSMbaQtifJ8EeiZ1QKz6eQhmQmp5iE8W5U+vEUXZ2TI9tHH3xN
+	kmr9CBybH2+SGlywf3YX7bOvlj5pmh51uH9LqfjW9yAa0lQEIL9LfXAejFJfperHyG6vx81A5//
+	HR4P50km/7KzwqF0uMTCneZLuGfvbWwQGNTKsfraHH+iktK/aE5DnSQP6QERtthwn9ToJUXNeeo
+	eG7o/q8+Bpo7vPAEq37xtefNjlwnN2bsV+LEP5KesFPSPiETfZ6g==
+X-Received: by 2002:a5d:5f92:0:b0:45e:9304:a4c3 with SMTP id ffacd0b85a97d-4651e5c4122mr16430995f8f.19.1782046092926;
+        Sun, 21 Jun 2026 05:48:12 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4666cea9581sm15509474f8f.0.2026.06.21.05.48.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 21 Jun 2026 05:48:12 -0700 (PDT)
+Date: Sun, 21 Jun 2026 13:48:09 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Alvin Lim <alvinwylim@gmail.com>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas
+ Cassel <cassel@kernel.org>, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
 Subject: Re: [PATCH] ata: ahci: force 32-bit DMA for ASMedia ASM1166
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Alvin Lim" <alvinwylim@gmail.com>
-Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+Message-ID: <20260621134809.7b1b2e3f@pumpkin>
 In-Reply-To: <20260621100844.1224301-1-alvinwylim@gmail.com>
 References: <20260621100844.1224301-1-alvinwylim@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 21 Jun 2026 10:21:51 +0000
-Message-Id: <20260621102151.E9CE51F000E9@smtp.kernel.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Sun, 21 Jun 2026 18:08:44 +0800
+Alvin Lim <alvinwylim@gmail.com> wrote:
 
-Pre-existing issues:
-- [Critical] The 32-bit DMA quirk is applied only to the ASM1166, leaving i=
-dentical sibling controllers (ASM1164 and ASM1165) exposed to catastrophic =
-silent data corruption.
-- [Critical] The `AHCI_HFLAG_32BIT_ONLY` quirk clears `HOST_CAP_64` from `h=
-priv->cap`, preventing the driver from explicitly zeroing the upper 32-bit =
-DMA address registers, which can lead to DMA to corrupted physical addresse=
-s.
---
+> The ASMedia ASM1166 SATA controller (1b21:1166) advertises 64-bit DMA
+> support (AHCI CAP.S64A), but on systems with the IOMMU enabled - where it
+> can be handed DMA addresses above 4 GB - it silently corrupts data in
+> transit.
 
-commit aa72273e536a2a474b07a2e0e23ffb50c8b94418
-Author: Alvin Lim <alvinwylim@gmail.com>
+That seems wrong.
+If any iommu is disabled the sata cotroller will be passed the memory's
+physical address which is very likely to be over 4G.
+So the controller seems to support 64bit addresses - as advertised.
 
-ata: ahci: force 32-bit DMA for ASMedia ASM1166
+But with the iommu enabled the addresses the controller needs to use are
+different from the physical address - so the controller will almost
+certainly see sub 4G addresses for buffers above 4G.
+(The iommu probably allocates 32bit PCIe addresses for all buffers so that
+it doesn't have to worry about targets that only support 32bit addresses.)
 
-This commit limits the ASMedia ASM1166 SATA controller to 32-bit DMA.
-It addresses a regression that occurs when the IOMMU is enabled and hands
-out DMA addresses above 4 GB, resulting in silent data corruption. A new
-board_ahci_32bit_dma board type is introduced and applied to the ASM1166.
+It seems more likely that the wrong addresses are ending up in the host
+side of the iommu and using bounce buffers fixes that.
+Using the wrong addresses is likely to lead to major kernel memory
+corruptions.
 
+Mixing up physical addresses and dma addresses, assuming that memory
+from dma_alloc_coherent() is physically contiguous, or just losing the
+high bits of the physical address passed to the iommu seem more likely.
+
+	David
+
+
+
+> Reads return different, wrong data on each access. SMART is clean,
+> there are no SATA link resets and no MCE is raised, so the corruption is
+> invisible until it surfaces as filesystem metadata errors (XFS EUCLEAN)
+> or, on Ceph, mass scrub errors across multiple independent filesystems at
+> once - i.e. host-level, not filesystem-level.
+> 
+> This is the same failure mode already quirked for other controllers that
+> falsely claim working 64-bit DMA. See commit 105c42566a55 ("ata: ahci:
+> force 32-bit DMA for JMicron JMB582/JMB585") and commit 20730e9b2778
+> ("ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers").
+> The ASM1166 currently maps to plain board_ahci with no DMA limit.
+> 
+> Limit the ASM1166 to 32-bit DMA. 32-bit is the guaranteed-correct lower
+> bound; the only cost is extra SWIOTLB bounce-buffering on transfers above
+> 4 GB, negligible for storage. A future change can widen it to the
+> controller's true addressable width if characterised. Until this lands the
+> only workarounds are disabling the IOMMU (amd_iommu=off / intel_iommu=off)
+> or using an HBA.
+> 
+> Reproduced on an AOOSTAR WTR MAX (AMD Ryzen 7 PRO 8845HS) whose six SATA
+> bays all hang off one ASM1166: with the IOMMU on, six concurrent
+> 'dd ... | md5sum' of the same large file return six different sums; with
+> amd_iommu=off they are identical, and a full Ceph deep-scrub of a 5.4 TiB
+> / 1.43M-object pool re-reads end-to-end with zero scrub errors.
+> 
+> Add a board_ahci_32bit_dma board type (mirroring board_ahci_43bit_dma)
+> and point the ASM1166 entry at it.
+> 
+> Fixes: 3bf614106094 ("ata: ahci: add identifiers for ASM2116 series adapters")
+> Cc: stable@vger.kernel.org
+> Assisted-by: Claude:claude-opus-4.8
+> Signed-off-by: Alvin Lim <alvinwylim@gmail.com>
+> ---
+>  drivers/ata/ahci.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
 > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 58f512f8952a9..895956c2ca15f 100644
+> index 58f512f8952a..895956c2ca15 100644
 > --- a/drivers/ata/ahci.c
 > +++ b/drivers/ata/ahci.c
-[ ... ]
-> @@ -132,6 +133,13 @@ static const struct ata_port_info ahci_port_info[] =
-=3D {
->  		.udma_mask	=3D ATA_UDMA6,
->  		.port_ops	=3D &ahci_ops,
+> @@ -48,6 +48,7 @@ enum {
+>  enum board_ids {
+>  	/* board IDs by feature in alphabetical order */
+>  	board_ahci,
+> +	board_ahci_32bit_dma,
+>  	board_ahci_43bit_dma,
+>  	board_ahci_ign_iferr,
+>  	board_ahci_no_debounce_delay,
+> @@ -132,6 +133,13 @@ static const struct ata_port_info ahci_port_info[] = {
+>  		.udma_mask	= ATA_UDMA6,
+>  		.port_ops	= &ahci_ops,
 >  	},
-> +	[board_ahci_32bit_dma] =3D {
+> +	[board_ahci_32bit_dma] = {
 > +		AHCI_HFLAGS	(AHCI_HFLAG_32BIT_ONLY),
-
-[Severity: Critical]
-This is a pre-existing issue, but does using AHCI_HFLAG_32BIT_ONLY here
-expose a regression in ahci_start_fis_rx()?
-
-When AHCI_HFLAG_32BIT_ONLY is set, ahci_save_initial_config() clears
-HOST_CAP_64 from the capability flags.
-
-Later, in ahci_start_fis_rx(), the hardware registers PORT_LST_ADDR_HI and
-PORT_FIS_ADDR_HI are not zeroed out because the flag is cleared:
-
-    if (hpriv->cap & HOST_CAP_64) {
-        writel((pp->cmd_slot_dma >> 16) >> 16,
-               port_mmio + PORT_LST_ADDR_HI);
-        writel((pp->rx_fis_dma >> 16) >> 16,
-               port_mmio + PORT_FIS_ADDR_HI);
-    }
-
-If the hardware is genuinely 64-bit capable and not fully reset, can it
-retain stale upper 32-bit addresses left by the firmware, causing DMA to
-target the wrong physical addresses when concatenated with the new lower
-32 bits?
-
-> +		.flags		=3D AHCI_FLAG_COMMON,
-> +		.pio_mask	=3D ATA_PIO4,
-> +		.udma_mask	=3D ATA_UDMA6,
-> +		.port_ops	=3D &ahci_ops,
+> +		.flags		= AHCI_FLAG_COMMON,
+> +		.pio_mask	= ATA_PIO4,
+> +		.udma_mask	= ATA_UDMA6,
+> +		.port_ops	= &ahci_ops,
 > +	},
-[ ... ]
-> @@ -1559,7 +1567,7 @@ static const struct pci_device_id ahci_pci_tbl[] =
-=3D {
+>  	[board_ahci_43bit_dma] = {
+>  		AHCI_HFLAGS	(AHCI_HFLAG_43BIT_ONLY),
+>  		.flags		= AHCI_FLAG_COMMON,
+> @@ -1559,7 +1567,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
 >  	}, {
 >  		/* ASM1166 */
 >  		PCI_VDEVICE(ASMEDIA, 0x1166),
-> -		.driver_data =3D board_ahci,
-> +		.driver_data =3D board_ahci_32bit_dma,
+> -		.driver_data = board_ahci,
+> +		.driver_data = board_ahci_32bit_dma,
 >  	}, {
-
-[Severity: Critical]
-This is a pre-existing issue, but does this quirk need to be applied to
-sibling controllers as well?
-
-Looking at ahci_pci_tbl, ASM1164 and ASM1165 are from the same silicon
-series and still map to plain board_ahci:
-
-    /* ASM1164 */
-    PCI_VDEVICE(ASMEDIA, 0x1164),
-    .driver_data =3D board_ahci,
-    }, {
-    /* ASM1165 */
-    PCI_VDEVICE(ASMEDIA, 0x1165),
-    .driver_data =3D board_ahci,
-
-Does leaving them without the 32-bit DMA limit expose them to the same
-regression where IOMMU addresses above 4 GB cause data corruption?
-
 >  		/*
 >  		 * Samsung SSDs found on some macbooks.  NCQ times out if MSI is
+> 
+> base-commit: 322008f87f917e2217eeac386a9410945092eb2e
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260621100844.1224=
-301-1-alvinwylim@gmail.com?part=3D1
