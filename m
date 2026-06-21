@@ -1,121 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f176.google.com (mail-qk1-f176.google.com [209.85.222.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69913D76;
-	Sat, 20 Jun 2026 02:54:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C03571F30BB
+	for <linux-ide@vger.kernel.org>; Sun, 21 Jun 2026 10:08:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781924043; cv=none; b=BcjB4CfBqKJrHgzgr9GUwCYe9GkTu46IYF9+O/WI1t627h7lzX1ZCoPNl3qK3N6t3qPGfhIaMK2Mw7lFT6fRnv96NaEoCLwcOfBSxYJZ1Fq2rJ+o2KYe3+oHnjJACMCtMwZZxmyjg7QSu2JT9xWTzDL7LS4JjLwGvnih6eHt6BM=
+	t=1782036533; cv=none; b=FgtNqbqwczj9PvMR+0sHSBIO65OcJ1VjrYFKVw+zaMSiduZnPd4mAGoUr44FN8zmN9Uk+4iBZhrhnhNQ3e0MCkCSHrxqVOhOKUmfhVfbbGAFYR0Sk2Sx1bKJOGR2ns1OBGDjzQqd1G4UcoL+CsfBUAgOFhWe59NRfswIcjJFGj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781924043; c=relaxed/simple;
-	bh=2451CF90z1Hce72jO8OSYBN1DWeWgaRN76jWcamXYHg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=iRUScPlL2ENGmsmQbdRrZMhnZXL+CdEmwaDvVAxfiNbkLSD4JMqs1ghDICGt6ihfL39223q/40zurQvSFt9Yyu1s83WaHUtLh6l+TwYm/Oa3su5Tn3/oYFkITAb/oBrKvTaT8Qab+Mw/wLKxJ5sMUn81jLswjKf4b7bYWaRrN+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h41gqUXz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1782036533; c=relaxed/simple;
+	bh=dtWdOxwNWwXH7pw0zgQYfBj0nw9Rt475E7W4gPVnOIU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MgBnQMRtWUHKsZKJED0K7suLKM4xDQijuz3FvEkaD+JTrxFls7bDTmJf82Rxr0OAxvgFxXEj8J2+0TGVsAPM2xzjKkabB20ZUuSZJutlue0EJz4H/sQAx7hNRoo9f+Jlx0ArRwWvH+VpEtLzFpv7HTHN042oazTQn+psw8MSelI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Sd4jdKFv; arc=none smtp.client-ip=209.85.222.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h41gqUXz"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 61C4FC2BCB4;
-	Sat, 20 Jun 2026 02:54:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1781924043;
-	bh=2451CF90z1Hce72jO8OSYBN1DWeWgaRN76jWcamXYHg=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=h41gqUXzZIUMd8eiYAitKgfUlZqbkZyVxn9jOEGW0J97YDd6Uv1eCAvat1YT4ZK3d
-	 mxjx2R1PfeSXxxqg+izEFxxWuuWBBn6t/ELvTsILmbvo7SDQYxQYBK35yo/+Xapm6/
-	 ZEzciiFAhfzvve7EpcDIib4f5lWCJyjeeS8RtCbR5CbsB3y1C39LO8cmxElaZfDX43
-	 g3D930CHIDvBbHNHG3bVZQ2/Ac0rU0gS7Y4CeqltAnp9jb4iASrC1PsKtiWb/lMjRA
-	 SiabiUtxn0a8WHw/am5MDB/GH3rqBa7wxIZpK2XLUoYfpZhinbZfNVZvWwJ4X8G7na
-	 hazXn7EDmK3kQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A947CDB46B;
-	Sat, 20 Jun 2026 02:54:03 +0000 (UTC)
-From: Bryam Vargas via B4 Relay <devnull+hexlabsecurity.proton.me@kernel.org>
-Date: Fri, 19 Jun 2026 21:54:02 -0500
-Subject: [PATCH] ata: libata-core: Add NOLPM quirk for PNY CS900 1TB SSD
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Sd4jdKFv"
+Received: by mail-qk1-f176.google.com with SMTP id af79cd13be357-922951391d6so72636185a.0
+        for <linux-ide@vger.kernel.org>; Sun, 21 Jun 2026 03:08:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782036531; x=1782641331; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ai/vQMf9K304uLaJT6I2I2q88PcbGz+JfSMbI420XYw=;
+        b=Sd4jdKFvOh0+5nWQiYuFkcM1Vc++CqfAtYl/rz5SytYXG/uFGtW5TeO0aKMjhbH2fF
+         fCbhr+zQjZ7EooDMGQWE6YiQMX9hMl5nmU/MgPdElwkJVLIp0g5e0KNZ5nBqfSgLw7hG
+         2ei9Rtv9ZiE3Zl+4JnezkTi0G7UG4YbVySFg1S1O+1Uqpt4fkqSd4hDgyFdh0OmRCD86
+         1XF+IRKQxXWkkPFHM1uiPsQSNOETA14E9VkhALgTk/5rIhS2Jukc71MvUoi+klJKIX5a
+         i7Neds8cTo1skFAQAnZrpLpLltgszjQEpdBTyo7NBkI1sH5E+W1Tn3fVRUOqNdmGQOHO
+         gxjQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782036531; x=1782641331;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Ai/vQMf9K304uLaJT6I2I2q88PcbGz+JfSMbI420XYw=;
+        b=hTmfYelvYM2ZDb7TBRT8e3EAHLi4FHtk1pQGnMXH/Swl510GWsLU5a2bMmFFvMTk8F
+         nYy4ugpN2kbVAxGlWxcIs7wNFgYxJ9tkCCtJVn6EhmTM5ldWxuyI27Nq3RhwrMNCDSP6
+         zmvG2flH0KmXR6JCevdkXubxNWpARLxYV5vjdihkFkAmWK6Av21lcS0YrAqg+4+hmGwn
+         F4erLsL2gZiKj3kOTVNRg8PL9h1ffT8vF5uCPfZlUSt8vilHGJrt7Yzl7qhUfe2/qkgH
+         wEi5byPIqzB/hiUb05+oF2yvZS+o9C8sPHPUDtbwT9YtNrbLDvqm5lBCZk3BrJpkDIO0
+         VvBw==
+X-Gm-Message-State: AOJu0Yw/YtYXuHV3DgD0/qibpEWHxBozHCAyhj9o8k8trP5duHDESt2C
+	ltMB6S9/vSIOFc839JD94tM8wEZh0n0y7AZ1Pp/SQzuw8iMQkAodRv//e6uWZ+g032MCAw==
+X-Gm-Gg: AfdE7cnZf+sOjLih3zoy8zB0KafGVZxuG2tUueMN+ZR38s1MqCUFClgPd1EesdgDqxs
+	GL80CGIcKqzB+yXiV7y4XsxhU+my0+lwqdBlkVZ0KjbpCVXZtUuYV788fIQgb8t+9ibjERh/RHr
+	x2CKiRBlx8Ndwnl3op21hymd6mxItYRMlsGojkM5HwEfIcLTo33oBPGkf0S2keAb0uedmLjh7Jx
+	+KWtfTeaylMG7EGWak0Q67l1b/ghinz7UWjSBykLNmPeI0e0+vdeYncaVDyCNQkMcyNchNQJoxB
+	sBpqa8RODZXF8M0cUxSErcaWka2PnNFo2O7eE6sh0ET+Gu3DX81QS+c0Ic6hNP8N7pZIqo/S/bO
+	MYxnD8M09TryY5vPLX93NHTAJ/UPG2cO7nJmY/8g2/wLVhXKoEJy2guEkvkA29piq/s7dWNDik4
+	kMeO0EEXPZG4fa69vSK4mdUcC0CpwTClnIkpHfg/8=
+X-Received: by 2002:a05:620a:6cc1:b0:920:56af:ceee with SMTP id af79cd13be357-9208ef628d6mr1675860985a.17.1782036530765;
+        Sun, 21 Jun 2026 03:08:50 -0700 (PDT)
+Received: from claudeLX-01.hammies.cc ([165.173.24.245])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-921db359a7csm545405085a.38.2026.06.21.03.08.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 21 Jun 2026 03:08:49 -0700 (PDT)
+From: Alvin Lim <alvinwylim@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Alvin Lim <alvinwylim@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] ata: ahci: force 32-bit DMA for ASMedia ASM1166
+Date: Sun, 21 Jun 2026 18:08:44 +0800
+Message-ID: <20260621100844.1224301-1-alvinwylim@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260619-b4-disp-494070d2-v1-1-0c6d7be96237@proton.me>
-X-B4-Tracking: v=1; b=H4sIAMkANmoC/x3MTQqAIBBA4avErBvwD8OuEi1Sp5qNhUIE4t2Tl
- t/ivQqFMlOBeaiQ6eHCV+qQ4wDh3NJByLEblFBWWOnQG4xcbjTOiElEhUFarbXTfnI79OzOtPP
- 7L5e1tQ9WBapHYgAAAA==
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1781924041; l=2401;
- i=hexlabsecurity@proton.me; s=proton; h=from:subject:message-id;
- bh=o1g9RWfDLgEq+zCaJ+RXbfq0Fdywflc/XcToyx0FVEA=;
- b=O/QEYP1k1iBnVvN85QIAIDEqJ5yBp1INLpi6jrpT7DLnpTBIjw3nE50uGZ+h5DeS0L1lhp/UI
- SpOmufUipDqATVbLVk4ViPZwh6loAAOHbYPaCRZIys0dUyciaF7rZYh
-X-Developer-Key: i=hexlabsecurity@proton.me; a=ed25519;
- pk=dmppBMZNLLoPzxHi9l8tZDzEZUunPbgsYqIZYXeUrL0=
-X-Endpoint-Received: by B4 Relay for hexlabsecurity@proton.me/proton with
- auth_id=814
-X-Original-From: Bryam Vargas <hexlabsecurity@proton.me>
-Reply-To: hexlabsecurity@proton.me
+Content-Transfer-Encoding: 8bit
 
-From: Bryam Vargas <hexlabsecurity@proton.me>
+The ASMedia ASM1166 SATA controller (1b21:1166) advertises 64-bit DMA
+support (AHCI CAP.S64A), but on systems with the IOMMU enabled - where it
+can be handed DMA addresses above 4 GB - it silently corrupts data in
+transit. Reads return different, wrong data on each access. SMART is clean,
+there are no SATA link resets and no MCE is raised, so the corruption is
+invisible until it surfaces as filesystem metadata errors (XFS EUCLEAN)
+or, on Ceph, mass scrub errors across multiple independent filesystems at
+once - i.e. host-level, not filesystem-level.
 
-The PNY CS900 1TB SSD (Phison PS3111-S11, DRAM-less) drops off the bus
-after entering Device-Initiated Slumber during idle. With the default
-med_power_with_dipm policy the link goes down (SStatus 1 SControl 300)
-and does not recover, forcing the filesystem read-only. Forcing
-max_performance keeps the link stable across prolonged idle.
+This is the same failure mode already quirked for other controllers that
+falsely claim working 64-bit DMA. See commit 105c42566a55 ("ata: ahci:
+force 32-bit DMA for JMicron JMB582/JMB585") and commit 20730e9b2778
+("ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers").
+The ASM1166 currently maps to plain board_ahci with no DMA limit.
 
-Add a NOLPM quirk so link power management is disabled for this drive
-specifically, leaving it intact for other devices on the host.
+Limit the ASM1166 to 32-bit DMA. 32-bit is the guaranteed-correct lower
+bound; the only cost is extra SWIOTLB bounce-buffering on transfers above
+4 GB, negligible for storage. A future change can widen it to the
+controller's true addressable width if characterised. Until this lands the
+only workarounds are disabling the IOMMU (amd_iommu=off / intel_iommu=off)
+or using an HBA.
 
+Reproduced on an AOOSTAR WTR MAX (AMD Ryzen 7 PRO 8845HS) whose six SATA
+bays all hang off one ASM1166: with the IOMMU on, six concurrent
+'dd ... | md5sum' of the same large file return six different sums; with
+amd_iommu=off they are identical, and a full Ceph deep-scrub of a 5.4 TiB
+/ 1.43M-object pool re-reads end-to-end with zero scrub errors.
+
+Add a board_ahci_32bit_dma board type (mirroring board_ahci_43bit_dma)
+and point the ASM1166 entry at it.
+
+Fixes: 3bf614106094 ("ata: ahci: add identifiers for ASM2116 series adapters")
 Cc: stable@vger.kernel.org
-Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
+Assisted-by: Claude:claude-opus-4.8
+Signed-off-by: Alvin Lim <alvinwylim@gmail.com>
 ---
-Tested on an Intel Alder Lake AHCI host. With the default
-med_power_with_dipm the link drops after prolonged idle (SStatus 1
-SControl 300); writes then fail and the filesystem is remounted
-read-only, e.g.:
+ drivers/ata/ahci.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-  sd 0:0:0:0: [sda] tag#22 CDB: Write(10) 2a 00 74 38 55 68 00 00 28 00
-  EXT4-fs warning (device sda1): ext4_end_bio:368: I/O error 10 writing
-    to inode 52429136 (starting block 243731117)
-  ata1: EH complete
-  ata1.00: detaching (SCSI 0:0:0:0)
-  Buffer I/O error on device sda1, logical block 243730861
-  sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result:
-    hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 58f512f8952a..895956c2ca15 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -48,6 +48,7 @@ enum {
+ enum board_ids {
+ 	/* board IDs by feature in alphabetical order */
+ 	board_ahci,
++	board_ahci_32bit_dma,
+ 	board_ahci_43bit_dma,
+ 	board_ahci_ign_iferr,
+ 	board_ahci_no_debounce_delay,
+@@ -132,6 +133,13 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
++	[board_ahci_32bit_dma] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_32BIT_ONLY),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ 	[board_ahci_43bit_dma] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_43BIT_ONLY),
+ 		.flags		= AHCI_FLAG_COMMON,
+@@ -1559,7 +1567,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	}, {
+ 		/* ASM1166 */
+ 		PCI_VDEVICE(ASMEDIA, 0x1166),
+-		.driver_data = board_ahci,
++		.driver_data = board_ahci_32bit_dma,
+ 	}, {
+ 		/*
+ 		 * Samsung SSDs found on some macbooks.  NCQ times out if MSI is
 
-Forcing max_performance (which this quirk applies per-device) keeps the
-link stable across overnight idle. Drive: model "PNY CS900 1TB SSD", firmware
-CS900702. The Phison PS3111-S11 controller is shared across the CS900
-line, so other capacities/firmwares may need the same; scoped here to
-the unit tested.
----
- drivers/ata/libata-core.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3d0027ec33c2..e1d05d4c13ba 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4280,6 +4280,9 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
- 	/* Apacer models with LPM issues */
- 	{ "Apacer AS340*",		NULL,	ATA_QUIRK_NOLPM },
- 
-+	/* PNY CS900 (Phison PS3111-S11, DRAM-less) drops the link on DIPM */
-+	{ "PNY CS900 1TB SSD",		NULL,	ATA_QUIRK_NOLPM },
-+
- 	/* Silicon Motion models with LPM issues */
- 	{ "MD619HXCLDE3TC",		"TCVAID", ATA_QUIRK_NOLPM },
- 	{ "MD619GXCLDE3TC",		"TCV35D", ATA_QUIRK_NOLPM },
-
----
-base-commit: 4549871118cf616eecdd2d939f78e3b9e1dddc48
-change-id: 20260619-b4-disp-494070d2-c1633393b79f
-
-Best regards,
+base-commit: 322008f87f917e2217eeac386a9410945092eb2e
 -- 
-bryamzxz <hexlabsecurity@proton.me>
-
+2.47.3
 
