@@ -1,107 +1,144 @@
-Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 155DD344D90
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2026 18:28:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B354E346784;
+	Mon, 22 Jun 2026 18:38:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782152930; cv=none; b=qBhZMKWBVv26Uv0V/7T0+xoMPVNnczbrbR4cQ/MiakFiiEO4TrCRSxl8904cvA7LmIkJgHC+c5lzqFzvEsmf7quIarLtrVLMizZ+2SsUdTsdvS4M4n2JnGuNs8bS6vHEQbmN3RJJJ4w3GnqW/7lzWYSh3+WYX35N9fzI2zgEL5Q=
+	t=1782153492; cv=none; b=QcjLmMpque6y+abZIyfoSpa5IrBUSy+5fYPOPCEzcD/sb6BAilCWEehitXSShSowcTRCvVY8gwf0GzGyG4r+sd9blrrqrIeMJhyRYdQC+/BihsLSN5aAV3yAgLuFsc5Pa3/w2u6UPNzkNQXAplcG6KBzLsl7TiAGhXMf3s8Y/Y4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782152930; c=relaxed/simple;
-	bh=Wajygr1xCS88wkbiv/zSCcaFCBJpsJIo8gHJvXgnJM8=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=ZpmXTUd4Rg8GRF1wZRS73PDJcdBRuRicbdPAr99oSd4bNiDeX1JuzFd+v3l0nWgvXDxX+8c34gq36lqRA4gksFA7xzFqxyjLTG5AY5BjBDMxkCX9nJ/WvAcigUMk3Etg8JXHiEjnnF04H1usdxDLwsMmX1whukHTTxJAMIsiwsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UR22GiXA; arc=none smtp.client-ip=209.85.214.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com
+	s=arc-20240116; t=1782153492; c=relaxed/simple;
+	bh=QV9VN3bRWQPJxZSM5bePiBAB4fbflpWvMBkV8Or64B8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=N/VqlhnD9BF/U8GLx6XXhz24luQFQIKGrLX8Zptw512fdFd178LIonIne3EEXb0aOlrTc0hBsnlUCVJkKFx7KCPmK+r3218/gewxQ0nK30Nt9a72vs4w4YIxNB3Uoz0pf77bKQwOawS7SDkgHnaZzTysA/V/lw0TmbtGkKYsMtQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D64NbnX1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UR22GiXA"
-Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2c7403e80b0so39821805ad.1
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2026 11:28:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1782152927; x=1782757727; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=lj/E13CApRr+dPq7lmFxUlfkRFlNtYVmYJyKopNC3jc=;
-        b=UR22GiXAC8Ah9ErwIoEu0zrKwL5Mr12ffJkHsNLxBeI9sLYawgh6tyDfGxnQd+Rfq8
-         oy0kF+wKBgfpXKLemV7bozRqBdBqJar/J1xFdxNksF5aFc+ClV2BufDYIwKNfhdooYJx
-         Kf7YdgGxiLJy56VTusD7S1wkS9r0+S3i162OhYjWu3M0CU6Bp1G7deUyNRU1BcaTFqeo
-         rdf8oe5aSImL3zTinvCtXDb956frxxXJKSdCs5dFUXHw8fCiZMq8MqvsWxmGTIqizQsn
-         P3JdqWMBQa6jtvtLNVbsJDL71N2FKcntJhYQvm3RoZquIs9Kk4S7nB1sWqoNoksprD/O
-         PYKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782152927; x=1782757727;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lj/E13CApRr+dPq7lmFxUlfkRFlNtYVmYJyKopNC3jc=;
-        b=LeOC4dXhbaq+4+Lkqk4ol+P+5pz+uPgzTRnRlxCOi37mLOJfgufbc2ojRZsu1Duga7
-         /MqivvOM03ybkoU+f9lt0RRHdL8cyhbTuxf8V3Rzs73SAsXBcY6c8/k7jw78NhfB2K1N
-         6TE3q525kIrCVbqyxfRihlSHIiRAB+fk1M7nS5h3TUyu4vIJ4q7rlb+ta04ZLoesLSPE
-         5mwDPaWTG70pzEbTQ5kf1hwq02Rsk0yKN83it6Vmtvg7D8wclSFNKAqk0buirdZsVklY
-         X/w7LmYPclskBmTXrBHTQgbgR2LW/fXiWUsTGzB8XwWw9+USnSaOFlR3pTt16B8pBWPx
-         LbLQ==
-X-Gm-Message-State: AOJu0YxqOCmEQAAidqoP7IWHbeTpxCZ2Ty9C9xcOwSrU+lq18ak9QJ3g
-	DMmlDigCXPU0K3RlMd/W7Amh4GIysvy8debyFbzZkVENPzj82gkO2+xNK5H3+hon0gt2MdTjKnp
-	NnA2OjW4yFiUIvQ==
-X-Received: from plbkn11.prod.google.com ([2002:a17:903:78b:b0:2bf:b2c:fa1d])
- (user=tadamsjr job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:902:ec85:b0:2c0:db23:4c1 with SMTP id d9443c01a7336-2c718c77ec9mr165834465ad.5.1782152926903;
- Mon, 22 Jun 2026 11:28:46 -0700 (PDT)
-Date: Mon, 22 Jun 2026 11:28:44 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D64NbnX1"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8D21DC2BCB4;
+	Mon, 22 Jun 2026 18:38:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1782153492;
+	bh=QV9VN3bRWQPJxZSM5bePiBAB4fbflpWvMBkV8Or64B8=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=D64NbnX1If5PlVCw2HccQijUwwxWX4jpACcbFHSxRfEVgYXupAOta653fsGXG0w7K
+	 2US/Vx4IJqOl4StUkges89tHLQpAxx4ZnZ+g8e7/kiurJlHs2VoOkThe/Ee8CWZKCV
+	 c9p7KlrQ0kVXc1NVs3yLSph/EdkbkEZbIeIZXz1VfW04j/FoVr7crQWejfV/moCHo/
+	 7QDZv0oA7I7iJWijT8l8WrZsd8gETLbi/oeHCXmVidsS8dMCVJqRpFWqOeRRcO1AYp
+	 z0l1UfpyiI5ZqIJtt2rFMvI2dQRm/mwTvZVPhtTAChKwZxddfEehAa7ESCldrfOvRE
+	 dZSlXcX+35GZA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC94CDB466;
+	Mon, 22 Jun 2026 18:38:12 +0000 (UTC)
+From: Bryam Vargas via B4 Relay <devnull+hexlabsecurity.proton.me@kernel.org>
+Date: Mon, 22 Jun 2026 13:38:12 -0500
+Subject: [PATCH v2] ata: libata-core: Reject an invalid concurrent
+ positioning ranges count
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.55.0.rc0.786.g65d90a0328-goog
-Message-ID: <20260622182844.2795777-1-tadamsjr@google.com>
-Subject: [PATCH] ata: libata-core: Allow capacity transition to zero for
- locked drives
-From: TJ Adams <tadamsjr@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>, Salomon Dushimirimana <salomondush@google.com>, 
-	TJ Adams <tadamsjr@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260622-b4-disp-5734c6f2-v2-1-53083c2df3c6@proton.me>
+X-B4-Tracking: v=1; b=H4sIABOBOWoC/x3MMQqAMAxA0atIZgM1alu8ijhoTTSLSgsiSO9uc
+ XzD/y8kjsoJhuqFyLcmPY8CqisI+3xsjLoWAxmyxhLh0uGq6cLetV2wQujFh9Y48Ys0ULIrsuj
+ zL8cp5w8SWH5TYgAAAA==
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782153491; l=3597;
+ i=hexlabsecurity@proton.me; s=proton; h=from:subject:message-id;
+ bh=s7iWl1A1AVZplle7BVcwv17DnZEN0SJ+S8DOR5LSvyE=;
+ b=Z1+ABP+JLnIwd4pXZznefy3o/ZLLvQYGxWqSz0a3j1XWTTHIYdCGOGkYz63EgbznvSov33Mgv
+ DdSo5rd3YTYDVtnmb1M9Hpc50NJP1rn9CTwNHr8Qez3HtGTZ7VkfosU
+X-Developer-Key: i=hexlabsecurity@proton.me; a=ed25519;
+ pk=dmppBMZNLLoPzxHi9l8tZDzEZUunPbgsYqIZYXeUrL0=
+X-Endpoint-Received: by B4 Relay for hexlabsecurity@proton.me/proton with
+ auth_id=814
+X-Original-From: Bryam Vargas <hexlabsecurity@proton.me>
+Reply-To: hexlabsecurity@proton.me
 
-Commit 91842ed844a0 ("ata: libata-core: Set capacity to zero for a
-security locked drive") introduced setting the device capacity (n_sectors)
-to zero in ata_dev_configure() if the drive is security locked.
+From: Bryam Vargas <hexlabsecurity@proton.me>
 
-However, during runtime revalidation, ata_dev_revalidate() compares the
-new capacity (now 0) with the old capacity (>0) and detects a mismatch.
-Since it does not consider the locked status, it returns -ENODEV.
+ata_dev_config_cpr() takes the number of range descriptors from buf[0]
+of the concurrent positioning ranges log (up to 255), which the device
+reports independently of the log size in the GPL directory. The count is
+then walked at a fixed 32-byte stride in two places with no bound: the
+log read here, and the INQUIRY VPD page B9h emitter, which writes one
+descriptor per range into the fixed 2048-byte ata_scsi_rbuf. A device
+reporting a count larger than its own log overflows the read buffer (up
+to 7704 bytes past a 512-byte slab), and a count above 62 overflows the
+response buffer on the emit side.
 
-This revalidation failure during Error Handling (EH) causes libata to
-eventually disable the device, offlining the SCSI device and resulting
-in subsequent accesses returning -ENXIO (No such device or address).
+Bound the count once, on probe, against both the log the device returned
+and the 62-descriptor capacity of the VPD B9h buffer; warn and ignore the
+log when it does not fit. Capping the stored count keeps the emitter in
+bounds with no separate change there.
 
-Fix this by allowing the capacity transition to
-zero in ata_dev_revalidate() if the drive is reported as security locked by
-ata_id_is_locked().
-
-Fixes: 91842ed844a0 ("ata: libata-core: Set capacity to zero for a security locked drive")
-Assisted-by: Antigravity:gemini-3.5-flash
-Signed-off-by: Terrence Adams <tadamsjr@google.com>
+Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+Fixes: fe22e1c2f705 ("libata: support concurrent positioning ranges log")
+Fixes: c745dfc541e7 ("libata: fix reading concurrent positioning ranges log")
+Cc: stable@vger.kernel.org
+Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
 ---
- drivers/ata/libata-core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+v2: Per Damien Le Moal's review, reject an inconsistent count instead of
+    clamping it, and fold the emitter bound into this single probe-time
+    check: a count above 62 (the VPD B9h 2048-byte buffer capacity) or one
+    that does not fit the device's own log is rejected with a warning. That
+    makes the separate emitter patch unnecessary, so v1 2/2 is dropped.
+    v1 1/2: https://lore.kernel.org/all/20260619-b4-disp-6200c44e-v1-1-4624a4707d9e@proton.me/
+    v1 2/2: https://lore.kernel.org/all/20260619-b4-disp-6200c44e-v1-2-4624a4707d9e@proton.me/
+
+A/B with a userspace AddressSanitizer mirror of both sinks (-m64 and -m32;
+the unbounded value is device log content, not bus state, so no hardware is
+needed):
+
+  count  buf_len  with this patch
+  2      128      accepted (conforming drive)
+  62     2048     accepted (62 actuators, the documented maximum)
+  63     8704     rejected (exceeds the 62-descriptor VPD B9h buffer)
+  255    8704     rejected (self-consistent log, but the emit would overflow)
+  62     512      rejected (count does not fit the device's own log)
+  255    512      rejected
+
+Without the patch the 512-byte rows fault on the log read and the >62 rows
+fault on the VPD B9h emit; with it every count the emitter can still receive
+fits the 2048-byte buffer. Reproducer available on request.
+---
+ drivers/ata/libata-core.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3b6243f0f91e..d090667979ca 100644
+index 3d0027ec33c2..017a16be158b 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -3974,7 +3974,8 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
+@@ -2832,6 +2832,18 @@ static void ata_dev_config_cpr(struct ata_device *dev)
+ 	if (!nr_cpr)
+ 		goto out;
  
- 	/* verify n_sectors hasn't changed */
- 	if (dev->class != ATA_DEV_ATA || !n_sectors ||
--	    dev->n_sectors == n_sectors)
-+	    dev->n_sectors == n_sectors ||
-+	    (dev->n_sectors == 0 && ata_id_is_locked(dev->id)))
- 		return 0;
- 
- 	/* n_sectors has changed */
++	/*
++	 * The count is reported independently of the log size and is also
++	 * emitted into the fixed 2048-byte VPD B9h buffer, which holds at most
++	 * (2048 - 64) / 32 = 62 descriptors. Reject a count that exceeds that
++	 * or does not fit the log the device returned.
++	 */
++	if (nr_cpr > 62 || buf_len < 64 + (size_t)nr_cpr * 32) {
++		ata_dev_warn(dev,
++			     "Invalid number of concurrent positioning ranges\n");
++		goto out;
++	}
++
+ 	cpr_log = kzalloc_flex(*cpr_log, cpr, nr_cpr);
+ 	if (!cpr_log)
+ 		goto out;
+
+---
+base-commit: 4549871118cf616eecdd2d939f78e3b9e1dddc48
+change-id: 20260622-b4-disp-5734c6f2-8f8c307f8bf1
+
+Best regards,
 -- 
-2.55.0.rc0.786.g65d90a0328-goog
+bryamzxz <hexlabsecurity@proton.me>
+
 
