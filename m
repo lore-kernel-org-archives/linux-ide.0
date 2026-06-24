@@ -1,73 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 535E23CEB8F;
-	Tue, 23 Jun 2026 08:54:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 695693019AA
+	for <linux-ide@vger.kernel.org>; Wed, 24 Jun 2026 09:09:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782204878; cv=none; b=gQ86nxt94AlT9iTAfLBkVvLL24I2LAWD+yxpWYbYfnUF9rFcPMV1WDmg6iNxJcG1HU/ZLPUkO4286IWoRSVNVlEEiwWU93XOxovh8pKzbdUhdHY17ez7uBnfJY8ffRR50T7PaJGj5edKqE0Ycwcg04zJCPEYO2rQxV+W0jlLeoY=
+	t=1782292175; cv=none; b=fTw5SgLpfSGckgJ1LRIFY6tf3011uCg5ygjaTyER+44UUm4z2wewxteMQgcyUWn6ABiDWrEHgiybcMM+YOxA/HvtOCeEIQZqrWKU05VgISApWOitxWZlfK8ovnGMFZuthR9YQI0bX1wCabcDbP18HAjFPLr98YTO3YWqY7UDnAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782204878; c=relaxed/simple;
-	bh=97YPWMvBjcEwckI07SgJ2FnuAF53DCvK11xbM6RFPzc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M2LFokepMtfeBzHd+T/uGm+Nltt6PymAxlcl0+OsB21ZjCiDVBAFGHYAame0UYcfBPiMsgVPL/xEn7x0UtHtOY1VjlstTDXKjldtNvW8sL0BousW9Y+8V6rd8q/ahJMVlGJ3c9FkIp2iQFBtEHa3SJDAMoUOwkWiFhINfuOBIl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ML4ESpvC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782292175; c=relaxed/simple;
+	bh=DEBmBa1xEMKYbRRzjsceGpmGRtHw6BcWKO5TOWuaw5E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Xr1wYbcgnxquv9retZRxge/+wnmz4YmavwkRoEaf7wEaavOa+fPxAVeL0CdhO08KFO+B8eu4Lr06RKhrWZtjI/t8asNu9XReco72oux/iT+aYueONXlgJt1UbR6PkB9Vt9KInE+r3P/DpRsbu3KT37TZDRQf6QzZvd1PvLP0M/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=USdumUOF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ML4ESpvC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32DA61F00A3D;
-	Tue, 23 Jun 2026 08:54:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="USdumUOF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A801F1F000E9;
+	Wed, 24 Jun 2026 09:09:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782204877;
-	bh=+zhOM/uFzDq1SDMZdo7xftkoU4thrns0Js84NyeU5DQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ML4ESpvCrka1ox/A7ZcVcSoWtLZnE3qUpJhEHVs2T+RcIJbBaPrS0OAvj4dyL92mH
-	 KysiwuHGMeEcUt1wmhbLW5TyM3LNb1MgwafZt0GcG7KLvh8eMSRlWY/kJx7ogSPA2I
-	 UP0Dgqb4rL7EsL5S8PsyOp9ocFDBoF4RM4uMmBfTPMJezpXG0g6V26q/yYE4/BglEM
-	 m0n67K9ApaJ8w+GMzUfD4RmnAx+oXmdG/9+rVO5NdQqNA1mt1uQjM0II8z0s9S59Wd
-	 YtU28Tbc7SzNEm22Opf090CJbboBonfT4xHd5w5SibDd0Kwvr1r7kdAODRWkBCL3CG
-	 QivXGgoB7BbJA==
-Date: Tue, 23 Jun 2026 10:54:33 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: hexlabsecurity@proton.me
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] ata: libata-core: Reject an invalid concurrent
- positioning ranges count
-Message-ID: <ajpJyZFqNIaFzXxe@ryzen>
-References: <20260622-b4-disp-1b9ba697-v3-1-14ac65dd4413@proton.me>
+	s=k20260515; t=1782292174;
+	bh=SVrUzzOKxujlvpf5JBLVu1DsqM5SReJqobfxx43Ji40=;
+	h=From:To:Cc:Subject:Date;
+	b=USdumUOFPWsVNj+P4hg9H8otSP8UKsiecVbaxEBDSikIP+NBjVYYgX1Y+OkICYSGN
+	 pVtQ/8r000K1q78MaO9imL9ghTHG5v8QNUauQSj44rflgxAYOOOlyPuT3G87CVed4G
+	 IqJhKjZ17q0UlKVyNEdkSO3mxSglYKxC2jq7eUjf/qKqZKhRq0MJQlm6sO2ZtcXk6V
+	 Nyt34q/brB7eKgKI1qfviVILGjQ3GjPqoUrzFdoh1jiwf0ov0hW0q5QAMpHSIzBEJu
+	 6vaJDSJZe0To43tUtAYXZ40LiSRegxOCtlntkUekLUdndlU0GiQ+AROrKHXVmY5yuR
+	 iQW2fzGxt0iHA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] ata: libata-scsi: fix ata_scsi_security_inout_xlat() buffer length conversion
+Date: Wed, 24 Jun 2026 18:09:31 +0900
+Message-ID: <20260624090931.1483644-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260622-b4-disp-1b9ba697-v3-1-14ac65dd4413@proton.me>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jun 22, 2026 at 10:23:45PM -0500, Bryam Vargas via B4 Relay wrote:
-> From: Bryam Vargas <hexlabsecurity@proton.me>
-> 
-> ata_dev_config_cpr() takes the number of range descriptors from buf[0]
-> of the concurrent positioning ranges log (up to 255), which the device
-> reports independently of the log size in the GPL directory. The count is
-> then walked at a fixed 32-byte stride in two places with no bound: the
-> log read here, and the INQUIRY VPD page B9h emitter, which writes one
-> descriptor per range into the fixed 2048-byte ata_scsi_rbuf. A device
-> reporting a count larger than its own log overflows the read buffer (up
-> to 7704 bytes past a 512-byte slab), and a count above 62 overflows the
-> response buffer on the emit side.
-> 
-> Bound the count once, on probe, against both the log the device returned
-> and the number of descriptors the VPD B9h response buffer can hold
-> (ATA_DEV_MAX_CPR, derived from the rbuf size). Reject an out-of-range
-> count with a warning; this keeps the emitter in bounds with no separate
-> change there.
-> 
-> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
-> Fixes: fe22e1c2f705 ("libata: support concurrent positioning ranges log")
-> Fixes: c745dfc541e7 ("libata: fix reading concurrent positioning ranges log")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
+ata_scsi_security_inout_xlat() converts the SCSI command buffer length
+into the ATA sector size based size by aligning upward the length to 512B.
+That is incorrect as that can lead to specifying a buffer size that is
+larger than the memory allocated for the command buffer, resulting in all
+sorts of possible command failures and/or memory corruptions.
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Ideally, we should bounce the buffer to a large enough size to fit
+the entire SCSI command buffer, but we do not have anything in place to do
+that cleanly. So for now, fix this by converting the command buffer length
+downward with a simple division of the buffer length by ATA_SECT_SIZE.
+
+Fixes: 818831c8b22f ("libata: implement SECURITY PROTOCOL IN/OUT")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-scsi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d54ec1631e9a..e78801e7ea8c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4330,7 +4330,13 @@ static unsigned int ata_scsi_security_inout_xlat(struct ata_queued_cmd *qc)
+ 		}
+ 
+ 		/* convert to the sector-based ATA addressing */
+-		len = (len + 511) / 512;
++		if (len) {
++			len = len / ATA_SECT_SIZE;
++			if (!len) {
++				ata_scsi_set_invalid_field(qc->dev, scmd, 6, 0);
++				return 1;
++			}
++		}
+ 	}
+ 
+ 	tf->protocol = dma ? ATA_PROT_DMA : ATA_PROT_PIO;
+-- 
+2.54.0
+
