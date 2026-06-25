@@ -1,119 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDD363C0A09;
-	Wed, 24 Jun 2026 14:21:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7D613D886;
+	Thu, 25 Jun 2026 01:02:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782310864; cv=none; b=ka74g2y5l2aPczAI9Q2u6isJMjN2ePJys+pq7OtVw0beUbAx1hr7I8N7HCQ4gu6Pfw/i1Q/s+ZErmW1veY4OOLgrzGIFkvQWMYIcE100eUXJutiF9ggx2i03H2VCtOGAO8LXWGsad+rZhgLtZaIJO3h/zxi/I0MIpnCKzCpHmX4=
+	t=1782349339; cv=none; b=qRKpu2ssuy3cWWe+dZ5m71Rftk8mQ5LabUhxE4cHGzG3ppZ/ogqNVwpzXwClJ6FRuQkLY9JvbVP0e+sfQw2hetyf4w0/+qQ81NwzDoR90t8cWxpsOrq6MABV1/Z0gqRrJY1rJg4YvPvoTKDMoJtzLCDvO3UZOduArcZBpajkHPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782310864; c=relaxed/simple;
-	bh=kJ0Gr85Rp0gGigLTnzui4SqPV6dwYPE+PLHZOa4KqnA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XBYbMeQzf7mlmkGztO677tQ7o5SVWxh//DlGWDQEIGSOTUtr+eUEtr8yfpJ6JIaWhwREl1qxwfLfTFxJwLBHXL32ICX0/D+3Wb+gS70TciYpk6+W6Hq2AEdFBAN/uTJGpLtUTd4nAFD5+MipbEEQ6NAZuud7S19rTcff1Q0mNVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jiznc4fw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782349339; c=relaxed/simple;
+	bh=4aBdcP/yzHkDazmvlvndiSUoGIy1y+NNUECdwWYhsDE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QkPi9D/mRAJX21AQ/ATc3wURfp+lQPmyDgnJ/XKt6hPvJsQDIc7YL66ztfkW/ko57vg0aY5ZHmD3Dr8i0py59BTEAlbqV/a2Etj7cgZQYdq0oOkDUBXZKtUS0r65Hwsz1OypjfRKEfT5LQx31IlHcnEYfZab1JZuZqttwy1cXMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H3e6pcdu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jiznc4fw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9742F1F000E9;
-	Wed, 24 Jun 2026 14:21:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H3e6pcdu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE5151F000E9;
+	Thu, 25 Jun 2026 01:02:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782310863;
-	bh=XLTa3rEANKsidus9X31We55gRgAStYGDj2gokPb6hjE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jiznc4fwnkn6FWmX52eD/4Aae6nM5ktNyKALn6zqbEJV4USFnNsbIi4CkSz79BHz6
-	 M4kJZSKo4iqAY1/+qm3+YR2dNvHDTMmeRWF3uAqyEP2WysRpn57AuZ44uVaH8VYoD2
-	 BvVtLUzg90yTLrZ4VRgQtHKM2JHNweN2Hxcb6TftAAJPqkq7i9KtKBvaBHXHuVOnTb
-	 CF3h9b95wrIKxsFgr1j2+uAvnlOtRajA8LAzJedO8Z7sarrmkXU/mc0w3gEDmkCu1x
-	 cqyYJ9NOJvm8vRQFxdCDGsXpIQ1N2KFcuiA9HRA0y1lBkc0f7gP4vkiiRmMTzWcujz
-	 ITyUc5e+c/d1w==
-Date: Wed, 24 Jun 2026 16:20:59 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: TJ Adams <tadamsjr@google.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Igor Pylypiv <ipylypiv@google.com>,
-	Salomon Dushimirimana <salomondush@google.com>
-Subject: Re: [PATCH] ata: libata-core: Allow capacity transition to zero for
- locked drives
-Message-ID: <ajvny2mkowNmu81Z@ryzen>
-References: <20260622182844.2795777-1-tadamsjr@google.com>
+	s=k20260515; t=1782349338;
+	bh=OzB30Fgc+XGx3ElMWQ3lcxs0gbB9egP80rQZ1i8ruK4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=H3e6pcduLKvTNn5nP4q3uJR1H2LHcacP4ZEmzHC1UVbgZV1iST7vpXegrJ3u5AZcI
+	 nolgEoV+5jaM+QXsNxSwHg/eKvN57iVBlmjemVj9A5HU6N6BOja4H7d5tq0CsGRQWg
+	 m1walDKyZfbaybtQ4BCWQ3lEdHMfShM85mnbC7NjrXtjqlB8bymb1SS0y72SYZkGdK
+	 uysdqAwL/eCPZ/iA8waDLl/zvnZWuf+znU+sJId781OH+zHzWmZktgaRta8IH1PKOY
+	 tRkWCoqSSzBRojNAtCA2Fr9rZ/fUuUBTsCKrO8OcdemcI0drGJIcNf1Q4sIAkP9MvA
+	 fGm7s/8Z2AFFQ==
+Message-ID: <13e1821d-487f-4fee-b060-da57edcde205@kernel.org>
+Date: Thu, 25 Jun 2026 10:02:06 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260622182844.2795777-1-tadamsjr@google.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] ata: libata-core: Reject an invalid concurrent
+ positioning ranges count
+To: hexlabsecurity@proton.me, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260622-b4-disp-1b9ba697-v3-1-14ac65dd4413@proton.me>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20260622-b4-disp-1b9ba697-v3-1-14ac65dd4413@proton.me>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jun 22, 2026 at 11:28:44AM -0700, TJ Adams wrote:
-> Commit 91842ed844a0 ("ata: libata-core: Set capacity to zero for a
-> security locked drive") introduced setting the device capacity (n_sectors)
-> to zero in ata_dev_configure() if the drive is security locked.
+On 6/23/26 12:23 PM, Bryam Vargas via B4 Relay wrote:
+> From: Bryam Vargas <hexlabsecurity@proton.me>
 > 
-> However, during runtime revalidation, ata_dev_revalidate() compares the
-> new capacity (now 0) with the old capacity (>0) and detects a mismatch.
-> Since it does not consider the locked status, it returns -ENODEV.
+> ata_dev_config_cpr() takes the number of range descriptors from buf[0]
+> of the concurrent positioning ranges log (up to 255), which the device
+> reports independently of the log size in the GPL directory. The count is
+> then walked at a fixed 32-byte stride in two places with no bound: the
+> log read here, and the INQUIRY VPD page B9h emitter, which writes one
+> descriptor per range into the fixed 2048-byte ata_scsi_rbuf. A device
+> reporting a count larger than its own log overflows the read buffer (up
+> to 7704 bytes past a 512-byte slab), and a count above 62 overflows the
+> response buffer on the emit side.
+> 
+> Bound the count once, on probe, against both the log the device returned
+> and the number of descriptors the VPD B9h response buffer can hold
+> (ATA_DEV_MAX_CPR, derived from the rbuf size). Reject an out-of-range
+> count with a warning; this keeps the emitter in bounds with no separate
+> change there.
+> 
+> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+> Fixes: fe22e1c2f705 ("libata: support concurrent positioning ranges log")
+> Fixes: c745dfc541e7 ("libata: fix reading concurrent positioning ranges log")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
 
-When booting with a security locked drive (that is not the boot device):
+Applied to fo-7.2-fixes. Thanks !
 
-ata_eh_revalidate_and_attach()
- -> ata_dev_read_id()
- -> ata_dev_configure() <- sets dev->n_sectors to 0
- sets ATA_EHI_SETMODE
-
-ata_dev_set_mode()
- -> ata_dev_revalidate()
-
-ata_dev_revalidate()
- sets local variable n_sectors to dev->n_sectors
-
- -> ata_dev_reread_id()
-     -> ata_dev_read_id()
- -> ata_dev_configure() will one again set dev->n_sectors to 0
-
-  /* verify n_sectors hasn't changed */
-  if (dev->class != ATA_DEV_ATA || !n_sectors ||
-      dev->n_sectors == n_sectors)
-          return 0;
-
-
-Please explain how you reproduce this.
-As far as I can see the local n_sectors variable will be 0,
-and the function call to ata_dev_configure() will set dev->n_sectors
-to 0, so this should, AFAICT, never get a "n_sectors mismatch" print.
-
-
-I even tried to reproduce with doing a suspend + resume (using QEMU),
-such that ata_dev_revalidate() will be called again:
-
-$ sudo dmesg | grep -E "locked|suspend|disable device|ata_dev_revalidate"
-[    0.988248] ata2.00: Security locked, setting capacity to zero
-[    0.993442] ata1.00: debug print: ata_dev_revalidate
-[    0.994729] ata2.00: debug print: ata_dev_revalidate
-[    0.995918] ata2.00: Security locked, setting capacity to zero
-[   40.239682] PM: suspend entry (deep)
-[   40.300128] PM: suspend devices took 0.020 seconds
-[   45.738412] PM: suspend exit
-[   45.985092] ata2.00: debug print: ata_dev_revalidate
-[   45.986698] ata2.00: Security locked, setting capacity to zero
-[   45.988530] ata1.00: debug print: ata_dev_revalidate
-[   45.993331] ata1.00: debug print: ata_dev_revalidate
-[   45.994525] ata2.00: debug print: ata_dev_revalidate
-[   45.995194] ata2.00: Security locked, setting capacity to zero
-
-
-Since you seem to state that the old capacity (local variable n_sectors)
-is > 0, it seems like the device wasn't locked during the initial boot /
-ata_dev_configure() call.
-
-
-Are you perhaps unlocking the device in firmware, so it is unlocked at
-boot, and then when you suspend, you lose power to the drive, so when
-you resume, the drive is locked?
-
-
-Kind regards,
-Niklas
+-- 
+Damien Le Moal
+Western Digital Research
