@@ -1,153 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8997C37CD3C
-	for <linux-ide@vger.kernel.org>; Thu, 25 Jun 2026 14:27:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6256D3DCDA6
+	for <linux-ide@vger.kernel.org>; Fri, 26 Jun 2026 09:00:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782397657; cv=none; b=M/Ds0n4dh7PqSEc4oWVHhn5Mjw+6Lca2ZxYErvsPTfrtlvTRXjarNepnvm/DvZRtAi72EScE9hQpWnfBPgXFi+wjfgHqA7bGa80iNFtAM2P1gI9EWraxGcb7rEJQwFYjsc9qsnz6AXNw1MZ0IO+Dzihkd4NH3KwT8RDqUI0xbW4=
+	t=1782464423; cv=none; b=pdXkOphAMCpWMw/pOV5U1D7hHJ913MWhfxvGeDJQlfHu0aEjtsNe/7+FotOHTFFvejlMGKMS5QgAMvkcL1ll94OjDuvqwRDiZtmMKPm4CxCzvtSLmOLV1FByc7TGayN5ObyieNoaBe7IX0542Zx15YcQXf6zpP7NINdCaUQaBpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782397657; c=relaxed/simple;
-	bh=2jR07+0CImeoB1TLwpwRdfH1LRIXzmyESrOY5P1ZjLo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MuQBfeIyABlZKzr/CRNz6Qa7CyoTcIGn/X0PFAL9aUh5Fp34Cr9C61DB+BDV5n3m8K6hOS7628scXGlbOZ34/esle46ZOp71qKxEMsosuQklv2HvX8PCm/1uSQ9p+HqSgVZSyKbcTVAZ8PS0FXR9XvBHr+TU+Vl78x9ETaTGLuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZaDshW3k; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782464423; c=relaxed/simple;
+	bh=9xbK0oRJFHC5LKOurDK3IJ0pMM6Wpus6Bcqrz5wDpt0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PU4iLepAv0+hZ0K2yud5UU6RmWZlMVPlm+N00cNfYNMaBtrLsEEo1hWQkX9oQL9GU2jBbP4asT3bM2T6ybGYunXl+xBFGoRMIuOD+GXKXcdmP8fQrrTPGmZjkSqhOjRAMaMvbuKU+csfy0ylCwtnecr6psvxQI4NbtClgNze+4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kJPA/D5L; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZaDshW3k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F4361F000E9;
-	Thu, 25 Jun 2026 14:27:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782397651;
-	bh=HdQR74P9JWQagrchKuMBSu/rjv2p4da3QSroL6um7js=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZaDshW3kJNwBLLoHxTONSGyZ96WtRI0XDtWfA9QBm5ov+PSGXUrbNs7cnGzE5xW6D
-	 bTMEG0hip/Ti6w0YhuQ3DnkKzSZcT276LrjwGH+OrOV1NIysuD164XhO0bAlMjTcbd
-	 5THH2xdxOs0LZ2t3p3l/LJJRAA5PpVatTQFFpPBYUTOuXSNWS5MuXxKX0jq+gsV0M5
-	 8kme9JgT3YprSfY80+VK2frl7Ak0+q2+9F6prV5ZAOGMqJU1Npv6L6sAUUl0fWmtF6
-	 Qz+hiJAJKmfWfUtMmkTkOEY+Mgt7aQFh6pI6pYnffwHW0mn2QuScoE7RFk3lyC9/zW
-	 8fky5FiGzBcSw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: pata_pxa: Fix DMA channel leak on probe error
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Wentao Liang" <vulab@iscas.ac.cn>
-Cc: cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260625141837.62362-1-vulab@iscas.ac.cn>
-References: <20260625141837.62362-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 25 Jun 2026 14:27:31 +0000
-Message-Id: <20260625142731.9F4361F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kJPA/D5L"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2c7f385883cso2851595ad.2
+        for <linux-ide@vger.kernel.org>; Fri, 26 Jun 2026 02:00:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782464421; x=1783069221; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=7o+20xWpRPr3IaiXNTmq6DkzWNdOpzNej3/0ztxICbs=;
+        b=kJPA/D5Lj5i7z1ysRNDoYZxH+MIMu4y8uRETG5O9OI5hsLg6FvcgMRql9BI74hoQki
+         fmsNRRKXn4JC2aKHep2Jnd5bUCTYCVIwzS/BDY0d+YmPuImyU3VyUdZfnI2dgZZV9v4h
+         1mKWF7KvqEpfLv5h4l5KdEIw2NylD0xe+319GzsYDaAF/7yf/7gQrW1j5jMtKw0h3S8z
+         3dVV8+jgbSHMqoU1j8JO2x3hgmubl029mWfFaKz7S0CSQuIWQVI0MyLKWStfnX16vB2P
+         VVYfORcI69qqoTrJj+fBM3hNBke7a2gymahM3SLWg7sf6swzUYZ5oVIOxM/rhd3OB/6J
+         jhww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782464421; x=1783069221;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7o+20xWpRPr3IaiXNTmq6DkzWNdOpzNej3/0ztxICbs=;
+        b=CUJ5O7u1f2V9Hzw+A3iS/lyczx0MRLfEz8nZIr/oLnSh6gvgx7+neMqC1SgT8OOPyU
+         fIFFZmXPyomPVSJCUiHOBxrFEMeZJ+Wxu2B/FZ3z3T0Ok1Fo1I/r4CaoNOSP8GROy8Fx
+         1/zFUDf7TJXMS1Y8F2QYAxTh03G+yNwAnICF/DOmLCgU1SCGA1yksOi831Eur0CQxif2
+         RyoJxQj45t9Bg7PsZQSU5lP42myVLPOYMyiNyQMGm0uoSnxNPVJ0Wc5097VASjbzwE7/
+         f/SWAjDT4aXg7tfzQczzB42T3kJyKgGHNJ8AE696NFHO6cXEdfE7ogkKNoBrNPBRqtUY
+         Lo/A==
+X-Gm-Message-State: AOJu0Yx/rjrnCbb2IY3GOWknwIejfBLUL/P9GsZRBoK+yhL2cdLS1hdV
+	NFNWXZSdV7yA0hRRtuYl0zpGkKTKeizjS7qWSXv8zchgRlqiSL+O1dk=
+X-Gm-Gg: AfdE7clY+tX1XM5F/rR4IrmbFiCfcd6qgOWEQYlgv36csbGJBI2kE9lrAdrdrEW/fn6
+	kfRS4elOqPt1/izQ3+QK+1Qg/PWNxu/miG/6jzDWbuJzSqU5+UViGhFERoWcR+zj+ZsN9ngBsbF
+	WJKEIM/FRrGcJWhkL4e8AiZT1TnP0pUCXLooxgdw3K+6/5BfkvjFBhElw+q7dMIqbsvud4c6QQO
+	zgOnNPivO5oEisLtxTJABXYPwjBCMoXzgc36DlHvX1+4gCZKT2NFXbmWQl+59+dGSM/Gr/2Uspv
+	s9DSVLjgpUnoUnL3aYiu+Fj8la43YR2kVZvCK3ciL+U6HHcX3c1UdYidOlSVFfaJvvA4W/0KAtj
+	7UMMbzX03MmQtg+Fq+hHmE6MRmF5FH+NICwLKCXMBvrMk/dosWkzgb9sNSj/tV7QuoWrc0KDNXj
+	2jn5jSQvXw7NVh/ZglH79TtlQYi0+KvojUoV9j72Ywz3a/+KmvQFfuqLk4ytdtJvZFLGkHFdJQN
+	R4=
+X-Received: by 2002:a17:903:1a28:b0:2c7:f697:2f41 with SMTP id d9443c01a7336-2c7fc73847dmr63702075ad.20.1782464421408;
+        Fri, 26 Jun 2026 02:00:21 -0700 (PDT)
+Received: from localhost.localdomain ([14.5.152.27])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c7f5afb5ecsm36000785ad.27.2026.06.26.02.00.18
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 26 Jun 2026 02:00:20 -0700 (PDT)
+From: Myeonghun Pak <mhun512@gmail.com>
+To: Linus Walleij <linusw@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Myeonghun Pak <mhun512@gmail.com>,
+	Ijae Kim <ae878000@gmail.com>
+Subject: [PATCH] ata: sata_gemini: unwind clocks on IDE pinctrl errors
+Date: Fri, 26 Jun 2026 17:58:37 +0900
+Message-ID: <20260626085848.40199-1-mhun512@gmail.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+gemini_sata_bridge_init() prepares and enables both SATA PCLKs, then
+disables them again while keeping the clocks prepared for later bridge
+start and stop operations. If gemini_setup_ide_pins() fails after that,
+gemini_sata_probe() returns directly and skips the existing
+out_unprep_clk unwind path.
 
-Pre-existing issues:
-- [High] Incorrect teardown order in `pxa_ata_remove()` releases the DMA ch=
-annel before detaching the ATA host, creating a use-after-free window.
-- [High] Missing NULL check for platform data (`pdata`) before dereferencin=
-g it in the probe function.
-- [High] Returning `AC_ERR_OK` when DMA descriptor preparation fails leads =
-to an unrecoverable 30-second ATA command timeout.
---
+Route the IDE pinctrl failure through out_unprep_clk so the clocks
+prepared by gemini_sata_bridge_init() are unprepared before probe
+fails.
 
-commit fb8345f4cc3cb507abc9c29fac4d410d641eab22
-Author: Wentao Liang <vulab@iscas.ac.cn>
-Subject: ata: pata_pxa: Fix DMA channel leak on probe error
+Fixes: d872ced29d5f ("ata: sata_gemini: Introduce explicit IDE pin control")
+Co-developed-by: Ijae Kim <ae878000@gmail.com>
+Signed-off-by: Ijae Kim <ae878000@gmail.com>
+Signed-off-by: Myeonghun Pak <mhun512@gmail.com>
+---
+ drivers/ata/sata_gemini.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-When dmaengine_slave_config() fails, the DMA channel acquired by
-dma_request_chan() is not released before returning the error,
-leaking the channel reference. This commit adds dma_release_channel()
-in the error path.
+diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+index 582c9708275c..92984b34fd3b 100644
+--- a/drivers/ata/sata_gemini.c
++++ b/drivers/ata/sata_gemini.c
+@@ -355,7 +355,7 @@ static int gemini_sata_probe(struct platform_device *pdev)
+ 	if (sg->ide_pins) {
+ 		ret = gemini_setup_ide_pins(dev);
+ 		if (ret)
+-			return ret;
++			goto out_unprep_clk;
+ 	}
+ 
+ 	dev_info(dev, "set up the Gemini IDE/SATA nexus\n");
+-- 
+2.47.1
 
-> diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
-> index 03dbaf4a13a75..9f63bdfb8576e 100644
-> --- a/drivers/ata/pata_pxa.c
-> +++ b/drivers/ata/pata_pxa.c
-> @@ -286,6 +286,7 @@ static int pxa_ata_probe(struct platform_device *pdev)
->  	ret =3D dmaengine_slave_config(data->dma_chan, &config);
->  	if (ret < 0) {
->  		dev_err(&pdev->dev, "dma configuration failed: %d\n", ret);
-> +		dma_release_channel(data->dma_chan);
->  		return ret;
->  	}
-
-While reviewing this patch, I noticed a few pre-existing issues in the same
-file.
-
-In pxa_ata_probe():
-
-> 	struct pata_pxa_pdata *pdata =3D dev_get_platdata(&pdev->dev);
-
-[ ... ]
-
-> 	/*
-> 	 * Adjust register offsets
-> 	 */
-> 	ap->ioaddr.altstatus_addr =3D ap->ioaddr.ctl_addr;
-> 	ap->ioaddr.data_addr	=3D ap->ioaddr.cmd_addr +
-> 					(ATA_REG_DATA << pdata->reg_shift);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is it possible for pdata to =
-be
-NULL here?
-
-If the driver is bound manually via sysfs to a platform device lacking
-platform data, dev_get_platdata() will return NULL, which would cause a
-direct kernel panic when dereferencing pdata->reg_shift.
-
-
-In pxa_qc_prep():
-
-> 	tx =3D dmaengine_prep_slave_sg(pd->dma_chan, qc->sg, qc->n_elem, dir,
-> 				     DMA_PREP_INTERRUPT);
-> 	if (!tx) {
-> 		ata_dev_err(qc->dev, "prep_slave_sg() failed\n");
-> 		return AC_ERR_OK;
-> 	}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but should this return an error
-code like AC_ERR_SYSTEM instead of AC_ERR_OK?
-
-Returning AC_ERR_OK when dmaengine_prep_slave_sg() fails incorrectly masks
-the error from the ATA core. The core proceeds to issue the command thinking
-it was prepared, but since no DMA descriptors were actually submitted, the
-device will never complete the transfer.
-
-This inevitably results in a 30-second block layer timeout.
-
-
-In pxa_ata_remove():
-
-> static void pxa_ata_remove(struct platform_device *pdev)
-> {
-> 	struct ata_host *host =3D platform_get_drvdata(pdev);
-> 	struct pata_pxa_data *data =3D host->ports[0]->private_data;
->=20
-> 	dma_release_channel(data->dma_chan);
->=20
-> 	ata_host_detach(host);
-> }
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is the teardown order safe
-here?
-
-ata_host_detach() unregisters the SCSI host, which can invoke the ATA error
-handler (EH) to flush or abort pending commands. If an ongoing command is
-aborted, the EH invokes driver callbacks like pxa_bmdma_stop(), which
-attempt to call dmaengine_tx_status() and dmaengine_terminate_all() on the
-already freed data->dma_chan.
-
-Does calling dma_release_channel() before ata_host_detach() create a
-use-after-free window?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260625141837.6236=
-2-1-vulab@iscas.ac.cn?part=3D1
