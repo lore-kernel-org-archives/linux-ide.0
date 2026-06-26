@@ -1,112 +1,161 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6256D3DCDA6
-	for <linux-ide@vger.kernel.org>; Fri, 26 Jun 2026 09:00:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 487733E6DEC
+	for <linux-ide@vger.kernel.org>; Fri, 26 Jun 2026 09:10:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782464423; cv=none; b=pdXkOphAMCpWMw/pOV5U1D7hHJ913MWhfxvGeDJQlfHu0aEjtsNe/7+FotOHTFFvejlMGKMS5QgAMvkcL1ll94OjDuvqwRDiZtmMKPm4CxCzvtSLmOLV1FByc7TGayN5ObyieNoaBe7IX0542Zx15YcQXf6zpP7NINdCaUQaBpI=
+	t=1782465009; cv=none; b=i51AWmcYRTHIZJnyfRElKGO3k2kvjMna5ZBKf5kxDfCUQ5wRXnbXzPLZJsYjW3IE8S9Z0OAnMWhbXtcezkJwO4iM2foQymSM+J8qgkPhGZoQXQwqD1dU2+ArluGLduJGn4F3Nshw+zOQcyAzrT53p65swEdD4Wegjj+XEOVu8xE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782464423; c=relaxed/simple;
-	bh=9xbK0oRJFHC5LKOurDK3IJ0pMM6Wpus6Bcqrz5wDpt0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PU4iLepAv0+hZ0K2yud5UU6RmWZlMVPlm+N00cNfYNMaBtrLsEEo1hWQkX9oQL9GU2jBbP4asT3bM2T6ybGYunXl+xBFGoRMIuOD+GXKXcdmP8fQrrTPGmZjkSqhOjRAMaMvbuKU+csfy0ylCwtnecr6psvxQI4NbtClgNze+4c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kJPA/D5L; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782465009; c=relaxed/simple;
+	bh=6pf/J4I2Cbz2dDQb1E5c7UDVq0A/jETXS/65q7gqNsI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=SKIe++AjGDKEup0jfF07djkLeb62vbkf2ioyVSTLxokBBob3ZQciqCz7zpt1rl0iJoZs7ZhybtXcXf6xEBsyjE3qeqeKPkeU8ScpGLt7BiLJSt1rXgWMx0sWAtJUTnDeJpfpPg2uEfoBduERdJvshzxlN9fXO2upda/4u1Vydyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JhyvZ8Pb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kJPA/D5L"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2c7f385883cso2851595ad.2
-        for <linux-ide@vger.kernel.org>; Fri, 26 Jun 2026 02:00:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782464421; x=1783069221; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=7o+20xWpRPr3IaiXNTmq6DkzWNdOpzNej3/0ztxICbs=;
-        b=kJPA/D5Lj5i7z1ysRNDoYZxH+MIMu4y8uRETG5O9OI5hsLg6FvcgMRql9BI74hoQki
-         fmsNRRKXn4JC2aKHep2Jnd5bUCTYCVIwzS/BDY0d+YmPuImyU3VyUdZfnI2dgZZV9v4h
-         1mKWF7KvqEpfLv5h4l5KdEIw2NylD0xe+319GzsYDaAF/7yf/7gQrW1j5jMtKw0h3S8z
-         3dVV8+jgbSHMqoU1j8JO2x3hgmubl029mWfFaKz7S0CSQuIWQVI0MyLKWStfnX16vB2P
-         VVYfORcI69qqoTrJj+fBM3hNBke7a2gymahM3SLWg7sf6swzUYZ5oVIOxM/rhd3OB/6J
-         jhww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782464421; x=1783069221;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7o+20xWpRPr3IaiXNTmq6DkzWNdOpzNej3/0ztxICbs=;
-        b=CUJ5O7u1f2V9Hzw+A3iS/lyczx0MRLfEz8nZIr/oLnSh6gvgx7+neMqC1SgT8OOPyU
-         fIFFZmXPyomPVSJCUiHOBxrFEMeZJ+Wxu2B/FZ3z3T0Ok1Fo1I/r4CaoNOSP8GROy8Fx
-         1/zFUDf7TJXMS1Y8F2QYAxTh03G+yNwAnICF/DOmLCgU1SCGA1yksOi831Eur0CQxif2
-         RyoJxQj45t9Bg7PsZQSU5lP42myVLPOYMyiNyQMGm0uoSnxNPVJ0Wc5097VASjbzwE7/
-         f/SWAjDT4aXg7tfzQczzB42T3kJyKgGHNJ8AE696NFHO6cXEdfE7ogkKNoBrNPBRqtUY
-         Lo/A==
-X-Gm-Message-State: AOJu0Yx/rjrnCbb2IY3GOWknwIejfBLUL/P9GsZRBoK+yhL2cdLS1hdV
-	NFNWXZSdV7yA0hRRtuYl0zpGkKTKeizjS7qWSXv8zchgRlqiSL+O1dk=
-X-Gm-Gg: AfdE7clY+tX1XM5F/rR4IrmbFiCfcd6qgOWEQYlgv36csbGJBI2kE9lrAdrdrEW/fn6
-	kfRS4elOqPt1/izQ3+QK+1Qg/PWNxu/miG/6jzDWbuJzSqU5+UViGhFERoWcR+zj+ZsN9ngBsbF
-	WJKEIM/FRrGcJWhkL4e8AiZT1TnP0pUCXLooxgdw3K+6/5BfkvjFBhElw+q7dMIqbsvud4c6QQO
-	zgOnNPivO5oEisLtxTJABXYPwjBCMoXzgc36DlHvX1+4gCZKT2NFXbmWQl+59+dGSM/Gr/2Uspv
-	s9DSVLjgpUnoUnL3aYiu+Fj8la43YR2kVZvCK3ciL+U6HHcX3c1UdYidOlSVFfaJvvA4W/0KAtj
-	7UMMbzX03MmQtg+Fq+hHmE6MRmF5FH+NICwLKCXMBvrMk/dosWkzgb9sNSj/tV7QuoWrc0KDNXj
-	2jn5jSQvXw7NVh/ZglH79TtlQYi0+KvojUoV9j72Ywz3a/+KmvQFfuqLk4ytdtJvZFLGkHFdJQN
-	R4=
-X-Received: by 2002:a17:903:1a28:b0:2c7:f697:2f41 with SMTP id d9443c01a7336-2c7fc73847dmr63702075ad.20.1782464421408;
-        Fri, 26 Jun 2026 02:00:21 -0700 (PDT)
-Received: from localhost.localdomain ([14.5.152.27])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c7f5afb5ecsm36000785ad.27.2026.06.26.02.00.18
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 26 Jun 2026 02:00:20 -0700 (PDT)
-From: Myeonghun Pak <mhun512@gmail.com>
-To: Linus Walleij <linusw@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Myeonghun Pak <mhun512@gmail.com>,
-	Ijae Kim <ae878000@gmail.com>
-Subject: [PATCH] ata: sata_gemini: unwind clocks on IDE pinctrl errors
-Date: Fri, 26 Jun 2026 17:58:37 +0900
-Message-ID: <20260626085848.40199-1-mhun512@gmail.com>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JhyvZ8Pb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A2C11F00A3A;
+	Fri, 26 Jun 2026 09:10:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782465006;
+	bh=CCRSQzI543bBI2uf3AHR2V/tdygfYZcZdWRb5grDhak=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JhyvZ8PbqfTuIiV5Z7O1L+3lCPzLqhiD30k570ufRfGAFiQ/I0bdTli3LgLgtlS8K
+	 KjoM36cvwkBsoCMJJ06AXxyf5+kNlHrATxNDPRwknrzrmwVaS9VDnoCw+l7z62PAJ8
+	 ttBoVziwmiovsOOXX8VVE1cEW46D6pEzvvVKUbqXfAXF5M3mOVm+EdD4xo6faxc0pJ
+	 pG/XZTMfwLsXwLDopkdNO7G0wl0E5mBBSS+8QJ/lc3FkUY7nONIjVL5CESoplGa8nZ
+	 FxZrIoKdfGfxTEN6yAOhfksdYOZH9ll56kk4Cva/7DZ2EaPgWBDi0nO1SrKuIMQ9Lw
+	 zCBL79Ka98jUA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ata: sata_gemini: unwind clocks on IDE pinctrl errors
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Myeonghun Pak" <mhun512@gmail.com>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260626085848.40199-1-mhun512@gmail.com>
+References: <20260626085848.40199-1-mhun512@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 26 Jun 2026 09:10:05 +0000
+Message-Id: <20260626091006.5A2C11F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+
+Pre-existing issues:
+- [High] Probe deferral is permanently masked because devm_clk_get errors a=
+re converted to -ENODEV.
+- [High] The sata_gemini bridge state (sg) can be freed while still in use =
+by consumers like pata_ftide010, leading to a Use-After-Free on driver unbi=
+nd.
+- [High] Unconditional clock disable during port stop can lead to negative =
+enable counts if port start partially fails.
+--
+
+commit 41dfc4226f4d13085ec0bbac5ed9062fd893a436
+Author: Myeonghun Pak <mhun512@gmail.com>
+
+ata: sata_gemini: unwind clocks on IDE pinctrl errors
 
 gemini_sata_bridge_init() prepares and enables both SATA PCLKs, then
 disables them again while keeping the clocks prepared for later bridge
-start and stop operations. If gemini_setup_ide_pins() fails after that,
-gemini_sata_probe() returns directly and skips the existing
-out_unprep_clk unwind path.
+start and stop operations. This patch routes the IDE pinctrl failure
+through out_unprep_clk so the clocks prepared by gemini_sata_bridge_init()
+are correctly unprepared before probe fails.
 
-Route the IDE pinctrl failure through out_unprep_clk so the clocks
-prepared by gemini_sata_bridge_init() are unprepared before probe
-fails.
+> diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+> --- a/drivers/ata/sata_gemini.c
+> +++ b/drivers/ata/sata_gemini.c
+> @@ -353,7 +353,7 @@ static int gemini_sata_probe(struct platform_device *=
+pdev)
+>  	if (sg->ide_pins) {
+>  		ret =3D gemini_setup_ide_pins(dev);
+>  		if (ret)
+> -			return ret;
+> +			goto out_unprep_clk;
 
-Fixes: d872ced29d5f ("ata: sata_gemini: Introduce explicit IDE pin control")
-Co-developed-by: Ijae Kim <ae878000@gmail.com>
-Signed-off-by: Ijae Kim <ae878000@gmail.com>
-Signed-off-by: Myeonghun Pak <mhun512@gmail.com>
----
- drivers/ata/sata_gemini.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[Severity: High]
+This is a pre-existing issue, but I noticed that probe deferral is
+permanently masked when getting the clocks.
 
-diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
-index 582c9708275c..92984b34fd3b 100644
---- a/drivers/ata/sata_gemini.c
-+++ b/drivers/ata/sata_gemini.c
-@@ -355,7 +355,7 @@ static int gemini_sata_probe(struct platform_device *pdev)
- 	if (sg->ide_pins) {
- 		ret = gemini_setup_ide_pins(dev);
- 		if (ret)
--			return ret;
-+			goto out_unprep_clk;
- 	}
- 
- 	dev_info(dev, "set up the Gemini IDE/SATA nexus\n");
--- 
-2.47.1
+In gemini_sata_bridge_init(), which is called earlier in probe, errors
+from devm_clk_get() are overwritten:
 
+drivers/ata/sata_gemini.c:gemini_sata_bridge_init() {
+    sg->sata0_pclk =3D devm_clk_get(dev, "SATA0_PCLK");
+    if (IS_ERR(sg->sata0_pclk)) {
+        dev_err(dev, "no SATA0 PCLK");
+        return -ENODEV;
+    }
+    ...
+}
+
+If devm_clk_get() returns -EPROBE_DEFER because the clock provider isn't
+ready, does returning -ENODEV cause the SATA controller to permanently
+fail to probe?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but there appears to be a
+lifetime issue between sata_gemini and pata_ftide010.
+
+When pata_ftide010 retrieves the bridge state:
+
+drivers/ata/pata_ftide010.c:pata_ftide010_gemini_init() {
+    ...
+    sg =3D gemini_sata_bridge_get();
+    if (IS_ERR(sg))
+        return PTR_ERR(sg);
+    ftide->sg =3D sg;
+    ...
+}
+
+The bridge is returned from a singleton:
+
+drivers/ata/sata_gemini.c:gemini_sata_bridge_get() {
+    if (sg_singleton)
+        return sg_singleton;
+    ...
+}
+
+Since the memory is allocated with devm_kzalloc() in gemini_sata_probe()
+and no device link or reference count is taken, can this lead to a
+use-after-free if sata_gemini is unbound via sysfs while pata_ftide010
+is still active?
+
+[Severity: High]
+This is also a pre-existing issue, but the clock disable logic might become
+unbalanced during port stop.
+
+In pata_ftide010_gemini_port_stop(), the bridge is unconditionally
+stopped:
+
+drivers/ata/pata_ftide010.c:pata_ftide010_gemini_port_stop() {
+    ...
+    if (ftide->master_to_sata1) {
+        dev_info(dev, "SATA1 (master) stop\n");
+        gemini_sata_stop_bridge(sg, 1);
+    }
+    ...
+}
+
+Which disables the clock:
+
+drivers/ata/sata_gemini.c:gemini_sata_stop_bridge() {
+    ...
+    else if (bridge =3D=3D 1)
+        clk_disable(sg->sata1_pclk);
+    ...
+}
+
+If port start partially fails (e.g., due to a PHY timeout in
+gemini_sata_setup_bridge()) and the clock was already disabled in the
+error path of gemini_sata_start_bridge(), does this unconditional stop
+cause a kernel warning or panic due to negative enable counts?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626085848.4019=
+9-1-mhun512@gmail.com?part=3D1
