@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5FE1C84A6;
-	Fri, 26 Jun 2026 11:10:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E386F2EDD6C;
+	Fri, 26 Jun 2026 11:15:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782472230; cv=none; b=ISm73jou+64RxkfUsHOn3tc5Lelrj+aHNnBc1Prq3Y7moZSWZpoBvgngv5v8DM2Y/cCaEMizgB0fea3Q5N0npCIwxNfqmFAtMW9vU/0n4UHFfL+HTYNw/uYaeqGhBFRKxh6BO4LlmjVs6t4Pw8jkCkfMI+vA++9uicmTUtl/LGQ=
+	t=1782472514; cv=none; b=r5zGnqlzYQOfcvKCScgJGf+QB8pIcqzvWjMfGWIxASp27ECMsy74KUaCQtPMAElZ0/uE/oXjf/ahvYZmICoIpZ9gjE55dTP1xA0Jj4E9uJEYljiBhVBH1tgf7qtxwVqyPc+wybQWAe3aGwYvw9YXf6qa5wdPoOnbINFXx9UHLYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782472230; c=relaxed/simple;
-	bh=BcOwHJCBoHCD/nt/jx+PVcrmEB7h8PTVijZIhVv3P34=;
+	s=arc-20240116; t=1782472514; c=relaxed/simple;
+	bh=DN9WLZF6EdexeBBGOTnI1zZeY8bVKw3B/YXKHNO5xKs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DqHbdL1yYq7qAZlsQOjKlWrKlJ6WD1L+Iitjp8KvUvVkKY8sylgQ+VPUrzqE/7JjGJT+LCHGm8Evwn+g29UNfsXrxvWj6Le7uSGxXDDF8CEKZ0ASGMhQw0ITficVvXObL+gFhknRjqeIyZeomIQv8TSCQJLDcTB/z4bcFIJqStw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=orM0BkuR; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=UWUOEjmCjwj32aPlsF+8vKgmoVMXZ91L1pQgjNizFTCfoQdi2vtA1UTG1h69N2zv3sLsHbxwEPTla9AHrw226ZNEB5MLRX+6OYoX/CEBYtccdIPXQb+Ni7s8Hha9vA5qdow3wAcp7SMNVpIljEnfBCh60K/ZdS/o6ClJJb1ysMc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BlB0+t3B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="orM0BkuR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E2B61F000E9;
-	Fri, 26 Jun 2026 11:10:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BlB0+t3B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C0A11F000E9;
+	Fri, 26 Jun 2026 11:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782472229;
-	bh=AUAlvBxMc4bt39AC/sKnSSFnKSzDSItRNQY9EFsMK8s=;
+	s=k20260515; t=1782472513;
+	bh=e0LyXAZoKcaekBF2FmALBSowoBwtUYst4U0N0uB/imU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=orM0BkuRMVNu0xg5QM0Qz3nJn7sG/5q9c8yQHGAYSEMgq2ZwuHw5D3SIT+gh+NhNO
-	 NGIW+AYjUQFDt2KcAGfafHF44nmxOJyvHq73WLrfWTClCjpb/uw0BkwJdLS2S1ujE1
-	 sz3N1ICe7QfgsfEafH5CivH1u6UjxsIJ5py8xTXSen9hES8/o8SwcF4FX8cIiEk/OZ
-	 ss/DTt6OEgDaMfo+Oqg0IZjMVZYtjhUJ3V2AQwod3baRgRAhTs0cXGr2BS/SqlT3vh
-	 p6cKiJIWtup8MdD5ERyKyOmSLgUPMr4eHj0sV/i742eDSOSZk6AjXQBnAETJ2M83NY
-	 GRrTvUVIwaabQ==
-Date: Fri, 26 Jun 2026 13:10:25 +0200
+	b=BlB0+t3BYOOXodGsh9dt401qI2r12enUapO7SZ69CLCtPQWGIiwe2PFznLFYqkt8M
+	 cCOn8tgsS6gMRCwVqs2E6DxdhhA+XVPnJEIM2pgxrwz+ef5yJ1C0LEkjVgMr/2gh/3
+	 ukxkO21nub5Pd4Z4zJIUxG3KPlY7z2TpyNAzFdXBWnssmA5gRkI0aW7RDn5DSHXD0G
+	 sRkJh5WJReV4h4W25oonwU6f3RCZhj6LlvgJb0u857AjH7cDPRltpayjkRYnik93GN
+	 bwUmzduHutX7YB7v64mxTL1GcKqOslNM3XZXVXp+wliUL93CH0RBzixt7imq0DK/wC
+	 Iw0zbMC1zPo4A==
+Date: Fri, 26 Jun 2026 13:15:09 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Wentao Liang <vulab@iscas.ac.cn>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] ata: pata_pxa: Fix DMA channel leak on probe error
-Message-ID: <aj5eIWnpbLDxzK40@ryzen>
-References: <20260625141837.62362-1-vulab@iscas.ac.cn>
+To: Myeonghun Pak <mhun512@gmail.com>
+Cc: Linus Walleij <linusw@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ijae Kim <ae878000@gmail.com>
+Subject: Re: [PATCH] ata: sata_gemini: unwind clocks on IDE pinctrl errors
+Message-ID: <aj5fPZADwPCvDu3d@ryzen>
+References: <20260626085848.40199-1-mhun512@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -42,39 +43,42 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260625141837.62362-1-vulab@iscas.ac.cn>
+In-Reply-To: <20260626085848.40199-1-mhun512@gmail.com>
 
-On Thu, Jun 25, 2026 at 10:18:37PM +0800, Wentao Liang wrote:
-> When dmaengine_slave_config() fails, the DMA channel acquired by
-> dma_request_chan() is not released before returning the error,
-> leaking the channel reference.
+On Fri, Jun 26, 2026 at 05:58:37PM +0900, Myeonghun Pak wrote:
+> gemini_sata_bridge_init() prepares and enables both SATA PCLKs, then
+> disables them again while keeping the clocks prepared for later bridge
+> start and stop operations. If gemini_setup_ide_pins() fails after that,
+> gemini_sata_probe() returns directly and skips the existing
+> out_unprep_clk unwind path.
 > 
-> Fix by adding dma_release_channel() in the error path.
+> Route the IDE pinctrl failure through out_unprep_clk so the clocks
+> prepared by gemini_sata_bridge_init() are unprepared before probe
+> fails.
 > 
-> The ata_host_activate() error path already correctly releases the
-> DMA channel.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 88622d80af82 ("ata: pata_pxa: dmaengine conversion")
-> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+> Fixes: d872ced29d5f ("ata: sata_gemini: Introduce explicit IDE pin control")
+> Co-developed-by: Ijae Kim <ae878000@gmail.com>
+> Signed-off-by: Ijae Kim <ae878000@gmail.com>
+> Signed-off-by: Myeonghun Pak <mhun512@gmail.com>
 > ---
->  drivers/ata/pata_pxa.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/ata/sata_gemini.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
-> index 03dbaf4a13a7..9f63bdfb8576 100644
-> --- a/drivers/ata/pata_pxa.c
-> +++ b/drivers/ata/pata_pxa.c
-> @@ -286,6 +286,7 @@ static int pxa_ata_probe(struct platform_device *pdev)
->  	ret = dmaengine_slave_config(data->dma_chan, &config);
->  	if (ret < 0) {
->  		dev_err(&pdev->dev, "dma configuration failed: %d\n", ret);
-> +		dma_release_channel(data->dma_chan);
->  		return ret;
+> diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+> index 582c9708275c..92984b34fd3b 100644
+> --- a/drivers/ata/sata_gemini.c
+> +++ b/drivers/ata/sata_gemini.c
+> @@ -355,7 +355,7 @@ static int gemini_sata_probe(struct platform_device *pdev)
+>  	if (sg->ide_pins) {
+>  		ret = gemini_setup_ide_pins(dev);
+>  		if (ret)
+> -			return ret;
+> +			goto out_unprep_clk;
 >  	}
 >  
+>  	dev_info(dev, "set up the Gemini IDE/SATA nexus\n");
 > -- 
-> 2.39.5 (Apple Git-154)
+> 2.47.1
 > 
 
 Reviewed-by: Niklas Cassel <cassel@kernel.org>
