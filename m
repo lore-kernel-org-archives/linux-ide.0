@@ -1,48 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E477D3CB8FB;
-	Tue, 30 Jun 2026 11:16:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3883D3EFFDB;
+	Tue, 30 Jun 2026 11:59:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782818190; cv=none; b=Ru4N18F8wUmdmO4nW+yrXWH3cNcJqeHd/IXpyEtHvfWYRLihGf2ty6B3eJ623jQZxd2E89yhYDP1r0nh8e29WWElqFmrfGtYx5KEeh2xa4Gq6zWRh1jWjj4Z0Y6uOfeLma8m7oA3adK8X3ESkHnxTRyNIHI2mQM99wlQyHUNNQI=
+	t=1782820752; cv=none; b=rXRhF/JcoLEWB9qj8IdQ+KnC3kDnh/fA2HcRZLp5IFfjWM88XTkaQtaAeS0uLUlcmbZuAe90SywX6mmVF59xLvB0+nwuSEQ8r79wF1etnZwL+gkuHxzCNhRp9+mcPNcKqek9JVa9Cm1VdG6r7Ec7WrTgUwHzrcQZN9+/wbDtGms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782818190; c=relaxed/simple;
-	bh=pdoMaeV9JXf0yIggbKyt+j8Fr3sd4SZK4CFbRTGUPZ8=;
+	s=arc-20240116; t=1782820752; c=relaxed/simple;
+	bh=15MeBpiR9COtkfQMfxHQfAshQ1Ip+uCvSynuoQEKCuo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S5kUOZ6UhjmAKXTHltWNdqUC0mVksnYFzgOoqN0k+AhBS82rLL4MNqvzjw2cyOAHTaBe5XmLgBI37NCL4tAtKGFEtbHgzD4Cc8lLfOnbCKk+bfJ9Z0bnLcEvaj06Onq2L6GIt78Ox+ZIQbcrIuzCD4i3J9ZU4V7CO/ZYAlxmrJE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OLzx5/Kd; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=nHvKJVxuRNTe5Rs/yXagsncWe5u4vRLjf646zrhkxq34fNQwiiF/ClqK1gPu2C6y6GQRchxhTFcWV/5yPWrrua16gueRiXmkPKRTevHYhG0w/P1Dj7dFPuOmIl114AtiOLDXa/34g2geAN+ARu3LrE7XODaLLhjAL/TA4Ks8xPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MP8grQaY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OLzx5/Kd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2DBB1F00A3D;
-	Tue, 30 Jun 2026 11:16:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MP8grQaY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34E0C1F000E9;
+	Tue, 30 Jun 2026 11:59:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782818189;
-	bh=OTPDtyFyxvlvcrv0KSLHZYeZFeNEnS0M8VoXDwD3ZB0=;
+	s=k20260515; t=1782820750;
+	bh=3uyRIdTmaGFcp2SYXLoMhSySxZ7Y9nec4cbKx7L5lv4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=OLzx5/Kd7HLop/R6N1oLBUN2mlpBZDXzkJZq41o/fMSVV9WCtEfir7/sczPcjjRT8
-	 44ethiD+mJfCoYrDNF3+RlpFHVvzSc/D4ySZrXRtAVtxpKM+3W78jGRN7/ao32YmSj
-	 wfiuP+9QMTki41Ng+MosgVnz3jM9FDKW9Mw5yFaAjZVcFOCpZLS/cpybSuRpwZLcyL
-	 KSKIxSvvU7Qoc7wDeyfJ1+J02jVtE8K1p7uDdeC+eTaiep/VPRFkN6mSJ/7TYErytJ
-	 ZzyuC69MxDY6qE+tAKIpKyBUuu3Ygx6STP1O6FlPb/IRSOVD5LlTQNWW2J88z9KMbo
-	 2qB2rNdOw8R3w==
-Date: Tue, 30 Jun 2026 13:16:26 +0200
+	b=MP8grQaYRynuELr3FfvFLwc8BtxWzDOL64Zo43/DGHHstDZBFORFfm7l07qAXss3O
+	 l0M4XqvVst1IQGjJy2sARExBd1mQNWfest91vqJY0MEprsSU8mEgE+e3UohN7ygDuX
+	 vRG4Y0Tb1kxk4ec3lE0NCtYXDQbbzRKk1TpW45ZjdVfS3v2Sgk9o547XhKD6ZPwGV6
+	 vAEXBFp0x3uDENjRGeNryUG76aSFeGJoOeLoDhu/RJbsYnGXYAWyv/gEjbExeBTAvB
+	 4mLVURNiGinPbNHHEjD/awFLwehlaYz6oqfsHXnAmj1rYnc6XfEzJjsHwliMWkTvYz
+	 u4ZEnwoviV2VA==
+Date: Tue, 30 Jun 2026 13:59:02 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Rosen Penev <rosenp@gmail.com>, linux-ide@vger.kernel.org,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ata: sata_dwc_460ex: use platform_get_irq()
-Message-ID: <akOlisttYmSoyRsl@ryzen>
-References: <akNzEGgiYC5V3rtc@ryzen>
- <9327f32a-5037-477c-80dc-f99b97ed9740@kernel.org>
- <DF85BCA7-B344-4AD6-8F6B-22CB3A3DF823@kernel.org>
- <CAKxU2N8uWY3k3nHTmdxEn86zEZ_hGJgyPvHWuHt=zRaPk-29kg@mail.gmail.com>
- <CAKxU2N_2N0YWBrF1k82qXCYYyvZxa26GYi09xiyKbBAtUoC_mA@mail.gmail.com>
- <743a2748-a458-4e65-a1d2-f54a6657e7a6@kernel.org>
- <akOHEDdu3zw9Uhph@ryzen>
- <2865750f-9bab-47d8-b4c9-9cf1cbef7834@kernel.org>
- <akOSrMbpFIO_VLul@ryzen>
- <d691ff29-6712-478f-90f0-467394d6e84e@kernel.org>
+To: Gary Guo <gary@garyguo.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	GOTO Masanori <gotom@debian.or.jp>,
+	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+	Jens Taprogge <jens.taprogge@taprogge.org>,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 1/7] ata: don't keep pci_device_id
+Message-ID: <akOvhr-X1Wp9iNd8@ryzen>
+References: <20260630-pci_id_fix-v2-0-b834a98c0af2@garyguo.net>
+ <20260630-pci_id_fix-v2-1-b834a98c0af2@garyguo.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -51,19 +62,36 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d691ff29-6712-478f-90f0-467394d6e84e@kernel.org>
+In-Reply-To: <20260630-pci_id_fix-v2-1-b834a98c0af2@garyguo.net>
 
-On Tue, Jun 30, 2026 at 07:06:55PM +0900, Damien Le Moal wrote:
-> On 6/30/26 18:55, Niklas Cassel wrote:
-> > Sure, we could create a dummy / stub for that function, but to be honest,
-> > I think my earlier suggestion of just using dev->of_node directly within
-> > the ifdef, and drop the local np variable would be the smallest change.
+Hello Gary,
+
+On Tue, Jun 30, 2026 at 12:09:01PM +0100, Gary Guo wrote:
+> pci_device_id is not guaranteed to live longer than probe due to presence
+> of dynamic ID. All information apart from driver_data can be easily
+> retrieved from pci_dev, so just store driver_data.
 > 
-> Yes. But I am not against replacing that ifdef with IS_ENABLED().
-> That's prettier :)
+> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-That is possible if we create a dummy / stub for sata_dwc_dma_init_old()
-(since that function is currently defined within #ifdef).
+Please write a proper commit message.
+
+The commit message should be detailed enough for someone to realize what
+is going on without reading your cover-letter (as information in the cover
+letter in not part of the accepted commit).
+
+1) Explain how to reproduce.
+
+2) Explain the problem.
+
+3) Explain the consequences of the problem. UAF? Crash?
+
+4) Explain how you fix it.
+
+
+AFAICT, this is somehow related to pci_add_dynid(), which is called when
+user-space is doing something like:
+
+$ echo "vendor device" > /sys/bus/pci/drivers/your_driver/new_id
 
 
 Kind regards,
