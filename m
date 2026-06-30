@@ -1,225 +1,148 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020131.outbound.protection.outlook.com [52.101.196.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79B3340E8FC;
-	Tue, 30 Jun 2026 12:41:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.131
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782823313; cv=fail; b=K/log4SJWMjIlogeo+IVlhUp2Uzx1RB4bGaYbXHYmrQ/HcgYXrpcAox/vGtG2qxap6dbducKRQXuY3fkS2/SWlxZf3CodnKRAiCaswjZfLw5yzVoZrW8dEbj8aNHJZBziPm1/uqCRHiWTijjMo0m7SaPZgI1tC5ne3kK64ptpXw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782823313; c=relaxed/simple;
-	bh=HQ5oRlnokZ93NXq53btkQvwDykQ5Q/V8j2dRTwEdAyw=;
-	h=Content-Type:Date:Message-Id:To:Cc:Subject:From:References:
-	 In-Reply-To:MIME-Version; b=D/Ugk7bbpYBY0azKffjWmvl9CwT3aTbNRZCKMdwNVaivRzBEa8syzjpBG8oMNRf+5Vb1Z9jvcjEbyFvEeIa6WDOfU46qsxvAMhEQ1JZ0pb8lo366aoT1y83pcJH8WhhqWtHoXYc41iSUD98YheIGPLr78v0NQyyNm1J766uDLeU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=ZAnko1jy; arc=fail smtp.client-ip=52.101.196.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44AB13E0223
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jun 2026 18:59:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782845945; cv=none; b=ePehZ4fgJcZt0odvgYxY8jYXPB/7iZs/kYv+gO+GZ5pTmW3g13F/SRlPz3HVjcC0e6hwo5xOzxBpDIQbpfR50MoHys6Sv5IRjuJLPUrR0vh00c1pjNawu9RPaqoQtaPIpAAzvfdu7VtcQ+G0RssusM71EAeCREnHXNyVkqh4z1o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782845945; c=relaxed/simple;
+	bh=XGgg+xXUmnlRvAbgTK542VK34Jp1hfwPb9Na535wrug=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=BMgWJglRA2H8XklqDXZCgzUUOV5xVUKDCI5E6GVnaQD2VTNJ3baj3+QZZn9LWxXAJMNt49e4GOWvaSqiBvUJfkP5/BbwHOtFw06KidyUHcN78ikvxMdvihQH+vVma72ZADIEluClco1ocakZF2tvQoXqJYBouVscdQqiLMs4f+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=I/3WEowT; arc=none smtp.client-ip=209.85.214.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="ZAnko1jy"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yO5LQOeF2ffGErUntv4O5VvwpCBj6LZbCzvYmCjuZUjAXh92S/2xLGY/rI9sPYz0IhbWrrkiBn9TjEYAvoJUoT8N47K83dvjT1KVdaEZAtPxEwsBOs5kPk04uIOXidSDE9X3JqRCVBWvCMa8ZRcEjEFwDbaUms0PHbYaKHSKXs2pOffOMB0031gb+g0OD+Nvvr+eZA6QWjMVkB+OySyoNP7j77bJ7X1Y+kuaJObgx8wru1m3ziy57Qyjr4r6NwYuBcYLk3J0nGMuW5vyVMslT33m57BFYsO6Ig/ZX0DPD4qFncBOi0+ZwM7kCOdTWIEB0p2XTYrqhvLWLDOGBhlAFQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=U7C+ij/IBqb9IZNxaIQnRIecNlJiRn+rTnBLg8PMsxc=;
- b=kRT7v9I8HkuKLZdmbb3PFa7YUkXvnwZjCsOu4YtlQOoSI4I1xGYZqrJ/UGFeAWiY+CWUoX6C5LWNCIVhNlw1tJu+n7e9ngeCPuMT36Zq/R+MMT36yS0Fz1ooTF/vsquOCZvjQA07fbb1BPTHKw2g3fRGhlIU/RgQDHyYNl7akuYLBfXjphI+jpkiXUXo3DPNNv967qMPG3xq5a6uMW9DCvEmpsv3pU7J6UVyF04po8MXG6HTDwVWatIXudFZcKfoXaBEVzJuy8fwqFrZyVw5hYTEYJ5oifyRzrQRbSefFWrbVrzKQKVEiFQty3QAgGjHPTidyhaUg2j+Q8JVz8LKqg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=U7C+ij/IBqb9IZNxaIQnRIecNlJiRn+rTnBLg8PMsxc=;
- b=ZAnko1jy+jox8I1RSrafadGnYwseMZiTg3V2deRttUe4wwhgd6OqKpWFprdMY1xJNC+mZzg16V4auAIWq1E0eSYvv6G2NX8NmeQ2dNYHRKCBbTLIpE89U2NlLE1PVdJTCnvhSs+3t24s8kD7Vk0FfdJ/PF5aX/ChW0dcFMw7nF4=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by CWLP265MB3588.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:f6::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.8; Tue, 30 Jun
- 2026 12:41:45 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0159.018; Tue, 30 Jun 2026
- 12:41:45 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 30 Jun 2026 13:41:44 +0100
-Message-Id: <DJME47JZ4KWH.2S9HL3IL5FBK2@garyguo.net>
-To: "Niklas Cassel" <cassel@kernel.org>, "Gary Guo" <gary@garyguo.net>
-Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Zhenzhong Duan"
- <zhenzhong.duan@gmail.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Danilo Krummrich" <dakr@kernel.org>, "Damien Le Moal"
- <dlemoal@kernel.org>, "GOTO Masanori" <gotom@debian.or.jp>, "YOKOTA
- Hiroshi" <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley"
- <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, "Vaibhav Gupta" <vaibhavgupta40@gmail.com>,
- "Jens Taprogge" <jens.taprogge@taprogge.org>, "Ido Schimmel"
- <idosch@nvidia.com>, "Petr Machata" <petrm@nvidia.com>, "Andrew Lunn"
- <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, "Eric
- Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>, "Paolo
- Abeni" <pabeni@redhat.com>, <linux-pci@vger.kernel.org>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
- <industrypack-devel@lists.sourceforge.net>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH v2 1/7] ata: don't keep pci_device_id
-From: "Gary Guo" <gary@garyguo.net>
-X-Mailer: aerc 0.21.0
-References: <20260630-pci_id_fix-v2-0-b834a98c0af2@garyguo.net>
- <20260630-pci_id_fix-v2-1-b834a98c0af2@garyguo.net>
- <akOvhr-X1Wp9iNd8@ryzen>
-In-Reply-To: <akOvhr-X1Wp9iNd8@ryzen>
-X-ClientProxiedBy: LO4P265CA0042.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:2ac::7) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="I/3WEowT"
+Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-2c804e38c65so52499515ad.2
+        for <linux-ide@vger.kernel.org>; Tue, 30 Jun 2026 11:59:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1782845943; x=1783450743; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=e+HRXjFGgcPzOleYtd12nce6K890KkClpjKYcrzynFs=;
+        b=I/3WEowTJRiihaVlRhDqzwj+YFRhy3c6bZt1KMXwh9x+om89q3OC+JV0rMtABHuHPF
+         qKTGPEF+LctDdirA+uM3nYkHMtqx7fzxbKIo7F/ANMmPr47Kwsrrnm8E9Yb1Y2eCZ8WT
+         pb40zvGu2vMFonNzF5uChbhNUm+4Abp0wLfh+8tBFirSreUkERpYPrulspJkbT2ABs3t
+         54e3TQ4JLV7EMB4ti1zVIN8Zf+GguCJY/CTwPz2Vs6GJbsvvrBWQB+i8mbiTIY3WqJ2b
+         z/S25V9ZGlAtRn3L2wb//Dbu0OlwWKm5mOpsVZXv+wJ2t9RD6W6vx1WOb8AUFiiio86v
+         g6uQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782845943; x=1783450743;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=e+HRXjFGgcPzOleYtd12nce6K890KkClpjKYcrzynFs=;
+        b=EDnDLblgBFdMYDr8u0X7O21rFQkqdecyctnJnlrFibsNecaSH6B/OkD43/s5kqzMbJ
+         2pWl4uvM+OWzUtWJhoOZ/tFfjhXZ8lxhzZ9h7Q7F0M7KEhtOsdjKmvGa/fIDMgjZ73Pr
+         uI/oUICxZbYHMdGgK74x/oAV7kddBaPdJbHz+eG20vYFOMYyd4nDt/l663MBig3pLJfM
+         3ePLi4vL7v8pBTrLH3uHADdwjx8TEhubiasfh22gPRFjxgdwurNea5wwACjwYVlNOQir
+         /B64OGz1VCUzygtqf5Ai/+d8pTSBwMqBZ2kHit2xeIQmmeU/JU803VSCXsYGW2IYsCvZ
+         M4Yg==
+X-Forwarded-Encrypted: i=1; AHgh+RpyTenMhqBc2BmzBKiXJerwMnad+94KjmZYXfu41iQ8YuxyjT9aVa80jJxT+OwTEf3ZegQ+QLHPzPE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6a01QpT/eAD8+1IUGza007sAADAttVpk0CIqNrIYcWuC8u/8x
+	63EIDnE8QTIse4UVoL3KFQcDdiXwO2tz/ZR/I56lT2DZJndYL29JlTpouMvJj5qZI0M3/J8+JFg
+	KQ7FAYw==
+X-Received: from plbko12.prod.google.com ([2002:a17:903:7cc:b0:2c6:9f66:d581])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:acd:b0:2c9:c517:d075
+ with SMTP id d9443c01a7336-2ca5a581ab5mr15124165ad.15.1782845942348; Tue, 30
+ Jun 2026 11:59:02 -0700 (PDT)
+Date: Tue, 30 Jun 2026 11:59:01 -0700
+In-Reply-To: <akJUz0kYkEBdLSZ3@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWLP265MB3588:EE_
-X-MS-Office365-Filtering-Correlation-Id: 817cd1f6-5a30-49b3-8874-08ded6a4f1e1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|10070799003|23010399003|7416014|376014|18002099003|22082099003|4143699003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	8r4Om6DjTyyFamzwaUIDNRUMn+7ZtiSS59PXScodezdPog0ImzQwk/wTH2yC+zFD47JN1hjFfRQM7TMSuoKwF7+mGG1hgIHq7wLXVlzADieQiZQfKCQPHPMxQo90AfRVWKa52lsTtGoJ+jX5SgC0f11pSOOAcQAmvpCcHWH1qU7efXAXkzPaJpAt7M8OdJuA8Oje+86o5pRXzkO+UKikG1CevuCCqONZUZsPhI3el5Msd0p5Svk/PkxdyrmcebA1EPyKEwOlp+v8feyQPIIjB5CLl+xcFzXT6Xe2PcCf5oxShquOOZDaTxMAcgfrkn01iN9uCbM1ywnSAU91aySR1VRenexOab0DMvnsKmkMNVwh15xYyV9XoH0wwV1d+vIj2Hx4p0RRGoKY/Ixw5Mrha3odfHmtDpCSrF7FVKYHYksjmDDyVFaoUSu1se4p3mWzO2/9CnI8H84avbzbDorMRNfIbojeIW3Ne+pHzpIB+7NAvM8unC9KHGrPWqdMkFxaX1WI4kpeLWIk8CrzGI2cPpT54HlnLHofPqxa50yzD4hWqw49w4RkKra/OLps/hX/toyT1W5CawpWnR3z5JLVwd8UHZiLk2rA42+4GtX/J3HRGT+ilyK8HMomye3YyMhOvWskhcy3+M3uzXiSKAUr+5R1ORvsTgmRwd5Lon2E2Sg=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(10070799003)(23010399003)(7416014)(376014)(18002099003)(22082099003)(4143699003)(56012099006);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?NkQrQVp6Rnl0ZlZJOHhzUE80d1d5VWl0YVl1T0UzakkyYjEwbFFKQkdPdkRF?=
- =?utf-8?B?SXVxUURnVWR3bVF5Tlpyb0FvQS83TWEycFAvRGhDZXhxcE1BQTd1MVNRbE1C?=
- =?utf-8?B?SW5JV1RpWDNUWnFHdHJBeXIra0RGQkNSUHRVNDFBMVFzc3VlMlpOdUZCcGNs?=
- =?utf-8?B?cW5TZFJKQXJ1Y0tWUnVuZU1qdU5kVlZDVlQrY3lTNTd6WEZiaTlZb1cyd05E?=
- =?utf-8?B?T1RYem0wamhxbnk2ZzVJdUlEaG4rQ0ZHZGxPZzZwWjJmcGZiY1pTTWtKY1Fo?=
- =?utf-8?B?WHUrdjBPekk3YWMva0doS09Dc3Ixa1JGUjl3aGhBRlZHcXpRb2Z6ZmU0VWRD?=
- =?utf-8?B?TjV4dm04WjROdkQ3QUJWc3QyR1JHU0lmQVU4cmI2QWd1OUhlTXJDeE5IK0ZG?=
- =?utf-8?B?VEw5a2s3RTE4dmx5dlZXRTVLcU1Wa2p2OURPaVh6Y0lWWFdaZEo3TVJUeU9p?=
- =?utf-8?B?SFlMbWVhRUFpdzFoVTZwUG9SMmNRRVBwNnV4TXg4YkJocXhLNDFwb1BhVy8x?=
- =?utf-8?B?WWluZ1JUejZsV0g1V3FOQjVDTzFCOEVEbEljWmZaTDVjOTNFTnJnbS84bndE?=
- =?utf-8?B?TTZkYnRTb3Q0Q1EyK0lPSFRpaCtHSzBOekZjWVRpWi9lUmhSU0lNS1piNUxJ?=
- =?utf-8?B?dmpXY3BDeTZLRjR4VnVCcVJUNkViVHc2OWRnSTFYdFFnNGI5RWtvNEo3blk4?=
- =?utf-8?B?M2xkY2w3bVlHS0ZjR3A1dlBIRHYyNitDRDd5emNhK1JhREYyZEZkL3ppSTg5?=
- =?utf-8?B?QUtTcS9YQldxaDQ4SzdYaTFCZkJjTDZWempQK284dFRMMGlRSGxWL1VOSDdo?=
- =?utf-8?B?cVRPZkFzcjFUbzFDZzdUTDR2bG1iNWdOQ0xjaWJHY0hjK1g5NnNoeTZOeGV0?=
- =?utf-8?B?d2twbzk3MUNtZDBpUXpobUY5YmZFNndrVllhY0RoNGhhVHExZ1l1Q3N4Y2JB?=
- =?utf-8?B?ZDNXRm9pRDNPZmE3QnlVekJ2dnRMdEcwbzJzcGRoRlJza2Z0SjgvYlJFMStQ?=
- =?utf-8?B?eDV1eTBocEcyTlRBR1FLajBuRCtGR2ZuQk1tSmFQS1FLeFZnTy9PUjJQWVZt?=
- =?utf-8?B?ODFYakRYbzd2c2VGaEhVU01uTTFBbEt2eEt3RzZhc09kRGpHcmNRcDFmeHNt?=
- =?utf-8?B?ZWo1aWg3eGs3Y1c3Y3dvd2tlQ1oyblNzaHhMdmVMRDdUU25jbEs1bDNOcENU?=
- =?utf-8?B?UC83YXpERkdwWTB1Z2hEcFhvNjdMWFFldGJaa256b2RpNGdBRnIxYXh0Sldk?=
- =?utf-8?B?b1dMV3NmYm1nUmFnZEo3RkQ0SFNnUzc2a0gzdWY1b1p4dHpTRW9SR0h2amtw?=
- =?utf-8?B?NUt5bDFXK2lPcGdVTitxNVV4TUNodG94R1JDQkh4aUs1K0hoenNINk1Gb3g0?=
- =?utf-8?B?UG5IMWhTYWJxMmpucm9UOGlidnBTQjM3MGsyS0VZQmJIR3p5eUlVa3c3L0pn?=
- =?utf-8?B?S2xWMHdpMmdmbzhyQmI3THJkSzFnYXI4M2FrQmppc2NWb0dOcDE0aDBhNDM1?=
- =?utf-8?B?SVNzK2JLL3BsZERBUHFQY3R5eGE0NHU2bS9Ra0JRTzgzaWNQTFplc3ZuMHZJ?=
- =?utf-8?B?VnFYUkNIdm14UEdYblFjYkhkdTYzenU0QUhwUVhscDdjRTU2Zktjb29LczVh?=
- =?utf-8?B?b1Q5WmVaSU5kWEVtc3ZkQlFucU8yWGI0Wk9PTmdCUjh6a255WHdEU1dDZTBI?=
- =?utf-8?B?NER1aUZFMmZXMmJiR25JOFFoU25saDRwMFBNV1JEUlIxdXAyK0VocG9WaGlT?=
- =?utf-8?B?U25vNzYxUTVHb2xTd3BxQ2NGYkFrUVByaDVNUE1BcXBtVDRpY01TOXFJMjRv?=
- =?utf-8?B?cGxWTENpd1ZlczNzQ2JVWnFKODZlY0krV0NpNGt6WmluNU81R3oxTkJXVkFp?=
- =?utf-8?B?VG40eHRobHVwNnRTZDNmbzBHS0FTdHVXa2NRUXMzbXZOTE9oemhLMUhVSlYv?=
- =?utf-8?B?clMyWWNOZ251YmRvR0k3N2s0L2t3N1FPaHBodTJtTENaVzN1Y3cweVZaMnNT?=
- =?utf-8?B?YzFLVFhUSzlLTk5jOFM3MVFjWnRlRzJIZnNndkJlUzNYZnBwVHhrb2VpYlV6?=
- =?utf-8?B?Q2EzQnJsb1lmd1dJWVMyb3plbFJBbnZKdmJ1VmlHM2liUGFWWjJPb3FRM05U?=
- =?utf-8?B?NkZUaFNzN3h6bTJ5VWhJYXRpMXFXRm40QjR1SzFOV05HOE1BVm1ISjdEaDNz?=
- =?utf-8?B?bTlLL01LK2FjSFhPVU54V0Q1L1FBOWt5VFMvOVVSRjRacDZUT1pHYWlhWGpu?=
- =?utf-8?B?Unkwc2p5c1ZNRWxIQWRHTHh2VmM4TEVoWUhhaDRBUWlvRStJcUxJTVZTYnNP?=
- =?utf-8?B?VXRVQlQzUzNxQjJHQ1N6WDlKUHB4S1FBajI0M3hKb0lvczB3MS96dz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 817cd1f6-5a30-49b3-8874-08ded6a4f1e1
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2026 12:41:45.5372
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0Rn7PqwIAojPxy9sGOOASpGL858uEzzzfzdt3AkmFDhCVYnKR+WfeazsYPmPJKo+faQuF2IV9INYBw9ErlRQjw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB3588
+Mime-Version: 1.0
+References: <20260629060526.3638272-1-jgross@suse.com> <d7c1db52-529a-43cc-ac7d-38b52627e8bc@app.fastmail.com>
+ <c1608c48-13c2-4290-826b-28b5ca51eaf7@suse.com> <7332feff-2649-496c-8e49-b0a19eb54a32@app.fastmail.com>
+ <akJUz0kYkEBdLSZ3@gmail.com>
+Message-ID: <akQR9YMtMHReJTfB@google.com>
+Subject: Re: [PATCH 00/32] x86/msr: Drop 32-bit MSR interfaces
+From: Sean Christopherson <seanjc@google.com>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org, 
+	linux-pm@vger.kernel.org, 
+	"linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>, x86@kernel.org, linux-acpi@vger.kernel.org, 
+	kvm@vger.kernel.org, linux-coco@lists.linux.dev, linux-pci@vger.kernel.org, 
+	virtualization@lists.linux.dev, linux-ide@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org, 
+	linux-crypto@vger.kernel.org, 
+	"open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>, linux-hyperv@vger.kernel.org, 
+	linux-hwmon@vger.kernel.org, linux-perf-users@vger.kernel.org, 
+	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+	"Rafael J . Wysocki" <rafael@kernel.org>, Daniel Lezcano <daniel.lezcano@kernel.org>, 
+	Zhang Rui <rui.zhang@intel.com>, "lukasz.luba@arm.com" <lukasz.luba@arm.com>, 
+	Jason Baron <jbaron@akamai.com>, Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>, 
+	Yazen Ghannam <yazen.ghannam@amd.com>, Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, 
+	Paolo Bonzini <pbonzini@redhat.com>, "Kirill A. Shutemov" <kas@kernel.org>, 
+	Rick Edgecombe <rick.p.edgecombe@intel.com>, Pu Wen <puwen@hygon.cn>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Ajay Kaher <ajay.kaher@broadcom.com>, 
+	Alexey Makhalov <alexey.makhalov@broadcom.com>, 
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+	Viresh Kumar <viresh.kumar@linaro.org>, Reinette Chatre <reinette.chatre@intel.com>, 
+	Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>, 
+	Babu Moger <babu.moger@amd.com>, Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Dave Airlie <airlied@redhat.com>, 
+	Helge Deller <deller@gmx.de>, linux-geode@lists.infradead.org, 
+	Olivia Mackall <olivia@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
+	Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "K. Y. Srinivasan" <kys@microsoft.com>, 
+	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
+	Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
+	Guenter Roeck <linux@roeck-us.net>, Peter Zijlstra <peterz@infradead.org>, 
+	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, 
+	Mark Rutland <mark.rutland@arm.com>, 
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>, Jiri Olsa <jolsa@kernel.org>, 
+	Ian Rogers <irogers@google.com>, Adrian Hunter <adrian.hunter@intel.com>, 
+	James Clark <james.clark@linaro.org>, Josh Poimboeuf <jpoimboe@kernel.org>, 
+	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, 
+	Andy Lutomirski <luto@kernel.org>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, 
+	Huang Rui <ray.huang@amd.com>, Mario Limonciello <mario.limonciello@amd.com>, 
+	Perry Yuan <perry.yuan@amd.com>, K Prateek Nayak <kprateek.nayak@amd.com>, 
+	"srinivas.pandruvada@linux.intel.com" <srinivas.pandruvada@linux.intel.com>, 
+	Artem Bityutskiy <artem.bityutskiy@linux.intel.com>, Artem Bityutskiy <dedekind1@gmail.com>, 
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
+	Vignesh Raghavendra <vigneshr@ti.com>, Ashok Raj <ashok.raj.linux@gmail.com>, 
+	Hans de Goede <hansg@kernel.org>, 
+	"Ilpo =?utf-8?B?SsOkcnZpbmVu?=" <ilpo.jarvinen@linux.intel.com>, 
+	Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>, David E Box <david.e.box@intel.com>, 
+	xen-devel@lists.xenproject.org
+Content-Type: text/plain; charset="us-ascii"
 
-On Tue Jun 30, 2026 at 12:59 PM BST, Niklas Cassel wrote:
-> Hello Gary,
->
-> On Tue, Jun 30, 2026 at 12:09:01PM +0100, Gary Guo wrote:
->> pci_device_id is not guaranteed to live longer than probe due to presenc=
-e
->> of dynamic ID. All information apart from driver_data can be easily
->> retrieved from pci_dev, so just store driver_data.
->>=20
->> Signed-off-by: Gary Guo <gary@garyguo.net>
->
-> Please write a proper commit message.
->
-> The commit message should be detailed enough for someone to realize what
-> is going on without reading your cover-letter (as information in the cove=
-r
-> letter in not part of the accepted commit).
->
-> 1) Explain how to reproduce.
->
-> 2) Explain the problem.
->
-> 3) Explain the consequences of the problem. UAF? Crash?
->
-> 4) Explain how you fix it.
+On Mon, Jun 29, 2026, Ingo Molnar wrote:
+> * Arnd Bergmann <arnd@arndb.de> wrote:
+> 
+> > >>> Note that most patches of this series are independent from each other.
+> > >>> Only the patches removing a specific interface (patches 7, 15, 26 and
+> > >>> 30) and the last two patches of the series depend on all previous
+> > >>> patches.
+> > >> 
+> > >> It looks like you are touching most files twice or more here, to
+> > >> first convert from rdmsr to rdmsrq and then to change the
+> > >> two-argument rdmsrq() macro to a single-argument inline. If you
+> > >> introduce the inline version of rdmsrq() first, you should be
+> > >> able to skip the second step (patch 31) as they could be able
+> > >> to coexist.
+> > >
+> > > I've discussed how to structure the series with Ingo Molnar before [1]. The
+> > > current approach was his preference.
+> > 
+> > Ok.
+> 
+> Note that the individual patches are IMO significantly easier to review
+> through the actual 32-bit => 64-bit variable assignment changes done
+> in isolation (which sometimes include minor cleanups), while
+> the Coccinelle semantic patch:
+> 
+>    { a(b,c) => c = a(b) }
+> 
+> which changes both the function signature and the order of terms as
+> well, is just a single add-on treewide patch.
 
-Hi Niklas,
-
-I see this as a contract mismatch between pci core and drivers, hence the c=
-ommit
-message just mentions the problem (lifetime of pci_device_id pointer is
-restricted to probe only) and the fix (don't store it).
-
-Currently as you said, the way that this becomes a problem is when dynamic =
-ID is
-involved. So the following sequence will cause issue:
-
-    echo "vendor device" > /sys/bus/pci/drivers/your_driver/new_id
-    # PCI core calls probe which stores the ID (e.g. ata)
-    echo "vendor device" > /sys/bus/pci/drivers/your_driver/remove_id
-    # Driver uses the stored ID (UAF)
-
-However, the gist here is that due to the presence of dynamic ID, pci_devic=
-e_id
-in probe is not guaranteed to live longer than the probe function (in fact,=
- it
-currently is not guaranteed to be alive at all, which is what this series i=
-s
-trying to address).
-
-Exactly how long the ID is going to live should be up to the PCI core and b=
-e
-transparent to drivers, so I intentionally left this out from driver fix
-patches, this should be implementation detail of PCI core. In fact, in patc=
-h 7
-I changed to be unconditionally invalid upon return regardless if it is dyn=
-amic
-ID or not.
-
-At the end of this series I changed the documentation to explicitly state t=
-his
-contract. So even without having the reproducer, the commit message still m=
-akes
-sense because it fixes a contract violation and reader can connect it with =
-the
-documentation.
-
-Best,
-Gary
-
->
->
-> AFAICT, this is somehow related to pci_add_dynid(), which is called when
-> user-space is doing something like:
->
-> $ echo "vendor device" > /sys/bus/pci/drivers/your_driver/new_id
->
->
-> Kind regards,
-> Niklas
+Is the plan for subsystem maintainers to pick up the relevant patches, and then
+do the treewide change one release cycle later?
