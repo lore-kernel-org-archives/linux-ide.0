@@ -1,217 +1,155 @@
-Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022084.outbound.protection.outlook.com [52.101.101.84])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012002.outbound.protection.outlook.com [52.101.43.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDE70425CEF;
-	Wed,  1 Jul 2026 11:44:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0CA5258CE5;
+	Wed,  1 Jul 2026 14:01:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.2
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782906259; cv=fail; b=KwwYtkPL60tW1Cye8zifRc/9B6SCHQnh+CysOXnuVA/0VdhaMbW3PjAYngnESsrrSM4/6iQE83omojgFF2TnDd6mAh5/imUVt19SC+ErtO0E7CjXnnD/qPSC8z17L5NLqDRU42uva/ZLLqEk4EwT+H+phG5aInyW9o/GtOPe7mc=
+	t=1782914504; cv=fail; b=eLZ6BrKwIBh6z761GhgILET2vOx+1GJODYE58XgdZ80EY6mAl2iZCgQqZ6SR7CrPSm2mIBxe85iTMgl5kGj2sxziI5OiMZhyYbrDZubJmbvo3Ozxtg2JXITx1IT2gjo/9OiszI+OG9MtOExygiQp5U3T+DJpI8ADbGvBk2bAZig=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782906259; c=relaxed/simple;
-	bh=4hOZm21bDZVv7F+8We9ZKyzHUMtSorrCsWQyrAK4EJE=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=RjlX9twP2rNGSNkK4O3qUZbFE2rafpJYQ4tqZ9edMdgrw6CiBcKCu7BX5GJitAj6gDon8SwUyXetXn1oVfA8bApFSb4/jeNhYh7bELBSX6cYH/oeRg9q+kUBwq/6eCT7AVR3YOHtFsYo4WmLrFgK7C13Hqnjg96Uplh8CJrG+4w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=wq6knVO0; arc=fail smtp.client-ip=52.101.101.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1782914504; c=relaxed/simple;
+	bh=1DxNEGj9NUoo3hE0EA8jtYIOtzn1a+/OWDfMESh944o=;
+	h=References:From:To:CC:Subject:Date:In-Reply-To:Message-ID:
+	 MIME-Version:Content-Type; b=KvK9pcNvuVQiKSDtUOuyKxUNKCGh6PfKZNn0Xuia7AH6IUS04kW+Jf+uY+JO0S2LB+yC3DwgUdUjPsj4I1rdX0/VNJAtzk6a+Yt/Fu3orYCo+TAOfSg3PZtH7ULYxh5uHSdFVHWT8DYnwkrHiEMt8RqfbeQT+Imu+RqgruECWeg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=PT/vRVul; arc=fail smtp.client-ip=52.101.43.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="wq6knVO0"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="PT/vRVul"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RS+zU6vnSOsA4EDFD9tl9aB5/gPV4QqfdxSL8BygH6l2Hm8oXSZuISdcduWywX8m2NeULmJU8UWTFrGMmokMQFXG5ftAosol/jMivRkvpNTLIe8WdXcYnV5rMw97zmss9C3mpBWMGYgZIHAyBMyu6HoSlR6TkqEEnOxoOApsk+fRFVzKlLU+43ZVzD+o+dLUllM2Uc1OSGSdYj+e9YfUhsV7U3YZGEJS0VRu9zshYmD7C6ZuWfKXKNUnfWi6VV+cLWkm2BMah4ZnVoO4MLwo8x63AZdu+WSka9XtmlzI2jlPx/CfTqTRzE4uqoJCW/ifrIFV36kk9qkSTkRRHY2qIg==
+ b=xYGQGnj2GZgLhx1Y5hc4CRs5fYvWfLirZTxDZN633g70/QzcwW0WbJkCgY6c/XPT+X3H3VyLlbUhsS3KV6oJ/EWEWoD+RPTU2QZFrrLQOzBE9ECuQUEYIEZdf2mYKnQOPd3LE/x7UbIOxa1qAegpTkA8lrYwHrTUPBdQY3v6JDSp7Ekwd1pPwKhNbaM9RjJJ2RGCHdqr4B8cbkVIx2ar5tQ52B4xLt9FVaZkWIZWWFvQU/xtxlpHvcFBqSFNvZScVCDLEffLkYWz6ZD8krnrM5OcaCzPeRUEKAtSDjBNJhrD/qnYmpyQG9UyQ1lIcN2ovQ+xV8UYqwHjxUYvx1IZrQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zwJkk5nTnDRm27oxVs5dW2PjkH0OJYXoR2duBU9wUJk=;
- b=loaJvCpqL0ml/vAN5WHm5M7xJUHYp2bHumX75nAVN5fs0bXNVk6moCrgOVa/8XiEJiTdh5TccV6NjoJhtFrF4nQdDupsDF8v9hsy3qkC+TuwO0Kk34vFkwVgcT7BWrdrUVELEBYmcDESD+ZDo4/p3JkmegTUlXwKGrE3zXADndRDUPPl4gWAKaveF+Jt6aEQRcVXex5Mv/8R0evXHtbfdqIlim2v5DsyGPwx2nL7VFfYOwZ3Hwuwb4knc5/UCIj7khRnYWNDsRzf/5FMNtMg7mf6gJgnLBsfgvNbd2gB9YyyJzA3Ry63up7L7wz7JSNl7XUWV2USfPj+SO5TqmitiQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
+ bh=Y9hP4k3So7cvT0iAfuN1pnBvVtkOp3DzaD3/tMN98lc=;
+ b=l4Z/7UhoCvilRORqcbaKfao58zP4oEWDu58mPExd1IEuNBJt1AI6i2AsWoT2SfsXfWR3ztPKw2eAe7Bxcvl8OAx73KLBXn8wlokSllJe/hsINrGtyUxSnJfU6PlZqwlDLjACie8s1Q6Fe1BUTdFmVEse1n3Oo9Vd6P/vrpCBp7aFmIf1IrObSYFz156UIDxiXCdG3H4kKqg4ti4aCZDkcJ84ZmMzcqlISiOeHrTzXrP3DQ3HUzRVWOjByteuyYTBBrQs+eZgsMht0ETbwiJH2WZ47eFmcjrBqYfk2+ZeAEsPSADjU/gfmy7W2D2s2Es54Ga8oQENb9HleyQOjTqsdw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zwJkk5nTnDRm27oxVs5dW2PjkH0OJYXoR2duBU9wUJk=;
- b=wq6knVO0Dz5fFvu2P2f34zO3IgtCmJzNTuNCX+tMjVIrcIxNB824kpCT6jrX/MwkXYU4uz8ZTMzimChdK3RbKPNlJwhcrjPBgsKgO8sTuB8amp2ywQbK20/47NvT/Lzea++CHYquwNZPSXYRuSCzVRIZMW3F4wy+Dy60685Ag0Y=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO0P265MB9113.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:49b::13) with
+ bh=Y9hP4k3So7cvT0iAfuN1pnBvVtkOp3DzaD3/tMN98lc=;
+ b=PT/vRVul7UgcLrtzHvNtI6/Ps/X9cBklNWubSEoSyjwogX04BzSfPexI4R2RSRbtdz6XqxUCQ1RrOF88+wJzYGSLcjixAfBTqt2wqDsfmYUvl3j8d5GzEH07/UedfEa79gT7yQmupwTXgM63hrv9kwCYMC15GJ99LWb1PWHV4ajiUwnhJDHXpECvRlseNFbVb11tkdKQjHj2lDlVzhPxG3u80O/YHYRpaVHwcGyt+47a0iMEpPfZeiDXwGAsgOm4nL6spr10/wCPSNmJ9TxrRknTqunxUZF5p7yZbIDoIGnHIDEnG7vwebapmQFQB/vpb5Iq6dEYUP5my4NcEzTpJA==
+Received: from SJ0PR03CA0175.namprd03.prod.outlook.com (2603:10b6:a03:338::30)
+ by BL3PR12MB6401.namprd12.prod.outlook.com (2603:10b6:208:3b1::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.8; Wed, 1 Jul 2026
- 11:44:09 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0159.018; Wed, 1 Jul 2026
- 11:44:09 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 01 Jul 2026 12:44:08 +0100
-Message-Id: <DJN7INDZVFWZ.1C2NSQTCYHQGE@garyguo.net>
-Cc: <linux-scsi@vger.kernel.org>, <dlemoal@kernel.org>, <cassel@kernel.org>,
- <linux-ide@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <driver-core@lists.linux.dev>
-Subject: Re: [PATCH v2 7/7] pci: fix UAF when probe runs concurrent to dyn
- ID removal
-From: "Gary Guo" <gary@garyguo.net>
-To: <sashiko-reviews@lists.linux.dev>, "Gary Guo" <gary@garyguo.net>
-X-Mailer: aerc 0.21.0
+ 14:01:34 +0000
+Received: from CO1PEPF000066EA.namprd05.prod.outlook.com
+ (2603:10b6:a03:338:cafe::3) by SJ0PR03CA0175.outlook.office365.com
+ (2603:10b6:a03:338::30) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.159.19 via Frontend Transport; Wed, 1
+ Jul 2026 14:01:33 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ CO1PEPF000066EA.mail.protection.outlook.com (10.167.249.5) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.181.6 via Frontend Transport; Wed, 1 Jul 2026 14:01:32 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 1 Jul
+ 2026 07:00:58 -0700
+Received: from fedora (10.126.231.37) by rnnvmail201.nvidia.com (10.129.68.8)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 1 Jul
+ 2026 07:00:45 -0700
 References: <20260630-pci_id_fix-v2-0-b834a98c0af2@garyguo.net>
- <20260630-pci_id_fix-v2-7-b834a98c0af2@garyguo.net>
- <20260701111052.3E04E1F00A3A@smtp.kernel.org>
-In-Reply-To: <20260701111052.3E04E1F00A3A@smtp.kernel.org>
-X-ClientProxiedBy: LO4P123CA0466.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:1aa::21) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+ <20260630-pci_id_fix-v2-4-b834a98c0af2@garyguo.net>
+User-agent: mu4e 1.8.14; emacs 30.2
+From: Petr Machata <petrm@nvidia.com>
+To: Gary Guo <gary@garyguo.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Zhenzhong Duan
+	<zhenzhong.duan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, "GOTO
+ Masanori" <gotom@debian.or.jp>, YOKOTA Hiroshi
+	<yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Vaibhav Gupta <vaibhavgupta40@gmail.com>, "Jens
+ Taprogge" <jens.taprogge@taprogge.org>, Ido Schimmel <idosch@nvidia.com>,
+	Petr Machata <petrm@nvidia.com>, Andrew Lunn <andrew+netdev@lunn.ch>, "David
+ S.  Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
+ Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	<linux-pci@vger.kernel.org>, <driver-core@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>, <industrypack-devel@lists.sourceforge.net>,
+	<netdev@vger.kernel.org>
+Subject: Re: [PATCH v2 4/7] mlxsw: don't keep pci_device_id
+Date: Wed, 1 Jul 2026 15:57:50 +0200
+In-Reply-To: <20260630-pci_id_fix-v2-4-b834a98c0af2@garyguo.net>
+Message-ID: <87y0fu24jb.fsf@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
+X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB9113:EE_
-X-MS-Office365-Filtering-Correlation-Id: 91afab73-026d-461d-3170-08ded766100b
+X-MS-TrafficTypeDiagnostic: CO1PEPF000066EA:EE_|BL3PR12MB6401:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7428bff3-5619-43fd-5fc7-08ded779421e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|366016|23010399003|376014|1800799024|3023799007|6133799003|18002099003|22082099003|56012099006|4143699003;
+	BCL:0;ARA:13230040|23010399003|82310400026|7416014|376014|1800799024|36860700016|56012099006|11063799006|4143699003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	xW8hBtNQV76coriNBqlDsNZ25q+Rra1YNa1NqgZA5kpb/gX+/BIlwFjfImZo0ePW2P54Zs2cAcjChNdLRNHjMtViwGyQu0p54dCsEl+wY8zLbh4BGoGTQ77ERxMAkJdVKgXAVYQuT01qDgHr0Y6toYm6ub00npnxwSpH3uWgOkOamk+lILB8XMRjLhfnXJ/kfjx5RXUyH23XXNOz8rmBSEt2Jltgdp+L2JxRVu4slfOQpAMgCaz5vTPq8fPEq6zIOz43KwqqNW7Mu+/WmX+/U8VZo/pKE9N1FVjkmyQ2EtNEbciUJKQvbK9pP2d8B5yNKDmGrFEuuC8vXF4119wvymfG11isMNKN8+vWYlS5VBZq2aXYUVq21Pu7GzA7j1R7xpTmGuNS0qGvnnp83hRqJfE5bbqpyb5MIycwFRiTp74MX2H2n+lqW2GyMRc2tnEeWKzpcc3uQ7iFilVPD6IXwzk/JpSjyCOrPvxSmQqgjb3NDPF36UXmDCNe5alpVHqIXspwHRipbxszYK5Bvbio2woL96sBN/qAU9TDNQgq+2JywIOKU+9CXeWgVzeExFpWU0RTHsUbbEbWv7sM59eM4pdzFVIdoCzmUxOMVIFhNgw6iTfHkue3a7bVUDEkZJng5vGR4oQZgecEAHJ2AJ4H8SVfJtV2Q5dB6vK7c4zYG7A=
+	WRS7BcZtddcB1wjGZoUf4DsMLe9NX3ggQrCjpsiuiDtGQQUMz1svfJipsQvp4rofXTorSU1VRAcQIJLkE2En8wyGhW6IJKFP8hnZ3LBLNIkm/7Qa3oiwS9mMfu78VZcUDbCiHPXDaae52/LIu1vbxQB7xRKFFE+r2ID66rv2813ilFWLJrq6WOtbHnmJkqzpM+m9deQ2yxZdAESM2E7o4qoR0hF0cf3h7FQIOiUdfdXKJijdzz/uMFZyDegRUREf5b3e6I67k0EiwzUWDi55RPTX7IzpHcq0wZ2prc9ulcPJxeKkALj+/jkQWqBjaGUd9NPa6wPWiigzOL5Eyalk1hP/5x8ls7lY9P7tBQYaf+9zuv8KKC2OmtH1DqrA07sX9c6ln07whCT4UlE8Cntm50JeYItf3ILfHSHlUMyXbRJ+3tc0NK8iAcklin1UJ3my51+kbGYKE+DguDDJpVveTDGQKPTp0fyuur3lz3sLi89LGesZN1L/6E5G1cFSE7MFWJIlRwrt2bohP7SQyuIRO0BX4S8RxGiInLTqM+M/o20vlUzutPtPr89zN7WeGLilxf8vbijMrbJRJ/osl24A6MIm3ke2e0fOkHZ+5t4FPd9ih7zTn4mdHpCNKb4VfJkfnZhxCBbHUSE5ry2dlkCTitHXWpU09Mr24/mUVlUxsVzsCd3YnZPPuTAzyx00pBmifvR1Qk9rz6ZGQ7fKjUqu5g==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(23010399003)(376014)(1800799024)(3023799007)(6133799003)(18002099003)(22082099003)(56012099006)(4143699003);DIR:OUT;SFP:1102;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(82310400026)(7416014)(376014)(1800799024)(36860700016)(56012099006)(11063799006)(4143699003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?OExBTzlkQ1IrWHBjaFdDcVZ0WithVDhmU21lQTFvUy9hZk5qRnRkMFRvMlVs?=
- =?utf-8?B?V3g4TmFidW5TYnQ5VU9KWkNJdytWeDZ6cWVNb3lZNzd1aDBVOVl6WWNVU0Js?=
- =?utf-8?B?cFpWMXgyYk5Lcy8zSzRYdXZjMWJUWE93Vm4yQThoT3dIdkVXb2pzK0tHZW91?=
- =?utf-8?B?ZVIyMXVrSGEvM0pWc0NsVEhOT0ZrSjQzdUZRWURXckZiVW1kSEVrV1RMd0VB?=
- =?utf-8?B?WFoxbWVvWmF1RVlBWng1UWJJeTNjSnhMbjVwTHNlb3BUZVR0eU1YTzJjMVdW?=
- =?utf-8?B?d3lncHdKMWthSm5kQjlxeUZyMXZWcTVOY0RiU2cvZzFZcklrZnJZRXJEUGJu?=
- =?utf-8?B?VFFuVytwODdXUk9JMDA0RHAvWUZpSlpUYkF2bmNDVVhiN3Z4a2RIUC9JUEp6?=
- =?utf-8?B?SnZ0ZXp5UU5SaE1rdlZpazg1R1lMZ09oWVhsQUVCMWQyS0lEMk1rQWh1M3JM?=
- =?utf-8?B?aGZvMG5iUWovK0xEMlRuSXlnVFBIMnZoUXhFeEFmRmlqUDRIZ1QrZVo0d09M?=
- =?utf-8?B?UWNscmM2eU0rbExtZkJqakVTSEJKZWtyMzIzcWovWHlVcnd1eVJlcVBEWGFN?=
- =?utf-8?B?UUJ1MGM3N2xYZUlxMDE5T29WVnFsM3ZDQzhFTUVqRk9TeGdGbUROb2xTSUgr?=
- =?utf-8?B?T0lhMzlTMzB5cUVDMTNhcjllb1l3Vk5kSGl2Yk9JZzFuckNGczlKWmdwaGZm?=
- =?utf-8?B?K2xzT2FkVnVxSzRlaWZFNWRpWjdFeDNLck5wR3NkTmxOV0NkTWx1anZ2Rys2?=
- =?utf-8?B?VHVOcy9kV2d4QTB6S00zSzZOWks4cDV2clJlZjZkV3ZUaE1MMVVHMWJVVC9n?=
- =?utf-8?B?QVg5VVBIN0NkV1FIaFlVN29Obys5N2s3cm8zSE4vekpZTlU4V1VLWkJLZDJ4?=
- =?utf-8?B?cnJDaHp2dW9TYjJLWHA4SHpzeXZaeHo0dFhPaGVPdDRXKy9WK1NtODdsZXY4?=
- =?utf-8?B?WTVyZ3liakVXWjdYVnNNRnNDcE5NWjl2ekxwZmhMTjVnUkJMZ0pLL0U5U3BO?=
- =?utf-8?B?SzZ0bHNVZUNTUFRDQjJMKzh6NmpVdGlGb0ZuU2RqTXFpSHRobmt5d0NQU3B5?=
- =?utf-8?B?bUdnOEZUWVd3MHlqNURPaVYrVnA0WUJGS2JjbFNIMTQ3anA3OENkWC9idHNj?=
- =?utf-8?B?NUE5YTIvYjBpK0JCYnJpK2RDeHQ4QUREc2FJSitLVVA0S3ViVisxM3ZrT1Aw?=
- =?utf-8?B?bDZXM3NaWm5iR20wMUlhNW5oMFZNMWtKeCtNN0hJYnNuY3NsV3RDMm5WRGJX?=
- =?utf-8?B?R0V4eHBKN2ZLeFIzZWhOMlpEK1FRZ1VsYlJGT2JIdjE2R0lYemJnbzNLN3Uv?=
- =?utf-8?B?am5pZWgrSzR4RlN5amZ5Q0lNL1NiSFl0QTFpdWNXZ2JLSURHQ2RGTGF0UHVK?=
- =?utf-8?B?Q0JIZ1dvYWE2a0JrSjYzbHdzUk9CdzQzdDVwaUNrdms1Qzdhb1ZTNW5vZmgy?=
- =?utf-8?B?Y2d6WUx1ZEZvZWpVc2V1ZE1lNE0xWVZFUjJ5RDBxa3RlQTJPVXdDSnZHNjZC?=
- =?utf-8?B?aUhIdjB4RmFxSkRYeFFmbmQ2UXNRVDlRZFRYb1RFaDhwOFBzS05Ba1p2U0NX?=
- =?utf-8?B?NUdxa1NTRGlYZEd3TXBrcFJsY0ViaTl5UXhwYnZMZFVhQWNVbytuUlVmUmJS?=
- =?utf-8?B?VWI0VHBUenE2UEZxMnBGNjdiVTd4TTcvcG5EMmszYTk1T3NEdmpZSndsc1pk?=
- =?utf-8?B?Q1dhaTQwakR5QldxTjQvVllqNWp4RU85QXQvb0p3WmNmeDNNa3I0WGJ1Rms4?=
- =?utf-8?B?UkZSUVNsN1JIRy9vbTVvNkwwQTlSd3ZDMVAvdk9EQ0FRQ3g1aEZlc2VncEpv?=
- =?utf-8?B?aDRWckJHQ1JlbklKN3R2czlkai9NaEdIZFFIcVJ6RnhxcytlOU1UWWVNS09k?=
- =?utf-8?B?Y2tKaStuaE03ZVd1amN5SXZRYzF0VjRyUURRenN6ZzV1eW5Nc3c3Tzd3ZjQ4?=
- =?utf-8?B?WU51SEdTV3VDTHA2Yy84d0wwUzNRc3Bsc1VGcm1veFJhdmVJWnA4eHcxaUwy?=
- =?utf-8?B?SXR5cG5KWWsvVjJsdGZwSExiK1oySUJTS0tiZjFNbUNDWTlRZWM3aW80TGhm?=
- =?utf-8?B?aFpqanEyNThmbFNRT3UvYmFwRVBQUmRuVXRtNnFjdTNFNFVsQXEyaDlBdDlF?=
- =?utf-8?B?a3VTSlV2dE1ObHlOL3k5S2N2Y3FURy9lSHlBRHRFdWpSWDFZclhYVHpTWThO?=
- =?utf-8?B?V2hSTld3bXNFSFNtZlJtQUFsR3dxQ1pNOER0TXhQRVBQOFVWSXYrNURsVUFm?=
- =?utf-8?B?RDhHVk5zU1FHWUtOb1JvMGtIYmEydUV5SGNkeHBGSVhlS2E1SnVhSFZVZ1Uz?=
- =?utf-8?B?cURQcGcvSmxPRVU3Y085YTBnNmV6SVYya1JoeVNSeFJvcTBwYXExQT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 91afab73-026d-461d-3170-08ded766100b
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Jul 2026 11:44:08.9866
+	z/Oz7TqXNIF8CuI/ozfVzNT0iBXlTL1hUSpKiNZRpVxznYxR0OtBfZTdtnhAwoLRDDna19iXHTp8HaEPaqMIV2qlaYpbkiNyAdID0B/wBld1XyjWHVN7ZBrE9fX6X8kxY6G0MOWaAvVZQIsRNiM+HC1kIHkuPnnfpaeuVgHmJ/xpHxDQLP377iEJFD/0az6IhIIWVxrYiwktsPcWaeV7joZKiNklT9RYyCLniFbkfpLbPck6GkDzW1+FSxb+EgqiVB3U2CgYnWDUfMA5Ji8AFejbY8KmCfyzz/9zVmIkDxlWJA0TujC+geUbMgaI8qjUxgDuyWv+Q+hHwLs9uSIQIGhLOWuesYLC6X55LVSPeW08Mv6dzAXzSBMkHfjcntfrmv+ptn78mC5YWEtsfYtkOntuv3P+VHCl1M5RqUjemSzIf7kLEehziv2NVPqkpMZe
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Jul 2026 14:01:32.9006
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: se06Eye4IRzU60nimWiSXbTiyW/BPknS9OB0RJRl4aOXQjM1XlqsrxNQK3OzwaSZ49UrXcRq+ITklsc4tCCwHw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB9113
-
-On Wed Jul 1, 2026 at 12:10 PM BST, sashiko-bot wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
-> - [High] The `id` parameter passed to PCI driver probe functions is now a=
- pointer to a stack-allocated variable, breaking drivers that rely on point=
-er arithmetic to calculate indices or that cache the pointer.
-> --
->
-> commit 0cf7c75b08e81435f8eec9e2453a6dda8624a99b
-> Author: Gary Guo <gary@garyguo.net>
-> Subject: pci: fix UAF when probe runs concurrent to dyn ID removal
->
-> This commit modifies the PCI matching logic to copy the matched device ID
-> instead of returning a pointer to it. This ensures dynamic IDs are safely
-> handled without requiring the lock to be held during probe.
->
-> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel=
-.org/
->
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->
-> [ ... ]
->
->> @@ -465,15 +470,14 @@ void pci_probe_flush_workqueue(void)
->>   */
->>  static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *p=
-ci_dev)
->>  {
->> -	const struct pci_device_id *id;
->> +	struct pci_device_id id;
->>  	int error =3D 0;
->> =20
->>  	if (drv->probe) {
->>  		error =3D -ENODEV;
->> =20
->> -		id =3D pci_match_device(drv, pci_dev);
->> -		if (id)
->> -			error =3D pci_call_probe(drv, pci_dev, id);
->> +		if (pci_match_device(drv, pci_dev, &id))
->> +			error =3D pci_call_probe(drv, pci_dev, &id);
->
-> [Severity: High]
-> Does passing a pointer to the stack-allocated id variable here break driv=
-ers
-> that rely on the pointer belonging to their static id_table?
->
-> Some drivers compute an array index using pointer arithmetic against the
-> provided id pointer. For example, in drivers/char/agp/amd-k7-agp.c:
->
-> agp_amdk7_probe() {
->     ...
->     j =3D ent - agp_amdk7_pci_table;
->     dev_info(&pdev->dev, "AMD %s chipset\n",
->              amd_agp_device_ids[j].chipset_name);
->     ...
-> }
-
-I am amused both by creative ways that drivers make use of this ID (which, =
-btw,
-is completely wrong without this change already and would be OOB access for=
- any
-dynamic ID or driver_override) and by the AI's ability to find them.
-
-I'm now convinced that the drivers shouldn't be given the pci_device_id in =
-the
-first place but just the driver_data field, although it's going to be very
-difficult to change all the drivers so that might never happen.
-
-Best,
-Gary
-
->
-> Since the pointer now points to the stack frame in __pci_device_probe()
-> rather than the static table, won't this pointer subtraction yield a
-> wildly out-of-bounds index and cause a memory read fault during device
-> probing?
->
->>  	}
->>  	return error;
->>  }
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7428bff3-5619-43fd-5fc7-08ded779421e
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CO1PEPF000066EA.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR12MB6401
 
 
+Gary Guo <gary@garyguo.net> writes:
+
+> pci_device_id is not guaranteed to live longer than probe due to presence
+> of dynamic ID. This stored ID is unused so remove it.
+>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> ---
+>  drivers/net/ethernet/mellanox/mlxsw/pci.c | 11 ++++-------
+>  1 file changed, 4 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/mellanox/mlxsw/pci.c b/drivers/net/ethernet/mellanox/mlxsw/pci.c
+> index 0da85d36647d..bfe3268dfdc1 100644
+> --- a/drivers/net/ethernet/mellanox/mlxsw/pci.c
+> +++ b/drivers/net/ethernet/mellanox/mlxsw/pci.c
+
+> @@ -1768,7 +1767,6 @@ static void mlxsw_pci_mbox_free(struct mlxsw_pci *mlxsw_pci,
+>  }
+>  
+>  static int mlxsw_pci_sys_ready_wait(struct mlxsw_pci *mlxsw_pci,
+> -				    const struct pci_device_id *id,
+>  				    u32 *p_sys_status)
+>  {
+>  	unsigned long end;
+
+I see, we used this to detect whether we are on SwitchX-2. Support far
+that was dropped ages ago in commit b0d80c013b04 ("mlxsw: Remove
+Mellanox SwitchX-2 ASIC support").
+
+Good cleanup, thanks.
+
+Reviewed-by: Petr Machata <petrm@nvidia.com>
