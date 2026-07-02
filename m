@@ -1,118 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 423887081A
-	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 02:14:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE68F7262E;
+	Thu,  2 Jul 2026 02:19:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782958453; cv=none; b=sqEQ7IXJGnLik0f69fCqUO8bP8ijYay/k1/Pi0wr6leIwyRn3So61fBl6yKaYj9TXTgPapMLj/le6VvK86rjSGOcxzUdtvltCdCK633wVHDfQG+XNJfezkb9ooY82UjSLX+lNcCB2bY7MRpK1au1xqtPlaDfrBBdxs9TZq74GT0=
+	t=1782958775; cv=none; b=g4hnRLcfPevBaoECEtaxIzuy6u6RFv1bKBw5vEtmiOSRtPZQ+wO4KeWvwFr1sfjNqBjex8qdtfrfNIKx6gynibvH5TmYVCcREBf+c/BdAiOqwy0H8vHt1wGxvWVdYRS5nZcgHEJ0sbqU3JZ9f97dWzxSJEligdeP3/bPrXyqbXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782958453; c=relaxed/simple;
-	bh=K6QkQL16lUWuh+uhXW4BYTHZkr+MrizcYiR59m3gPD8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fwiGj3lfnsT9K0x1zFhl188VGcFxVGTKXH4NLJEZHxVEsow1PhjTzxStUJ94F+Sc6717OxpVxuFZCCREYZHXBs0+wu55FoP0nuH64dSq23/p6usCylxjsitaM5U11k6UTiHXv4/bjcOeCdGqaZBMMjztJa1OS6cBPH3vpe5gG0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/nLutu3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782958775; c=relaxed/simple;
+	bh=aWcXcNSTyC8w2G/i9juMoMt4zWRNJQ67g4Bqco3YHF8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AbyZiYqApqYGeSP3+mde9AfbzsuNS34mY9T0eED/7/Gvdhor6lUVxqnfYgVPmJk1YVN/6KcAtDcFrE3mIOjkOVrzqSCxTDrexgaa5F6umiUBDxYe0NPhgWLa+Gut9fgnjgLmCYbhIsVVrPxCt+3VLxq2liFqkcZoRgTXBpOS6Co=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X680cmhF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/nLutu3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B01331F000E9;
-	Thu,  2 Jul 2026 02:14:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X680cmhF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B00A51F000E9;
+	Thu,  2 Jul 2026 02:19:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782958451;
-	bh=+hnyotckuqi6T3zftHGuTRmQ5ucKsKgkOqs4ehckGmM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=J/nLutu39ObG3IWiuZulzKDpFhH9Weuy+wloL6vFsA/o1ioH0TtglZUua7w7o+Ir7
-	 B4y1c5sxKe0r7FlwIIJ1fk2WpIehT5dux9+gO9K5nwmpDuWawehFo3Ri4PpOfW77dS
-	 g8SNfNcfpMXZGA7xnPdhWb/TyvkGuPzCfnDNmLeCA99fRADhQG0tfxZsGfWIM73Ra7
-	 drggUgHoHXRjqTfjqqwSRqssTWEK5u2N2H/KlojacMa1xdHN5WZCRJjha8Q9T1jvBs
-	 Kpc61Zy10PgT3JewfArH3M636D5sONdzKfg7QiNkyMqV+gYYNObbRNLHUWhYxW8nLE
-	 J24++lnsWXUBA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] ata: libata-scsi: limit simulated SCSI command copy
- to response length
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Karuna Ramkumar" <rkaruna@google.com>
-Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260702020142.3399851-1-rkaruna@google.com>
-References: <20260702020142.3399851-1-rkaruna@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 02:14:11 +0000
-Message-Id: <20260702021411.B01331F000E9@smtp.kernel.org>
+	s=k20260515; t=1782958774;
+	bh=hUxBaKt4Kk+Fjood6whqXgKIiJJVftxRALRC+L+/IVg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=X680cmhF7H11qCeLXH8/cakafHtjtq9/WQ91mRJSQuxXsa9Cw9Dv4i2IIXldhEc4r
+	 YUduZ1dqugOL2RQAcNzhFPswxbdbn48EU9KBX0es50fi1VMaEeWQ7rVR9j+bvS2cEi
+	 3BZPS0KAHvnfvdshyGlKmMXL+LfsfVosfIEZLDzwtfBUW3JjXK6iWBoyEGFitT3jfi
+	 3v03ZwS1LjsAbWtlUov1mKcW/NHdTg0mlOgpk+dYCFSjcDH/sUtpOrRJpISmaP1lZX
+	 aGvkQMRrzLmHY0+n4VSQWu9WTeR0BwpBn8gER6J1w4cS+bK9O8tqfu9JDB6g+Mck33
+	 5v/janRFgOvWg==
+Message-ID: <a6cbe516-7147-48da-8cdc-b67ebfa0dcce@kernel.org>
+Date: Thu, 2 Jul 2026 11:19:32 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 4/6] ata: libata-scsi: improves checks for ZBC_IN and
+ ZBC_OUT commands support
+To: sashiko-reviews@lists.linux.dev
+Cc: cassel@kernel.org, linux-ide@vger.kernel.org
+References: <20260702015646.1702539-1-dlemoal@kernel.org>
+ <20260702015646.1702539-5-dlemoal@kernel.org>
+ <20260702020737.E00E61F000E9@smtp.kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260702020737.E00E61F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On 7/2/26 11:07, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] ZBC_IN is incorrectly evaluated as not having service actions because ZI_REPORT_ZONES equals 0, breaking all REPORT SUPPORTED OPERATION CODES (RSOC) formats.
+> --
+> 
+> commit 6af9854276b3609a524ea350c87e6e2924aee340
+> Author: Damien Le Moal <dlemoal@kernel.org>
+> 
+> ata: libata-scsi: improves checks for ZBC_IN and ZBC_OUT commands support
+> 
+> Improve ata_scsi_cmd_is_supported() to check the service action for the
+> ZBC_IN and ZBC_OUT opcodes, to correctly report supported zone management
+> commands for zoned disks.
+> 
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index e432e521ad318..f9e6bda6833e4 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -3708,8 +3708,17 @@ static bool ata_scsi_cmd_is_supported(struct ata_device *dev, u8 op, u16 sa,
+>>  		}
+>>  		return true;
+>>  	case ZBC_IN:
+>> +		return sa == ZI_REPORT_ZONES && ata_dev_is_zoned(dev);
+> 
+> [Severity: Medium]
+> Does this inadvertently break REPORT SUPPORTED OPERATION CODES (RSOC) formats
+> for ZBC_IN?
+> 
+> Because ZI_REPORT_ZONES evaluates to 0, the helper
+> ata_scsi_supported_cmd_has_sa() will evaluate this as not having service
+> actions:
+> 
+> drivers/ata/libata-scsi.c:ata_scsi_supported_cmd_has_sa() {
+>     return cmd->sa != 0;
+> }
+> 
+> This appears to cause incorrect behavior during RSOC handling for ZBC_IN:
+> 
+> - Format 0 (ata_scsi_report_all_supported_opcodes) fails to set the SERVACTV
+>   (Service Action Valid) bit because cmd->sa evaluates to 0.
+> 
+> - Format 1 incorrectly accepts ZBC_IN.
+> 
+> - Format 2 (ata_scsi_report_supported_opcodes) incorrectly rejects valid
+>   queries for ZBC_IN with CHECK CONDITION (ILLEGAL REQUEST), preventing
+>   userspace from probing ZBC_IN service actions.
 
-Pre-existing issues:
-- [Critical] The defensive bounds check `WARN_ON(len > ATA_SCSI_RBUF_SIZE)`=
- is ineffective because it evaluates after the `actor` callback has already=
- performed an out-of-bounds write.
---
+Yes, these observations are correct if one assumes that "0" is a valid service
+action. But it is not: the SPC specifications actually define service action "0"
+as "reserved". So this is a mess, but the specifications are responsible here.
 
-commit 41acccb75ba899e5e72a927d95a97d5d6f088c63
-Author: Karuna Ramkumar <rkaruna@google.com>
+With these changes, report zones is still reported as supported and everything
+works.
 
-ata: libata-scsi: limit simulated SCSI command copy to response length
-
-This patch limits the sg_copy_from_buffer() size to the actual response len=
-gth
-instead of the full buffer size to avoid overwriting the tail of the transf=
-er
-buffer. It also adds a bounds check on the length returned by the actor
-function to abort if it exceeds the static buffer capacity.
-
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index d54ec1631e9a6..836981b176c7d 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1933,8 +1933,13 @@ static void ata_scsi_rbuf_fill(struct ata_device *=
-dev, struct scsi_cmnd *cmd,
->  	memset(ata_scsi_rbuf, 0, ATA_SCSI_RBUF_SIZE);
->  	len =3D actor(dev, cmd, ata_scsi_rbuf);
->  	if (len) {
-> +		if (WARN_ON(len > ATA_SCSI_RBUF_SIZE)) {
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-[Severity: Critical]
-This is a pre-existing issue, but does this defensive bounds check actually
-prevent memory corruption?
-
-Because the check evaluates after the actor callback has already executed,
-the actor function may have already performed an out-of-bounds write. For
-example, a malicious or buggy ATA device reporting a large number of
-Concurrent Positioning Ranges (nr_cpr up to 255) could cause
-ata_scsiop_inq_b9() to write up to 8224 bytes into the 2048-byte statically
-allocated ata_scsi_rbuf array:
-
-drivers/ata/libata-scsi.c:ata_scsiop_inq_b9() {
-	...
-	for (i =3D 0; i < cpr_log->nr_cpr; i++, desc +=3D 32) {
-		desc[0] =3D cpr_log->cpr[i].num;
-		desc[1] =3D cpr_log->cpr[i].num_storage_elements;
-		put_unaligned_be64(cpr_log->cpr[i].start_lba, &desc[8]);
-		put_unaligned_be64(cpr_log->cpr[i].num_lbas, &desc[16]);
-	}
-	...
-}
-
-Should the actor functions be modified to take a buffer size parameter so
-they can safely enforce limits before writing memory?
-
-> +			ata_scsi_set_sense(dev, cmd, ABORTED_COMMAND, 0, 0);
-> +			spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
-> +			return;
-> +		}
->  		sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd),
-> -				    ata_scsi_rbuf, ATA_SCSI_RBUF_SIZE);
-> +				    ata_scsi_rbuf, len);
->  		cmd->result =3D SAM_STAT_GOOD;
->  		if (scsi_bufflen(cmd) > len)
->  			scsi_set_resid(cmd, scsi_bufflen(cmd) - len);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702020142.3399=
-851-1-rkaruna@google.com?part=3D1
+-- 
+Damien Le Moal
+Western Digital Research
