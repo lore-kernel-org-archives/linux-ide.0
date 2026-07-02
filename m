@@ -1,346 +1,363 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C89E2E8B82
-	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 11:00:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03E763C8C48
+	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 11:03:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782990013; cv=none; b=tUfOYfkXsxMLNOGScr7tLomr1kTeCvlEiglG+03bR4GDZyRKQpTXChFxayn0Vj8sDrnhIMWI27i0lcNP1NOdeV21E3d7FA9WG7LCGewtGGySln+nUVZ2/Q8WY4zVxtZ3uArjrVxD1P4fCz9o9fWF84XgUgcQVRf5pQv6FOgIohM=
+	t=1782990238; cv=none; b=QWay5I1+VvZlZcNd304j1hxveSfEnNwKoc2bS2cWKfS93tZma+OtMWyzMBGd96BY6ScRIDK618IUU8DDQxabiO6KYMvXyE6XTnPkOkhE8P8xaPaM22DFjKxTrylCHCVESv3OqspT7PMUlp6Bjnne4U0T2PwNBdYnynik51X0PO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782990013; c=relaxed/simple;
-	bh=Xp4qnjmiY2UkIrgajF2phdnBInGno/31PUYUZlRglbM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NdQbrn6kW6z1/BtilWIN+MHz3mZd4B57HnKVHOkoj4IjzYdWRkCelCg3jQO2P/uPmg9ZNQQNfAnlUdJm73OyZti94UX9C4bXEmsmKgd8E2OdtMp14OfKCrcmVcvUFq/XIaDdpJV9WENo3DsGS4yr5pux7xejkFQAkzgB6KecEBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PbqDaWNb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782990238; c=relaxed/simple;
+	bh=rLAZ6xjWSh4dBeXXx+Zm/8773z7w6ApW8uj4atG+Tbg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=g+fBU2rENI9HDBg1pw8E97oUqcpFXXvjvekSoLDIRDLJeosFsHf6hfzLinMXj5zDJx3cZ0gPINsFW1S2qYjIJaHP/zq3DLO7vT/3zqaf+UZ8sA5WtNjDDNISzz/b5VvjwJEkbeKRylph998QxzG1nY0AFcahCkn8o+LETO8wOIA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=fFwMSklP; arc=none smtp.client-ip=209.85.218.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PbqDaWNb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A33C01F000E9;
-	Thu,  2 Jul 2026 11:00:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782990011;
-	bh=F+YmP7axWqshbZYHLVDMyr/VGo8wbZxPs/lqHmnbLCQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=PbqDaWNbFqBtKElbKviHQO8dLGbr/rY+MKRFTifvbfMxAdYuG56IGgVH5R1szYLZi
-	 5jRmiucGadYma5vtgmNx2nBcBFR4v0nOV5/EIThmz8h0ns8HhAvw6E0fcQzvcOnPSm
-	 +XiMLc6X8SgYyIRPL3gM0iEFXu3VEtTEDulcoFKhDBMLDjRlggrz96ZjoC/OwXyVNR
-	 n7Jb8Kenm1BukEVqzwQuyOf0Hnhrvs83QiNUjutozUCa0RwZBhI0eEBmenVmAwgjku
-	 ejAfBqiwACYctVQ7ub7RBaf61UTXmLc4IanA/DFZ9Uxecn3uZ36BjySbg8CoGv+mVh
-	 r+dCcGRvZqWFQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	Shaun Tancheff <shaun@tancheff.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH v3 2/2] ata: libata-scsi: scale DSM TRIM payload by MAX PAGES PER DSM COMMAND
-Date: Thu,  2 Jul 2026 12:59:59 +0200
-Message-ID: <20260702105956.2058733-6-cassel@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260702105956.2058733-4-cassel@kernel.org>
-References: <20260702105956.2058733-4-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="fFwMSklP"
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-c124c3c876aso277497366b.1
+        for <linux-ide@vger.kernel.org>; Thu, 02 Jul 2026 04:03:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1782990234; x=1783595034; darn=vger.kernel.org;
+        h=in-reply-to:autocrypt:from:content-language:references:cc:to
+         :subject:user-agent:mime-version:date:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=rLAZ6xjWSh4dBeXXx+Zm/8773z7w6ApW8uj4atG+Tbg=;
+        b=fFwMSklPk0K45f82cZkspN0XsW8ZtBuWJzhUe4xeCi24fLDRim2r9FMLcrAW2l2CRM
+         UmlK6M0QWT7XvyQM/cn09ziJXQjKd7ZsumWeSiaRRghFwEa6iOLf1yJ/AXt1ONpPEH3I
+         KstDJ1gUUMIVlpa1BSWwcRPDispmLW++j7GzDeNBM6Esg0RlzD91LniADw/G/qIAFALv
+         5Ozakp1uvbCNhx8DAcYIFY1YWcxmzb1yeuo2otcJDZDjAwK521FQlFsZEFHVi4khWsNy
+         Oyh76J9OzTaslFSKJKGQviWPawMCyN/bFcSJ46DTuzX0G+GuGgn652CKn2uSHsI7EPtQ
+         rl1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782990234; x=1783595034;
+        h=in-reply-to:autocrypt:from:content-language:references:cc:to
+         :subject:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rLAZ6xjWSh4dBeXXx+Zm/8773z7w6ApW8uj4atG+Tbg=;
+        b=YaXvCVzgG45EV5QJjvHZRY++6kHXxQbHyOhnyznI3nJ8+h4oolw1h9A5AEtkUkYxfe
+         hPGugZ051p/7jVkTJIj5K0KtN+/a8e70UMjshsxAlYYTTR4i//1uYdqswx5LUhxCRHlU
+         RzCy98a+1rtXLARI2DjJ8N8r+PGdo9yGnDnilpUN22XgKOLFCRcaOIex6odLN/SIJvAp
+         26ty6F3YFytYngwzqUB8QAuSO1/vxL6QutG9D1RY1BOSZXE/Urgvb1QAUHbL5qbdICPB
+         c4rJYvKTiA0rhLPC34AMCU/z8nhD+a2CmFFRGkhLM4X1ZOg1oKizYMlDXOwdGN+PNdF6
+         1pLA==
+X-Forwarded-Encrypted: i=1; AHgh+RoEfzjCMcZR4/9W1APOplXoicrNxnxDFshV5pq6REqSLOzujW7ziUx8h3oWKWPIHtbFscq4vPmUX2k=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzdCAdu0RebXb9synQUBtgHYuc4e59YnKkCYHaeHlviXOue/rJN
+	nD1SptSIMTUTFqWDUyN5Y5Cnvc+IyUPEHZodvoNr/8G1SOMd8MqKXYdPd5p9HMZWlgQ=
+X-Gm-Gg: AfdE7ckV/YFr5M1JPZGt8b9XKPNgTINA6p3SMqUzvIoqXb8cR6/1jrmaK3wyg5sTNsW
+	qd++RhdRG/X4FkTmPcYSrfsHQ6wSC4sDcI0eEbruC2nVuLMdYdVRSrve/KnCBysz4CDwSDFJdlC
+	queaGP5pjM+WCdckZBNf26VdJoZ1Mp7mNP+rn1RGj57oAOg0hV9tCh4ezAPENhTR+hflpbjokf4
+	RRVAWZmSiay6zuB6QJJushg4lTk7mXqbWB5w7czimlz4GowLj7u0TusDzqKCQ8N1lT3AljawqGM
+	h7/StJVCz4vxQNYQ/P/Cxz+Pe/O65F4jDfJVnrh+wbhniqgzNm/1NOcFhOjgaY5QhRaNpdgFVLY
+	wGC/4l2cWOgFyZiYx8507puN9sZ/ff01w0ydbfryXTKeseIzY0IfFsxECPIFPOtIZAgCKwzi/vZ
+	PKpDnFG1gSgo20Khs78s9twW/lSCnaYSt3TphrZgUVC6yEMnH4Vi8tLlc7R1hwgvEE91h+WLxi6
+	ZeQiuuN1lHFg2ojQzsLxR5W0mINjZqdsaJCE9lXbic=
+X-Received: by 2002:a17:907:e14b:10b0:c12:3143:864f with SMTP id a640c23a62f3a-c12ae47556cmr180127966b.2.1782990234377;
+        Thu, 02 Jul 2026 04:03:54 -0700 (PDT)
+Received: from ?IPV6:2a00:12d0:af5d:ad01:5d3f:14e6:9bcb:5112? (2a00-12d0-af5d-ad01-5d3f-14e6-9bcb-5112.ip.tng.de. [2a00:12d0:af5d:ad01:5d3f:14e6:9bcb:5112])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-698acf25f4dsm809220a12.8.2026.07.02.04.03.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 02 Jul 2026 04:03:53 -0700 (PDT)
+Message-ID: <99228803-b8b7-47a3-b77c-6fdf3b785730@suse.com>
+Date: Thu, 2 Jul 2026 13:03:52 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=11262; i=cassel@kernel.org; h=from:subject; bh=Xp4qnjmiY2UkIrgajF2phdnBInGno/31PUYUZlRglbM=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLLcXNY2yAbFn+Q7t6zgkfCnF315vyYcKBL+XHDZdU76j hP/co03dJSyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAiSmsZGbrLH00QUXzx4Vfm lI+GUfMPc1q4SHupPfy0J6A722HLxyxGhp+lm3qOfJovLd5xnHXe0zkfBHkex3V8Y/xoc7wjorh yDR8A
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/32] x86/msr: Drop 32-bit MSR interfaces
+To: Ingo Molnar <mingo@kernel.org>, Sean Christopherson <seanjc@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+ linux-pm@vger.kernel.org,
+ "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>, x86@kernel.org,
+ linux-acpi@vger.kernel.org, kvm@vger.kernel.org, linux-coco@lists.linux.dev,
+ linux-pci@vger.kernel.org, virtualization@lists.linux.dev,
+ linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-fbdev@vger.kernel.org, linux-crypto@vger.kernel.org,
+ "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+ linux-hyperv@vger.kernel.org, linux-hwmon@vger.kernel.org,
+ linux-perf-users@vger.kernel.org, linux-mtd@lists.infradead.org,
+ platform-driver-x86@vger.kernel.org, "Rafael J . Wysocki"
+ <rafael@kernel.org>, Daniel Lezcano <daniel.lezcano@kernel.org>,
+ Zhang Rui <rui.zhang@intel.com>, "lukasz.luba@arm.com"
+ <lukasz.luba@arm.com>, Jason Baron <jbaron@akamai.com>,
+ Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>,
+ Yazen Ghannam <yazen.ghannam@amd.com>, Len Brown <lenb@kernel.org>,
+ Pavel Machek <pavel@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Paolo Bonzini <pbonzini@redhat.com>,
+ "Kirill A. Shutemov" <kas@kernel.org>,
+ Rick Edgecombe <rick.p.edgecombe@intel.com>, Pu Wen <puwen@hygon.cn>,
+ Bjorn Helgaas <bhelgaas@google.com>, Ajay Kaher <ajay.kaher@broadcom.com>,
+ Alexey Makhalov <alexey.makhalov@broadcom.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>,
+ Viresh Kumar <viresh.kumar@linaro.org>,
+ Reinette Chatre <reinette.chatre@intel.com>,
+ Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>,
+ Babu Moger <babu.moger@amd.com>, Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Dave Airlie <airlied@redhat.com>, Helge Deller <deller@gmx.de>,
+ linux-geode@lists.infradead.org, Olivia Mackall <olivia@selenic.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>, Linus Walleij <linusw@kernel.org>,
+ Bartosz Golaszewski <brgl@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Guenter Roeck <linux@roeck-us.net>, Peter Zijlstra <peterz@infradead.org>,
+ Arnaldo Carvalho de Melo <acme@kernel.org>,
+ Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+ Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
+ Adrian Hunter <adrian.hunter@intel.com>, James Clark
+ <james.clark@linaro.org>, Josh Poimboeuf <jpoimboe@kernel.org>,
+ Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
+ Vitaly Kuznetsov <vkuznets@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Boris Ostrovsky <boris.ostrovsky@oracle.com>, Huang Rui <ray.huang@amd.com>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Perry Yuan <perry.yuan@amd.com>, K Prateek Nayak <kprateek.nayak@amd.com>,
+ "srinivas.pandruvada@linux.intel.com" <srinivas.pandruvada@linux.intel.com>,
+ Artem Bityutskiy <artem.bityutskiy@linux.intel.com>,
+ Artem Bityutskiy <dedekind1@gmail.com>,
+ Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Ashok Raj <ashok.raj.linux@gmail.com>, Hans de Goede <hansg@kernel.org>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>,
+ David E Box <david.e.box@intel.com>, xen-devel@lists.xenproject.org
+References: <20260629060526.3638272-1-jgross@suse.com>
+ <d7c1db52-529a-43cc-ac7d-38b52627e8bc@app.fastmail.com>
+ <c1608c48-13c2-4290-826b-28b5ca51eaf7@suse.com>
+ <7332feff-2649-496c-8e49-b0a19eb54a32@app.fastmail.com>
+ <akJUz0kYkEBdLSZ3@gmail.com> <akQR9YMtMHReJTfB@google.com>
+ <akY4U0jUZm4HOGZ_@gmail.com>
+Content-Language: en-US
+From: Juergen Gross <jgross@suse.com>
+Autocrypt: addr=jgross@suse.com; keydata=
+ xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOB
+ ycWxw3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJve
+ dYm8Of8Zd621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJ
+ NwQpd369y9bfIhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvx
+ XP3FAp2pkW0xqG7/377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEB
+ AAHNH0p1ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNvbT7CwHkEEwECACMFAlOMcK8CGwMH
+ CwkIBwMCAQYVCAIJCgsEFgIDAQIeAQIXgAAKCRCw3p3WKL8TL8eZB/9G0juS/kDY9LhEXseh
+ mE9U+iA1VsLhgDqVbsOtZ/S14LRFHczNd/Lqkn7souCSoyWsBs3/wO+OjPvxf7m+Ef+sMtr0
+ G5lCWEWa9wa0IXx5HRPW/ScL+e4AVUbL7rurYMfwCzco+7TfjhMEOkC+va5gzi1KrErgNRHH
+ kg3PhlnRY0Udyqx++UYkAsN4TQuEhNN32MvN0Np3WlBJOgKcuXpIElmMM5f1BBzJSKBkW0Jc
+ Wy3h2Wy912vHKpPV/Xv7ZwVJ27v7KcuZcErtptDevAljxJtE7aJG6WiBzm+v9EswyWxwMCIO
+ RoVBYuiocc51872tRGywc03xaQydB+9R7BHPzsBNBFOMcBYBCADLMfoA44MwGOB9YT1V4KCy
+ vAfd7E0BTfaAurbG+Olacciz3yd09QOmejFZC6AnoykydyvTFLAWYcSCdISMr88COmmCbJzn
+ sHAogjexXiif6ANUUlHpjxlHCCcELmZUzomNDnEOTxZFeWMTFF9Rf2k2F0Tl4E5kmsNGgtSa
+ aMO0rNZoOEiD/7UfPP3dfh8JCQ1VtUUsQtT1sxos8Eb/HmriJhnaTZ7Hp3jtgTVkV0ybpgFg
+ w6WMaRkrBh17mV0z2ajjmabB7SJxcouSkR0hcpNl4oM74d2/VqoW4BxxxOD1FcNCObCELfIS
+ auZx+XT6s+CE7Qi/c44ibBMR7hyjdzWbABEBAAHCwF8EGAECAAkFAlOMcBYCGwwACgkQsN6d
+ 1ii/Ey9D+Af/WFr3q+bg/8v5tCknCtn92d5lyYTBNt7xgWzDZX8G6/pngzKyWfedArllp0Pn
+ fgIXtMNV+3t8Li1Tg843EXkP7+2+CQ98MB8XvvPLYAfW8nNDV85TyVgWlldNcgdv7nn1Sq8g
+ HwB2BHdIAkYce3hEoDQXt/mKlgEGsLpzJcnLKimtPXQQy9TxUaLBe9PInPd+Ohix0XOlY+Uk
+ QFEx50Ki3rSDl2Zt2tnkNYKUCvTJq7jvOlaPd6d/W0tZqpyy7KVay+K4aMobDsodB3dvEAs6
+ ScCnh03dDAFgIq5nsB11j3KPKdVoPlfucX2c7kGNH+LUMbzqV6beIENfNexkOfxHfw==
+In-Reply-To: <akY4U0jUZm4HOGZ_@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------WjZXb44KsATEDkDSufWy2bKk"
 
-DSM TRIM currently always emits a single 512-byte page of LBA Range Entries
-(ATA_MAX_TRIM_RNUM == 64 ranges), regardless of how many pages the device
-can accept in one DATA SET MANAGEMENT command.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------WjZXb44KsATEDkDSufWy2bKk
+Content-Type: multipart/mixed; boundary="------------o2fircZpb09tU1GMO2GxqgPd";
+ protected-headers="v1"
+From: Juergen Gross <jgross@suse.com>
+To: Ingo Molnar <mingo@kernel.org>, Sean Christopherson <seanjc@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+ linux-pm@vger.kernel.org,
+ "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>, x86@kernel.org,
+ linux-acpi@vger.kernel.org, kvm@vger.kernel.org, linux-coco@lists.linux.dev,
+ linux-pci@vger.kernel.org, virtualization@lists.linux.dev,
+ linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-fbdev@vger.kernel.org, linux-crypto@vger.kernel.org,
+ "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+ linux-hyperv@vger.kernel.org, linux-hwmon@vger.kernel.org,
+ linux-perf-users@vger.kernel.org, linux-mtd@lists.infradead.org,
+ platform-driver-x86@vger.kernel.org, "Rafael J . Wysocki"
+ <rafael@kernel.org>, Daniel Lezcano <daniel.lezcano@kernel.org>,
+ Zhang Rui <rui.zhang@intel.com>, "lukasz.luba@arm.com"
+ <lukasz.luba@arm.com>, Jason Baron <jbaron@akamai.com>,
+ Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>,
+ Yazen Ghannam <yazen.ghannam@amd.com>, Len Brown <lenb@kernel.org>,
+ Pavel Machek <pavel@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Paolo Bonzini <pbonzini@redhat.com>,
+ "Kirill A. Shutemov" <kas@kernel.org>,
+ Rick Edgecombe <rick.p.edgecombe@intel.com>, Pu Wen <puwen@hygon.cn>,
+ Bjorn Helgaas <bhelgaas@google.com>, Ajay Kaher <ajay.kaher@broadcom.com>,
+ Alexey Makhalov <alexey.makhalov@broadcom.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>,
+ Viresh Kumar <viresh.kumar@linaro.org>,
+ Reinette Chatre <reinette.chatre@intel.com>,
+ Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>,
+ Babu Moger <babu.moger@amd.com>, Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Dave Airlie <airlied@redhat.com>, Helge Deller <deller@gmx.de>,
+ linux-geode@lists.infradead.org, Olivia Mackall <olivia@selenic.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>, Linus Walleij <linusw@kernel.org>,
+ Bartosz Golaszewski <brgl@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Guenter Roeck <linux@roeck-us.net>, Peter Zijlstra <peterz@infradead.org>,
+ Arnaldo Carvalho de Melo <acme@kernel.org>,
+ Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+ Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
+ Adrian Hunter <adrian.hunter@intel.com>, James Clark
+ <james.clark@linaro.org>, Josh Poimboeuf <jpoimboe@kernel.org>,
+ Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
+ Vitaly Kuznetsov <vkuznets@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Boris Ostrovsky <boris.ostrovsky@oracle.com>, Huang Rui <ray.huang@amd.com>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Perry Yuan <perry.yuan@amd.com>, K Prateek Nayak <kprateek.nayak@amd.com>,
+ "srinivas.pandruvada@linux.intel.com" <srinivas.pandruvada@linux.intel.com>,
+ Artem Bityutskiy <artem.bityutskiy@linux.intel.com>,
+ Artem Bityutskiy <dedekind1@gmail.com>,
+ Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Ashok Raj <ashok.raj.linux@gmail.com>, Hans de Goede <hansg@kernel.org>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>,
+ David E Box <david.e.box@intel.com>, xen-devel@lists.xenproject.org
+Message-ID: <99228803-b8b7-47a3-b77c-6fdf3b785730@suse.com>
+Subject: Re: [PATCH 00/32] x86/msr: Drop 32-bit MSR interfaces
+References: <20260629060526.3638272-1-jgross@suse.com>
+ <d7c1db52-529a-43cc-ac7d-38b52627e8bc@app.fastmail.com>
+ <c1608c48-13c2-4290-826b-28b5ca51eaf7@suse.com>
+ <7332feff-2649-496c-8e49-b0a19eb54a32@app.fastmail.com>
+ <akJUz0kYkEBdLSZ3@gmail.com> <akQR9YMtMHReJTfB@google.com>
+ <akY4U0jUZm4HOGZ_@gmail.com>
+In-Reply-To: <akY4U0jUZm4HOGZ_@gmail.com>
 
-The maximum is reported by MAX PAGES PER DSM COMMAND (IDENTIFY DEVICE word
-105).  Honour it: size the TRIM descriptor as a whole number of 512-byte
-pages, bounded by that limit and by the logical sector size (the WRITE SAME
-data-out buffer is a single logical block).  Build and transfer only as
-many pages as the request needs, and set the DSM COUNT field, qc->nbytes
-and the maximum WRITE SAME length in the Block Limits VPD page accordingly.
+--------------o2fircZpb09tU1GMO2GxqgPd
+Content-Type: multipart/mixed; boundary="------------DvT8SfkPmJRmXAYHiBwk9gCF"
 
-Build the descriptor straight into the WRITE SAME data-out buffer using an
-atomic sg_miter mapping, instead of staging it in the shared ata_scsi_rbuf
-and copying it out.  This removes the global ata_scsi_rbuf_lock and a
-memcpy from the TRIM path.
+--------------DvT8SfkPmJRmXAYHiBwk9gCF
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-While commit 9379e6b8e0f9 ("libata: Safely overwrite attached page in WRITE
-SAME xlat") replaced direct access to the data-out buffer with an
-intermediate step that writes the entries in the ata_scsi_rbuf buffer, this
-solution writes to the data-out buffer using sg_miter, which maps each
-segment with kmap_atomic (SG_MITER_ATOMIC), so it's highmem- and
-multi-segment-safe, and it's usable from the non-sleeping
-command-submission path (unlike the page_address() access that
-ata_scsi_rbuf originally replaced).
+T24gMDIuMDcuMjYgMTI6MDcsIEluZ28gTW9sbmFyIHdyb3RlOg0KPiANCj4gKiBTZWFuIENo
+cmlzdG9waGVyc29uIDxzZWFuamNAZ29vZ2xlLmNvbT4gd3JvdGU6DQo+IA0KPj4+IE5vdGUg
+dGhhdCB0aGUgaW5kaXZpZHVhbCBwYXRjaGVzIGFyZSBJTU8gc2lnbmlmaWNhbnRseSBlYXNp
+ZXIgdG8gcmV2aWV3DQo+Pj4gdGhyb3VnaCB0aGUgYWN0dWFsIDMyLWJpdCA9PiA2NC1iaXQg
+dmFyaWFibGUgYXNzaWdubWVudCBjaGFuZ2VzIGRvbmUNCj4+PiBpbiBpc29sYXRpb24gKHdo
+aWNoIHNvbWV0aW1lcyBpbmNsdWRlIG1pbm9yIGNsZWFudXBzKSwgd2hpbGUNCj4+PiB0aGUg
+Q29jY2luZWxsZSBzZW1hbnRpYyBwYXRjaDoNCj4+Pg0KPj4+ICAgICB7IGEoYixjKSA9PiBj
+ID0gYShiKSB9DQo+Pj4NCj4+PiB3aGljaCBjaGFuZ2VzIGJvdGggdGhlIGZ1bmN0aW9uIHNp
+Z25hdHVyZSBhbmQgdGhlIG9yZGVyIG9mIHRlcm1zIGFzDQo+Pj4gd2VsbCwgaXMganVzdCBh
+IHNpbmdsZSBhZGQtb24gdHJlZXdpZGUgcGF0Y2guDQo+Pg0KPj4gSXMgdGhlIHBsYW4gZm9y
+IHN1YnN5c3RlbSBtYWludGFpbmVycyB0byBwaWNrIHVwIHRoZSByZWxldmFudCBwYXRjaGVz
+LA0KPj4gYW5kIHRoZW4gZG8gdGhlIHRyZWV3aWRlIGNoYW5nZSBvbmUgcmVsZWFzZSBjeWNs
+ZSBsYXRlcj8NCj4gDQo+IEknbGwgdHJ5IHRvIGtlZXAgdGhlIHBhdGNoZXMgaW4gYSBzaW5n
+bGUgdHJlZSAodGlwOng4Ni9tc3IpDQo+IGluIHRoZSBob3BlIG9mIG5vdCBwcm9sb25naW5n
+IHRoZSBwYWluIHR3byBjeWNsZXMgLSBidXQgaXQncw0KPiBvZiBjb3Vyc2UgZmluZSBmb3Ig
+bWFpbnRhaW5lcnMgdG8gcGljayB1cCB0aGUgcGF0Y2hlcyB0b28NCj4gKG1vc3Qgb2YgdGhl
+bSBhcmUgc3RhbmRhbG9uZSksIHdlJ2xsIHNvcnQgaXQgYWxsIG91dCBpbiB0aGUgZW5kLg0K
+DQpJbmdvLCB3b3VsZCB5b3UgYmUgZmluZSB3aXRoIG1lIHBvc3RpbmcgcGF0Y2ggdXBkYXRl
+cyBqdXN0IGFzIHJlcGxpZXMgdG8gdGhlDQpvcmlnaW5hbCBwYXRjaCBlbWFpbHM/IFRoaXMg
+d291bGQgc3BlZWQgdGhpbmdzIHVwLCBhcyBJIHdvdWxkbid0IG5lZWQgdG8gd2FpdA0KZm9y
+IG1vcmUgcmV2aWV3IGlucHV0IG9mIGFsbCB0aGUgcGF0Y2hlcyBiZWZvcmUgc2VuZGluZyBv
+dXQgbmV3IHZlcnNpb25zLg0KDQpBcyB0aGUgcGF0Y2hlcyBhcmUgKG1vc3RseSkgc3RhbmRh
+bG9uZSwgdGhpcyBzaG91bGQgbm90IGNhdXNlIGFueSB3ZWlyZA0KcHJvYmxlbXMuDQoNClRo
+ZSBsYXN0IHR3byBwYXRjaGVzIG1pZ2h0IG5lZWQgdXBkYXRlcywgYnV0IHRob3NlIGNhbiBi
+ZSBhcHBsaWVkIG9ubHkgYWZ0ZXINCnRoZSByZXN0IGhhcyBiZWVuIGFjY2VwdGVkIGFueXdh
+eS4NCg0KDQpKdWVyZ2VuDQo=
+--------------DvT8SfkPmJRmXAYHiBwk9gCF
+Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Description: OpenPGP public key
+Content-Transfer-Encoding: quoted-printable
 
-A 512-byte-sector device still uses a single page, so its behaviour is
-unchanged.
+-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-Add ata_id_dsm_max_pages() to read IDENTIFY DEVICE word 105.
+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
+kt+z4drzFUyEjLM1vVvIMjkUoJs=3D
+=3DeeAB
+-----END PGP PUBLIC KEY BLOCK-----
 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-scsi.c | 135 ++++++++++++++++++++++++++------------
- include/linux/ata.h       |  13 ++++
- 2 files changed, 107 insertions(+), 41 deletions(-)
+--------------DvT8SfkPmJRmXAYHiBwk9gCF--
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 429b03a08071..5d56ad66af77 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2198,6 +2198,39 @@ static unsigned int ata_scsiop_inq_89(struct ata_device *dev,
- 	return get_unaligned_be16(&rbuf[2]) + 4;
- }
- 
-+/**
-+ * ata_dsm_trim_pages - maximum DSM TRIM payload for a device, in 512-byte pages
-+ * @dev: ATA device the DATA SET MANAGEMENT TRIM command will be sent to
-+ *
-+ * A DATA SET MANAGEMENT TRIM payload is a list of 512-byte pages, each holding
-+ * up to ATA_MAX_TRIM_RNUM (64) LBA Range Entries; the format is page-based and
-+ * unrelated to the logical sector size.
-+ *
-+ * The logical sector size still bounds it, though: the descriptor is written
-+ * directly into the WRITE SAME data-out buffer, which sd sizes to a single
-+ * logical block, so it can hold at most sector_size / 512 pages.
-+ *
-+ * Return: the maximum number of 512-byte pages a single translated WRITE SAME
-+ * command may send to @dev (never less than one), that is the smaller of:
-+ *   - MAX PAGES PER DSM COMMAND (IDENTIFY DEVICE word 105), when the device
-+ *     reports a non-zero limit; and
-+ *   - the logical sector size expressed in 512-byte pages (see above).
-+ */
-+static unsigned int ata_dsm_trim_pages(struct ata_device *dev)
-+{
-+	unsigned int sector_size = ata_id_logical_sector_size(dev->id);
-+	unsigned int max_pages = ata_id_dsm_max_pages(dev->id);
-+	unsigned int pages = sector_size / ATA_SECT_SIZE;
-+
-+	/* If the device does not specify a limit, assume only a single page. */
-+	if (!max_pages)
-+		max_pages = 1;
-+
-+	pages = min_not_zero(pages, max_pages);
-+
-+	return pages;
-+}
-+
- /**
-  *	ata_scsiop_inq_b0 - Simulate INQUIRY VPD page B0, Block Limits
-  *	@dev: Target device.
-@@ -2237,7 +2270,8 @@ static unsigned int ata_scsiop_inq_b0(struct ata_device *dev,
- 	 * with the unmap bit set.
- 	 */
- 	if (ata_id_has_trim(dev->id)) {
--		u64 max_blocks = 65535 * ATA_MAX_TRIM_RNUM;
-+		unsigned int max_pages = ata_dsm_trim_pages(dev);
-+		u64 max_blocks = max_pages * ATA_MAX_TRIM_RNUM * (u64)U16_MAX;
- 
- 		if (dev->quirks & ATA_QUIRK_MAX_TRIM_128M)
- 			max_blocks = 128 << (20 - SECTOR_SHIFT);
-@@ -3426,14 +3460,14 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- /**
-  * ata_format_dsm_trim_descr() - SATL Write Same to DSM Trim
-  * @cmd: SCSI command being translated
-- * @trmax: Maximum number of entries that will fit in sector_size bytes.
-+ * @size: DSM TRIM payload size in bytes (a multiple of 512)
-  * @sector: Starting sector
-  * @count: Total Range of request in logical sectors
-  *
-  * Rewrite the WRITE SAME descriptor to be a DSM TRIM little-endian formatted
-  * descriptor.
-  *
-- * Upto 64 entries of the format:
-+ * The payload is a list of @size / 8 entries of the format:
-  *   63:48 Range Length
-  *   47:0  LBA
-  *
-@@ -3442,35 +3476,45 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
-  *
-  * NOTE: this is the same format as ADD LBA(S) TO NV CACHE PINNED SET
-  *
-- * Return: Number of bytes copied into sglist.
-+ * The descriptor is written straight into the WRITE SAME data-out buffer;
-+ * ata_dsm_trim_pages() guarantees @size does not exceed that buffer (one
-+ * logical block). An atomic sg_miter mapping is used so this works from the
-+ * command submission path and, unlike page_address(), copes with a high
-+ * memory payload.
-+ *
-+ * Return: Number of bytes written into the data-out buffer.
-  */
--static size_t ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 trmax,
-+static size_t ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, size_t size,
- 					u64 sector, u32 count)
- {
--	size_t len = ATA_SECT_SIZE;
--	size_t r;
--	__le64 *buf;
--	u32 i = 0;
--	unsigned long flags;
-+	struct sg_mapping_iter miter;
-+	size_t offset = 0;
- 
--	BUILD_BUG_ON(ATA_SECT_SIZE > ATA_SCSI_RBUF_SIZE);
-+	sg_miter_start(&miter, scsi_sglist(cmd), scsi_sg_count(cmd),
-+		       SG_MITER_TO_SG | SG_MITER_ATOMIC);
-+	while (offset < size && sg_miter_next(&miter)) {
-+		__le64 *buf = miter.addr;
-+		size_t chunk = min_t(size_t, miter.length, size - offset);
-+		unsigned int n = chunk / sizeof(__le64);
-+		unsigned int i;
- 
--	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
--	buf = ((void *)ata_scsi_rbuf);
--	memset(buf, 0, len);
--	while (i < trmax) {
--		u64 entry = sector |
--			((u64)(count > 0xffff ? 0xffff : count) << 48);
--		buf[i++] = __cpu_to_le64(entry);
--		if (count <= 0xffff)
--			break;
--		count -= 0xffff;
--		sector += 0xffff;
-+		for (i = 0; i < n; i++) {
-+			u64 entry = 0;
-+
-+			if (count) {
-+				u32 rlen = min_t(u32, count, 0xffff);
-+
-+				entry = sector | ((u64)rlen << 48);
-+				sector += rlen;
-+				count -= rlen;
-+			}
-+			buf[i] = cpu_to_le64(entry);
-+		}
-+		offset += n * sizeof(__le64);
- 	}
--	r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
--	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
-+	sg_miter_stop(&miter);
- 
--	return r;
-+	return offset;
- }
- 
- /**
-@@ -3490,10 +3534,11 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	struct scsi_cmnd *scmd = qc->scsicmd;
- 	struct ata_device *dev = qc->dev;
- 	const u8 *cdb = scmd->cmnd;
-+	unsigned int max_pages = ata_dsm_trim_pages(dev);
-+	unsigned int n_pages;
-+	size_t size;
- 	u64 block;
- 	u32 n_block;
--	const u32 trmax = ATA_MAX_TRIM_RNUM;
--	u32 size;
- 	u16 fp;
- 	u8 bp = 0xff;
- 	u8 unmap = cdb[1] & 0x8;
-@@ -3523,7 +3568,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 		goto invalid_fld;
- 	}
- 	/* If the request is too large the cmd is invalid */
--	if (n_block > 0xffff * trmax) {
-+	if (n_block > max_pages * ATA_MAX_TRIM_RNUM * (u64)U16_MAX) {
- 		fp = 2;
- 		goto invalid_fld;
- 	}
-@@ -3536,31 +3581,39 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 		goto invalid_param_len;
- 
- 	/*
--	 * The TRIM descriptor is a single 512-byte page, which is the maximum
--	 * WRITE SAME length advertised in the Block Limits VPD page. For DATA
--	 * SET MANAGEMENT TRIM the COUNT field (aka nsect) is the number of
--	 * 512-byte blocks to be transferred.
-+	 * The DATA SET MANAGEMENT TRIM payload is a whole number of 512-byte
-+	 * pages (each holding up to ATA_MAX_TRIM_RNUM LBA Range Entries),
-+	 * independent of the logical sector size. Only use as many pages as
-+	 * are needed to describe the request, capped at max_pages.
- 	 */
--	size = ata_format_dsm_trim_descr(scmd, trmax, block, n_block);
--	if (size != ATA_SECT_SIZE)
-+	n_pages = DIV_ROUND_UP(DIV_ROUND_UP(n_block, U16_MAX),
-+			       ATA_MAX_TRIM_RNUM);
-+	n_pages = clamp(n_pages, 1U, max_pages);
-+	size = (size_t)n_pages * ATA_SECT_SIZE;
-+
-+	if (ata_format_dsm_trim_descr(scmd, size, block, n_block) != size)
- 		goto invalid_param_len;
- 
-+	/*
-+	 * For DATA SET MANAGEMENT TRIM the COUNT field (aka nsect) is the
-+	 * number of 512-byte pages to be transferred.
-+	 */
- 	if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
- 		/* Newer devices support queued TRIM commands */
- 		tf->protocol = ATA_PROT_NCQ;
- 		tf->command = ATA_CMD_FPDMA_SEND;
- 		tf->hob_nsect = ATA_SUBCMD_FPDMA_SEND_DSM & 0x1f;
- 		tf->nsect = qc->hw_tag << 3;
--		tf->hob_feature = (size / 512) >> 8;
--		tf->feature = size / 512;
-+		tf->hob_feature = n_pages >> 8;
-+		tf->feature = n_pages;
- 
- 		tf->auxiliary = 1;
- 	} else {
- 		tf->protocol = ATA_PROT_DMA;
- 		tf->hob_feature = 0;
- 		tf->feature = ATA_DSM_TRIM;
--		tf->hob_nsect = (size / 512) >> 8;
--		tf->nsect = size / 512;
-+		tf->hob_nsect = n_pages >> 8;
-+		tf->nsect = n_pages;
- 		tf->command = ATA_CMD_DSM;
- 	}
- 
-@@ -3569,9 +3622,9 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 
- 	ata_qc_set_pc_nbytes(qc);
- 	/*
--	 * The DSM TRIM payload is a single 512-byte page, which may be smaller
--	 * than the WRITE SAME data-out buffer (one logical block); only
--	 * transfer that page so the length matches the COUNT field.
-+	 * The DSM TRIM payload (size) may be smaller than the WRITE SAME
-+	 * data-out buffer (one logical block); only transfer the pages that
-+	 * were actually built so the transfer length matches the COUNT field.
- 	 */
- 	qc->nbytes = size;
- 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 8fd48bcb2a46..ac5616a9668b 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -75,6 +75,7 @@ enum {
- 	ATA_ID_HW_CONFIG	= 93,
- 	ATA_ID_SPG		= 98,
- 	ATA_ID_LBA_CAPACITY_2	= 100,
-+	ATA_ID_MAX_PAGES_PER_DSM	= 105,
- 	ATA_ID_SECTOR_SIZE	= 106,
- 	ATA_ID_WWN		= 108,
- 	ATA_ID_LOGICAL_SECTOR_SIZE	= 117,	/* and 118 */
-@@ -928,6 +929,18 @@ static inline bool ata_id_has_trim(const u16 *id)
- 	return false;
- }
- 
-+static inline u16 ata_id_dsm_max_pages(const u16 *id)
-+{
-+	/*
-+	 * IDENTIFY DEVICE word 105: MAX PAGES PER DSM COMMAND. Maximum number
-+	 * of 512-byte pages of LBA Range Entries the device accepts in a
-+	 * single DATA SET MANAGEMENT command. Zero means the device does not
-+	 * specify a limit. The field is reserved unless TRIM is supported, so
-+	 * callers must gate on ata_id_has_trim().
-+	 */
-+	return id[ATA_ID_MAX_PAGES_PER_DSM];
-+}
-+
- static inline bool ata_id_has_zero_after_trim(const u16 *id)
- {
- 	/* DSM supported, deterministic read, and read zero after trim set */
--- 
-2.55.0
+--------------o2fircZpb09tU1GMO2GxqgPd--
 
+--------------WjZXb44KsATEDkDSufWy2bKk
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmpGRZgFAwAAAAAACgkQsN6d1ii/Ey9T
+iQf8D4c54BGRNKMRsSJiXSFxOPiUVfGXcsH7BLGSCIbavlNKB6PC4nfBVKfvlEHUsQk3Zy7dOXCt
+DjWUBhqMxb+QCJKNrUGKsdDFtl1Agihz8PaRzzF6LAJL86LHnhjy30FkyEoT+wE8pfL61qKpyusy
+xGc+xkkzm+tcDAwQDn9wTrmDKRaa/yWjrPX2idLQ/ATrKILtNW/Ci7tbKeltRSGhWV7aNEtyEUco
+wq6RU91rH9miz+a9ZWCRa/bc1FU0brdudBe2pkTiDua5vzSwUx4gBoLQ98BcHb+bKidB+OS3WYBa
+Qfoo0sr6Uryp6mf98UcyNgyPhA4rdUuo1iUvfsGhdg==
+=MZUf
+-----END PGP SIGNATURE-----
+
+--------------WjZXb44KsATEDkDSufWy2bKk--
