@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE21A351C2E
-	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 06:34:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302A13890F1
+	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 06:34:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782974068; cv=none; b=vGZtRBEoA3tvznEY0bNG5VEXSRxzdXwW79iAozacJpWXJMTejV3HIbUiif7PLxVdF2b1Kl+5Aoih69obU+PyF7CXsRorhn5eh0+9REiXUDd8eBvSE2lpRGUgmMrJSc3fDUjcNasDS3w/nKNc/6Q3nEACMM3MVtfTdYEcYQdGxcU=
+	t=1782974068; cv=none; b=Xa9hcEJn4n2TvvSNJwCgi0Gd/E53/Qeu9Fo1r5vreaTu65veS86pJ/3sCigycPS5TlfiNYpXz5jZNhIG9IpeWZVzULSnSm92GVu2U4Oi7bU/gEIq+YwcZcNLepO8Jpeg9zEnu6TuKFlFL23Rz6iRuP6y6c8Xe5T1BOqeNMcxe1k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1782974068; c=relaxed/simple;
-	bh=fqmkSt0s7xrSjiHTIBjntnR+glabkOJCvsmssXuiP34=;
+	bh=UF+s5kFLvzposD55yA269Rv4MFMoPqjvsVjBC5MHUuw=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZPCYvQOhPiUmAOu82Fr1KtxjxpMlaOnCXZWFO0ZJ7cAvl1svJpPJBke4rxFwq4kcgPU8eLdxGLCsb/vQCl0edceoeU7KKN6g7KP40eYrnTEeH8OBNMPEz+qiOmh/X1IXn1WdWYIq/5/MOEZuk+EFXWZqXudndCx0JfAZEEKOW94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VrMHQzDH; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=NUpChIt7sZKB89YQxBGTI+EhMtn8quL4bcMXpDgWsqp0/1UDGxeMzA0HziQDPYV6zZkuF5kZDIjqS/hVRlyUAWOLFXpmFUlP/85sZPYgS+/+hHOnNhtx+hA4M3rFkaU5nB2i8Aro0mEXYbuQrpWpaKpVis6km4iPd5eVdo1yNRo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nU4fNYTW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VrMHQzDH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FBFA1F00A3A;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nU4fNYTW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B91E51F000E9;
 	Thu,  2 Jul 2026 06:34:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782974066;
-	bh=DiVXf97SnWwKHLDUKO39bqLLi9Q9+lJUdcOmzqNkWH4=;
+	s=k20260515; t=1782974067;
+	bh=ffYmPWPddD80gq6Reof2hIuoXvvEunWXTz4fD9wctJI=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=VrMHQzDHre0UBQsMQoauoYn37DxzmnZzO/Q5a5r4TU+vcrRjZOEjELP2km7ld3JZI
-	 BpKAzn45VeX6D3xS0Mfa9WOuGY9an4i2den60ezQUFC05iJhdigL9y4ZSHNqO9ed6F
-	 tLNbhQawQQoBlMF2lTry+FyGPhsi6F5nBYMS4Jcgsau95mjcHcUxqn73mFm5+Wb/oC
-	 R8oxvfRO0j9U859w+OBsDhvBxeNFv8EzL7ja7tI8rYR0HaGRxfJukgd8vfimmfjdO+
-	 sKRE5QFE/vZTLP6Xs3PbmdFc/L4VG8yvgJOVPu0HJ3248QO9OJDk2NGnx+oRfwPeze
-	 RiHl3PjZtKsfQ==
+	b=nU4fNYTWiT5IBgKpcO0KVgLVsVNAQr/yXLzMazXL9yZqNMT+FpcNxfeRi+vQEGYDH
+	 u2JzIbZdnXEbAUs/0iRauz+LBlTzsXbJ07u4SQvgT7WHc9u81pcVmZGtO7xv5ue2Ro
+	 Dn1jBRheZVrEnymBOtPIU7yamnvqmqqZYKJc0wwbOE701IDL97iLVGtP7tEShcH91a
+	 yFhtyWb1OIBykFMuNDZ4J2kySuMS8nzzZWIkTL+9ThwJwUUBl3Zj3uuI98jKYGjTZv
+	 XIyMMwnXiY9Do5pXo5ez9iZnRemwCtMAn+pqJ9gdvjCtvAykoaWA//CcxoWPT5dtYg
+	 COdApIEbGTP0w==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v2 4/5] ata: libata-scsi: support reporting options 2 in REPORT SUPPORTED OPERATION CODES
-Date: Thu,  2 Jul 2026 15:34:11 +0900
-Message-ID: <20260702063412.1892584-5-dlemoal@kernel.org>
+Subject: [PATCH v2 5/5] ata: libata-scsi: support the all command format for reporting supported commands
+Date: Thu,  2 Jul 2026 15:34:12 +0900
+Message-ID: <20260702063412.1892584-6-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260702063412.1892584-1-dlemoal@kernel.org>
 References: <20260702063412.1892584-1-dlemoal@kernel.org>
@@ -43,36 +43,118 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add support for the reporting options value 2 of the in REPORT SUPPORTED
-OPERATION CODES command in ata_scsi_report_supported_opcodes(). With this
-reporting option, the specified opcode to check must have a service
-action. Use ata_scsi_supported_cmd_has_sa() to check for this and fill the
-command reply buffer using the one command format based on the command
-support.
+Add support to ata_scsi_report_supported_opcodes() for the all command
+format indicated with a reporting option of 0. The function
+ata_scsi_report_all_supported_opcodes() is introduced to implement this
+support. This function operates by testing all commands of the
+ata_supported_cmds array and testing them using
+ata_scsi_cmd_is_supported(), filling rbuf as it loops through all the
+commands that libata can emulate or translate.
+
+With this change, sg_opcodes /dev/sdX is able to list all commands
+supported by libata and a device. An example below is shown for a SATA
+disk also supporting CDL:
+
+  # sg_opcodes /dev/sda
+    ATA       WDC  WUH722626AL  WZ41
+    Peripheral device type: disk
+
+  Opcode  Service    CDB  RWCDLP,  Name
+  (hex)   action(h)  size   CDLP
+  -----------------------------------------------
+   00                  6    0,0    Test Unit Ready
+   01                  6    0,0    Rezero Unit
+   03                  6    0,0    Request Sense
+   08                  6    0,0    Read(6)
+   0a                  6    0,0    Write(6)
+   0b                  6    0,0    Seek(6)
+   12                  6    0,0    Inquiry
+   15                  6    0,0    Mode select(6)
+   1a                  6    0,0    Mode sense(6)
+   1b                  6    0,0    Start stop unit
+   1d                  6    0,0    Send diagnostic
+   25                 10    0,0    Read capacity(10)
+   28                 10    0,0    Read(10)
+   2a                 10    0,0    Write(10)
+   2b                 10    0,0    Seek(10)
+   2f                 10    0,0    Verify(10)
+   35                 10    0,0    Synchronize cache(10)
+   55                 10    0,0    Mode select(10)
+   5a                 10    0,0    Mode sense(10)
+   7f     1ff0        32    0,0    ATA pass-through(32)
+   85                 16    0,0    ATA pass-through(16)
+   88                 16    1,1    Read(16)
+   8a                 16    1,2    Write(16)
+   8f                 16    0,0    Verify(16)
+   91                 16    0,0    Synchronize cache(16)
+   93                 16    0,0    Write same(16)
+   9e       10        16    0,0    Read capacity(16)
+   a0                 12    0,0    Report luns
+   a1                 12    0,0    ATA pass-through(12)
+   a3        c        12    0,0    Report supported operation codes
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/libata-scsi.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/ata/libata-scsi.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 86ac41a7d81a..e75ed573e234 100644
+index e75ed573e234..b14fd30c0e38 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -3737,6 +3737,13 @@ static unsigned int ata_scsi_report_supported_opcodes(struct ata_device *dev,
- 			return 0;
- 		}
- 		break;
-+	case 2:
-+		/* One command format, must have sa. */
-+		if (!ata_scsi_supported_cmd_use_sa(cdb[3])) {
-+			ata_scsi_set_invalid_field(dev, cmd, 3, 0xff);
-+			return 0;
-+		}
-+		fallthrough;
- 	case 3:
- 		/* One command format */
- 		sa = get_unaligned_be16(&cdb[4]);
+@@ -3721,6 +3721,42 @@ static bool ata_scsi_cmd_is_supported(struct ata_device *dev, u8 op, u16 sa,
+ 	return true;
+ }
+ 
++static unsigned int
++ata_scsi_report_all_supported_opcodes(struct ata_device *dev, u8 *rbuf)
++{
++	struct ata_scsi_cmd_support sup;
++	const struct ata_scsi_cmd *cmd;
++	unsigned int len = 4;
++	u8 *buf = &rbuf[len];
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(ata_supported_cmds); i++) {
++		if (len > ATA_SCSI_RBUF_SIZE - 8)
++			break;
++
++		cmd = &ata_supported_cmds[i];
++
++		/* All command format */
++		if (!ata_scsi_cmd_is_supported(dev, cmd->op, cmd->sa, &sup))
++			continue;
++
++		buf[0] = cmd->op;
++		put_unaligned_be16(cmd->sa, &buf[2]);
++		buf[5] = (sup.rwcdlp << 6) | (sup.cdlp << 2);
++		if (cmd->sa_valid)
++			buf[5] |= 0x01;
++		put_unaligned_be16(cmd->cdb_len, &buf[6]);
++
++		/* CTDP == 0 */
++		len += 8;
++		buf += 8;
++	}
++
++	put_unaligned_be32(len - 4, &rbuf[0]);
++
++	return len;
++}
++
+ static unsigned int ata_scsi_report_supported_opcodes(struct ata_device *dev,
+ 						      struct scsi_cmnd *cmd,
+ 						      u8 *rbuf)
+@@ -3730,6 +3766,9 @@ static unsigned int ata_scsi_report_supported_opcodes(struct ata_device *dev,
+ 	u16 sa = 0;
+ 
+ 	switch (cdb[2]) {
++	case 0:
++		/* All command format */
++		return ata_scsi_report_all_supported_opcodes(dev, rbuf);
+ 	case 1:
+ 		/* One command format with command support data, ignore sa. */
+ 		if (ata_scsi_supported_cmd_use_sa(cdb[3])) {
 -- 
 2.54.0
 
