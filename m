@@ -1,111 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0884D37A4BC
-	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 07:16:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BF372C0268
+	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 10:04:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782976616; cv=none; b=jVX9W7OUJOE1jGxYWIgqx4wXDKXk2jPvvv9qEOLCGHq9AxkiKtQzF8hviFjfB47XA0l6u+P28OCjfbIyvTUCd060flCuLw6JsVWDSJG6pf1rjKWFFbcun4KLi/Fo1S1uZgaQyqpXl5DIvkXHBGFzysn93l3F1rv5MyNJqcN4wo0=
+	t=1782986686; cv=none; b=unDKqwdSBSOCbLKlykHOMRlsrimsEYh6PS94LdgVXQ2SNjN3wTNR2Gs1GL9tQxPhNW6e8P7u9Ma3vnvBNamK2wygiV/dkEb1aTquQr9T4IGZdjPYXFE1cb6+Ky/XsrQF9xVzJqR4aTy/R254gQO0/tbdcyKTTBmNGyd1U/GRU/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782976616; c=relaxed/simple;
-	bh=aKSaEY3kmUa4tRT0hCCOOtzRInmt0/YMmi/asAn9WVI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WSxlFaNc6Sju5outbVc+eqaegOCuTsalTQD+QrYrScG2LYtkNxkmMITX6NuPfyztOvxWO4Gi1rlKdvtzv+St0GbPK5Q5pGPDzPTuVjtvr7YQK2UmY05h0d1EMYUT32vHrudfp/AsGlhg8ULwlz3OqHCsrMsJoO6EI6tc2aY4D2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gK4/1MYK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782986686; c=relaxed/simple;
+	bh=a3KOmGKZKIh5ppXhcQ6fg69FJruvTmuGshkjUAlNQ9E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Aavhsojcd934BGjl8OKAN1Avqo0Jc41m6/49zbIN+L1iK0jQBiOpoGPRm4gWGblrFQPvOsS4lsA5916n+jfZU/yoP4nlbY/pQX7l6a6vE/vKsA8NYpdD8RmcoiwSA48h1+H8Qk2QImWlz1DIhAT3IF8JM75aAUQH0z7GFQEeIlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CfLYvJh3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gK4/1MYK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 009531F000E9;
-	Thu,  2 Jul 2026 07:16:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CfLYvJh3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4946F1F00A3A;
+	Thu,  2 Jul 2026 10:04:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782976613;
-	bh=1sVELj+M7xIVPWnxQPyCDJIPrNzs8lkFCUMwlTS5gx4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gK4/1MYKAV1ejVfN/dOgGgAWkhkidJPoCfYfwNc/DJ4v5DCX32qiECK7LraW+Fni6
-	 4W+lZIrLPNGEwvmQmvoxSs4EdZcRvOitEJlaTJzP4UL3i5sld23sGcdtfCGMpWCEyT
-	 x4sh8G06z/Hbw+DRNKZarUM8esr3d3GXjdh8mq5yTF1V/0KPyEXmzzwKQOQUOHJiR9
-	 p7mXXf9u79V9ZHxA2kOTjkqrG3ASwFV5Sl0gT+pYMLIy3eZqB3c5CivaI8ncnNC/Wu
-	 19Bt8450kHyxvozXz4dxOWfukArzjN47H6IEQLt3Xc6IRV6X2N03g9Yy+aXFfxT1zA
-	 KoeVrflHMB9Ww==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/5] ata: libata: rename ata_dev_is_zac()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260702063412.1892584-2-dlemoal@kernel.org>
-References: <20260702063412.1892584-1-dlemoal@kernel.org>
- <20260702063412.1892584-2-dlemoal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 07:16:52 +0000
-Message-Id: <20260702071653.009531F000E9@smtp.kernel.org>
+	s=k20260515; t=1782986685;
+	bh=xdXlBHVq98ajCo6NO10FXhMr/Zevs8WTqlSzJx0FJ9s=;
+	h=From:To:Cc:Subject:Date;
+	b=CfLYvJh3ISB9nagc0BQ/Ora7CbndXjaggDSdnnv2k3n5mMxLYPbg7Ob/AEuC0AUte
+	 SG6UkV6tzYr8j0EbRvpA4VRZofMqxjhgSXpo5avashwduSWywmUzkLMwgVynYubRTX
+	 JBWM0TWGmXrjlSrpcBXq6Jflgm8WdZTbRtQ38nAjLJ6iqzJtjx47MSf1fIhX9X/CbL
+	 9SUU1Qu5N9tD8OVA0n3j1rAsYnmD+H0pw4yX8gfWppW3SrWYST3KLH7L99UebpLOuV
+	 dNjbdZa4zhlKQr9fJUPVphH7wqEFwLwxoRwJv8qat17zlgEtp4QCWinYiVaypa2Qdr
+	 vvr1a7wrQByqA==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Shaun Tancheff <shaun@tancheff.com>,
+	Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Subject: [PATCH v2 0/2] ata: DSM TRIM fix and improvements
+Date: Thu,  2 Jul 2026 12:04:11 +0200
+Message-ID: <20260702100410.2039383-4-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1711; i=cassel@kernel.org; h=from:subject; bh=a3KOmGKZKIh5ppXhcQ6fg69FJruvTmuGshkjUAlNQ9E=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLLczGdNFLd8z1lu5mMjncijk+ekMXX3h635Z2uPPRYK5 WdRPmLVUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIlw32Nk2ObC6JBx8vsO2wMV V8ISbq4pzpPoWvv3amXd5x97p24xW8Hwz5r7EfOj3PvtOREZ7Q13ExltZgu+5NKy/nHkjtqm36x 6HAA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Incomplete refactoring of ZBC checks leaves SCSI emulation in an i=
-nconsistent state for Device Managed drives.
---
+Hello all,
 
-commit 8a69ac9e4f68da535d403caef5279dfdb19419f2
-Author: Damien Le Moal <dlemoal@kernel.org>
+This fixes DSM TRIM for 4Kn devices, which has ironically been broken
+since commit ef2d7392c4ec ("libata: SCT Write Same / DSM Trim"), which
+claimed to correct the DSM TRIM handling for 4Kn devices.
 
-ata: libata: rename ata_dev_is_zac()
 
-The helper function ata_dev_is_zac() is renamed to ata_dev_is_zoned() to
-better reflect its checks. Existing callers and an open-coded check are
-updated to use the renamed helper.
+The first commit is a small fix that can be backported, which limits
+the DSM TRIM to what we currently report in the Block Limits VPD page.
+We currently report a single 512 byte page of entries, i.e. 64 Entries,
+where each entry has a maximum of U16_MAX logical blocks.
 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index d54ec1631e9a6..8811bfc373697 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
+The second commit:
+-Improves the support by reading the MAX PAGES PER DSM COMMAND limit and
+ populates the Block Limits VPD page accordingly.
+-Modifies ata_scsi_write_same_xlat() to properly support up to this amount
+ of pages.
+-Removed the intermediate copying to ata_scsi_rbuf, writes to the scsi
+ buffer directly.
 
-[ ... ]
+Practically, sd still caps n_block at SD_MAX_WS16_BLOCKS
+(~3 pages actually used on 4Kn), so while removing the limit on
+ATA_SCSI_RBUF_SIZE (2048) - i.e. 4 pages), we will still be limited
+by SD_MAX_WS16_BLOCKS. The main improvement is not longer taking the
+ata_scsi_rbuf_lock and doing and extra copy from ata_scsi_rbuf.
 
-> @@ -3656,8 +3656,7 @@ static unsigned int ata_scsi_report_supported_opcod=
-es(struct ata_device *dev,
->  		break;
->  	case ZBC_IN:
->  	case ZBC_OUT:
-> -		if (ata_id_zoned_cap(dev->id) ||
-> -		    dev->class =3D=3D ATA_DEV_ZAC)
-> +		if (ata_dev_is_zoned(dev))
 
-[Severity: High]
-Should this refactoring also be applied to ata_scsiop_inq_std() and
-ata_scsiop_read_cap() to prevent an inconsistent state for Device Managed
-drives?
+Changes since v1:
+-Picked up tags from Hannes.
+-Cast to u64 to avoid potential overflow when using 32-bit arithmetic.
+-If no limit is reported, assume that only a single 512-byte page is
+ supported.
 
-They still use the identical open-coded check:
 
-drivers/ata/libata-scsi.c:ata_scsiop_inq_std() {
-        ...
-        if (ata_id_zoned_cap(dev->id) || dev->class =3D=3D ATA_DEV_ZAC)
-                memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
-        ...
-}
+Niklas Cassel (2):
+  ata: libata-scsi: fix DSM TRIM for sector sizes larger than 2048 bytes
+  ata: libata-scsi: scale DSM TRIM payload by MAX PAGES PER DSM COMMAND
 
-drivers/ata/libata-scsi.c:ata_scsiop_read_cap() {
-        ...
-        if (ata_id_zoned_cap(dev->id) || dev->class =3D=3D ATA_DEV_ZAC)
-                rbuf[12] =3D (1 << 4); /* RC_BASIS */
-        ...
-}
+ drivers/ata/libata-scsi.c | 137 ++++++++++++++++++++++++++------------
+ include/linux/ata.h       |  13 ++++
+ 2 files changed, 108 insertions(+), 42 deletions(-)
 
-By only replacing the check here in ata_scsi_report_supported_opcodes(),
-Device Managed zoned drives (ata_id_zoned_cap =3D=3D 0x02) will correctly no
-longer report support for ZBC commands, but will still incorrectly claim ZBC
-capabilities in standard INQUIRY and set the ZBC-specific RC_BASIS bit in
-READ CAPACITY (16).
+-- 
+2.55.0
 
->  			supported =3D 3;
->  		break;
->  	case SECURITY_PROTOCOL_IN:
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702063412.1892=
-584-1-dlemoal@kernel.org?part=3D1
