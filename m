@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EAC72D7D59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAF4029CE9
 	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 01:57:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782957422; cv=none; b=qbW7IvdxnvBYDPi080zIk0F4scxgIwCMMC4PX1XFNs+G5oXRa5m99IhbYbzLDc8XMVkdA0AMDyWhyfuxxTM+AmOvxDMN+KT2dfSufNMK1H/wWB693ho4cyGcFL33BoGvbo8Xe1cB3geZLVI5hLa6gxFbqtkWwtwQVXUn2tUb8/I=
+	t=1782957422; cv=none; b=FL7+kuVCqWMkbuy9y3f4ZKoU8CUUAhEexiL66WwU+LwjMR67+qxLioF1ukjI55dpfevE0+cquwuXt+s8Na0F7R9cuXBFUqWo3AYZpLf91FGXHvHkkQH+ajOf9ixBtSTUiojw5QiFH+Upqdj7ihZNQHOYiUTisqBGaKACowYcqJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1782957422; c=relaxed/simple;
-	bh=Oe8oFGCVUYQOI/h6pq+IBzlIgErc+4bzZeAacuuYtYU=;
+	bh=4/Cv3sSN7NlV+HN3AU+m3uf9AOhX5+rxwHTFo7oKnfs=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KvqoM+hc3E3Z83ngEEYQLB1tgjbdged5OMYYl5O/QSPjHWFte87v3obS4IwYIg0TW92aknlb30zEVj0481XDyLu8D72Y3mGUVFpK7q4Fh4cJvAU7ixLQr2mZC+0Iv7JLEgQMgxhWXHsDT4tY9Y5VPNKnnW5LUcy911BVx20Oe5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FZ8VaOeJ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=L8dNRI6ZOJKLE18Qf55NnrtLg2mrzoeGo281zkEOrBYDCh7hQ89PifQ9RZ6Gi+CEJH2dqBCtn19AUlZgtp+A/Qr+NOoqfdHCuxbf7DRW5QAaWxaiIjMNWT9XiKNRJLIcNopt60adSkjAL50zkkeHu8sV+ZdK1/z/0ijrQdeH4Ds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ouI1KuxB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FZ8VaOeJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B73551F00A3A;
-	Thu,  2 Jul 2026 01:57:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ouI1KuxB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DF3C1F00A3D;
+	Thu,  2 Jul 2026 01:57:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1782957421;
-	bh=JHxkoa5DaD+/BtZFLb7659KPM7r2UoAXHnM73aOoLe4=;
+	bh=9KUBATwqusaztKM+4Ysn/TQJuMtW1AQGD1y3c8pXkp0=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=FZ8VaOeJQiO+/60IIt+WsUK6lXRjt8tntd4+xZCL2unbo82xoUY+zxCBAIIMzx7Zq
-	 9CNvizA03i4ASQnlczTb1Sc2yqCNMnMoS4upHBzMMVVZ5rohPOaq6yL0APItP706+v
-	 eilpm/wsWNirvUSpEzMBF70R8bzm+Mpu/Z3qhNWtZrQYTXIfY26YgpLRWwE9vINnUO
-	 cYLk8gzQTTn4X9rLcIUim89rrX/w9vc3vb4Id8uBqicq1sk1ouC6KFpYGyCg3HZdGa
-	 EX6X1HfJ4vfTffmKTn2IPaocErh42aIywK12WR6M3IF1cY0Pu4E50uDCLSJMa1agG/
-	 sEsGgbA5IMWvw==
+	b=ouI1KuxBo004EqWlQrztUw/eKYnwfQd42YkJXEOtY84RaFFyJH+Sno1zTufDeXvCd
+	 1+8eSWhafHnV/T721aOWKB8sB5LwbiKiKYN93/5IVIXmYlGuI9nF8+g1REzkAWytIm
+	 23DtWSGy0+VayZCFwo0CfmG49gekMx8ox7/aFXo6peGRq2LrxaBHy4nDF2J4qoGGoq
+	 8r3eiXGCfABZJRFEu1Tgw0gKNHBD7XKBrfWLmahSCI22iVb6DrIVGFCPWDebjEhH9u
+	 09HXsM5dm7Y6hWNlr1dYxNfBxKAZ4vTupJ2vkG3AA129lUKDGEaS5oY2AcQJPkZyY/
+	 uX7j2WvDpsXVQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v1 4/6] ata: libata-scsi: improves checks for ZBC_IN and ZBC_OUT commands support
-Date: Thu,  2 Jul 2026 10:56:44 +0900
-Message-ID: <20260702015646.1702539-5-dlemoal@kernel.org>
+Subject: [PATCH v1 5/6] ata: libata-scsi: support reporting options 2 in REPORT SUPPORTED OPERATION CODES
+Date: Thu,  2 Jul 2026 10:56:45 +0900
+Message-ID: <20260702015646.1702539-6-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260702015646.1702539-1-dlemoal@kernel.org>
 References: <20260702015646.1702539-1-dlemoal@kernel.org>
@@ -43,38 +43,36 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Improve ata_scsi_cmd_is_supported() to check the service action for the
-ZBC_IN and ZBC_OUT opcodes, to correctly report supported zone management
-commands for zoned disks.
+Add support for the reporting options value 2 of the in REPORT SUPPORTED
+OPERATION CODES command in ata_scsi_report_supported_opcodes(). With this
+reporting option, the specified opcode to check must have a service
+action. Use ata_scsi_supported_cmd_has_sa() to check for this and fill the
+command reply buffer using the one command format based on the command
+support.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/libata-scsi.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/ata/libata-scsi.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e432e521ad31..f9e6bda6833e 100644
+index f9e6bda6833e..3f313050c63f 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -3708,8 +3708,17 @@ static bool ata_scsi_cmd_is_supported(struct ata_device *dev, u8 op, u16 sa,
+@@ -3747,6 +3747,13 @@ static unsigned int ata_scsi_report_supported_opcodes(struct ata_device *dev,
+ 			return 0;
  		}
- 		return true;
- 	case ZBC_IN:
-+		return sa == ZI_REPORT_ZONES && ata_dev_is_zoned(dev);
- 	case ZBC_OUT:
--		return ata_id_zoned_cap(dev->id) || dev->class == ATA_DEV_ZAC;
-+		switch (sa) {
-+		case ZO_CLOSE_ZONE:
-+		case ZO_FINISH_ZONE:
-+		case ZO_OPEN_ZONE:
-+		case ZO_RESET_WRITE_POINTER:
-+			return ata_dev_is_zoned(dev);
-+		default:
-+			return false;
+ 		break;
++	case 2:
++		/* One command format, must have sa. */
++		if (!ata_scsi_supported_cmd_has_sa(cdb[3])) {
++			ata_scsi_set_invalid_field(dev, cmd, 3, 0xff);
++			return 0;
 +		}
- 	case SERVICE_ACTION_IN_16:
- 		return sa == SAI_READ_CAPACITY_16;
- 	case SECURITY_PROTOCOL_IN:
++		fallthrough;
+ 	case 3:
+ 		/* One command format */
+ 		sa = get_unaligned_be16(&cdb[4]);
 -- 
 2.54.0
 
