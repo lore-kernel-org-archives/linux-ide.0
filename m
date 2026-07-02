@@ -1,145 +1,158 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2DE61F4176
-	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 00:16:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65F7741C71
+	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 00:18:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782951370; cv=none; b=W3T4Jqnzh7L+MgTNPwRijke5wiqdgaRycqT/e6mY2QQ+Nr7yTGBG9AidjpPGieP6YiYp/tmxkUymeIQqdyfSAl5RX8Nphq/DY+GS7WdjLAVCJBcFYHx24awS+J7p4Mk6k1XXA3Kms2tVHG2mjv+06yR6zgWeu93QFu9N+es/k7U=
+	t=1782951494; cv=none; b=e2ffAHnqqFT5gxjIhVu+kVuGpEfV3sUMpScZI6E1hehE4ujlPIowFkjJYwGWRTScM6ypLjUK/yznlumPk5HPUCg2Glkqer8+pRl3MgZBTDifYUt/Yn3m8VgEpwlFlilfR3jAhAu1sXftjsgXKyLVRSlXBO+jFgguFilFH5LW26w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782951370; c=relaxed/simple;
-	bh=iYYsGyBKOkQl9GXbsm24JLfaoSZRpUUTHCDZ0nlgKsE=;
+	s=arc-20240116; t=1782951494; c=relaxed/simple;
+	bh=lmN1mzYhFW0s0Ay2Y7wWfcBI5QbeIe9Ot7oi5FhBr4Q=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jHmoi8RuEcEzB/CZLv2vdJqhst7jCnrOPp6v0AXWd6drwFGkq5+8QFlhAyxTQsk49uQwp1BC4+cbCuxfbt385Vp/cdfmHYj2/gOtGpkHmNoTHKl74+RcAFRlKeYsnTcAO2F2f7dgE0t/sJF0X1L8h5ka8AZ3v5pTCVnVG3lBtt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vuayuhy1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=XEhAG6nEr8adg1c19L+N/ZsvsdfY5TCkMwlEhzI2+YHFpnbS1Ng/HODNOsz8GWPJHsO7TIWq37HfGemKL2tKmOVuU4RFW6o0cePLuk84zkihbwU7K+YCePNXARMjhXxfiCZw42rS+P0WyYthg5WwFiyX2IbNsA1aozhYdYg15bY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VOaWwMmX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vuayuhy1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E49E1F000E9;
-	Thu,  2 Jul 2026 00:16:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VOaWwMmX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F45D1F000E9;
+	Thu,  2 Jul 2026 00:18:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782951369;
-	bh=tg3PpbDN3tqWlSfpqMa+UbLqizw383kksF0fF6MAiCQ=;
+	s=k20260515; t=1782951493;
+	bh=Yf5c7+zVGecK+1q/csiok/mtjFlyBtLpYBTSzbs7WCg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Vuayuhy1o7mczSJCPDgZ5kUM5/XH3QPaCxQjTvxQ0Ts1jCisTo1kseN1Rmu/jbJGt
-	 9/PIm7eoKmMRvXxrg6NjlK/oktkrGOjRmqAclBSAE5zaZfE+vsP3Bt0eNaUZNP84/a
-	 1kzZawET9f6wlKNdkEFWpHVhGU6JXWCDwf2XM7l5xEZauD4jEwOMQHYyJ6fXkWq6iv
-	 xj7OMhjHuznY4NxJPC5e8XG2OlrjP4e7CvVpwLflsaUJ2K1uA9O6cYek8rK3siyF0y
-	 m9VDa+F2lBM2vY6/vETBz8osP9i7IjWfW4Wd4k9hRGv+xgdH+Z1Pt2RA75BwhhzVv+
-	 YtpkqbSBl6yjA==
+	b=VOaWwMmXnNFSPiKgSBdm6YqQsL5jb+pxHWVuiTXsxba/BxiVVx8Bg/Bb0JSLVcz11
+	 Er7u0CpYABHpuLkT7vAMh+HXsYLXNVmhTtiSID6rYbh5+tsI0BtLp3i0yT50QtpQha
+	 uZuN3bqHaedcuv0Rf/G6ryokXHT7QAFF34E4jQCq3kN8b6IhA5483h5fXS8oifwDUP
+	 tFhCVGpxNdGQCxpL0Csaa3DML9eDCoy+Ne6uKCXcZxIWPETNuP2rqyzGrkMwxB13uo
+	 zOXev4KPRLpges/hEgJUdsgbB1c0jZp5Y6VuFIQekJRZ1EetEJYyIgBA/EoIKUw0SF
+	 e+5sy4a1c7wfA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCHv2 5/8] ata: sata_dwc_460ex: fix data race on
- hsdev->sactive_issued in interrupt handler
+Subject: Re: [PATCHv2 6/8] ata: sata_dwc_460ex: disable SATA interrupts on
+ device removal
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Rosen Penev" <rosenp@gmail.com>
-Cc: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260702000350.68331-6-rosenp@gmail.com>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260702000350.68331-7-rosenp@gmail.com>
 References: <20260702000350.68331-1-rosenp@gmail.com>
- <20260702000350.68331-6-rosenp@gmail.com>
+ <20260702000350.68331-7-rosenp@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 00:16:08 +0000
-Message-Id: <20260702001609.4E49E1F000E9@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 00:18:12 +0000
+Message-Id: <20260702001813.0F45D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Masking hardware interrupts before calling ata_host_detach() break=
+s the SCSI teardown sequence, leading to command timeouts, shutdown hangs, =
+and potentially unwritten disk caches.
+- [Medium] Missing read-back to flush posted writes when disabling hardware=
+ interrupts in sata_dwc_disable_interrupts().
+
 Pre-existing issues:
-- [Critical] The NCQ tag completion logic contains an infinite loop due to =
-a left shift instead of a right shift, which will cause a hard CPU hang ins=
-ide a spinlock-protected hardirq context.
-- [High] Unconditionally zeroing `hsdev->sactive_issued` on every interrupt=
- destroys persistent NCQ state, breaking NCQ completion tracking.
-- [High] The `clear_interrupt_bit()` function ignores the `bit` argument an=
-d inadvertently clears all pending hardware interrupts.
+- [High] sata_dwc_probe() incorrectly returns 0 (success) even if ata_host_=
+activate() fails, leading to unhandled error paths and crashes on remove.
+- [High] Masking interrupts without calling synchronize_irq() allows an in-=
+flight interrupt handler to execute concurrently with hardware teardown.
 --
 
-commit 2746dc992432ebc7a9253d28cee91b6dd821a51d
+commit df81e2008992f864aa17e308c42b08931c2b48f5
 Author: Rosen Penev <rosenp@gmail.com>
 
-ata: sata_dwc_460ex: fix data race on hsdev->sactive_issued in interrupt ha=
-ndler
-   =20
-hsdev->sactive_issued is written locklessly in sata_dwc_isr() before
-acquiring host->lock, while sata_dwc_qc_complete() performs a
-read-modify-write on the same field under the lock.  This creates a
-data race that can corrupt NCQ tag tracking state.
-   =20
-Move the zero assignment inside the critical section so all accesses
-to sactive_issued are serialized by host->lock.
+ata: sata_dwc_460ex: disable SATA interrupts on device removal
+
+This commit adds sata_dwc_disable_interrupts() and calls it at the beginning
+of sata_dwc_remove(). It masks the controller's INTMR and ERRMR registers to
+prevent unhandled interrupt storms during teardown.
 
 > diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-> index 4fc22ce4bd9aa..9a4fb911d3215 100644
+> index 4fc22ce4bd9aa..62580a58ad76e 100644
 > --- a/drivers/ata/sata_dwc_460ex.c
 > +++ b/drivers/ata/sata_dwc_460ex.c
-> @@ -470,9 +470,9 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_in=
-stance)
->  	int handled, port =3D 0;
->  	uint intpr, sactive, sactive2, tag_mask;
->  	struct sata_dwc_device_port *hsdevp;
-> -	hsdev->sactive_issued =3D 0;
+> @@ -762,6 +762,12 @@ static int sata_dwc_qc_complete(struct ata_port *ap,=
+ struct ata_queued_cmd *qc)
+>  	return 0;
+>  }
 > =20
->  	spin_lock_irqsave(&host->lock, flags);
-> +	hsdev->sactive_issued =3D 0;
+> +static void sata_dwc_disable_interrupts(struct sata_dwc_device *hsdev)
+> +{
+> +	sata_dwc_writel(&hsdev->sata_dwc_regs->intmr, 0);
+> +	sata_dwc_writel(&hsdev->sata_dwc_regs->errmr, 0);
+
+[Severity: Medium]
+Will these posted writes reach the hardware predictably before the CPU moves
+on to tear down the device?
+
+Since sata_dwc_writel() wraps writel_relaxed(), writes to the memory-mapped
+registers over the system bus can be posted. Without a subsequent dummy read
+to a controller register to flush them, the interrupt mask configuration mi=
+ght
+be delayed in write buffers. This could allow an interrupt to fire during
+teardown, which is exactly what this change is intended to prevent.
+
+> +}
+> +
+
+[ ... ]
+
+> @@ -1217,6 +1223,8 @@ static void sata_dwc_remove(struct platform_device =
+*ofdev)
+>  	struct ata_host *host =3D dev_get_drvdata(dev);
+>  	struct sata_dwc_device *hsdev =3D host->private_data;
+> =20
+> +	sata_dwc_disable_interrupts(hsdev);
+> +
 
 [Severity: High]
-This is a pre-existing issue, but does unconditionally zeroing
-hsdev->sactive_issued on every entry into sata_dwc_isr() destroy persistent
-NCQ state?
+Does masking interrupts here break the SCSI teardown sequence?
 
-It looks like this breaks NCQ completion tracking by erasing tags set during
-SATA_DWC_INTPR_NEWFP handling.
-
-Would this force a fallback to a non-standard NCQ completion path that hand=
-les
-commands individually?
-
-> =20
->  	/* Read the interrupt register */
->  	intpr =3D sata_dwc_readl(&hsdev->sata_dwc_regs->intpr);
-
-[Severity: Critical]
-This is a pre-existing issue, but does the NCQ tag completion logic contain=
- an
-infinite loop when processing completions?
-
-Inside the NCQ completion block of sata_dwc_isr():
-
-        while (!(tag_mask & 0x00000001)) {
-                tag++;
-                tag_mask <<=3D 1;
-        }
-
-Because tag_mask is left-shifted, bit 0 will remain 0 and tag_mask eventual=
-ly
-evaluates to 0. At that point, !(0 & 1) is always true.
-
-Would this cause the loop to spin forever inside a spinlock-protected hardi=
-rq
-context?
+When ata_host_detach() is called, it instructs the SCSI layer to issue cache
+flush and spindown commands. If hardware interrupts are already masked, won=
+'t
+these commands fail to complete and eventually time out? This could lead to=
+ a
+system hang during device removal and potential data loss if caches are not
+successfully flushed.
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does the clear_interrupt_bit=
-()
-function ignore the bit argument and inadvertently clear all pending hardwa=
-re
-interrupts?
+This isn't a bug introduced by this patch, but does the teardown sequence
+leave a race window with the still-registered ISR?
 
-drivers/ata/sata_dwc_460ex.c:clear_interrupt_bit()
-        sata_dwc_writel(&hsdev->sata_dwc_regs->intpr,
-                        sata_dwc_readl(&hsdev->sata_dwc_regs->intpr));
+The interrupt handler is registered using devm_request_irq() and is only
+freed by devres after sata_dwc_remove() returns. While the new masking stops
+new interrupts, it does not wait for an already-running ISR on another CPU =
+to
+finish. Since synchronize_irq() isn't called, could the ISR execute
+concurrently with ata_host_detach(), phy_exit(), and sata_dwc_dma_exit_old(=
+),
+accessing freed memory or hardware in an invalid state?
 
-Since it reads the intpr register and writes the exact read value back,
-assuming a standard Write-1-to-Clear (W1C) register model, would this clear
-all pending interrupts?
+[Severity: High]
+This is a pre-existing issue, but can sata_dwc_remove() crash if the initial
+device probe failed?
 
-Could hardware interrupts that occur simultaneously with NEWFP interrupts be
-permanently lost?
+Looking at sata_dwc_probe():
+
+    err =3D ata_host_activate(host, irq, sata_dwc_isr, 0, &sata_dwc_sht);
+    if (err)
+        dev_err(dev, "failed to activate host");
+
+    return 0;
+
+If ata_host_activate() fails, probe still returns 0 (success). When the
+driver is later unbound, sata_dwc_remove() will unconditionally call
+ata_host_detach() and attempt to tear down host structures that were never
+successfully initialized, potentially causing a NULL pointer dereference or
+list corruption.
+
+>  	ata_host_detach(host);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702000350.6833=
-1-6-rosenp@gmail.com?part=3D1
+1-7-rosenp@gmail.com?part=3D1
