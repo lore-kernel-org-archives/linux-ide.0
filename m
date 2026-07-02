@@ -1,96 +1,105 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1579533D6;
-	Thu,  2 Jul 2026 02:02:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75381533D6
+	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 02:07:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782957773; cv=none; b=tzU2jA2EfKpQrIkuKPh0Bm0+0b5S/U7Tpn6LuXoAE//rgoj5xfrwJO4lf9ruT+JEl2ng/YmlmlUTqfsXAheS6Z19mWj11ph8lW0WbmndkXD6xS/d9gziC/UTKP4BQcpsLozRE6xiTQzX2jR94/3GsT9rQDcWXnA9LiofhY1PZYc=
+	t=1782958059; cv=none; b=Ui0U1CWD3zGXpLkuS983U/A+xd7irlulF0M8cY6pQ23zbBZgT88FJw80ToBEN7YF6VvUqydZ+5wscmVFHbQeOZZzu8QDATm1Uub3dx/IRC6pPYjeMltlvb19LWqF7v8tvgs/bPp/4HDpMjIQ6Ty3mBjx+vjgmucdUitaic3UuSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782957773; c=relaxed/simple;
-	bh=EVhcObEECHTjAeVYmHE+vPVc2mAyf49zpo3beYu8aMg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HYZFrrSNg5Ndq60PInaVlLRxkXDaI84JyVriq8VaBgaGVRPNY3d4hnCYa/Yh0F3nBYVPppw3I05Hc2ld0/K9FDDliDrfEpDtSLDYzPuL8/3jCEYE0mNb0/cGBDaYBc5gjDjJSPfblWogdYBWb6dUGdtGTqairAY6qcEiGfb6hT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RJndfuqT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782958059; c=relaxed/simple;
+	bh=clx3r1yDQ4oKzIfCYxmrT9AxstmLK50C4wd5t46wNgY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=seEi4UM3pZ3IjhSYQ+FpUgHBCKdXUgoTKgbUAi/QgXpJVQNiIUHHnYhWQ7FGwNQRF8dsUBIy5mZGydFi6imL1kfHZT4bJ6uWUzW/xyMUkaKFrfsfpydC44KEURmicWU7Vdxeb0QpVIwRgEZbcW1D4tq1/JnH1x4UDz0VLjZxazg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BOU11jAD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RJndfuqT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A59D1F000E9;
-	Thu,  2 Jul 2026 02:02:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BOU11jAD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E00E61F000E9;
+	Thu,  2 Jul 2026 02:07:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782957772;
-	bh=N6QdvP25qfvZrufRAvYCnW3j+yy6X+IASdCTsh9x5AM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=RJndfuqTVBc700G3+nDF2gtuYTJPMhg1cRDCk7r49YoUHOxOfuZm5NRkqudpq1Hjd
-	 UxkmzO/qABHx/UiLWj+jgnUlLGkz4nXQ2ogW0vdGjvqlZ612c5WHbAQ0fxCExz77ZV
-	 WjkHijQm0xBnYS9HmeEGP541bsqHpCiaKzP79vqeT2A/K0hmYl8OkBQ2NGEB4OEF2p
-	 1H24TMRAqC4CnsqUZLbQ5Bx2joxf4BgRvugAIBwj1t+OhSETtkernWOXDCxS5uoEyR
-	 p/HjLo0zngngyahYP2R2PqAp0+6a1FITxxqFDB5N6SkQFxD+oupDPkXkFcV3hNGx+Q
-	 BLNM5U7G3m/Kw==
-Message-ID: <5eb27fed-607b-4f86-ac55-e2eb99a00ec0@kernel.org>
-Date: Thu, 2 Jul 2026 11:02:50 +0900
+	s=k20260515; t=1782958058;
+	bh=AyEBGPxzfW4TCGpWFvUMdBUNl0Dv8liWSQdigv7/nkc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BOU11jADgHyt12GqrQGjpl5GBw6TsXg/mOd/zgqLmEiKcg5RKwHF5hI7+nWEUEUp6
+	 PpaFqYG/o8mWi5a7dMcOItuURBxd+CjFXl9xeEEw2ZpkT1ImMbnbtbCXNTG/Lv9iZa
+	 5cA7mUpDWEP7unuZ3dZHVFyIjyytwvpYdLFaPLK3RRjaKYIRRBCRCuvOcj/f+rgIvN
+	 J70An3X2TGoSjNY59imwn+qVrBa70zhkS6p6j3w7jf/JrbXPKlgdi+x1uQ0oMXlMia
+	 zWhISSu3oLBvXlzOrBMXcaeHOrDcoPIlijPi8JPngqb1bD+Tjkj5YN/ihKgLGT5T9s
+	 5m4pAKuzJhTug==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v1 4/6] ata: libata-scsi: improves checks for ZBC_IN and
+ ZBC_OUT commands support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Damien Le Moal" <dlemoal@kernel.org>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260702015646.1702539-5-dlemoal@kernel.org>
+References: <20260702015646.1702539-1-dlemoal@kernel.org>
+ <20260702015646.1702539-5-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 02 Jul 2026 02:07:37 +0000
+Message-Id: <20260702020737.E00E61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHv2 0/8] ata: sata_dwc_460ex: cleanups and interrupt
- ordering fix
-To: Rosen Penev <rosenp@gmail.com>, linux-ide@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20260702000350.68331-1-rosenp@gmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260702000350.68331-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 7/2/26 09:03, Rosen Penev wrote:
-> This series modernizes the sata_dwc_460ex driver by replacing legacy OF
-> APIs with their modern device-property and platform-device counterparts,
-> converting old DMA resource teardown to devm-managed cleanup, fixing a
-> latent interrupt-ordering bug, and dropping a redundant stack copy of
-> port_info.
-> 
-> Patch 4 fixes a real issue: sata_dwc_enable_interrupts() was called
-> before the IRQ handler was registered, so a probe failure or an
-> asserted interrupt could trigger an unhandled irq storm.
-> 
-> v2: sashiko fixes.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] ZBC_IN is incorrectly evaluated as not having service actions be=
+cause ZI_REPORT_ZONES equals 0, breaking all REPORT SUPPORTED OPERATION COD=
+ES (RSOC) formats.
+--
 
-Several patches in this series are clearly bug fixes that should come first in
-the series and have a fixes tag and cc-stable. Can you please reorganize the
-series with the fixes first ?
+commit 6af9854276b3609a524ea350c87e6e2924aee340
+Author: Damien Le Moal <dlemoal@kernel.org>
 
-Also please try to avoid growing the patch series with more patches in response
-to sachiko "not introduced by this patch" comments on valid problems. Send
-incremental patches instead. Otherwise, making progress will take a longer time,
-and bigger series are harder to review.
+ata: libata-scsi: improves checks for ZBC_IN and ZBC_OUT commands support
 
-> 
-> Rosen Penev (8):
->   ata: sata_dwc_460ex: use device_property_present()
->   ata: sata_dwc_460ex: use platform_get_irq()
->   ata: sata_dwc_460ex: enable SATA interrupts only after IRQ handler is
->     registered
->   ata: sata_dwc_460ex: drop redundant struct copy of port_info
->   ata: sata_dwc_460ex: fix data race on hsdev->sactive_issued in
->     interrupt handler
->   ata: sata_dwc_460ex: disable SATA interrupts on device removal
->   ata: sata_dwc_460ex: fix PHY lifecycle ordering on device removal
->   ata: sata_dwc_460ex: use devm for old DMA resource lifetime management
-> 
->  drivers/ata/sata_dwc_460ex.c | 99 ++++++++++++++++++------------------
->  1 file changed, 49 insertions(+), 50 deletions(-)
-> 
-> --
-> 2.55.0
-> 
+Improve ata_scsi_cmd_is_supported() to check the service action for the
+ZBC_IN and ZBC_OUT opcodes, to correctly report supported zone management
+commands for zoned disks.
 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index e432e521ad318..f9e6bda6833e4 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3708,8 +3708,17 @@ static bool ata_scsi_cmd_is_supported(struct ata_d=
+evice *dev, u8 op, u16 sa,
+>  		}
+>  		return true;
+>  	case ZBC_IN:
+> +		return sa =3D=3D ZI_REPORT_ZONES && ata_dev_is_zoned(dev);
 
--- 
-Damien Le Moal
-Western Digital Research
+[Severity: Medium]
+Does this inadvertently break REPORT SUPPORTED OPERATION CODES (RSOC) forma=
+ts
+for ZBC_IN?
+
+Because ZI_REPORT_ZONES evaluates to 0, the helper
+ata_scsi_supported_cmd_has_sa() will evaluate this as not having service
+actions:
+
+drivers/ata/libata-scsi.c:ata_scsi_supported_cmd_has_sa() {
+    return cmd->sa !=3D 0;
+}
+
+This appears to cause incorrect behavior during RSOC handling for ZBC_IN:
+
+- Format 0 (ata_scsi_report_all_supported_opcodes) fails to set the SERVACTV
+  (Service Action Valid) bit because cmd->sa evaluates to 0.
+
+- Format 1 incorrectly accepts ZBC_IN.
+
+- Format 2 (ata_scsi_report_supported_opcodes) incorrectly rejects valid
+  queries for ZBC_IN with CHECK CONDITION (ILLEGAL REQUEST), preventing
+  userspace from probing ZBC_IN service actions.
+
+>  	case ZBC_OUT:
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702015646.1702=
+539-1-dlemoal@kernel.org?part=3D4
