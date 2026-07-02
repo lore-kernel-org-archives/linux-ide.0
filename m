@@ -1,160 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302A13890F1
-	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 06:34:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79EA834E777
+	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 06:38:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782974068; cv=none; b=Xa9hcEJn4n2TvvSNJwCgi0Gd/E53/Qeu9Fo1r5vreaTu65veS86pJ/3sCigycPS5TlfiNYpXz5jZNhIG9IpeWZVzULSnSm92GVu2U4Oi7bU/gEIq+YwcZcNLepO8Jpeg9zEnu6TuKFlFL23Rz6iRuP6y6c8Xe5T1BOqeNMcxe1k=
+	t=1782974326; cv=none; b=MlWGrVM2kEJDk2svFmnxNBHPHNqEbNhRNtk0TCCU7svrCYl2KscoWz6nyuESgD5Phy8Q8uCOmh56pc26x/dCcsYxv9A8H+4n+aX+Ue5OXQlWo5bfYpS8dvh89PWeAtoGiglmqkR/gyjp6mVuEDieDNIRsB/N8Iq2KZdaXnxFCxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782974068; c=relaxed/simple;
-	bh=UF+s5kFLvzposD55yA269Rv4MFMoPqjvsVjBC5MHUuw=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NUpChIt7sZKB89YQxBGTI+EhMtn8quL4bcMXpDgWsqp0/1UDGxeMzA0HziQDPYV6zZkuF5kZDIjqS/hVRlyUAWOLFXpmFUlP/85sZPYgS+/+hHOnNhtx+hA4M3rFkaU5nB2i8Aro0mEXYbuQrpWpaKpVis6km4iPd5eVdo1yNRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nU4fNYTW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782974326; c=relaxed/simple;
+	bh=a1GjsmEkHVXla4S45CiiIFkQzb9UxO2yXhQzHWlYgXA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=AjdWx3Nq1ZFdKNEANWJEZ3jyyXV/Bf1u1hLYwCf31rBLF5iuqX1sh/DYVAPQLO/ha7HJRnNu6VZgKTtZ9HjrqXvYG4Od5tOrTOmf5Vifqj9gw1lzWEIySVWyNF1xOI9jeViJyomd88BgAy+EI2ooMrl9vwPt4g61vQ0IMmVwCNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=auP9+W8x; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zTFkiaYw; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=auP9+W8x; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zTFkiaYw; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nU4fNYTW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B91E51F000E9;
-	Thu,  2 Jul 2026 06:34:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782974067;
-	bh=ffYmPWPddD80gq6Reof2hIuoXvvEunWXTz4fD9wctJI=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=nU4fNYTWiT5IBgKpcO0KVgLVsVNAQr/yXLzMazXL9yZqNMT+FpcNxfeRi+vQEGYDH
-	 u2JzIbZdnXEbAUs/0iRauz+LBlTzsXbJ07u4SQvgT7WHc9u81pcVmZGtO7xv5ue2Ro
-	 Dn1jBRheZVrEnymBOtPIU7yamnvqmqqZYKJc0wwbOE701IDL97iLVGtP7tEShcH91a
-	 yFhtyWb1OIBykFMuNDZ4J2kySuMS8nzzZWIkTL+9ThwJwUUBl3Zj3uuI98jKYGjTZv
-	 XIyMMwnXiY9Do5pXo5ez9iZnRemwCtMAn+pqJ9gdvjCtvAykoaWA//CcxoWPT5dtYg
-	 COdApIEbGTP0w==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v2 5/5] ata: libata-scsi: support the all command format for reporting supported commands
-Date: Thu,  2 Jul 2026 15:34:12 +0900
-Message-ID: <20260702063412.1892584-6-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260702063412.1892584-1-dlemoal@kernel.org>
-References: <20260702063412.1892584-1-dlemoal@kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="auP9+W8x";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zTFkiaYw";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="auP9+W8x";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zTFkiaYw"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id AA68E75B35;
+	Thu,  2 Jul 2026 06:38:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1782974322; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9MpX2K5pbBw1Uk9SjZJbTDy9PGebzitoIF29R4z6f0g=;
+	b=auP9+W8xmRzwS8OtduFfBbGU6tTvAdhM2Pk3DqXemhloXyBhUynM7Wla7SJxOlCshROy7j
+	7LvRvxl/duf6AkgcyNEIXc33Roj0b3QNVWmoeKSTeEL+PFcoHD3YdV4pRsUXk398hIo1z+
+	rb9YxdrLH4CZBnA3RrgIrbPiE4U6YKQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1782974322;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9MpX2K5pbBw1Uk9SjZJbTDy9PGebzitoIF29R4z6f0g=;
+	b=zTFkiaYwLL4IoKt8axpF+cspnKOA4N+s9uFpaPhTopSnrJWcSLp1vZ51prhRBrRK1D/0wr
+	+H16JVlVjp2tqHDA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1782974322; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9MpX2K5pbBw1Uk9SjZJbTDy9PGebzitoIF29R4z6f0g=;
+	b=auP9+W8xmRzwS8OtduFfBbGU6tTvAdhM2Pk3DqXemhloXyBhUynM7Wla7SJxOlCshROy7j
+	7LvRvxl/duf6AkgcyNEIXc33Roj0b3QNVWmoeKSTeEL+PFcoHD3YdV4pRsUXk398hIo1z+
+	rb9YxdrLH4CZBnA3RrgIrbPiE4U6YKQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1782974322;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9MpX2K5pbBw1Uk9SjZJbTDy9PGebzitoIF29R4z6f0g=;
+	b=zTFkiaYwLL4IoKt8axpF+cspnKOA4N+s9uFpaPhTopSnrJWcSLp1vZ51prhRBrRK1D/0wr
+	+H16JVlVjp2tqHDA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 85DDA779AA;
+	Thu,  2 Jul 2026 06:38:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id hcFNHnIHRmrqTgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 02 Jul 2026 06:38:42 +0000
+Message-ID: <31e15b73-4f34-42b5-b735-6523f52aad30@suse.de>
+Date: Thu, 2 Jul 2026 08:38:42 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/5] ata: libata: rename ata_dev_is_zac()
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
+References: <20260702063412.1892584-1-dlemoal@kernel.org>
+ <20260702063412.1892584-2-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260702063412.1892584-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_THREE(0.00)[3];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Level: 
 
-Add support to ata_scsi_report_supported_opcodes() for the all command
-format indicated with a reporting option of 0. The function
-ata_scsi_report_all_supported_opcodes() is introduced to implement this
-support. This function operates by testing all commands of the
-ata_supported_cmds array and testing them using
-ata_scsi_cmd_is_supported(), filling rbuf as it loops through all the
-commands that libata can emulate or translate.
+On 7/2/26 8:34 AM, Damien Le Moal wrote:
+> The helper function ata_dev_is_zac() checks if a device is a ZAC class
+> device (host managed zoned disk) or if it is a host aware zoned disk, that
+> is, a regular ATA disk that supports the zoned capabilities. So the name
+> of this helper function is confusing as it hints at the first case only.
+> 
+> Rename this helper function to ata_dev_is_zoned() to avoid confusions and
+> better reflect the two cases tested.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/ata/libata-core.c | 6 +++---
+>   drivers/ata/libata-scsi.c | 7 +++----
+>   drivers/ata/libata.h      | 2 +-
+>   3 files changed, 7 insertions(+), 8 deletions(-)
+> 
+Sigh ... This was the first function I ever coded when starting SMR support.
 
-With this change, sg_opcodes /dev/sdX is able to list all commands
-supported by libata and a device. An example below is shown for a SATA
-disk also supporting CDL:
+You could have shown a bit more respect ;-)
 
-  # sg_opcodes /dev/sda
-    ATA       WDC  WUH722626AL  WZ41
-    Peripheral device type: disk
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-  Opcode  Service    CDB  RWCDLP,  Name
-  (hex)   action(h)  size   CDLP
-  -----------------------------------------------
-   00                  6    0,0    Test Unit Ready
-   01                  6    0,0    Rezero Unit
-   03                  6    0,0    Request Sense
-   08                  6    0,0    Read(6)
-   0a                  6    0,0    Write(6)
-   0b                  6    0,0    Seek(6)
-   12                  6    0,0    Inquiry
-   15                  6    0,0    Mode select(6)
-   1a                  6    0,0    Mode sense(6)
-   1b                  6    0,0    Start stop unit
-   1d                  6    0,0    Send diagnostic
-   25                 10    0,0    Read capacity(10)
-   28                 10    0,0    Read(10)
-   2a                 10    0,0    Write(10)
-   2b                 10    0,0    Seek(10)
-   2f                 10    0,0    Verify(10)
-   35                 10    0,0    Synchronize cache(10)
-   55                 10    0,0    Mode select(10)
-   5a                 10    0,0    Mode sense(10)
-   7f     1ff0        32    0,0    ATA pass-through(32)
-   85                 16    0,0    ATA pass-through(16)
-   88                 16    1,1    Read(16)
-   8a                 16    1,2    Write(16)
-   8f                 16    0,0    Verify(16)
-   91                 16    0,0    Synchronize cache(16)
-   93                 16    0,0    Write same(16)
-   9e       10        16    0,0    Read capacity(16)
-   a0                 12    0,0    Report luns
-   a1                 12    0,0    ATA pass-through(12)
-   a3        c        12    0,0    Report supported operation codes
+Cheers,
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/ata/libata-scsi.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e75ed573e234..b14fd30c0e38 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3721,6 +3721,42 @@ static bool ata_scsi_cmd_is_supported(struct ata_device *dev, u8 op, u16 sa,
- 	return true;
- }
- 
-+static unsigned int
-+ata_scsi_report_all_supported_opcodes(struct ata_device *dev, u8 *rbuf)
-+{
-+	struct ata_scsi_cmd_support sup;
-+	const struct ata_scsi_cmd *cmd;
-+	unsigned int len = 4;
-+	u8 *buf = &rbuf[len];
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(ata_supported_cmds); i++) {
-+		if (len > ATA_SCSI_RBUF_SIZE - 8)
-+			break;
-+
-+		cmd = &ata_supported_cmds[i];
-+
-+		/* All command format */
-+		if (!ata_scsi_cmd_is_supported(dev, cmd->op, cmd->sa, &sup))
-+			continue;
-+
-+		buf[0] = cmd->op;
-+		put_unaligned_be16(cmd->sa, &buf[2]);
-+		buf[5] = (sup.rwcdlp << 6) | (sup.cdlp << 2);
-+		if (cmd->sa_valid)
-+			buf[5] |= 0x01;
-+		put_unaligned_be16(cmd->cdb_len, &buf[6]);
-+
-+		/* CTDP == 0 */
-+		len += 8;
-+		buf += 8;
-+	}
-+
-+	put_unaligned_be32(len - 4, &rbuf[0]);
-+
-+	return len;
-+}
-+
- static unsigned int ata_scsi_report_supported_opcodes(struct ata_device *dev,
- 						      struct scsi_cmnd *cmd,
- 						      u8 *rbuf)
-@@ -3730,6 +3766,9 @@ static unsigned int ata_scsi_report_supported_opcodes(struct ata_device *dev,
- 	u16 sa = 0;
- 
- 	switch (cdb[2]) {
-+	case 0:
-+		/* All command format */
-+		return ata_scsi_report_all_supported_opcodes(dev, rbuf);
- 	case 1:
- 		/* One command format with command support data, ignore sa. */
- 		if (ata_scsi_supported_cmd_use_sa(cdb[3])) {
+Hannes
 -- 
-2.54.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
