@@ -1,81 +1,33 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E1C634E777
-	for <linux-ide@vger.kernel.org>; Thu,  2 Jul 2026 06:54:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74EA138E8D8;
+	Thu,  2 Jul 2026 07:00:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782975299; cv=none; b=o/869OCk5GDN48CipUWvITDgRoCpB93z7EJci3yIiVNaz1b2R6U5bo1VesB+m/9NGnSZoAnfv+pSjI4n91nBz9oWCH3xp4pt/WEzXbjLvyc3/M7lW5+LwG5xJYzldykGzQOxPdTBTmFCTdaNdaaZIFwdLoAfJWTyzUSQ+L4hz00=
+	t=1782975621; cv=none; b=SRkRoli4RMtD2TBJf9goMCRSQLeFY3EN+aam/OiwZK29sDjBNANHyV3qq2L4loJrNjJoGN2yc7PaUQbUP9/azztWGTqXOb5DVUKNxcyw6CKA8G+6lVEtbsG1hXmlAf2I7QX1NdI644qF+BtVNV1MBBX95Gr6wuqXMLlrOLTTRq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782975299; c=relaxed/simple;
-	bh=QoplbqtGfzbX2B9n6A50NY3VluflBcJYKCWl9HxGOz0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=gAxO+8UFY1M7e/Y3K6C7YYNo5FBdLNss7uhChZXAgv0Vda30RMCJlAYpRN+6T7AHJQ8QPActwFiGEVyoXu1j1Uuaj79n5wE94JLl3u+HIfCSwnjh+3tcoCVoe795a05MQXj8TLaaKmr5kZ8Kk3Pszxs0duzZt+EDLLjYdTYNyQo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=HmR5cprt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JUim0JLO; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=hNh/pYFS; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=cFSQx5Gh; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1782975621; c=relaxed/simple;
+	bh=H0Q8gI21oGdzfUcOFvcxeAjKdH1I6nFAUlNmk/tpM3A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=R/rbFE2XH+oJeNQDZc3EacOz5pe15YW11EYeDqOFy4AYzqK39gtddRdwHJ7Ru5LHaBwgyPyPk5ZjXOaCOrlEwsR31jQCzp4YQf0eLWyhce77RM3q39GmiL1xv4OAAQ52Yf28wWnRSKig9hK3acVuMQJxNowani8JzAvmKVS5p50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oH/H+1jI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="HmR5cprt";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JUim0JLO";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="hNh/pYFS";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="cFSQx5Gh"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id AB6D275BB1;
-	Thu,  2 Jul 2026 06:54:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1782975291; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ln8uaRlhW8zgndLuwatW2BWIviJ2Ua63qIXg0KBccXI=;
-	b=HmR5cprtr6ZtYbXEzL/sEUKPNdCvaBcdqXl8rCpsX2qoSxbfE6qfVrdoyqj33n86Q+GHsF
-	zLDMXVfKCp+L2k3nVkEmhFZld499r+SPiCXG23wznsdRtBdKL/jeWdJfTqJJAdVsQhf+45
-	kMWJheb2dulsQ9JBsgX+esH4h3zEu30=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1782975291;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ln8uaRlhW8zgndLuwatW2BWIviJ2Ua63qIXg0KBccXI=;
-	b=JUim0JLOChhVnoLEPi3zc7iTrNCchofcnMVTHDvRaADo5qEX/JpU/MSNmEia/oJxZcPPTb
-	WoRrGloJF1lhJyDQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="hNh/pYFS";
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=cFSQx5Gh
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1782975289; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ln8uaRlhW8zgndLuwatW2BWIviJ2Ua63qIXg0KBccXI=;
-	b=hNh/pYFSfLoeeNcBlOG3yOXlqCbk80fjXQaTI0PX0F0RE3BEP9zl3cuZB2VmLNw7tFueEM
-	KPkrGIsyaHQAX6JH3yVSw83Nj4jnm7IE1/VekzQwVOQ54Gd24XyW5bWBPqdgvS/YArOOX3
-	io8QVaHK/ZKxUjT4T41xkyPsqU4ZYyw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1782975289;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ln8uaRlhW8zgndLuwatW2BWIviJ2Ua63qIXg0KBccXI=;
-	b=cFSQx5GhvWNSB0ket3VZfySuv9dHhvu/4A3ecVXBgmG/j5Etrt71AMHG859yn8GQmLCdWF
-	DA6b5fRetuCvl1Aw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 89968779AA;
-	Thu,  2 Jul 2026 06:54:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id sFUNIDkLRmodXwAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 02 Jul 2026 06:54:49 +0000
-Message-ID: <4ce39b7c-8d8d-4334-ab3f-5c59a9f80270@suse.de>
-Date: Thu, 2 Jul 2026 08:54:49 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oH/H+1jI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 940381F000E9;
+	Thu,  2 Jul 2026 07:00:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782975620;
+	bh=cpCiJPZNrQ4osQRHla7T/Pi15rCP7atqnvJKmzSanak=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=oH/H+1jIY2EuHRQEfloOyzzqOO4JbppOdWTtS0eBvBbj0Aizmrs+BnocZzsSEA2Pu
+	 NOG5cmg6FGn5BQTSdPm7bFV8hrWHo2cqpKN/twGIY54jN+vhCzFuXrKsc6G3BJmabE
+	 kpWX77ppWyz7A8nEUWyPkRLqjr7+oDOHa0DghgtOe+aFBz1OUW8koiXZQ+nfF8S+Kk
+	 7BEYy/hnQtPt3TppqD5WPPQI1IvWQ4ycEdrdixwqWui4Yn2/qC6gEeqh3flEWilh6v
+	 t55MnRAoIG43rZLFt4ioTSLBbr07vYP3AkCNnQg4CrS5h06Xh5Asb1Agmd5+jDwvEV
+	 nmaDbyCrD8Dgg==
+Message-ID: <3acde700-be7c-4ca0-b646-1dc5f6976cad@kernel.org>
+Date: Thu, 2 Jul 2026 16:00:18 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -83,112 +35,109 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 5/5] ata: libata-scsi: support the all command format
- for reporting supported commands
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
+Subject: Re: [PATCH v2 4/5] ata: libata-scsi: support reporting options 2 in
+ REPORT SUPPORTED OPERATION CODES
+To: sashiko-reviews@lists.linux.dev
+Cc: cassel@kernel.org, linux-ide@vger.kernel.org
 References: <20260702063412.1892584-1-dlemoal@kernel.org>
- <20260702063412.1892584-6-dlemoal@kernel.org>
+ <20260702063412.1892584-5-dlemoal@kernel.org>
+ <20260702065227.EA8671F000E9@smtp.kernel.org>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260702063412.1892584-6-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Rspamd-Action: no action
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	TO_DN_SOME(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: AB6D275BB1
-X-Spam-Score: -4.51
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260702065227.EA8671F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 7/2/26 8:34 AM, Damien Le Moal wrote:
-> Add support to ata_scsi_report_supported_opcodes() for the all command
-> format indicated with a reporting option of 0. The function
-> ata_scsi_report_all_supported_opcodes() is introduced to implement this
-> support. This function operates by testing all commands of the
-> ata_supported_cmds array and testing them using
-> ata_scsi_cmd_is_supported(), filling rbuf as it loops through all the
-> commands that libata can emulate or translate.
+On 7/2/26 15:52, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> - [Medium] Reporting options 1 and 2 incorrectly terminate with CHECK CONDITION (INVALID FIELD IN CDB) for valid queries, violating SCSI protocol.
+> - [Medium] Reporting option 3 incorrectly evaluates the REQUESTED SERVICE ACTION field for commands that do not use service actions.
+> --
 > 
-> With this change, sg_opcodes /dev/sdX is able to list all commands
-> supported by libata and a device. An example below is shown for a SATA
-> disk also supporting CDL:
+> commit 8b0fcbdec2fbb5690930a99f6f8a7faf9e8bd511
+> Author: Damien Le Moal <dlemoal@kernel.org>
 > 
->    # sg_opcodes /dev/sda
->      ATA       WDC  WUH722626AL  WZ41
->      Peripheral device type: disk
+> ata: libata-scsi: support reporting options 2 in REPORT SUPPORTED OPERATION CODES
+>     
+> Add support for the reporting options value 2 of the in REPORT SUPPORTED
+> OPERATION CODES command in ata_scsi_report_supported_opcodes(). With this
+> reporting option, the specified opcode to check must have a service
+> action. Use ata_scsi_supported_cmd_has_sa() to check for this and fill the
+> command reply buffer using the one command format based on the command
+> support.
 > 
->    Opcode  Service    CDB  RWCDLP,  Name
->    (hex)   action(h)  size   CDLP
->    -----------------------------------------------
->     00                  6    0,0    Test Unit Ready
->     01                  6    0,0    Rezero Unit
->     03                  6    0,0    Request Sense
->     08                  6    0,0    Read(6)
->     0a                  6    0,0    Write(6)
->     0b                  6    0,0    Seek(6)
->     12                  6    0,0    Inquiry
->     15                  6    0,0    Mode select(6)
->     1a                  6    0,0    Mode sense(6)
->     1b                  6    0,0    Start stop unit
->     1d                  6    0,0    Send diagnostic
->     25                 10    0,0    Read capacity(10)
->     28                 10    0,0    Read(10)
->     2a                 10    0,0    Write(10)
->     2b                 10    0,0    Seek(10)
->     2f                 10    0,0    Verify(10)
->     35                 10    0,0    Synchronize cache(10)
->     55                 10    0,0    Mode select(10)
->     5a                 10    0,0    Mode sense(10)
->     7f     1ff0        32    0,0    ATA pass-through(32)
->     85                 16    0,0    ATA pass-through(16)
->     88                 16    1,1    Read(16)
->     8a                 16    1,2    Write(16)
->     8f                 16    0,0    Verify(16)
->     91                 16    0,0    Synchronize cache(16)
->     93                 16    0,0    Write same(16)
->     9e       10        16    0,0    Read capacity(16)
->     a0                 12    0,0    Report luns
->     a1                 12    0,0    ATA pass-through(12)
->     a3        c        12    0,0    Report supported operation codes
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 86ac41a7d81ab..e75ed573e234b 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -3737,6 +3737,13 @@ static unsigned int ata_scsi_report_supported_opcodes(struct ata_device *dev,
+>>  			return 0;
+>>  		}
+>>  		break;
+>> +	case 2:
+>> +		/* One command format, must have sa. */
+>> +		if (!ata_scsi_supported_cmd_use_sa(cdb[3])) {
+>> +			ata_scsi_set_invalid_field(dev, cmd, 3, 0xff);
+>> +			return 0;
+>> +		}
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/ata/libata-scsi.c | 39 +++++++++++++++++++++++++++++++++++++++
->   1 file changed, 39 insertions(+)
+> [Severity: Medium]
+> Does this validation check incorrectly abort execution with a SCSI error for
+> option 2 commands that are unknown?
 > 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+> According to SPC-5, option 2 queries for unsupported commands (and similarly,
+> option 1 queries for commands with service actions) must return SUPPORT=001b.
+> Instead, this implementation erroneously aborts the command by calling
+> ata_scsi_set_invalid_field(), preventing the code from falling through and
+> correctly populating the response buffer.
 
-Cheers,
+Sashiko, please reread the SPC specifications. It says:
 
-Hannes
+If the REQUESTED OPERATION CODE field specifies an operation code for
+which the device server does not implement service actions a, then the
+device server shall terminate the command with CHECK CONDITION
+status, with the sense key set to ILLEGAL REQUEST, and the additional
+sense code set to INVALID FIELD IN CDB.
+
+Which is exactly what we are testing here.
+
+> 
+>> +		fallthrough;
+>>  	case 3:
+>>  		/* One command format */
+>>  		sa = get_unaligned_be16(&cdb[4]);
+> 
+> [Severity: Medium]
+> If an initiator issues REPORT SUPPORTED OPERATION CODES with option 3 for a
+> standard command that lacks service actions, while providing non-zero data in
+> the requested service action field, wouldn't this unconditional extraction of
+> sa cause a regression?
+
+No. Service action is not ignored with reporting options 3.
+
+> SPC-5 dictates that if the requested opcode does not have service actions, the
+> requested service action field must be ignored. By unconditionally extracting
+> sa here, it will fail to match in ata_scsi_get_supported_cmd() since
+> non-service-action commands expect sa == 0, improperly yielding SUPPORT=001b
+> for a valid, supported command.
+
+No. SPC says:
+
+a) the operation code specified by the REQUESTED OPERATION CODE
+field specifies an operation code for which the device server does
+not implement service actions, the REQUESTED SERVICE ACTION field
+is set to 00h, and the command is supported; or
+...
+then the command support data shall indicate that the command is
+supported (i.e., the SUPPORT field (see table 262) is set to 011b or 101b).
+Otherwise, the command support data shall indicate that the command is
+not supported (i.e., the SUPPORT field is set to 001b).
+
+Set for commands that do not support service actions, the command must have
+service action set to 0.
+
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Damien Le Moal
+Western Digital Research
