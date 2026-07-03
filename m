@@ -1,40 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D357F2D3A60
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED9B531714B
 	for <linux-ide@vger.kernel.org>; Fri,  3 Jul 2026 04:05:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783051554; cv=none; b=DjLFj9c06wB74bKlpGaplRJz8sevtDs9ROIL0QQxkLrFbF7WeuPyApGp8KwRevHz73SsHpVd0uobZQHOvS1TyfSnq3r8Pga3yBW9X2kGgxTfuNPknf74dSRl+gdUHwkiNeBcCSpGr/r5pxrg1Vsn0THSiw/0VCW0by8gExTz/QY=
+	t=1783051554; cv=none; b=uomDzDYd8ewdcndx+O6fvibkePnHWKLbF1Mg7G6NAKBTThWfcVGKSSGXmhbhKiDeVRO94FYB1sQU17f5VanyzgdRXPmn8Y8WqyuBJM8q/eWBlLdHpHtu8PcuW1doJZFPLpXuVB9c9t9Eqz61gw+WS3dIHuruExrA3u5eRwVJ5u0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783051554; c=relaxed/simple;
-	bh=RPAmARmySOlgeXMNho48w8ZDLL2D+3hdvCXdPJgJvQk=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OQuzsNMCVx3gIbBz/UUoY3jFbYL6OPHqkqsUdVOlMN2xel6KFoPMubFE05AzYaLZ6YB2nqvrfFJM0dsdSgPa47QwS3T/nOvczHFMDcQjvRjp31/ix4BFgnGn9b8hQmtqjmse9qiNSJLWyF0zI6cSWGbr8jPu5tMo6eObaIDzU4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OFAQz7+Y; arc=none smtp.client-ip=100.103.45.18
+	bh=foewrzNW8vSdpOfSkPjY4GvxcgJQfEeWGE7anZnfROo=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=skQYKKJWOJ0B/ecJSUNM81XEaJ/9kh+gX0T4fI7Pa12iqtpcduhRIpElKgGbNB3OsDfnAjw2A+T2XjXppUoXh6M654KLCjenjZ4QNwRJ/LZZVjZddZXIhRx7HfeJ3rZZ6FbF2qnpMFMOSD9fas5aGdscU+3cJ6rvXncEOu1sDww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PZ/dqSty; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OFAQz7+Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77E421F00A3D;
-	Fri,  3 Jul 2026 04:05:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PZ/dqSty"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB0A51F000E9;
+	Fri,  3 Jul 2026 04:05:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1783051544;
-	bh=uzxN0FhSbjSJAYoJWecsOyaiy81WGVB6naYA3IfvH9s=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=OFAQz7+YIEtj0omn6re36NGpm8PyguPugHcXrqVLru/JzhoculDmjXBIYh4dXxmYo
-	 LlWVv6P0w28EulGygRfg/56o2ZG4P+fuSsa0FWK2l+vacgyHGWtGpoDe/ylW7u3iSa
-	 0HdPj4ogdWr+V+4t1oj6auninIR+zflJFCBwJgb1uwFRumDtxt1mogUozUX4yDjo/U
-	 POpSWHcwkovncpQWrdxmKYYrV/IrgfAcrY247dT50g7KZcQz2zEx8Ym337teYaB8Y/
-	 h7zMaadPBOyPfgDln3VrUPbkFXU2KOSgMCBAtMC9OUfxjaonE5N1ty1C+VMj6cM0wu
-	 c8vTAYuFwcdPQ==
+	bh=naB/UScOV4/uXUNqn1Ex7/t82Op2O5O2awQdMuafTqE=;
+	h=From:To:Subject:Date;
+	b=PZ/dqSty1QVPllpDUf1Ij8xZ9TFqLRaiTYPWdiD3LNhQ5+Fa49lsYD0XDo+ufTJBS
+	 2faIW5a3izs60RK91CyVe3EgSWwcy61xNGd2EDAF3Nc1cfH6i008aeDQqhcuIF3nZS
+	 q03iGPxPf+zjfE5V52JkVdyGeFZXOGwbVkb35oBvuOv/bO9f9d0QMoOxtPVj0ln4br
+	 U3MkATTvJd/aQ12PLKI+Ms0oG3g2QeQYJFZ2hJlX5LPwm69S45gEbgRavfeiUPkzIZ
+	 cdk2o0tUgap9i0ijuc1V1f9Kb2zqCt79TRpCDUZJSfa7zXVQllya0F0rgxtffx5K+V
+	 FyyCTRSNhfVNw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 1/5] ata: libata: rename ata_dev_is_zac()
-Date: Fri,  3 Jul 2026 13:05:28 +0900
-Message-ID: <20260703040532.2152614-2-dlemoal@kernel.org>
+Subject: [PATCH v3 0/5] Improve ata_scsi_report_supported_opcodes()
+Date: Fri,  3 Jul 2026 13:05:27 +0900
+Message-ID: <20260703040532.2152614-1-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260703040532.2152614-1-dlemoal@kernel.org>
-References: <20260703040532.2152614-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -43,122 +40,82 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The helper function ata_dev_is_zac() checks if a device is a ZAC class
-device (host managed zoned disk) or if it is a host aware zoned disk, that
-is, a regular ATA disk that supports the zoned capabilities. So the name
-of this helper function is confusing as it hints at the first case only.
+The implementation of ata_scsi_report_supported_opcodes() mostly satisfies
+the internal use when an ATA device is probed from the SCSI layer, but it
+is very incomplete. The code is also not very flexible for extending
+support for new commands.
 
-Rename this helper function to ata_dev_is_zoned() to avoid confusions and
-better reflect the two cases tested. Use this helper in
-ata_scsiop_inq_std(), ata_scsiop_read_cap() and
-ata_scsi_report_supported_opcodes() instead of having the same tests open
-coded.
+This patch series address these issues, cleaning up the implementation and
+making REPORT SUPPORTED OPERATION CODES fully functional. E.g., with these
+changes, sg_opcodes can be used for listing all SCSI commands that are
+supported by libata-scsi and a device.
 
-While at it, to stay consistent with this renaming, also rename
-ata_dev_config_zac() to ata_dev_config_zoned().
+Example:
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
----
- drivers/ata/libata-core.c |  6 +++---
- drivers/ata/libata-scsi.c | 11 +++++------
- drivers/ata/libata.h      |  2 +-
- 3 files changed, 9 insertions(+), 10 deletions(-)
+  # sg_opcodes /dev/sda
+    ATA       WDC  WUH722626AL  WZ41
+    Peripheral device type: disk
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3b6243f0f91e..6daa99508b72 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2488,7 +2488,7 @@ static void ata_dev_config_sense_reporting(struct ata_device *dev)
- 	}
- }
- 
--static void ata_dev_config_zac(struct ata_device *dev)
-+static void ata_dev_config_zoned(struct ata_device *dev)
- {
- 	unsigned int err_mask;
- 	u8 *identify_buf = dev->sector_buf;
-@@ -2497,7 +2497,7 @@ static void ata_dev_config_zac(struct ata_device *dev)
- 	dev->zac_zones_optimal_nonseq = U32_MAX;
- 	dev->zac_zones_max_open = U32_MAX;
- 
--	if (!ata_dev_is_zac(dev))
-+	if (!ata_dev_is_zoned(dev))
- 		return;
- 
- 	if (!ata_identify_page_supported(dev, ATA_LOG_ZONED_INFORMATION)) {
-@@ -3093,7 +3093,7 @@ int ata_dev_configure(struct ata_device *dev)
- 		ata_dev_config_fua(dev);
- 		ata_dev_config_devslp(dev);
- 		ata_dev_config_sense_reporting(dev);
--		ata_dev_config_zac(dev);
-+		ata_dev_config_zoned(dev);
- 		ata_dev_config_trusted(dev);
- 		ata_dev_config_cpr(dev);
- 		ata_dev_config_cdl(dev);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d54ec1631e9a..a86721b5df7f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2020,7 +2020,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_device *dev,
- 	if (rbuf[32] == 0 || rbuf[32] == ' ')
- 		memcpy(&rbuf[32], "n/a ", 4);
- 
--	if (ata_id_zoned_cap(dev->id) || dev->class == ATA_DEV_ZAC)
-+	if (ata_dev_is_zoned(dev))
- 		memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
- 	else
- 		memcpy(rbuf + 58, versions, sizeof(versions));
-@@ -2060,7 +2060,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_device *dev,
- 	};
- 
- 	for (i = 0; i < sizeof(pages); i++) {
--		if (pages[i] == 0xb6 && !ata_dev_is_zac(dev))
-+		if (pages[i] == 0xb6 && !ata_dev_is_zoned(dev))
- 			continue;
- 		rbuf[num_pages + 4] = pages[i];
- 		num_pages++;
-@@ -2317,7 +2317,7 @@ static unsigned int ata_scsiop_inq_b2(struct ata_device *dev,
- static unsigned int ata_scsiop_inq_b6(struct ata_device *dev,
- 				      struct scsi_cmnd *cmd, u8 *rbuf)
- {
--	if (!ata_dev_is_zac(dev)) {
-+	if (!ata_dev_is_zoned(dev)) {
- 		ata_scsi_set_invalid_field(dev, cmd, 2, 0xff);
- 		return 0;
- 	}
-@@ -2848,7 +2848,7 @@ static unsigned int ata_scsiop_read_cap(struct ata_device *dev,
- 	rbuf[10] = sector_size >> (8 * 1);
- 	rbuf[11] = sector_size;
- 
--	if (ata_id_zoned_cap(dev->id) || dev->class == ATA_DEV_ZAC)
-+	if (ata_dev_is_zoned(dev))
- 		rbuf[12] = (1 << 4); /* RC_BASIS */
- 	rbuf[13] = log2_per_phys;
- 	rbuf[14] = (lowest_aligned >> 8) & 0x3f;
-@@ -3656,8 +3656,7 @@ static unsigned int ata_scsi_report_supported_opcodes(struct ata_device *dev,
- 		break;
- 	case ZBC_IN:
- 	case ZBC_OUT:
--		if (ata_id_zoned_cap(dev->id) ||
--		    dev->class == ATA_DEV_ZAC)
-+		if (ata_dev_is_zoned(dev))
- 			supported = 3;
- 		break;
- 	case SECURITY_PROTOCOL_IN:
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 0dd735c2e5b5..f813b1c32461 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -44,7 +44,7 @@ static inline bool ata_sstatus_online(u32 sstatus)
- 	return (sstatus & 0xf) == 0x3;
- }
- 
--static inline bool ata_dev_is_zac(struct ata_device *dev)
-+static inline bool ata_dev_is_zoned(struct ata_device *dev)
- {
- 	/* Host managed device or host aware device */
- 	return dev->class == ATA_DEV_ZAC ||
+  Opcode  Service    CDB  RWCDLP,  Name
+  (hex)   action(h)  size   CDLP
+  -----------------------------------------------
+   00                  6    0,0    Test Unit Ready
+   01                  6    0,0    Rezero Unit
+   03                  6    0,0    Request Sense
+   08                  6    0,0    Read(6)
+   0a                  6    0,0    Write(6)
+   0b                  6    0,0    Seek(6)
+   12                  6    0,0    Inquiry
+   15                  6    0,0    Mode select(6)
+   1a                  6    0,0    Mode sense(6)
+   1b                  6    0,0    Start stop unit
+   1d                  6    0,0    Send diagnostic
+   25                 10    0,0    Read capacity(10)
+   28                 10    0,0    Read(10)
+   2a                 10    0,0    Write(10)
+   2b                 10    0,0    Seek(10)
+   2f                 10    0,0    Verify(10)
+   35                 10    0,0    Synchronize cache(10)
+   55                 10    0,0    Mode select(10)
+   5a                 10    0,0    Mode sense(10)
+   7f     1ff0        32    0,0    ATA pass-through(32)
+   85                 16    0,0    ATA pass-through(16)
+   88                 16    1,1    Read(16)
+   8a                 16    1,2    Write(16)
+   8f                 16    0,0    Verify(16)
+   91                 16    0,0    Synchronize cache(16)
+   9e       10        16    0,0    Read capacity(16)
+   a0                 12    0,0    Report luns
+   a1                 12    0,0    ATA pass-through(12)
+   a3        c        12    0,0    Report supported operation codes
+
+Changes from v2:
+ - Patch 2: reformatted the array of supported commands and removed
+   WRITE_SAME_16 command from it.
+ - Applied review tags.
+Changes from v1:
+ - Patch 2: Added an sa_valid field to the array of supported command to
+   correctly handle sa == 0 being a valid service action (report zones) in
+   patch 3
+ - Dropped v1 patch 4
+ - Patch 5: correctly set the servact field based on the sa_valid field of
+   the array of supported commands.
+
+Damien Le Moal (5):
+  ata: libata: rename ata_dev_is_zac()
+  ata: libata-scsi: refactor ata_scsi_report_supported_opcodes()
+  ata: libata-scsi: improve service action support in
+    ata_scsi_report_supported_opcodes()
+  ata: libata-scsi: support reporting options 2 in REPORT SUPPORTED
+    OPERATION CODES
+  ata: libata-scsi: support the all command format for reporting
+    supported commands
+
+ drivers/ata/libata-core.c |   6 +-
+ drivers/ata/libata-scsi.c | 283 ++++++++++++++++++++++++++++++--------
+ drivers/ata/libata.h      |   2 +-
+ 3 files changed, 228 insertions(+), 63 deletions(-)
+
 -- 
 2.54.0
 
