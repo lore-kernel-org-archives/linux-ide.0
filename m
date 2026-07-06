@@ -1,39 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85019481648;
-	Mon,  6 Jul 2026 06:56:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96FE83EB0F4;
+	Mon,  6 Jul 2026 06:56:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783320988; cv=none; b=FiWSrQL89Chin/kXyMl4l/2/hsU5t2k3Pw3W7gxruSlG0mI7BodsM+2TI0w+t72UvfYpUjfTWyyQyFamQ7uky6gtO5uAWIYcOfehx9y78/uwD1rRnS4Tlb4R/YelJS22u1tWWRiIxIZHMnERGcFux8qNX1bfhozDr45L5JYHHFg=
+	t=1783320992; cv=none; b=OX08P78nNRF3GSPuXuXx34tTxGXooxDG85SfvTdBiwQcvCM/FmskiV81VCaFXN4pvb8B1kD7F2rz2KJgf2pwV4pI8zAPUMz5boPoWDeZb0sNzk7N6xap7BuDVxBl0asXa7MzQ343724vy+bZIqGO8ciFvAyk/qr5MNnj90J8SuI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783320988; c=relaxed/simple;
-	bh=r6PABZt7ILwhpo+ZIZ26JMI2EtSIjYao7FKvKAliuqM=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=QCKseZDsliVLkwKZ/mcWZXDXceRg6ffDVlnZGuUX60+va6wjswhKDAuFixemcav79r6VRQPqiAx1DP25vNvEk/Z7G/edyRGY5PhgrsKL8MeRJoE4GPPuNmywQNpoGrQgpzdRYC1WU0uZAetD9VWsFg6kN0y43WfLT6BS2dy29d4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rq2mKXsd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783320992; c=relaxed/simple;
+	bh=gluATQgK136X2NaA5l+2c6eiRoyER7NSQNkZM4FdPu4=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=XlnP0L36SJ1Jhkb5tRdxn+US77MZp6KsJ3j8+JJguJfP5kT58+HMw+60Co7+M1YYZTbIqQfirS1Bh+rypeSn5OxMXzwbZZxjqvvmswlb9pFUV+HAUtbXfgk6J47k/Btw/PqBHIVvHolrMpGqJnL16CxgFPeG2AgOxBCkB4DQ1g8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ck/K3T8c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rq2mKXsd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65A031F000E9;
-	Mon,  6 Jul 2026 06:56:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ck/K3T8c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5CDB1F00A3E;
+	Mon,  6 Jul 2026 06:56:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783320981;
-	bh=zTdCcxi6QeqNZVUmL/kMNNdgXQn+3026HQntWeXcHwA=;
-	h=From:To:Subject:Date;
-	b=Rq2mKXsdBYAt2c7MsuhLTKYv+LHnD1kJCgPEZwGmZyKJw0e2WUsLmdx4+I5LcBr9d
-	 o6ReiWycs6F5ayv7bYkO+mFzDWQXcXbLRh5PnvhuDkZcRcDrwLsqmTjVicSf6nU8M4
-	 yaWRsvqQRcrE573YyFe8gtvqE4lp40VvihSI1FFyTeoV7rBz3xJaKVo1OqMKBTioEF
-	 diTUWHg7BSCm9AEArJWutw7DXxPDbs66iPgkarJ2+APrS7vRvI8IikCKLq6+o6L8/a
-	 LN1BPlHCHdLvUJUCweE7fOctkreJhZIdsZmJ0X6aA04C2XZKB/qS3ItMCNM1jfvPJ/
-	 mlWEUPiCZX4Fw==
+	s=k20260515; t=1783320983;
+	bh=Yqrc2pZmygpf5FsngFXVeilRsT/c6BKvSjZbpBLe59E=;
+	h=From:To:Subject:Date:In-Reply-To:References;
+	b=ck/K3T8cjvYxWnNmHJf3LV0ej41y+a40TUsEoQjTbXwnVeMdDtqMGkaXerkW2p2RS
+	 uOQCIENHF42DZjrCK9eOkgY4NfIa0yVVBb24TZ21XbdfxX6t42yfGj9BghkDE9Sj+v
+	 CI2pPCfSjiO1Y0izxIVfGnExdfs0zBO8T2g8yrHx/d11FF6INFiybvXpmyWhMvR6hE
+	 fR5ZmiKx6Jjvk8d021OKpBmnkL9TyUINIg8+p3JpnB21QEgJPWRGvERDANTqCxWyTT
+	 iKq4uPaRqByk3HoOwVvHlYF/4CuNpzjszq9McWlxgslQ8AIkr39hFrrPyVUwFeGudX
+	 tRvRBl9SCTEPw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v1 0/9] ATA support for storage element management commands
-Date: Mon,  6 Jul 2026 15:56:01 +0900
-Message-ID: <20260706065610.3559692-1-dlemoal@kernel.org>
+Subject: [PATCH v1 2/9] scsi: define depopulation capabilities related service actions
+Date: Mon,  6 Jul 2026 15:56:03 +0900
+Message-ID: <20260706065610.3559692-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260706065610.3559692-1-dlemoal@kernel.org>
+References: <20260706065610.3559692-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -42,47 +45,65 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This patch series adds support to libata for translating all storage
-element management commands:
- - GET PHYSICAL ELEMENT STATUS
- - REMOVE ELEMENT AND TRUNCATE
- - RESTORE ELEMENTS AND REBUILD
- - REMOVE ELEMENT AND MODIFY ZONES
+Add to include/scsi/scsi_proto.h the definition of the four service
+actions of the SERVICE ACTION IN (16) command for the storage element
+depopulation and restoration capabilities, as defined in the SBC5 and
+ZBC2 specifications. These are:
+ - SAI_GET_PHYSICAL_ELEMENT_STATUS (GET PHYSICAL ELEMENT STATUS command)
+ - SAI_REMOVE_ELEMENT_AND_TRUNCATE (REMOVE ELEMENT AND TRUNCATE command)
+ - SAI_RESTORE_ELEMENTS_AND_REBUILD (RESTORE ELEMENTS AND REBUILD command)
+ - SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES (REMOVE ELEMENT AND MODIFY ZONES
+   command)
 
-The first 2 patches add definitions to scsi_proto.h related to the
-depopulation feature. The remaining patches modify libata to detect
-support for this feature and add command translation support.
+The physical element types and physical element health values reported by
+the GET PHYSICAL ELEMENT STATUS command are also defined.
 
-Martin,
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ include/scsi/scsi_proto.h | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-I have more patches for sd and scsi_debug (depop emulation) that depend on
-patch 1 & 2. So I am not sure how we should handle this series. Maybe we
-should create a "depop" topic branch in the scsi or libata tree ? I am
-open to suggestions.
-
-Damien Le Moal (9):
-  scsi: scsi_debug: move ASC and ASCQ definitions to scsi_proto.h
-  scsi: define depopulation capabilities related service actions
-  ata: libata: improve the definition of device flags
-  ata: libata-scsi: improve ata_get_xlat_func
-  ata: libata-core: detect support for depopulation capabilities
-  ata: libata-scsi: add support for the GET PHYSICAL ELEMENT STATUS
-    command
-  ata: libata-scsi: add support for the REMOVE ELEMENT AND TRUNCATE
-    command
-  ata: libata-scsi: add support for the RESTORE ELEMENTS AND REBUILD
-    command
-  ata: libata-scsi: add support for the REMOVE ELEMENT AND MODIFY ZONES
-    command
-
- drivers/ata/libata-core.c |  73 +++++++++-
- drivers/ata/libata-scsi.c | 300 +++++++++++++++++++++++++++++++++++++-
- drivers/scsi/scsi_debug.c |  46 ------
- include/linux/ata.h       |   4 +
- include/linux/libata.h    |  90 +++++++-----
- include/scsi/scsi_proto.h |  74 ++++++++++
- 6 files changed, 493 insertions(+), 94 deletions(-)
-
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index 965cde7ebc5b..c6b4a4dc8d9c 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -129,6 +129,10 @@
+ #define SAI_GET_LBA_STATUS    0x12
+ #define SAI_REPORT_REFERRALS  0x13
+ #define SAI_GET_STREAM_STATUS 0x16
++#define SAI_GET_PHYSICAL_ELEMENT_STATUS 0x17
++#define SAI_REMOVE_ELEMENT_AND_TRUNCATE 0x18
++#define SAI_RESTORE_ELEMENTS_AND_REBUILD 0x19
++#define SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES 0x1a
+ /* values for maintenance in */
+ #define MI_REPORT_IDENTIFYING_INFORMATION 0x05
+ #define MI_REPORT_TARGET_PGS  0x0a
+@@ -464,6 +468,25 @@ enum zbc_zone_alignment_method {
+ 	ZBC_CONSTANT_ZONE_START_OFFSET	= 0x8,
+ };
+ 
++/* SCSI physical element types */
++enum scsi_phys_element_type {
++	SCSI_PHYS_ELEM_TYPE_ALL_ACCESS_STORAGE	= 0x1,
++	SCSI_PHYS_ELEM_TYPE_FRAC_ACCESS_STORAGE	= 0x2,
++};
++
++/* SCSI physical element health. */
++enum scsi_phys_element_health {
++	SCSI_PHYS_ELEM_HEALTH_NOT_REPORTED		= 0x00,
++	SCSI_PHYS_ELEM_HEALTH_WITHIN_SPEC_LIMITS	= 0x01,
++	SCSI_PHYS_ELEM_HEALTH_AT_SPEC_LIMITS		= 0x64,
++	SCSI_PHYS_ELEM_HEALTH_OUTSIDE_SPEC_LIMITS	= 0x65,
++	SCSI_PHYS_ELEM_HEALTH_DEPOP_REVOKE_ERR		= 0xFB,
++	SCSI_PHYS_ELEM_HEALTH_DEPOP_REVOKE_IN_PROGRESS	= 0xFC,
++	SCSI_PHYS_ELEM_HEALTH_DEPOP_ERR			= 0xFD,
++	SCSI_PHYS_ELEM_HEALTH_DEPOP_IN_PROGRESS		= 0xFE,
++	SCSI_PHYS_ELEM_HEALTH_DEPOP_OK			= 0xFF,
++};
++
+ /* Version descriptor values for INQUIRY */
+ enum scsi_version_descriptor {
+ 	SCSI_VERSION_DESCRIPTOR_FCP4	= 0x0a40,
 -- 
 2.54.0
 
