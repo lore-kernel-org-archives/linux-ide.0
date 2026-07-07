@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FDBB3E5EC2;
-	Tue,  7 Jul 2026 07:33:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF4083E92B5;
+	Tue,  7 Jul 2026 07:33:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409614; cv=none; b=ZO2JEfbi9oWvB6KtS/oe8dhNNmsSy4Iv1YnPisd6FkrAiXGsipuq+2PMbTxv9KliC/BQYm+PzFscbr06DWXjjDJDa+LFVjOTE4LNrTxPvXTQ++ryrbrjvEfYzg5R8UnIsqY6/KVvzrHQBZuvfBbqzzMi1lUf6pUrqusSLqPzhvY=
+	t=1783409615; cv=none; b=d/o+Tc1isu/hMRV88sTM0fMf9dXcWkngQPiIMeCE7/WfHfrD0L9T58hd80Dqr6SMUUeAVUUup6z+IT1gKhuI452lVuyTfzsZWOP3FlM9zKm/Cq3BVaqIbv7J+UVkB9SS4FhEJpRDvS1A8fCRdKC0oeGCvDBOL+OXECtxRwO2HR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409614; c=relaxed/simple;
-	bh=VzAP7qanhLQVu4me13wkALuw0YXHUL1pSIOGecDyXrc=;
+	s=arc-20240116; t=1783409615; c=relaxed/simple;
+	bh=PfN7fR5sv084KvOhLn1XW/Lw1qwh0GidwWdc2CyeYeU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=isxLsURB2rvScdgXDxMJb3Rc9nmFQYRJJ4Pdegpx6brzk6QgbuaBEeSG3YBfHOFC34K7KZzO7/XtlRoeHAD4Zm/Q7FEPvYN4TGKYRlM6Ffq1WAcEp5MoY86YU52KuL9h/qm3rbrimwRM/a7AXNptYJkmBPHRgAPFOvDDKssm+wk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QSfw3KvU; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=iz/hJii0sPqCbAq4LcibpgXaN0nwXpXpDo+tv+pIyqgXT4XXYrL7ZsbujTwidax987siFixZ77qdzbVgAl65oFzVYnrqB73mMN5rQVliwHvA2ELrRfkoxG+gV+GxCFtZSwxJv/Jhj14z/UoFOGbvDTvRoeZMSn3cYcegdEaFUTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eRpw9U/n; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QSfw3KvU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB4E11F00A3F;
-	Tue,  7 Jul 2026 07:33:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eRpw9U/n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E5A61F000E9;
+	Tue,  7 Jul 2026 07:33:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409613;
-	bh=v1oOPeTvAISVGM6dIZHjUhBxaruZEjK+yszFzabP8u4=;
+	s=k20260515; t=1783409614;
+	bh=6raXW6tTfXqLQeqQS8TRI54npNDxeghgUG26veqYNbM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QSfw3KvUGNZyD7K+Ri51UddKzPhCdjdOv03qy7E+nKKgDOsoW3/CQ8Mf81PzRpIia
-	 EbmDLmX9p9ll7l5XkJfT8XUfBYnpRdDLRHwZL36we+Oh3zPNUeLaFCTuqQnmNWLhLs
-	 aWzAG8Jqhd7kyNJsjzUTg1/xyI/m3a8TDszXv52OcmXtPkFGNHwf/EFFr7N05IHSiD
-	 FrmSQS2vop7nP0YO+eG+IlYnaB6jf8vNsKbuC7XKjVDMjqyx47Fp36h/bb4fEOXTwa
-	 bC6S0keNYhDt20jg/Vg0x1n9HJ2pZPpcc8/xyqBOMXnuicNXJc9TiTu201NVxmO3Mf
-	 oCefMA6azR8tw==
+	b=eRpw9U/nhJusw4HUKV66OsxwuiaoEbrC1gdaz2HQVDmAeHntR1C8/dtXwR7W00YC6
+	 8/f2CqEFY2z2Iy+B5u8Sp+A8Wm4Hx3C3nBJ3s1LzdYuCbTnF6CXveNbMzOpZyYdU6g
+	 CduLSoEzfK7yvr+8vp6QsxJvySO5XPbefS+zL/URxbd6Sig5EqmELXynrxvALXedpB
+	 301qVULhA5K8ZR+KkQy3oopB/1j1L8FIZH5IX4rMHvpnjrwnVAZ/LjnUEGoE0X6fJE
+	 d4YYiY1h6d248F1jsSLin0brAdCKayH/WorZ9w8nDMvAAS0BJuix9WJYfV/526wCeo
+	 y7W2okuJDQF1g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 06/40] dept: distinguish each kernel context from
- another
+Subject: Re: [PATCH v19 07/40] dept: distinguish each work from another
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Byungchul Park" <byungchul@sk.com>
-Cc: cassel@kernel.org, dri-devel@lists.freedesktop.org, "Anna Schumaker" <anna@kernel.org>, ojeda@kernel.org, tytso@mit.edu, linux-modules@vger.kernel.org, "Jeff
- Layton" <jlayton@kernel.org>, "Chuck Lever" <cel@kernel.org>, dlemoal@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev
-In-Reply-To: <20260706061928.66713-7-byungchul@sk.com>
+Cc: linux-rt-devel@lists.linux.dev, cassel@kernel.org, linux-ide@vger.kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org, "Anna
+ Schumaker" <anna@kernel.org>, linux-modules@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, ojeda@kernel.org, dlemoal@kernel.org, dri-devel@lists.freedesktop.org, "Jeff
+ Layton" <jlayton@kernel.org>
+In-Reply-To: <20260706061928.66713-8-byungchul@sk.com>
 References: <20260706061928.66713-1-byungchul@sk.com>
- <20260706061928.66713-7-byungchul@sk.com>
+ <20260706061928.66713-8-byungchul@sk.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:33:32 +0000
-Message-Id: <20260707073332.DB4E11F00A3F@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:33:33 +0000
+Message-Id: <20260707073334.0E5A61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -48,59 +48,56 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] cur_cxt() incorrectly identifies a hardirq interrupting a softirq =
-as a softirq context, mixing dependencies between unrelated execution conte=
-xts.
+- [Medium] `dept_update_cxt()` hardcodes the process context ID, failing to=
+ track bottom-half (BH) work items in softirq context and corrupting the co=
+ntext of preempted tasks.
 --
 
-commit 504ac1eb7d0a4081c645648037ec455b5ec741d7
+commit b8dda7d95e5377770d28c6712cf8fe7fafa98ade
 Author: Byungchul Park <byungchul@sk.com>
 
-dept: distinguish each kernel context from another
+dept: distinguish each work from another
 
-Each unique kernel context, in dept's point of view, should be
-identified on every entrance to kernel mode e.g. system call or user
-oriented fault.  Otherwise, dept may track meaningless dependencies
-across different kernel context.
+This commit updates DEPT to assign a different context ID to each work item.
+Since workqueues provide their own concurrency control, wait operations in a
+work item do not prevent events in other works from executing.
 
-> diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-> index fd091ae28ae27..1c4de1b55730a 100644
-> --- a/kernel/dependency/dept.c
-> +++ b/kernel/dependency/dept.c
+> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+> index c6ea96d5b7167..4a4075d0697c7 100644
+> --- a/kernel/workqueue.c
+> +++ b/kernel/workqueue.c
 [ ... ]
-> -static int cur_irq(void)
-> +static int cur_cxt(void)
->  {
->  	if (lockdep_softirq_context(current))
-> -		return DEPT_SIRQ;
-> +		return DEPT_CXT_SIRQ;
->  	if (lockdep_hardirq_context())
-> -		return DEPT_HIRQ;
-> -	return DEPT_IRQS_NR;
-> +		return DEPT_CXT_HIRQ;
-> +	return DEPT_CXT_PROCESS;
->  }
+> @@ -3204,6 +3205,8 @@ __acquires(&pool->lock)
+> =20
+>  	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
+>  #endif
+> +	dept_update_cxt();
+> +
 
-[Severity: High]
-This is a pre-existing issue, but does cur_cxt() incorrectly prioritize sof=
-tirq
-over hardirq context here?
+[Severity: Medium]
+Will this unconditionally modify the process context ID, even when tracking
+bottom-half (BH) work items running in softirq context?
 
-If a softirq is executing and is interrupted by a hardirq, both
-lockdep_softirq_context(current) and lockdep_hardirq_context() evaluate to
-true. Because the softirq check comes first, cur_cxt() will return
-DEPT_CXT_SIRQ instead of DEPT_CXT_HIRQ.
+When a BH workqueue executes multiple work items in a single softirq batch,
+process_one_work() executes them and calls dept_update_cxt(). However,
+dept_update_cxt() is implemented as:
 
-Could this cause the waits and events triggered inside the interrupting har=
-dirq
-to be erroneously attributed to the interrupted softirq's context, potentia=
-lly
-mixing unrelated dependencies and leading to false positive circular depend=
-ency
-reports?
+kernel/dependency/dept.c:dept_update_cxt() {
+    struct dept_task *dt =3D dept_task();
+    dt->cxt_id[DEPT_CXT_PROCESS] +=3D 1UL << DEPT_CXTS_NR;
+}
+
+This hardcodes the increment to DEPT_CXT_PROCESS rather than checking
+cur_cxt() to increment DEPT_CXT_SIRQ. Does this cause DEPT to fail in
+distinguishing sequential BH work items and falsely report dependencies?
+
+Also, can this corrupt the continuous dependency tracking context of
+whatever task was preempted by the softirq?
+
+>  	/* ensure we're on the correct CPU */
+>  	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
+>  		     raw_smp_processor_id() !=3D pool->cpu);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706061928.6671=
-3-1-byungchul@sk.com?part=3D6
+3-1-byungchul@sk.com?part=3D7
