@@ -1,46 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB3173F8239;
-	Tue,  7 Jul 2026 07:33:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D41713F88AA;
+	Tue,  7 Jul 2026 07:33:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409623; cv=none; b=nSCje13goZAmI2dB/6b5X1gTletHnxITqJG41pAXR4OHhUzBcU6oKH91reYaamRWfH8JYdl3o5M4NvVDFr+gMdGj/KWtNiLNs4Y2kVJ5WFN/gwJpfL6FlKP6kf/eGNMUdreC32ms6ppMRuMo5iBw0Xq0CkTv2MNo71ShjEmZVzk=
+	t=1783409624; cv=none; b=QXMEuimuzZZa52ttPuhkoouT1yqq9NHoSytrwie1W7WDUiTMvrLMl85Z6H5yi3saiurMnZDJrvpiVEX9+Mn5dF3kIEcd7T4ZXSW1Q4QP4XfH7TBtN1NlzWI/ZbHRxMNqmCGAbKZNMWo6SQrSCfQ3Q6Yr81r4Ws94jhxNrX5GE0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409623; c=relaxed/simple;
-	bh=StqZMEeROpGbzz3EZ8aIU6n84dd6DEa4CxSOesJlAHY=;
+	s=arc-20240116; t=1783409624; c=relaxed/simple;
+	bh=AwMJ+lgCOSiBHuONbGKQvTOUfDjPZjNC0oqp8tgwZsQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DbREt9OzZHKrVsyb7deg7w+VJ/qKfGARFgeDfMKBsQyTiqRKdz9+Vo11bxEBh3TzsV4dRisZLTOCGJzzRYXRVeXwMtGB3WfBV1Wpx6Yq53zaz9TOJv74jLNh00H0mxP3HiyyopEdZa94curOHpElXAAe1qTVvZq1nYuutptWchg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YFY2+nEC; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Z6f3Gsv7/PaAyOqsxkdMuDeZkDz8zHl0VDuoXzJlgpZjZtGoml1knU0kpeRGO0dLJG8D9X7ToE4d8Ddw1C6QULpORxQyMKNYuYjpiOI7ieUx4FQN3HAoHROWBh9rvBdYCFpqDGd2ej+rzFoZJqVAGF5oDNquomc4zZH/B6J64co=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xk79Tjws; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YFY2+nEC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D416C1F00A3D;
-	Tue,  7 Jul 2026 07:33:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xk79Tjws"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 119731F000E9;
+	Tue,  7 Jul 2026 07:33:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409621;
-	bh=MD3sDUe6wOddXx22FYVGBhoZj9I+j/JyYjpvUNaHU0A=;
+	s=k20260515; t=1783409622;
+	bh=iPuerRcuivB+2DuvQ9kuX8ZsIO7TmcRGdbgEsGpDX2g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YFY2+nECFmNvehvL3XZDuItawP8I4TGA6CBZ7TVwGuqFoNgo4Qjq2bs0KGdNZve12
-	 H24IZpLEZS1oraN+H9ccdplmbPr6Vbw8QqO1RTyoeNHx2/XAMSC8kJ9p6RI3fycXLb
-	 wxbb6lQjTFKIPPVaqonPcblRlSuFll3QVsKThaTiy2E9nXQzwZo27FVX2D1sTgAFeD
-	 cHDjCB81pwXldvkQINr3VBEKoxvhmD+ca91XeIHPddwC6oYOtVuXpX87hyuie8WWui
-	 1oQfL8O7KX8SIV0Ljc2oaXjm6rIQYYD+IOBjfAU6rywHjQfUrhDfMClH0NaZj1v/76
-	 tu19pnRAXdHsQ==
+	b=Xk79Tjws4zk4Nm8wQ9Hlhi1CQHCea9/tYlP70BIzvghLY0WiEkWgwwax11+6ntTLw
+	 TDB8i4Wnpe/2Yep4Zp1aJr+WHL3/X5PC6rFUgCOxxjyKVKn6V1OEFRRLUnda9G7aZJ
+	 2/yDXTvUg0ZbNChKY5VcRxGBp4jonzPjdcGrnt8YBpJxzV3L2O3T0IxqPHLVQwJ49n
+	 YbROZDL5qcv8FpLOC0lY9LIPV/trRl0Vgv/1bBNLAa59VckI1YIQqM4vuJ/DG3j5HF
+	 okEhO3e2k2yJiJ0Azm2KCYPbaw76F8EvQXPSoqg+UAuSe+XvRkBZwq1uv/F52KEi5T
+	 b6PdvUQOHcbEA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 23/40] dept: print staged wait's stacktrace on
- report
+Subject: Re: [PATCH v19 24/40] locking/lockdep: prevent various lockdep
+ assertions when lockdep_off()'ed
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Byungchul Park" <byungchul@sk.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tytso@mit.edu, cassel@kernel.org, "Anna
- Schumaker" <anna@kernel.org>, dlemoal@kernel.org, "Chuck Lever" <cel@kernel.org>, dri-devel@lists.freedesktop.org, linux-modules@vger.kernel.org, "Jeff
- Layton" <jlayton@kernel.org>, ojeda@kernel.org, linux-rt-devel@lists.linux.dev
-In-Reply-To: <20260706061928.66713-24-byungchul@sk.com>
+Cc: dri-devel@lists.freedesktop.org, dlemoal@kernel.org, ojeda@kernel.org, tytso@mit.edu, linux-rt-devel@lists.linux.dev, "Jeff
+ Layton" <jlayton@kernel.org>, linux-modules@vger.kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Chuck
+ Lever" <cel@kernel.org>, "Anna Schumaker" <anna@kernel.org>
+In-Reply-To: <20260706061928.66713-25-byungchul@sk.com>
 References: <20260706061928.66713-1-byungchul@sk.com>
- <20260706061928.66713-24-byungchul@sk.com>
+ <20260706061928.66713-25-byungchul@sk.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:33:40 +0000
-Message-Id: <20260707073340.D416C1F00A3D@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:33:41 +0000
+Message-Id: <20260707073342.119731F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -49,71 +49,62 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Data race on `dt->stage_m` leading to zeroed class keys and kernel=
- warnings.
+- [Medium] The patch introduces a performance regression on fast paths when=
+ CONFIG_PROVE_LOCKING is enabled by adding an out-of-line function call to =
+a macro that is unconditionally evaluated before checking if the assertion =
+actually fails.
 --
 
-commit 02dbd1fb0ecda3493e1e312bcf532860fa1353de
+commit a2a5c1f9c5f68f19a3e991808b6e812dde3fa53a
 Author: Byungchul Park <byungchul@sk.com>
+locking/lockdep: prevent various lockdep assertions when lockdep_off()'ed
 
-dept: print staged wait's stacktrace on report
+This commit adds a check for lockdep_recursing(current) to the
+__lockdep_enabled macro. To avoid header dependency issues, it introduces
+an out-of-line function lockdep_recursing_current().
 
-This commit modifies the dependency tracking (dept) system to capture and
-print the stacktrace of the wait that an event wakes up. This provides more
-context for interpreting dept's reports.
-
-> diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-> index e425d3ab05e5a..5bf32633e1fbd 100644
-> --- a/kernel/dependency/dept.c
-> +++ b/kernel/dependency/dept.c
-
+> diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+> index 60b17a2ff555f..5113b7053b621 100644
+> --- a/include/linux/lockdep.h
+> +++ b/include/linux/lockdep.h
 [ ... ]
-
-> @@ -2561,6 +2580,14 @@ void dept_request_event_wait_commit(void)
+> @@ -630,7 +631,7 @@ DECLARE_PER_CPU(int, hardirqs_enabled);
+>  DECLARE_PER_CPU(int, hardirq_context);
+>  DECLARE_PER_CPU(unsigned int, lockdep_recursion);
 > =20
->  	wg =3D next_wgen();
->  	WRITE_ONCE(dt->stage_m.wgen, wg);
-> +
-> +	/*
-> +	 * __schedule() can be hit multiple times between
-> +	 * dept_stage_wait() and dept_clean_stage().  In that case,
-> +	 * keep the first stacktrace only.  That's enough.
-> +	 */
-> +	if (!dt->stage_wait_stack)
-> +		dt->stage_wait_stack =3D get_current_stack();
->  	arch_spin_unlock(&dt->stage_lock);
+> -#define __lockdep_enabled	(debug_locks && !this_cpu_read(lockdep_recursi=
+on))
+> +#define __lockdep_enabled	(debug_locks && !this_cpu_read(lockdep_recursi=
+on) && !lockdep_recursing_current())
 > =20
->  	__dept_wait(&dt->stage_m, 1UL, ip, w_fn, 0, true, sched_map, timeout);
+>  #define lockdep_assert_irqs_enabled()					\
+>  do {									\
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does accessing dt->stage_m
-here, immediately after dropping the stage_lock, introduce a data race with
-a concurrent wakeup?
+[Severity: Medium]
+Will this out-of-line call introduce measurable overhead on fast paths?
 
-If a task begins scheduling out, it calls dept_request_event_wait_commit()
-from __schedule(). It acquires dt->stage_lock, updates fields, and unlocks
-it. Before it can call __dept_wait(&dt->stage_m, ...), an interrupt or
-another CPU could concurrently call try_to_wake_up() on the same task.
+Since debug_locks and !this_cpu_read(lockdep_recursion) are almost always
+true in healthy systems, lockdep_recursing_current() will be evaluated every
+time __lockdep_enabled is checked.
 
-The waking CPU would acquire dt->stage_lock in dept_ttwu_stage_wait() and
-zero out dt->stage_m via __dept_clean_stage():
+For example, in lockdep_assert_irqs_enabled():
 
-kernel/dependency/dept.c:__dept_clean_stage() {
-    memset(&dt->stage_m, 0x0, sizeof(struct dept_map));
-    ...
-}
+    WARN_ON_ONCE(__lockdep_enabled && !this_cpu_read(hardirqs_enabled));
 
-If __dept_wait(&dt->stage_m) executes concurrently on the original CPU, it
-reads the zeroed structure. This would cause it to look up a class with key
-0 and trigger DEPT_WARN_ON(!valid_class(c)), breaking dependency tracking
-and potentially panicking the system if panic_on_warn is enabled.
+Because __lockdep_enabled is the first operand, the out-of-line call execut=
+es
+before checking if the assertion actually fails.
 
-Could this be prevented by either copying the required parts of dt->stage_m
-to local variables while the lock is still held, or expanding the lock
-coverage?
+Could we move __lockdep_enabled to the end of the && chain in these
+assertions?
+
+    WARN_ON_ONCE(!this_cpu_read(hardirqs_enabled) && __lockdep_enabled);
+
+Placing the failure condition first would ensure the out-of-line function is
+only evaluated on the slow path when the assertion is already failing, avoi=
+ding
+the function call overhead on hot paths entirely.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706061928.6671=
-3-1-byungchul@sk.com?part=3D23
+3-1-byungchul@sk.com?part=3D24
