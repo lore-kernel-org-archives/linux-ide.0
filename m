@@ -1,109 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63C4E3B4EA4;
-	Tue,  7 Jul 2026 07:33:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460E23AE6E5;
+	Tue,  7 Jul 2026 07:33:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409602; cv=none; b=ZqnlTpBClxtEAaJhkGaKH4kk64d7NmVKzROf9Vrmjj6dotiJzAs6CxBVvVd9EG4e6q7RwQTLeiMlupE6JPg6LYpQ4fKIBXesrxWj5HNuWdOls0vf19k3BRvj0CjZ3jq0y7HBe3YHLlODuybQMeEZQ1sjZoDlr2u60qza9dgZpGU=
+	t=1783409603; cv=none; b=quK8XkKfJGjV8ybgEvsTXkXIDpEQPFcWp9QhMNhQhIEHojla3pTsbnJPWpGUJBxZz4MZbWZk/R40IPysuossZ/wsN5aym3dz5CjwI3VwmJxM+ib9rqCduDpL8retIjG3az14ZxYadNUl3dfXklxjWpYuPg0IAbeH581oENte+50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409602; c=relaxed/simple;
-	bh=LQcRDmNWbRAXD/TCfpuEmVOi3+A7MRg8kYEdwNmXc1E=;
+	s=arc-20240116; t=1783409603; c=relaxed/simple;
+	bh=pGYCyXRK2yYV5Ttr7avkJ6eShZsXTI1NNIavnFmWzcw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qxHecu85dnqRT6crWPuIRZr+7CEYZ5jeLgs0hcJNUubOITnKjDzcq+ggurTlg/NlFiIsPs+7DjiLj28Z+Qv29QasSRmvVMo+pdkHeTK5/FqZCkjuba7eBd2As0EBaLUEnwphVu3FeUj1dyK9mN6jWnaT8eTnqS0Yv2HtiAzi/JA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S3cJlJ3i; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=B52/tpt0XNvEw1946TtIJXE9seyVf3+pKk61CWk1xN6aCMLfx5T2jQJiUxvX3jb6v5ei698P139/a6odlR/sosHZMxGJgbcvGL0bDzaLlvhnBJeTwDXnEYrPJBV6sFDlVpLek8lVrEXcPOH8gTAV09kgtpirWXTup5rnnvkLlLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G1tFwiSL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S3cJlJ3i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EA881F00A3D;
-	Tue,  7 Jul 2026 07:33:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G1tFwiSL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 731D11F00A3F;
+	Tue,  7 Jul 2026 07:33:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409600;
-	bh=LQcRDmNWbRAXD/TCfpuEmVOi3+A7MRg8kYEdwNmXc1E=;
+	s=k20260515; t=1783409602;
+	bh=B+/XC3pWnPrw6raRJdBi8Hg3nc0HCH4EyJEtBIzzqSk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=S3cJlJ3iouB7Z6ojGsVKgLqcqwGPkp3Jy1uXU1U1IKX5tE7sNZ0O7RxFTlyFh7SwO
-	 6nPinlpFUbzE1P6i+gkaLAfLN4CNUkX5xjjaOcuGKv+sfI0J5wumQ+v9wWXuscUcgU
-	 ko0IIIneizm7Ib48e6ZKYBDYWMXa8LJ1fQuYBDnq/cNqLv5EzED9GAXpoCeIJispSI
-	 scyNRCIEcmu7LIqkf5UmLD+Z4hxtLns2Zshh50EoT0MXGAc2sC4z8wRmi2OA2oKvG/
-	 OkLDUvWRIPv4/8aR7PdRQjqJJ3hOx+0/AdrXGZvc2HGIY6p9hWYmPT8WJ+mXcWSW8e
-	 XBUiQFBrHT0Uw==
+	b=G1tFwiSLEda+byN8nnSKVdu3qVjBOOZYzY2j16VjNJigoIn3WwphRuPeCyNBpvyvw
+	 99zgbLByOUlVwf0F1OOtjiW6gYWSx4dhImgxj9fFaneYt1YQ9kPB6H4IPpbhKslTUi
+	 oGZtz1Hf2P7k+5APd7MkLlOF4cREHrvpHC+K61mhvZMSu8uNk4+MLZPTN9mAjhzSVY
+	 bZd7Dec6fOUyXk1M0godpj8iRUNS77AajVsYR7Ytrt4sjMoVNRcXXb5XDrIG9SrdYF
+	 qSNScWun/V/ow2Qnvfj50W0uabFczVfumIusXx9ptKmCAN3YkJ3L2uY9N86XynN04s
+	 porkYJkw4jCGQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 08/40] dept: add a mechanism to refill the internal
- memory pools on running out
+Subject: Re: [PATCH v19 12/40] dept: apply sdt_might_sleep_{start, end}() to
+ waitqueue wait
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Byungchul Park" <byungchul@sk.com>
-Cc: "Chuck Lever" <cel@kernel.org>, tytso@mit.edu, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-modules@vger.kernel.org, linux-rt-devel@lists.linux.dev, "Jeff
- Layton" <jlayton@kernel.org>, cassel@kernel.org, "Anna Schumaker" <anna@kernel.org>, dlemoal@kernel.org, ojeda@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260706061928.66713-9-byungchul@sk.com>
+Cc: dri-devel@lists.freedesktop.org, linux-rt-devel@lists.linux.dev, cassel@kernel.org, "Chuck
+ Lever" <cel@kernel.org>, linux-kernel@vger.kernel.org, dlemoal@kernel.org, linux-modules@vger.kernel.org, linux-ide@vger.kernel.org, ojeda@kernel.org, "Jeff
+ Layton" <jlayton@kernel.org>, tytso@mit.edu, "Anna Schumaker" <anna@kernel.org>
+In-Reply-To: <20260706061928.66713-13-byungchul@sk.com>
 References: <20260706061928.66713-1-byungchul@sk.com>
- <20260706061928.66713-9-byungchul@sk.com>
+ <20260706061928.66713-13-byungchul@sk.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:33:19 +0000
-Message-Id: <20260707073320.3EA881F00A3D@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:33:21 +0000
+Message-Id: <20260707073321.731D11F00A3F@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Per-CPU object pools (`lpool`) grow unboundedly because objects ar=
-e never returned to the global pool, leading to endless `vmalloc()` allocat=
-ions and potential OOM.
-- [High] Un-ratelimited printk in the pool exhaustion path causes console f=
-looding and soft lockups.
+- [High] The `sdt_might_sleep_end()` cleanup macro is bypassed when wait lo=
+ops (`___wait_event`, `___swait_event`) are interrupted by a signal, perman=
+ently leaking a DEPT dependency stage.
 --
 
-(Note: The format of this report is altered to use a free-form summary rath=
-er=20
-than inline diff quotes due to recitation restrictions.)
-
-commit 0f35ff40c325e46d2d4adab446907928b805d0e5
+commit 1300cac9c94eeb3955744b6d40ed8dce8cfc059f
 Author: Byungchul Park <byungchul@sk.com>
 
-dept: add a mechanism to refill the internal memory pools on running out
+dept: apply sdt_might_sleep_{start,end}() to waitqueue wait
+   =20
+Make dept able to track dependencies by waitqueue waits.
 
-This commit introduces a mechanism to dynamically refill internal memory
-pools for the DEPT engine using an IRQ work and workqueue. It adds per-CPU
-local pools and a vmalloc-based refill path when the static pools are
-exhausted.
+> diff --git a/include/linux/wait.h b/include/linux/wait.h
+> index dce055e6add39..c8f8b44060fb9 100644
+> --- a/include/linux/wait.h
+> +++ b/include/linux/wait.h
+
+[ ... ]
+
+> @@ -305,6 +306,7 @@ extern void init_wait_entry(struct wait_queue_entry *=
+wq_entry, int flags);
+>  	struct wait_queue_entry __wq_entry;					\
+>  	long __ret =3D ret;	/* explicit shadow */				\
+>  										\
+> +	sdt_might_sleep_start(NULL);						\
+>  	init_wait_entry(&__wq_entry, exclusive ? WQ_FLAG_EXCLUSIVE : 0);	\
+>  	for (;;) {								\
+>  		long __int =3D prepare_to_wait_event(&wq_head, &__wq_entry, state);\
+> @@ -323,6 +325,7 @@ extern void init_wait_entry(struct wait_queue_entry *=
+wq_entry, int flags);
+>  			break;							\
+>  	}									\
+>  	finish_wait(&wq_head, &__wq_entry);					\
+> +	sdt_might_sleep_end();							\
+>  __out:	__ret;									\
+>  })
 
 [Severity: High]
-Could the per-CPU local pools (lpool) grow without bounds under certain
-workloads?
+Does this bypass sdt_might_sleep_end() when interrupted by a signal?
 
-Looking at to_pool() and from_pool() in kernel/dependency/dept.c, objects
-are unconditionally added to the per-CPU lpool without any upper bound
-check or reclaim logic. If a task allocates an object (like ecxt or wait)
-on CPU A, migrates to CPU B, and frees it, the object goes into CPU B's
-lpool.
+Looking at ___wait_event(), if ___wait_is_interruptible(state) and __int is
+set, it will take the goto __out path:
 
-Because objects are never returned to the global spool when the lpool grows
-large, the global pool will eventually drain. When from_pool() sees an
-empty global pool, it triggers request_rpool_refill(), which allocates new
-memory via vmalloc() in dept_wq_work_fn().
+		if (___wait_is_interruptible(state) && __int) {			\
+			__ret =3D __int;						\
+			goto __out;						\
+		}								\
 
-Will continuous cross-CPU allocation and freeing indefinitely leak memory
-into local pools and repeatedly trigger vmalloc allocations, potentially
-leading to an out-of-memory condition?
+If that path is taken, sdt_might_sleep_end() is bypassed, which permanently
+leaks a DEPT dependency stage. A stale wait context remains in the task's
+dependency tracker state. When the task later sleeps for unrelated reasons,
+the scheduler might attribute the sleep to the leaked context, leading to
+false-positive lockup splats.
 
-[Severity: High]
-Is it safe to use an un-ratelimited printk in the pool exhaustion path?
-
-In kernel/dependency/dept.c:from_pool(), when a pool is exhausted, the
-code calls DEPT_INFO() (which maps to pr_warn()) to notify the user. This
-happens with hardware interrupts disabled via dept_enter().
-
-Because the pool refill in dept_wq_work_fn() happens asynchronously in a
-workqueue, the pool will remain empty until the workqueue runs. Every
-subsequent lock acquisition during this window will synchronously print a
-multi-line message to the console.
-
-Could this flood the console and cause soft lockups or RCU stalls since
-thousands of locks might be acquired by a single thread while waiting for
-the async workqueue to execute?
+Also, does this same structural issue exist in ___swait_event() in
+include/linux/swait.h for simple waitqueues?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706061928.6671=
-3-1-byungchul@sk.com?part=3D8
+3-1-byungchul@sk.com?part=3D12
