@@ -1,138 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD20416117;
-	Tue,  7 Jul 2026 07:33:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C144189AC;
+	Tue,  7 Jul 2026 07:33:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409632; cv=none; b=meM/ivSDek1RyE12TXn8ShlH3QYqkKrMBIXWUlV3UpBTH7C01klmkFSS15XQiU1I+7bCidZxX4hzJeHCpfcBQIJKZw+G3BEIlP79jSfsOEvXubUHoE0ROBNKGmAmzJm4K/7rCEpi6YVM11bXJGOeLTZi6+dFbAszy3376yET5H4=
+	t=1783409633; cv=none; b=mDsk8t5QFJ6LiyKqu8YTBrMT2M7XIrQHUgSFLfLvvmPwVGuIk7gTxE32zgDcHvRoW2hmKF5e7dZWteYgIJY8uyrTEik+fpeje0ySm065qEDaZt+HW11SjNhT+oRPvlWGUv7u96avXYqwkCtkB8tq0QoveJehVo9Eiwvzzk9EgIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409632; c=relaxed/simple;
-	bh=xq7g7me3sYLudB3cfDK5NvAvWeXmXX7rBq/JLLczh40=;
+	s=arc-20240116; t=1783409633; c=relaxed/simple;
+	bh=4sIwc83ixaz4TUV2SZlXi8ngJHN7SQzSwiDBg0GBbY4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=k3wsas3tU2oPSxAxmErzMQw4Q9YN5RkT6q6aGe7HJ6wRq9AEOnnZR3xA2z7+7wKh48kQi38ThXLnEhifvFSDXhmj5fWMLn1yJklSGAad4iAjYFBfr8F1wTMIVEo5g8DAN/Io2znrqOmFf+SaKGF5nO/zrmmQW59VC/SyS3MmeHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=becB94z1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Sh44Tv5TxykksNGBBPVlmzv2GsH/ccBQSqDzVZLPe4O51aAQsslPvWWQsl35DJaL+XG5hgErjaWQ+A78+7nflLgmFf1HExYErTC+9FEobVgwHZN0qlYWqwkgag4RMEc2QPgXCGypOf46popwCumumBOSDWnivX041+qcg981ss0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LSCQtqyv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="becB94z1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0965F1F00A3E;
-	Tue,  7 Jul 2026 07:33:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LSCQtqyv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 384E71F000E9;
+	Tue,  7 Jul 2026 07:33:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409630;
-	bh=c+VSnSjFRcFL2UYOIKKOUNT7KazPYUK7QU08PtQTxxM=;
+	s=k20260515; t=1783409631;
+	bh=d78FYg/cIzWC/W00YTFzSsPORye58PHTDC+ZSZCPZEc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=becB94z18LgfMpYXzuHELj6ZtB6sKdTUr8mZ2PW4SgPauseZ1dFRDkU8i8BDTKgYb
-	 exG3677WXn7VOpoQQQOwCcuCrOslNSSv7hED2xinrObDCIelvuv9M8vLq91ITxJkbe
-	 SmloJHXHbeO/eKpObxjD74SLSrS8p7Ky8VjyWt4AhWkNgPSnThA3xzGvD4h7UVg/GG
-	 HJIEZ08WmgNfS8+qwrAgDuchnG+Uo0kd/nnoQsI7SF+8l9QOchA9wFfA+6Il23iuH/
-	 3HfylDskRvSVrxct5vdwBSuJg+37FyFKAToss0JvwmZPcQNtNEkrsZYuvHCxABzr9Y
-	 3JqTC0VfXq52Q==
+	b=LSCQtqyvJAkgRhTDMUiDOAtLWo6i1y8W7LHe3zwktScTwsffFXh1Eutl900KVHJak
+	 13kL2HrXX2Q5Qn4a9LhT3J/5SzYZ377drHzR52PxnTUzD+yW7FpdFSTInWYjjye1Sm
+	 p3wfhuwYIJ3M6Ynia5Lb3Nadm0LNkBGVkL9jcB3cJWa1w4nE8b7kTQL5N3OJxfyT9C
+	 6mvVHmbqFkJPgR6ikGs1VfIYMlM48o2DO3pIHUCuIDPqt6yLHzdCC3mm13MYHGzWII
+	 V90OCh2VycTENqHXqV+8IQMVNmwVh3z/hVbF6UimZdoF3rgqsDmsENq6whMb7Lzhqb
+	 H5Ay2Ezrs+3Bg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 32/40] completion, dept: introduce
- init_completion_dmap() API
+Subject: Re: [PATCH v19 33/40] dept: call dept_hardirqs_off() in
+ local_irq_*() regardless of irq state
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Byungchul Park" <byungchul@sk.com>
-Cc: dlemoal@kernel.org, "Jeff Layton" <jlayton@kernel.org>, linux-modules@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-rt-devel@lists.linux.dev, cassel@kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu, "Chuck
- Lever" <cel@kernel.org>, linux-ide@vger.kernel.org, "Anna Schumaker" <anna@kernel.org>, ojeda@kernel.org
-In-Reply-To: <20260706061928.66713-33-byungchul@sk.com>
+Cc: linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org, "Jeff
+ Layton" <jlayton@kernel.org>, linux-ide@vger.kernel.org, cassel@kernel.org, "Chuck
+ Lever" <cel@kernel.org>, "Anna Schumaker" <anna@kernel.org>, dri-devel@lists.freedesktop.org, tytso@mit.edu, linux-rt-devel@lists.linux.dev, dlemoal@kernel.org, ojeda@kernel.org
+In-Reply-To: <20260706061928.66713-34-byungchul@sk.com>
 References: <20260706061928.66713-1-byungchul@sk.com>
- <20260706061928.66713-33-byungchul@sk.com>
+ <20260706061928.66713-34-byungchul@sk.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:33:49 +0000
-Message-Id: <20260707073350.0965F1F00A3E@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:33:50 +0000
+Message-Id: <20260707073351.384E71F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Double evaluation of arguments in wait_for_completion macros leads=
- to skipped array indices and memory corruption.
-- [Medium] Unconditional struct growth of a widely used primitive for a deb=
-ug feature.
-- [Medium] Wait event macros skip calling sdt_might_sleep_end() on signal i=
-nterruptions, leaking DEPT tracking state and stacks.
+- [High] Hides missing assembly trace annotations, causing DEPT and Lockdep=
+ states to diverge and allowing NMIs to silently revert the workaround.
+- [Medium] Exporting `dept_hardirqs_off` as GPL-only breaks the build/loadi=
+ng of non-GPL modules that use `local_irq_save()` or `local_irq_disable()`.
 --
 
-commit 5b626a37ee940081b6d37187cde51c2f272e370c
+commit 3f12c8d53e9de3037ef421690b95c2ca6667e3a1
 Author: Byungchul Park <byungchul@sk.com>
 
-completion, dept: introduce init_completion_dmap() API
+dept: call dept_hardirqs_off() in local_irq_*() regardless of irq state
 
-Currently, dept uses dept's map embedded in task_struct to track
-dependencies related to wait_for_completion() and its family.  So it
-doesn't need an explicit map basically.
+For dept to function properly, dept_task()->hardirqs_enabled must be set
+correctly.  If it fails to set this value to false, for example, dept
+may mistakenly think irq is still enabled even when it's not.
 
-However, for those who want to set the maps with customized class or
-key, introduce a new API to use external maps.
-
-> diff --git a/include/linux/completion.h b/include/linux/completion.h
-> index 4d8fb1d95c0a6..e50f7d9b4b974 100644
-> --- a/include/linux/completion.h
-> +++ b/include/linux/completion.h
-> @@ -27,17 +27,15 @@
->  struct completion {
->  	unsigned int done;
->  	struct swait_queue_head wait;
-> +	struct dept_map *dmap;
->  };
-
-[Severity: Medium]
-Since struct completion is heavily embedded in many kernel data structures,
-does unconditionally adding the dmap pointer increase the global memory
-footprint even on production non-debug kernels? Should this new field be
-guarded by an #ifdef?
-
-[ ... ]
-
-> @@ -136,13 +140,13 @@ extern void complete_all(struct completion *);
-> =20
->  #define wait_for_completion(x)						\
->  ({									\
-> -	sdt_might_sleep_start_timeout(NULL, -1L);			\
-> +	sdt_might_sleep_start_timeout((x)->dmap, -1L);			\
->  	__wait_for_completion(x);					\
->  	sdt_might_sleep_end();						\
->  })
+> diff --git a/include/linux/irqflags.h b/include/linux/irqflags.h
+> index d8b9cf093f83d..586f5bad4da78 100644
+> --- a/include/linux/irqflags.h
+> +++ b/include/linux/irqflags.h
+> @@ -214,6 +214,13 @@ extern void warn_bogus_irq_restore(void);
+>  		raw_local_irq_disable();		\
+>  		if (!was_disabled)			\
+>  			trace_hardirqs_off();		\
+> +		/*					\
+> +		 * Just in case that C code has missed	\
+> +		 * trace_hardirqs_off() at the first	\
+> +		 * place e.g. disabling irq at asm code.\
+> +		 */					\
+> +		else					\
+> +			dept_hardirqs_off();		\
+>  	} while (0)
 
 [Severity: High]
-Does evaluating the argument x multiple times in this macro lead to issues
-if callers pass an expression with side effects?
+Can NMIs silently revert this workaround?
 
-For example, if a caller like mlx5_vdpa_exec_async_cmds() does:
+If assembly code disables IRQs but misses the trace_hardirqs_off() annotati=
+on,
+and then C code calls local_irq_disable(), this skips trace_hardirqs_off()
+but executes the new dept_hardirqs_off() branch. Lockdep still thinks IRQs
+are enabled, while DEPT thinks they are disabled.
 
-	while (completed < issued)
-		wait_for_completion(&cmds[completed++].cmd_done);
+If an NMI occurs while in this state, irqentry_nmi_enter() saves the Lockdep
+state (which is incorrectly 'enabled'). Upon NMI exit, irqentry_nmi_exit()
+restores the saved Lockdep state by calling lockdep_hardirqs_on(), which
+unconditionally calls dept_hardirqs_on().
 
-Would completed++ be executed twice per iteration, skipping array elements
-and potentially causing out-of-bounds memory accesses?
+Will this force DEPT back into an incorrect 'enabled' state while hardware
+IRQs are actually disabled, potentially leading to false-positive circular
+dependency reports?
 
 [ ... ]
 
+> diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+> index 007e1bc7d201e..35a3667ac8b3c 100644
+> --- a/kernel/dependency/dept.c
+> +++ b/kernel/dependency/dept.c
+> @@ -2095,6 +2095,7 @@ void noinstr dept_hardirqs_off(void)
+>  	 */
+>  	dept_task()->hardirqs_enabled =3D false;
+>  }
+> +EXPORT_SYMBOL_GPL(dept_hardirqs_off);
+
 [Severity: Medium]
-Do wait event macros such as ___wait_event() in include/linux/wait.h skip
-calling sdt_might_sleep_end() when interrupted by a signal?
+Will this break the build or loading of non-GPL modules?
 
-In include/linux/wait.h:___wait_event():
+Because dept_hardirqs_off() is now called directly from universal inline
+macros like local_irq_disable() and local_irq_save(), any out-of-tree
+module marked with a non-GPL license that invokes these macros will fail
+to link or load when CONFIG_DEPT is enabled.
 
-		if (___wait_is_interruptible(state) && __int) { \
-			__ret =3D __int; \
-			goto __out; \
-		}
-        ...
-	sdt_might_sleep_end(); \
-__out:	__ret; \
-})
-
-If the wait is interrupted by a signal, it escapes via goto __out. Because
-__out is placed after sdt_might_sleep_end(), it seems the cleanup is
-skipped.
-
-Does this permanently leak the tracking state and its underlying stack
-objects?
+Standard trace_hardirqs_off() avoids this issue by being exported via
+EXPORT_SYMBOL.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706061928.6671=
-3-1-byungchul@sk.com?part=3D32
+3-1-byungchul@sk.com?part=3D33
