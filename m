@@ -1,114 +1,146 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91EAF414A10;
-	Tue,  7 Jul 2026 07:33:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F74C3FCB00;
+	Tue,  7 Jul 2026 07:33:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409628; cv=none; b=eeU8TI/PUjNqntc7tmfvpCbNw0rUksebxb0SoMM4JkjOlnsyG0a+YfGNyPYIn+uryhF3dTXw+HMj5hphr3pyIXvtK+bMCYdeSxx0C25kkKYmrYXjPfna1InIgiHgWGfy/6ygti1KRFMxHgOo9LWO1EK8M9CAwFmMyffm0VjloHc=
+	t=1783409629; cv=none; b=JayJivpkDupPK99yHaNbpkf+IdtZI/GJS40OvBeWMvGmO6Wazr0Wb1li4g72Y7wSDhSD1ljxh+BGL1tkkooVEyOi7cFXP3UJsTRoJhhRsxmgZOy7+x7IEaDRiOccloBDZE3OVlkWzQwKy2u3S7DjJaxCHQ9bLT2tHOIfXaLXLH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409628; c=relaxed/simple;
-	bh=dlEEBVmvICxTMLOL76+9rjDaDAfGXFNHc1vMQ5okYNc=;
+	s=arc-20240116; t=1783409629; c=relaxed/simple;
+	bh=iQvxUquwnqOQqzjhEAFcreMN0Wd5ry4aANq7LQS/FdU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mR4UH02ktAvSu2Yby8OYnffkfP4oyCimsb2lsd7bSnRNnr1idg7DzRyzu9838BBJTrHWK9LoqEMvqwPJ0BWAvV4clgQ6EmYSaUv81baz9sJoWwe2yPKIArx/jsr3dUS6Yn3TAXOd4U/auRQtCRjOSWal2kUgtOzraCj2tSK2H2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m0pYkUlF; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=KGFF+bittboew1sj95Kzl1mqSC+spte7dcrdOln2M4lSIwtbHK9RnBSjLBwry9gAJt/WXgz4VMyT7fzTZP2sUpdIKMI2DCUw3FD8/uTfAFvYJfUfLh0iKGPUXiLqDy/dUnsl7aDqpgHQoyd35oQl7BCVI8MJRwExmoJ9ZruYRqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KBj+Nsf6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m0pYkUlF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A320A1F00A3D;
-	Tue,  7 Jul 2026 07:33:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KBj+Nsf6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1EC01F00A3A;
+	Tue,  7 Jul 2026 07:33:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409627;
-	bh=mj2BqZFLC1Qe+QrDrzIG3TwlkOkq3c2gx510rdnmI3k=;
+	s=k20260515; t=1783409628;
+	bh=5Q67Ks3EtT/rviD16v/y5//PZ31a2ZTmmYZGkyVwukM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=m0pYkUlFrRvISeoZcOf6/qm5EAhVAGO2ke0E4NHHevrIo4vg9x4wa+qxSKgIZfULy
-	 cTJX9T0Y2qqDQc7uSoit3ezT/ujBJAKr0dKCGvEe675oyrxohdH62Rvb3FlirCCjvB
-	 ukZUe8RejZ/HUpE4m3ipen2qt/olGdcm/GlsOC2OOJu7HIOgW80YAa1z+urRCNadaa
-	 fdwpkFWdeX0P2rFxDurWwmPxgZgD//wHBQ4bQR9e46gWKr0KcCdGSIkwI2Qi2U7RQs
-	 /c+Aqcsg0dtB1HXksFxaYmffb+CZdTbhrce9EvNfh/ukAo/PyW5PsOObigMwps+Ya1
-	 02pD0x71jrYHg==
+	b=KBj+Nsf6/iUkquQMKGvR/GDwyZrSB36Nlqsb4zJRVKyaHRRlYKBedR+OzYrEU7ktI
+	 BXuSFymw1NnUB/bFxipAGuVZkOrHIKpVn7E1PL2pvxGMoxRJ/wkKHxXtw37R6tali+
+	 cD3UDhh1+uSAKKv9Wf3SXh6NeaLNql6c7JOkVKwVppqOMEUW4MrxhX/wuMBpDUryAo
+	 xLma9eT3JDAtZcBrqsIdMR3Mc4BUlS2HIxP3ZW0gcxNBQdbkRwTc4Sj6SdDK2z9WAJ
+	 GvAM0HPrUC92s8BTkKOmGaImcWQ6soMHNnYzKD0X5EsexG4chvKJDBQnHCN9ARHmn6
+	 ej7MznerlbndQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 29/40] dept: make dept aware of
- lockdep_set_lock_cmp_fn() annotation
+Subject: Re: [PATCH v19 30/40] dept: make dept stop from working on
+ debug_locks_off()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Byungchul Park" <byungchul@sk.com>
-Cc: linux-modules@vger.kernel.org, "Chuck Lever" <cel@kernel.org>, "Anna
- Schumaker" <anna@kernel.org>, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev, dlemoal@kernel.org, cassel@kernel.org, tytso@mit.edu, "Jeff
- Layton" <jlayton@kernel.org>, ojeda@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260706061928.66713-30-byungchul@sk.com>
+Cc: tytso@mit.edu, linux-kernel@vger.kernel.org, "Jeff Layton" <jlayton@kernel.org>, linux-rt-devel@lists.linux.dev, linux-ide@vger.kernel.org, cassel@kernel.org, ojeda@kernel.org, "Anna
+ Schumaker" <anna@kernel.org>, dlemoal@kernel.org, dri-devel@lists.freedesktop.org, linux-modules@vger.kernel.org, "Chuck
+ Lever" <cel@kernel.org>
+In-Reply-To: <20260706061928.66713-31-byungchul@sk.com>
 References: <20260706061928.66713-1-byungchul@sk.com>
- <20260706061928.66713-30-byungchul@sk.com>
+ <20260706061928.66713-31-byungchul@sk.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:33:45 +0000
-Message-Id: <20260707073345.A320A1F00A3D@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:33:47 +0000
+Message-Id: <20260707073347.A1EC01F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Medium] DEPT falsely reports a deadlock when a task sequentially acquire=
-s three or more locks of the same class (or interleaves them with other loc=
-ks), because the `lockdep_cmp_fn` bypass is improperly restricted to only t=
-he immediately preceding lock.
+- [Medium] DEPT fails to stop when lock debugging is globally disabled via =
+kernel tainting.
+- [Low] dept_stop_emerg() is unnecessarily exported via EXPORT_SYMBOL_GPL d=
+espite having no module callers.
+- [Low] Implicit reliance on transitive header inclusion for dept_stop_emer=
+g().
 --
 
-commit d03c5b926a945b89f5a90fd98986386e113df5af
+commit 3772379470ad3a639343d641bfb17cbd105fc9a5
 Author: Byungchul Park <byungchul@sk.com>
 
-dept: make dept aware of lockdep_set_lock_cmp_fn() annotation
-   =20
-This commit updates the DEPT (Dependency Tracker) subsystem to respect the
-lockdep_set_lock_cmp_fn() annotation. It allows DEPT to avoid false positive
-deadlock reports by using the custom comparison function when evaluating
-dependencies between locks of the same class.
+dept: make dept stop from working on debug_locks_off()
+
+The commit adds a dept_stop_emerg() call inside debug_locks_off() to
+stop the DEPT feature when panic or other lock debugging suspensions occur.
 
 > diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+> index 048348ea64d29..007e1bc7d201e 100644
 > --- a/kernel/dependency/dept.c
 > +++ b/kernel/dependency/dept.c
 
 [ ... ]
 
-> @@ -1658,8 +1688,13 @@ static void add_wait(struct dept_class *c, unsigne=
-d long ip,
->  		if (!eh->ecxt)
->  			continue;
+> @@ -187,6 +187,12 @@ static void dept_unlock(void)
+>  	arch_spin_unlock(&dept_spin);
+>  }
 > =20
-> -		if (eh->ecxt->class !=3D c || eh->sub_l =3D=3D sub_l)
-> -			add_dep(eh->ecxt, w);
-> +		if (eh->ecxt->class =3D=3D c && eh->sub_l !=3D sub_l)
-> +			continue;
+> +void dept_stop_emerg(void)
+> +{
+> +	WRITE_ONCE(dept_stop, 1);
+> +}
+> +EXPORT_SYMBOL_GPL(dept_stop_emerg);
+
+[Severity: Low]
+Does this function need to be exported to loadable modules?
+
+CONFIG_DEPT is a boolean configuration, so kernel/dependency/dept.c is
+always built-in. Its only caller in lib/debug_locks.c is also always
+built-in, making this export unnecessary.
+
 > +
-> +		if (i =3D=3D dt->ecxt_held_pos - 1 && lockdep_cmp_fn(eh->map, m))
-> +			continue;
+>  enum bfs_ret {
+>  	BFS_CONTINUE,
+>  	BFS_DONE,
+> diff --git a/lib/debug_locks.c b/lib/debug_locks.c
+> index a75ee30b77cb8..14a965914a8fb 100644
+> --- a/lib/debug_locks.c
+> +++ b/lib/debug_locks.c
+
+[ ... ]
+
+> @@ -38,6 +38,8 @@ EXPORT_SYMBOL_GPL(debug_locks_silent);
+>   */
+>  int debug_locks_off(void)
+>  {
+> +	dept_stop_emerg();
+
+[Severity: Low]
+Is it possible to explicitly include <linux/dept.h> in lib/debug_locks.c?
+
+Relying on implicit transitive header inclusion for dept_stop_emerg()
+could break the build if inner header structures like spinlock.h or
+lockdep.h change in the future.
+
+> +
+>  	if (debug_locks && __debug_locks_off()) {
 
 [Severity: Medium]
-Will this condition incorrectly bypass the comparison for earlier locks in
-the chain?
+Will this miss DEPT shutdown when the system is tainted?
 
-By restricting the lockdep_cmp_fn() check to only the most recently
-acquired lock (i =3D=3D dt->ecxt_held_pos - 1), it seems we might miss valid
-comparisons for older contexts.
+For example, when a system fault occurs, add_taint() disables lockdep via
+__debug_locks_off():
 
-For example, if a task acquires lock A1, then lock B, and then lock A2
-(where A1 and A2 are the same class), the check against A1 will be skipped
-because A1 is no longer at dt->ecxt_held_pos - 1.
+kernel/panic.c:add_taint() {
+    ...
+    if (lockdep_ok =3D=3D LOCKDEP_NOW_UNRELIABLE && __debug_locks_off())
+        pr_warn("Disabling lock debugging due to kernel taint\n");
+    ...
+}
 
-This would result in a call to add_dep(A1, A2), creating a
-self-referential class dependency that triggers a false positive deadlock
-report.
+Because this bypasses debug_locks_off(), DEPT remains enabled when the
+system lock state is already unreliable, potentially leading to false
+positive dependency splats or further crashes.
 
-Should lockdep_cmp_fn() be allowed to evaluate against any previously held
-lock in the chain, rather than just the immediate predecessor?
-
-> +
-> +		add_dep(eh->ecxt, w);
+>  		if (!debug_locks_silent) {
+>  			console_verbose();
+>  			return 1;
+>  		}
 >  	}
-> =20
->  	wg =3D next_wgen();
+>  	return 0;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706061928.6671=
-3-1-byungchul@sk.com?part=3D29
+3-1-byungchul@sk.com?part=3D30
