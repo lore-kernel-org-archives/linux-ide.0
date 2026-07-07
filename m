@@ -1,127 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C144189AC;
-	Tue,  7 Jul 2026 07:33:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E477441D4EC;
+	Tue,  7 Jul 2026 07:33:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409633; cv=none; b=mDsk8t5QFJ6LiyKqu8YTBrMT2M7XIrQHUgSFLfLvvmPwVGuIk7gTxE32zgDcHvRoW2hmKF5e7dZWteYgIJY8uyrTEik+fpeje0ySm065qEDaZt+HW11SjNhT+oRPvlWGUv7u96avXYqwkCtkB8tq0QoveJehVo9Eiwvzzk9EgIk=
+	t=1783409635; cv=none; b=bai6ou3nsZmHi872/OQaedYBXoi3b20eagB3odEwPcO2D90UWb8e4dwt7n6C1N5rqaGvuaA0eoLc2GCmUuMVYpTGhDDtB6Xskk/J2T8OV6VA8662MhKTmV3NWyE/PXo7LVHuW3p9uJt2INTonkzoGvOop978wzJkWcGXjdvbUls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409633; c=relaxed/simple;
-	bh=4sIwc83ixaz4TUV2SZlXi8ngJHN7SQzSwiDBg0GBbY4=;
+	s=arc-20240116; t=1783409635; c=relaxed/simple;
+	bh=StTKPs4ne4KC+Cv1cNaMlVihugkSEmp+rFffw5JLAwM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Sh44Tv5TxykksNGBBPVlmzv2GsH/ccBQSqDzVZLPe4O51aAQsslPvWWQsl35DJaL+XG5hgErjaWQ+A78+7nflLgmFf1HExYErTC+9FEobVgwHZN0qlYWqwkgag4RMEc2QPgXCGypOf46popwCumumBOSDWnivX041+qcg981ss0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LSCQtqyv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=tfVb+R+pVLVdfwugBvB7aTgK5T6TWjRux4tq+pJRLWC+k/Wd9bzvpI65GZdSu5podraEKI+5XFv6od/4nhtR/qK7V+kBJLJWaCBRz4dv/WXy709cacuexYHM1nKBMZkiys4aiyQGcvwOMrJYZfzDMvfHbxfjqX3MJYKd4Q3K2uc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QfB0uizV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LSCQtqyv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 384E71F000E9;
-	Tue,  7 Jul 2026 07:33:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QfB0uizV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CD771F00A3D;
+	Tue,  7 Jul 2026 07:33:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409631;
-	bh=d78FYg/cIzWC/W00YTFzSsPORye58PHTDC+ZSZCPZEc=;
+	s=k20260515; t=1783409633;
+	bh=UVO2l0eGVKNtsmAWdFLKtoZMyq4dJSOu2+5aMtn+n/g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LSCQtqyvJAkgRhTDMUiDOAtLWo6i1y8W7LHe3zwktScTwsffFXh1Eutl900KVHJak
-	 13kL2HrXX2Q5Qn4a9LhT3J/5SzYZ377drHzR52PxnTUzD+yW7FpdFSTInWYjjye1Sm
-	 p3wfhuwYIJ3M6Ynia5Lb3Nadm0LNkBGVkL9jcB3cJWa1w4nE8b7kTQL5N3OJxfyT9C
-	 6mvVHmbqFkJPgR6ikGs1VfIYMlM48o2DO3pIHUCuIDPqt6yLHzdCC3mm13MYHGzWII
-	 V90OCh2VycTENqHXqV+8IQMVNmwVh3z/hVbF6UimZdoF3rgqsDmsENq6whMb7Lzhqb
-	 H5Ay2Ezrs+3Bg==
+	b=QfB0uizVfseNfmxTewRu8FAZHlmgpfF53PJBcvKx9+BQwX18Y6AAzr1D0OCDueHjP
+	 /RxHQDiI8aKj3wY/2DuS3XHvOBAP3F/wwiN+4k/LuwlS3xcQD4ADHQs0XVFl7OEhKL
+	 XH5Po2IxxHTa3b9vcOT0X0OB5gi2hXMWcVwibdoQlze6ZWBe/vQuPzhLp6/cwaroAt
+	 div3N9mBEYOIuv1ml/+Bs5InpLloEMuWvF9CB2qPeI6qWUFCd0DPCbfA0rOcHFqZBH
+	 9YsMfQtYR2jgwda9MNRJy2o9Th9yEVYyEbgDWfpCppPqgUTfFKFwTAOHtbapx692xt
+	 EzBSH1RlJbdsQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 33/40] dept: call dept_hardirqs_off() in
- local_irq_*() regardless of irq state
+Subject: Re: [PATCH v19 34/40] rcu/update: fix same dept key collision
+ between various types of RCU
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Byungchul Park" <byungchul@sk.com>
-Cc: linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org, "Jeff
- Layton" <jlayton@kernel.org>, linux-ide@vger.kernel.org, cassel@kernel.org, "Chuck
- Lever" <cel@kernel.org>, "Anna Schumaker" <anna@kernel.org>, dri-devel@lists.freedesktop.org, tytso@mit.edu, linux-rt-devel@lists.linux.dev, dlemoal@kernel.org, ojeda@kernel.org
-In-Reply-To: <20260706061928.66713-34-byungchul@sk.com>
+Cc: dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org, "Anna
+ Schumaker" <anna@kernel.org>, ojeda@kernel.org, tytso@mit.edu, "Chuck Lever" <cel@kernel.org>, "Jeff
+ Layton" <jlayton@kernel.org>, linux-rt-devel@lists.linux.dev, linux-modules@vger.kernel.org
+In-Reply-To: <20260706061928.66713-35-byungchul@sk.com>
 References: <20260706061928.66713-1-byungchul@sk.com>
- <20260706061928.66713-34-byungchul@sk.com>
+ <20260706061928.66713-35-byungchul@sk.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:33:50 +0000
-Message-Id: <20260707073351.384E71F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:33:52 +0000
+Message-Id: <20260707073353.1CD771F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Hides missing assembly trace annotations, causing DEPT and Lockdep=
- states to diverge and allowing NMIs to silently revert the workaround.
-- [Medium] Exporting `dept_hardirqs_off` as GPL-only breaks the build/loadi=
-ng of non-GPL modules that use `local_irq_save()` or `local_irq_disable()`.
+- [Low] Unused struct member `dkey` inflates stack footprint
 --
 
-commit 3f12c8d53e9de3037ef421690b95c2ca6667e3a1
-Author: Byungchul Park <byungchul@sk.com>
+commit de6aa9797881496b4a8d7d66626b1bfd19cfdd54
+Author: Yunseong Kim <ysk@kzalloc.com>
 
-dept: call dept_hardirqs_off() in local_irq_*() regardless of irq state
+rcu/update: fix same dept key collision between various types of RCU
 
-For dept to function properly, dept_task()->hardirqs_enabled must be set
-correctly.  If it fails to set this value to false, for example, dept
-may mistakenly think irq is still enabled even when it's not.
+This commit addresses a false positive circular dependency report in dept
+by assigning separate dept keys and maps to each struct rcu_synchronize
+execution context.
 
-> diff --git a/include/linux/irqflags.h b/include/linux/irqflags.h
-> index d8b9cf093f83d..586f5bad4da78 100644
-> --- a/include/linux/irqflags.h
-> +++ b/include/linux/irqflags.h
-> @@ -214,6 +214,13 @@ extern void warn_bogus_irq_restore(void);
->  		raw_local_irq_disable();		\
->  		if (!was_disabled)			\
->  			trace_hardirqs_off();		\
-> +		/*					\
-> +		 * Just in case that C code has missed	\
-> +		 * trace_hardirqs_off() at the first	\
-> +		 * place e.g. disabling irq at asm code.\
-> +		 */					\
-> +		else					\
-> +			dept_hardirqs_off();		\
->  	} while (0)
+> diff --git a/include/linux/rcupdate_wait.h b/include/linux/rcupdate_wait.h
+> --- a/include/linux/rcupdate_wait.h
+> +++ b/include/linux/rcupdate_wait.h
+> @@ -19,17 +19,20 @@ struct rcu_synchronize {
+> =20
+>  	/* This is for debugging. */
+>  	struct rcu_gp_oldstate oldstate;
+> +	struct dept_map dmap;
+> +	struct dept_key dkey;
 
-[Severity: High]
-Can NMIs silently revert this workaround?
+[Severity: Low]
+Does this code ever use the dkey member of struct rcu_synchronize?
 
-If assembly code disables IRQs but misses the trace_hardirqs_off() annotati=
-on,
-and then C code calls local_irq_disable(), this skips trace_hardirqs_off()
-but executes the new dept_hardirqs_off() branch. Lockdep still thinks IRQs
-are enabled, while DEPT thinks they are disabled.
+The _wait_rcu_gp() macro defines its own static struct dept_key __key,
+which it passes as an argument to __wait_rcu_gp(). This leaves the dkey
+member of struct rcu_synchronize completely unused and uninitialized, while
+needlessly increasing the stack footprint of the rs_array allocated in the
+macro.
 
-If an NMI occurs while in this state, irqentry_nmi_enter() saves the Lockdep
-state (which is incorrectly 'enabled'). Upon NMI exit, irqentry_nmi_exit()
-restores the saved Lockdep state by calling lockdep_hardirqs_on(), which
-unconditionally calls dept_hardirqs_on().
-
-Will this force DEPT back into an incorrect 'enabled' state while hardware
-IRQs are actually disabled, potentially leading to false-positive circular
-dependency reports?
+>  };
+>  void wakeme_after_rcu(struct rcu_head *head);
+> =20
+>  void __wait_rcu_gp(bool checktiny, unsigned int state, int n, call_rcu_f=
+unc_t *crcu_array,
+> -		   struct rcu_synchronize *rs_array);
+> +		   struct rcu_synchronize *rs_array, struct dept_key *dkey);
+> =20
+>  #define _wait_rcu_gp(checktiny, state, ...) \
+> -do {												\
+> -	call_rcu_func_t __crcu_array[] =3D { __VA_ARGS__ };					\
+> -	struct rcu_synchronize __rs_array[ARRAY_SIZE(__crcu_array)];				\
+> -	__wait_rcu_gp(checktiny, state, ARRAY_SIZE(__crcu_array), __crcu_array,=
+ __rs_array);	\
+> +do {													\
+> +	call_rcu_func_t __crcu_array[] =3D { __VA_ARGS__ };						\
+> +	static struct dept_key __key;									\
+> +	struct rcu_synchronize __rs_array[ARRAY_SIZE(__crcu_array)];					\
+> +	__wait_rcu_gp(checktiny, state, ARRAY_SIZE(__crcu_array), __crcu_array,=
+ __rs_array, &__key);	\
+>  } while (0)
 
 [ ... ]
 
-> diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-> index 007e1bc7d201e..35a3667ac8b3c 100644
-> --- a/kernel/dependency/dept.c
-> +++ b/kernel/dependency/dept.c
-> @@ -2095,6 +2095,7 @@ void noinstr dept_hardirqs_off(void)
->  	 */
->  	dept_task()->hardirqs_enabled =3D false;
->  }
-> +EXPORT_SYMBOL_GPL(dept_hardirqs_off);
+> diff --git a/kernel/rcu/update.c b/kernel/rcu/update.c
+> --- a/kernel/rcu/update.c
+> +++ b/kernel/rcu/update.c
 
-[Severity: Medium]
-Will this break the build or loading of non-GPL modules?
+[ ... ]
 
-Because dept_hardirqs_off() is now called directly from universal inline
-macros like local_irq_disable() and local_irq_save(), any out-of-tree
-module marked with a non-GPL license that invokes these macros will fail
-to link or load when CONFIG_DEPT is enabled.
-
-Standard trace_hardirqs_off() avoids this issue by being exported via
-EXPORT_SYMBOL.
+> @@ -426,7 +426,8 @@ void __wait_rcu_gp(bool checktiny, unsigned int state=
+, int n, call_rcu_func_t *c
+>  				break;
+>  		if (j =3D=3D i) {
+>  			init_rcu_head_on_stack(&rs_array[i].head);
+> -			init_completion(&rs_array[i].completion);
+> +			sdt_map_init_key(&rs_array[i].dmap, dkey);
+> +			init_completion_dmap(&rs_array[i].completion, &rs_array[i].dmap);
+>  			(crcu_array[i])(&rs_array[i].head, wakeme_after_rcu);
+>  		}
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706061928.6671=
-3-1-byungchul@sk.com?part=3D33
+3-1-byungchul@sk.com?part=3D34
