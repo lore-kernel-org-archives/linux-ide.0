@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70F653DD866;
-	Tue,  7 Jul 2026 07:33:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5153F3822B4;
+	Tue,  7 Jul 2026 07:33:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409611; cv=none; b=EePJrlfeYWFVPyR3byLlKiin+CO4rANNdaR7rZMxo1s5lAj86B4vixCR5DpoghVbMJ0yNJ62YiBhIsbbQwPA2xRnLiFXoWk1/rcXAAmzfcBylZ4Bb4pP9CS/HtwViaWyD4GlBZ62qBIlEoU6L0DRi05Rke0yzuAADo3IL63G2AQ=
+	t=1783409612; cv=none; b=Uogzyr1lK5Gl6Deonekr+VRdp1Cdhwx3iACFuhtJWsVowx/VupoV6bDNoR5Y5nBNjI0hUoFvT1swkJ3N5g+vZEe9gfpyIr6Pdew4eRK/GYY5SAxqsH4Jef1HaNJalMk3OTWboDiJdvRv7GOxMY3xiCEv1jhXiQxmPhsFxnHp03k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409611; c=relaxed/simple;
-	bh=0QtGpZ5hsw3qjteBUfipW0q1CErQDxgwi2IkZTeAw70=;
+	s=arc-20240116; t=1783409612; c=relaxed/simple;
+	bh=rhQXrQsQa94EDZ9EunUByJXxNat90BkAAuScEsXuVm0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=m5O/75mWNeWPKZKqDuvtl+O+NLIi8bH3qmSXrYJNifYjSVeQzNogOHNUB2q+mZPCWXcImz+3ZbrZpW3HZyJans4ucJZznIcQ3Y+lHRO+S90KkTnJNsAp3woT8cBl3BiueoUU617VxZY0PIxMqR8GTBaTpsT6UvPG3zYKR3b8uGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i6SRejcT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=d5973QESx5GIJgXizxLBWyHno+2mUdLt3cJ6MabDNV+Fl9p4aheRYT3/eu1Sm0fl8nez3WY+YdLay1ezYT+t5AN41wLRXFEPY7Lx8Sv5pmSVrG+0VBGua9Dm3/1W1ykx8dCOucywmUr/SYmqu4WVtzSlHfK+mrHMLypkpHPz0bQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DO4gUTwR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i6SRejcT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4CE41F00A3D;
-	Tue,  7 Jul 2026 07:33:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DO4gUTwR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82D2F1F000E9;
+	Tue,  7 Jul 2026 07:33:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409610;
-	bh=4HO9NTC2IIFbYOH0gv4YNtH+ly33tb1GqBVw0WwfVWU=;
+	s=k20260515; t=1783409611;
+	bh=FCWBgXZf3qnampYaWbK+IOo2I/FywmPizrCWO9/t39U=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=i6SRejcTyfs1vj6La4zFnYx5R9fC3HOSqKDwoSonnzoQBhJgMF4y4z61bXtwYY6m/
-	 fF8xcIQHCM4szZAEPG4NtK4d0ImheL8ek9uh6+t5Dn0REdumrqFx1SQQtqmP/5fvmK
-	 wsrDWVd45JwkNpUXMU2gbV+jHY2hQR5k0LFMn23M7qvJ3+zkMb+Q/WuYTZ/JrNp6Jq
-	 DgTHr/gH2g/Jc45XusSmKkqziIMCsmEy5HFbTSdqIC4jdTby29RMDwocQSUdbOHXHN
-	 KZVHh+FEkn+eIhnqghH8jzINQNZMQBop2Y9YymGsaz2oJZhKs6J94PiZWwYoGshjMT
-	 VdTh69UYojrBA==
+	b=DO4gUTwRHzgGfos3HyXKRzvKkB76qfNzgvn4u+WpAxJZO5ceYbY0xIj1ZoYrJ4f1M
+	 zRq+k2jNOmtEF4mFQJuwDCzbJcNtz8BXuIMoGc/9+EW5eZZ0t8vxKOQ/kf5ZVJg6Y2
+	 GAbYkBxqEVESRwGJBbDtfZEUUWP7iDFAheBbf362K21nQDm8EXQORDKzRo3pyB4UBk
+	 dfHVCdgkrxKIoV4VATHigAD07rim0uvTPCcLBAHKLYFxlDFL+wdHu4YjEgKmOd8ZbX
+	 yZfH6yc+8xr9hBAU6FXrTD8EH7UIcmr8AkTZad/QTNkF1ZnTiqbTgskwzMka2547EL
+	 l2uvu5k4VzP6Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 17/40] dept: apply timeout consideration to swait
+Subject: Re: [PATCH v19 02/40] dept: add single event dependency tracker
+ APIs
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Byungchul Park" <byungchul@sk.com>
-Cc: cassel@kernel.org, "Jeff Layton" <jlayton@kernel.org>, "Anna Schumaker" <anna@kernel.org>, ojeda@kernel.org, dri-devel@lists.freedesktop.org, linux-rt-devel@lists.linux.dev, tytso@mit.edu, dlemoal@kernel.org, linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, "Chuck
- Lever" <cel@kernel.org>
-In-Reply-To: <20260706061928.66713-18-byungchul@sk.com>
+Cc: "Chuck Lever" <cel@kernel.org>, "Anna Schumaker" <anna@kernel.org>, ojeda@kernel.org, linux-modules@vger.kernel.org, "Jeff
+ Layton" <jlayton@kernel.org>, tytso@mit.edu, cassel@kernel.org, linux-rt-devel@lists.linux.dev, dri-devel@lists.freedesktop.org, dlemoal@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20260706061928.66713-3-byungchul@sk.com>
 References: <20260706061928.66713-1-byungchul@sk.com>
- <20260706061928.66713-18-byungchul@sk.com>
+ <20260706061928.66713-3-byungchul@sk.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:33:28 +0000
-Message-Id: <20260707073328.A4CE41F00A3D@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:33:30 +0000
+Message-Id: <20260707073330.82D2F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,64 +48,63 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] When a wait event is interrupted by a signal, it bypasses sdt_migh=
-t_sleep_end(), permanently leaking the DEPT wait stage.
+- [Critical] Unsafe macro conversion of functions causes double-evaluation =
+of arguments, leading to logic bugs and memory corruption.
 --
 
-commit 264d829a8f72641205caea8b130ee3c25557563a
+commit e5795ffb367b1b68ef8574b0a67f0bf3654baf77
 Author: Byungchul Park <byungchul@sk.com>
 
-dept: apply timeout consideration to swait
-   =20
-Now that CONFIG_DEPT_AGGRESSIVE_TIMEOUT_WAIT was introduced, apply the
-consideration to swait, assuming an input 'ret' in ___swait_event()
-macro is used as a timeout value.
+dept: add single event dependency tracker APIs
 
-> diff --git a/include/linux/swait.h b/include/linux/swait.h
-> index 277ac74f61c39..233acdf55e9bc 100644
-> --- a/include/linux/swait.h
-> +++ b/include/linux/swait.h
-> @@ -162,7 +162,7 @@ extern void finish_swait(struct swait_queue_head *q, =
-struct swait_queue *wait);
->  	struct swait_queue __wait;					\
->  	long __ret =3D ret;						\
->  									\
-> -	sdt_might_sleep_start(NULL);					\
-> +	sdt_might_sleep_start_timeout(NULL, __ret);			\
+Wrapped the base APIs for easier annotation on wait and event. Start
+with supporting waiters on each single event. More general support for
+multiple events is a future work. Do more when the need arises.
 
-[Severity: High]
-Is this a regression where a signal-interrupted wait event permanently leaks
-the dept wait stage tracking state?
+> diff --git a/include/linux/dept_sdt.h b/include/linux/dept_sdt.h
+> new file mode 100644
+> index 0000000000000..0535f763b21be
+> --- /dev/null
+> +++ b/include/linux/dept_sdt.h
+[ ... ]
+> +#define sdt_map_init_key(m, k)		dept_map_init(m, k, 0, #m)
+> +
+> +#define sdt_wait(m)							\
+> +	do {								\
+> +		dept_request_event(m);					\
+> +		dept_wait(m, 1UL, _THIS_IP_, __func__, 0);		\
+> +	} while (0)
 
-Looking at ___swait_event(), if the task receives a signal while waiting, it
-evaluates ___wait_is_interruptible(state) && __int as true and takes the
-goto __out path:
+[Severity: Critical]
+Can this macro evaluate its argument multiple times, causing a regression
+if the argument contains side effects?
 
-		if (___wait_is_interruptible(state) && __int) {
-			__ret =3D __int;
-			goto __out;
-		}
+Unlike sdt_might_sleep_start(m) later in this file which safely captures
+its argument in a local variable __m, sdt_wait(m) evaluates its argument
+twice.
 
-This jumps completely over the cleanup call:
+If an expression with a post-increment is passed to a macro like this,
+the side effect will execute multiple times. This is especially risky
+if existing synchronization primitives like wait_for_completion(x) are
+converted into similar macros to integrate with the tracker.
 
-	finish_swait(&wq, &__wait);
-	sdt_might_sleep_end();
-__out:	__ret;
+For example, looking at drivers/vdpa/mlx5/core/resources.c:
 
-Without calling sdt_might_sleep_end() and its underlying dept_clean_stage(),
-the dept state isn't cleaned up for the current task. Subsequent waits by t=
-his
-task will fail to register new dependency maps and instead repeatedly commit
-the stale wait map during __schedule(). This irreversibly corrupts the lock
-dependency graph and triggers false deadlock reports.
+mlx5_vdpa_add_res() {
+	...
+	while (completed < issued)
+		wait_for_completion(&cmds[completed++].cmd_done);
+	...
+}
 
-The exact same bypass flaw appears to be present in ___wait_event() in
-include/linux/wait.h and ___wait_var_event() in include/linux/wait_bit.h.
+If wait_for_completion() or a similar wrapper evaluates its argument twice,
+completed++ increments twice per loop iteration. This would skip completion
+entries and eventually access out-of-bounds memory past the end of the cmds
+array.
 
->  	INIT_LIST_HEAD(&__wait.task_list);				\
->  	for (;;) {							\
->  		long __int =3D prepare_to_swait_event(&wq, &__wait, state);\
+Could the argument be evaluated once and captured in a local variable
+within these macros to avoid this?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706061928.6671=
-3-1-byungchul@sk.com?part=3D17
+3-1-byungchul@sk.com?part=3D2
