@@ -1,108 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC6F419310
-	for <linux-ide@vger.kernel.org>; Wed,  8 Jul 2026 09:35:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B514040803C;
+	Wed,  8 Jul 2026 10:52:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783503319; cv=none; b=WZSOJhDJQ+eDNYl+yy2YS+Uq0tp83q55Az4NOlL5GI/jDRJFiuV+c5aRVD+8OQnSsv4Xb8XrgcSuC3Bh5jOGnCxKueQNxPmygujhTuunoANeYJiJpDDgtPqP4tUO0PQJfO0Ogmr5D+yqBnbIfV2vLi9NwwvNnAGB1fRoEV7if8s=
+	t=1783507934; cv=none; b=UW50N53K2DeUh6816DVuDIkFYH3VwgrQE/rGDEFZf6w+KDlE+866lraLSMqCxGfx3neiBR8s7HCE0mRrQtrEX3Q1kxM+F+Sw3twWh5V7cfsHXYAbNcsqXAqa8bs9hpvtkwP8q4ZLaUp+wujwaIxaAw3fU9IVFzGStqpXvouynqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783503319; c=relaxed/simple;
-	bh=sNXwauNzD+flAtkNqQ27Do6IVSPEJIlTde/IeH4XHq8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NptN0G0yO5Q0ggIvCs9MEkJoyNo8HcmN15+96D7vMErCWQBpdJ0TwaM6/HguQ7iDgPcgN/weyrQunStqfzHhnz7anrBj8f8/KX0rpkxODOxPTyjlnieh7UWeAGYy0pcCPMfEUdIT11SgUynlYBaqZcGgsVjJnh8deQa2IJmFXq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bg+1aezm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783507934; c=relaxed/simple;
+	bh=dsJABScrUj4xyMwOzi3nscIGfAqE3ZpoAy0XSamHHZw=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=GTv+UlPZKmbN8JxkFuMiqbVL3BjEn7XVTX+mpqKVw/ES7LQAwHkgfyS2uThdNNeQrWWos88DxSi9zQoUsVbE0uYoO7MwWSTzDI3VqL62cOsAbg0VgIqgImpMZh+VtNtIciU6BaYz+tk012aJetGf/aaxtxGVbEnRPrb6QchlvCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=EbEd9dB/; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=ebF1mgFh; arc=none smtp.client-ip=103.168.172.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bg+1aezm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 829931F000E9;
-	Wed,  8 Jul 2026 09:35:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783503316;
-	bh=JrH1FqiWWc5i7DngvqILNAJFhx2uDRN9wo/wITIAphg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Bg+1aezmDCAn42clf/xz/Hs83mQI2q7IA9ktIIdkCjT+07USLxCDxkRgRJiRk4iNZ
-	 FproV6WXSthGlCHMGTu84IBQ9lghQl73bTYLj6I+hoZ4nWA+tsldfvuMhXrPZSJWk0
-	 08+ZHF6gBVi8Bfg007smLYDslT0yBtVeciXa7bii8j2+mdU26oJnUox5oEQCD7Xl0U
-	 kcmDCJNZymZggosttBi3XB4dod1iB8KiFO0v104UAfNPZ9WaIQxwGyV9WP7zh5o7ZH
-	 WEvBNV8hJU2FFkspkRg8n56wqc04Eg2vjZ9jQRyn2ip2fJR7KWxsyH6zq8LcVn77mj
-	 4OSMmCRa4fznQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: pata_ep93xx: fix double-free of DMA channel on
- error path
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chen Changcheng" <chenchangcheng@kylinos.cn>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20260708092704.60815-1-chenchangcheng@kylinos.cn>
-References: <20260708092704.60815-1-chenchangcheng@kylinos.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 09:35:16 +0000
-Message-Id: <20260708093516.829931F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="EbEd9dB/";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="ebF1mgFh"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfout.phl.internal (Postfix) with ESMTP id 35CFEEC00FB;
+	Wed,  8 Jul 2026 06:51:58 -0400 (EDT)
+Received: from phl-imap-05 ([10.202.2.95])
+  by phl-compute-04.internal (MEProxy); Wed, 08 Jul 2026 06:51:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1783507918;
+	 x=1783594318; bh=hIZg2ldnJogwpujWh7PTyNBHelvaX4udZ6sI2p5ue3Q=; b=
+	EbEd9dB/H667eHNIUhfhARn5KtpXiZwQHKjFZHTKDd0icFN+ezVXDoGvC69FDhwt
+	yGkyxqc2b8kw04vbMceMZxF6wcD5sNonUrpVRsoGxsbHEd+Z5uryyRyVWVlmK6wt
+	w42/mvKHGQ64rDwVXwab7FNgK48Q9Yzr6C50ukDOu5Yg6ccraJekoZRQ7TBsLvye
+	5wU79tQ5Omkh4VuNRWZeaRLGjD+i53giPaVAssrf9I0yPOzC79LMZBta60VW27Kz
+	7UqeUsz+jaOQGVFqNjz55YeA7KHLTx6k42Qy7WkblHIoq1G/iC1J4tM9uXzcA1qw
+	N+7PRK04ZkMgN4QZHm+VZA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1783507918; x=
+	1783594318; bh=hIZg2ldnJogwpujWh7PTyNBHelvaX4udZ6sI2p5ue3Q=; b=e
+	bF1mgFh9WHGg4EAveD6C5FztHI4IrY97ZINpWS9SyyBvcvdNPJdLIxcri7dAnh4e
+	KRjF4zwGN3PwfYV2xB0/lM+iUkMw6XRmqpE/koiy/ukk+k1QLvBG5MAkg0EQSMK9
+	4w8kgGyuGaEMAjMgAhXwgQpqwMecAllOn52+2uHbXMxws2nv3o9kC+33GX0xI7t+
+	tSwXDpU8vCAtwDPzpxfBtucPg7atptZo1L9YNEibKUPGYjI7nFL/dw1EqM7dpwpC
+	NQU6Z3l41oHPN8rBW8TBIHUG85xxdaJPlo5oMMya03aYzbTpNZrSEPRS2A9KYu4e
+	A7ukfXgz808KiI9jRix5Q==
+X-ME-Sender: <xms:zCtOanDVTSWCcdnLjIq39wQcYuC3g-d1DXGiRMCp18u8ZXoluSR4Hw>
+    <xme:zCtOaoVUtY4r0JTbDNt2A1JGFq2Ub2zXV3bnBKYK5smZNJoz2EHRxfyaan7hWTs5Y
+    jZviUs_RJsldNmdqnZMowq1TNqbuJaWPydz5c_F0xs_9qILNSyTCRE>
+X-ME-Proxy-Cause: dmFkZTGtvw6WvSymr4VinGd1nWZv6KTMr8E8sY/3Felf8ggSTxeLSW1bjf6AFpkx1wa10S
+    Tw+au5ZhoWjRVV4ZI5UaQ1rc5VcDRzzogcg7j5MEWljN6cRcQL8D7zUObhRejnnY9esRfP
+    ea/uVcXgJyKkO4oLUCdW5XJqAoSaylYrXZtr69SMRAudl/jG8PFCLGprKfHRJRQv+wu+qo
+    Ky6LBuaylM/KOJXeoiIOvzHTqzPBFkFfzcbZ07SYR20IZcJsltsnUbgxEkF8i9VvxSY5cj
+    P0H8ig+2CZPMhH3F3JbjSfqImk4zgPlFkmqRiUKu3EgM5JwdEqDpHx4baqAFnHhFMRyhC2
+    E5j1O3GDnopkBgVgqnjcO3D+iFhPY9A9ZdD9uKsCMfqUmtId4qKm0xHbyexw3QpVt73tMA
+    cuvIZW58OuFOqhCYLFWnC0fUhq/NsIo6V+0j5NjvwpM1H8+gxpj4uQQKT8OymxUG+1DK86
+    iq1vh6w9x3N0JuB7jmaCN+ME+7q3zagzdX1XfGkNpro1YVBcAO1VIbh9ihsdxiKg2X4tdn
+    L3SH6w2tThZrvIi5Vl/MdH/VbBKVd4hfxFL5vwjxYxAKWcHBrHs87CN6LDGHs25nSi5aPm
+    UgWhxzh9cYhZDf1SLKH4QfQFVHb77cWDrH8ChqzI6/5ekmpHMNLILE2lA6fA
+X-ME-Proxy: <xmx:zCtOasBt3oO2ZuCPZHZYA9qTIXvaFWRtBOnmoIkkOG1HcJXCHPshng>
+    <xmx:zCtOaqg4B4pxEY1ePwRuyAUne2lVzP3AAaCci7_dWcKCr1QWK-JVPQ>
+    <xmx:zCtOahxgna8TOR1MKkOlZT4v-G9kxufyWeDNblw_csGLb2T6wrGHwQ>
+    <xmx:zCtOaj303j4vhpsN_fHUENQEdVbLt9PHKwIAzJOBzgXOlpyikkceQw>
+    <xmx:zitOaj8A7Uyz9qRtirqup1Vfgi56TGIONPRWwFl9K1OWFNzRof921wgr>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 540881820082; Wed,  8 Jul 2026 06:51:56 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-ThreadId: AoQOi4MnDbNN
+Date: Wed, 08 Jul 2026 12:50:11 +0200
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "Chen Changcheng" <chenchangcheng@kylinos.cn>,
+ "Damien Le Moal" <dlemoal@kernel.org>, "Niklas Cassel" <cassel@kernel.org>
+Cc: "Nikita Shubin" <nikita.shubin@maquefel.me>,
+ "Vinod Koul" <vkoul@kernel.org>, "Sergey Shtylyov" <s.shtylyov@omp.ru>,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <64f3ed43-9276-423f-9db6-2270fa9c2192@app.fastmail.com>
+In-Reply-To: <20260708092704.60815-1-chenchangcheng@kylinos.cn>
+References: <20260708092704.60815-1-chenchangcheng@kylinos.cn>
+Subject: Re: [PATCH] ata: pata_ep93xx: fix double-free of DMA channel on error path
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-
-Pre-existing issues:
-- [High] Probe fails entirely instead of falling back to PIO mode when DMA =
-channels are not available.
---
-
---- Patch [1]: [PATCH] ata: pata_ep93xx: fix double-free of DMA channel on =
-error path ---
-commit 5d77ddcea9fce813ec9dad68a5d5fe3f97dacb61
-Author: Chen Changcheng <chenchangcheng@kylinos.cn>
-
-ata: pata_ep93xx: fix double-free of DMA channel on error path
-
-This commit fixes a double-free of the rx DMA channel and a potential inval=
-id
-release of an ERR_PTR tx channel in the ep93xx_pata_dma_init() error path.
-It achieves this by updating ep93xx_pata_release_dma() to safely check using
-IS_ERR_OR_NULL() and adjusting the error jump labels.
-
-> diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-> index 42a24dc51d26b..b4fb89481b7ee 100644
-> --- a/drivers/ata/pata_ep93xx.c
-> +++ b/drivers/ata/pata_ep93xx.c
-[ ... ]
-> @@ -664,7 +664,7 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_da=
-ta *drv_data)
->  	if (IS_ERR(drv_data->dma_tx_channel)) {
->  		ret =3D dev_err_probe(dev, PTR_ERR(drv_data->dma_tx_channel),
->  				    "tx DMA setup failed\n");
-> -		goto fail_release_rx;
-> +		goto fail_release_dma;
-
-[Severity: High]
-This is a pre-existing issue, but does this error path prevent the driver
-from falling back to PIO mode?
-
-In ep93xx_pata_probe(), the driver aborts entirely if ep93xx_pata_dma_init()
-returns an error:
-
-ep93xx_pata_probe() {
-    ...
-    err =3D ep93xx_pata_dma_init(drv_data);
-    if (err)
-        return err;
-    ...
-}
-
-If dma_request_chan() returns an error (like -ENODEV when DMA is not
-configured in the Device Tree), the error is propagated via dev_err_probe().
-
-Would it be better to treat missing DMA channels as a soft failure so the
-device can still initialize and operate in PIO mode?
-
+On Wed, Jul 8, 2026, at 11:27, Chen Changcheng wrote:
+>  static void ep93xx_pata_release_dma(struct ep93xx_pata_data *drv_data)
+>  {
+> -	if (drv_data->dma_rx_channel) {
+> +	if (!IS_ERR_OR_NULL(drv_data->dma_rx_channel)) {
+>  		dma_release_channel(drv_data->dma_rx_channel);
+>  		drv_data->dma_rx_channel = NULL;
 >  	}
-> =20
->  	/* Configure receive channel direction and source address */
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708092704.6081=
-5-1-chenchangcheng@kylinos.cn?part=3D1
+If something requires you to use IS_ERR_OR_NULL(), that is usually
+a bad API design, and you should fix this at the place where
+it gets introduced.
+
+Please fix the probe path instead so it doesn't try to use the
+device without a valid channel.
+
+      Arnd
