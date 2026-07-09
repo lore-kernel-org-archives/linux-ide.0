@@ -1,241 +1,172 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86D0B2D781B
-	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 04:36:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783571799; cv=none; b=T1qaI+BcS6Wqd+9/J1ReC8DxP0IJqEHqYtdEmKjb7sfEoZlXFrPZm8qvpvCILG6RQjXFlldajFYGDYpWFagk4WDqgu1514iAxoBfupCPSRvP+jrby/DXmDhmeovoOyigAK8W46D8sjQkStYUd5xAQtLqq1bRFqB2q8i5pk2XQuQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783571799; c=relaxed/simple;
-	bh=cJNH2LoCno3RyHaKnKxAQk3XlUBLXJUiRCkfFBryEqQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GqQbDeRTLH9j6SqkO6GU83kZRBayg/w1d6FgerJTuO4Xt+pj4imXbrO2xABR3sYZeLVe47ZJQS3ZxrR2xD31j0wx2mL8BMvy9YdelCuSGMgoj4OxdUz4gCP1tDBHf47TK6dTRc/UpElBjnpwxqxA8NrG21jz1Og7BXdnhqjkDkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=oX0QjfET; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AD4626ED3A
+	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 05:23:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783574616; cv=pass; b=WGlHpHIS/Ukkk9mfI8ist5/JpHdBG+uCg7Yyx7F6wAkgDNxXkxgLeNLa6od5nyPBPR5SgiyssXbDv7c/3nndQ7bLYAbBpDqoAlSRXpGIwqLX0E2Mtxo+GiNBVz2PrtxEcHVA9SPEtFMX5dic7kLpWteFbunJq/BDIsNBIMTckhk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783574616; c=relaxed/simple;
+	bh=N4IaFh4irsPi9G/nPjxoICQH42HqckBrZkiXKWwClDo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Wo3dNnBycO0PzYO+VMi0PYxtUeK6ZW4sz5RsmOkkVYfWK5Sbh5NHElrod5Awkt89xHsuP3fN23heWPhzOtR7PzU/31t9/CfyDih/WmlkNUnQpLZBw8gZpVp4cEAdEmxGNERD9troe2F/Jd17thC/9Z5O4demHgxiszjmVq0xMyM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ycf4rv7+; arc=pass smtp.client-ip=209.85.208.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="oX0QjfET"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2ccdf36f63dso72125ad.0
-        for <linux-ide@vger.kernel.org>; Wed, 08 Jul 2026 21:36:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ycf4rv7+"
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-698bf053053so2469098a12.3
+        for <linux-ide@vger.kernel.org>; Wed, 08 Jul 2026 22:23:34 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783574613; cv=none;
+        d=google.com; s=arc-20260327;
+        b=FTSZ7VJ/pn4aIyodvM9QF/KCEeFPu6/sxs4K7klu2Ir75ppFl4QAQNRC1sjb26/kDY
+         nDFFwTYmcZXS0Uvk7klSYdTj98B+ihQbYWqRxOkpuN1IGC3hO2PN6hrxvliRh1W674aj
+         UWaAnR/M1HzS0m1PUSr41co4mOG1X8aPwIVbKDOYwfUvIXj5XuLdiXZZFllz4S0G69In
+         AZ8tqRfuHPvr2PbqBCUmwSusIGwq1+M+Zfoh+9SGwJS7qKXB3I2/K4JUYo3cC/BA7CR4
+         lt11G1fMwVHNrq9Z8kQ1DvnjeltcbBc8qBzvkCaiND2dt0pAVJ1D3mhTS0DoJowDq1pN
+         hQtg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=3jYMuHN3mp22w1LNXaX78paFZMrbcZqtJQFGUwmQCoc=;
+        fh=auVoQHEGSnzUss1Bb8UIwBAdpNHqUnX0mKWe35mvJ04=;
+        b=Z5oey6pdZ6ZYMYhd39291kaGvSbDkY0uuhd5Zg6JmMS2enCrip86wcvuyRScljDuCu
+         xBuo6CXuYV3a/Egv9hU0O0rfckS2LAAh9xGtjeKX1xho/3/lOiwrXmG/jv3vR4WBbnX6
+         lczYc2cEVaP8QfegYvBwn6eZe+m4j8vYSj3xgpphlODm7IC1tilkihlVAFRpT2IEwj8N
+         B+SE7lzcWE1C3UcL9tKnlwdReMLWDHAtTO3utbxE0pZh0X6Xc4dbHGPNBr8SmdJidKuA
+         Xe6QM43jthy/dGOM9P8VIqkJaN9cp/hWJREtoVAww/LD2dvpAuRs8OzSZ6pnqZUDqORb
+         kvNA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783571798; x=1784176598; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1783574613; x=1784179413; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=C/e9zeofXY3+pcFO6xjlYgqQd30GeoO2uMIiITsRZ4I=;
-        b=oX0QjfETtMhw56AuICasNbDJ8nj6qHGbYHKEBFhbbxHXaY2LOqmgok7f/grVBWz8OC
-         nhBwIlwho3qTJuYcX1EsvroZgMQdKfacwiOxkExQhDL/3pefllTW7j0rRngP0A3B9Iq1
-         B0kebqOmLxiNfvz4sAUUXjKGt7H2LhuL7ukh4ROclpBideNzUtVibyrH/Ld3LzpRsPPR
-         FRs95loiTFQ10SOJJpHVKlRfpvygb7DNqZCCxPSwnX5Tqmb2CQIE7s3eYrUqHpGwanZp
-         XhGG5o4UGhj1P03mNzE6FGr42PDRlDfyayQ97+fb91tt7vQewh4cAIcfdYujVYIUWZwQ
-         Zpkg==
+        bh=3jYMuHN3mp22w1LNXaX78paFZMrbcZqtJQFGUwmQCoc=;
+        b=Ycf4rv7+Ex2GD5m4poJ+yI45JAdxAWCNaJzZ1LhadtHlORtiEmLr2TZmgJX6qtd9EW
+         ro4ppIQK8Gazx0J0q+ElKf0DwuLGptyttCjcPKcHlPL3rDJ4XgzUQFXzZZkqM/v+dviz
+         RHza9jwF+DUvBZMmcKVP/R3kfSnNi/bg1rQgH47yWWm0f65nlZ9TGx8OdFSr8yHRAuZz
+         SRw7rI2haN3c5JbqxB6BSP63RP2mbNF15ixmsKNxlHPmS6OH1+K45PmJJnrYUBMqt/a4
+         WsWerRPQaMd/uK5C610wI6nomZtlj2V406DAs3P3Nh0ZIlsI97nM7KJPjEKqeoVfxWxU
+         s9pQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783571798; x=1784176598;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20251104; t=1783574613; x=1784179413;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=C/e9zeofXY3+pcFO6xjlYgqQd30GeoO2uMIiITsRZ4I=;
-        b=BKMKgtgWoz676OtpssQcTiFGeW1W2xH/GoB+Rm88U6G5uMx23TdqUdM6qTOtFgvTXJ
-         nZPDMjD3tld0nqmiW9CR7HtnrvBRhiVEgcYDaEpX7KlTqea9YoRTfpSeaOIV0Jy5W2Kp
-         pwLyDKRFAraiGj/rUn/XCW1uv9DbRS9Z3lPS/RXuA+WCSwiuClPQle4Xlhv/f8XM4b7d
-         38c1YQ+DJ+4C/L26QsORNWmS+x+j9CNHw+/TIfGh0iqpOWxwLvboY3ROmSZgWh1Ir1kx
-         SdWg1eaOgO/btbdY8WL0gpxkDlsjPg3oj+P8EvixRyENz/77vhb4zj/hPABwRyCeHSB5
-         LsLg==
-X-Forwarded-Encrypted: i=1; AHgh+RpmCcuy7GbPpOEG2SyI+bvVv1hkwyotRi+oU4bpoKclvHvC55ePiURU3KyQysCQu4c2/E5iVXejiTg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxMXkW4Iyha1+em27HIoxRdtu6QPw9/+74nfIarfbdpD5IXKTYC
-	dDBNlhZcd/ix8ZEClpqfpo8kpH/1+ItUWB4RtwIPcrEVdQ/0anvUMKBizHMl+gRZnQ==
-X-Gm-Gg: AfdE7clnH6LEWkxKFvaCmeJnQdLuwlGWwh8lJBMqMyg0kyjERxmBIOGHcobV++3NOWd
-	vHzv7AP/zvtbBzOs4mXdt0BSfzeRV5VE7S3SFQzno2jvBOJA5KibE5mFmaWAsy0sTXFnZjcKWjK
-	9fsvfX71pVJdflsbirAeVpVCC4kPtDgVsnfwggGBRHnLldo0g8XXiOt8vOG5HaS8KTA0nr52Xih
-	Hgsu8CpL1JOYo0G+xtZbwSX95auRpRR5W/5+4tlW8HrkdMl0Kt40+o1oZp3jAkbwwRo2474w3LK
-	65LYis/urdHbzgaRVh2dVN7TM0U405VO3qfdHe737KhzretLy/m/nUckZ++rKOweGRehXUIlc9L
-	9rcmv6n06q5RIWeYik1HdSM/L2lAAuoyctL2UWtUybF0z3viHebqyzTOoADNMBYgCG5wRoPtpZh
-	cgkn/T2ayMBUzTtAecP5ZTdwt5DnZR6WRqliPGlFEWKv7/WcVwGWk=
-X-Received: by 2002:a17:903:22c5:b0:2ca:be81:b469 with SMTP id d9443c01a7336-2cd218eaee3mr1641105ad.0.1783571797237;
-        Wed, 08 Jul 2026 21:36:37 -0700 (PDT)
-Received: from google.com (98.144.168.34.bc.googleusercontent.com. [34.168.144.98])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38a57dc53a0sm456618a91.9.2026.07.08.21.36.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2026 21:36:36 -0700 (PDT)
-Date: Wed, 8 Jul 2026 21:36:33 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org
-Subject: Re: SCSI EH wakeup deadlock from deferred_qc
-Message-ID: <ak8lUXgBZPsQDcuY@google.com>
-References: <20260708193644.671852-1-ipylypiv@google.com>
- <4a1b8987-7c76-41e2-baf9-6c176950593b@kernel.org>
- <26dbfbdd-4f9d-4a5f-8f61-a3bb7c457f50@kernel.org>
- <ak8GcZ2k0AIkpMCe@google.com>
- <2c0de926-25fa-4bd3-9a79-44fce94e6c2d@kernel.org>
+        bh=3jYMuHN3mp22w1LNXaX78paFZMrbcZqtJQFGUwmQCoc=;
+        b=X/GfO2uj+zWbQ7iD18l7CqHLqJRl0nBWWx5xPPwAHZTbUJxal2eEwOn9Z8MXiZiz+D
+         deWV14V8iszKsaVv6h2NVNaNH6JKAtTnNtDASmVcHC5ZOzLPcWEKTdDa407zzhWhChuO
+         fWGUIEwmXzmtfKOnVLCsVxNuUZNL3sRmqWm4Gq8bFBEI4ofA7HAhiuCJEbgEy1K9VhJ1
+         ZcuvdSR3ZSFFQzu1lg/0EamAHb5B1xJyOKnexEVdeySj9RCI97RIV+XJETQZmOnNbVUN
+         uCvVQTnO9Ls+BOHVbB4Nw1MWzrcJjgxsKRYQZTnpjD3+q9NQTP82D/VmfYV6sxw6zYg2
+         //Bg==
+X-Forwarded-Encrypted: i=1; AHgh+Rps3Qx5fzkC/38gQJar+3nuybA6VI45ujhSUK5OqpfR1KXj02o5ydUzP+A0g+5tm8e0NQeTNshyl+k=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxXTRQT+6qSWGX1UmOXKuIvywoBGiw9ugHuVdy0xMjrGQFH1Kvf
+	8jL00iNuS1QBJPuZEmpU/UVowaXx44IXyvmoxDZnpTJsdwls05i/BszA3Jhbrwbdvc0/e4fVRA5
+	GX2pMi3LuB/Hgup2IYNTA0o9meZvE1Us=
+X-Gm-Gg: AfdE7cmF4Qs/5VhtGGYX668OTFHwWtnR8hu84K2vaHqINKB9w4s3UI0pFmmpDfAS5ZZ
+	ZA2RVHWVCmo2vnIale+8+HjEPwfgjeO9G/SKppTK7tA7RiobTBhaoo0vPKMtNsO2jDcII/rl9PU
+	05Si0YIZkZlwuUYy5iuFevL/pQLamqs/AgdPO0k7ds3WpwEUOjGUXse9sUluYGNTHYORdUujXWB
+	M+W43SODO5qgu34fHamhiMrd5DQycWguh9HIdQheEvPrQpTazyRzK1S1FzckevbiMul3vY/5Ofo
+	snNXPYsxsiStM9uAPRG2Dvrnctobt3m8xkQ6PGP8IuCA4T7xu4kWEzN7Sj8IuAlJKC0WBQa4Rvp
+	QKAV2mVV7nL8znZQAGOW06x25VZy3OJgavb+S2eQR+fM886JnFUpg0IAHOcY83V7eTibvYFB9rj
+	fNxQ9tvvaLHP+Fs5TJW7Or7z0y2MChi0xnPhSBVw==
+X-Received: by 2002:a05:6402:2691:b0:698:3365:f94a with SMTP id
+ 4fb4d7f45d1cf-69ab4460df3mr2297290a12.15.1783574612726; Wed, 08 Jul 2026
+ 22:23:32 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2c0de926-25fa-4bd3-9a79-44fce94e6c2d@kernel.org>
+References: <20260709023202.2132165-1-rosenp@gmail.com> <20260709023202.2132165-2-rosenp@gmail.com>
+ <20260709024713.58EC71F000E9@smtp.kernel.org>
+In-Reply-To: <20260709024713.58EC71F000E9@smtp.kernel.org>
+From: Rosen Penev <rosenp@gmail.com>
+Date: Wed, 8 Jul 2026 22:23:21 -0700
+X-Gm-Features: AUfX_mxUsrbMf_vMjOrBztQg0DDni59xq5EgO9N7xFeXpzk-Tve9U0tz1DayLso
+Message-ID: <CAKxU2N-S33sLoJc1M5idCx7ma1aw=LcBdjtyaMaKHMo-ci17Eg@mail.gmail.com>
+Subject: Re: [PATCHv3 1/5] ata: sata_dwc_460ex: use platform_get_irq()
+To: sashiko-reviews@lists.linux.dev
+Cc: cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jul 09, 2026 at 12:37:07PM +0900, Damien Le Moal wrote:
-> On 7/9/26 11:24, Igor Pylypiv wrote:
-> > On Thu, Jul 09, 2026 at 10:01:11AM +0900, Damien Le Moal wrote:
-> >> On 7/9/26 08:44, Damien Le Moal wrote:
-> >>> On 7/9/26 04:36, Igor Pylypiv wrote:
-> >>>> Hi Damien,
-> >>>>
-> >>>> I've stumbled upon an issue where SCSI EH didn't run upon command timeout
-> >>>> but ran ~10 or so seconds later. It seems like a recent regression from
-> >>>> the introduction of deffered_qc.
-> >>>>
-> >>>> When an active command times out while a non-NCQ command is waiting in
-> >>>> deferred_qc, SCSI EH fails to wake up. Recovery stalls until the deferred
-> >>>> command's own timer expires.
-> >>>>
-> >>>> When an NCQ command times out, scsi_timeout() calls scsi_eh_scmd_add(),
-> >>>> incrementing shost->host_failed (1). However, when scsi_eh_wakeup() checks
-> >>>> whether to wake the EH thread, scsi_host_busy(shost) counts 2 active
-> >>>> commands (1 timed-out + 1 in deferred_qc).
-> >>>>
-> >>>> Because busy (2) != host_failed (1), scsi_eh_wakeup() refuses to wake
-> >>>> the EH thread, deadlocking error recovery until the deferred command
-> >>>> times out on its own.
-> >>>
-> >>> Igor,
-> >>>
-> >>> Can you try the attached diff ?
-> >>> I will test on my end, but I need to hack something to trigger a timeout :)
-> >>
-> >> Hacking libahci to trigger a timeout for a particular LBA read, I tested the
-> >> attached v2 and I see the deferred QC running right after the read command
-> >> timeout. So this looks like a good fix to me. Can you test please ?
-> > 
-> > Thank you for coming up with a fix so quickly, Damien!
-> > The fix works for the issue I'm seeing!
-> > 
-> > Note: I tested on a 6.18 based kernel with your changes ported to libsas
-> > to fix the issue for the pm80xx driver. Attached libsas diff for reference.
-> 
-> Thanks for the diff. I will add it to the patch, and if that's OK with you, also
-> add a co-developed-by tag ?
-
-Of course! Thanks again for fixing this quickly, Damien!
-
-Best,
-Igor
-
-> 
-> > 
-> > Thank you!
-> > Igor
-> > 
-> >>
-> >> -- 
-> >> Damien Le Moal
-> >> Western Digital Research
-> > 
-> >> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> >> index 5868526301a2..5221d7004c0e 100644
-> >> --- a/drivers/ata/libata-scsi.c
-> >> +++ b/drivers/ata/libata-scsi.c
-> >> @@ -1685,7 +1685,8 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
-> >>  	spin_unlock_irqrestore(ap->lock, flags);
-> >>  }
-> >>  
-> >> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
-> >> +static void ata_scsi_do_requeue_deferred_qc(struct ata_port *ap,
-> >> +					    struct scsi_cmnd *timed_out_scmd)
-> >>  {
-> >>  	struct ata_link *link;
-> >>  
-> >> @@ -1698,15 +1699,27 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
-> >>  	 */
-> >>  	ata_for_each_link(link, ap, PMP_FIRST) {
-> >>  		struct ata_queued_cmd *qc = link->deferred_qc;
-> >> +		u32 host_byte;
-> >>  
-> >> -		if (qc) {
-> >> -			link->deferred_qc = NULL;
-> >> -			cancel_work(&link->deferred_qc_work);
-> >> -			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-> >> -		}
-> >> +		if (!qc)
-> >> +			continue;
-> >> +
-> >> +		link->deferred_qc = NULL;
-> >> +		cancel_work(&link->deferred_qc_work);
-> >> +
-> >> +		if (qc->scsicmd == timed_out_scmd)
-> >> +			host_byte = DID_TIME_OUT;
-> >> +		else
-> >> +			host_byte = DID_REQUEUE;
-> >> +		ata_scsi_qc_done(qc, true, host_byte << 16);
-> >>  	}
-> >>  }
-> >>  
-> >> +void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
-> >> +{
-> >> +	ata_scsi_do_requeue_deferred_qc(ap, NULL);
-> >> +}
-> >> +
-> >>  static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
-> >>  {
-> >>  	struct ata_queued_cmd *qc = link->deferred_qc;
-> >> @@ -1730,6 +1743,28 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
-> >>  		queue_work(system_highpri_wq, &link->deferred_qc_work);
-> >>  }
-> >>  
-> >> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
-> >> +{
-> >> +	struct ata_port *ap = ata_shost_to_port(scmd->device->host);
-> >> +	unsigned long flags;
-> >> +
-> >> +	/*
-> >> +	 * We had a timeout, either for an NCQ command or for one deferred
-> >> +	 * queued command. Either way, we must release all deferred queued
-> >> +	 * command so that scsi EH can trigger.
-> >> +	 */
-> >> +	spin_lock_irqsave(ap->lock, flags);
-> >> +	ata_scsi_do_requeue_deferred_qc(ap, scmd);
-> >> +	spin_unlock_irqrestore(ap->lock, flags);
-> >> +
-> >> +	/*
-> >> +	 * Let scsi_timeout() know that it must continue with handling the
-> >> +	 * timeout as we in fact did not do much here.
-> >> +	 */
-> >> +	return SCSI_EH_NOT_HANDLED;
-> >> +}
-> >> +EXPORT_SYMBOL_GPL(ata_scsi_eh_timed_out);
-> >> +
-> >>  static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
-> >>  {
-> >>  	struct ata_link *link = qc->dev->link;
-> >> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> >> index 96e626d6a7ca..327da43d7496 100644
-> >> --- a/include/linux/libata.h
-> >> +++ b/include/linux/libata.h
-> >> @@ -1153,6 +1153,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
-> >>  #endif
-> >>  extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
-> >>  					     struct scsi_cmnd *cmd);
-> >> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
-> >>  #if IS_REACHABLE(CONFIG_ATA)
-> >>  bool ata_scsi_dma_need_drain(struct request *rq);
-> >>  #else
-> >> @@ -1464,6 +1465,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
-> >>  	.ioctl			= ata_scsi_ioctl,		\
-> >>  	ATA_SCSI_COMPAT_IOCTL					\
-> >>  	.queuecommand		= ata_scsi_queuecmd,		\
-> >> +	.eh_timed_out		= ata_scsi_eh_timed_out,	\
-> >>  	.dma_need_drain		= ata_scsi_dma_need_drain,	\
-> >>  	.this_id		= ATA_SHT_THIS_ID,		\
-> >>  	.emulated		= ATA_SHT_EMULATED,		\
-> > 
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+On Wed, Jul 8, 2026 at 7:47=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+>
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+> - [Low] The patch removes the local variable `np` from `sata_dwc_probe()`=
+, causing a build failure when `CONFIG_SATA_DWC_OLD_DMA` is enabled.
+Rebasing error. Will fix.
+> --
+>
+> --- Patch [1]: [PATCHv3 1/5] ata: sata_dwc_460ex: use platform_get_irq() =
+---
+> commit 74bc1be9c4385029a4079d000bf78ff4452fc266
+> Author: Rosen Penev <rosenp@gmail.com>
+>
+> ata: sata_dwc_460ex: use platform_get_irq()
+>
+> This commit replaces irq_of_parse_and_map() with platform_get_irq() in bo=
+th
+> sata_dwc_dma_init_old() and sata_dwc_probe(). It improves error handling =
+for
+> IRQs and removes the unnecessary include of of_irq.h.
+>
+> > diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.=
+c
+> > index 4fc22ce4bd9aa..442c6e9d06e0a 100644
+> > --- a/drivers/ata/sata_dwc_460ex.c
+> > +++ b/drivers/ata/sata_dwc_460ex.c
+>
+> [ ... ]
+>
+> > @@ -1126,7 +1122,6 @@ static const struct ata_port_info sata_dwc_port_i=
+nfo[] =3D {
+> >  static int sata_dwc_probe(struct platform_device *ofdev)
+> >  {
+> >       struct device *dev =3D &ofdev->dev;
+> > -     struct device_node *np =3D dev->of_node;
+> >       struct sata_dwc_device *hsdev;
+> >       u32 idr, versionr;
+> >       char *ver =3D (char *)&versionr;
+>
+> [ ... ]
+>
+> > @@ -1173,11 +1168,9 @@ static int sata_dwc_probe(struct platform_device=
+ *ofdev)
+> >       sata_dwc_enable_interrupts(hsdev);
+> >
+> >       /* Get SATA interrupt number */
+> > -     irq =3D irq_of_parse_and_map(np, 0);
+> > -     if (!irq) {
+> > -             dev_err(dev, "no SATA DMA irq\n");
+> > -             return -ENODEV;
+> > -     }
+> > +     irq =3D platform_get_irq(ofdev, 0);
+> > +     if (irq < 0)
+> > +             return irq;
+> >
+> >  #ifdef CONFIG_SATA_DWC_OLD_DMA
+> >       if (!of_property_present(np, "dmas")) {
+>
+> [Severity: Low]
+> Will this cause a build failure when compiling with CONFIG_SATA_DWC_OLD_D=
+MA
+> enabled?
+>
+> The earlier hunk removes the declaration of the np variable, but it appea=
+rs
+> to still be referenced here in sata_dwc_probe(). Could dev->of_node be pa=
+ssed
+> to of_property_present() instead to avoid an undeclared identifier error?
+>
+> --
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709023202.21=
+32165-2-rosenp@gmail.com?part=3D1
