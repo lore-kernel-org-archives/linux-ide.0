@@ -1,158 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E533C370AE7
-	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 02:55:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783565749; cv=none; b=iljMp8YUUT+CmXGEFCg9FM+fHGnHcOU9qgZs8yhlPm+3XAh86IVw0cUPO/8XikBmVkNy7IOjYtV67mfXOAhGZIZZlF/XX/0SuQ6S0l/9SL1XRSPuVrfgkfag1OAdb6yoJIxohXmg70Fq1LTGPSBG3C9f7duJIaS4h8U70s/h7lc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783565749; c=relaxed/simple;
-	bh=85VcJmdvtcOIbWAQFdQoCZwWFzfXuT2YaP6/BIsdqEM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CNlXYR0r/MtMPqq22Ks/MYIgZsihNLtx8ALmWOZJ5KFBotvd+FCofqMXrQXs/0t2JJ21qpwaIcl3hzstmiiVuDdk6cRtHPh23OR3f8MdRSxRQw+6IXWZ7NO8PD6z84l1iEpIYcfGiydXgjrVhFWnCmvSP0iFmpEo14GsInEVphU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PMJ68Yii; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8D1138F643
+	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 03:34:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.180
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783568068; cv=pass; b=tkBk16Pm+k/hT5m56kn3LbqHZbwJU82tmFReLFHHqa5Ae+nFVABLYXDXaM00sgtYvqyIFjyV/AnVn0Wov78tSA0jSu+9CVlxeJ0M7KeAWoHKCWWysQBPgINR4LoS6NL9x4d3I3hfjWwiRSENJPMUUaK4/j5fEXDUijY3N41zM+U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783568068; c=relaxed/simple;
+	bh=YnwHcp5gSCbZJi1VkH0uzYLY9T/1f9/oVSvbGGMl3UU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Gqp7dtWR2KUvMWg+7LM5jJ9v7OoqOYWb8EWwMFJF3NGm7giqBG0hcnaB0kbXjw7C+PlCMiXnXggxgl2oSTeIUPQ08qwc+091e+eJGxnwV16XvxKc7Hh2tf+M0CF1UdY1z17/5iMKrwRzKi2uB5p72oo0PR0Gm2CTC2+JO8wROIs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=L71oGnqW; arc=pass smtp.client-ip=209.85.160.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PMJ68Yii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A0331F000E9;
-	Thu,  9 Jul 2026 02:55:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783565747;
-	bh=NEHV0l0/PsWqL5RCvVF8EwrX1oYn+6cBdCAousG3NiY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PMJ68Yii5Mc2YBvK4YjJq+j594j0fHxsjqANfAcaTAm6E8vn/+CPzLMzT3QhRNheC
-	 3os1ooZYM3Xw170Nf0BSpNVFBf//N4i+cxy8bAHq9wNSBfUWD16p2MR/cm3bCFF8Sj
-	 Qh0jbHDXo3uYjLoIVp+atgk17u6ubgHtNsU5TCox1+o9GgjImCeEVNuwn7fvTV82Zg
-	 19z3syiwU0K59191HfCbM0Muu/8Rp4cScs+cdZDN8TaXOmQh6I0JxtF7qn9LVMebbm
-	 /3U4c7Jpw9ggz3s/sUQvkRK384apQnEOScCXPBP6uIH8H4gSbvK8RZ4LNElMqH5x3e
-	 MKqCjTPVA2xyQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCHv3 5/5] ata: sata_dwc_460ex: disable SATA interrupts on
- device removal
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rosen Penev" <rosenp@gmail.com>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20260709023202.2132165-6-rosenp@gmail.com>
-References: <20260709023202.2132165-1-rosenp@gmail.com>
- <20260709023202.2132165-6-rosenp@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 02:55:46 +0000
-Message-Id: <20260709025547.3A0331F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="L71oGnqW"
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-51c01c79467so184141cf.0
+        for <linux-ide@vger.kernel.org>; Wed, 08 Jul 2026 20:34:26 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783568066; cv=none;
+        d=google.com; s=arc-20260327;
+        b=COsTL7tqrhdOvXW+aXyLuZLbZV2O57dHF3TrGA/chAOE4DlFLG65yG90P519Oe0QKT
+         rMyjAjC6+E2V813mKlWayF0mYx/hqCdX/Lj80LKuqHZvDbtDw7m7nM0vKN2PmTTM+/uY
+         UGkr+YUB2W2rJI9f7yyyI3AxdFO5fMX1ncYSYDZUdCjxfU38Jv7exVNHLWp45fqu3xR/
+         XN2noZiD3PwDM1vze9kDfHVc20e9vSj0hBiggiRqea6FHL1o2TiRPqMgEw7YH57peT2t
+         gduONRbkwJnq9IA4eAbz1aEzSeImZ9Zj/zexN3DhW81j7kPMsRntBd9MCvSbxB5gVjoM
+         uRHA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=YnwHcp5gSCbZJi1VkH0uzYLY9T/1f9/oVSvbGGMl3UU=;
+        fh=Y6prRgjPCQoCmAa8Z1xtJ/kO7KvphxJSUw6DSdaTgZo=;
+        b=ANud0KFN09U24pKTR/Oi39czlkD9Q9LKXe8XLDXfeCvfhK8MQ99Twlbu3hkNMBLCW8
+         AeHGKDvXgaBBx5hHmGeI8IvAf3/OLfWb7Z4iCO2nUiqcRuXwDPuNHRtJDNc7ugJviExe
+         1nvgq68P0uia9akLrv6HknsPye3/MwLg78ijL1DQf+wmRDxT8IwACUpJp2YUfx2QiwpO
+         8V7xeK+av/2yqUrzMLlwqRakWOJqrb2OKoh+9rh4A/HCewANevk2usbpuUM4qSYHuc5b
+         uHw9IJ4Rk8l9Ng0enMa6mZFRoARiedCRrTN/bQYxgfTMV5IUf26SS9/d+G1HxjXhnWlw
+         zDgw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1783568066; x=1784172866; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=YnwHcp5gSCbZJi1VkH0uzYLY9T/1f9/oVSvbGGMl3UU=;
+        b=L71oGnqWCOTft9J9Fu6zcn99GBSdoT1APUs+ALGgHqKdVft0+rA4lqvyO3rhUDE4vz
+         4PNQBwJNAquJ/+BDIo+hT48A0fSwrNKlCrDt9+Eu2Jy0nWeOe5AijZTg3C89yts0K6bn
+         yy45/Q11ZHsYi3He8Hp8FGGQpAQdtD2euEANTMJFNTK7V+rSBdYdK7Sxqt8eNfkF0OXu
+         rEInI0xMr3zHiv94gthrKHowxQUZn3+Jv+MetLekoP5sEkFefx4HWf8uRpvGouAnlUib
+         cgcFIBzVh8b97Ew+5D1YMGzPRJhT9K6j08dOaGbRPr8X6/cGmaWBKFC00db5One89AMU
+         HpKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783568066; x=1784172866;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=YnwHcp5gSCbZJi1VkH0uzYLY9T/1f9/oVSvbGGMl3UU=;
+        b=Oc0X0szEgtCqFJo38CNNsvOX3d3ZHFCg3h0ElHfrtiteD7VRsjZi6Qpvjw6L4obar1
+         hRwEOWbjqx94f86Km8W5Smv/TDmpZHDKDSBxEBK/QDPuG1HgVCsvwafVJk+MkwNEdaQ9
+         /2POfgjYFCjoVyKF6t+2MPCD4PWw9h2CinGWi+bVo40IlGpc5jIf2BPUmzcuenQY5K6j
+         bzDw7uQAZz+el9bgN6b01f7VA+reZqXHy2myaFZ3DnNMaHbijsGvrpbVhokgkR9aSPpY
+         bx/Vhm56vnxzD1/MCJfnEKhHmi1CX5XV4BQ0o3Y2nfN99wx5MRfuEjf6vyoJTvvNQzK+
+         oQyg==
+X-Forwarded-Encrypted: i=1; AHgh+RoAntpVMrj4kJtnzCJfxA1WkX8Nnv7RU3MSSVXNY49TDyfOG9tRJeXBg6jo8Hmz+DDxpw4NKDCgLvA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxpnm/VuZ3L6EbgO7M6wLyd81P1igMpOcWcfEosl5EP8/NOatpO
+	Y/GQOGtiAmP0ABo+nJS6mftgU60Zf+naoHLyPQDlZj2k6g5IEmYjn/JRBBCEqhfEODCSCJ/VAXE
+	G4BphRdwk0GA4ZXLt2OclUG4/59xbCjb9Jl/CmbLh
+X-Gm-Gg: AfdE7cnhqkonWE2KDYDdgUASR7hq7npXR5KWRn53bHaft2MZcKEyUjiZthoKq8iOX2d
+	eQJVA0PABurWn262tasWGpz6TXXhwC1906J8PBG+IEnCT0VBB84DIbCvG6SflFLcADmUp9H74fE
+	l/Ro4d2N7lt1LUqEQbBJryZSshUTRMeqNF649ao2dNzoPv9lj6+YX2MVEg0KXOhK+2IoL5f4rHT
+	qYVzS9Qw6B7T2AxSSLCQaYHgy3w35pQuLroDwdXo9U4Ih0R4/oBo/7lKdJ8z8jCtA2yQBfweW5R
+	ywKVmoSbt+zJk57it07jbkOQpJaAtQ==
+X-Received: by 2002:a05:622a:248b:b0:517:5ac7:332e with SMTP id
+ d75a77b69052e-51c9a7990e9mr3535921cf.6.1783568065317; Wed, 08 Jul 2026
+ 20:34:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260702020142.3399851-1-rkaruna@google.com> <20260702021411.B01331F000E9@smtp.kernel.org>
+ <16780c1b-418a-4555-b4bd-d442cedd620e@kernel.org> <CAD50Xqp_LBvRqhn0q93s3aVxtfFWGhf42jBePKsUonfE6V=WNw@mail.gmail.com>
+ <49cb57c1-d7d6-4f30-b628-72c083981da6@kernel.org>
+In-Reply-To: <49cb57c1-d7d6-4f30-b628-72c083981da6@kernel.org>
+From: Karuna Ramkumar <rkaruna@google.com>
+Date: Wed, 8 Jul 2026 20:34:14 -0700
+X-Gm-Features: AVVi8CfbAcgGqz-QJ-NyJv_X0AMeDeCMo8PBT3Fs4cz3f84_fg3eA2anGJSuTU8
+Message-ID: <CAD50Xqra-_2CnJdGPJtWeOZT-Ne4wRRcQEL+6uy1--jPRYwACQ@mail.gmail.com>
+Subject: Re: [PATCH v2] ata: libata-scsi: limit simulated SCSI command copy to
+ response length
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: sashiko-reviews@lists.linux.dev, cassel@kernel.org, 
+	linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>, 
+	TJ Adams <tadamsjr@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+On Mon, Jul 6, 2026 at 6:10=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org> =
+wrote:
+>
+> On 7/7/26 08:10, Karuna Ramkumar wrote:
+> > Before I start working on this, I would love to hear your feedback on:
+> > 1. Whether you think this API update (passing `rbuf_len` down to all
+> > actors and helper functions) is the right approach, or if you prefer
+> > simpler, and more localized checks elsewhere.
+>
+> I do not think it is necessary at all because rbuf is statically declared=
+:
+>
+> static u8 ata_scsi_rbuf[ATA_SCSI_RBUF_SIZE];
+>
+> So the buffer address and maximum size is known to all functions using it=
+.
+>
+> > 2. What would be the best way to test all these simulated command
+> > paths to ensure the fix is verified appropriately?
+>
+> Most functions for emulated commands generate only a very small amount of=
+ data,
+> far below ATA_SCSI_RBUF_SIZE. So I would suggest that we simply add check=
+s to
+> the functions which may potentially exceed that. Off the top of my head, =
+I do
+> not know if we have any, but we should just check.
+>
+> Note that ideally, we should have each function allocate their own local =
+buffer
+> to handle the translation. But this is right now a little hard to do beca=
+use
+> these translation/emulation functions are called with the port locked, so=
+ we
+> would have a memory allocation for a potentially large-ish buffer under a=
+ spin
+> lock, which means no reclaim/no wait allocation, and thus potential for f=
+ailure
+> which we do not have right now. A proper/ideal fix would need to drop
+> ata_scsi_rbuf, have some helpers for managing the internal buffer and red=
+esign
+> the submission path to not have the port locked until the translation is
+> actually generated. That is all more work and more changes.
+>
+> So as a first step, let's check the emulation function if any of them can=
+ exceed
+> ATA_SCSI_RBUF_SIZE in size, fail them with internal target failure.
 
-New issues:
-- [High] Disabling hardware interrupts before `ata_host_detach()` prevents =
-pending I/O and device unload commands from completing, resulting in comman=
-d timeouts during teardown.
-- [High] `sata_dwc_disable_interrupts()` is called in the remove path witho=
-ut synchronization, creating a race with the Error Handling (EH) thread tha=
-t can cause interrupts to be incorrectly re-enabled.
+Hi Damien,
 
-Pre-existing issues:
-- [High] Pre-existing race condition missing IRQ synchronization before fre=
-eing DMA and PHY resources during device removal, risking Use-After-Free.
-- [High] `clear_interrupt_bit()` unintentionally clears all pending interru=
-pts, causing lost interrupts due to a flawed read-modify-write on a W1C reg=
-ister.
---
+I went through all the SCSI actor functions in libata-scsi.c and
+calculated their maximum size consumption.
 
---- Patch [1]: [PATCHv3 5/5] ata: sata_dwc_460ex: disable SATA interrupts o=
-n device removal ---
-commit 65387714eba3b122c58a0cdaf1a76af59f78680c
-Author: Rosen Penev <rosenp@gmail.com>
-Subject: ata: sata_dwc_460ex: disable SATA interrupts on device removal
+As you mentioned, most command emulations triggered via actor
+callbacks write a fixed or small amount of payload, and are well
+within the 2048 byte limit of `ata_scsi_rbuf`.
 
-This commit adds sata_dwc_disable_interrupts() and calls it at the
-beginning of sata_dwc_remove() to prevent unhandled interrupt storms
-during host teardown.
+There are two functions that can potentially overflow though:
 
-Fixes: 62936009f35a ("[libata] Add 460EX on-chip SATA driver, sata_dwc_460e=
-x"
+1. ata_scsiop_inq_b9: Writes 64 + nr_cpr * 32 bytes. If nr_cpr crosses
+62, then this can cause an overflow
+2. ata_format_dsm_trim_descr: Writes trmax * 8 bytes. If trmax > 2048
+/ 8, then this can cause an overflow too.
 
-> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-> index 4fc22ce4bd9aa..7c858a7992c9c 100644
-> --- a/drivers/ata/sata_dwc_460ex.c
-> +++ b/drivers/ata/sata_dwc_460ex.c
+I will prepare a patch to add bounds checks to these two functions and
+send it over for review. Please let me know if you have any
+suggestions/concerns.
 
-[ ... ]
+Thanks,
+Karuna
 
-> @@ -1217,6 +1225,8 @@ static void sata_dwc_remove(struct platform_device =
-*ofdev)
->  	struct ata_host *host =3D dev_get_drvdata(dev);
->  	struct sata_dwc_device *hsdev =3D host->private_data;
-> =20
-> +	sata_dwc_disable_interrupts(hsdev);
-> +
-
-[Severity: High]
-Does this cause teardown commands to time out?
-
-When sata_dwc_remove() calls ata_host_detach(), the SCSI devices are
-detached, which typically issues teardown commands like SYNCHRONIZE CACHE.
-Because interrupts are already masked by sata_dwc_disable_interrupts(), will
-these commands fail to receive their completion IRQs and hang until they ti=
-me
-out?
-
-[Severity: High]
-Does masking interrupts here also create a race with the libata error handl=
-er?
-
-If the teardown commands time out as mentioned above, the libata error
-handling (EH) thread will execute. The EH thread calls sata_dwc_hardreset(),
-which explicitly calls sata_dwc_enable_interrupts(). Could this inadvertent=
-ly
-re-enable interrupts while sata_dwc_remove() is still running, recreating t=
-he
-interrupt storm this patch is trying to fix?
-
->  	ata_host_detach(host);
-> =20
->  	phy_exit(hsdev->phy);
-
-[Severity: High]
-This is a pre-existing issue, but does device removal leave a use-after-free
-window?
-
-In sata_dwc_remove(), the PHY and DMA resources are destroyed before the
-devres-managed IRQ handler is unregistered. If an unexpected interrupt fires
-and sata_dwc_isr() executes, could it access these freed resources before
-devres cleans up the IRQ?
-
-[ ... ]
-
-While reviewing this driver, I noticed another pre-existing issue not touch=
-ed
-by this patch:
-
-drivers/ata/sata_dwc_460ex.c:clear_interrupt_bit() {
-    ...
-    sata_dwc_writel(&hsdev->sata_dwc_regs->intpr,
-                    sata_dwc_readl(&hsdev->sata_dwc_regs->intpr));
-}
-
-[Severity: High]
-This is a pre-existing issue, but does clear_interrupt_bit() unintentionally
-clear all pending interrupts?
-
-Looking at clear_interrupt_bit(), the function ignores its 'bit' argument a=
-nd
-reads then writes back the intpr register. Because intpr is a write-1-to-cl=
-ear
-(W1C) register, does writing back the read value clear every currently pend=
-ing
-interrupt, including those that have arrived since the ISR started but have=
-n't
-been processed yet?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709023202.2132=
-165-6-rosenp@gmail.com?part=3D1
+>
+> --
+> Damien Le Moal
+> Western Digital Research
