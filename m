@@ -1,166 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B32991B4224
-	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 02:25:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E28F35674A
+	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 02:32:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783563919; cv=none; b=G/MLVZ0Iiv96mouzZZy/+6D3vz+yC5hmrRw3vjAYVZlHGzGv7zgWtFWoGd8yZOmJ6+lctGkCp+WFWy0oOv149cRJPScwJYVRpzBy/gDGJ0xm5nkTBVYrpfIhZ1LzSsvrNUwzMea2ZJy+VpWSx2mFB7gWBBQ86uQodaO+eaCAe30=
+	t=1783564326; cv=none; b=Di95/K0zJaLun4ziD413RkhufY2TJjOAYqyeI0l4fX6UgpmHPY1W6tQXGZOV2wOAEN2WLb3Nf36F8yseoXUtosLJqmYI3SnuZstS1FYS8AYW88d5prTLEm08baWdc/qP4Y4SdiiBfO8Yx19ZJRaAaOkyePxJtLO5/1S4q/EH6Ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783563919; c=relaxed/simple;
-	bh=QXsjV4NaYVGei1H5/S8D/ykEpyubqKjLsaih656Iu98=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WA4MUmE4XWBUy56fIGXc4rZSo7w7C4rxx1QTcPi42ZhI8UXvec69Jpp8MMqIgpxtlsS03qUowPwNkLRoqBnEIMWlR+zrI7wbXaG0QgIhG9zlXJ8/ZnyN9iWCKogTy7i6HJAb9XAVl0MYwCbiWBAiYVGRKX3fzlgqaUz9G6k9YFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E8WMl3BQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783564326; c=relaxed/simple;
+	bh=N5ypJRr+B4PLFY0uTdy/nYMiu3cORVTUEBd2Eh9uOXQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T6lv0eO+C/B+3iRicXOMExuqR7sbredlVJnxCKDt3LAl7v5/swwB5MFe8sQm3i2CDWiqmHSuiyXbSl4aDausi5wd0o09usrML0g2yvdQIM68pCsjQFNmFcJGsn4XAczxwvG2CIY1qtOZhrmlEJOqs7dOeiBtCiQ41VLwbrC5rvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D0xgS5cF; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E8WMl3BQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21DC01F000E9;
-	Thu,  9 Jul 2026 02:25:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783563918;
-	bh=4vmf1i6xNkT3gu+kg6jFfcHw++woI6LTWcPUDQWDk68=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=E8WMl3BQar5pxJmyNHSJt5EtdKzdMtcw/NM7230DfoXQykp1aHEOaX2j8JotFkiX6
-	 E4GUPq9k2gsQLfWYeS+RY7I2v7j8zHKGJCfDuZj6gDsyTbUkFp5O+QM86KWpQnFTeG
-	 HYUyW20dTkHZ0qsSp9SRcX02pZgl4qZlntMo7T9/IvT0IQdzdKBLZNKkHDs0k0PW33
-	 ngVSDXOdLDXcMll6qlS2P6asbuWK4fvxJKVJAF6h1N47oCYYn24mZ2oH25NZJxULt1
-	 3gs43lmvPGZaVMkJSw+lXosKuJT67ZmBhKzeMQhu56B2CRFg6ua0dix6A4MrFodZA3
-	 eNodk2kWw10nA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: sata_mv: Use platform_get_irq() to get interrupt
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rosen Penev" <rosenp@gmail.com>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20260709021232.2042777-1-rosenp@gmail.com>
-References: <20260709021232.2042777-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 09 Jul 2026 02:25:17 +0000
-Message-Id: <20260709022518.21DC01F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D0xgS5cF"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-846970f0acaso414322b3a.3
+        for <linux-ide@vger.kernel.org>; Wed, 08 Jul 2026 19:32:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783564325; x=1784169125; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=EkdpAtMgxU4TYg95cadNbgkx4tHxAGnlxHVTCHLzsy4=;
+        b=D0xgS5cF6sGHVlax4abphNZI77o8QECUON6j8QlY5CHkPK+odrRjZSMcaX+dKXYOVj
+         lXISy5R+NDXxcqUHDwVa7R57vtOEDhHXePgabx4t+bGkUJ0kmsBLGo+S1jWSyDKLqzGU
+         RpGNwouEtk+AdcN8MyfoFXbrqUzmrnQrV0kiJfm9yqFLVpq/LK0A3dacgG5ZszwJMwLD
+         VYbsYdpuGKuRNBXgmdkvGSq1OYpaMVVqjTRPGtP6mig3bwT8eI/RJH8AOO6sIdhYvY5U
+         6KTi1eT5wKDTrl4zqhXnswYYWoXQzqma5tD4vhtgpuwhcgP9XWrWPTDir5U3+a3Drg3m
+         Oxfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783564325; x=1784169125;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EkdpAtMgxU4TYg95cadNbgkx4tHxAGnlxHVTCHLzsy4=;
+        b=KVpN2CJsVso1Sa1XL+TyJrG5B0hqTTgCiDuTxALM434gb1SYBfWz2eUOQkn5VDv/6A
+         h5TegnjuF/dqokuJuVrEItZYPlyw2vCX+Tptl3n3KIEa3GV0h502+lMl7TkwYoJXBZhy
+         2UF7LnmB+hU1W8uPqf09qf1LLLrpm+MCdE2m7SqaEqpgf4r5RIDZ4YV4nTH6FCxnEpYH
+         3y9PD32JaC1xuBxD4Idy+ThGXO3J0Y4XP/RXh9/gevTv1rzawd6Wo576SXjKu/VdgR86
+         p3JtgaOsABG1HvCV6hgdgNUmzNs3rhn4YxcsC5RL89eFKSHK16+pe1VY2AQSNnipeTdh
+         X7VQ==
+X-Gm-Message-State: AOJu0Yy6KTwTO4jk11krflvQ15GjiFzo6VfdfQ1EyndtkKWJWejeX2RT
+	SEFXMKqXURu6fL/xoXsgVsmqb2JVFLRfijrNQliMtFHbCryqCMkyZq1r7K7f6A==
+X-Gm-Gg: AfdE7cl+XqNE9VSe9hu5T+fJ0YYkxCoEB95rAUgfJY8O9nEai6rnk7kHM/saOrkbci0
+	qyEooeXvvb2/+n6JhZ3e+IhAQH535i6vquhGTuunEk+QnQeNb6IcKUHDoJSaddCxq8pmQcZfVt9
+	OK6l2ZLFJDSm1T0T5ZQOk7hgAUGjJ3/P7fXJKCjhPBkbSnoZnpqS2X/8Nfo1Kr2K0erggB69j7k
+	G79Hx/hTFS9n1xrwMYi1MSvWVpW3R42naXsvnuHOleRkqLwnA3KAZyF7JrK6lyRI7n9kNPw3b+D
+	x6+RshyV9xtQskGcDE6lZL35W8/nzrCqYl3EJ+2VSdZHlDEbCXIowCC2VHjFpGk6R33K7hEFQu5
+	o8hzWAch09Q+ReJuJG5ONRBTeSPhB4YlKcxPwMvmx1T1hME5sg+N9DK+NuQrnVgO4onpqA0Pl5D
+	3MSu49gJwyJYLVsJCx+8V1I7WdnP+t3NZg/8MIbk+qTHMsZRC83i56cAu8MLc5my2zZnlkdFQlc
+	9s0dMbZ36PdzrRXP2YfUWsFHAbJBNBTOnasxPs70sGft83GvngkrxZ6xaP+/IXLFw==
+X-Received: by 2002:a05:6a00:8f0b:b0:847:968c:a0f1 with SMTP id d2e1a72fcca58-84842fd40fcmr4991124b3a.43.1783564324890;
+        Wed, 08 Jul 2026 19:32:04 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e35])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-847f6b975a0sm7935954b3a.14.2026.07.08.19.32.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Jul 2026 19:32:04 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Jeff Garzik <jgarzik@redhat.com>,
+	Prodyut Hazarika <phazarika@appliedmicro.com>,
+	Mark Miesfeld <mmiesfeld@appliedmicro.com>,
+	Rupjyoti Sarmah <rsarmah@amcc.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCHv3 0/5] ata: sata_dwc_460ex: cleanups and interrupt ordering fix
+Date: Wed,  8 Jul 2026 19:31:57 -0700
+Message-ID: <20260709023202.2132165-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+Fix various issues flagged by Sashiko against the original submission of this driver.
 
-New issues:
-- [Low] The `if (!irq)` check after calling `platform_get_irq()` is dead co=
-de.
+v3: Shrink series to Fixes on the initial commit.
+v2: sashiko fixes.
 
-Pre-existing issues:
-- [High] The sanity check `pdev->num_resources !=3D 1` unconditionally brea=
-ks probing for legacy non-DT platforms.
-- [High] Unconditional dereference of `mv_platform_data` for non-DT platfor=
-m devices.
-- [High] Port clock reference and enable state are leaked if PHY initializa=
-tion fails.
---
+Rosen Penev (5):
+  ata: sata_dwc_460ex: use platform_get_irq()
+  ata: sata_dwc_460ex: enable SATA interrupts only after IRQ handler is
+    registered
+  ata: sata_dwc_460ex: fix clear_interrupt_bit() clearing all pending
+    interrupts
+  ata: sata_dwc_460ex: fix infinite loop in NCQ tag completion
+    bit-scanning
+  ata: sata_dwc_460ex: disable SATA interrupts on device removal
 
---- Patch [1]: [PATCH] ata: sata_mv: Use platform_get_irq() to get interrup=
-t ---
-commit f1861b64daa8effebc2bb7261bbf40da10b32a2b
-Author: Rosen Penev <rosenp@gmail.com>
+ drivers/ata/sata_dwc_460ex.c | 46 ++++++++++++++++--------------------
+ 1 file changed, 21 insertions(+), 25 deletions(-)
 
-ata: sata_mv: Use platform_get_irq() to get interrupt
+-- 
+2.55.0
 
-This commit simplifies the driver's probe logic by using platform_get_irq()
-unconditionally to fetch the interrupt. It replaces the direct use of
-irq_of_parse_and_map() on DT-based systems.
-
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 41647a56a9f4e..b109eb4ef995d 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -4054,13 +4054,11 @@ static int mv_platform_probe(struct platform_devi=
-ce *pdev)
->  				n_ports);
->  			return -EINVAL;
->  		}
-> -
-> -		irq =3D irq_of_parse_and_map(pdev->dev.of_node, 0);
->  	} else {
->  		mv_platform_data =3D dev_get_platdata(&pdev->dev);
->  		n_ports =3D mv_platform_data->n_ports;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but could mv_platform_data be NU=
-LL
-here in mv_platform_probe()? If a non-DT device is probed without valid
-platform data (e.g., bound manually via sysfs), dereferencing it
-unconditionally would cause a NULL pointer dereference.
-
-> -		irq =3D platform_get_irq(pdev, 0);
->  	}
-> +	irq =3D platform_get_irq(pdev, 0);
->  	if (irq < 0)
->  		return irq;
->  	if (!irq)
-
-[Severity: Low]
-Since platform_get_irq() returns negative error codes on failure and interc=
-epts
-0 internally to return -EINVAL, is the if (!irq) check in mv_platform_probe=
-()
-now dead code?
-
->  		return -EINVAL;
-
-While reviewing this probe function, I noticed a couple of other
-pre-existing issues.
-
-[Severity: High]
-This is a pre-existing issue, but I am wondering if this sanity check
-unconditionally breaks probing for legacy non-DT platforms:
-
-drivers/ata/sata_mv.c:mv_platform_probe() {
-	/*
-	 * Simple resource validation ..
-	 */
-	if (unlikely(pdev->num_resources !=3D 1)) {
-		dev_err(&pdev->dev, "invalid number of resources\n");
-		return -EINVAL;
-	}
-...
-}
-
-Legacy board files initializing the sata_mv device add both an IORESOURCE_M=
-EM
-and an IORESOURCE_IRQ resource, making num_resources =3D=3D 2. It looks lik=
-e this
-would cause the probe to immediately abort with -EINVAL.
-
-[Severity: High]
-This is another pre-existing issue, but it appears that the clock reference
-and enable state might be leaked if PHY initialization fails:
-
-drivers/ata/sata_mv.c:mv_platform_probe() {
-...
-		hpriv->port_phys[port] =3D devm_phy_optional_get(&pdev->dev,
-							       port_number);
-		if (IS_ERR(hpriv->port_phys[port])) {
-			rc =3D PTR_ERR(hpriv->port_phys[port]);
-			hpriv->port_phys[port] =3D NULL;
-			if (rc !=3D -EPROBE_DEFER)
-				dev_warn(&pdev->dev, "error getting phy %d", rc);
-
-			/* Cleanup only the initialized ports */
-			hpriv->n_ports =3D port;
-			goto err;
-		}
-...
-}
-
-If clk_get() and clk_prepare_enable() succeed for a port, but the subsequent
-devm_phy_optional_get() fails (e.g., returning -EPROBE_DEFER), the error
-handler sets hpriv->n_ports =3D port.
-
-Since the cleanup loop uses a for-loop up to hpriv->n_ports, the current
-port index is excluded. Would this bypass clk_disable_unprepare() and
-clk_put() for the currently failing port?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709021232.2042=
-777-1-rosenp@gmail.com?part=3D1
