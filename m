@@ -1,289 +1,166 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1B0E15B998
-	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 02:24:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B32991B4224
+	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 02:25:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783563896; cv=none; b=AiLICA6x0I8oJggId3T7xpZhuMq0bImlNYnQQMfcvg2XxUV6EkigxVIlRX2gWMqN8B9+NyTTXILa+9sXLc+Mn5iRsSyNnReVuBoJ5C7GeM5NrzDaGEdYnNOhwB9UgGLZaKa4c7FVEDRvNrgmhxx+lWtrIOhqnE4po/IPaLBlkos=
+	t=1783563919; cv=none; b=G/MLVZ0Iiv96mouzZZy/+6D3vz+yC5hmrRw3vjAYVZlHGzGv7zgWtFWoGd8yZOmJ6+lctGkCp+WFWy0oOv149cRJPScwJYVRpzBy/gDGJ0xm5nkTBVYrpfIhZ1LzSsvrNUwzMea2ZJy+VpWSx2mFB7gWBBQ86uQodaO+eaCAe30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783563896; c=relaxed/simple;
-	bh=9cfKziMH86NDrQ5YDfwVI4Dz010TtVsxJHJZZuqzXkg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hgbePLEGQkXICIDbC77VTvPGT0BPZ020wAsCRzMHu2PVMLQOFS4s6IeNuT62YgnPT5adoAlVOmyneZ18wJfFDqjA86TP0jqA90chMFX426DkO/47NKC/ZClxTOZ9La6nDh5Jl87IO54n/3Ye2D7AWRhbV0czCZhEhU+yx+Rnuek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=IwfJGxQW; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1783563919; c=relaxed/simple;
+	bh=QXsjV4NaYVGei1H5/S8D/ykEpyubqKjLsaih656Iu98=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=WA4MUmE4XWBUy56fIGXc4rZSo7w7C4rxx1QTcPi42ZhI8UXvec69Jpp8MMqIgpxtlsS03qUowPwNkLRoqBnEIMWlR+zrI7wbXaG0QgIhG9zlXJ8/ZnyN9iWCKogTy7i6HJAb9XAVl0MYwCbiWBAiYVGRKX3fzlgqaUz9G6k9YFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E8WMl3BQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IwfJGxQW"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cb59f6ba26so58805ad.0
-        for <linux-ide@vger.kernel.org>; Wed, 08 Jul 2026 19:24:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783563894; x=1784168694; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=TNbWlyVjmD3Y4bikHUItloVHnS6u78fK2qgRkCFP1lI=;
-        b=IwfJGxQWO4yMr2P1gdP8i8XjEiJ79DAzIRSa2lrGpTQ716CphbZsIG78Yzn8eUdrZW
-         MrwIMD3kyl+ZPqo607J4QuWEKzL/Ionwgj/6N6w8U8pGsfhuocNxJ6/lQh3BV93ZCteg
-         gk5lFvaFOueKvVsOd8lJfWrLI64Aww8kwJxJl4yJSHWNdw7xFuN/hfy5lbn2/aqMqTGe
-         b1ka83UaAIa0OPBErc2yJYZ2XXD5YGimAffDCuhLF2lxb5hIDZmqbnASuOKkuwKiRicY
-         e7wMUpa/SusZbGky4RASUnHi9mLFKl6+jpuSWMllF/Fc2EFfemgKcJoPQ4qVZ5KXW02x
-         9WFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783563894; x=1784168694;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=TNbWlyVjmD3Y4bikHUItloVHnS6u78fK2qgRkCFP1lI=;
-        b=LP+XRlMaB33gG20kqiUqbOX18YKdM9l+kPSaXLRDRMqZWomNlkmZp9cF9xI0Dir0RM
-         h46YUJ+bdjQnz85O8RUdRdZZJkYy5dgaucToMGZ6naDk4d3bowZxQ229L+28H+jwH6oC
-         YRKnlFtR1aFpQHISFricCOfqE5mh51M+kljFAWHqrXDFtqHSAXV/0etr1e8G01JiSMNS
-         2e/FXy1qHJGcwWbyggu6UkYyqRjcwpm61ubW6zvepxd1n0F5F6v4+DR/cUDwMh/8XvIk
-         /gtXYfHmPUfRvTeMcC1uXr+ZGYkIhVJ6ZQah8IGVNNO0hPjDSQ13hmMjsgD3vlfwS6Y/
-         kkdg==
-X-Forwarded-Encrypted: i=1; AHgh+RqjqizGZtvbnR8oZuu8pDYMbbbII5ANIUHH/0AqYfc20LqIq105AfqnYWwjMOk3JeRUHRp8DXGac+0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBCeGue34ClHjAYD0A6rHbimC2KitBzsdZ8Hqg2DYIzL3N34Vs
-	9OXIx/rF5jCDKhJEvE5X+yvuyvp2Mh5TZsVgh7L6/Yd5+talUBFdndmE9BOgbxpgXQ==
-X-Gm-Gg: AfdE7cnfGRb7m1mihgwYGvRDKe9DsAAyPZyQ3gKbuE6lxTbh/1EryE4VhgwpaJN0tFr
-	GAq7iHSxSjv9kpVvD7SfWl39YVQ/N/1cKPosujtibq8CBd5S45amFOxu+Ip8Rp/2XEbAw89f2qV
-	v+i8U2JG8KOfpaWhCcY3UG2mL4pGQt3C3hFRBr5P5clBPWZSvecruXkImIQAOlK7Xm3ylH3+FyV
-	eNdLjtDX4asm8xckmo89RC7SaLfoOSQDycenu9UxHyGf+auGhRHQW15EZ8TzqqctOU9x3Jz+uy7
-	JRC0VW9V2zagaH2+8qwTQEr0Hd3Og9uDMdbSJHeQK69owSUuJ5XeyxupxeyzYAx7/VTmSSCT7rF
-	Bxh7kco2F9sI5GZWXs0y2N5zymAgbwkxLbTjRqt/fUNCTuOH2zgilTr67AFiewPzXEqB+oRYyRV
-	UoEuisk/b/5gkZswDoL/YpNRAy/IXvqIGpDCuN4o98zQLFbxV3odC/QUVUtXq3jw==
-X-Received: by 2002:a17:902:d589:b0:2ca:bf8e:3632 with SMTP id d9443c01a7336-2cd33d0a92bmr1272385ad.6.1783563893708;
-        Wed, 08 Jul 2026 19:24:53 -0700 (PDT)
-Received: from google.com (98.144.168.34.bc.googleusercontent.com. [34.168.144.98])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38a55a4727bsm346034a91.9.2026.07.08.19.24.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2026 19:24:53 -0700 (PDT)
-Date: Wed, 8 Jul 2026 19:24:49 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org
-Subject: Re: SCSI EH wakeup deadlock from deferred_qc
-Message-ID: <ak8GcZ2k0AIkpMCe@google.com>
-References: <20260708193644.671852-1-ipylypiv@google.com>
- <4a1b8987-7c76-41e2-baf9-6c176950593b@kernel.org>
- <26dbfbdd-4f9d-4a5f-8f61-a3bb7c457f50@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E8WMl3BQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21DC01F000E9;
+	Thu,  9 Jul 2026 02:25:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783563918;
+	bh=4vmf1i6xNkT3gu+kg6jFfcHw++woI6LTWcPUDQWDk68=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=E8WMl3BQar5pxJmyNHSJt5EtdKzdMtcw/NM7230DfoXQykp1aHEOaX2j8JotFkiX6
+	 E4GUPq9k2gsQLfWYeS+RY7I2v7j8zHKGJCfDuZj6gDsyTbUkFp5O+QM86KWpQnFTeG
+	 HYUyW20dTkHZ0qsSp9SRcX02pZgl4qZlntMo7T9/IvT0IQdzdKBLZNKkHDs0k0PW33
+	 ngVSDXOdLDXcMll6qlS2P6asbuWK4fvxJKVJAF6h1N47oCYYn24mZ2oH25NZJxULt1
+	 3gs43lmvPGZaVMkJSw+lXosKuJT67ZmBhKzeMQhu56B2CRFg6ua0dix6A4MrFodZA3
+	 eNodk2kWw10nA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ata: sata_mv: Use platform_get_irq() to get interrupt
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rosen Penev" <rosenp@gmail.com>
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
+In-Reply-To: <20260709021232.2042777-1-rosenp@gmail.com>
+References: <20260709021232.2042777-1-rosenp@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 09 Jul 2026 02:25:17 +0000
+Message-Id: <20260709022518.21DC01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="L5JkSjuxSh2ERa2O"
-Content-Disposition: inline
-In-Reply-To: <26dbfbdd-4f9d-4a5f-8f61-a3bb7c457f50@kernel.org>
 
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
---L5JkSjuxSh2ERa2O
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+New issues:
+- [Low] The `if (!irq)` check after calling `platform_get_irq()` is dead co=
+de.
 
-On Thu, Jul 09, 2026 at 10:01:11AM +0900, Damien Le Moal wrote:
-> On 7/9/26 08:44, Damien Le Moal wrote:
-> > On 7/9/26 04:36, Igor Pylypiv wrote:
-> >> Hi Damien,
-> >>
-> >> I've stumbled upon an issue where SCSI EH didn't run upon command timeout
-> >> but ran ~10 or so seconds later. It seems like a recent regression from
-> >> the introduction of deffered_qc.
-> >>
-> >> When an active command times out while a non-NCQ command is waiting in
-> >> deferred_qc, SCSI EH fails to wake up. Recovery stalls until the deferred
-> >> command's own timer expires.
-> >>
-> >> When an NCQ command times out, scsi_timeout() calls scsi_eh_scmd_add(),
-> >> incrementing shost->host_failed (1). However, when scsi_eh_wakeup() checks
-> >> whether to wake the EH thread, scsi_host_busy(shost) counts 2 active
-> >> commands (1 timed-out + 1 in deferred_qc).
-> >>
-> >> Because busy (2) != host_failed (1), scsi_eh_wakeup() refuses to wake
-> >> the EH thread, deadlocking error recovery until the deferred command
-> >> times out on its own.
-> > 
-> > Igor,
-> > 
-> > Can you try the attached diff ?
-> > I will test on my end, but I need to hack something to trigger a timeout :)
-> 
-> Hacking libahci to trigger a timeout for a particular LBA read, I tested the
-> attached v2 and I see the deferred QC running right after the read command
-> timeout. So this looks like a good fix to me. Can you test please ?
+Pre-existing issues:
+- [High] The sanity check `pdev->num_resources !=3D 1` unconditionally brea=
+ks probing for legacy non-DT platforms.
+- [High] Unconditional dereference of `mv_platform_data` for non-DT platfor=
+m devices.
+- [High] Port clock reference and enable state are leaked if PHY initializa=
+tion fails.
+--
 
-Thank you for coming up with a fix so quickly, Damien!
-The fix works for the issue I'm seeing!
+--- Patch [1]: [PATCH] ata: sata_mv: Use platform_get_irq() to get interrup=
+t ---
+commit f1861b64daa8effebc2bb7261bbf40da10b32a2b
+Author: Rosen Penev <rosenp@gmail.com>
 
-Note: I tested on a 6.18 based kernel with your changes ported to libsas
-to fix the issue for the pm80xx driver. Attached libsas diff for reference.
+ata: sata_mv: Use platform_get_irq() to get interrupt
 
-Thank you!
-Igor
+This commit simplifies the driver's probe logic by using platform_get_irq()
+unconditionally to fetch the interrupt. It replaces the direct use of
+irq_of_parse_and_map() on DT-based systems.
 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 41647a56a9f4e..b109eb4ef995d 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -4054,13 +4054,11 @@ static int mv_platform_probe(struct platform_devi=
+ce *pdev)
+>  				n_ports);
+>  			return -EINVAL;
+>  		}
+> -
+> -		irq =3D irq_of_parse_and_map(pdev->dev.of_node, 0);
+>  	} else {
+>  		mv_platform_data =3D dev_get_platdata(&pdev->dev);
+>  		n_ports =3D mv_platform_data->n_ports;
 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 5868526301a2..5221d7004c0e 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1685,7 +1685,8 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
->  	spin_unlock_irqrestore(ap->lock, flags);
->  }
->  
-> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
-> +static void ata_scsi_do_requeue_deferred_qc(struct ata_port *ap,
-> +					    struct scsi_cmnd *timed_out_scmd)
->  {
->  	struct ata_link *link;
->  
-> @@ -1698,15 +1699,27 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
->  	 */
->  	ata_for_each_link(link, ap, PMP_FIRST) {
->  		struct ata_queued_cmd *qc = link->deferred_qc;
-> +		u32 host_byte;
->  
-> -		if (qc) {
-> -			link->deferred_qc = NULL;
-> -			cancel_work(&link->deferred_qc_work);
-> -			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-> -		}
-> +		if (!qc)
-> +			continue;
-> +
-> +		link->deferred_qc = NULL;
-> +		cancel_work(&link->deferred_qc_work);
-> +
-> +		if (qc->scsicmd == timed_out_scmd)
-> +			host_byte = DID_TIME_OUT;
-> +		else
-> +			host_byte = DID_REQUEUE;
-> +		ata_scsi_qc_done(qc, true, host_byte << 16);
+[Severity: High]
+This isn't a bug introduced by this patch, but could mv_platform_data be NU=
+LL
+here in mv_platform_probe()? If a non-DT device is probed without valid
+platform data (e.g., bound manually via sysfs), dereferencing it
+unconditionally would cause a NULL pointer dereference.
+
+> -		irq =3D platform_get_irq(pdev, 0);
 >  	}
->  }
->  
-> +void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
-> +{
-> +	ata_scsi_do_requeue_deferred_qc(ap, NULL);
-> +}
-> +
->  static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
->  {
->  	struct ata_queued_cmd *qc = link->deferred_qc;
-> @@ -1730,6 +1743,28 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
->  		queue_work(system_highpri_wq, &link->deferred_qc_work);
->  }
->  
-> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
-> +{
-> +	struct ata_port *ap = ata_shost_to_port(scmd->device->host);
-> +	unsigned long flags;
-> +
-> +	/*
-> +	 * We had a timeout, either for an NCQ command or for one deferred
-> +	 * queued command. Either way, we must release all deferred queued
-> +	 * command so that scsi EH can trigger.
-> +	 */
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	ata_scsi_do_requeue_deferred_qc(ap, scmd);
-> +	spin_unlock_irqrestore(ap->lock, flags);
-> +
-> +	/*
-> +	 * Let scsi_timeout() know that it must continue with handling the
-> +	 * timeout as we in fact did not do much here.
-> +	 */
-> +	return SCSI_EH_NOT_HANDLED;
-> +}
-> +EXPORT_SYMBOL_GPL(ata_scsi_eh_timed_out);
-> +
->  static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
->  {
->  	struct ata_link *link = qc->dev->link;
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 96e626d6a7ca..327da43d7496 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1153,6 +1153,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
->  #endif
->  extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
->  					     struct scsi_cmnd *cmd);
-> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
->  #if IS_REACHABLE(CONFIG_ATA)
->  bool ata_scsi_dma_need_drain(struct request *rq);
->  #else
-> @@ -1464,6 +1465,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
->  	.ioctl			= ata_scsi_ioctl,		\
->  	ATA_SCSI_COMPAT_IOCTL					\
->  	.queuecommand		= ata_scsi_queuecmd,		\
-> +	.eh_timed_out		= ata_scsi_eh_timed_out,	\
->  	.dma_need_drain		= ata_scsi_dma_need_drain,	\
->  	.this_id		= ATA_SHT_THIS_ID,		\
->  	.emulated		= ATA_SHT_EMULATED,		\
+> +	irq =3D platform_get_irq(pdev, 0);
+>  	if (irq < 0)
+>  		return irq;
+>  	if (!irq)
 
+[Severity: Low]
+Since platform_get_irq() returns negative error codes on failure and interc=
+epts
+0 internally to return -EINVAL, is the if (!irq) check in mv_platform_probe=
+()
+now dead code?
 
---L5JkSjuxSh2ERa2O
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename=6.18_libsas_ata_timeout.diff
+>  		return -EINVAL;
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index ffa5b49aaf08..b48dcc281042 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -500,6 +500,30 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
- }
- EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
- 
-+enum scsi_timeout_action sas_eh_timed_out(struct scsi_cmnd *cmd)
-+{
-+	struct domain_device *dev;
-+	struct ata_port *ap;
-+	unsigned long flags;
-+
-+	if (!cmd)
-+		return SCSI_EH_NOT_HANDLED;
-+
-+	dev = cmd_to_domain_dev(cmd);
-+	if (!dev || !dev_is_sata(dev))
-+		return SCSI_EH_NOT_HANDLED;
-+
-+	ap = dev->sata_dev.ap;
-+	if (ap) {
-+		spin_lock_irqsave(ap->lock, flags);
-+		ata_scsi_do_requeue_deferred_qc(ap, cmd);
-+		spin_unlock_irqrestore(ap->lock, flags);
-+	}
-+
-+	return SCSI_EH_NOT_HANDLED;
-+}
-+EXPORT_SYMBOL_GPL(sas_eh_timed_out);
-+
- /* Try to reset a device */
- static int try_to_reset_cmd_device(struct scsi_cmnd *cmd)
- {
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index c4f6a6a7f6bd..852de6a55448 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -712,6 +712,7 @@ void sas_task_abort(struct sas_task *);
- int sas_eh_abort_handler(struct scsi_cmnd *cmd);
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd);
- int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
-+enum scsi_timeout_action sas_eh_timed_out(struct scsi_cmnd *cmd);
- 
- extern void sas_target_destroy(struct scsi_target *);
- extern int sas_sdev_init(struct scsi_device *);
-@@ -743,6 +744,7 @@ void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
- 	.name				= DRV_NAME,			\
- 	.proc_name			= DRV_NAME,			\
- 	.queuecommand			= sas_queuecommand,		\
-+	.eh_timed_out			= sas_eh_timed_out,		\
- 	.dma_need_drain			= ata_scsi_dma_need_drain,	\
- 	.target_alloc			= sas_target_alloc,		\
- 	.change_queue_depth		= sas_change_queue_depth,	\
+While reviewing this probe function, I noticed a couple of other
+pre-existing issues.
 
---L5JkSjuxSh2ERa2O--
+[Severity: High]
+This is a pre-existing issue, but I am wondering if this sanity check
+unconditionally breaks probing for legacy non-DT platforms:
+
+drivers/ata/sata_mv.c:mv_platform_probe() {
+	/*
+	 * Simple resource validation ..
+	 */
+	if (unlikely(pdev->num_resources !=3D 1)) {
+		dev_err(&pdev->dev, "invalid number of resources\n");
+		return -EINVAL;
+	}
+...
+}
+
+Legacy board files initializing the sata_mv device add both an IORESOURCE_M=
+EM
+and an IORESOURCE_IRQ resource, making num_resources =3D=3D 2. It looks lik=
+e this
+would cause the probe to immediately abort with -EINVAL.
+
+[Severity: High]
+This is another pre-existing issue, but it appears that the clock reference
+and enable state might be leaked if PHY initialization fails:
+
+drivers/ata/sata_mv.c:mv_platform_probe() {
+...
+		hpriv->port_phys[port] =3D devm_phy_optional_get(&pdev->dev,
+							       port_number);
+		if (IS_ERR(hpriv->port_phys[port])) {
+			rc =3D PTR_ERR(hpriv->port_phys[port]);
+			hpriv->port_phys[port] =3D NULL;
+			if (rc !=3D -EPROBE_DEFER)
+				dev_warn(&pdev->dev, "error getting phy %d", rc);
+
+			/* Cleanup only the initialized ports */
+			hpriv->n_ports =3D port;
+			goto err;
+		}
+...
+}
+
+If clk_get() and clk_prepare_enable() succeed for a port, but the subsequent
+devm_phy_optional_get() fails (e.g., returning -EPROBE_DEFER), the error
+handler sets hpriv->n_ports =3D port.
+
+Since the cleanup loop uses a for-loop up to hpriv->n_ports, the current
+port index is excluded. Would this bypass clk_disable_unprepare() and
+clk_put() for the currently failing port?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260709021232.2042=
+777-1-rosenp@gmail.com?part=3D1
