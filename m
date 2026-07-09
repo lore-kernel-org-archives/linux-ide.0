@@ -1,176 +1,203 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8D1138F643
-	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 03:34:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.180
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783568068; cv=pass; b=tkBk16Pm+k/hT5m56kn3LbqHZbwJU82tmFReLFHHqa5Ae+nFVABLYXDXaM00sgtYvqyIFjyV/AnVn0Wov78tSA0jSu+9CVlxeJ0M7KeAWoHKCWWysQBPgINR4LoS6NL9x4d3I3hfjWwiRSENJPMUUaK4/j5fEXDUijY3N41zM+U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783568068; c=relaxed/simple;
-	bh=YnwHcp5gSCbZJi1VkH0uzYLY9T/1f9/oVSvbGGMl3UU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Gqp7dtWR2KUvMWg+7LM5jJ9v7OoqOYWb8EWwMFJF3NGm7giqBG0hcnaB0kbXjw7C+PlCMiXnXggxgl2oSTeIUPQ08qwc+091e+eJGxnwV16XvxKc7Hh2tf+M0CF1UdY1z17/5iMKrwRzKi2uB5p72oo0PR0Gm2CTC2+JO8wROIs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=L71oGnqW; arc=pass smtp.client-ip=209.85.160.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56AC231F98D
+	for <linux-ide@vger.kernel.org>; Thu,  9 Jul 2026 03:37:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783568231; cv=none; b=CJ2qFwUmnXIbJBfxOVF9sHIlqhO6SWjjLrhosNbOoF0mjf/S5MYt/RjxbKHDy5DX/LMsd8DmM40d/a8E/wPEeKzFj+il7PRdvMYJDfI6A2BGbpVieygGEx/FtcKc9JllCSDfaWcCae6G5bZP0LGW641bX1sLBeIKk9E9GsOHpQw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783568231; c=relaxed/simple;
+	bh=tkTvOujs0ykF0cquqV0RNPcH/T9kRxEdmXY55wfcmGs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=istxxfuSgYh7+AF6nmP+IsSvAqsNbKc/59IKLO2wEEV7xR6/QqTYv+ipTHjdA3RJTrrdH0rlNioAl8Kg5AdAvnZwyAQ+b1lXDUDLinZjM6YlnhaSOf00HnY3SXTJ5x+5MWTECsVYnOtuNgdBhHh18/k2Yx2nV2JB3C0Fij8EOSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MMj4AuEO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="L71oGnqW"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-51c01c79467so184141cf.0
-        for <linux-ide@vger.kernel.org>; Wed, 08 Jul 2026 20:34:26 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783568066; cv=none;
-        d=google.com; s=arc-20260327;
-        b=COsTL7tqrhdOvXW+aXyLuZLbZV2O57dHF3TrGA/chAOE4DlFLG65yG90P519Oe0QKT
-         rMyjAjC6+E2V813mKlWayF0mYx/hqCdX/Lj80LKuqHZvDbtDw7m7nM0vKN2PmTTM+/uY
-         UGkr+YUB2W2rJI9f7yyyI3AxdFO5fMX1ncYSYDZUdCjxfU38Jv7exVNHLWp45fqu3xR/
-         XN2noZiD3PwDM1vze9kDfHVc20e9vSj0hBiggiRqea6FHL1o2TiRPqMgEw7YH57peT2t
-         gduONRbkwJnq9IA4eAbz1aEzSeImZ9Zj/zexN3DhW81j7kPMsRntBd9MCvSbxB5gVjoM
-         uRHA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=YnwHcp5gSCbZJi1VkH0uzYLY9T/1f9/oVSvbGGMl3UU=;
-        fh=Y6prRgjPCQoCmAa8Z1xtJ/kO7KvphxJSUw6DSdaTgZo=;
-        b=ANud0KFN09U24pKTR/Oi39czlkD9Q9LKXe8XLDXfeCvfhK8MQ99Twlbu3hkNMBLCW8
-         AeHGKDvXgaBBx5hHmGeI8IvAf3/OLfWb7Z4iCO2nUiqcRuXwDPuNHRtJDNc7ugJviExe
-         1nvgq68P0uia9akLrv6HknsPye3/MwLg78ijL1DQf+wmRDxT8IwACUpJp2YUfx2QiwpO
-         8V7xeK+av/2yqUrzMLlwqRakWOJqrb2OKoh+9rh4A/HCewANevk2usbpuUM4qSYHuc5b
-         uHw9IJ4Rk8l9Ng0enMa6mZFRoARiedCRrTN/bQYxgfTMV5IUf26SS9/d+G1HxjXhnWlw
-         zDgw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783568066; x=1784172866; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=YnwHcp5gSCbZJi1VkH0uzYLY9T/1f9/oVSvbGGMl3UU=;
-        b=L71oGnqWCOTft9J9Fu6zcn99GBSdoT1APUs+ALGgHqKdVft0+rA4lqvyO3rhUDE4vz
-         4PNQBwJNAquJ/+BDIo+hT48A0fSwrNKlCrDt9+Eu2Jy0nWeOe5AijZTg3C89yts0K6bn
-         yy45/Q11ZHsYi3He8Hp8FGGQpAQdtD2euEANTMJFNTK7V+rSBdYdK7Sxqt8eNfkF0OXu
-         rEInI0xMr3zHiv94gthrKHowxQUZn3+Jv+MetLekoP5sEkFefx4HWf8uRpvGouAnlUib
-         cgcFIBzVh8b97Ew+5D1YMGzPRJhT9K6j08dOaGbRPr8X6/cGmaWBKFC00db5One89AMU
-         HpKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783568066; x=1784172866;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=YnwHcp5gSCbZJi1VkH0uzYLY9T/1f9/oVSvbGGMl3UU=;
-        b=Oc0X0szEgtCqFJo38CNNsvOX3d3ZHFCg3h0ElHfrtiteD7VRsjZi6Qpvjw6L4obar1
-         hRwEOWbjqx94f86Km8W5Smv/TDmpZHDKDSBxEBK/QDPuG1HgVCsvwafVJk+MkwNEdaQ9
-         /2POfgjYFCjoVyKF6t+2MPCD4PWw9h2CinGWi+bVo40IlGpc5jIf2BPUmzcuenQY5K6j
-         bzDw7uQAZz+el9bgN6b01f7VA+reZqXHy2myaFZ3DnNMaHbijsGvrpbVhokgkR9aSPpY
-         bx/Vhm56vnxzD1/MCJfnEKhHmi1CX5XV4BQ0o3Y2nfN99wx5MRfuEjf6vyoJTvvNQzK+
-         oQyg==
-X-Forwarded-Encrypted: i=1; AHgh+RoAntpVMrj4kJtnzCJfxA1WkX8Nnv7RU3MSSVXNY49TDyfOG9tRJeXBg6jo8Hmz+DDxpw4NKDCgLvA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxpnm/VuZ3L6EbgO7M6wLyd81P1igMpOcWcfEosl5EP8/NOatpO
-	Y/GQOGtiAmP0ABo+nJS6mftgU60Zf+naoHLyPQDlZj2k6g5IEmYjn/JRBBCEqhfEODCSCJ/VAXE
-	G4BphRdwk0GA4ZXLt2OclUG4/59xbCjb9Jl/CmbLh
-X-Gm-Gg: AfdE7cnhqkonWE2KDYDdgUASR7hq7npXR5KWRn53bHaft2MZcKEyUjiZthoKq8iOX2d
-	eQJVA0PABurWn262tasWGpz6TXXhwC1906J8PBG+IEnCT0VBB84DIbCvG6SflFLcADmUp9H74fE
-	l/Ro4d2N7lt1LUqEQbBJryZSshUTRMeqNF649ao2dNzoPv9lj6+YX2MVEg0KXOhK+2IoL5f4rHT
-	qYVzS9Qw6B7T2AxSSLCQaYHgy3w35pQuLroDwdXo9U4Ih0R4/oBo/7lKdJ8z8jCtA2yQBfweW5R
-	ywKVmoSbt+zJk57it07jbkOQpJaAtQ==
-X-Received: by 2002:a05:622a:248b:b0:517:5ac7:332e with SMTP id
- d75a77b69052e-51c9a7990e9mr3535921cf.6.1783568065317; Wed, 08 Jul 2026
- 20:34:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MMj4AuEO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B2B71F000E9;
+	Thu,  9 Jul 2026 03:37:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783568229;
+	bh=qtiIrsSg4oOUdasQ6SPQXdCfPeyOQay6Kg08rw6Dul4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=MMj4AuEOC2YIuQcTwO1mdYQVXxwlV7q1me5xe82wmmck2f+Kgn1nbhE+g2nGxFEVr
+	 2qLTL+Z1rA17Hv/q6UPC+9KlK9hVMp4ApKr4art5aDWODIE1v5ta+GStPsOa6g1bHY
+	 WfLOFQN+c90OfDzv2Q9kFaX0XKIqfb/z8cwRzwbVYE1crNqC4fgvMNBgQK+6oAwR9Z
+	 krqiZqSpZ+svt6/QwnncT+m2Y1BECJH2HyagachjxmhHdfZ6+S/zFBL8lrx25XLIVV
+	 scGVsnowhMsXfDhdzCquAxjR2/6LjnmD1pX5z9C4G5NUgfCjmCr7OZ4xFoOfd7+36G
+	 oectiyc3S/KVg==
+Message-ID: <2c0de926-25fa-4bd3-9a79-44fce94e6c2d@kernel.org>
+Date: Thu, 9 Jul 2026 12:37:07 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260702020142.3399851-1-rkaruna@google.com> <20260702021411.B01331F000E9@smtp.kernel.org>
- <16780c1b-418a-4555-b4bd-d442cedd620e@kernel.org> <CAD50Xqp_LBvRqhn0q93s3aVxtfFWGhf42jBePKsUonfE6V=WNw@mail.gmail.com>
- <49cb57c1-d7d6-4f30-b628-72c083981da6@kernel.org>
-In-Reply-To: <49cb57c1-d7d6-4f30-b628-72c083981da6@kernel.org>
-From: Karuna Ramkumar <rkaruna@google.com>
-Date: Wed, 8 Jul 2026 20:34:14 -0700
-X-Gm-Features: AVVi8CfbAcgGqz-QJ-NyJv_X0AMeDeCMo8PBT3Fs4cz3f84_fg3eA2anGJSuTU8
-Message-ID: <CAD50Xqra-_2CnJdGPJtWeOZT-Ne4wRRcQEL+6uy1--jPRYwACQ@mail.gmail.com>
-Subject: Re: [PATCH v2] ata: libata-scsi: limit simulated SCSI command copy to
- response length
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: sashiko-reviews@lists.linux.dev, cassel@kernel.org, 
-	linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>, 
-	TJ Adams <tadamsjr@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: SCSI EH wakeup deadlock from deferred_qc
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org
+References: <20260708193644.671852-1-ipylypiv@google.com>
+ <4a1b8987-7c76-41e2-baf9-6c176950593b@kernel.org>
+ <26dbfbdd-4f9d-4a5f-8f61-a3bb7c457f50@kernel.org>
+ <ak8GcZ2k0AIkpMCe@google.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ak8GcZ2k0AIkpMCe@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jul 6, 2026 at 6:10=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org> =
-wrote:
->
-> On 7/7/26 08:10, Karuna Ramkumar wrote:
-> > Before I start working on this, I would love to hear your feedback on:
-> > 1. Whether you think this API update (passing `rbuf_len` down to all
-> > actors and helper functions) is the right approach, or if you prefer
-> > simpler, and more localized checks elsewhere.
->
-> I do not think it is necessary at all because rbuf is statically declared=
-:
->
-> static u8 ata_scsi_rbuf[ATA_SCSI_RBUF_SIZE];
->
-> So the buffer address and maximum size is known to all functions using it=
-.
->
-> > 2. What would be the best way to test all these simulated command
-> > paths to ensure the fix is verified appropriately?
->
-> Most functions for emulated commands generate only a very small amount of=
- data,
-> far below ATA_SCSI_RBUF_SIZE. So I would suggest that we simply add check=
-s to
-> the functions which may potentially exceed that. Off the top of my head, =
-I do
-> not know if we have any, but we should just check.
->
-> Note that ideally, we should have each function allocate their own local =
-buffer
-> to handle the translation. But this is right now a little hard to do beca=
-use
-> these translation/emulation functions are called with the port locked, so=
- we
-> would have a memory allocation for a potentially large-ish buffer under a=
- spin
-> lock, which means no reclaim/no wait allocation, and thus potential for f=
-ailure
-> which we do not have right now. A proper/ideal fix would need to drop
-> ata_scsi_rbuf, have some helpers for managing the internal buffer and red=
-esign
-> the submission path to not have the port locked until the translation is
-> actually generated. That is all more work and more changes.
->
-> So as a first step, let's check the emulation function if any of them can=
- exceed
-> ATA_SCSI_RBUF_SIZE in size, fail them with internal target failure.
+On 7/9/26 11:24, Igor Pylypiv wrote:
+> On Thu, Jul 09, 2026 at 10:01:11AM +0900, Damien Le Moal wrote:
+>> On 7/9/26 08:44, Damien Le Moal wrote:
+>>> On 7/9/26 04:36, Igor Pylypiv wrote:
+>>>> Hi Damien,
+>>>>
+>>>> I've stumbled upon an issue where SCSI EH didn't run upon command timeout
+>>>> but ran ~10 or so seconds later. It seems like a recent regression from
+>>>> the introduction of deffered_qc.
+>>>>
+>>>> When an active command times out while a non-NCQ command is waiting in
+>>>> deferred_qc, SCSI EH fails to wake up. Recovery stalls until the deferred
+>>>> command's own timer expires.
+>>>>
+>>>> When an NCQ command times out, scsi_timeout() calls scsi_eh_scmd_add(),
+>>>> incrementing shost->host_failed (1). However, when scsi_eh_wakeup() checks
+>>>> whether to wake the EH thread, scsi_host_busy(shost) counts 2 active
+>>>> commands (1 timed-out + 1 in deferred_qc).
+>>>>
+>>>> Because busy (2) != host_failed (1), scsi_eh_wakeup() refuses to wake
+>>>> the EH thread, deadlocking error recovery until the deferred command
+>>>> times out on its own.
+>>>
+>>> Igor,
+>>>
+>>> Can you try the attached diff ?
+>>> I will test on my end, but I need to hack something to trigger a timeout :)
+>>
+>> Hacking libahci to trigger a timeout for a particular LBA read, I tested the
+>> attached v2 and I see the deferred QC running right after the read command
+>> timeout. So this looks like a good fix to me. Can you test please ?
+> 
+> Thank you for coming up with a fix so quickly, Damien!
+> The fix works for the issue I'm seeing!
+> 
+> Note: I tested on a 6.18 based kernel with your changes ported to libsas
+> to fix the issue for the pm80xx driver. Attached libsas diff for reference.
 
-Hi Damien,
+Thanks for the diff. I will add it to the patch, and if that's OK with you, also
+add a co-developed-by tag ?
 
-I went through all the SCSI actor functions in libata-scsi.c and
-calculated their maximum size consumption.
+> 
+> Thank you!
+> Igor
+> 
+>>
+>> -- 
+>> Damien Le Moal
+>> Western Digital Research
+> 
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 5868526301a2..5221d7004c0e 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -1685,7 +1685,8 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
+>>  	spin_unlock_irqrestore(ap->lock, flags);
+>>  }
+>>  
+>> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
+>> +static void ata_scsi_do_requeue_deferred_qc(struct ata_port *ap,
+>> +					    struct scsi_cmnd *timed_out_scmd)
+>>  {
+>>  	struct ata_link *link;
+>>  
+>> @@ -1698,15 +1699,27 @@ void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
+>>  	 */
+>>  	ata_for_each_link(link, ap, PMP_FIRST) {
+>>  		struct ata_queued_cmd *qc = link->deferred_qc;
+>> +		u32 host_byte;
+>>  
+>> -		if (qc) {
+>> -			link->deferred_qc = NULL;
+>> -			cancel_work(&link->deferred_qc_work);
+>> -			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
+>> -		}
+>> +		if (!qc)
+>> +			continue;
+>> +
+>> +		link->deferred_qc = NULL;
+>> +		cancel_work(&link->deferred_qc_work);
+>> +
+>> +		if (qc->scsicmd == timed_out_scmd)
+>> +			host_byte = DID_TIME_OUT;
+>> +		else
+>> +			host_byte = DID_REQUEUE;
+>> +		ata_scsi_qc_done(qc, true, host_byte << 16);
+>>  	}
+>>  }
+>>  
+>> +void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
+>> +{
+>> +	ata_scsi_do_requeue_deferred_qc(ap, NULL);
+>> +}
+>> +
+>>  static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
+>>  {
+>>  	struct ata_queued_cmd *qc = link->deferred_qc;
+>> @@ -1730,6 +1743,28 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
+>>  		queue_work(system_highpri_wq, &link->deferred_qc_work);
+>>  }
+>>  
+>> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
+>> +{
+>> +	struct ata_port *ap = ata_shost_to_port(scmd->device->host);
+>> +	unsigned long flags;
+>> +
+>> +	/*
+>> +	 * We had a timeout, either for an NCQ command or for one deferred
+>> +	 * queued command. Either way, we must release all deferred queued
+>> +	 * command so that scsi EH can trigger.
+>> +	 */
+>> +	spin_lock_irqsave(ap->lock, flags);
+>> +	ata_scsi_do_requeue_deferred_qc(ap, scmd);
+>> +	spin_unlock_irqrestore(ap->lock, flags);
+>> +
+>> +	/*
+>> +	 * Let scsi_timeout() know that it must continue with handling the
+>> +	 * timeout as we in fact did not do much here.
+>> +	 */
+>> +	return SCSI_EH_NOT_HANDLED;
+>> +}
+>> +EXPORT_SYMBOL_GPL(ata_scsi_eh_timed_out);
+>> +
+>>  static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>>  {
+>>  	struct ata_link *link = qc->dev->link;
+>> diff --git a/include/linux/libata.h b/include/linux/libata.h
+>> index 96e626d6a7ca..327da43d7496 100644
+>> --- a/include/linux/libata.h
+>> +++ b/include/linux/libata.h
+>> @@ -1153,6 +1153,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
+>>  #endif
+>>  extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
+>>  					     struct scsi_cmnd *cmd);
+>> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
+>>  #if IS_REACHABLE(CONFIG_ATA)
+>>  bool ata_scsi_dma_need_drain(struct request *rq);
+>>  #else
+>> @@ -1464,6 +1465,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
+>>  	.ioctl			= ata_scsi_ioctl,		\
+>>  	ATA_SCSI_COMPAT_IOCTL					\
+>>  	.queuecommand		= ata_scsi_queuecmd,		\
+>> +	.eh_timed_out		= ata_scsi_eh_timed_out,	\
+>>  	.dma_need_drain		= ata_scsi_dma_need_drain,	\
+>>  	.this_id		= ATA_SHT_THIS_ID,		\
+>>  	.emulated		= ATA_SHT_EMULATED,		\
+> 
 
-As you mentioned, most command emulations triggered via actor
-callbacks write a fixed or small amount of payload, and are well
-within the 2048 byte limit of `ata_scsi_rbuf`.
 
-There are two functions that can potentially overflow though:
-
-1. ata_scsiop_inq_b9: Writes 64 + nr_cpr * 32 bytes. If nr_cpr crosses
-62, then this can cause an overflow
-2. ata_format_dsm_trim_descr: Writes trmax * 8 bytes. If trmax > 2048
-/ 8, then this can cause an overflow too.
-
-I will prepare a patch to add bounds checks to these two functions and
-send it over for review. Please let me know if you have any
-suggestions/concerns.
-
-Thanks,
-Karuna
-
->
-> --
-> Damien Le Moal
-> Western Digital Research
+-- 
+Damien Le Moal
+Western Digital Research
