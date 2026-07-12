@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 112B13845D5
-	for <linux-ide@vger.kernel.org>; Sun, 12 Jul 2026 22:38:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44342386441
+	for <linux-ide@vger.kernel.org>; Sun, 12 Jul 2026 22:45:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783895933; cv=none; b=n+dA6aUXDoGvzqY9HkMFxkE7ZFBBz9ucBp9lDuZaMdzjO8M/vI1ZB78z/0od4GrjxueMVxrifXgOLY0G3ra16j44oYBx9B91QARCQvyO1BFkSei0CdOqsu0Tw2fBXX4qgjAdMgvCOzQpAcse+KnOONTznbWvkLlwJcTFPvlZ+lg=
+	t=1783896341; cv=none; b=HE67omkYWZT0XyYoxnghEt4V6Fuh+8Mp3KKGuoxP2dY7FWXXexvfkEthUG4j0O+zMfhgUEy0XinmUN0yfM5dmz5QxRucYyphIPzAL6aXx1VP/6SyXy7IL0pydku/Kp1yy/Bfwd1yyHilYrSzz+2Xf/VCq0qC1KfncisZv6RS7xY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783895933; c=relaxed/simple;
-	bh=e5dkpmfBBEziDn/sF/IEki4XDypPQ5eNQyUF4pVB8Yo=;
+	s=arc-20240116; t=1783896341; c=relaxed/simple;
+	bh=x0GqrxTlbxq6Gc8RxVGFKjtNAHptmIUoDvcYp4b3IPE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Cqzeu1DnVOeRUdAYyt7sMKC6RQ61Xa0cM8Ftc1m71RukIkTxUK0rs8DuGgA5a9I8TYKqCRFxgcLzxSZLmq1ZHjVHz/5DD+L51nUwvmLITUjKIGb7TDS8C+q0TToh/D+tq4RUwHfbmpbZIQ4B1IPS+BgyUt7rorgBnkQ+sHz+nlw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BF9L2IO2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=pqk0c/OGZ6rdPu+wJVlaZB9dd7No8zGyCeR/P/Dx49U7HuoOLhB1wz4dpG4VC7kZjCwWfQLoWIPKlKS8hGwT4QOJG0JxnfKJ4HLZO/ya/xkeSvshWHdDlIto/MT5eeDcsz8xjwhbO9GXdtxd4im+R562tiBAj7dutUsfyB3gm6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=avkLtDI6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BF9L2IO2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 689EF1F000E9;
-	Sun, 12 Jul 2026 22:38:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="avkLtDI6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECFDC1F000E9;
+	Sun, 12 Jul 2026 22:45:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783895931;
-	bh=x5YHzybzNIbGesavAX4+ovvDs1z9rIHan4XpYFEfZaA=;
+	s=k20260515; t=1783896339;
+	bh=C1mqbWi2c1U5UnIGTi06hSfNfg39iL/g0vDJWUPOz4w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BF9L2IO2VTF2oH4e0sWi2TcVCdLHbrOpQ2QU4+Lqi7/IOo3Ts9ad9zLfFYksPzjCU
-	 g3qxnDDRdxaG6VcWTBp1bybandn5G2iAFs+hSIUp76DmkA0NxoXlVm1PlyGYmyjIrf
-	 Ho6xhg9gWylk5M34j9Y0/xLIEMIW0tGDqFvcsAI2vPkGxosKspnImQbaq+24ojEcgg
-	 V7QNAJ1iDxX0km+xHsHUI2iMJ55ZfT1XHsh2EQAEjMaSc0OfWJTy5phkGwH/qud65Z
-	 XgDj6anBm9nWwwLFe0mCAObWKN7IGjO/0X/NWS/iX7z4j2FeOyXYUfuvMsu1HrKjMc
-	 x78TDHCw/02MA==
+	b=avkLtDI6UK2dbEj/W1zt425k8ksGL0qX0ArvM+LBXUnO+GJ4+AkNT63SPhBPBbfHf
+	 a/RCQoiQeaNIum8xz9re+xaFSzOrowpW3AeCj9k+Ad/AOdzjoxMFrxtq/n5fPWhQpu
+	 jSqiNfS8+gl9t/XNVDY9K3ehS9VYJ4G3N6sw8U96Fqu9JnO3S70aewwDGK9iD5XF1d
+	 oYaHpbXy3lauG03jO62uJpVf18ABGcgrxeefUfNUVYDam4rldNL98KCtRrMpmTjF3g
+	 VVYDcG/79ua2+0+KaIUcMAROWqNW0D2Yvra+TXAXwwpz9dolcrRsIWCsCv5F7fKcm9
+	 fGL7IbLom/bmg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: sata_mv: accept 1 or 2 resources in platform probe
+Subject: Re: [PATCHv2] ata: sata_mv: use devm clock helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Rosen Penev" <rosenp@gmail.com>
-Cc: linux-ide@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260712223137.1058531-1-rosenp@gmail.com>
-References: <20260712223137.1058531-1-rosenp@gmail.com>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260712223733.1084077-1-rosenp@gmail.com>
+References: <20260712223733.1084077-1-rosenp@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 12 Jul 2026 22:38:50 +0000
-Message-Id: <20260712223851.689EF1F000E9@smtp.kernel.org>
+Date: Sun, 12 Jul 2026 22:45:38 +0000
+Message-Id: <20260712224538.ECFDC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,74 +47,74 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Missing error check for port clock clk_prepare_enable() leads to u=
-nbalanced disable and potential hardware faults.
+- [High] The return value of `phy_power_on()` is ignored, which can lead to=
+ hardware faults and unbalanced `phy_power_off()` execution during teardown.
 --
 
---- Patch [1]: [PATCH] ata: sata_mv: accept 1 or 2 resources in platform pr=
-obe ---
-commit 079963d555bbd8a5581f9c80568deb335571afa8
+--- Patch [1]: [PATCHv2] ata: sata_mv: use devm clock helpers ---
+commit 4da9c2641dc6134cc0fc1f75c23bcc95ae5882fd
 Author: Rosen Penev <rosenp@gmail.com>
 
-ata: sata_mv: accept 1 or 2 resources in platform probe
+ata: sata_mv: use devm clock helpers
 
-This commit modifies mv_platform_probe() to accept either 1 or 2 resources,
-allowing the SATA driver to probe successfully on legacy Marvell
-Orion/Kirkwood-style boards.
+This commit replaces manual clock acquisition and enablement with
+devm_clk_get_optional_enabled() for the main and per-port clocks. It
+simplifies the error handling and remove paths by removing the manual clock
+cleanup.
 
 > diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 41647a56a9f4e..365454390d7e0 100644
+> index 41647a56a9f4e..eafd1e6b827dd 100644
 > --- a/drivers/ata/sata_mv.c
 > +++ b/drivers/ata/sata_mv.c
-> @@ -4027,7 +4027,7 @@ static int mv_platform_probe(struct platform_device=
+
+[ ... ]
+
+> @@ -4120,8 +4118,8 @@ static int mv_platform_probe(struct platform_device=
  *pdev)
->  	/*
->  	 * Simple resource validation ..
->  	 */
-> -	if (unlikely(pdev->num_resources !=3D 1)) {
-> +	if (unlikely(pdev->num_resources !=3D 1 && pdev->num_resources !=3D 2))=
- {
->  		dev_err(&pdev->dev, "invalid number of resources\n");
->  		return -EINVAL;
->  	}
+>  			/* Cleanup only the initialized ports */
+>  			hpriv->n_ports =3D port;
+>  			goto err;
+> -		} else
+> -			phy_power_on(hpriv->port_phys[port]);
+> +		}
+> +		phy_power_on(hpriv->port_phys[port]);
 
 [Severity: High]
-This is a pre-existing issue, but while reviewing this function I noticed
-the return value of clk_prepare_enable() for port clocks is ignored further
-down in mv_platform_probe():
+This is a pre-existing issue, but is it safe to ignore the return value of
+phy_power_on() here?
 
-drivers/ata/sata_mv.c:mv_platform_probe() {
-...
-        hpriv->port_clks[port] =3D clk_get(&pdev->dev, port_number);
-        if (!IS_ERR(hpriv->port_clks[port]))
-            clk_prepare_enable(hpriv->port_clks[port]);
-...
-}
+If powering on the PHY fails, the SATA controller might still attempt to
+initialize and use the unpowered port. Could this result in hardware
+lockups or register access faults?
 
-Does this code risk causing a synchronous external abort on ARM systems if
-the port clock fails to enable? If the driver proceeds with hardware
-initialization while the IP block is unclocked, it could lead to a kernel
-panic upon register access.
+[ ... ]
 
-Additionally, if clk_prepare_enable() fails or another error occurs during
-probe, the cleanup loop unconditionally attempts to disable and unprepare
-the clock:
+> @@ -4190,17 +4179,8 @@ static void mv_platform_remove(struct platform_dev=
+ice *pdev)
+>  	int port;
+>  	ata_host_detach(host);
+> =20
+> -	if (!IS_ERR(hpriv->clk)) {
+> -		clk_disable_unprepare(hpriv->clk);
+> -		clk_put(hpriv->clk);
+> -	}
+> -	for (port =3D 0; port < host->n_ports; port++) {
+> -		if (!IS_ERR(hpriv->port_clks[port])) {
+> -			clk_disable_unprepare(hpriv->port_clks[port]);
+> -			clk_put(hpriv->port_clks[port]);
+> -		}
+> +	for (port =3D 0; port < host->n_ports; port++)
+>  		phy_power_off(hpriv->port_phys[port]);
 
-drivers/ata/sata_mv.c:mv_platform_probe() {
-...
-err:
-...
-    for (port =3D 0; port < hpriv->n_ports; port++) {
-        if (!IS_ERR(hpriv->port_clks[port])) {
-            clk_disable_unprepare(hpriv->port_clks[port]);
-            clk_put(hpriv->port_clks[port]);
-        }
-...
-}
+[Severity: High]
+This is a pre-existing issue, but does this code unconditionally power off
+ports even if phy_power_on() failed during mv_platform_probe()?
 
-Could this unbalanced disable cause a WARN_ON during the error path since
-the clock was never successfully enabled?
+If the earlier power on operation failed and was ignored, calling
+phy_power_off() here could decrement the PHY's power count and runtime PM
+usage count below zero, potentially causing unbalanced lifecycle operations
+in the PM framework.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260712223137.1058=
-531-1-rosenp@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260712223733.1084=
+077-1-rosenp@gmail.com?part=3D1
