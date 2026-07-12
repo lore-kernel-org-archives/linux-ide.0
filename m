@@ -1,63 +1,63 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0180F379C4F
-	for <linux-ide@vger.kernel.org>; Sun, 12 Jul 2026 21:37:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66CE837A487
+	for <linux-ide@vger.kernel.org>; Sun, 12 Jul 2026 21:37:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783892259; cv=none; b=hpfP1A8iOlBEExf31nXF/xjfCZQXc2bnxUeHLlf8/hA1VXaA1XoToDylNP5JIfm8Zu/yDjW5GEmtNlTz/ZyehDw6AeXsakyneyrhpV7/sKLI8dCVHGeCGLRMpEOXnjxzkofVNZtarw/9tU+ZgTF/DluFRdUTw6KX4YLVHH/CuoA=
+	t=1783892260; cv=none; b=h+utVm+1CyBOQNquNDQ1RRhq5Q52i8dfgQq/DfLucN7MgLlyTpVhUnjM29fB9PUnKdOlsCc0A2+B7l+CJnYG5rpvT+wny5kTHQJqekP/DoclbJDeGgWXEGSQ5/g8MTLMUbab6pdIIQ50dCfe4XBGuptgw6+0ClVHs0cS5MvDoiY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783892259; c=relaxed/simple;
-	bh=VO4t2u2qQdmKg/v0j6i3hHOlLjtd8aS3IHBNDIy+lqo=;
+	s=arc-20240116; t=1783892260; c=relaxed/simple;
+	bh=Fr6vIWHzoEK/IHHnS7kMjTaf3CDbcnlP99n14LxLBpc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VEdDBQPPgCo9kvGVfTramFuGnQC3W83O9w0N5hk9IlnyJkyqxAiIvIx9L2IWrig5njv3Q3SLNnhRTIFCINMHhTL8Vt69o1ltrmdsTbvbn1oT2qFzJClqF5cbY3X+M7hyDPpnwii+yAy06B2DB+UTB0AbRqjeWtxhDjefq08Zg4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g74bQ+0u; arc=none smtp.client-ip=209.85.214.181
+	 MIME-Version; b=QyEk5LA36y7Js7UrwnuJJRrQxIZ0kOMJCNbe4cD8yhdeNUgyh7D8ltXRtrevYiHZUMxSJMvQnmPHNBsFqxmRoDHhoAcmaDrHZ6VaJufrj8RB6LZOuiLsrRef1Ilui1DMFtSvJ9LjpW9xEspXPNJ0by48dOPAZxaO4WepTNOBw/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MZmqRQxZ; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g74bQ+0u"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2cacf197759so36955755ad.2
-        for <linux-ide@vger.kernel.org>; Sun, 12 Jul 2026 14:37:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MZmqRQxZ"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2ceb096e675so10770525ad.0
+        for <linux-ide@vger.kernel.org>; Sun, 12 Jul 2026 14:37:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783892254; x=1784497054; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1783892256; x=1784497056; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=oKqwIHEOqJ6y+293+N3845Mk/6weuqq1m5qiev+Nu1w=;
-        b=g74bQ+0uLCeQYX7U9SsmKHBt34Ywdm7xAS5X4JzV9ib1uroytC7zpxPkSYUUPTeEnc
-         5RpGUs0ZOmJDYg9NWk3x1J5wfjaV5w3cJJCVP6ZMhoUFFFFW+c55MGlHNoj4uKB/gCLi
-         Au2eFeC0zyVL630ZU8YKET2AM+/Kt+yDbx6MD3qr7o8cAVHUklmjucZjkVzHWrhQPcSf
-         3Q/MmCKo22LGtEsW1udE8PgXsWR9Pocnhtc/qKtcDEicyxeNg2lhcTluu2aB/RY6aANK
-         tOeTjqr+pegTkO8hqWn/pfyhhGr1l5kWXKSRdGhTl+qShmrp3+Z+HFXToXVgyfzzHk5y
-         dLqA==
+        bh=lfXe2Fd3Jd3U8LKEcL3Fi16GHp5v+t05WNlpCspEzlA=;
+        b=MZmqRQxZgXJjuF9t4ihh2FRCIJ5vmu/FaWURqTVnhmJEY93XOt3DZH9RM/OO8DVGD4
+         0u609CQ13uNIxyzKfq1I7qiATckU+rLH5XU7TyNJ7zQeXVQ0ekOjfKzsDaL0bleBgC6z
+         1krMvLJXQL6GRTdlfzKXPaafSaRU7F7eQesI387lW1CS0DCMQtRrF2WkX7jklQERsVS1
+         lgHRga1ZhkLaD4Zl3UD0u2hHOHi75I1cqt0KsUXDqs0WH2hn8pfhpFLjLRALFDmnGj0Q
+         il09Mw4MueTNtrrlJVSiIdU3fpNkTKKWSMrIu5K6v4/1XG7pGTEkW4HeqldSGgHLZDy5
+         fSUw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783892254; x=1784497054;
+        d=1e100.net; s=20251104; t=1783892256; x=1784497056;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=oKqwIHEOqJ6y+293+N3845Mk/6weuqq1m5qiev+Nu1w=;
-        b=NAhDopJsHIThB9DNN4/t+xXaAE+Sw6zek2rhDClEB6rSJkCaxVpkhR9LZGMsa2pm3m
-         jYkQE374nLnaia/NybL/GFaH3OoYrchpXKS9Wjo6eS4xUin2PkRU0Q6W7bVhOcYkvjp5
-         upjN2Bm7yeoF33blq690s4AN0lqhsp14VchCLPGahnZVyyIwjBRNHMyidIOV8ROLZ4aC
-         XJK+L777aFcWjlN2lHZ8u/E4WHH7uqujrFesSM18E3lU8xyETqJmhUAd8sY5C0Z+LxM9
-         8hqN0u7X9yFoAJABPMddjbjVoBAE/XUMz2EJXyIsSri4zpRf4bIh85ZmvL+jVNbGzk4U
-         Mhhg==
-X-Gm-Message-State: AOJu0YzZ6TPg7Ua0gMunuzoUv6tTeUQismOnAVsNc+XqWFmfcxU3oaHn
-	3rLlO42ALr8dh5iwxKxKYFBv3/YZdxKXL00NK/h86TY65dYOn6LfaV005aKUyw==
-X-Gm-Gg: AfdE7cnsxAfdOTSjCY+R1i+9mB0ZVOr+S8IQNWgfBTbs3J3gMOI6B3R4FS+JDVJMxJf
-	TRYzlPmJYkvGoiysNUnEA2nLoPBQIq9rIOHOcsJaTjxX/dYVQcDw84BHdZVOwbpxx3WK3zAoQxd
-	zOMBGVSHcEVysCuHE6IgBP8K3Nj8q3uqapYMlOiwY0C1uIExeiv+/VAD/pbdyQ2Ydt4BClI2iWv
-	AWSbBnZq3gev5vg31nqYPRwk6yl2WzdNl0IZ0WezP7YY07JF59KDvDhAlmoN1h4tuag2vOSaoxJ
-	k1u3a3FJ41aBmZFsI2ToYuxOO1jTMg8mWcBbBKWW9376zWT/hDaDiwRiMnf6pPr8/IbwAHtFl40
-	TVcMBZmpM4t/rL7pI1wBzpbfSKSqSDrFoKat+XzrZMSw1mNYAuOLs/JcoCTMmb18jWK/00BUxXb
-	bFS8G3AHl6kYkWUn2La4JISZ7yDfl8yB9qhFNeyKd1jUB8wxnZlIFAQKjPeD7Cn4rPPNK2TjcaI
-	eJE4SkePefcgIl/5VPv4bp/+vHiwxokIUSq6NOkTQb5v+ht2rNczeTYiK6BcH682g==
-X-Received: by 2002:a17:902:db0e:b0:2cc:80c5:73be with SMTP id d9443c01a7336-2ce9f04da7bmr57517825ad.40.1783892254464;
-        Sun, 12 Jul 2026 14:37:34 -0700 (PDT)
+        bh=lfXe2Fd3Jd3U8LKEcL3Fi16GHp5v+t05WNlpCspEzlA=;
+        b=jaQCZALTmpoPz711Vg6Dx7s8oCTfFgJZeORRI+PsjGluUhSVLgkpqHSiVlzgTvGxqF
+         1Cbrz/ty3Y6jH4+LF0bguEhCshZ+X61oTZzRKnZ/Hc/5EvA+z8FJm/4JZZ62Thvg74c0
+         RuevEDUccOArENphHTsyft278NcVpjVmOhr1v1Ig18aypkjrsaqMsg6zIyiW43Akb4LO
+         XW0gwkDJJI5Knc4RjypPhbl7UmBnXZpdHV82e5JMBCcFTZK4GgE0/9BO+lnOie+T/PFq
+         fZl6D3Uo8cmKvgTxdXjBYtR91F+DTGNVO95cH8+y2pExul+gmnjNQRFOCs+UsCPY+7HT
+         xfig==
+X-Gm-Message-State: AOJu0Yzs5E+7EU7v22u92nM5Aq3ZvBxlWB+8+1UXhf+57ESMAPZ6r+LY
+	N6UsLqQFAFGrOLUubNz6x1QwTeXB/5MsD4yVTpfb2blB6H5rb8cDJcAWCXL3/A==
+X-Gm-Gg: AfdE7cmpGhwU2FmQZahXHqdjHhOJO1usgvvkE0A6asALKIrJTQObCt/q15EfZzUbh8T
+	QPO95Sr6toSN6L+ZiU9KC+xBihfrgPojGlQQewpTXGOZbwCgGaUs1w8WwsKemEqYh5SxZaYLnVj
+	TiEv3KQJbjwpdGnvJgtWSJcw81Qg2m70fL+MNNC6zPK3CauAE3FzaafH94ya11myF3RY4Psm115
+	xAodSv5weV+B92FL/p2kfJ0A/la9nPw3wqE3f8s9sSmBa5sHfTd+s/GwaVgQ4+s07Kh9PL9GX3h
+	epQSdyB7K0CyKvU0/gYiaOSpAqFsjIKaiuUH3VAjH58+ajFf3g8HrPK5HBe7/l6if61fQyJcvTG
+	wm4WX/AqiBJW9ZfPY4AsWKxjs5SX6vWSzj8xr80gKL0L0OsI9/nUpcy6/7uELZEBnggvlqKSf2V
+	y+zdMKjvHCLp1MfyPMoSisGFr6yxBcxJz2qOOkn9ROf2t8uUoAkIEMwaPhh32nYpSd0JvKJcSFF
+	PTDZbLX060QhBDrd8bdSM+sYFfS4jc83X+NMh+aOq3DF6DrHDzLir02+6CVYS6+iQ==
+X-Received: by 2002:a17:902:f68b:b0:2cc:7c36:2c23 with SMTP id d9443c01a7336-2ce9f178346mr60043925ad.43.1783892255667;
+        Sun, 12 Jul 2026 14:37:35 -0700 (PDT)
 Received: from ryzen.lan ([2601:644:8000:7a86::e35])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ccc9bfb7aesm89082605ad.29.2026.07.12.14.37.33
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ccc9bfb7aesm89082605ad.29.2026.07.12.14.37.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 12 Jul 2026 14:37:33 -0700 (PDT)
+        Sun, 12 Jul 2026 14:37:35 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-ide@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -67,9 +67,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Rupjyoti Sarmah <rsarmah@amcc.com>,
 	Prodyut Hazarika <phazarika@appliedmicro.com>,
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv4 3/4] ata: sata_dwc_460ex: fix clear_interrupt_bit() clearing all pending interrupts
-Date: Sun, 12 Jul 2026 14:37:27 -0700
-Message-ID: <20260712213728.824420-4-rosenp@gmail.com>
+Subject: [PATCHv4 4/4] ata: sata_dwc_460ex: fix infinite loop in NCQ tag completion bit-scanning
+Date: Sun, 12 Jul 2026 14:37:28 -0700
+Message-ID: <20260712213728.824420-5-rosenp@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260712213728.824420-1-rosenp@gmail.com>
 References: <20260712213728.824420-1-rosenp@gmail.com>
@@ -81,36 +81,45 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-clear_interrupt_bit() ignores the bit argument and performs a
-read-write-back of the entire INTPR register.  If INTPR uses standard
-Write-1-to-Clear semantics, this clears every pending interrupt bit,
-not just the intended one.  Coalesced interrupts (e.g. DMAT + NEWFP)
-would be cleared together, silently losing the second event.
+The hand-rolled bit-scanning loop in the NCQ completion path has an
+infinite loop bug.  When tag_mask has only high bits set (e.g.
+0x80000000), the inner while loop left-shifts tag_mask until it
+overflows to 0.  At that point !(0 & 1) is always true and 0 <<= 1
+stays 0, causing an infinite loop in hardirq context with a spinlock
+held.
 
-Write only the specific bit to clear so that other pending interrupts
-are preserved.
+Replace the open-coded bit-scanning with __ffs() which correctly
+finds the least significant set bit and is bounded by the width of
+the argument.
 
 Fixes: 62936009f35a ("[libata] Add 460EX on-chip SATA driver, sata_dwc_460ex")
 Assisted-by: opencode:big-pickle
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 85c5e67e9175..bc543a408963 100644
+index bc543a408963..8e3fc713891a 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -394,8 +394,7 @@ static void clear_serror(struct ata_port *ap)
+@@ -607,14 +607,9 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
+ 	status = ap->ops->sff_check_status(ap);
+ 	dev_dbg(ap->dev, "%s ATA status register=0x%x\n", __func__, status);
  
- static void clear_interrupt_bit(struct sata_dwc_device *hsdev, u32 bit)
- {
--	sata_dwc_writel(&hsdev->sata_dwc_regs->intpr,
--			sata_dwc_readl(&hsdev->sata_dwc_regs->intpr));
-+	sata_dwc_writel(&hsdev->sata_dwc_regs->intpr, bit);
- }
- 
- static u32 qcmd_tag_to_mask(u8 tag)
+-	tag = 0;
+ 	while (tag_mask) {
+-		while (!(tag_mask & 0x00000001)) {
+-			tag++;
+-			tag_mask <<= 1;
+-		}
+-
+-		tag_mask &= (~0x00000001);
++		tag = __ffs(tag_mask);
++		tag_mask &= ~(1U << tag);
+ 		qc = ata_qc_from_tag(ap, tag);
+ 		if (unlikely(!qc)) {
+ 			dev_err(ap->dev, "failed to get qc");
 -- 
 2.55.0
 
