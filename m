@@ -1,253 +1,143 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7977F34D915
-	for <linux-ide@vger.kernel.org>; Mon, 13 Jul 2026 18:07:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F13C03845DC
+	for <linux-ide@vger.kernel.org>; Mon, 13 Jul 2026 23:21:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783966068; cv=none; b=KJqhqAFe3Y8e7+IFn31SH2eiKJEtS7pGdNV8XBo7NKnKSpXzUEhJjyEFMBAOyVQjFI3pig/hv6PjIWY5+C/X+MKhlLf3+uaCNLgSPWvCijZrCaTJK/7TSxi3UJ4rxh+s+X0qyRxM1DL1fi1W/8P0gwy0T05FYCPW67sS0rh4Wjc=
+	t=1783984907; cv=none; b=u21EC2Hl2WvF4jFGgwhg0TfsOe0l+XCO8dRIyP1OG4nkwCvyP3/jNFyc3lBAnzsmfplaboRiiqUUFHzMTMEHs9lq8TzBpHOFgPmycefIoP++IHd9x9YsSNmrUUC6t7JVAL1giRxfUJ4BlzomiMP9srraa5yom0n45FnR6xdOd58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783966068; c=relaxed/simple;
-	bh=9jXOE3cnpKV0SrWXKUIOsJBwnB01t8vrC8J+fOQUeMQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kGeM32x4o9Dctt5dH5AlOueDCbRYp4mnyH/f8rngJyVNlHe3l6ePrGbVEtzCcUu05h3YRptLCX0i397nJhjqTSm7Ecik5gx8wl9+sMbWj3GgUGxjrY0gv2bAf7JafPrrbla4bpWezynCw5Yx18AD5raKXxrEd/lvgF0F24cNYD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ln7GBtWx; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1783984907; c=relaxed/simple;
+	bh=aHq2z5wJgiJJGtDTjASWD2AVN48KvlxybLZ9/CTioZw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WnJ99uFjUd4YPveqO/e1pBorV6KrtXx65VAZaN3ANZ8YgDx8IAI4Kh1fVvW+o0Gy8/RVBxJntN75a0K00UvdfuDEX4ifobmg/k9xvTkryHUrccmCiP+WCH0Dj351ZtnA4LYCicp+8UdhadT8sCZkmtKrNbbrNzJuF+btrFA3Xqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ggPklpUl; arc=none smtp.client-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ln7GBtWx"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2cede6375caso18905ad.0
-        for <linux-ide@vger.kernel.org>; Mon, 13 Jul 2026 11:07:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ggPklpUl"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-848882fdb18so102660b3a.0
+        for <linux-ide@vger.kernel.org>; Mon, 13 Jul 2026 16:21:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1783966067; x=1784570867; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=+qVbRp+HK6CwM5MQDi7Qzigzhk3NjlBw18NuSK0e1UA=;
-        b=ln7GBtWxRrDx0ncOQvBM5AH+N+Lg+lVrHIv0ZrqubCI7/WodVyACHBLdE2mmDNYcZR
-         M7adaTrCxznQ1sBUKwPq0OL7ks83U6M/nAyrwr6B/0RO7bPRRyNYUC9upwRlowKZ1L29
-         iHbzsnmhPp6sgLSUseoapLE1dHdI8pFSNcVZ48QZ7M359PQDEpW1VHyCdDvtJmr+BT7J
-         siDXmg8wWWzjjLGJXPIV3YSewvZQ+oPH8GE6SnDQ3LuyRCr4fCotWc5IUtnzCoCEiclr
-         6r9k9sXR+z4mMoqYE0kV2AyM6mDIS/dHmTgJJQoUC3FLhwt7jKmpUA4o1LlNXPojFvwn
-         nGEg==
+        d=gmail.com; s=20251104; t=1783984905; x=1784589705; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=kmt8IO5aqVfL3mDoyy5CaJovs80770UZpxeBY54vlPs=;
+        b=ggPklpUlFaK5T9pGM9+5iG/A57PUGBeZ0ASmJf0XRiV5lQNwEN9GEbV+v3E/ylYu11
+         8PdhvPQhYlKV9RJWPMJge1N565Vx76ZuxuvoQ2UWh1d2/GLvMeR1X0/uHWONoT9qqFlH
+         5N/uPuh9QJyA7j0tqHDFnIq7pC17/9g5QXE/SnA/XqKedFB7YzRSkmqy/1xisMQtbUJF
+         nno8yrKc+/SqcxcIzyhYN0LmgR9ehGgJ3+RIUFX7FfQHVg7l48trttl0Po4dzacaXMVd
+         uWXDsmGWesJ2UoN6cBjGOA5LeuJ2CqRyES6Ld2wmO9MVoSiGAa7kxbZ1BE6Byf0s1VVc
+         k8FQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783966067; x=1784570867;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=+qVbRp+HK6CwM5MQDi7Qzigzhk3NjlBw18NuSK0e1UA=;
-        b=mss6PlBkqG7Rdc/SJlfB91ySdRe8Bt+rYaIA96q5NJqjZLwU5gUvLnOgIUBx7gwvcJ
-         t3z0ZRBUsJVOYzdKthRD9v0DFGbt5wVyg1VXuIYWg3Us/kZsqThezNNcgX8nFGsPmgLy
-         cBytKEZxJlJq6/ccx2O/9j64wwexQvazrFMWYEEAbFFieh/cjwifcAgdaMDQmnegPOFb
-         gaI0mXCcdl8pzFdF+UmDVSlK3IbbRHwxmLL2aObkPJ9k4ly0mCbyVtJYvor08tAsCqA5
-         BH/zTYuvySLyZhzAdvawcztx27Ff6M6RJPTDNw0Xr9cpNh7aqJSGEmytpnjLW+JPu3mC
-         P72g==
-X-Gm-Message-State: AOJu0Yxq6hugHQcZtP3MHgJWbTlVdgkzH4w9omrJHqXay/+9j9P6vvWQ
-	W+vu97lFJiC+GY49Us8aBWlSaGqUz/oiNu5lMfgzIrcpAnAH+vyscCBKkhgAuB87Crj3jlEG92k
-	Lh5wc9Q==
-X-Gm-Gg: AfdE7clCsJ3+x63FK2uUC7kG+7t4gl1SEzOHTsALa5PwOggk6FGv8QPf/yMdPnENdST
-	wMrrDpn05xLkZhSD82gbdlF45iHkf9x+LS/ebj0iTXzferX+rbw/Yx+RrN/8MCwvfSEnl2Sjpps
-	8ssFbsgHdXMcF61TSHWn7/o+dUkN8dy6Lxa4vZAUvOYU5o6cdwFljbgN5yQY32d4KhZ4hnrNRUN
-	TPKJvAfVBQmNaMu1S65gzzRlwkqcWT8Vpud4gO/vxa1P2vZaLTOfQAbQJt3w0Xa64Fph5LPgucp
-	lx1QHPgVjysHWj3QJVwBCzBtRt3k8nF52lLbATiK5RdI8y7lgduNxJnRIkJV4hPga730J44Lc5Z
-	GcWnT4ve1k/sYTgwvgyXBDvSSmPDYSwUt6qJ/pCbhELvS8WtqM92tnSWaKVLxvlJM+bQMhbeTFt
-	iGCvVypMbN7FzNCp8qw0Bo5B1QvhvbtEoLCrZxdLRTrhLIBG2PnUl8qV3UbFA=
-X-Received: by 2002:a17:903:120e:b0:2ce:7ae6:2a23 with SMTP id d9443c01a7336-2cee1cea1b1mr2289125ad.27.1783966066150;
-        Mon, 13 Jul 2026 11:07:46 -0700 (PDT)
-Received: from google.com (249.65.83.34.bc.googleusercontent.com. [34.83.65.249])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38e17470008sm241847a91.17.2026.07.13.11.07.45
+        d=1e100.net; s=20251104; t=1783984905; x=1784589705;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=kmt8IO5aqVfL3mDoyy5CaJovs80770UZpxeBY54vlPs=;
+        b=DOLiLIqFChQZVZxEDBz2RSx7v4YEqSOqpkd2VyDsCJpScnwqKLv+J6wMMzwyqfZy2k
+         ZnYdfX7Lr6W85iyZ8rRX+D6cKi55P3aadUztTi6ODLSsvIWiilTHriw1+x0HQhaAg6Uy
+         Oji1L9H50d+iuN4/9vLTUrc3EzpVcYFXeh0xRm/vPgvP6HlQC943SMFa2h4M3GUm6q1R
+         SR1Lv1osLYPqAvfkiZBwvwMFu3AcxHus+ceeIcvUDT+OfwHPHTpq5X2ViBgBJpQfsMfe
+         T3EgagpvVdkeTj4MJZtrhq8lfa/Wu4p23NW4xJn2ntkKUr3ilHRPKPBUSxrIndPpqAg/
+         t2YQ==
+X-Gm-Message-State: AOJu0YyOtqMTSqWB1YP2YmI9WbZJZ4k1WvDDHeiJVSl9tktz1A5DWSs9
+	S18E7SWTz31TT1pzCcQFO/YY8im9Co4fd1W+oXrtDqUiUq2G9rq3K8nDqjCpsQ==
+X-Gm-Gg: AfdE7ckId0q3cOJhNooREElFtn4nhJiC+WtJ7bmkQMusv0gaDHhnI0SIKM71GYuu0vH
+	QfwkcjwMUcwCr4NrSyZ3klJJk+o9gIxuK5NpjqedLYVyLE2Gb/3xT+1Ow10xYEgnWEwDvaRU8jz
+	aJjFb/JIIii/SI6HQ0Qcx7cHefjCnaY9vuHO/1Dqi3pXEcfhz8vAO0U5Axs7E9An3s6oMc2D4NR
+	WhI9vFiv5CESIk79ioqCNJB7EnIqeRUx8gg8Iffd6LmuG25siS3CqdV2DigOrYhcoo1C8lPLbnz
+	MgMXQZRAlmBODsh6YMnRfMdAisfMrcIhln3h/yPF16Utfd/7In9RPTyrMyHxrmt5vt/ClPfgDMA
+	vXifCczLx4hTCj//11aKHZ085v4dyqq8IL7GRNyAx4QgdlG8YTr8hhcmC/DUrhsp5TP/tJiRlMA
+	3MotuV6BLLvWKRlnHkvAFYsuFhvXqopcq+j+eNus7pWr4TQheWe9fGFR15XfnLco+4KpCQkDq6w
+	w6zvfJLj6P+oNdqFk3U0zrcFFcZ6T+3nC3RG47xxhZ1EGPZ95qDI4Ooz8inURpvsUx7KzWysOmY
+X-Received: by 2002:a05:6a00:368b:b0:848:6dd5:f61 with SMTP id d2e1a72fcca58-8488971d44amr10074793b3a.44.1783984905296;
+        Mon, 13 Jul 2026 16:21:45 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e35])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84a4f7e9711sm476090b3a.50.2026.07.13.16.21.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2026 11:07:45 -0700 (PDT)
-Date: Mon, 13 Jul 2026 11:07:41 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v3 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-Message-ID: <alUpbYeKFLrPvlFQ@google.com>
-References: <20260713041252.463401-1-dlemoal@kernel.org>
- <20260713041252.463401-2-dlemoal@kernel.org>
+        Mon, 13 Jul 2026 16:21:44 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nick Desaulniers <ndesaulniers@google.com>,
+	Bill Wendling <morbo@google.com>,
+	Justin Stitt <justinstitt@google.com>,
+	linux-kernel@vger.kernel.org (open list),
+	llvm@lists.linux.dev (open list:CLANG/LLVM BUILD SUPPORT:Keyword:\b(?i:clang|llvm)\b)
+Subject: [PATCH] ata: pata_rb532_cf: use devm_platform_ioremap_resource()
+Date: Mon, 13 Jul 2026 16:21:43 -0700
+Message-ID: <20260713232143.1114497-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260713041252.463401-2-dlemoal@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jul 13, 2026 at 01:12:51PM +0900, Damien Le Moal wrote:
-> If a command timeout occurs while we have a deferred non-NCQ command
-> waiting to be issued, the SCSI EH task is not immediately woken up as the
-> waiting deferred command is never issued nor completed, thus leaving this
-> command to always be counted as "busy" for the SCSI host. This results in
-> the test "shost->host_failed != scsi_host_busy(shost))" in the function
-> scsi_error_handler() to always be true, keeping the EH task sleeping.
-> Eventually, when the deferred command also times out, the SCSI EH task
-> is woken up and the timeout processing occurs.
-> 
-> Avoid this unnecessary SCSI EH task wake-up additional time using the
-> eh_timed_out SCSI host template operation. The function
-> ata_scsi_eh_timed_out() is introduced to implement this operation. This
-> function calls the new helper ata_eh_schedule_deferred_qc_retry() to
-> schedule a retry through libata EH of all differed queued command, except
-> for a differed queued commands that timed out as that case is handled in
-> ata_scsi_cmd_error_handler().
-> 
-> Since ata_scsi_eh_timed_out() does not directly handles the timeout itself
-> and eventual re-issuing of deferred commands, this function returns
-> SCSI_EH_NOT_HANDLED to have scsi_timeout() continue with the regular
-> timeout handling, using scsi_abort_command() and scsi_eh_scmd_add(), thus
-> preventing the wkae-up delay for SCSI EH task.
-> 
-> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  drivers/ata/libata-eh.c   | 35 ++++++++++++++++++++++++++++++++++-
->  drivers/ata/libata-scsi.c | 22 ++++++++++++++++++++++
->  drivers/ata/libata.h      |  2 ++
->  include/linux/libata.h    |  2 ++
->  4 files changed, 60 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 05df7ea6954a..8e9d57c6f039 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -546,6 +546,31 @@ static void ata_eh_unload(struct ata_port *ap)
->  	spin_unlock_irqrestore(ap->lock, flags);
->  }
->  
-> +void ata_eh_schedule_deferred_qc_retry(struct ata_port *ap,
-> +				       struct scsi_cmnd *scmd)
-> +{
-> +	struct ata_queued_cmd *qc;
-> +	struct ata_link *link;
-> +	unsigned long flags;
-> +
-> +	/*
-> +	 * Trigger EH for retrying any deferred qc that is not the queued
-> +	 * command for scmd.
-> +	 */
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	ata_for_each_link(link, ap, PMP_FIRST) {
-> +		qc = link->deferred_qc;
-> +		if (!qc || qc->scsicmd == scmd)
-> +			continue;
-> +
-> +		link->deferred_qc = NULL;
-> +		cancel_work(&link->deferred_qc_work);
-> +		qc->flags |= ATA_QCFLAG_RETRY;
+Replace the open-coded platform_get_resource() plus devm_ioremap()
+sequence with a single devm_platform_ioremap_resource() call, which folds
+the resource lookup and mapping into one step and returns an ERR_PTR on
+failure, checked with IS_ERR() and propagated via PTR_ERR(). Similar to
+platform_get_irq(), it can return -EPROBE_DEFER so move it early.
 
+The pata-rb532-cf platform device (arch/mips/rb532/devices.c) provides a
+single IORESOURCE_MEM window at the DEV1BASE chip-select, distinct from
+the other RB532 chip-selects, so the region reservation now performed by
+devm_platform_ioremap_resource() introduces no conflict. The mapped size
+is unchanged. Drop the redundant error message, as
+devm_platform_ioremap_resource() already logs on failure.
 
-Gemini pointed out an issue:
+Built for MIPS (rb532_defconfig) with LLVM=1;
+drivers/ata/pata_rb532_cf.o compiles cleanly.
 
-ata_scsi_cmd_error_handler() would skip this command because
-ATA_QCFLAG_ACTIVE flag is not set and qc != qc->dev->link->deferred_qc
-because ata_eh_schedule_deferred_qc_retry() set link->deferred_qc to NULL.
+Assisted-by: opencode:hy3-free
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/ata/pata_rb532_cf.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-https://github.com/torvalds/linux/blob/master/drivers/ata/libata-eh.c#L655-L657
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index fd81e75c9402..0144e597707e 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -103,16 +103,14 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
+ {
+ 	int irq;
+ 	struct gpio_desc *gpiod;
+-	struct resource *res;
+ 	struct ata_host *ah;
+ 	struct rb532_cf_info *info;
++	void __iomem *iobase;
+ 	int ret;
+ 
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	if (!res) {
+-		dev_err(&pdev->dev, "no IOMEM resource found\n");
+-		return -EINVAL;
+-	}
++	iobase = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(iobase))
++		return PTR_ERR(iobase);
+ 
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq < 0)
+@@ -139,11 +137,7 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
+ 	ah->private_data = info;
+ 	info->gpio_line = gpiod;
+ 	info->irq = irq;
+-
+-	info->iobase = devm_ioremap(&pdev->dev, res->start,
+-				resource_size(res));
+-	if (!info->iobase)
+-		return -ENOMEM;
++	info->iobase = iobase;
+ 
+ 	rb532_pata_setup_ports(ah);
+ 
+-- 
+2.55.0
 
-
-> +		ata_qc_schedule_eh(qc);
-> +	}
-> +	spin_unlock_irqrestore(ap->lock, flags);
-> +}
-> +
->  /**
->   *	ata_scsi_error - SCSI layer error handler callback
->   *	@host: SCSI host on which error occurred
-> @@ -1214,9 +1239,17 @@ static void __ata_eh_qc_complete(struct ata_queued_cmd *qc)
->  	struct scsi_cmnd *scmd = qc->scsicmd;
->  	unsigned long flags;
->  
-> +
-> +	/*
-> +	 * If we are retrying a deferred QC after a timeout, it is not active
-> +	 * and all we need to do is to complete it directly.
-> +	 */
->  	spin_lock_irqsave(ap->lock, flags);
->  	qc->scsidone = ata_eh_scsidone;
-> -	__ata_qc_complete(qc);
-> +	if ((qc->flags & ATA_QCFLAG_RETRY) && !(qc->flags & ATA_QCFLAG_ACTIVE))
-> +		qc->complete_fn(qc);
-> +	else
-> +		__ata_qc_complete(qc);
->  	WARN_ON(ata_tag_valid(qc->tag));
->  	spin_unlock_irqrestore(ap->lock, flags);
->  
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 5868526301a2..89ef2eef72a0 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1730,6 +1730,28 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
->  		queue_work(system_highpri_wq, &link->deferred_qc_work);
->  }
->  
-> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
-> +{
-> +	struct ata_port *ap = ata_shost_to_port(scmd->device->host);
-> +
-> +	/*
-> +	 * ata_scsi_cmd_error_handler() takes care of timed-out deferred queued
-> +	 * commands. However, if we had any other command time out and we have
-> +	 * deferred queued commands, we must let scsi_timeout() handle them
-> +	 * with scsi_eh_scmd_add() so that we do not unnecessarilly delay
-> +	 * starting the SCSI EH task. So schedule all deferred queued commands
-> +	 * for retry through EH.
-> +	 */
-> +	ata_eh_schedule_deferred_qc_retry(ap, scmd);
-> +
-> +	/*
-> +	 * Let scsi_timeout() know that it must continue with handling the
-> +	 * timeout as we in fact did not do much here.
-> +	 */
-> +	return SCSI_EH_NOT_HANDLED;
-> +}
-> +EXPORT_SYMBOL_GPL(ata_scsi_eh_timed_out);
-> +
->  static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
->  {
->  	struct ata_link *link = qc->dev->link;
-> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-> index 700627596ce1..e1fdecd93ccf 100644
-> --- a/drivers/ata/libata.h
-> +++ b/drivers/ata/libata.h
-> @@ -198,6 +198,8 @@ extern void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
->  			       unsigned int action);
->  extern void ata_eh_done(struct ata_link *link, struct ata_device *dev,
->  			unsigned int action);
-> +void ata_eh_schedule_deferred_qc_retry(struct ata_port *ap,
-> +				       struct scsi_cmnd *scmd);
->  extern void ata_eh_autopsy(struct ata_port *ap);
->  const char *ata_get_cmd_name(u8 command);
->  extern void ata_eh_report(struct ata_port *ap);
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 96e626d6a7ca..327da43d7496 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1153,6 +1153,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
->  #endif
->  extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
->  					     struct scsi_cmnd *cmd);
-> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
->  #if IS_REACHABLE(CONFIG_ATA)
->  bool ata_scsi_dma_need_drain(struct request *rq);
->  #else
-> @@ -1464,6 +1465,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
->  	.ioctl			= ata_scsi_ioctl,		\
->  	ATA_SCSI_COMPAT_IOCTL					\
->  	.queuecommand		= ata_scsi_queuecmd,		\
-> +	.eh_timed_out		= ata_scsi_eh_timed_out,	\
->  	.dma_need_drain		= ata_scsi_dma_need_drain,	\
->  	.this_id		= ATA_SHT_THIS_ID,		\
->  	.emulated		= ATA_SHT_EMULATED,		\
-> -- 
-> 2.55.0
-> 
