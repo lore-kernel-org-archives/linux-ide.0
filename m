@@ -1,138 +1,106 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16E3F29ACFD
-	for <linux-ide@vger.kernel.org>; Wed, 15 Jul 2026 01:17:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 874E7370AE2
+	for <linux-ide@vger.kernel.org>; Wed, 15 Jul 2026 01:25:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784078222; cv=none; b=QlzYtVLXmFp/gZ2zlvV9pqKEHhoCeNzWSeOieN4l57N76ocQKW2DSqvPoIntedebAWdQV7cEz2sE4vAb2LRFUrWFIngWEFWwF6ED5ygtz7o7hOWUdBRwXE0sn7nqq9KNS/EHXN6Dpvrw8B2zDWbUN8Kh6FG37b0tOG4uUEgWdMo=
+	t=1784078708; cv=none; b=uM3CMEMGTb0JRWNsb3B+2tRYNCOqC40PXbytjbMz24PI8P+J1RisD1srHm2m7jsMnNXvQ5Qtw1Z6UYPOim6EMN+i9gKJa+ds1CPIMc+GRYbJHHORiro7a2eQQfYqUcj6Ura0QLuFXAOV7bRs5zF5AsAiyroSJAoJq58xvGUNU+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784078222; c=relaxed/simple;
-	bh=BP/51ZrzCuUH18tmFa47SYVzg6KlW1yHQnc30QxX/js=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rxTK4o4hN7tEsDKbq+CRbul/Nc1HphvKsIwm/9CB/fR+k6TG0eWFAeSzVhzr5gTzepalI/cxFqFCyE3tm732jMUOCz2y0jMgbA6NKavNavBxIox6ubMTx3owDDrjuNTVFZs90XD9pa58fTrxGkChvle8ge8vsi4hbrA+2l+XHLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dB4wsgMG; arc=none smtp.client-ip=209.85.215.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784078708; c=relaxed/simple;
+	bh=rBfnWBPS8iz7FQ6dhUE6j0Vjq+N6LPva7sqmO5G/vSM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=tFccJ9RciQ91EzXwgVKK7o3HTlDAClQM0ecl6g2zSQ07t8n8qqcGQ9FKQCJo9HLtNGWEUAqQqo01QsNg0fnN/rVbyE0+yHnDE2QrStbI+pzCo5RlvMaksDSn3vk8akISJ8MrzvUXIqP5EXKc3RN//tNJKsB4tyMkCGtJCecpcg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gqaLWtT5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dB4wsgMG"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-ca97d139d5fso3550339a12.0
-        for <linux-ide@vger.kernel.org>; Tue, 14 Jul 2026 18:17:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784078220; x=1784683020; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=MwJBrQ0pKijpyzFHsFaJHm7N376wuBcGnxSFAS9F0K4=;
-        b=dB4wsgMG3+hBWgK32izxKWc1nSYs7/XGSPHwyrEK1KmGcZ+2BMRMJJyJ/Q6EV7xbGV
-         T0RROqKaVHja7cKZMsTZp+u1RiZyswN4GYSrdgWBpRf5m6GQOoe0TrBMrnN3/sVHMLSv
-         OIwiZHYPmYxnW9K2QGZj1PxvtTs/tGvvUa+H25QzKm8zR7jDTC1dGNn3VbwMz97ymgC1
-         +feUxwl9eiwIGzRKc+a1bepa9pvNOyv+K6TS/91bm2mi7rSQtxWAC+2yVze12CYw1Fc5
-         RyLFf7BtVJx+e2RDPN9KOSXI7I+2W1jvM2guuCxxi4EjNvcleJWu7kabBtV5ilDX7hCm
-         RGJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784078220; x=1784683020;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=MwJBrQ0pKijpyzFHsFaJHm7N376wuBcGnxSFAS9F0K4=;
-        b=rsu7HxphHQ7gSQXUjYMYjt5GumS83OkLnhYy2IaPgHfIyin3pHNNMD+69Fm+mddz/n
-         gj5fQKfqZ7uQi9qW5lXhxAPoUCxUAivqP5DUo0vbgscv6ea7c04xhKVRw1z8XzEO57FG
-         /FV6hcec9hGcgQEsB3vCBbElVnnhWbtJ2K7A38u/o9dP3N7QixKC+PSspIeZLLgEn0Fo
-         QfhFuFvHoh9RXRhAoSF+vdJFg1It22G71Qhh2VhjmUbzcMVxx3qR8CNgbVuIVDjidYV5
-         vsUQrU3ewpXyXMQDpnRhhN144Yro5T1sTKlUogbksrdXr00xF/fufXLy5Wcfu5Ug3ZMX
-         D0zQ==
-X-Gm-Message-State: AOJu0YyATpIUXlByf7+TePnAAd/zYreS+iTpguXRIvmnaBr5BrMi8jCr
-	g7lqlCFafMZHQj8CkbpYyoYy5JwZKL9lQcZL0mqLh8Pocynd1mX5hBuAw5XstfM7
-X-Gm-Gg: AfdE7clMU6SUaiLHvJOk8ZGXiNrW0Q4L+TFogWpBmTrNo1FTymzByExHFPGGNZaVo8t
-	OdSfEXO+aczYrvplGTgyPw2X1oFWsyadFinppIah9YlXGmOYl+gUlmOXWlqDXeH1k4sGPWWZJOH
-	y4aCUatX4khstCCcnG10okYbYkNO0+7r95Ter6jbkbi3Y1et5ij+EzhnbIt4U1q3a2491SwCJB/
-	XO2OIYn6WjrfWdTGB3XK54XOsoo+6Ni/nrqwoCC70MPiAvoszY1zHm8Fk+UOwtAc1XaWXBdOF0f
-	gbfCBJb0fuL/MsWCnsblDEE+V1YWmorBd4ITbeu3KWeo4JoS8HCtl1JIJerxOO08HumPkNd2+/N
-	ZYQTrdtTvD9uV2a4k+T8BH848DAizc2W8dNi5/hMicxVz8q0OPwK83rpZTtaXzw6HPV8Psn3HB+
-	HQqywjV3G1JXbhOa9PfsjeMfsAYZuZ4tNiUjL810oI/JSVq6Fqh5Nl79ljUElJQD7wAT8JdIGSi
-	tOsVXZ0RH0EH/yoeY4oZcHmhJJ20f647f0jKy9CNwuU2ei1WbcSICHoe8k5JU2b+w==
-X-Received: by 2002:a05:6a21:7a9b:b0:3bf:64cd:c45e with SMTP id adf61e73a8af0-3c35731bd15mr5639748637.4.1784078220446;
-        Tue, 14 Jul 2026 18:17:00 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e34])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-313b4cbafa1sm83586250eec.6.2026.07.14.18.16.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jul 2026 18:16:59 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nick Desaulniers <ndesaulniers@google.com>,
-	Bill Wendling <morbo@google.com>,
-	Justin Stitt <justinstitt@google.com>,
-	linux-kernel@vger.kernel.org (open list),
-	llvm@lists.linux.dev (open list:CLANG/LLVM BUILD SUPPORT:Keyword:\b(?i:clang|llvm)\b)
-Subject: [PATCH] ata: ahci_da850: use devm_platform_ioremap_resource()
-Date: Tue, 14 Jul 2026 18:16:58 -0700
-Message-ID: <20260715011658.1284298-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gqaLWtT5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCBFE1F00A3A;
+	Wed, 15 Jul 2026 01:25:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784078707;
+	bh=Qh4Q9KujGCa/goscognnUesikNSgdMRYsz+GH6PX6DM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=gqaLWtT5kFf3litUHzg893LJkIpMUJtkzT4NOLMljBJ941WCIx+9iBIHTOrhISKGv
+	 pINefyeMF+DSy6EJvPYqC03AujV2vtGzZhcsU7rQYBYO09RKzWzsAKx25oe/y8rYD9
+	 z1xFNGOnabl2wtxTek70UCidUspCe6uu5unzznwJdNV1ENZQRjAc3GW8sUt7KlA1V2
+	 YQRZ/DKCe+Tsh6xu/BpTwA+Ym7LizH26HAaoDYhNApvmeZAB5TCzP0lhPrW8z0dWgt
+	 yqezIpyb4IBc5oH/Myhp8fa6Kp0O65bnOIRPKoLQs2D8uYlZ+aXj2Z4Xfqzi9ByWcs
+	 u4B/pt5Tf9pMg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ata: pata_pxa: use devm_platform_ioremap_resource
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rosen Penev" <rosenp@gmail.com>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260715011343.1270261-1-rosenp@gmail.com>
+References: <20260715011343.1270261-1-rosenp@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 15 Jul 2026 01:25:06 +0000
+Message-Id: <20260715012506.CCBFE1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Replace the open-coded platform_get_resource(IORESOURCE_MEM, 1) plus
-devm_ioremap() sequence with devm_platform_ioremap_resource(pdev, 1),
-which looks up resource index 1 (the power-down control register),
-reserves it and maps it in one call, returning an ERR_PTR checked with
-IS_ERR()/PTR_ERR(). Resource index 0 (the AHCI register block) is still
-mapped separately as hpriv->mmio via ahci_platform_get_resources().
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Built for ARM (davinci_all_defconfig + CONFIG_AHCI_DA850) with LLVM=1;
-drivers/ata/ahci_da850.o compiles cleanly.
+Pre-existing issues:
+- [High] Teardown order bug in `pxa_ata_remove()` causes Use-After-Free
+--
 
-Assisted-by: opencode:hy3-free
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/ata/ahci_da850.c | 17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+--- Patch [1]: [PATCH] ata: pata_pxa: use devm_platform_ioremap_resource ---
+commit 5dcbe84075bf85bf6a553efa199d7ee5d2ff52be
+Author: Rosen Penev <rosenp@gmail.com>
 
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index f97566c420f8..4e53ff96d712 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -162,7 +162,6 @@ static int ahci_da850_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct ahci_host_priv *hpriv;
- 	void __iomem *pwrdn_reg;
--	struct resource *res;
- 	u32 mpy;
- 	int rc;
- 
-@@ -198,22 +197,14 @@ static int ahci_da850_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
-+	pwrdn_reg = devm_platform_ioremap_resource(pdev, 1);
-+	if (IS_ERR(pwrdn_reg))
-+		return PTR_ERR(pwrdn_reg);
-+
- 	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
- 		return rc;
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
--	if (!res) {
--		rc = -ENODEV;
--		goto disable_resources;
--	}
--
--	pwrdn_reg = devm_ioremap(dev, res->start, resource_size(res));
--	if (!pwrdn_reg) {
--		rc = -ENOMEM;
--		goto disable_resources;
--	}
--
- 	da850_sata_init(dev, pwrdn_reg, hpriv->mmio, mpy);
- 
- 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_da850_port_info,
--- 
-2.55.0
+ata: pata_pxa: use devm_platform_ioremap_resource
 
+This commit replaces the open-coded platform_get_resource() and
+devm_ioremap() sequences for the CMD and CTL ports with
+devm_platform_ioremap_resource(). It simplifies the probe function by
+consolidating resource fetching and mapping.
+
+> diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
+> index 9f63bdfb8576e..c816997dc0a99 100644
+> --- a/drivers/ata/pata_pxa.c
+> +++ b/drivers/ata/pata_pxa.c
+
+[ ... ]
+
+[Severity: High]
+This is a pre-existing issue, but does pxa_ata_remove() have a use-after-fr=
+ee
+if an interrupt occurs during module unload?
+
+Looking at drivers/ata/pata_pxa.c:pxa_ata_remove():
+
+static void pxa_ata_remove(struct platform_device *pdev)
+{
+	struct ata_host *host =3D platform_get_drvdata(pdev);
+	struct pata_pxa_data *data =3D host->ports[0]->private_data;
+
+	dma_release_channel(data->dma_chan);
+
+	ata_host_detach(host);
+}
+
+The DMA channel is explicitly freed via dma_release_channel() before calling
+ata_host_detach().=20
+
+Because the ATA host is still active and its interrupt handler was register=
+ed
+via devres (which only unregisters the IRQ after the remove callback
+completes), an active device or a stray interrupt could trigger
+ata_sff_interrupt().
+
+This interrupt handler calls pxa_bmdma_status(), which dereferences the
+already freed data->dma_chan.=20
+
+Should ata_host_detach() be called before releasing the DMA channel to prev=
+ent
+this race?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715011343.1270=
+261-1-rosenp@gmail.com?part=3D1
