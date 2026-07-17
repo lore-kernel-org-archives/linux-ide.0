@@ -1,159 +1,145 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lithops.sigma-star.at (mailout.nod.at [116.203.167.152])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782DF3FAE0C
-	for <linux-ide@vger.kernel.org>; Thu, 16 Jul 2026 13:47:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F40A737DE8D;
+	Fri, 17 Jul 2026 09:13:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.203.167.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784209634; cv=none; b=WDACiaHykR4TCgqYgGK9+2g3Y3ut+cSSa90nrvdIjXYdDVOu8cV/CcHztdfB9Yq30gEPzbj7cu0/fxpa9svr+Eqi/FmJjUt0PLclYzaGHJqXnzhGtkfJhiCsKkBAH7jq1Bc7pg1LtgykyJ27Dp+14h/K3M6ueNsck1ZzuOP3xXY=
+	t=1784279600; cv=none; b=HS3jXQuKWkogke6CUuco55fbD/CRJY9YNgufzCdzFLTMETWTOsscOsN+AT+FbOtZ7N6fPaGsuGmfajKaOQ0buT5cPiFL3wgi7EtG9GowuaoZCYcu9cYgyLxr1zue2dBA52XKAY3OD5GXJuz/t8YM33t5XdfzsMDHkDIDC7NQyec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784209634; c=relaxed/simple;
-	bh=0WtXjB6WwYolKe1XepFFEIP+h0W2NaY7L/pE4Ob2j1k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GHEbbLaqe8wtT+Ae3pHB8mRTvthw2HrXWvtTKv0OgOVjJGQVw44KbRZXbVEXnodV9X1jJ3Teo4Fwjdo7x0Ect9up8ZOD5d/7ilTwRJ56h33SG4wEfgI8Vi0nsP6mnObR/EbmLHwOXNUu3XSyKaae3OpOaVOl34GIMAH8NPRcOxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ZwPKquWA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=t9ShfoCB; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ZwPKquWA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=t9ShfoCB; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ZwPKquWA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="t9ShfoCB";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ZwPKquWA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="t9ShfoCB"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id D45223DF3;
-	Thu, 16 Jul 2026 13:47:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1784209627; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e01hDe7AeUVKeg6D9VB9uCJXyJQWuZecmSs/neZL6o8=;
-	b=ZwPKquWAZKZUP1nA5oLMOTX55w5YRMk1Br1TlJhpRnOvr8yTyfWWkH3h6MPjn6czJBsC6k
-	bCNBk9dqGRXgHF6rgDu5r2ICxGpqHBGZIuoOgHV6nkqOTvXndRNDD5n5oASrq+k8av8dSV
-	xGGuRwa7gb2Sw0sgfDw3Nk4wgi2xNdA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1784209627;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e01hDe7AeUVKeg6D9VB9uCJXyJQWuZecmSs/neZL6o8=;
-	b=t9ShfoCB/KS2mCcLMhHkrmb1BiFkIQk+uTRrh55EICkSf4wRU5In0SgEL7M1NuHow+nT6m
-	yJGL1heSc0JkJkAg==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1784209627; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e01hDe7AeUVKeg6D9VB9uCJXyJQWuZecmSs/neZL6o8=;
-	b=ZwPKquWAZKZUP1nA5oLMOTX55w5YRMk1Br1TlJhpRnOvr8yTyfWWkH3h6MPjn6czJBsC6k
-	bCNBk9dqGRXgHF6rgDu5r2ICxGpqHBGZIuoOgHV6nkqOTvXndRNDD5n5oASrq+k8av8dSV
-	xGGuRwa7gb2Sw0sgfDw3Nk4wgi2xNdA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1784209627;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e01hDe7AeUVKeg6D9VB9uCJXyJQWuZecmSs/neZL6o8=;
-	b=t9ShfoCB/KS2mCcLMhHkrmb1BiFkIQk+uTRrh55EICkSf4wRU5In0SgEL7M1NuHow+nT6m
-	yJGL1heSc0JkJkAg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BD1A0779AD;
-	Thu, 16 Jul 2026 13:47:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 83rELdvgWGpaGQAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 16 Jul 2026 13:47:07 +0000
-Message-ID: <d47e2b74-9431-4552-afc5-2115f3244b4f@suse.de>
-Date: Thu, 16 Jul 2026 15:47:07 +0200
+	s=arc-20240116; t=1784279600; c=relaxed/simple;
+	bh=9Ys0Bb8I8vT8ULc8xeny8V61gybdtGMmjg+cd8vYMGA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cQk7y3bwflS963CStyzHvzks+3D15Rvkv5LC66gfkws38gMtRE8T+wxsgZmxghE8B+XHfQrS8KqNGnIkL+CHk4qIET2Qoox+XDmC+qOTvTncEf2I9mmwwKB6/CsLsrQFRNy2PsG5Yl0HkCcx2EEJAtkqnfyfb8ku5Ox+XFjPgvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nod.at; spf=fail smtp.mailfrom=nod.at; arc=none smtp.client-ip=116.203.167.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nod.at
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nod.at
+Received: from localhost (localhost [127.0.0.1])
+	by lithops.sigma-star.at (Postfix) with ESMTP id B18B92698E6;
+	Fri, 17 Jul 2026 11:04:18 +0200 (CEST)
+Received: from lithops.sigma-star.at ([127.0.0.1])
+	by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id jYTY-eBFuK7E; Fri, 17 Jul 2026 11:04:18 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by lithops.sigma-star.at (Postfix) with ESMTP id 500732698DA;
+	Fri, 17 Jul 2026 11:04:18 +0200 (CEST)
+Received: from lithops.sigma-star.at ([127.0.0.1])
+	by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id w2gkZ1sYjZoJ; Fri, 17 Jul 2026 11:04:18 +0200 (CEST)
+Received: from nailgun.corp.sigma-star.at (93-82-119-196.adsl.highway.telekom.at [93.82.119.196])
+	by lithops.sigma-star.at (Postfix) with ESMTPSA id F30C22B4F67;
+	Fri, 17 Jul 2026 11:04:17 +0200 (CEST)
+From: Richard Weinberger <richard@nod.at>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	upstream+linux@sigma-star.at,
+	cassel@kernel.org,
+	dlemoal@kernel.org,
+	Richard Weinberger <richard@nod.at>
+Subject: [PATCH] [RFC] libata: Don't busy-wait for PIO data-in command completion
+Date: Fri, 17 Jul 2026 11:04:04 +0200
+Message-ID: <20260717090404.857078-1-richard@nod.at>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/2] scsi: libsas: terminate deferred commands on time
- out
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Igor Pylypiv <ipylypiv@google.com>, John Garry <john.g.garry@oracle.com>,
- Jason Yan <yanaijie@huawei.com>
-References: <20260716083847.926102-1-dlemoal@kernel.org>
- <20260716083847.926102-3-dlemoal@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260716083847.926102-3-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
-X-Spam-Level: 
-X-Spam-Score: -4.30
+Content-Transfer-Encoding: quoted-printable
 
-On 7/16/26 10:38 AM, Damien Le Moal wrote:
-> If a command timeout occurs while we have a deferred non-NCQ command
-> waiting to be issued, the SCSI EH task is not immediately woken up as the
-> waiting deferred command is never issued nor completed, thus leaving this
-> command to always be counted as "busy" for the SCSI host. This results in
-> the test "shost->host_failed != scsi_host_busy(shost))" in the function
-> scsi_error_handler() to always be true, keeping the EH task sleeping.
-> Eventually, when the deferred command also times out, the SCSI EH task
-> is woken up and the timeout processing occurs.
-> 
-> Avoid this unnecessary additional SCSI EH trigger wait time with the same
-> method as implemented in libata-scsi, using the eh_timed_out SCSI host
-> template operation. The function sas_eh_timed_out() implements this
-> operation and executes the function ata_scsi_retry_deferred_qc()
-> for SATA devices.
-> 
-> Co-developed-by: Igor Pylypiv <ipylypiv@google.com>
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/ata/libata-scsi.c           |  4 ++--
->   drivers/scsi/libsas/sas_scsi_host.c | 15 +++++++++++++++
->   include/linux/libata.h              |  1 +
->   include/scsi/libsas.h               |  2 ++
->   4 files changed, 20 insertions(+), 2 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+libata: Don't busy-wait for PIO data-in command completion
 
-Cheers,
+Unlike PIO data-out, the PIO data-in protocol raises no completion
+interrupt, the last interrupt announces the final data block, and once
+the host has drained it from the data register the ending status must
+be obtained synchronously.  ata_sff_hsm_move() does this by spinning
+in ata_wait_idle() for up to 10ms.
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Usually this is not a big deal unless the device is slow.  In my case
+it's a CF card which keeps BSY asserted for multiple milliseconds(!)
+after the final data block.  Since the waiting happens in the
+interrupt handler, under the port lock with interrupts disabled, the
+CPU is hogged for milliseconds on every read command.
+
+To improve the situation, bound the inline wait to ~100us.  If the
+device is still busy after that, mark the command ATA_TFLAG_POLLING,
+so the interrupt handler won't race for it, and obtain the ending
+status via ata_sff_pio_task(), which sleeps between status checks
+instead of spinning with the lock held.
+
+Since ata_sff_pio_task() may now finish a data-in command, it must
+wait for both BSY and DRQ to clear at HSM_ST_LAST, matching what
+ata_wait_idle() enforced.
+
+Signed-off-by: Richard Weinberger <richard@nod.at>
+---
+ drivers/ata/libata-sff.c | 24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 1e2a2c33cdc80..416e1239ed56d 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1114,8 +1114,14 @@ int ata_sff_hsm_move(struct ata_port *ap, struct a=
+ta_queued_cmd *qc,
+=20
+ 			if (ap->hsm_task_state =3D=3D HSM_ST_LAST &&
+ 			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
+-				/* all data read */
+-				status =3D ata_wait_idle(ap);
++				status =3D ata_sff_busy_wait(ap,
++						ATA_BUSY | ATA_DRQ, 10);
++				if (status !=3D 0xff &&
++				    (status & (ATA_BUSY | ATA_DRQ))) {
++					qc->tf.flags |=3D ATA_TFLAG_POLLING;
++					ata_sff_queue_pio_task(link, 0);
++					return 0;
++				}
+ 				goto fsm_start;
+ 			}
+ 		}
+@@ -1213,7 +1219,7 @@ static void ata_sff_pio_task(struct work_struct *wo=
+rk)
+ 		container_of(work, struct ata_port, sff_pio_task.work);
+ 	struct ata_link *link =3D ap->sff_pio_task_link;
+ 	struct ata_queued_cmd *qc;
+-	u8 status;
++	u8 status, wait_mask;
+ 	int poll_next;
+=20
+ 	spin_lock_irq(ap->lock);
+@@ -1229,6 +1235,10 @@ static void ata_sff_pio_task(struct work_struct *w=
+ork)
+ fsm_start:
+ 	WARN_ON_ONCE(ap->hsm_task_state =3D=3D HSM_ST_IDLE);
+=20
++	wait_mask =3D ATA_BUSY;
++	if (ap->hsm_task_state =3D=3D HSM_ST_LAST)
++		wait_mask |=3D ATA_DRQ;
++
+ 	/*
+ 	 * This is purely heuristic.  This is a fast path.
+ 	 * Sometimes when we enter, BSY will be cleared in
+@@ -1236,14 +1246,14 @@ static void ata_sff_pio_task(struct work_struct *=
+work)
+ 	 * or something.  Snooze for a couple msecs, then
+ 	 * chk-status again.  If still busy, queue delayed work.
+ 	 */
+-	status =3D ata_sff_busy_wait(ap, ATA_BUSY, 5);
+-	if (status & ATA_BUSY) {
++	status =3D ata_sff_busy_wait(ap, wait_mask, 5);
++	if (status & wait_mask) {
+ 		spin_unlock_irq(ap->lock);
+ 		ata_msleep(ap, 2);
+ 		spin_lock_irq(ap->lock);
+=20
+-		status =3D ata_sff_busy_wait(ap, ATA_BUSY, 10);
+-		if (status & ATA_BUSY) {
++		status =3D ata_sff_busy_wait(ap, wait_mask, 10);
++		if (status & wait_mask) {
+ 			ata_sff_queue_pio_task(link, ATA_SHORT_PAUSE);
+ 			goto out_unlock;
+ 		}
+--=20
+2.51.0
+
