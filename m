@@ -1,81 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53ADF449B31;
-	Mon, 20 Jul 2026 23:58:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFBC137C92C
+	for <linux-ide@vger.kernel.org>; Mon, 20 Jul 2026 23:59:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784591909; cv=none; b=LztgJhYJKTIN6d3KmW+Coc2bLIJ03UM0RPfi13x9vU8IfBYAX7Buqr9UUwLYFgtE14HAcRLbS4rAYqD4p5fM3JmfVaMHN9VfLCL5co0pfonKrdU9/Rr9tXcPnmhf3IW5a+8Mex+Yid5QOnmnSp0ao54CvYSurUfiWt0vb0WyrmU=
+	t=1784592008; cv=none; b=eogwJv0A8tWoY6ZqT4cfdyrC5ha66uAVL+mpPBCir1/Jn5cxOm8VpeKaECLvLJ8rMP00rqLsGkyJeZUEkVbZcDTq+1vTG59Acb8u7Rw+qvf23XH3Z+RsKIXePbmcbrzUgfmY93/qz0Tvf3AZkHPjs93+KnPEOBbhlZNobVgDVyk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784591909; c=relaxed/simple;
-	bh=BhnvLPfjBhqReUr6mTe58IXcF0OiouKlt8Pj9p7uvCA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=u/JbMofQIwtyZGkNQ3q2AWRtmnsjS1kzw4vb7j4kUtgIfoRDehmUoPMgg7ps0qftYf+FNlNdI9rXCNb9WE2RSN05XHzmOd5/chnxhK9DVc7wQQJzTC4XHQruaHX+7YfIplknsei7dN6p+OcdCab8cRUBOHYpBqL4H7kcwdHz9VI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oNrdT6/g; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784592008; c=relaxed/simple;
+	bh=i1DAcfsh3RuSKk16XtJYv0IvaG5nSmN5OjVV4mOIG3w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=H+QJ/TC8oHdmtNX3lyJ2l00NBBlN2+nPVZCsLEg8Ozla3h/ZQbjhdcKEH5BNXuYlkvRq4DOWFlthsyOsVe/sM4VuF6oHhedRgxM+K+0Z0L4UlXqnfzsF1wp23IKiEbIUA83bWGmWHBB+//6fvOPHcA2MiTmPWTx8PqnB4gK5Dow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=tLy3VS31; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oNrdT6/g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DE881F000E9;
-	Mon, 20 Jul 2026 23:58:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784591908;
-	bh=/P0skrbYyqE0q1+DCGGww4fGsVLyiqIXtfRaxXt0qKI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=oNrdT6/gG+0+jYatFkxcD4vhfHNLmZJg2RUf6GWE1RGE/WG5dyPkM3E2F9zDGDPF6
-	 /7ZwOY1/JM2ZkA0qxQATdFKLRdWKf7KwMEWglI41y0CEyqbAc96mvfGZljgRWIrea2
-	 4TyJtej/d1FU2+OTkKBJuCaxYKJgs081q2g7M7P4bYrLspkBVUaTPbZwwEzIEI0XTu
-	 4KvuH+cpVNPi7O2baomLLcqXZnkmUmXObilEfJ0lgcMs9T6Scf9eZPlx62SwT3fG6x
-	 GLyLrW+uR9ZsXNMYkDK3JVMNhAArHT9e4nskJItd5xQheXYZSgML4TFkaPAerilBKQ
-	 ncpS8XBUnxkqQ==
-Message-ID: <7b68dcb2-9b52-42cc-9524-debcb01185d0@kernel.org>
-Date: Tue, 21 Jul 2026 08:58:25 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tLy3VS31"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-38dd55ad76cso3424896a91.1
+        for <linux-ide@vger.kernel.org>; Mon, 20 Jul 2026 16:59:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784591995; x=1785196795; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=h9JVRYfS7k+t1ox8I0apzr6CCDqndFJDiGHdQM7HZMw=;
+        b=tLy3VS31+tc9K0HmThQo8J9iNNEckVrpZGqoJ/CiCYeD7fJ3nZjvycgznevraHInds
+         lR0aoTCX8FekxLRPlpC28C4ploPRRZdXb9JDoGAmlQ0wkGfYRHbZHmeGezX1o+VaBVFd
+         CW9tk/3sWHuzaJPu7VLjboawST13Je1qh2OS40qp/CMHkl3snNZW4sHGlLMP6B9aVjSr
+         iu5ox7GfuIeVnc4cFcM/3+rQgrV84YnLLmtYdXBKd0VDTWJ8sMvDixX3TOkqX136s+fy
+         w9dACX56ny/oFP7xFuO7oex9IkPnqXYlvt/doeWI8EIFz030D5fKyC6zRwHs1+HIZfHQ
+         sSQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784591995; x=1785196795;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=h9JVRYfS7k+t1ox8I0apzr6CCDqndFJDiGHdQM7HZMw=;
+        b=FC3Dyx2KEf5xg8tvU0DbltUW5M2NGfSZmr01gpfprvGei/NuxROCue9zfUwPzYsp4r
+         uZVFrzR9JSXzeXIrwT0wCiRqT6YOwVQF3lEC1IjMZZ/sLedKKP19Peo4uuvFFFDWSShp
+         kSshgh74kxw4P/fuQXL5cUrdX3QaI8PQ+lwX2607anAXbyT19ifh/Mw8guRGziYLc1KK
+         dh/qgP86FPMO7EjX1WQpxvlfn5MFrmkhaRvSnyR9T1JsFhL1gX1h5S3BwBbADnlr8gdZ
+         rTR/Mzk4xJHrOthXdE4Kh5GTe+7/W0fsz6QQXl1FXlk13gT1c9a1aGKBT60Qn+s35Ogf
+         sBGQ==
+X-Gm-Message-State: AOJu0YxGFpLxWYQUGsPqQZpCJu8+DpCFClvGflLSy+3OiGRCzvs3t7uY
+	kfcuPIcKZy7gbDd702IbK5MbjF9reZ1+je+0Ka6uR4732KGF2WfErmsu9Ajbjw==
+X-Gm-Gg: AR+sD13blBY8ERqUYc+rvXT1Bo/f/OzsF352o4s4x1VGTPxeSbcyAlG8payDRuRh/mL
+	3BBMAjEyYkP6e438injiG7nO3qoUUOl64Mlg7aSrM0o9Qx25msyMLTT59wq9Q66w1YSFj0wiF/5
+	G4E3h2lNHGmNlfNzbURR8Ej2JRXap5TWUnwBXg8kmlSugfclQmCDr2b91+zRzOzTd2dKuw/oqH2
+	g1H1ctQBflraE1y/b/WxYGKW1avBS496ZMoiMVV/Je7bHq3I2PII6nB4XcfUDMny3MkjpksKx8y
+	tRdwXZ9IWIBwg4QsKVeCfTZKmG6o/9byFHEY9zIG4QKQ2CVYlS/fWCN1tIEDQE92tQ8Axg75JQ0
+	ZBmkzopY5e2VxGVWat5K2GymspIPdj43YmMYTSXPUwxMH57IDvRV4T07Eg/FuH6IPHo8FtXMDJn
+	oesWbtab7/0sSQ0ifjvMfr156uTcxGu204mK2wq7kYENrTTILGvyM/IJqFMQL6urRsE6VZj65dC
+	z67LfX8cjfCXrj5SlQBSsxF82ogZ0f+NA8meUuoeUVnxkg77/QeYyM=
+X-Received: by 2002:a17:90b:2891:b0:37f:9e21:91d8 with SMTP id 98e67ed59e1d1-38e4b68268bmr15072497a91.15.1784591994807;
+        Mon, 20 Jul 2026 16:59:54 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e35])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38e9232c4ccsm449020a91.7.2026.07.20.16.59.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Jul 2026 16:59:54 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Jeff Garzik <jgarzik@redhat.com>,
+	Rafal Prylowski <prylowski@metasoft.pl>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCHv2] ata: pata_ep93xx: add missing "cc" clobber to inline asm
+Date: Mon, 20 Jul 2026 16:59:52 -0700
+Message-ID: <20260720235952.1334318-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: pata_pxa: use devres for DMA channel management
-To: sashiko-reviews@lists.linux.dev, Rosen Penev <rosenp@gmail.com>
-Cc: cassel@kernel.org, linux-ide@vger.kernel.org
-References: <20260720015014.1912040-1-rosenp@gmail.com>
- <20260720020148.7A2DA1F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260720020148.7A2DA1F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 7/20/26 11:01, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] The commit message falsely claims that `ata_host_activate()` registers a managed host detach and that the patch preserves the previous teardown ordering.
-> --
-> 
-> --- Patch [1]: [PATCH] ata: pata_pxa: use devres for DMA channel management ---
-> commit d581effc5d41a82779ae2b411de235a8efbfb017
-> Author: Rosen Penev <rosenp@gmail.com>
-> 
-> ata: pata_pxa: use devres for DMA channel management
-> 
-> Convert the DMA channel request to devm_dma_request_chan() so the
-> channel is released automatically on device teardown. This removes
-> the explicit dma_release_channel() calls in the probe error paths
-> and in pxa_ata_remove().
-> 
->> Devres releases in LIFO order, so the managed host detach registered
->> by ata_host_activate() runs before the DMA channel is released, which
->> preserves the previous teardown ordering.
-> 
-> [Severity: Medium]
-> Is this description accurate regarding the managed host detach and teardown
-> ordering?
+The inline assembly in ep93xx_pata_delay() uses a "subs" instruction
+which modifies the ARM condition code flags. Add a "cc" clobber so
+the compiler knows the flags are altered. Without it, the compiler may
+reorder flag-dependent instructions across the asm block when the
+function is inlined, potentially causing incorrect control flow.
 
-Rosen,
+Fixes: 2fff27512600 ("PATA host controller driver for ep93xx")
+Assisted-by: Opencode:Big-Pickle
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ v2: add Fixes tag
+ drivers/ata/pata_ep93xx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Can you resend with a fixed up commit message?
-Thanks.
-
+diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+index be8a314654e6..f149210b1454 100644
+--- a/drivers/ata/pata_ep93xx.c
++++ b/drivers/ata/pata_ep93xx.c
+@@ -211,6 +211,7 @@ static void ep93xx_pata_delay(unsigned long count)
+ 		"bge 0b\n"
+ 		: "=r" (count)
+ 		: "0" (count)
++		: "cc"
+ 	);
+ #else
+ 	while (count--)
 -- 
-Damien Le Moal
-Western Digital Research
+2.55.0
+
