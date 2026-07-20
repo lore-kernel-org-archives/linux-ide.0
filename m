@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4252B30566F;
-	Mon, 20 Jul 2026 23:02:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 910D423B62B;
+	Mon, 20 Jul 2026 23:56:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784588555; cv=none; b=GVBPggDMn3FIvLoW2rl3UPKWhSNcT8LwjP5/+Z0ct8A95W7yLVlK/jXWbGhERkwSicYcejkSfgmo6Ng/fEzla4YKYnWc6y8K1UG0th4LDWkkOYEFxyEVvUgGMh4ZzAEOD0mcS1xaD83A4Z/xBSLSA5V8+BQK9vcTIjCVqbDnPJI=
+	t=1784591804; cv=none; b=YtLmvO3zVjKB0CsMEeF+/ynMUFmoZ6ab2B2E58GiZA+4t0Tizx3lufulBEBN4TtJnHGFthupyu+BFGJfRKkz/DEKEpRcXrKJlZLvJG2y4ljI0SnY/jNDFHeTAoiGpBgKIkI7CME5UKPXKl60wNjYwxmbCmK5vhkIavgXxWJoHIw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784588555; c=relaxed/simple;
-	bh=VBXpq495oBuYWABdv9f5Ti4OmI4iAWmIz/Zz+TEGKdc=;
+	s=arc-20240116; t=1784591804; c=relaxed/simple;
+	bh=CGJZw57P69O5TYEpK0H10NkvsoFu/mqQfS+W2Jwsu+k=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=acsRCqm553ErEd13F8ZUAwYBd0sZB9LlqWGuQWgSlkjU8+EGM2bIxqdlRmmtx+Z/DHAKATsgmKd+UGdaU+SAEGDvHmhGGcSqaR1cc3zq7z5lBHl2wx/z5HvgvBWTCunJDlvn6b6I+z6aSa/ydQ7Cvk0RdI9Kf9pRKggR0S9t49M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ILyb6rYV; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=XPKV33H7Q1xaPGuQnJlPXaf01i78OrPT+r12C6OhjWtroemvyTRlodpVYl6bY7SHZzVqOu6/Nw/9p7GGu1vciubsVm2Kawx9pQNK4blNYE/NPtFN3nKBjjI1e2Ew/AfGMCsgKdMJHsdnC/ZmH+J5wI1pY2eZZBFiRtnyU8Ps8lQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nG2i01M5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ILyb6rYV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 372EC1F000E9;
-	Mon, 20 Jul 2026 23:02:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nG2i01M5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D3FE1F000E9;
+	Mon, 20 Jul 2026 23:56:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784588553;
-	bh=PnW0lZd/JsTnJbPqyIclWVPnCm2B6xPQbEZiok5Yhi8=;
+	s=k20260515; t=1784591803;
+	bh=tI7vORlL+DB+4YyVwN29M7SJQROrCvVY6k9WER4GKKU=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ILyb6rYVRUYE67uRr5/622CA/wZzg0PNJlCQLHXjYnMSnQnWd0tJcX4oMOSfFhuMk
-	 6GCsa/ziZTR92DMHJ0rvxkClz99ZWyBMeNimh9Czml6ISx4W6tR9xIM4OPPzGWhpVH
-	 MhcSvs5f09wcF5ossvM1hZcObfOplj/8s1QdONIhQ6fo5wGh1XsKQuALmWzaZYoiQP
-	 ALCmU4aZCe7jt4XnXiNlftOuoYKjO0Pmeq15YTWfUCZJcfn4JQY60j6E98bpelfEGr
-	 UC9DTRNFLuVj/iJH1bUiBTSY3jAvyBo5O5yaTwH/uuYk4evJPZ2WqtVPKIGPF7h0td
-	 e2iNtp5TCqBCQ==
-Message-ID: <51f5420b-4eac-4f7e-9da6-727bc027bc23@kernel.org>
-Date: Tue, 21 Jul 2026 08:02:31 +0900
+	b=nG2i01M5ukbbfrovdaiV0NWU8rLTOTLTZTwB8scYQqg5Xp5tuPyFX1CaXmIUyB5I/
+	 8BkFFfK/KQRiqKjVdXhCp0ocNh5zV1qmtUPvRHXZjX4jUGYKhVet/BNY53emH+gbs6
+	 jU6CXufDtxYbTHvVdy3wCVuZCs6I7Ufgh9lq9acSELAbOER9Wa+zO6UTeENr5joP8U
+	 8CbSrP2WSykIyVFowwnXzPJB9WH7KyaDXTpDslnD0KayfWECFQnTQOfjSyUfCb7dQ9
+	 sLpd64mPytdlhFTVHFgtH65ndQEG0Zw19GqcGwXhzEP5B9QIj9z1znJLGBLSgbNDoS
+	 HygKVZYEBF4kw==
+Message-ID: <a174426c-ba54-4f3e-8ac8-010734f98bf2@kernel.org>
+Date: Tue, 21 Jul 2026 08:56:41 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,33 +35,48 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: pata_ep93xx: add missing "cc" clobber to inline asm
-To: Rosen Penev <rosenp@gmail.com>, linux-ide@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20260601183458.11448-1-rosenp@gmail.com>
- <CAKxU2N_Jwq4jqS7ckqBaXpAskeKtu4Giou7ssNvhhV8j7ROxBg@mail.gmail.com>
+Subject: Re: [PATCH] [RFC] libata: Don't busy-wait for PIO data-in command
+ completion
+To: Richard Weinberger <richard@nod.at>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, upstream+linux@sigma-star.at,
+ cassel@kernel.org
+References: <20260717090404.857078-1-richard@nod.at>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <CAKxU2N_Jwq4jqS7ckqBaXpAskeKtu4Giou7ssNvhhV8j7ROxBg@mail.gmail.com>
+In-Reply-To: <20260717090404.857078-1-richard@nod.at>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 7/21/26 06:09, Rosen Penev wrote:
-> On Mon, Jun 1, 2026 at 11:35 AM Rosen Penev <rosenp@gmail.com> wrote:
->>
->> The inline assembly in ep93xx_pata_delay() uses a "subs" instruction
->> which modifies the ARM condition code flags. Add a "cc" clobber so
->> the compiler knows the flags are altered. Without it, the compiler may
->> reorder flag-dependent instructions across the asm block when the
->> function is inlined, potentially causing incorrect control flow.
->>
->> Assisted-by: Opencode:Big-Pickle
->> Signed-off-by: Rosen Penev <rosenp@gmail.com>
-> should I resend?
+On 7/17/26 18:04, Richard Weinberger wrote:
+> libata: Don't busy-wait for PIO data-in command completion
+> 
+> Unlike PIO data-out, the PIO data-in protocol raises no completion
+> interrupt, the last interrupt announces the final data block, and once
+> the host has drained it from the data register the ending status must
+> be obtained synchronously.  ata_sff_hsm_move() does this by spinning
+> in ata_wait_idle() for up to 10ms.
+> 
+> Usually this is not a big deal unless the device is slow.  In my case
+> it's a CF card which keeps BSY asserted for multiple milliseconds(!)
+> after the final data block.  Since the waiting happens in the
+> interrupt handler, under the port lock with interrupts disabled, the
+> CPU is hogged for milliseconds on every read command.
+> 
+> To improve the situation, bound the inline wait to ~100us.  If the
+> device is still busy after that, mark the command ATA_TFLAG_POLLING,
+> so the interrupt handler won't race for it, and obtain the ending
+> status via ata_sff_pio_task(), which sleeps between status checks
+> instead of spinning with the lock held.
+> 
+> Since ata_sff_pio_task() may now finish a data-in command, it must
+> wait for both BSY and DRQ to clear at HSM_ST_LAST, matching what
+> ata_wait_idle() enforced.
+> 
+> Signed-off-by: Richard Weinberger <richard@nod.at>
 
-Oops. This fell through the cracks. Yes, please resend and add a fixes tag as well.
+Applied to for-7.3 with a modified commit title.
+Thanks!
 
 -- 
 Damien Le Moal
