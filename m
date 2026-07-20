@@ -1,69 +1,69 @@
-Received: from mail-qv1-f48.google.com (mail-qv1-f48.google.com [209.85.219.48])
+Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519BC2C86D
-	for <linux-ide@vger.kernel.org>; Mon, 20 Jul 2026 02:02:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9793F272E6D
+	for <linux-ide@vger.kernel.org>; Mon, 20 Jul 2026 02:09:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784512955; cv=none; b=QJUfzbByUZk/HaIZJQOF2CZ7FOBVd6REPykeDJA3TwWgib1NyND4y/UyxTedBtYnz666ialyVnzjYRELPPmbvNPHFv8WPeaTqHEmeAv04UZWLUlK61ImMGtX9EqExmIE86z+IAIpvQgzmrdDHNZjpwHpiZ+io+0/V1TnH3CbPh0=
+	t=1784513353; cv=none; b=QzA5I93p4c3mnQO/0FmzRGuHfYoTVEmCoXyADOEPu3okvam3hloCgpqu/ONe7RLrzJ7QVOF74zO5FQGeNVXOEnD9QN5+yJEPrvRA8uKph2GtuBaDY3GWZLhpuhr2MhVMu4FUQAUWTWwbiNPVUeovDOTI8MCb2cU4RqE5DcsMmkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784512955; c=relaxed/simple;
-	bh=N7bV8IhOFF9GBhLm5PFUUKuPkaLfsq/MU5lnX57/+gc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=erC4c5GG5D2NFbQPkFpREPEyIWTcSxzx+s06+Fs9NHBNNpgoc1U/iXdcwZkU9QNDbhhkq44WK1HG9TVikNIqWFmLkQiJealodw+ck+GLTfVAmngZqdRLIn28DI+6+SS7PTZNHVevczoEIcJ3E5o2C94cFGTtDaZpcXM7ngz/XgU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GCrXCfdV; arc=none smtp.client-ip=209.85.219.48
+	s=arc-20240116; t=1784513353; c=relaxed/simple;
+	bh=Qp+8v8xeLdewqRc7DicuCMBj15mpz4wfB6nsfukV+7Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Wca6zxUTfZx9D1oCgHIAGLYk7GMw2wpfOx0oMD/CqB5VSXyqv64LYCTLKGnAvhq3eQgy4STP30VEZnon7wMc192zAd3m4T0B7KiPOyRpGcDRxXjLIfU9RGByY4Ox/FJCc97b/P+l1YozDUpMdh88W4RkChj6ZGkEN0dqd+IuKko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KkpO/hsf; arc=none smtp.client-ip=209.85.219.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GCrXCfdV"
-Received: by mail-qv1-f48.google.com with SMTP id 6a1803df08f44-8ef1dc934d1so38308706d6.0
-        for <linux-ide@vger.kernel.org>; Sun, 19 Jul 2026 19:02:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KkpO/hsf"
+Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-8ee88fce572so73193346d6.1
+        for <linux-ide@vger.kernel.org>; Sun, 19 Jul 2026 19:09:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784512952; x=1785117752; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784513350; x=1785118150; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=fZjEI+rH+GkZRFlNAE3Vjq6nP1qdwM39GIwm4i94NEE=;
-        b=GCrXCfdVZO82gWt5lwl6V9c1kguGnyEXUnVFyJXBYgOZ1/IVxpKyKGtd2FU77leDfz
-         u6sH7nzy7vfQYM9VTcM5s7BDrYPlm0rDZQqCbrEcZg0OlUCX1rUgcHSb6d+lCBnFOqM8
-         isSIX8I7nylg9YCRs90RtdPpU34xQprLmvd0zFkb+oekEKZ6gMMvcU5BiiVbjD3lVagA
-         +GG5sjjDxnjaZVEhEa+5y2aIfNUy8i5WiwEd3f2IdnmVc9Dvx9acBtwsMguw7pgbsMWX
-         yCvVwG9DvivbpHmPp64YZYdXO6fEvHyevgtpR4iuDyB+eMR0Nhoc0h1TEvBkg2xG/MUg
-         jCWg==
+        bh=SaPW5A1Sk4IueK0qNz7OPYuFBk9omXY8zTZ0G2a4L5g=;
+        b=KkpO/hsfJMCxfs90hoWlZj+LlAo77/7V2MCcY1IT6JYw3lfMFNyAcBdefCwzy+BwIc
+         6qCRcpKOuRlrAccAJWsR3Nyx0/K6BjY+K9V0AWq/+cwmfWj90sW+UuDHvYT3LGaOkWHk
+         7ftjCZMOAEzddw2kwXKzuixrtQU8s400f3HR5KOsgrrV6nkL/w4GrdG803PYP8eMSMjX
+         R4QV3F6nwprm+AUbHJLEoSuy5Ew/HQXIlt0AFW50PeO4ESETuQEFxU+MPpIkNcl1t1+v
+         Ac6YZPDYZ7DU0/8Xl5pII7p0x9JVSYzr+cJ68qK+0IuHl8cpBfhLRblnmw8ebQbvPbmT
+         XsRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784512952; x=1785117752;
+        d=1e100.net; s=20251104; t=1784513350; x=1785118150;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=fZjEI+rH+GkZRFlNAE3Vjq6nP1qdwM39GIwm4i94NEE=;
-        b=n5nCZ+rFHkBihxf6SY93SihjxIb2AvKH+zH7xmaS3VtbqqIgLBn8RJeO8WZ6YrR1S/
-         KGnwcN+zdYacz4L+gffkksuan1Cm2+DkKLCgB4seqUyCaljiEPBig9dHiPrDoOV76aMF
-         +PnZbvU+c2Rn65Ch8/s5BiORMWOVVpyStDCvM/E+py4IoJu7gy3PrrtCVWgt6ACtIVDp
-         b6BchC7vxEwuSiUh2dhBz5osGnVoDYwrYZqN0xuJivgCDbpAWsSZVN6NbpcwyUDPzLzM
-         cVgMn8S2hSG7XPoYQiSInWeRRUYjPcKvbZCSL5ghOirgoVPETWe5QBHW0OjYXVuwRp07
-         0kDw==
-X-Gm-Message-State: AOJu0Yw0oZeoBsIhWnPaQ1nxaMwBUFkPywFqti2LzxCCM8+1Kia3UO5p
-	ql2LyBLdCiRhWuEojIpk4AMhFwIowO60bQkkWYJNLE8HxG2oRTmMEXRCD/n8yg==
-X-Gm-Gg: AfdE7clBrWiOuXIFq3XBodN4Zic/Zu/2qYpfNQRn635VAeUjN29EYqdlvRv3E6snPQc
-	xd3yTovdEXf6RBLC/0RXX7lg33u8LdlLnUgLUVI20SDAtJjofSUHOj5V/YMNHqUJVDWzq/nUlf9
-	XLa2zSi+G1qcb32lTcsuVtsv9tQWUMz2iMV9ICK8dDxmL1ks8Zcz8/yF1w+dqd+HcluumkArEJ1
-	xzPy05zEgVf8rXpBCySWJhhk9vvuMFTwrikkdw2mVTvYXK8Tsvw5kRlS9RbAv6yeYAGy79Ab1Bv
-	ifGmlWjKsc5PZvdMY9kgthGZVaaMxC9YxOhlUMaYjmavhsmNfcwO+aJdpC69IkHa75Kn7r9cS9L
-	VfHAMCXayRxzl5Rv/H5KwLlL19dO6ntm/N4Hkuy7LQQjUD2XElBzglfTrRsqIzRXfBlMht8TSzD
-	B3TP3gZuCuuO471Ow1qlkDjIo96lUi3QPXuGLRWdYdwzyXOzXjZvi+Rp4dIfhw1MZYzQMvJ2W97
-	jKY4mB2w0xMAjP291BNUK7BeI8pKYzvKxchN4Cqoi7weFKupLmhSOQ=
-X-Received: by 2002:a05:6214:600d:b0:907:8960:fb59 with SMTP id 6a1803df08f44-9078960fde1mr75673126d6.34.1784512952081;
-        Sun, 19 Jul 2026 19:02:32 -0700 (PDT)
+        bh=SaPW5A1Sk4IueK0qNz7OPYuFBk9omXY8zTZ0G2a4L5g=;
+        b=fqqw6C/XLJuscajvnxl7HWwEyN5KQCKLAe0E0TR3SsS2b7nBXRwxk+3D7k/9z2K94h
+         SBN/9cFaRvHqUISz9sRwla/od6XgTlcLsHAYQsdT4erO/sjLxA5Rg91oevVykJ8O9srs
+         YIukIgOmFYU3TylD0D6fN8TRnA0egZGhY69eJNqsPxkrs+zQ1jNeLQLF8YrYRw9996z/
+         6uiovutfIyM5FjPaHR4VpId0/tpotqygsSMXmNHIohN5cH3vwcoasDzC6ULvFS5KEMKd
+         wn8Jn72BdLaeKrZA3yRDIFXsG8RKf3cUut+HzDc1eZoYS7erMmK6hPRq7pX8FBc9HYjS
+         LUvA==
+X-Gm-Message-State: AOJu0Ywxj1k9fdAZgDAzcUo9VibMgo7Lw/bwCmvgyv3hmU6Kbck8E3BB
+	FAmokRm/0Oncp5dF/P6UmT+DQV/hwcmFJb/SksaIvWE1hPVebUTjLHHdANh/iQ==
+X-Gm-Gg: AfdE7cnbLMPj7eQps7iNfyqDSPVJpqSrItXtZPqof51zYUUF5V6Z2uum3BiXEgz9lu4
+	IsshX6E+VNOIPeQnntXxlps5P+QdGPCj70WFwbv4mCVnAoSPjCcUSmmNlmNN64yxkNz67eCeB/K
+	cnPMWfGDQSBiZNuTura0EhKfy+FdTj5UbmKTkXlkzOcPLxeW/SAhOmqENx27hMRi/dx/HnOXpNS
+	eCoy2DbJVYmGGsjylnFNmr+OxrCwdIW9Wg13bMICbxRwe/kU79UvrbsbhjglLS2P0mXuuz7pOUI
+	IcPt8eWcmS1kvPG1J5oyJ6d/J+bCEhCiPYhvbi02f5VoVohAPdbbbccECu9Gf2y/0qFj06Ew4qr
+	sSCWlLKZz311xI+FGT7ZimwPZVdh273F8CbZ8diD8QsPZWjbvPnu/J8oFAS9Yn8gBTaHRS+a7KY
+	56geM0pMOYg40ytMVPZgYlWJiJh7w61jwYuTUpx27IId3Ld18a1lYXahUBhbCvmYpP1Ys1HwB8b
+	sOSa320MbOixdQSXvKvjeakymRHTII/VKDIiWhTJcatRIp5pizQMyg=
+X-Received: by 2002:a05:6214:212c:b0:8ec:a010:9af5 with SMTP id 6a1803df08f44-90778310af9mr134021156d6.10.1784513350415;
+        Sun, 19 Jul 2026 19:09:10 -0700 (PDT)
 Received: from ryzen.lan ([2601:644:8000:7a86::e35])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9077871d06csm81613826d6.43.2026.07.19.19.02.30
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9077856a9e8sm79969766d6.17.2026.07.19.19.09.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 19 Jul 2026 19:02:31 -0700 (PDT)
+        Sun, 19 Jul 2026 19:09:09 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-ide@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv2] ata: pata_ep93xx: fix PIO fallback when DMA init fails
-Date: Sun, 19 Jul 2026 19:02:29 -0700
-Message-ID: <20260720020229.1972888-1-rosenp@gmail.com>
+Subject: [PATCH] ata: pata_ep93xx: fix incorrect return value in data_xfer
+Date: Sun, 19 Jul 2026 19:09:07 -0700
+Message-ID: <20260720020907.2004063-1-rosenp@gmail.com>
 X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -73,91 +73,46 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ep93xx_pata_dma_init() returns an error when dma_request_chan() fails,
-which causes ep93xx_pata_probe() to abort entirely.  The probe function
-already has a PIO fallback path (it checks both channel pointers before
-enabling UDMA), so the DMA init should not fail the probe on non-fatal
-errors.
+The while (words--) loop post-decrements words, so it underflows from
+0 to UINT_MAX on exit.  The function then returns "words << 1", which
+is either 0 (for odd-length transfers after words++) or 0xFFFFFFFE
+(for even-length transfers).  Callers like __atapi_pio_bytes() depend
+on the correct byte count to manage scatter-gather progress; a wrong
+value causes ATAPI PIO transfer errors.
 
-Propagate -EPROBE_DEFER, such that we allow the DMA controller driver
-to load, in case we got probed before the DMA controller driver.
-For all other failures (e.g. -ENODEV when the DMA controller is missing
-in the device tree), fall back to PIO.
+Fix by returning ALIGN(buflen, 2) instead of the corrupted words
+counter, matching what ata_sff_data_xfer() effectively returns via
+its words counter.
 
-Assisted-by: Opencode:Big-Pickle
+Assisted-by: opencode:big-pickle
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
- v2: fix EPROBE_DEFER description
- drivers/ata/pata_ep93xx.c | 30 +++++++++++++++++++++---------
- 1 file changed, 21 insertions(+), 9 deletions(-)
+ drivers/ata/pata_ep93xx.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index 42a24dc51d26..339ee5e43e9f 100644
+index 21d7261f537e..97dda6213878 100644
 --- a/drivers/ata/pata_ep93xx.c
 +++ b/drivers/ata/pata_ep93xx.c
-@@ -656,14 +656,22 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	 * start of new transfer.
- 	 */
- 	drv_data->dma_rx_channel = dma_request_chan(dev, "rx");
--	if (IS_ERR(drv_data->dma_rx_channel))
--		return dev_err_probe(dev, PTR_ERR(drv_data->dma_rx_channel),
--				     "rx DMA setup failed\n");
-+	if (IS_ERR(drv_data->dma_rx_channel)) {
-+		ret = PTR_ERR(drv_data->dma_rx_channel);
-+		drv_data->dma_rx_channel = NULL;
-+		if (ret == -EPROBE_DEFER)
-+			return ret;
-+		dev_warn(dev, "rx DMA unavailable, using PIO\n");
-+		return 0;
-+	}
+@@ -502,15 +502,13 @@ static unsigned int ep93xx_pata_data_xfer(struct ata_queued_cmd *qc,
+ 	if (unlikely(buflen & 0x01)) {
+ 		buf += buflen - 1;
  
- 	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
- 	if (IS_ERR(drv_data->dma_tx_channel)) {
--		ret = dev_err_probe(dev, PTR_ERR(drv_data->dma_tx_channel),
--				    "tx DMA setup failed\n");
-+		ret = PTR_ERR(drv_data->dma_tx_channel);
-+		drv_data->dma_tx_channel = NULL;
-+		if (ret == -EPROBE_DEFER)
-+			goto fail_release_rx;
-+		dev_warn(dev, "tx DMA unavailable, using PIO\n");
- 		goto fail_release_rx;
+-		if (rw == READ) {
++		if (rw == READ)
+ 			*buf = ep93xx_pata_read_data(drv_data, IDECTRL_ADDR_DATA);
+-		} else {
++		else
+ 			ep93xx_pata_write_data(drv_data, *buf, IDECTRL_ADDR_DATA);
+-		}
+-		words++;
  	}
  
-@@ -674,7 +682,7 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	conf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
- 	ret = dmaengine_slave_config(drv_data->dma_rx_channel, &conf);
- 	if (ret) {
--		dev_err_probe(dev, ret, "failed to configure rx dma channel");
-+		dev_warn(dev, "failed to configure rx dma channel, using PIO\n");
- 		goto fail_release_dma;
- 	}
- 
-@@ -685,7 +693,7 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	conf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
- 	ret = dmaengine_slave_config(drv_data->dma_tx_channel, &conf);
- 	if (ret) {
--		dev_err_probe(dev, ret, "failed to configure tx dma channel");
-+		dev_warn(dev, "failed to configure tx dma channel, using PIO\n");
- 		goto fail_release_dma;
- 	}
- 
-@@ -693,10 +701,14 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 
- fail_release_rx:
- 	dma_release_channel(drv_data->dma_rx_channel);
-+	drv_data->dma_rx_channel = NULL;
-+	if (ret == -EPROBE_DEFER)
-+		return ret;
-+	return 0;
-+
- fail_release_dma:
- 	ep93xx_pata_release_dma(drv_data);
--
--	return ret;
-+	return 0;
+-	return words << 1;
++	return ALIGN(buflen, 2);
  }
  
- static void ep93xx_pata_dma_start(struct ata_queued_cmd *qc)
+ /* Note: original code is ata_devchk */
 -- 
 2.55.0
 
