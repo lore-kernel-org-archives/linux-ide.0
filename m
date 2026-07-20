@@ -1,161 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A0B73D6CA4;
-	Mon, 20 Jul 2026 09:33:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B9E449B24
+	for <linux-ide@vger.kernel.org>; Mon, 20 Jul 2026 19:47:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784539985; cv=none; b=PmlevFxI8S7YRJRx1dlMTYwik1D/xZO6EXbYkKQKcVhATeUofQFwLIoa9zSZT0vYEBmovRoa+skgBK6eo3JjG7+LRaPlBaYauLHy6TBYs/0+MqqQUQd+YHprRGoHjh43/m6w+3GwtuuPt+9n8s/OFMnxRSF7mmgH5f9QI54SIgw=
+	t=1784576842; cv=none; b=AzV5180pzAf0pkusFkqN461QGUiE/Zx34uwPV8Yx9dVneJK8V4mPUAbYQ/RlbC0cRSqJDsyM7tkBrNm28fNLTLzudVirtyRbp+QLagF8IicXjSZfr1FdDQUU6NeQaFlAsRtaHQsptUGUegmkqIrzB4r0b4NPfZAk85KnKBVCdQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784539985; c=relaxed/simple;
-	bh=vsf/E3+jsCQFMwL3EKVcVKBhK4dFH51HgTt0oiVpb2I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rZNHBIehwp/JnyQNKH40OkxoGu5nUNjZa3etfkcOQ0NQi2JRXV7CX+zjraVh/Q2lYN8T9U0xFvoCB+mb5SK55NoBKVXXJnM62Um28GT/jK5gfrb/rQ170jjPm/3co1BCwRL/L1iTvSYIZghAY22D2P4tbQTFC6EvuZfthu5aSe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XI6iGe0B; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784576842; c=relaxed/simple;
+	bh=IM8OcCd1J5H5NYYxqt8/UURDJnjX3/PpwHj5eTTFHqg=;
+	h=Message-ID:Subject:From:To:Date:Content-Type:MIME-Version; b=BY9j1OfiqiWwlvd7Its5ldZp9G0uQi5qHKcghlbh6IyAl6yVSGPh8Eas84ZuHm/ux8CS0gmmVKgI+6Sy26c20sjriqZrI6kN9/yhGxp7CC74ZeH05wfogzSlGo5tBEfrZ8k5k4teQqYM+HKEuD3Uk3LroYZKGlm9LcnyiXYce9k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NFqWtqou; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=O/kNxkKn; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XI6iGe0B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3955E1F000E9;
-	Mon, 20 Jul 2026 09:33:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784539984;
-	bh=ZfR2g/WngHonCyKcs/mZInuSpqMXOSxgggCegt3LK1A=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=XI6iGe0BYtGPn25QKY67E6hw5PrL4gPoAvtiUT6L1+2KkgutDMPGNAW+N0BG4Jdlx
-	 QHau7uR0BE143B56lkVMCXEPbN0+WpQcPEBX5HCMB1FnjRmXFfnb0UQ1IbBzk/HtpD
-	 FZVRDBAwUYJy3UD29oP1oDrlBsLNWA+Tn7LxolguDRONuh6qVC5/BV068+8G8lTpR/
-	 CA9oNCtHd/WxxKJoUN5lBuaKNvoenxvI+vznOGrfQV+kzutyVAwS2ND0x+Q54UfTLo
-	 lvaX1z6Q15IWmdaHyOg1SQT6UFHKCTAsJR/lEyN1V2LjKexoAj5c2u/qkyv+QmBCLQ
-	 0iiCs5rMUZWzw==
-Message-ID: <8a4b58ca-c172-429d-8de3-34f92f5d2264@kernel.org>
-Date: Mon, 20 Jul 2026 18:33:01 +0900
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NFqWtqou";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="O/kNxkKn"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784576839;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=IM8OcCd1J5H5NYYxqt8/UURDJnjX3/PpwHj5eTTFHqg=;
+	b=NFqWtqouhoqZJAk7dfmSrgzGyz1a0J2IzMVyoo6Z3PBQF8GKJ+Pjav86PrcxoMw2SKKNhP
+	IqptS8ZgkoTmzCVPNSWECtQUlo5T1HhhokTxfemxnRHx9UyXYlS1uORUsmpF3UFknf8d3i
+	Kimuzhk51W0kz1X142VXZZQFbAXuhmU=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-34-tcoVOJ-LOMmPiJiz6-5Onw-1; Mon, 20 Jul 2026 15:47:18 -0400
+X-MC-Unique: tcoVOJ-LOMmPiJiz6-5Onw-1
+X-Mimecast-MFC-AGG-ID: tcoVOJ-LOMmPiJiz6-5Onw_1784576838
+Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-8f39a46efd9so78085126d6.1
+        for <linux-ide@vger.kernel.org>; Mon, 20 Jul 2026 12:47:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1784576838; x=1785181638; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type:date
+         :to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=IM8OcCd1J5H5NYYxqt8/UURDJnjX3/PpwHj5eTTFHqg=;
+        b=O/kNxkKnCD81XB3AuVxQg1Ev+PoT/b7IRyNA8m5nBCT1e6KNH2c35r+cEW62QVwLDx
+         pgW0QqC+hzUDnB48DyUP4ILUOkwJIkXs9TajJxHOc91XXvuYCE+0Ej83gfz/yNTCmCna
+         A6EGPnqou8qxMzBqLuPrjtxl+6pwuAtbo98LULLFg1sWkJeK81biEpDW4SLQfJ/W8CXv
+         aR3F4j+DReQCk5JDYctgw/82scxAWvNoYjOyNMWYdmHyQHepzxcngJWOiFTnkWiA2Zt9
+         YA/kQLjZTMPadB96AvvxW/L/HwRjYDpwVdf5+VRjPBGfaLVwLce2axqTH2O/tEj41xtx
+         p4jA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784576838; x=1785181638;
+        h=mime-version:user-agent:content-transfer-encoding:content-type:date
+         :to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=IM8OcCd1J5H5NYYxqt8/UURDJnjX3/PpwHj5eTTFHqg=;
+        b=qJdPWFV1KDmMkcwS70CTqZr3HQmFTx5pIKwWmzu0G0RAuXpaadd4V/A8d1LIPOSbPQ
+         zowVr+hJ8Dv5gcodYSbS2kyn1u3QRnAi3Rn/5RRvtiHKOFxooFGQ9Jz8mfoJYV2wJry4
+         QggQfzgNJ9/DtbmDsuirK62AYmK2/LZhygzVf2TyNYOGqauhZh6P1b4EBYfi6HHLdtmv
+         bTEzPtwzABAhCOoMFIjndhHpN7ysva/SC6leTXYj1DjC7asykL6TBijwv0+tjVezkCYf
+         cl5GqmbXVkM9tCRcMHKCqQixrLPSA1EQFgDv/LC1weu5W07qhiAA/Y5xa6+7p+bD8IrQ
+         tGhw==
+X-Gm-Message-State: AOJu0YwsemFMAJQTpVUlBDXIrKKgolUEhrMaqWo3WCUr5ggzmbPzL/1a
+	1CoxyU7TeeCT0B1OzizjTJxoIOPvTwjVO12DnG9ZSkV0C5wNx/TYaSN8l1B4t20UtyqCjIvJKmU
+	mNwKW9t+6RpZxiPfi9QX0fZy+QmCJ8qjL9F5XW+/ThwPlLiUac+1IY8hk/iJCJS0apEc3ob9BKt
+	iGRL9NNf2wQp5oymAgm7hWX5aWN9inJ3CKsoguwj61J1uD7Q==
+X-Gm-Gg: AfdE7cky+BRxoooQv8C2Nc1H8+u93QECc0l3zRGHD4cQ1SBPOsb9CeepraOTIEePt7d
+	VGqGZYunWH4h0hXPMYwrOIT54BdtNMZk/lf7ZzecB5h038XnKjpVfqODskw4v6hk+plzpc3wHFo
+	H5WtytG6u7vwLGKJciZ5S1fMGeCKmLZ0ccs7+jKk1Vdh8C7QhaXWuayHzsOg6ZVK7Ld/mnZOR3J
+	VIslKiR2bVabPk5YVBlkGQ6hRF3aN0tOunN+sOB+7LfDBBmx2b19y/P14+xlWJyQPDnIFDEfVXq
+	0vbvL4fTf91kx2K+MdBUbX0ulUwAjNpg4WdRx+w11zCqTySbr7LKYNqj4dcGFmhWhAVu0OqbC8y
+	DfWCdPY6xqLFuZ+85zUse/g9xetDRThJaH8XX
+X-Received: by 2002:a05:622a:418b:b0:51c:ca9:7cdf with SMTP id d75a77b69052e-521298a8897mr152412151cf.2.1784576837791;
+        Mon, 20 Jul 2026 12:47:17 -0700 (PDT)
+X-Received: by 2002:a05:622a:418b:b0:51c:ca9:7cdf with SMTP id d75a77b69052e-521298a8897mr152411741cf.2.1784576837110;
+        Mon, 20 Jul 2026 12:47:17 -0700 (PDT)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:dbb1:97f1:a6e6:766b])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5214f504892sm78706291cf.20.2026.07.20.12.47.16
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Jul 2026 12:47:16 -0700 (PDT)
+Message-ID: <1b6f060321c3822e588f93da530688c008e8034e.camel@redhat.com>
+Subject: Subscribe
+From: Laurence Oberman <loberman@redhat.com>
+To: linux-ide@vger.kernel.org
+Date: Mon, 20 Jul 2026 15:47:15 -0400
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-To: sashiko-reviews@lists.linux.dev
-Cc: cassel@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20260720071450.1877625-1-dlemoal@kernel.org>
- <20260720071450.1877625-2-dlemoal@kernel.org>
- <20260720073106.E10121F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260720073106.E10121F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 7/20/26 16:31, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] A race condition between block layer timeout work and the SCSI EH thread causes deferred QCs to fail permanently, resulting in spurious I/O errors.
-> --
-> 
-> --- Patch [1]: [PATCH v6 1/2] ata: libata-scsi: terminate deferred commands on time out ---
-> commit 65621fb40c8a19c964f38c70891c67cb0a3f9251
-> Author: Damien Le Moal <dlemoal@kernel.org>
-> Subject: ata: libata-scsi: terminate deferred commands on time out
-> 
-> If a command timeout occurs while we have deferred non-NCQ commands
-> waiting to be issued, the SCSI EH task is not immediately woken up as the
-> waiting deferred commands are never issued nor completed. Avoid this
-> unnecessary SCSI EH task wake-up additional time by scheduling a retry of
-> all waiting deferred QCs, using the eh_timed_out SCSI host template
-> operation.
-> 
->> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->> index 5868526301a2b..b02b4ca5c09e2 100644
->> --- a/drivers/ata/libata-scsi.c
->> +++ b/drivers/ata/libata-scsi.c
-> 
-> [ ... ]
-> 
->> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
->> +void ata_scsi_requeue_deferred_qc(struct ata_port *ap,
->> +				  struct scsi_cmnd *timedout_scmd)
->>  {
->> +	struct ata_queued_cmd *qc;
->>  	struct ata_link *link;
->>  
->>  	lockdep_assert_held(ap->lock);
->>  
->>  	/*
->> -	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
->> -	 * do not try to be smart about what to do with this deferred command
->> -	 * and simply requeue it by completing it with DID_REQUEUE.
->> +	 * Trigger EH for any deferred qc, to either retry them or handle one
->> +	 * that timed out.
->>  	 */
->>  	ata_for_each_link(link, ap, PMP_FIRST) {
->> -		struct ata_queued_cmd *qc = link->deferred_qc;
->> +		qc = link->deferred_qc;
->> +		if (!qc)
->> +			continue;
->>  
->> -		if (qc) {
->> -			link->deferred_qc = NULL;
->> -			cancel_work(&link->deferred_qc_work);
->> +		link->deferred_qc = NULL;
->> +		cancel_work(&link->deferred_qc_work);
->> +
->> +		if (!timedout_scmd) {
->> +			/*
->> +			 * We are retrying due to some error. Complete the
->> +			 * request and ask for a requeue. In this case, since EH
->> +			 * was scheduled already, the block layer attempting to
->> +			 * re-issue the command immediately will not lead to the
->> +			 * device being kept busy, thus allowing SCSI EH task to
->> +			 * run.
->> +			 */
->>  			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
->> +			continue;
->>  		}
->> +
->> +		/*
->> +		 * We are being called from scsi_timeout(). scsi_eh_scmd_add()
->> +		 * will add the command to eh_work_q and it will be handled by
->> +		 * ata_scsi_cmd_error_handler(). So here, we only need to
->> +		 * indicate if we want a retry if the command did not timeout.
->> +		 */
->> +		if (qc->scsicmd != timedout_scmd)
->> +			qc->flags |= ATA_QCFLAG_RETRY;
->> +
->> +		/*
->> +		 * Schedule EH, but set EH pending on the port so that we do not
->> +		 * reenter this function from ata_eh_set_pending() with
->> +		 * timedout_scmd being NULL and erroneously retry deferred QCs
->> +		 * that have timed out on other links.
->> +		 */
->> +		ap->pflags |= ATA_PFLAG_EH_PENDING;
->> +		ata_qc_schedule_eh(qc);
-> 
-> [Severity: High]
-> Does this introduce a race condition between the block layer timeout work and
-> the SCSI EH thread that could cause deferred QCs to fail permanently with
-> spurious I/O errors?
-> 
-> When a command times out, ata_scsi_eh_timed_out() calls this and triggers
-> ata_qc_schedule_eh() on deferred QCs. This calls blk_abort_request(), which
-> schedules the block layer timeout_work asynchronously.
-> 
-> Meanwhile, the original timed-out command is added to eh_cmd_q and immediately
-> wakes up the SCSI EH thread. If the SCSI EH thread processes eh_cmd_q in
-> ata_scsi_cmd_error_handler() before the asynchronous timeout_work for the
-> deferred QCs runs, ata_scsi_cmd_error_handler() will miss the deferred QCs
-> since they aren't in eh_work_q yet:
+Subscribe
 
-Somehow, this patch seems to be working, but yet, in view of this comment, I do
-not see how the host busy counter is decremented for the deferred QCs. Something
-is missing. We somehow need to call scsi_complete() with a status that leads to
-the command disposition to fall to the default scsi_eh_scmd_add() so that we do
-not immediately retry the command, since that also does not work (previous
-version issue).
-
-Spending the weekend on this was a waste of time. Back to the drawing board on this.
-
--- 
-Damien Le Moal
-Western Digital Research
