@@ -1,74 +1,41 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A47DD313E38
-	for <linux-ide@vger.kernel.org>; Tue, 21 Jul 2026 01:58:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C05D3C4B93;
+	Tue, 21 Jul 2026 06:40:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784599140; cv=none; b=YhsBZBCYTltmwoaxMlhYEWnI8JdcoUKP+Snqq1xKQJxDP1TBb5p1n/gseBr7G+C+8RJcTqLe9twxmFUdsWdFaXXbrNGjBl99k/Z1vSJ2mBEbWioXiFLCthpld+19gLHI65p/5W64K21c/p99aIlnpD1H9wr5V6vqBOFLORs+Q6s=
+	t=1784616040; cv=none; b=rVvVMHXmCxtqWayR79LeuAXJUwVvTHBWrsOv4Dxz3oqo6pQzMd4i4qCmZkxLRj4tL5nIQuspKuVEjcnDw70cfCg9qLP1wm2wp+PIh7Fuvq4C7GOV8EFer6vRakEqfhnhmy3qSpN4sO+uZrUi/yDgxNhqj0OqElg5L8Fskk0EDfQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784599140; c=relaxed/simple;
-	bh=64BryWhazFiSQGTHWsvVf9n0qNYmhx/nkK0q5awa1cI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MyIZgDqee/zmrU9fD3bj1h/opDyez2TbCVSmruPpnzqm3/BeV0J6a6nCf5IuUF3svpSxKXwxGIb5gczjw5ZJ1ZpcICitRiCba/CJSk594SlgqGr+8JwMd6nG32D2U9VDOk18dg3/fnqJWCl9rTwn0/WNZrVUpKKXJ0d4N6Eug8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VjO3ncyT; arc=none smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784616040; c=relaxed/simple;
+	bh=xT9g2GjO1dsYM3VIODV6tNLUevUl9qHJFp7R948v9IA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TzeL+3GARCbvJKiJHFiu7t5j/XyiQn21h0UB10N065vStRZmrNTHurJnlBAijUO3DSNOUM8EhDBmLafgcoemMTukfBH9fCWhLvOoCyEXu7kSRLmo3WntxUqCpfXlz/NMp8FXUswIMh6336BJgKCT3duoC8tE2C33QPNAExBX81k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kH3Ym0ms; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VjO3ncyT"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-38dd55ad76cso3475878a91.1
-        for <linux-ide@vger.kernel.org>; Mon, 20 Jul 2026 18:58:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784599139; x=1785203939; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4L7OFyjs0agWHOOlRPNJjGmbLFr+eh96a4dzibePYvg=;
-        b=VjO3ncyTDuVE1xGsyZN5nIfQDfN3bT9y6xOspNZJar/z8Yho095fy51X2/jgsVCpkX
-         DXUaopXzzJodG2yMaeijLWOccZoYAtFtB79r9xYAo98yOrp/AjgO9km03Q6KrCBd9iSU
-         evvikB/RuotL1XcAGJ+ksk99JU9KI4a/LPy/Mn0gaPBw4t4bqTUk3l9IjFdnVRyiP7W+
-         Kay78KmuqLQHHdOVW9Kb+VZ23vMY2tHT34cT60o7hPtGoEAyoAOxTUeu2qh4iNMsoGYN
-         sWWrv65mf8lMByZxxIb3//z49rPF/r5tXmtE1k2inwfaGZC5GWrF9jPArc6pHpClDIhy
-         G/8g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784599139; x=1785203939;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=4L7OFyjs0agWHOOlRPNJjGmbLFr+eh96a4dzibePYvg=;
-        b=ookt12uT9brNnCu7T4F8PH4AOsJNV9T3OOKOsRvV7/N+OMC8mLwKst/tHEvlOvG77h
-         yZq65dGN1yanCWIOLGPcHaarT/kM3Op8zdqB3/bXdkQkAKB/FYmMf9Tzn3pX+zYpnj5J
-         NYxtdam02mgaO+0pQ0ZUzWcodEtkjR/hDZs+lgE42+b9LW8efCvASealOF4DYW1oKxTd
-         itwKDdJxR7gUplxQBvb8gOcfxwTvrzoYzgKAa7h/KcX5p4d23/MeBRaPcfVoGaXOMoyW
-         pHa628/AHaW7lcAxRGGbMB0rQqCRgPwKlfMdb0s2XLJf/AwTwEGJIjOLhnLCsSdpGJ02
-         bJ4w==
-X-Gm-Message-State: AOJu0YxFGAMxUtXofZvCjDVa+VM6oF62ajB+8tJjxJe56Phf4m+Hrg2L
-	0xmouz/7KQYsH9kXTpxi4avxBw0BsivV+UJy7ugPUMAS8Oez82jQZPSzxh7mDA==
-X-Gm-Gg: AR+sD11C18KMJ7WrIxwsZipJ5LuPKKZYq+A0/y3zDycwbLM0P8ucIoO4tmbuNPEBZBb
-	05J7X1T9ChhEqHC8CYTrjW7vz6+CNQuusupfPoyLH8iavvP/s3ePRkYo/bPpmtve/ipewbDxkUK
-	jiKBfZ55gjZiPLAHbNBQebSNtkulFke541xzCl6RJE8cj7pEUltUojXnpF8hJJOALGlTfjF1ifr
-	IKpwa3sVcI8c5zznJVtfTGZZDzFpCpx1FmF9X9Iihq43ZxYKOlRRfqMjGRa9JLojek49gcKh7b0
-	vlWRZUOGceiRxxFpbLpzzt1JdkOPTqA4mlevHjJkg1TCdrFb1bPbltXXy1TjsgoCvthNO4OUolR
-	VFInzcoprRXt4EeILHe0YH3ac/znf9EPxYKxJxS12UHfTRGu5LrpYr4Gr9Bw+nTRsXWteTZc2w8
-	0/0vOfP2PvzeHnLVRXnNh2qEqgfwi+RpQyeLkvX9mwmuH2Iu0WRdMgykHOEcXOWEoh6jDFBBfdZ
-	Gz5qxdJN0E8TTNVragPSAiTxRnCjsrcbSmdnQVVTc2BPZyNkcMikL0=
-X-Received: by 2002:a17:90b:2891:b0:37f:9e21:91d8 with SMTP id 98e67ed59e1d1-38e4b68268bmr15320913a91.15.1784599138974;
-        Mon, 20 Jul 2026 18:58:58 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e35])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38e92064c77sm620646a91.1.2026.07.20.18.58.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2026 18:58:57 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kH3Ym0ms"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5781D1F000E9;
+	Tue, 21 Jul 2026 06:40:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784616039;
+	bh=g3ePDX3M/XdmNKR4grkEL/SQkRgndCBGDDnz57Wh8a8=;
+	h=From:To:Cc:Subject:Date;
+	b=kH3Ym0msoVpKQEFoZIteMqpOl14uIwfrPXkVvVRsE1NNv+96SsWceidVl9eFe3md5
+	 I1I0tpZleG9qjLw+DleZDtRDakEfbSsbvEB7WUn177uvkSMiw80xBf2nrK9xpLnniD
+	 dgFTeh50ZRUCyiczI3x8/FuzOnr3eYWmjNEEC06bMMLFbFL+rn6VphvWFa+nZPMZqH
+	 Kt5apsXjl1NnCsKRo+zZTR8Y7c3Al0uCKeDu/yLndMXmggArFRFZUuEft0SeqgjGwS
+	 tw94kDnYnnPDXLVnpbA1/j+Ng5vIgA+el2jzNGoX2qTMz89AAq3DPgAxLNF9ivwYz0
+	 MRLB4KDEVplEA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nick Desaulniers <ndesaulniers@google.com>,
-	Bill Wendling <morbo@google.com>,
-	Justin Stitt <justinstitt@google.com>,
-	linux-kernel@vger.kernel.org (open list),
-	llvm@lists.linux.dev (open list:CLANG/LLVM BUILD SUPPORT:Keyword:\b(?i:clang|llvm)\b)
-Subject: [PATCHv2] ata: pata_pxa: use devres for DMA channel management
-Date: Mon, 20 Jul 2026 18:58:56 -0700
-Message-ID: <20260721015856.17503-1-rosenp@gmail.com>
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Igor Pylypiv <ipylypiv@google.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v7 0/2] fixup handling of timeouts with deferred QCs
+Date: Tue, 21 Jul 2026 15:40:25 +0900
+Message-ID: <20260721064027.2081195-1-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -78,73 +45,67 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert the DMA channel request to devm_dma_request_chan() so the
-channel is released automatically on device teardown. This removes
-the explicit dma_release_channel() calls in the probe error paths
-and in pxa_ata_remove(), simplifying the driver.
+This patch series fixes libata and libsas to correctly handles deferred
+queued commands in case of a timeout error, to avoid excessive delays in
+waking up the scsi EH task.
 
-Use ata_platform_remove_one() which is now equivalent to what remains of
-the remove function after dma_release_channel() removal.
+Igor,
 
-Built as a module for arm/pxa_defconfig (CONFIG_PATA_PXA=m) with
-LLVM=1 W=1; no new warnings.
+My apologies for the churn, but please retest!
+Also, I added your Signed-off-by on patch 2 since half of it is yours.
 
-Assisted-by: opencode:hy3-free
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- v2: Use ata_platform_remove_one()
- drivers/ata/pata_pxa.c | 22 ++++------------------
- 1 file changed, 4 insertions(+), 18 deletions(-)
+Martin,
 
-diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
-index c816997dc0a9..a694f6a178e3 100644
---- a/drivers/ata/pata_pxa.c
-+++ b/drivers/ata/pata_pxa.c
-@@ -262,40 +262,26 @@ static int pxa_ata_probe(struct platform_device *pdev)
- 	/*
- 	 * Request the DMA channel
- 	 */
--	data->dma_chan = dma_request_chan(&pdev->dev, "data");
-+	data->dma_chan = devm_dma_request_chan(&pdev->dev, "data");
- 	if (IS_ERR(data->dma_chan))
- 		return PTR_ERR(data->dma_chan);
-+
- 	ret = dmaengine_slave_config(data->dma_chan, &config);
- 	if (ret < 0) {
- 		dev_err(&pdev->dev, "dma configuration failed: %d\n", ret);
--		dma_release_channel(data->dma_chan);
- 		return ret;
- 	}
- 
- 	/*
- 	 * Activate the ATA host
- 	 */
--	ret = ata_host_activate(host, irq, ata_sff_interrupt,
-+	return ata_host_activate(host, irq, ata_sff_interrupt,
- 				pdata->irq_flags, &pxa_ata_sht);
--	if (ret)
--		dma_release_channel(data->dma_chan);
--
--	return ret;
--}
--
--static void pxa_ata_remove(struct platform_device *pdev)
--{
--	struct ata_host *host = platform_get_drvdata(pdev);
--	struct pata_pxa_data *data = host->ports[0]->private_data;
--
--	dma_release_channel(data->dma_chan);
--
--	ata_host_detach(host);
- }
- 
- static struct platform_driver pxa_ata_driver = {
- 	.probe		= pxa_ata_probe,
--	.remove		= pxa_ata_remove,
-+	.remove		= ata_platform_remove_one,
- 	.driver		= {
- 		.name		= DRV_NAME,
- 	},
+Once reviewed, I or you can take both patches ?
+
+Changes from v6:
+ - In patch 1, go back to using direct command completion for retrying
+   deferred QCs, but adds libata EH trigger to avoid problems with the
+   block layer immediately re-issuing the retried commands. This same
+   method also allows directly handling timed out deferred QCs, which
+   simplifies libata EH.
+
+Changes from v5:
+ - Reworked patch 1 to have deferred command retries all go through libata
+   EH to ensure that we do not run into issues with the block layer
+   immediately re-issuing retried deffered commands (which would create
+   again the problem we are trying to solve). This change necessitate the
+   introduction of a new QC flag and changes to the completion path for
+   commands to ATAPI devices.
+
+Changes from v4:
+ - Simplified sas_eh_timed_out() code in patch 2
+
+Changes from v3:
+ - Reimplement ata_scsi_requeue_deferred_qc() in patch 1 as
+   ata_eh_retry_deferred_qc() so that all requeue pathes use the same
+   function.
+
+Changes from v2:
+ - Modified patch 1 to avoid the problem reported by Sashiko that requeued
+   deferred QCs may be re-ssued immediately by the block layer, thus
+   potentially keeping the device busy. The modification now relies on
+   libata-EH to perform the requeue instead of immediately doing it from
+   the eh_timed_out operation.
+ - Modified patch 2 to use the new helper function defined in patch 1.
+
+Changes from v1:
+ - Modified patch 1 to ignore timed out deferred QCs in
+   ata_scsi_requeue_deferred_qc() to let ata_scsi_cmd_error_handler()
+   correctly handle this case.
+
+Damien Le Moal (2):
+  ata: libata-scsi: terminate deferred commands on time out
+  scsi: libsas: terminate deferred commands on time out
+
+ drivers/ata/libata-eh.c             |  29 ++------
+ drivers/ata/libata-scsi.c           | 109 +++++++++++++++++++++++++---
+ drivers/ata/libata.h                |   3 +-
+ drivers/scsi/libsas/sas_scsi_host.c |  15 ++++
+ include/linux/libata.h              |   4 +
+ include/scsi/libsas.h               |   2 +
+ 6 files changed, 127 insertions(+), 35 deletions(-)
+
 -- 
 2.55.0
 
