@@ -1,163 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC302417D8F;
-	Tue, 21 Jul 2026 06:40:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AB96392C27;
+	Tue, 21 Jul 2026 07:00:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784616043; cv=none; b=ZOlP9Volje2VSlcrKqbdlI3BNFiFvCaCu9ts059MCmLQG//1KXw96pq1wBoBOlSA0LERL/vdgYSE9cB5OK8/x9hwadG+tvmlIKQtJDBzeCqktXvMVipKJWw64GNkkx4ymD3YuadJCnewomn1PXGEb0XqDQZj5oX9iQ/BVQfl5Xk=
+	t=1784617232; cv=none; b=TFY9xQOnf7k7trdtc0tXQoF3uB0+b9DC085VCpBPCjlctJyuBx0V39pt3yhB8RMcBgsK1DOLBsWmFvNBPblqu/w9bS9dQwVs2+3a8sWV02pRD4JhyX4SAUqwoKAgWwqcyoGVgfEei2Xqt/5XztOnYVNpML5OgGmZ0z7jzzBczA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784616043; c=relaxed/simple;
-	bh=ouLPKGxF1vD+S0h3U7KzlQJsjJwZuN6il4B7iLvQu70=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XlvQvN0TgNTxO03FBJQwOGvbVCLBy33j4QiTn69Q/R34HnxFgjPam48LBi/xt3cDkbfuejwW4qEk/Tu863twEHzztRkoG/VOG5cVbsA1FxaE/L4joP+Ak/pE9NJAWYrEnpKLgUpjvYlYYLGRm26iScYqUdcuc7glL7ZBpTjzVGI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BgIXhMSm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784617232; c=relaxed/simple;
+	bh=kBXhWdXw8q9dwSMkHWf5tfvX+EO3BBu+jrAzQyCdhLA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=UvgvbPfTUMofrxWjiv3VfaJ/7HPaY8xOtS3jPyBmoyGxTUbc2eM8C/VKIkcQdjf6FH/3PyERkLBNRc/JRN7NS+xAFy0TZ8Jj39TDVVYEnwp9t3iX+GYGwT44JWHur3GtMLvYIbb4iSumf82i6Gfj2gm3nSainHt8xr4r8A0OM3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g6yVaE4y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BgIXhMSm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85DA31F000E9;
-	Tue, 21 Jul 2026 06:40:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g6yVaE4y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AC0F1F000E9;
+	Tue, 21 Jul 2026 07:00:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784616041;
-	bh=xLWPzEdzVa6Eak5YTWSWLMOhwld/kGRTIpheajMCp8U=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BgIXhMSmgMAREk9ix0ud21rzIdrpIfMuJnZEWlSpkbUcZnZwR3Wks0Fmzgz+J2HLx
-	 f0D7rwISRKUOzU+OBfej4pZfbOkb6OVvQnryFgt7EUdhwJtqS+0P4EfosyrLgwPfC/
-	 PUuZdvkS0h1Qtpcg4M+60PmPNu/1RrboUfuwSUPRcVs8BLSTYdDm76GLphZ9C84Yt/
-	 ZhZxtRAQvVfxpd/pLv5713xslfRT0S+5N+BEIFbASmaXxWiK8KXRv3yb12QV1oS7PM
-	 Zkr0rCewK8ibfQfFYhKzi4qb05bWofvS4pb4Qr2crre3SGRW6UzIdxDWoITFkVY/fK
-	 yRBnZj4RkTGSQ==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Igor Pylypiv <ipylypiv@google.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v7 2/2] scsi: libsas: terminate deferred commands on time out
-Date: Tue, 21 Jul 2026 15:40:27 +0900
-Message-ID: <20260721064027.2081195-3-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260721064027.2081195-1-dlemoal@kernel.org>
+	s=k20260515; t=1784617230;
+	bh=gy5pe3UqCNYXt4NOpi0/UbsFodI8JIL0IdcKJwKZRUg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=g6yVaE4yCatHMRp/v+PoTPkaQLzBgbpwzrL1q8Hj6Ldox5CmwujX2OSLaAqLxoyFg
+	 emgtAMN8IdAZDx73Y/vmKyTEUMvc7ZE++faA0LMSB586kGx4ALl/bCsW/iiyTqnvzp
+	 jCfKi5dtOePeohHg8ZYyxIRSlGVoZqBkf5p2odyOn8EMJtBJvv793bUTSVZ5GEY8+Q
+	 4z+iQnxsnigVLzWr+S5WTW5Yheywqfhnq4WxpJJGZjNAZg2hoRRJzAYgNsLAlNs7Dy
+	 MQz3F7ySW6cGbUmGq/KfZ81iYMZgx+5jeD2ux6Op5OMmgvI/fXhgjlcyL6NrK9kutY
+	 IWP1R3dNi+q/A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands on
+ time out
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Damien Le Moal" <dlemoal@kernel.org>
+Cc: linux-scsi@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260721064027.2081195-2-dlemoal@kernel.org>
 References: <20260721064027.2081195-1-dlemoal@kernel.org>
+ <20260721064027.2081195-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 21 Jul 2026 07:00:30 +0000
+Message-Id: <20260721070030.8AC0F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-If a command times out while we have deferred non-NCQ commands waiting to
-be issued, the SCSI EH task is not immediately woken up as the waiting
-deferred commands are never issued nor completed, thus leaving the SCSI
-host in a busy state (shost->host_failed != scsi_host_busy(shost)) which
-prevents the SCSI EH task from being woken up. Eventually, when the
-deferred commands also time out, the SCSI EH task is woken up and the
-timeout processing occurs.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Avoid this unnecessary additional SCSI EH wake up time with the same
-method as implemented in libata-scsi, using the eh_timed_out SCSI host
-template operation. The function sas_eh_timed_out() implements this
-operation and executes the function ata_scsi_retry_deferred_qc()
-for SATA devices.
+Pre-existing issues:
+- [High] Missing call to ata_scsi_schedule_deferred_qc() in atapi_qc_comple=
+te() leads to starvation and timeouts of deferred commands.
+--
 
-Co-developed-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
----
- drivers/ata/libata-scsi.c           |  5 +++--
- drivers/scsi/libsas/sas_scsi_host.c | 15 +++++++++++++++
- include/linux/libata.h              |  2 ++
- include/scsi/libsas.h               |  2 ++
- 4 files changed, 22 insertions(+), 2 deletions(-)
+--- Patch [1]: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands=
+ on time out ---
+commit 3b26adffba8da435c70bdca03b617603f9f9ae76
+Author: Damien Le Moal <dlemoal@kernel.org>
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index c2f2f711fd98..ec7ea8f3ce40 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1779,8 +1779,8 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
- 		queue_work(system_highpri_wq, &link->deferred_qc_work);
- }
- 
--static enum scsi_timeout_action
--ata_scsi_retry_deferred_qc(struct ata_port *ap, struct scsi_cmnd *scmd)
-+enum scsi_timeout_action ata_scsi_retry_deferred_qc(struct ata_port *ap,
-+						    struct scsi_cmnd *scmd)
- {
- 	enum scsi_timeout_action action;
- 	unsigned long flags;
-@@ -1791,6 +1791,7 @@ ata_scsi_retry_deferred_qc(struct ata_port *ap, struct scsi_cmnd *scmd)
- 
- 	return action;
- }
-+EXPORT_SYMBOL_GPL(ata_scsi_retry_deferred_qc);
- 
- enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
- {
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index c83282733ec4..97ac3db5dccb 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -502,6 +502,21 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
- }
- EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
- 
-+/*
-+ * Handle deferred QCs in case of a command timeout.
-+ * See ata_scsi_eh_timed_out() for details.
-+ */
-+enum scsi_timeout_action sas_eh_timed_out(struct scsi_cmnd *cmd)
-+{
-+	struct domain_device *dev = cmd_to_domain_dev(cmd);
-+
-+	if (dev_is_sata(dev))
-+		return ata_scsi_retry_deferred_qc(dev->sata_dev.ap, cmd);
-+
-+	return SCSI_EH_NOT_HANDLED;
-+}
-+EXPORT_SYMBOL_GPL(sas_eh_timed_out);
-+
- /* Try to reset a device */
- static int try_to_reset_cmd_device(struct scsi_cmnd *cmd)
- {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 327da43d7496..ca0a7e025e9e 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1153,6 +1153,8 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
- #endif
- extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
- 					     struct scsi_cmnd *cmd);
-+enum scsi_timeout_action ata_scsi_retry_deferred_qc(struct ata_port *ap,
-+						    struct scsi_cmnd *scmd);
- enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
- #if IS_REACHABLE(CONFIG_ATA)
- bool ata_scsi_dma_need_drain(struct request *rq);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 163f23c92b41..c7017ae76c61 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -705,6 +705,7 @@ void sas_task_abort(struct sas_task *);
- int sas_eh_abort_handler(struct scsi_cmnd *cmd);
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd);
- int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
-+enum scsi_timeout_action sas_eh_timed_out(struct scsi_cmnd *cmd);
- 
- extern void sas_target_destroy(struct scsi_target *);
- extern int sas_sdev_init(struct scsi_device *);
-@@ -743,6 +744,7 @@ void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
- 	.this_id			= -1,				\
- 	.eh_device_reset_handler	= sas_eh_device_reset_handler,	\
- 	.eh_target_reset_handler	= sas_eh_target_reset_handler,	\
-+	.eh_timed_out			= sas_eh_timed_out,		\
- 	.target_destroy			= sas_target_destroy,		\
- 	.ioctl				= sas_ioctl,			\
- 
--- 
-2.55.0
+ata: libata-scsi: terminate deferred commands on time out
 
+This commit avoids unnecessary SCSI EH task wake-ups by scheduling
+a retry of all waiting deferred QCs using the new ata_scsi_eh_timed_out
+operation. It also updates ata_scsi_requeue_deferred_qc to terminate
+timed-out deferred commands directly and schedule libata EH to prevent
+the block layer from re-issuing them immediately.
+
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 5868526301a2b..c2f2f711fd987 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+
+[ ... ]
+
+> @@ -2936,7 +3014,15 @@ static void atapi_qc_complete(struct ata_queued_cm=
+d *qc)
+>  		if (qc->cdb[0] =3D=3D ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
+>  			qc->dev->sdev->locked =3D 0;
+> =20
+> -		ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
+> +		if (cmd->result)
+> +			ata_scsi_qc_done(qc, false, 0);
+> +		else
+> +			ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
+> +		return;
+> +	}
+> +
+> +	if (cmd->result) {
+> +		ata_scsi_qc_done(qc, false, 0);
+>  		return;
+>  	}
+> =20
+
+[Severity: High]
+This isn't a bug introduced by this patch, but should atapi_qc_complete()
+be calling ata_scsi_schedule_deferred_qc(link) before returning?
+
+Unlike ata_scsi_qc_complete() which kicks deferred commands,
+atapi_qc_complete() misses this call on all of its exit paths, including
+the ones modified here. If an ATAPI command is executing on a shared PATA
+link and a concurrent command is issued to the other device, it gets
+deferred by ata_std_qc_defer(). When the ATAPI command finishes, it
+appears the deferred command will be trapped in link->deferred_qc and
+never issued, eventually failing with DID_TIME_OUT and causing device hangs.
+
+Could this function be missing a call to ata_scsi_schedule_deferred_qc()
+to prevent starvation?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260721064027.2081=
+195-1-dlemoal@kernel.org?part=3D1
