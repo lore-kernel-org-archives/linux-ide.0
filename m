@@ -1,390 +1,201 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022086.outbound.protection.outlook.com [52.101.101.86])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E67F447884C
-	for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2026 14:33:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784817200; cv=none; b=pDTaI1HZqcKssCKNOOFd7gRYyhMGUSr8rSkYOUiBbabefsmS/uI3Xv6qz8ywbxwKuG5+Zwjz3ztqjw+zM5IOwE7KmQFM5S5mYulEzy0fhcUyHSf+bw+4uwPRDsk8afZiDkFD6ZVsyl5+xv9zI8/jTRfooa8XXiR7ZKFhQnXg4Qc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784817200; c=relaxed/simple;
-	bh=1iPgfPqtN65TNA94HJTPaKoTVAJOYO3sttLNiXqb08U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P4kpnllYaraeual3E2Y6Gm7apNGpssVBjBpjsD7oGvpoXoUU1SMTUtQAg2KLHs9YCGkOryEGZT6wcgcGndHJEFb9X6HicEp7M5Yj+wTlGZxRShicOKndUylYC8uq8PCMU/c4MwuXnKUA3Dqq1UMBfOThxhzD4RFoSYZ6hdHkwhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HOpKBEm/; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF58D36606E;
+	Thu, 23 Jul 2026 18:58:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.86
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784833094; cv=fail; b=Vce+jWbUZ/3mk36KkQv5GMnXF236IFtT4BNLK++BUVGJd0hGsO5XxXFlH5r/2M1k/GznoVNSxcLiejk3NjLP9Hoo/MF2mCm3bcFhRi3N7LSQiBHO2LvhdTuCt56100LngW5PkASH7pa2pPkr3UQSId1OY5S0cAbd9PLgW/At7v4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784833094; c=relaxed/simple;
+	bh=FmfkcHw4QqdapG3+OrbGkAXBmDseorsdja9ku6UtdKo=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=fRAgzJ2+Wakn5Q8YvkfYyE+zMzXSCCWKB0gyh47ac0q4rn7hpsHDvB4kmQiihwPy8Cox9WGhgkrdOn693hdYmIiwFUhfdaVPNo6pWp7uk1Qd1z8Y+bWJ6atG+Q8cY9f5vr8HHAvRw+NP3G2Zp0qrUgOY22tdVOqanfzTrL+0WLY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=gGCCPfKo; arc=fail smtp.client-ip=52.101.101.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HOpKBEm/"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cab97c86bdso90015ad.1
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2026 07:33:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784817194; x=1785421994; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=vZI+OzvVPDlnkxQ1LYwHN0YJJPOPV9liKVQ0dUyj/Oc=;
-        b=HOpKBEm/xwp0+rY5MGEGrBjoQOHQ8CP0eSmecJD67RgVIJots30VKWmy+oPYwnF7qb
-         zYQ6oC7AZXyGhCJO3C/STDpxfxjEFu7fd6uge3Cdw8EPWBxmdRHlWuhXNRvjCg4brZ/k
-         POwfAVfXE3oUgw9u8dviFqfDJ0awh2BDOcrrdRlLge6WpRffwArTax32w+ASR0sYQlgs
-         VzE6+Ng7qY8YuW1ynbIKtvW1JJguq+WuuMvKV6LKZTa0Rr3mk4hd9MkWgviH7pCYt21I
-         a3Szd0RAEu7nwfVamnOeZEX99Cub+BYicTW1DHY6ZvKr8+tF8fLiWjjejMunn/Ff7mma
-         mjDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784817194; x=1785421994;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=vZI+OzvVPDlnkxQ1LYwHN0YJJPOPV9liKVQ0dUyj/Oc=;
-        b=BXAX4U+gYE5Lkk4lP8H1RziS366QNnxXLsEWFtW0CD4jqB6y9m0RSMdsjcczkSwmu9
-         bWRI97pKVr27goBqAqB6PEdymJ4rLLT+0hOuy+RBLFwHPF9UAlGOLAhGUslAoeL3L7UG
-         GVnRBkoGtrUIMUUENJmpe0mj6RKuAHaIRLL2Sc4lOxCloS9lMfIWJhywxM3+JeTOUPdD
-         PHn9SHd8nnppJWNTSUrS4jjbzvevhuk/rj5hXP1HvVarJ99n7V133R5Q7IBl72V0TbZf
-         MOBWTiZZTPGqYXAG2EMTbJ/v/KxWsozqo8/AWEN9fqWZDLf3FOuhw+UdqGBFJ3MIXz4q
-         NlpA==
-X-Gm-Message-State: AOJu0Yxx6W44zNp+ulp0pUFTebnQgrunOTQjQDU+npBuPL6K4mxe2KxC
-	Bt+fLVJJRiJ+vNClLSAkNjKxQixjeEx1ErDP83OMCmIQn6GnZo365+N7tWEtijhH0Q==
-X-Gm-Gg: AR+sD10cg7t9K1FPe00MiOuTH3TwrzAasquq8T498ioHvsCewhOl5bRiYC9SB+bNsWm
-	8f5dlg8o4/oJBMDIJEB4EAbCdEtqwEeSmQxO2mLIJxgm3fl8uV5t8ZvZ4ali0ezSxGzpOHDtJH0
-	QypkKTZMbaI68nVdlzqSqDh0mDD2oMAxe+34UUv1kC35qS9z9x93CuWCbsKwzX9p81iSf5h67ag
-	hBzpygSyE9TKckF+8WGZ4X5XBMQXc1GZYaxjty89sZR8OXXrFhk2BphSay/vLQQ1mEJt7Hy0Z44
-	XyjM4fbl+0SWV3iy7l+qwSzzyfl1utdGtiOwVLclvu8F1z46ciEwtAocfwYqJugaQ+qzKY3IyeS
-	2+IT6cN/k76fZ31hDciQ4xQ8+6UlD+ZCf7COnceQloyfBofg2wG2+ZNzwBZzbF7Rxd0W/8FCQMe
-	MS4GEC375thq6cNqeXOiI9L6mug1yLP7keh3r0eBhnPnz68Ert
-X-Received: by 2002:a17:902:f60e:b0:2c1:ee6e:4e49 with SMTP id d9443c01a7336-2cfa53828bdmr2852265ad.26.1784817192680;
-        Thu, 23 Jul 2026 07:33:12 -0700 (PDT)
-Received: from google.com (249.65.83.34.bc.googleusercontent.com. [34.83.65.249])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbb8f1a9967sm2836789a12.25.2026.07.23.07.33.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 07:33:11 -0700 (PDT)
-Date: Thu, 23 Jul 2026 07:33:07 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-Message-ID: <amImI_xndJs48pJJ@google.com>
-References: <20260721064027.2081195-1-dlemoal@kernel.org>
- <20260721064027.2081195-2-dlemoal@kernel.org>
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="gGCCPfKo"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=sC93KypOVk7SOBVE6myQou09DcQsKhfP7zJl6+N2/p4IWkqEanM0seN3+9Fev0NQro35T9mMfLGLaUCEDqpqszdYJdjAtYROfYoMZxA4HGiAGZ7bEwNKlGP2TTIBJpO3c5TsorMmohGpa4LdbGPbKk/iwQKWKf+O2qUdZBaHhD7cqz6kZHO8i++TH63ZH6g8DTyJVsrPaBLPJIVwvKT+4zq9eeJ/Uck8zRhhDhtmzoadtCun2+uGY1jnsSwXJr7+gz9t8fO8aAuNUF4DpGsfq1X6qwD8kIxdwKTA+GJwkSMFgUuXG5k948b8M9LxPqdASMxnsom2agadvAVnzrsLXg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=CpzpsCWwZe4bG2fLGxYvu0P/ao9Y6eo4U9wAjnm2A74=;
+ b=ETgh23pH7OtL8R8MLUXtJ+uvKzXEwXEq+ZWheAQTQzOSAnvFA2JJK9RfOiljCbL3zYraTRPWpKhBNoMHxsc5+fh2cKnNXE8DsVt/qy+c/wlLDJL02VxRBoFixrszqvroz33AIrEgT0X4Kx8RQHYdm7uyK2E8HFAKW8ncHR5Upxqc8+wnFsnuqBmNTgqQo9o5FWdNO1x9/8w+ejhqSYVbyFWa83u1awvOCZOQ9yLVdjZ5+ZQ8K2VVpIxlFIKeGyHvFTZeY9KnLN95DnSFK5M9ylzS4zdJDvP64sXOZj4O+dwQk0RuSIWf5q9l70xdE6dWKrXyJ4Opve4Ud6+g0hR3wg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CpzpsCWwZe4bG2fLGxYvu0P/ao9Y6eo4U9wAjnm2A74=;
+ b=gGCCPfKoysJvsAeaUiHa5ZrwaHDoNPzStO6u6qz3i8qwwr+a1IT7Ew3NZpIkiClJU15f6FOHc5ay+BBRTDpeckKxKoBII/MgHfzSdYDNdqaAf9nTvR6x+/aRoyBwF4hTeugthPpEclBiL4uNmd5YBEpkyh3uu+GbqKyW3Dj2yRk=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by LOYP265MB2208.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:115::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Thu, 23 Jul
+ 2026 18:57:59 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%2]) with mapi id 15.21.0245.009; Thu, 23 Jul 2026
+ 18:57:59 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 23 Jul 2026 19:57:58 +0100
+Message-Id: <DK66ISTEVM5H.3K5O68CW1F8ZB@garyguo.net>
+Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Zhenzhong Duan"
+ <zhenzhong.duan@gmail.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Danilo Krummrich" <dakr@kernel.org>, "Damien Le Moal"
+ <dlemoal@kernel.org>, "Niklas Cassel" <cassel@kernel.org>, "GOTO Masanori"
+ <gotom@debian.or.jp>, "YOKOTA Hiroshi" <yokota@netlab.is.tsukuba.ac.jp>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>, "Vaibhav Gupta"
+ <vaibhavgupta40@gmail.com>, "Jens Taprogge" <jens.taprogge@taprogge.org>,
+ "Ido Schimmel" <idosch@nvidia.com>, "Petr Machata" <petrm@nvidia.com>,
+ "Andrew Lunn" <andrew+netdev@lunn.ch>, "David S. Miller"
+ <davem@davemloft.net>, "Eric Dumazet" <edumazet@google.com>, "Jakub
+ Kicinski" <kuba@kernel.org>, "Paolo Abeni" <pabeni@redhat.com>, "David
+ Airlie" <airlied@redhat.com>, <linux-pci@vger.kernel.org>,
+ <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+ <industrypack-devel@lists.sourceforge.net>, <netdev@vger.kernel.org>,
+ <dri-devel@lists.freedesktop.org>, "Sashiko" <sashiko-bot@kernel.org>
+Subject: Re: [PATCH v3 9/9] pci: fix UAF when probe runs concurrent to dyn
+ ID removal
+From: "Gary Guo" <gary@garyguo.net>
+To: "Bjorn Helgaas" <helgaas@kernel.org>, "Gary Guo" <gary@garyguo.net>
+X-Mailer: aerc 0.21.0
+References: <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
+ <20260721223500.GA690676@bhelgaas>
+In-Reply-To: <20260721223500.GA690676@bhelgaas>
+X-ClientProxiedBy: LO4P265CA0180.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:311::11) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260721064027.2081195-2-dlemoal@kernel.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LOYP265MB2208:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4dab689d-58d1-45ec-e3a3-08dee8ec5045
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|7416014|376014|10070799003|366016|1800799024|56012099006|10067099003|4143699003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	eImn8aTkxu2wV3Viu+bGzZD9g8s15EcJb/oteLAfaHyMJ9poOVk6AYX9xuoZhjdHU0HfJOYfuYnjb6iKW8w+0bR4lo2OQq/m2lDQs8HaxiUIq60+gw20eiGZxkd7kcxxG8/4tWhLlwyqn3ildX5I/+zjxLwZQQRZG5fqI9ATNl2TsiJxlHhsColwlHS+xt5W/8yxdpV4ulvDvhpLE9zeQUEenQBeAxEIrq6HQbM5PwTJIUBdp5OGoFQyTi3Q8UQPcjBF/g5hQCDmpsli2/UrE5qiJEeoxZx082SXmiGwESSwyG8WHj2y2UAznx7k60XDamkr2+oNqVQ9N79ibSxrbs9BMJIb5lq3fGuDXhdPp63bV7EaKv0j9mnyVrrXt7t865ghBsNoYbHaRwnN3yShc2dvbsBhvzhSqfrWhNR3fKSbMj1emNfiEhHDTJY5cbDqYXgmE+/TG5ZyD8NhznPvnvrvgz3DXrfNPVlavwXOqyvSDpzAQJUtYpowPGhpIlGPhZH39pZTr0eYaa1cq+i7H6s9ZjsBXIMOEGB+ZB9mG8HnqgJ3eHjPgUoyzHA61YbMP6kiQv6zesTxXcpH5aFDHHq7Ttgr+tRZ2Rj2RmZls1ZWgo44FMHzRl1XsIv1oexquA+nzwbSYmLSK5Ti1ZvhxJ28Ag6OZ48OMP0zzbtyKts=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(376014)(10070799003)(366016)(1800799024)(56012099006)(10067099003)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?R2toTm9LdWVFaVdVTnd3OUZZYU80azBlRVFWdXlGeDFOYjdtaUlCNEZEdnpO?=
+ =?utf-8?B?RVEyL1JpbEJYaHhaV01pdGNYcFNQWEduRDJvdWYwZFJqdVlUNEp2QWhEQjdq?=
+ =?utf-8?B?TjhvNk9YL0kya0pJRE9zVEQ3NE1WNXY2emxUVnRSRytCYnlBZUpHR1ZqN2Vn?=
+ =?utf-8?B?bDVUczVTd0tpV3o2SUJlQit4UE9Ld2pVbXorOVpQQys3SjF1eXJsOVRoUDJh?=
+ =?utf-8?B?Z1ZRbFh0d1I4RklLODFTeE9kQm4reGttcEczTmZldCtWWEt1WU1vcEk0RmNq?=
+ =?utf-8?B?VVpKZml5QVk3YjBzZ1B1OW1PUDd1STJuOU9tU2ZNNWZUYzZsN1BraW42blNX?=
+ =?utf-8?B?d1dLcUpzUHVOV2FxM2FIRG1DYS8zekMrSnkveWVYVVhsbVpzQXErQm9kY0VS?=
+ =?utf-8?B?YW0rbVFTM2p6SmZHZThXYWtLNHJkV3dWUUh4NUdLU1gvOWhQTzlVQ0NhZEln?=
+ =?utf-8?B?TjdBQWFPVHBZMWhuL1FXYVNGWXE2L0xuVzVGZEJSRGhMUGJrbGVFcFV2bVI3?=
+ =?utf-8?B?aGFzaGpxK0Zia0lseEVJb0FjdlVFUzg3TTB4cjRDbzZiU2tsOTJGWkNCTys3?=
+ =?utf-8?B?MndZa1A5UFNaMSs3ZE9Mdnh4ZE5OSC84WG5zRHVHTUYrb3I5NXMwcmR5S0Vt?=
+ =?utf-8?B?cEpqb3hLYlMxQkRQbWZBTjFHVlZaRmU4R2JsYldIb1lDRllJcEZQMEJKQjF1?=
+ =?utf-8?B?NURGbGJnRDA3TGlRODR1ZmhNUmFNbW9WR2hKbkVqVXpoZVc2anc0ck55RE5u?=
+ =?utf-8?B?eG5WSjZuekFCTjBxOGRWaVozSGFZbUZmS0JjUC9sQm56NXNRcWVhK0h6d1B6?=
+ =?utf-8?B?VWZCcWhmR0dKYkJ1a0s5Wk1MZmNJQkwvaUVjMnlDSmMyVEk2aXBXV2JPU0pt?=
+ =?utf-8?B?b2sxbDlLaU1TaTJBMFUraU40NTFyNVRsa3Ntam1OWFFPbnlPd0VseldXNHlC?=
+ =?utf-8?B?SGZtaGwzQTErbGVGd05KUWNyWVBrZkRGQjRBc09Ec3lqM0oxa2JvZFRBT2xq?=
+ =?utf-8?B?VUlxZGRXMEs3SEVIaDhxUE5vem5iR0U1QjloMUhYbnJ2Q2gzbVQyMGNtaDVD?=
+ =?utf-8?B?c0NqejVnVTBNbWhWcmFZc1JVc3NUM2t0LzJGN003Q1NRL2kzVUpFMkZrc2wz?=
+ =?utf-8?B?VFVha3lZNjZHT2tDbXNOZDBNdVNaQWJIKzNybWhROERrWE5FaC9hOUtLd3Jv?=
+ =?utf-8?B?T0ZqZkJ2bGlRVFJGZkFBcUlRTTNhZWJ0VUdIa1N2NnZJTGttVEFxSVZkajdX?=
+ =?utf-8?B?ckE1QS9QR3ArU3RoWjZQNWtCQXB3bjRlTUUvMGlIWW15dFh2eDBjMkJGWDYw?=
+ =?utf-8?B?bE1JQ21UcjJTcFdSV0VNSnJoUTdLVWVwbHRaam9meGs5bisyMWpJQ1N2aUhE?=
+ =?utf-8?B?WThRL01vUEg3QnRiRkZ4Sm5XUmFRZWZhZE9peGhvSWczcm5ORUpVdkVQcUxU?=
+ =?utf-8?B?WTM3djEwUTRUL1FZOW9EQTMwNE9vYVo2WEFYZnk1K1FpNlY5bVYrbDVzS1Bx?=
+ =?utf-8?B?dEtsNEZqTjVOWHV6UUozUVQ0V21FTWQxcjNnem9mZVlrUHhlZGZMUWNnOXBG?=
+ =?utf-8?B?MDJIR1FPQzhVcmkvWnFCa2ppY1JHMU5FeHVSVnp2eEhBZ1B3TTd4VmZMcHZj?=
+ =?utf-8?B?b1pPb2k3WFpiTmdpZnRXSmtJQVFTNUtQdnoxMkM1eG1QUHdoQXJPM09xRm9o?=
+ =?utf-8?B?VGhHcTRSUHdhNHVDbzg3T1RBR1RyWEMyZnovaEZuS0ZIUHZEeGpkVjl3cjRj?=
+ =?utf-8?B?U2FDUlVSYXY2K3l1aTN5ZE15VUE5NENEMWxtUXJjNngxRVB1dDRTKzVua2lW?=
+ =?utf-8?B?QVJ6TTZpWUN2Y3pJLzB4SzlNVnRjVmtlcUhrVlY2YmFHYkszWnRaZDZlcGI5?=
+ =?utf-8?B?dXBMbVdXVmtXdndCOUtiQXhRL3hMekhINEc3dGo4bmVodmtuU0E1N3llb01G?=
+ =?utf-8?B?Y2RLYWV5NmZKSC9nZU9vVk9HWnMzb1g4R2hnNEg4bnY3U3k0SVpkZ01qSkxX?=
+ =?utf-8?B?S3lzSS9TazVWSU9WWFJWYjcwMUZWd2JrajFENkx0MklMQTNEQjBGUkRoeVdk?=
+ =?utf-8?B?eFoyeElCNDBmWlRPNi90a1JnYXlYVnlzYnVFYzRkUlJuNHgzc05DMGI0ZWNl?=
+ =?utf-8?B?TFFGOEZOSzZleWxaZGplRDV5ekVKUUtPTTQvWVdnU2ZnRytqNHlxUm9vdVdw?=
+ =?utf-8?B?dzRDc1lwdkVQM1Y1WU5sS3h3am1YaFROTVp1Q2lUaTg0bVpOT1F6Smp2a0FI?=
+ =?utf-8?B?ZFFXV3F2cUx0dEhrL2g4ZEVoSEkwT2dLR1hMTjhSK2I5ZWRJUlN1SUcxS1gv?=
+ =?utf-8?B?OUJEZTh6Y01KV0dOd3RlZWhDWGYzM1BCNHJaQlgzTjJpampnSWdqZz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4dab689d-58d1-45ec-e3a3-08dee8ec5045
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 18:57:59.0654
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Ec/ftnzcqW2F6OazifJQh0L70kJ6bsgcbITh95Gz8KROVEBnF0azZP+jjXeYUYFZwHtXknAeWhh1DBXywHFlrA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LOYP265MB2208
 
-On Tue, Jul 21, 2026 at 03:40:26PM +0900, Damien Le Moal wrote:
-> If a command times out while we have deferred non-NCQ commands waiting to
-> be issued, the SCSI EH task is not immediately woken up as the waiting
-> deferred commands are never issued nor completed, thus leaving the SCSI
-> host in a busy state (shost->host_failed != scsi_host_busy(shost)) which
-> prevents the SCSI EH task from being woken up. Eventually, when the
-> deferred commands also time out, the SCSI EH task is woken up and the
-> timeout processing occurs.
-> 
-> Avoid this unnecessary SCSI EH task wake-up additional time by scheduling
-> a retry of all waiting deferred QCs, using the eh_timed_out SCSI host
-> template operation. The function ata_scsi_eh_timed_out() is introduced to
-> implement this operation.
-> 
-> However, terminating deferred commands with DID_REQUEUE to force a retry
-> by calling the function ata_scsi_requeue_deferred_qc() may still keep the
-> SCSI host in a busy state because the block layer may immediately re-issue
-> these commands. The solution to this is to schedule libata EH for the
-> port which suffered the command timeout to prevent accepting any new
-> command. ata_scsi_requeue_deferred_qc() is modified to add a call to
-> ata_port_schedule_eh() for this purpose.
-> 
-> In addition to this change, ata_scsi_requeue_deferred_qc() is also
-> modified to take a new timedout_scmd scsi command argument which indicates
-> the SCSI command that timed out. With this additional argument,
-> ata_scsi_requeue_deferred_qc() can now also terminate with DID_TIME_OUT
-> any timed out deferred qc, which simplifies ata_scsi_cmd_error_handler().
-> In this case, ata_scsi_requeue_deferred_qc() returns SCSI_EH_DONE, with
-> this return value propagated back to the ata_scsi_eh_timed_out() operation
-> to indicate to scsi_timeout() that the timed out command was handled and
-> no further processing is needed.
-> 
-> For non-timed out deferred qc that need to be retried,
-> ata_scsi_requeue_deferred_qc() returns SCSI_EH_NOT_HANDLED, thus
-> indicating to scsi_timeout() that the timed out command needs to go
-> through the SCSI EH (and libata EH) processing by adding it to the EH work
-> queue with scsi_eh_scmd_add().
-> 
-> One side effect of these changes is that the function atapi_qc_complete()
-> needs to be modified to ensure that a deferred ATAPI command that needs
-> to be retried is completed with DID_REQUEUE instead of the default
-> SAM_STAT_GOOD status, and a command that timed out is completed with
-> DID_TIME_OUT instead of SAM_STAT_CHECK_CONDITION.
-> 
-> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+On Tue Jul 21, 2026 at 11:35 PM BST, Bjorn Helgaas wrote:
+> On Mon, Jul 06, 2026 at 03:11:21PM +0100, Gary Guo wrote:
+>> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
+>> as remove_id_store can free the node. Thus, make a copy in
+>> pci_match_device. Also, clarify that the id parameter is only valid duri=
+ng
+>> probe.
+>>=20
+>> Reported-by: Sashiko <sashiko-bot@kernel.org>
+>> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kerne=
+l.org/
+>> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
+>> Signed-off-by: Gary Guo <gary@garyguo.net>
+>> ---
+>>  drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
+>>  include/linux/pci.h      |  1 +
+>>  2 files changed, 16 insertions(+), 13 deletions(-)
+>>=20
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 64b308b6e61c..92c17c116de6 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -979,6 +979,7 @@ struct module;
+>>   *		function returns zero when the driver chooses to
+>>   *		take "ownership" of the device or an error code
+>>   *		(negative number) otherwise.
+>> + *		The pci_device_id parameter is only valid during probe.
+>
+> The probe function takes a pointer to a struct pci_device_id, so I
+> think the requirement is that the struct pci_device_id only *needs* to
+> be valid during .probe(), right, i.e., the PCI core probe path makes
+> its own copy of the ID and doesn't retain the pointer after .probe()
+> returns, right?
+>
+> I assume the caller determines the struct pci_device_id lifetime, and
+> it could be forever.
+>
+> Could say something like:
+>
+>   The pci_device_id parameter only needs to be valid during probe.
 
-Hi Damien,
+As a contract on function parameter, the caller needs to guarantee that it =
+lives
+at least as long as documented (i.e. during the whole probe) and the callee
+cannot assume that it will be valid beyond what's guaranteed.
 
-I left a comment regarding redundant incrementing of scsicmd->allowed.
-Other than that, the patch looks good!
+How about:
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+    The pci_device_id parameter is only guaranteed to be valid during probe=
+.
 
-Thanks,
-Igor
+Best,
+Gary
 
-> ---
->  drivers/ata/libata-eh.c   |  29 +++-------
->  drivers/ata/libata-scsi.c | 108 ++++++++++++++++++++++++++++++++++----
->  drivers/ata/libata.h      |   3 +-
->  include/linux/libata.h    |   2 +
->  4 files changed, 107 insertions(+), 35 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 05df7ea6954a..e01277ee1fa9 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -650,29 +650,12 @@ int ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
->  		set_host_byte(scmd, DID_OK);
->  
->  		ata_qc_for_each_raw(ap, qc, i) {
-> -			if (qc->scsicmd != scmd)
-> -				continue;
-> -			if ((qc->flags & ATA_QCFLAG_ACTIVE) ||
-> -			    qc == qc->dev->link->deferred_qc)
-> +			if (qc->scsicmd == scmd &&
-> +			    qc->flags & ATA_QCFLAG_ACTIVE)
->  				break;
->  		}
->  
-> -		if (i < ATA_MAX_QUEUE && qc == qc->dev->link->deferred_qc) {
-> -			/*
-> -			 * This is a deferred command that timed out while
-> -			 * waiting for the command queue to drain. Since the qc
-> -			 * is not active yet (deferred_qc is still set, so the
-> -			 * deferred qc work has not issued the command yet),
-> -			 * simply signal the timeout by finishing the SCSI
-> -			 * command and clear the deferred qc to prevent the
-> -			 * deferred qc work from issuing this qc.
-> -			 */
-> -			WARN_ON_ONCE(qc->flags & ATA_QCFLAG_ACTIVE);
-> -			qc->dev->link->deferred_qc = NULL;
-> -			cancel_work(&qc->dev->link->deferred_qc_work);
-> -			set_host_byte(scmd, DID_TIME_OUT);
-> -			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-> -		} else if (i < ATA_MAX_QUEUE) {
-> +		if (i < ATA_MAX_QUEUE) {
->  			/* the scmd has an associated qc */
->  			if (!(qc->flags & ATA_QCFLAG_EH)) {
->  				/* which hasn't failed yet, timeout */
-> @@ -948,10 +931,10 @@ static void ata_eh_set_pending(struct ata_port *ap, bool fastdrain)
->  	ap->pflags |= ATA_PFLAG_EH_PENDING;
->  
->  	/*
-> -	 * If we have a deferred qc, requeue it so that it is retried once EH
-> -	 * completes.
-> +	 * If we have deferred QCs, requeue them so that the SCSI EH task can
-> +	 * run.
->  	 */
-> -	ata_scsi_requeue_deferred_qc(ap);
-> +	ata_scsi_requeue_deferred_qc(ap, NULL);
->  
->  	if (!fastdrain)
->  		return;
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 5868526301a2..c2f2f711fd98 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1685,26 +1685,75 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
->  	spin_unlock_irqrestore(ap->lock, flags);
->  }
->  
-> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
-> +enum scsi_timeout_action ata_scsi_requeue_deferred_qc(struct ata_port *ap,
-> +						struct scsi_cmnd *timedout_scmd)
->  {
-> +	enum scsi_timeout_action action = SCSI_EH_NOT_HANDLED;
-> +	struct ata_queued_cmd *qc;
->  	struct ata_link *link;
-> +	u32 host_byte;
->  
->  	lockdep_assert_held(ap->lock);
->  
->  	/*
-> -	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
-> -	 * do not try to be smart about what to do with this deferred command
-> -	 * and simply requeue it by completing it with DID_REQUEUE.
-> +	 * If we have deferred QCs when a reset, a timeout or an NCQ command
-> +	 * fails, do not try to be smart about what to do with the deferred
-> +	 * commands and simply terminate them and let the SCSI layer decide
-> +	 * what to do.
->  	 */
->  	ata_for_each_link(link, ap, PMP_FIRST) {
-> -		struct ata_queued_cmd *qc = link->deferred_qc;
-> +		qc = link->deferred_qc;
-> +		if (!qc)
-> +			continue;
-> +
-> +		/*
-> +		 * Clear the deferred QC so that the deferred work does not try
-> +		 * to issue it.
-> +		 */
-> +		link->deferred_qc = NULL;
-> +		cancel_work(&link->deferred_qc_work);
-> +
-> +		/*
-> +		 * We are going to complete some scsi command, either with
-> +		 * DID_TIME_OUT if the command timed out while waiting for being
-> +		 * issued, or with DID_REQUEUE if another command timed out or
-> +		 * we had a failed command. However, the block layer may re-issue
-> +		 * immediately these commands, keeping the scsi host busy and
-> +		 * thus preventing the SCSI EH task from running.
-> +		 * So schedule EH on the port to prevent accepting new commands
-> +		 * until everything is sorted out with the error or timeout that
-> +		 * got us here in the first place. Note that we set EH pending
-> +		 * on the port before calling ata_port_schedule_eh() so that we
-> +		 * do not reenter this function from ata_eh_set_pending() with
-> +		 * timedout_scmd being NULL and erroneously retry deferred QCs
-> +		 * that have timed out on other links.
-> +		 */
-> +		if (!ata_port_eh_scheduled(ap)) {
-> +			ap->pflags |= ATA_PFLAG_EH_PENDING;
-> +			ata_port_schedule_eh(ap);
-> +		}
->  
-> -		if (qc) {
-> -			link->deferred_qc = NULL;
-> -			cancel_work(&link->deferred_qc_work);
-> -			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-> +		/*
-> +		 * If we are being called from scsi_timeout(), then we have a
-> +		 * non-NULL timedout_scmd. If the timed out command is for a
-> +		 * deferred qc, terminate it with DID_TIME_OUT and tell
-> +		 * scsi_timeout() that we are done. Otherwise, ask for a retry
-> +		 * with DID_REQUEUE and tell scsi_timeout() that we have not
-> +		 * handled the timeout so that the timed out command gets added
-> +		 * to the EH work queue with scsi_eh_scmd_add(), for later
-> +		 * handling with libata EH ata_scsi_cmd_error_handler().
-> +		 */
-> +		if (qc->scsicmd != timedout_scmd) {
-> +			qc->scsicmd->allowed++;
-
-Incrementing scsicmd->allowed seems to be unnecessary. scsicmd->retries
-is not being incremented for DID_REQUEUE. 
-
-> +			host_byte = DID_REQUEUE;
-> +		} else {
-> +			host_byte = DID_TIME_OUT;
-> +			action = SCSI_EH_DONE;
->  		}
-> +		ata_scsi_qc_done(qc, true, host_byte << 16);
->  	}
-> +
-> +	return action;
->  }
->  
->  static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
-> @@ -1723,13 +1772,42 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
->  		return;
->  
->  	if (ata_port_eh_scheduled(ap)) {
-> -		ata_scsi_requeue_deferred_qc(ap);
-> +		ata_scsi_requeue_deferred_qc(ap, NULL);
->  		return;
->  	}
->  	if (!ap->ops->qc_defer(qc))
->  		queue_work(system_highpri_wq, &link->deferred_qc_work);
->  }
->  
-> +static enum scsi_timeout_action
-> +ata_scsi_retry_deferred_qc(struct ata_port *ap, struct scsi_cmnd *scmd)
-> +{
-> +	enum scsi_timeout_action action;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	action = ata_scsi_requeue_deferred_qc(ap, scmd);
-> +	spin_unlock_irqrestore(ap->lock, flags);
-> +
-> +	return action;
-> +}
-> +
-> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
-> +{
-> +	struct ata_port *ap = ata_shost_to_port(scmd->device->host);
-> +
-> +	/*
-> +	 * ata_scsi_cmd_error_handler() takes care of timed-out deferred queued
-> +	 * commands. However, if we had any other command time out and we have
-> +	 * deferred QCs, we must let scsi_timeout() handle them with
-> +	 * scsi_eh_scmd_add() so that we do not unnecessarilly delay starting
-> +	 * the SCSI EH task. So requeue all deferred queued commands for retry
-> +	 * through libata EH.
-> +	 */
-> +	return ata_scsi_retry_deferred_qc(ap, scmd);
-> +}
-> +EXPORT_SYMBOL_GPL(ata_scsi_eh_timed_out);
-> +
->  static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
->  {
->  	struct ata_link *link = qc->dev->link;
-> @@ -2936,7 +3014,15 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
->  		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
->  			qc->dev->sdev->locked = 0;
->  
-> -		ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
-> +		if (cmd->result)
-> +			ata_scsi_qc_done(qc, false, 0);
-> +		else
-> +			ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
-> +		return;
-> +	}
-> +
-> +	if (cmd->result) {
-> +		ata_scsi_qc_done(qc, false, 0);
->  		return;
->  	}
->  
-> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-> index 700627596ce1..8dacc1daabf0 100644
-> --- a/drivers/ata/libata.h
-> +++ b/drivers/ata/libata.h
-> @@ -180,7 +180,8 @@ enum scsi_qc_status __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
->  					struct ata_port *ap)
->  	__must_hold(ap->lock);
->  void ata_scsi_deferred_qc_work(struct work_struct *work);
-> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap);
-> +enum scsi_timeout_action ata_scsi_requeue_deferred_qc(struct ata_port *ap,
-> +						      struct scsi_cmnd *scmd);
->  
->  /* libata-eh.c */
->  extern unsigned int ata_internal_cmd_timeout(struct ata_device *dev, u8 cmd);
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 96e626d6a7ca..327da43d7496 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1153,6 +1153,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
->  #endif
->  extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
->  					     struct scsi_cmnd *cmd);
-> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
->  #if IS_REACHABLE(CONFIG_ATA)
->  bool ata_scsi_dma_need_drain(struct request *rq);
->  #else
-> @@ -1464,6 +1465,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
->  	.ioctl			= ata_scsi_ioctl,		\
->  	ATA_SCSI_COMPAT_IOCTL					\
->  	.queuecommand		= ata_scsi_queuecmd,		\
-> +	.eh_timed_out		= ata_scsi_eh_timed_out,	\
->  	.dma_need_drain		= ata_scsi_dma_need_drain,	\
->  	.this_id		= ATA_SHT_THIS_ID,		\
->  	.emulated		= ATA_SHT_EMULATED,		\
-> -- 
-> 2.55.0
-> 
