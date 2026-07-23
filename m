@@ -1,61 +1,61 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 424243803C2
-	for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2026 19:10:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 984D836F901
+	for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2026 19:13:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784833830; cv=none; b=F/tENcMxKwlLwe3JyjY2u/XglDnvZGNm3h8kCAxsDzBVDWaJi9ARF2wYWUPkTnMpPZqhv2gApgqRWxEpTWQkbVGKkY2aEgApSYDT2WSF+0lZpyC49IojsvO3dsXCfJqZdAWuXH4LusL88DzkzyANmrWbOCW/wPS8ilFGTB8umjY=
+	t=1784833986; cv=none; b=jj48kVly66F1WnklPcB5RHRO1xJmVagdCmZ4IS/5gQNjbkPdhKYkjZy+AIb1Lg8vcilK8WJqDixOQNznnc88R++/NQC/oPCGHApznXJ/7uA8rjJsAq9sxM2SWv8fv7uwgS+jyS6/6L5qmDwUdduHNwpVPeIKOc+Cx92P/QnqtNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784833830; c=relaxed/simple;
-	bh=CGvBFdrnBTyCmbklutKLWgHULCfNFj0YpxQdGzvdoVY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=r4ZCh7/zyKV35IQYG3vQ03aAMfE6c6iehexSq5gdqmN0rsFC2xoiur+8AEWaXKixYrhAgodqq+GuqJBEFawEg+Kvlr1Kq2cpXloyWflClMBabgkcZjS5c11SJ0mlItdQpq+zHu68bAeQDAv9lVcugvCHP3NgaU5eDzwn9HGWobY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YcaOb3K0; arc=none smtp.client-ip=209.85.214.180
+	s=arc-20240116; t=1784833986; c=relaxed/simple;
+	bh=qIYhyFMm8ZkAnEifeEZILDs8zeE6roEPdbjvxoTZ+NY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PE/JmlQKo0JbJNM/k6bWyrZ8PYSk3G8CeW2aJCpIDNQ/pbdo4fNn3/9PPApap2ngnrA6rcNys8F08Zy+Csq0KghaNYA3euaa0F4R2wwJVmbEMsOqAOsecwWSB+19SmUxZeZMvfCYqaIiolrVauz68zfy7+8XmvsKpANhj2+Z5L0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cygelzo1; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YcaOb3K0"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2cab973140bso14293315ad.3
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2026 12:10:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cygelzo1"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2cf50c6f235so14224715ad.0
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2026 12:13:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784833827; x=1785438627; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784833984; x=1785438784; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Kma+H0GidEuVkDhtrT3eR8/peQN+opodaig3EX+nuRs=;
-        b=YcaOb3K0TCrjF1oB2cy5+5I8jaEgu7XB2ugG6IDAndYn6ajUglUt/lbg8P4MD5ZG5e
-         0HE/G/q4AzjsX2R2jibQJmCkTBqOHYg8XzvbnJsCzV+zA0vfn/c8wRzXUanf56BLlm/f
-         weMBn0UWok2oJ6AcbDWTIW/mFJn66Trk5ZoGvisnUADzmSf3HCmm8egp1gXyamGAq+T8
-         x8hzDi8cq7/M3REnGkKpsMeP7jOMPYALTAfkZ9y+fcce2z5pJol5O14Q4MRgb+7M2GhD
-         ygAIsYiasrclk06UsSevy3Zipp0yEwdtNP78+ENFXsJnJ0YaCngWFSV1GL7aDDrVxjzf
-         kseA==
+        bh=apccZsPdPUzjdUN/B9litPObvaZZXYJcoMOK0Da9NHw=;
+        b=cygelzo1Cd0qSVreYwy0laeHDpe2Lw9aTIvRz/T0nxSMsjKJ1jyGhop60HAb/ta3aC
+         9F/IOudED5vjkJGa4JgKsali7GudjanC+clfMEyZOqj0iZo36StNUiUtIUf2nS+woYKI
+         IOCRO1eSmweJgpjmEXgW7hzC/daT4d6Wn6LaHbvJxgXg+r9hZS6lyNvv/DxVAvHNIWN8
+         iz9fVvMdjo6+99H0zFzNXm1MZ0jwv4gp3BKodi9wjovKIaQqUJfXlfB9JsKjW8Hxa7yQ
+         7OLi2B6wWxlEj3lxo+o3sk9ZOSM6iIfZIWpy52mSImbAbaU9eiw1quzFxPAF8XIm44ik
+         8PfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784833827; x=1785438627;
+        d=1e100.net; s=20251104; t=1784833984; x=1785438784;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Kma+H0GidEuVkDhtrT3eR8/peQN+opodaig3EX+nuRs=;
-        b=DFWyDvV3UxPQBwh8e6omyZeqthmT4AOcKVl1jOxBW5sI4gTi9KxbOttgJp5712RNiX
-         emIQdaXEDRz86aJViWCoiWwcqT41/e96x83ccFVrBEYBW9Rcp3TajcMJ5dm9YjA1ry4V
-         0d4rT8JUPe/tppGxrFyI/ws53Ddh9XYR4xmR4ltRTn/h8113PLN5vnOvu7fscZEmkM4L
-         2Y5xjnCpd5W9Mynlm0bWC3RM/NkWuXVZbMKcXFtf5KI6UMeLcI1yr9jZbNCpFFsRXfAC
-         G1QoebTaW38pvyiB9M3PPRT2N5jVzLlYxn6feI/ohuwvoGkrBc43alixx76idhe9Y5Wu
-         DTkg==
-X-Gm-Message-State: AOJu0YwpQfn0tsxeTpRSgyNQe9LG3GOIkgcl+mFmG7Hcbc78HrcYDRkw
-	3tsreWYzVo0TRmRMzXc+EsyqJIAuHJpkhVvtz02fY1i1tf1LG+E3taXMibCZwQ==
-X-Gm-Gg: AR+sD10Yry30oqtoHV90oY5Fp7uqhqVh8JGcGAByUMRW34iRVCgp5dw5frffb4frMNL
-	JvU6thV0Ui8zflbqkdqZfdeei1joKfUj8UlSL41YoWTcANqqsvibMLR9kCOSgAYXCxu0Yyzg1RI
-	gs6AT7xPcir7QOVfHgE5YCeNhPDHNbnDZ4aMMoftupPeW3HjIdhCHyGg0x+RVJrk0O7gmAOUTZG
-	AAwI62n7hcu9jJrq5sDWVePZaVsUlLa/OaydDojt6wGcPKL0g1nc0GUfJPJacE73pGJ618BKDzG
-	pGfltisyoh60n5DCCpfoXkRfGI/b+s3bxK1pNeMHU8zipfgplE8eFpH/byjy1zzG9nqrjwpslCh
-	Rcv03vjG9xUOsCxsgjJJK08prsQIn7MgtnhBD5kOBmMIwGDFZr2EmzIXAY6YthjMW85aAkGH+ff
-	o/mwlG/lsIpHHWbYW3PU3oPtn3aw9SjeNu7w/v687vrDuceuNHUfSLSog8X9Hlhx6bxgSJbkygr
-	PPCqEdmQGJjWwfCQgiHeRa8TGt49795cZdWAd70bYaulte3ssbRTqg=
-X-Received: by 2002:a17:903:3b8f:b0:2cf:7882:a444 with SMTP id d9443c01a7336-2cfa6b7e2ecmr55815815ad.16.1784833826654;
-        Thu, 23 Jul 2026 12:10:26 -0700 (PDT)
+        bh=apccZsPdPUzjdUN/B9litPObvaZZXYJcoMOK0Da9NHw=;
+        b=isgBvyGkYlCXI87be7SBHncWD/ga/z49rUfBrdfEwLJalR2mQLabGxpxBLIK7DgJyH
+         gU0A4xOHqXX9yoTnkf0sNDyvJEOn02CYU6AaWkgt639Yvk1ZRiwAm4k7r/4hGgBXr4gp
+         SgSWGJC2TWCb/JgBKpZ15kloAUgoW9VSPy4EE0NbazoOEC9u6MwRwDGKKdWszpiPtP6j
+         A37K0jJq92ptpmrqz1kkBc9dbPQnNLGHdKBiNQ+aJ1gq449s3nmfDEEIzjE/Ioq0R2Gd
+         knK7D8WbZs/mIe38t8bvdFvLp0c2WBdgTl8fWDjnhAAmiqQgBaAMxoFh4wK2b7UoiZMd
+         Tl7Q==
+X-Gm-Message-State: AOJu0YwuLQrPtF34kokY7Cjg1ZzourXEDmqkrlNZBDtghSp4CODvZsKk
+	VFeAQBNrTNrP8BBL/Ypryd5qw2LA/7QAfFHZ+bKReuqvWk4+590uamhft/VoBA==
+X-Gm-Gg: AR+sD10p0IQIiq5iktS7aj0xH8f1uhxDWMp5T6NspE42TkgpC4q8at3pz0bVqjdOP2Y
+	QinVa0VGhGqATAlAuRv2l4KUx21K6j+JQg9UM/2/I5ywI0WkjL/oWUXuq9+K/tvcTf0NEWE+HJW
+	IqXkQeP5jtvTRBJ4gfQ6LNYX+SWWyvEh59Y/nzQOMmeUCtqH5VV989894I7p1tWAaiEFPGqnBA6
+	o7e1Ttx3pBUuOKMm00gO6NZPUS6dKkl9GYyobe0E0xu4TXPoa8lway7I53twHwwISGONUpmypqA
+	HIZzoasAd4wpDneIBtOFmEelePYFKoHHST2esXGbOXjLFh8PbqEnAs9E86SXvoA7cNr9Ii4qTXW
+	ofd9MWEa6WAqkx43vpN7kXyG9ZVY7V1eSpNZzbSYhNKXqQiAxyy4sq8DzTyPrALcQmxlnVQ/16I
+	kmOGQMz/BAALt/aOel/IRmzQm8RIZAlSVDlWUVKevBf5iPFdmZdQrAyFOC0XFHoLGC58DqrL2/3
+	PJc2j/PKUK88ZzgtB2RBkfmhgN0fi2nxxCHdXvcriljUyTSte0j6jc=
+X-Received: by 2002:a17:903:37c8:b0:2ca:7131:cace with SMTP id d9443c01a7336-2cfa74e3b19mr49772015ad.31.1784833983950;
+        Thu, 23 Jul 2026 12:13:03 -0700 (PDT)
 Received: from ryzen.lan ([2601:644:8000:7a86::e34])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf8f2e65e6sm39324025ad.38.2026.07.23.12.10.25
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf8edea703sm39057785ad.0.2026.07.23.12.13.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 12:10:25 -0700 (PDT)
+        Thu, 23 Jul 2026 12:13:03 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-ide@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -63,9 +63,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Rafal Prylowski <prylowski@metasoft.pl>,
 	Jeff Garzik <jgarzik@redhat.com>,
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv2] ata: pata_ep93xx: add missing "cc" and "memory" clobbers to inline asm
-Date: Thu, 23 Jul 2026 12:10:24 -0700
-Message-ID: <20260723191024.128984-1-rosenp@gmail.com>
+Subject: [PATCHv2] ata: pata_ep93xx: fix endianness bug in trailing byte transfer
+Date: Thu, 23 Jul 2026 12:13:02 -0700
+Message-ID: <20260723191302.139580-1-rosenp@gmail.com>
 X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -75,42 +75,62 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The inline assembly in ep93xx_pata_delay() uses a "subs" instruction
-which modifies the ARM condition code flags. Add a "cc" clobber so
-the compiler knows the flags are altered. Without it, the compiler may
-reorder flag-dependent instructions across the asm block when the
-function is inlined, potentially causing incorrect control flow.
+ep93xx_pata_data_xfer() handles a trailing odd byte by reading/writing
+a full 16-bit word and extracting the first byte.  The current code
+uses cpu_to_le16()/le16_to_cpu() wrapping, but then assigns through a
+u8 pointer (*pad), truncating the value.
 
-Additionally, add a "memory" clobber to prevent the compiler from
-reordering I/O accesses across this delay loop. On older ARM
-architectures like ARMv4T used in EP93xx, __iormb()/__iowmb() may
-evaluate to empty when CONFIG_ARM_DMA_MEM_BUFFERABLE is not set,
-leaving writel()/readl() without a compiler memory barrier. Without
-a "memory" clobber here, the compiler optimizer might reorder
-independent I/O accesses across the delay, violating ATA PIO timing
-requirements. This also brings the ARM path in line with the non-ARM
-fallback which uses cpu_relax() (a compiler barrier).
+On the READ path, *pad = cpu_to_le16(...) truncates the u16 to u8.
+On little-endian this happens to give the right byte, but on big-endian
+cpu_to_le16() puts the valid byte in the upper 8 bits and truncation
+keeps the lower 8 bits (zeros), losing the data.
 
-Fixes: 2fff27512600 ("PATA host controller driver for ep93xx")
+On the WRITE path, le16_to_cpu(*pad) zero-extends pad[0] (u8) to u16
+(0x00BB) and then on big-endian byte-swaps to 0xBB00.  The hardware then
+receives 0x00 as the first byte instead of 0xBB.
+
+The readl()/writel() calls inside ep93xx_pata_read_data() and
+ep93xx_pata_write_data() already handle endianness correctly, so the
+trailing byte can just use the raw read/write value directly without
+the cpu_to_le16/le16_to_cpu wrappers.  Remove the pad[] array and
+simplify.
+
+Fixes: 2fff27512600f9ad ("PATA host controller driver for ep93xx")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202607231521.gvhnJpOG-lkp@intel.com/
 Assisted-by: Opencode:Big-Pickle
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
- v2: add memory barrier
- drivers/ata/pata_ep93xx.c | 1 +
- 1 file changed, 1 insertion(+)
+ v2: add kernel bot fixes tags
+ drivers/ata/pata_ep93xx.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index be8a314654e6..085f1e8e5343 100644
+index 339ee5e43e9f..558f9cf95e6e 100644
 --- a/drivers/ata/pata_ep93xx.c
 +++ b/drivers/ata/pata_ep93xx.c
-@@ -211,6 +211,7 @@ static void ep93xx_pata_delay(unsigned long count)
- 		"bge 0b\n"
- 		: "=r" (count)
- 		: "0" (count)
-+		: "cc", "memory"
- 	);
- #else
- 	while (count--)
+@@ -499,19 +499,12 @@ static unsigned int ep93xx_pata_data_xfer(struct ata_queued_cmd *qc,
+ 
+ 	/* Transfer trailing 1 byte, if any. */
+ 	if (unlikely(buflen & 0x01)) {
+-		unsigned char pad[2] = { };
+-
+ 		buf += buflen - 1;
+ 
+ 		if (rw == READ) {
+-			*pad = cpu_to_le16(
+-				ep93xx_pata_read_data(
+-					drv_data, IDECTRL_ADDR_DATA));
+-			*buf = pad[0];
++			*buf = ep93xx_pata_read_data(drv_data, IDECTRL_ADDR_DATA);
+ 		} else {
+-			pad[0] = *buf;
+-			ep93xx_pata_write_data(drv_data, le16_to_cpu(*pad),
+-					  IDECTRL_ADDR_DATA);
++			ep93xx_pata_write_data(drv_data, *buf, IDECTRL_ADDR_DATA);
+ 		}
+ 		words++;
+ 	}
 -- 
 2.55.0
 
