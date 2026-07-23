@@ -1,130 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60251308F32
-	for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2026 19:22:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34B6C44C4EF;
+	Thu, 23 Jul 2026 19:29:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784834538; cv=none; b=iRYxjVhcyERNBhl8ymbf8efC6vMefTnHpTPvKY6RTS/n3h8ksrIcx2qfSj8QVHHq2fO9Eo3/0AFhUgBnlMJlJVJQtwrWHWJi+Sw59+nBqUxrBBKe8L+TG8sHE1g/p2bI74onYze7D9c9bJUnbRsRFi8QKO2g8Lf7zrGVTXd23T0=
+	t=1784835001; cv=none; b=TFP8qnAXV78gwF1BD4jlEw5Kdx1czmHtQFQqgkGcyqaU3zrO9wI7KBmMJooq5zqTrRbBH6TOiJN7tKa+GbkgKgALEd1obC5pJdidU51Y29Au5U7mdJvz7PHHhsLmu5VhGWA4lePtysdQmOzPZ0UrrRphXbMJQAA8WDlc1sGImMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784834538; c=relaxed/simple;
-	bh=X/IeehER49R19c5zM8MK9HzujYRXX8/ANMvUaZxZvfo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AtQvewxv3cRX8DiWOZm/G2fpvO+kqaP6RnZHpemCwEfK/j/pVyfv7CQkGZ3+iRP4uHiMw0gmPS1RzfzBmmMf7qD/cIoklJ141g9cxRi4E0GYQXNWJqSBUd8VY1s7DEx9dfRPThFrkXr/na0BhXtu0g7ETBzN0Y8FV1V9fp2T4cQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B71/3q+g; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784835001; c=relaxed/simple;
+	bh=TwWA1xCcEzuUuBFTE0AMItQB+YBiuWATuf/SC44C6OA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=am88LIu0U9+7tz1JPKfAky6CoQGTwl5dN+hm51DsCr+xBIuGiUci0M4CF74Jr4nY8/qMQyO+PoRAuPeBwglAmtF//QfVOX75fLjAIsUgcfBBglV9FUfTiRMPr2KkeDCjqGj3LyKcB/a1ZbNQBH0J1Q+3zbeSY0Wgj+UoSe5sfCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HpztF2W+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B71/3q+g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2FAC1F000E9;
-	Thu, 23 Jul 2026 19:22:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HpztF2W+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0B281F000E9;
+	Thu, 23 Jul 2026 19:29:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784834537;
-	bh=QIuuO8psmDZE+MFXMxCxS/XHjkNhsggVulwzgAfpfCs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=B71/3q+gRSxB4PxtPWKFtJU90wFMjf3q41d0b+kBGxujb/xhTaW4kypMd57Lm9Gdi
-	 hY86s8iEzPEUIc2F5R+1u67i9D3iTt3nDNJbYaTRpATFBzQHqKf88Dqqudd7ruJkoM
-	 N+nLoW/f06KpMUFiJArUG+dpaVFf3D9xSK9yrFgsZ8ADLRRIqLnqgeQkIerf5VJuj8
-	 vcdSrIhISIpRRxQgySO6O4oeyHJjUEUzclmTik8rhO9MRSP8nYCAiJI6nMBMTGPVz+
-	 c0NcFTwzfkNAIewOwW2DX2bMPEdPm6KFKlMjVRejsn6hAyRd1z7AgNtkhDpBtNb9rw
-	 95HQnDAjV0rDw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCHv2] ata: pata_ep93xx: fix endianness bug in trailing byte
- transfer
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rosen Penev" <rosenp@gmail.com>
-Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260723191302.139580-1-rosenp@gmail.com>
-References: <20260723191302.139580-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 19:22:16 +0000
-Message-Id: <20260723192216.B2FAC1F000E9@smtp.kernel.org>
+	s=k20260515; t=1784834998;
+	bh=y5iomjCyRfRp3uujqn1eS42YOTWw+ABmMrptepvIZ7Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HpztF2W+jj+oPJBXBd5DBcqoA2Sm/XtLNAo7A3jLOwKkr8x9d2LlNJc5kOK87NXwV
+	 dPfvFf436Ag4QAWvE4hqB+0CIaIog+ggZsQ3mr/KoGuZeT7PauU3CUF+DKT/KQGiyw
+	 FLRRMPX6Juqw8TE9zKGvvEkK/N74UmZpHbG6YXAMajMDzSW4qR095hChwpIimswuz5
+	 FmKTpz2ndXcBDeMV9c1wUZAFhLPoXzpKXNHeFyf3bAsS8jduYzwuQq95Gtem2ReCoX
+	 4ZUVJbFHzbprLyxqinE64Imvapcq2pUpbKd09SDGjMeT0bBsnsCnQuBqAreyPWS7mS
+	 DJoSCkrUJGJnA==
+Date: Thu, 23 Jul 2026 14:29:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gary Guo <gary@garyguo.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	GOTO Masanori <gotom@debian.or.jp>,
+	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+	Jens Taprogge <jens.taprogge@taprogge.org>,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	David Airlie <airlied@redhat.com>, linux-pci@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, Sashiko <sashiko-bot@kernel.org>
+Subject: Re: [PATCH v3 9/9] pci: fix UAF when probe runs concurrent to dyn ID
+ removal
+Message-ID: <20260723192957.GA839273@bhelgaas>
+References: <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
+ <20260721223500.GA690676@bhelgaas>
+ <DK66ISTEVM5H.3K5O68CW1F8ZB@garyguo.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <DK66ISTEVM5H.3K5O68CW1F8ZB@garyguo.net>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Thu, Jul 23, 2026 at 07:57:58PM +0100, Gary Guo wrote:
+> On Tue Jul 21, 2026 at 11:35 PM BST, Bjorn Helgaas wrote:
+> > On Mon, Jul 06, 2026 at 03:11:21PM +0100, Gary Guo wrote:
+> >> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
+> >> as remove_id_store can free the node. Thus, make a copy in
+> >> pci_match_device. Also, clarify that the id parameter is only valid during
+> >> probe.
+> >> 
+> >> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> >> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/
+> >> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
+> >> Signed-off-by: Gary Guo <gary@garyguo.net>
+> >> ---
+> >>  drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
+> >>  include/linux/pci.h      |  1 +
+> >>  2 files changed, 16 insertions(+), 13 deletions(-)
+> >> 
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index 64b308b6e61c..92c17c116de6 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -979,6 +979,7 @@ struct module;
+> >>   *		function returns zero when the driver chooses to
+> >>   *		take "ownership" of the device or an error code
+> >>   *		(negative number) otherwise.
+> >> + *		The pci_device_id parameter is only valid during probe.
+> >
+> > The probe function takes a pointer to a struct pci_device_id, so I
+> > think the requirement is that the struct pci_device_id only *needs* to
+> > be valid during .probe(), right, i.e., the PCI core probe path makes
+> > its own copy of the ID and doesn't retain the pointer after .probe()
+> > returns, right?
+> >
+> > I assume the caller determines the struct pci_device_id lifetime, and
+> > it could be forever.
+> >
+> > Could say something like:
+> >
+> >   The pci_device_id parameter only needs to be valid during probe.
+> 
+> As a contract on function parameter, the caller needs to guarantee that it lives
+> at least as long as documented (i.e. during the whole probe) and the callee
+> cannot assume that it will be valid beyond what's guaranteed.
+> 
+> How about:
+> 
+>     The pci_device_id parameter is only guaranteed to be valid during probe.
 
-Pre-existing issues:
-- [High] The `ep93xx_pata_data_xfer` function calculates an incorrect consu=
-med byte count due to the `words` loop counter underflowing, returning eith=
-er `0xFFFFFFFE` or `0`.
---
+That's ok with me.  My only niggle is that this documentation is that the
+*consumer* end, and of course the consumer, i.e., the PCI core probe path,
+can't guarantee anything about the parameters it receives.  But I guess
+your point is that the *caller* must guarantee that the parameter remains
+valid during probe.
 
---- Patch [1]: [PATCHv2] ata: pata_ep93xx: fix endianness bug in trailing b=
-yte transfer ---
-commit 6f058310f6ea9721e68fb8c4613fa6b146f2e1f7
-Author: Rosen Penev <rosenp@gmail.com>
-
-ata: pata_ep93xx: fix endianness bug in trailing byte transfer
-
-This commit fixes an endianness issue in the trailing odd byte transfer
-logic by removing the pad array and directly reading/writing the u8
-value without wrappers.
-
-Closes: https://lore.kernel.org/oe-kbuild-all/202607231521.gvhnJpOG-lkp@int=
-el.com/
-
-> diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-> index 42a24dc51d26b..647977ed607c8 100644
-> --- a/drivers/ata/pata_ep93xx.c
-> +++ b/drivers/ata/pata_ep93xx.c
-> @@ -499,19 +499,12 @@ static unsigned int ep93xx_pata_data_xfer(struct at=
-a_queued_cmd *qc,
-> =20
->  	/* Transfer trailing 1 byte, if any. */
->  	if (unlikely(buflen & 0x01)) {
-> -		unsigned char pad[2] =3D { };
-> -
->  		buf +=3D buflen - 1;
-> =20
->  		if (rw =3D=3D READ) {
-> -			*pad =3D cpu_to_le16(
-> -				ep93xx_pata_read_data(
-> -					drv_data, IDECTRL_ADDR_DATA));
-> -			*buf =3D pad[0];
-> +			*buf =3D ep93xx_pata_read_data(drv_data, IDECTRL_ADDR_DATA);
->  		} else {
-> -			pad[0] =3D *buf;
-> -			ep93xx_pata_write_data(drv_data, le16_to_cpu(*pad),
-> -					  IDECTRL_ADDR_DATA);
-> +			ep93xx_pata_write_data(drv_data, *buf, IDECTRL_ADDR_DATA);
->  		}
->  		words++;
->  	}
-
-[Severity: High]
-This is a pre-existing issue, but does this function calculate the correct
-consumed byte count?
-
-When ep93xx_pata_data_xfer() executes the earlier transfer loop, the words
-variable unconditionally decrements until it underflows:
-
-drivers/ata/pata_ep93xx.c:ep93xx_pata_data_xfer() {
-    ...
-    unsigned int words =3D buflen >> 1;
-
-    /* Transfer multiple of 2 bytes */
-    while (words--)
-        if (rw =3D=3D READ)
-            ...
-}
-
-After the loop, words underflows to UINT_MAX.
-
-For odd-length transfers, the trailing byte block quoted above executes
-words++, which increments UINT_MAX to 0. The function then returns words <<=
- 1,
-which results in returning 0.
-
-If 0 is returned, could this cause an infinite loop in __atapi_pio_bytes()?=
- A
-returned consumed value of 0 means qc->curbytes does not advance, which mig=
-ht
-cause the transfer loop to stall indefinitely.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723191302.1395=
-80-1-rosenp@gmail.com?part=3D1
+The only thing the consumer can guarantee is that it doesn't depend on the
+pci_device_id parameter after the probe returns.
