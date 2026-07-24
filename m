@@ -1,182 +1,214 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E93473C80;
-	Fri, 24 Jul 2026 22:30:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4AB8470133
+	for <linux-ide@vger.kernel.org>; Fri, 24 Jul 2026 22:52:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784932239; cv=none; b=Dd6Lt5K/sUukAzrbFbsoTvkPrcZshwwKWgEGoqITeDzR00NYv89IeEdlTBCim9n1yPSTQopTc22hfdkXcq0YsMRKIxZYZoU/iQYFWWMFTJnvROtvgM8WK55Wkt3wA0zSekrbzJU6HfZgXmkT3Ktr7Wu6JYFdksARx/2YQrMT0fM=
+	t=1784933567; cv=none; b=Sb9QZuZglEVGGoBc3bcCE2VIksZHWrxYpXYxTFj4uqadnSfTeO9fofuxaP2VifkN5OT8Gjq6MengWTvDcfUHm7d/Xkc+D5wZyjeaVPWuHW/YCym5Elwk0n8ihcfU92PT18FiaPMGKEcBnZvWcrXAt3Ko8yf+mwE6G004gNaB1PY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784932239; c=relaxed/simple;
-	bh=Gmq7d7Jg9C0o7Jvo2rDo8fBZ5JsOa9IPQMlU3RrGn94=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=aHVY+p7FLIJgOk5W2+/OyFzkJ5k8706AHohV9lw/vJpHfME4e8zYjP07EX6my8KZfACUAeZBwtFD/7LamOsE6IuVsgoDG9VW3Qou5CGpajuJYnkFv92h8fr7TcKimd2CkM9GALU1PW5kvnfzeJCmepVLvxj6aeU3L1aEckHGZNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kg0rN4VN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784933567; c=relaxed/simple;
+	bh=4plRYqkV5J1VK4Wwn2r1/kn4Z8FsxuK/ZjasjX4OfGI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VVIkBUlo8L/lHZziNss9C6a4tsKLNfKzNjgKedgwmPHlrGGfLpu2DHNmywWQkrFYLbf4l/FhyNp5QNBPBfOdVOJi77pYlDmef7GqtDKIfw0PZKtRokrswLKhm1AxE9yHCcczpxe8VkpSwQ7Tc6174N+812MtLa+DNnE4bkUVfeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MwTyGpkB; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kg0rN4VN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B40B1F00A3A;
-	Fri, 24 Jul 2026 22:30:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784932236;
-	bh=GS14DZQhW66q/6Q+X41QrQ1/gqGz9PBB64fXYqWc4+A=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Kg0rN4VNZ6bV24H8SvNLXOhE+5jjor+DqTtJly6ByqD6Q0sM0vxfACb688tRlkE1q
-	 wjyKLglL9XwupGMR66ysdyTevHPvfSH+frGOISUTH4KavpyI0Lh/jPD+u7McPOXNmr
-	 cvRkSvmFUY2KGqROQSWSPngkxP/UbcDEzyMHHCWxHuDvS+ofDdvv6uC3OFDhFoxSsi
-	 mjfisqiO3UnipsNxl4hBMB2oOHn4243tNZpYLTGywhA86qUHF6rD9Jm97to+SU1ZwD
-	 zP7U+v/AqkntG2svYeCMp6iaxn+Tz4/MeoQWDbi+YyqcX/0VzDERrTXU6cl4ybbR03
-	 SnHpJDvqQGwGA==
-Date: Fri, 24 Jul 2026 17:30:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gary Guo <gary@garyguo.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MwTyGpkB"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2cab973140bso14027575ad.3
+        for <linux-ide@vger.kernel.org>; Fri, 24 Jul 2026 15:52:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784933555; x=1785538355; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=QrUhrFObb5bOhWiGrqzISYLTX9FEy6tA1qYJNkVOOEU=;
+        b=MwTyGpkBdUru1i1jeUUbwjKbYm3D2rSe43HrDspxvG3ml2feil0jvVLmJ8BWgIKZGr
+         44YQCoEhRNYgUs5XIWeLNOyWVvfCuicHn8g95YOKQ4ZDHikoTzZruOY4Gj/rZzYLIG9n
+         vRPJNtlsXtEW5GwPHUhMR3t7a9W6ICs+lf2Vz4uxAk/CyVfDFX7JgE21e13MWmCoFbT6
+         YzCWKLujmGR2l2NdhFitlHhhIfNdi1Zb4hxPUUOK1HII/RuNiMTNKTLtK7cRRaS/iDnK
+         HYIwhBZYD4UZmDEMLW25t4MJUcBSs2xjipNkn+27VbQaXFYYRJMAQoMxdsMF31S4BLkR
+         FSmA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784933555; x=1785538355;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QrUhrFObb5bOhWiGrqzISYLTX9FEy6tA1qYJNkVOOEU=;
+        b=g7ujRgPTjudM+lHQCWhauIlIvBig4L8ailoPIJfI4o2MyCxWBD8SLEHsGmX78Jsh2o
+         cVocCHAFDBpJIrg3sShyNwuh5nQgGKiEX9NDqABhIfxmeNuCNQZjYAXYWbHZ1t0DmTS1
+         LJI69uqaG95W+QkRwWFfBxm95+z0JCBIHASQOzaVu0U5LUPRcVouMXEr/7g+xJtt1hc6
+         90XbaPPAk9WoPUgNN+8HEdY7Brfhks3WF9fW4yiQa+IT/WId9rHiZ1S+H/uqlmDztBFZ
+         7oEhtIh2I4r9YcXtEK7xBNjSZoRHe1uJZiyY4AxP5XtdiceQZdW5IU/CeF4tqXZThpIJ
+         sjXQ==
+X-Gm-Message-State: AOJu0Yw6tqyR2DWmbC5JSu1zWcixY1ZkCWP7Wygz1+R8XqVOQA66s989
+	w5R7ehc4TMXt2QQ3TPdFrwnWIX5lYxHtKOg4gAL3dkvCp3i80NwC8cU+citnXA==
+X-Gm-Gg: AR+sD11EAB+jN/Vzli4lOfx8/xXBOwrAZTR0i4hroQj0HjWK7WcZhe1gdtiq9UlUMHc
+	pfOoCqYJigjoXa5ctX+YAW4Qgfl17RlIzExwEkACu8XGcb7+w6h1aeJIP3ebp77i72uU4F5uoLY
+	QMLtgi64mL0o6DaNa/JpGwvKfYXA939mwkti3dULi+MgaGxvlRa2C2peAa4n6qd/kDUaa+LNZDS
+	mDml2fbqXeY88SGI0oAQburH3hiwjFFj6v7sXAaJwi97Pb5FBQfuAP9FXG6KNDqVEgWOTbkR6cH
+	qM03v4wFU/C2Jqj5K+l0NMB4JI7mlFcQPGEL2Ev0Ke86IWZzwEADRsDBQS3yqkc+M3YIDAJOJi0
+	vjD4sZqhuotRQuzKz8xBuQoopJASngyHriSn/Ri1/h1ub2NR3PvGpEc6Z48zm7pIkgOLTmzowBK
+	6Wt5gEVWggTnQgOy4btSYDJEVrgc5JAz5fqoLrQZCkeCp+ZpVglICEmmFB9TFQrAUFSXUWd7Eno
+	8cfKd59pk0EC0Dc55Hc2X3ErbD9putIMnRbXRhf0s23Nlztx5afPfg=
+X-Received: by 2002:a17:90b:1d44:b0:38e:4b71:8b0 with SMTP id 98e67ed59e1d1-38f296134femr306219a91.25.1784933554946;
+        Fri, 24 Jul 2026 15:52:34 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e35])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f03b0eaa8sm2186444a91.8.2026.07.24.15.52.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jul 2026 15:52:34 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	GOTO Masanori <gotom@debian.or.jp>,
-	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-	Jens Taprogge <jens.taprogge@taprogge.org>,
-	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	David Airlie <airlied@redhat.com>, linux-pci@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, Sashiko <sashiko-bot@kernel.org>
-Subject: Re: [PATCH v4 9/9] PCI: Fix UAF when probe runs concurrent to dyn ID
- removal
-Message-ID: <20260724223035.GA1068309@bhelgaas>
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCHv2] ata: pata_ep93xx: use devm_dma_request_chan for DMA channels
+Date: Fri, 24 Jul 2026 15:52:32 -0700
+Message-ID: <20260724225232.41149-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260723-pci_id_fix-v4-9-3580726844e1@garyguo.net>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jul 23, 2026 at 11:00:48PM +0100, Gary Guo wrote:
-> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
-> as remove_id_store() can free the node. Thus, make a copy in
-> pci_match_device(). Also, clarify that the id parameter is only valid
-> during probe.
-> 
-> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/
-> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
-> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+Convert the manual DMA channel request/release in ep93xx_pata_dma_init()
+to the managed devm_dma_request_chan() API. This removes the now-unused
+ep93xx_pata_release_dma() helper and the error-path cleanup in
+ep93xx_pata_probe()/ep93xx_pata_remove(), simplifying the code and
+avoiding potential leaks if probe fails after DMA init.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Assisted-by: opencode:hy3-free
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ v2: add NULL assignments
+ drivers/ata/pata_ep93xx.c | 54 ++++++++++-----------------------------
+ 1 file changed, 13 insertions(+), 41 deletions(-)
 
-> ---
->  drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
->  include/linux/pci.h      |  1 +
->  2 files changed, 16 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index ab3bb756ce89..e16aa59dd7ac 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -180,6 +180,7 @@ static const struct pci_device_id pci_device_id_any = {
->   * pci_match_device - See if a device matches a driver's list of IDs
->   * @drv: the PCI driver to match against
->   * @dev: the PCI device structure to match against
-> + * @id_copy: place to store copy of pci_device_id for dynamic ID
->   *
->   * Used by a driver to check whether a PCI device is in its list of
->   * supported devices or in the dynids list, which may have been augmented
-> @@ -187,9 +188,9 @@ static const struct pci_device_id pci_device_id_any = {
->   * structure or %NULL if there is no match.
->   */
->  static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
-> -						    struct pci_dev *dev)
-> +						    struct pci_dev *dev,
-> +						    struct pci_device_id *id_copy)
->  {
-> -	struct pci_dynid *dynid;
->  	const struct pci_device_id *found_id = NULL;
->  	struct pci_device_id dev_id;
->  	int ret;
-> @@ -201,17 +202,16 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
->  
->  	dev_id = pci_id_from_device(dev);
->  	/* Look at the dynamic ids first, before the static ones */
-> -	spin_lock(&drv->dynids.lock);
-> -	list_for_each_entry(dynid, &drv->dynids.list, node) {
-> -		if (pci_match_one_id(&dynid->id, &dev_id)) {
-> -			found_id = &dynid->id;
-> -			break;
-> +	scoped_guard(spinlock, &drv->dynids.lock) {
-> +		struct pci_dynid *dynid;
-> +
-> +		list_for_each_entry(dynid, &drv->dynids.list, node) {
-> +			if (pci_match_one_id(&dynid->id, &dev_id)) {
-> +				*id_copy = dynid->id;
-> +				return id_copy;
-> +			}
->  		}
->  	}
-> -	spin_unlock(&drv->dynids.lock);
-> -
-> -	if (found_id)
-> -		return found_id;
->  
->  	found_id = do_pci_match_id(drv->id_table, &dev_id, ret > 0);
->  	if (found_id)
-> @@ -467,12 +467,13 @@ void pci_probe_flush_workqueue(void)
->  static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
->  {
->  	const struct pci_device_id *id;
-> +	struct pci_device_id id_copy;
->  	int error = 0;
->  
->  	if (drv->probe) {
->  		error = -ENODEV;
->  
-> -		id = pci_match_device(drv, pci_dev);
-> +		id = pci_match_device(drv, pci_dev, &id_copy);
->  		if (id)
->  			error = pci_call_probe(drv, pci_dev, id);
->  	}
-> @@ -1560,12 +1561,13 @@ static int pci_bus_match(struct device *dev, const struct device_driver *drv)
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	struct pci_driver *pci_drv;
->  	const struct pci_device_id *found_id;
-> +	struct pci_device_id id_copy;
->  
->  	if (pci_dev_binding_disallowed(pci_dev))
->  		return 0;
->  
->  	pci_drv = (struct pci_driver *)to_pci_driver(drv);
-> -	found_id = pci_match_device(pci_drv, pci_dev);
-> +	found_id = pci_match_device(pci_drv, pci_dev, &id_copy);
->  	if (found_id)
->  		return 1;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 64b308b6e61c..92c17c116de6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -979,6 +979,7 @@ struct module;
->   *		function returns zero when the driver chooses to
->   *		take "ownership" of the device or an error code
->   *		(negative number) otherwise.
-> + *		The pci_device_id parameter is only valid during probe.
->   *		The probe function always gets called from process
->   *		context, so it can sleep.
->   * @remove:	The remove() function gets called whenever a device
-> 
-> -- 
-> 2.54.0
-> 
+diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+index 339ee5e43e9f..c99b8c49a1ce 100644
+--- a/drivers/ata/pata_ep93xx.c
++++ b/drivers/ata/pata_ep93xx.c
+@@ -627,18 +627,6 @@ static int ep93xx_pata_bus_softreset(struct ata_port *ap, unsigned int devmask,
+ 	return ep93xx_pata_wait_after_reset(&ap->link, devmask, deadline);
+ }
+ 
+-static void ep93xx_pata_release_dma(struct ep93xx_pata_data *drv_data)
+-{
+-	if (drv_data->dma_rx_channel) {
+-		dma_release_channel(drv_data->dma_rx_channel);
+-		drv_data->dma_rx_channel = NULL;
+-	}
+-	if (drv_data->dma_tx_channel) {
+-		dma_release_channel(drv_data->dma_tx_channel);
+-		drv_data->dma_tx_channel = NULL;
+-	}
+-}
+-
+ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ {
+ 	struct platform_device *pdev = drv_data->pdev;
+@@ -655,7 +643,7 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ 	 * to request only one channel, and reprogram it's direction at
+ 	 * start of new transfer.
+ 	 */
+-	drv_data->dma_rx_channel = dma_request_chan(dev, "rx");
++	drv_data->dma_rx_channel = devm_dma_request_chan(dev, "rx");
+ 	if (IS_ERR(drv_data->dma_rx_channel)) {
+ 		ret = PTR_ERR(drv_data->dma_rx_channel);
+ 		drv_data->dma_rx_channel = NULL;
+@@ -665,14 +653,14 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ 		return 0;
+ 	}
+ 
+-	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
++	drv_data->dma_tx_channel = devm_dma_request_chan(&pdev->dev, "tx");
+ 	if (IS_ERR(drv_data->dma_tx_channel)) {
+ 		ret = PTR_ERR(drv_data->dma_tx_channel);
+ 		drv_data->dma_tx_channel = NULL;
+ 		if (ret == -EPROBE_DEFER)
+-			goto fail_release_rx;
++			return ret;
+ 		dev_warn(dev, "tx DMA unavailable, using PIO\n");
+-		goto fail_release_rx;
++		return 0;
+ 	}
+ 
+ 	/* Configure receive channel direction and source address */
+@@ -683,7 +671,9 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ 	ret = dmaengine_slave_config(drv_data->dma_rx_channel, &conf);
+ 	if (ret) {
+ 		dev_warn(dev, "failed to configure rx dma channel, using PIO\n");
+-		goto fail_release_dma;
++		drv_data->dma_rx_channel = NULL;
++		drv_data->dma_tx_channel = NULL;
++		return 0;
+ 	}
+ 
+ 	/* Configure transmit channel direction and destination address */
+@@ -694,21 +684,12 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ 	ret = dmaengine_slave_config(drv_data->dma_tx_channel, &conf);
+ 	if (ret) {
+ 		dev_warn(dev, "failed to configure tx dma channel, using PIO\n");
+-		goto fail_release_dma;
++		drv_data->dma_rx_channel = NULL;
++		drv_data->dma_tx_channel = NULL;
++		return 0;
+ 	}
+ 
+ 	return 0;
+-
+-fail_release_rx:
+-	dma_release_channel(drv_data->dma_rx_channel);
+-	drv_data->dma_rx_channel = NULL;
+-	if (ret == -EPROBE_DEFER)
+-		return ret;
+-	return 0;
+-
+-fail_release_dma:
+-	ep93xx_pata_release_dma(drv_data);
+-	return 0;
+ }
+ 
+ static void ep93xx_pata_dma_start(struct ata_queued_cmd *qc)
+@@ -959,10 +940,8 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 
+ 	/* allocate host */
+ 	host = ata_host_alloc(&pdev->dev, 1);
+-	if (!host) {
+-		err = -ENOMEM;
+-		goto err_rel_dma;
+-	}
++	if (!host)
++		return -ENOMEM;
+ 
+ 	ep93xx_pata_clear_regs(ide_base);
+ 
+@@ -999,14 +978,8 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 	dev_info(&pdev->dev, "version " DRV_VERSION "\n");
+ 
+ 	/* activate host */
+-	err = ata_host_activate(host, irq, ata_bmdma_interrupt, 0,
++	return ata_host_activate(host, irq, ata_bmdma_interrupt, 0,
+ 		&ep93xx_pata_sht);
+-	if (err == 0)
+-		return 0;
+-
+-err_rel_dma:
+-	ep93xx_pata_release_dma(drv_data);
+-	return err;
+ }
+ 
+ static void ep93xx_pata_remove(struct platform_device *pdev)
+@@ -1015,7 +988,6 @@ static void ep93xx_pata_remove(struct platform_device *pdev)
+ 	struct ep93xx_pata_data *drv_data = host->private_data;
+ 
+ 	ata_host_detach(host);
+-	ep93xx_pata_release_dma(drv_data);
+ 	ep93xx_pata_clear_regs(drv_data->ide_base);
+ }
+ 
+-- 
+2.55.0
+
