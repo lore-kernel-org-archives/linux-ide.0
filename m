@@ -1,266 +1,154 @@
-Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022122.outbound.protection.outlook.com [52.101.96.122])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 307ED40F759;
-	Thu, 23 Jul 2026 22:01:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.122
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784844128; cv=fail; b=tmQvWBVnqOy492e95AxTEN2G8DlvIZi7vcmhU8Z6lO1SCijBTzHsLDmVKM+XOTMS4c1otSacpWKHZeeHH712CqGNZ9shVb4wx2hPS4nj4nvZQ9sWvfNydUxgpCdS3iOOSyDUZV+kM/DfiL19DRd3OBLLneVJUpwV3vb4mWU7lc4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784844128; c=relaxed/simple;
-	bh=lHva/dma2dhjWQsmx2fGGemN3LY6Pzjje93ttaBGl9s=;
-	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=EnVTnXNVFuoP2z+lsIV7TD16qeiYWohgyHsuPIGgjztprlegKK0CQlOynGQMnV/4Vi9VpyzzE1V3jBmAMQhh3j6cko5/KSPO0lKvW4S/zqSGpioPFMBcNAANnT1ptm1+1k5lJSOG6/cyKEWnvc1lM0zI3CVxGQIshVCOtn6aWZQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=ZUXco7VC; arc=fail smtp.client-ip=52.101.96.122
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BFE93ACA74
+	for <linux-ide@vger.kernel.org>; Fri, 24 Jul 2026 07:41:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784878877; cv=none; b=h10mzZX+W7SvkWRWphTN0X0zI7qM7v14EGxPJvjq/ogbe/UgMtW8pub89vSwJ99bG3/hr18DZB/jLijmoOyqW/NPSH5280RxI4tY+3kWrUx1fVzeeXkVqXUKelNz9lFK61AygXaj0QbrvhhUxl9HkFw/KgnUMNLbX6yEHmHXKSc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784878877; c=relaxed/simple;
+	bh=v7KytCFHT9shhvp5Rc09FYDEUjds27ni+ytJOXNzO/A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GzR7172bMqSr6CGAXw/E48y+29Yps5dDi9KlVv67pEBRPl6l4TaQzelalkxF1gaRaZe6a6xKNQNd0NP6kO0FuopCridsewW+1lASJIyYGtgmXpZYFgn9n6DSKwN736svNaQCcGbSOdgpq7YWJn+7GJWPJEDLmm4SQceknfGV/bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=tBChoWxq; arc=none smtp.client-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="ZUXco7VC"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ge93VeykG/XhaTosN0XKrunv0anpbiQf0N7L/7DvefbbDNmo7nl/22fMNzE7O8yHvi1W3RdS7WDVsad4kD+ERWey6cA4xVd6a0QI3wVfAWrovDTFBxvQ4yY2kTkk4Zd4HMkJL/3njQxRR8rGIVQUGYV6Kd6kCekrRc6Msi37ikHpgSj+lSkhz+59pOgucMSDnItmHxUo/45tapCwB81fLq4fPLynTqcINL6wsOL9km6wnJeFeODYtaeJP8UcQqqJreJNgKFjjcYMMxXJCrHkvn0hS7BssPK9DOHPSfvQ8Ge9fBEs2stx19sTFYar3dKRZhDWCCYTXOIJwGca2RNgvA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Co5kdjmHbYEl4DCl1tDECg3+TXAiKFmIIs3avtbaJ8Q=;
- b=kIKMuFf1DWUpUpGe/bYZCk+xtyflV0oZmyb/zFoZuCZLs36vX/1wcDi/en8r9zMIw8S5/VuN6BPb1GZq7qYdkRkgwbIpX/z+e8XJik93pPU6Di5EC6Eo1yNk52Jg4Ucb1HGmz+CUH7RjsHW8Ly4zMsXKdXsLQGOg+U7+dsx8TJIbKMDKnqd2KC1LSK+m8U93e/6iOSftpC03B4oX8X8GnXsTzKmWMgrJQSC80pjsHv8jmdU9FpZvZNrRJ0aS7oAQUVKHVsDVl1d8MSvlYIDvvYiQNZiiZYm0nBBN1ChYjqBOkb/2V4fClkCyxjZkO5SWbla2Uy5zB7vCK3avJB8GPQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Co5kdjmHbYEl4DCl1tDECg3+TXAiKFmIIs3avtbaJ8Q=;
- b=ZUXco7VCX+UDmBtei1BtwJ/9nLxUmXBKgz6Np591SMOEzxt7iHHaaKSaazPm3jT9n4xjEbD9JSdUCJ0t5UH8nypgpLQxO/6CPnl1M3iAfhr4nKyhhG1uPkcbJlKT+xrmosootqAaduDZfLGHSR+NxgT2zZflXxhUAWkXNyq/GDA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO0P265MB2635.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:14c::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.11; Thu, 23 Jul
- 2026 22:01:11 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%2]) with mapi id 15.21.0245.009; Thu, 23 Jul 2026
- 22:01:11 +0000
-From: Gary Guo <gary@garyguo.net>
-Date: Thu, 23 Jul 2026 23:00:48 +0100
-Subject: [PATCH v4 9/9] PCI: Fix UAF when probe runs concurrent to dyn ID
- removal
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260723-pci_id_fix-v4-9-3580726844e1@garyguo.net>
-References: <20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net>
-In-Reply-To: <20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- Zhenzhong Duan <zhenzhong.duan@gmail.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- GOTO Masanori <gotom@debian.or.jp>, 
- YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Vaibhav Gupta <vaibhavgupta40@gmail.com>, 
- Jens Taprogge <jens.taprogge@taprogge.org>, 
- Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- David Airlie <airlied@redhat.com>
-Cc: linux-pci@vger.kernel.org, driver-core@lists.linux.dev, 
- linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
- linux-scsi@vger.kernel.org, industrypack-devel@lists.sourceforge.net, 
- netdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- Sashiko <sashiko-bot@kernel.org>, Gary Guo <gary@garyguo.net>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1784844066; l=4035;
- i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=lHva/dma2dhjWQsmx2fGGemN3LY6Pzjje93ttaBGl9s=;
- b=PRpoM33KIVcuLWUlxn8nVZJmx89ogQe/kUyc0oKz9B1+e+FStVQw+oLIXU+fW6nX1Ym14kr31
- JqvL8iK2SXIALrn1fyHEzic/O9VRJlsrXDW2sfHe7DORDCEEsZ8XUxA
-X-Developer-Key: i=gary@garyguo.net; a=ed25519;
- pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
-X-ClientProxiedBy: LO4P123CA0115.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:192::12) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tBChoWxq"
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-cbb662575d3so98199a12.0
+        for <linux-ide@vger.kernel.org>; Fri, 24 Jul 2026 00:41:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784878876; x=1785483676; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2/zWtQhEGENWbHFCLZBJq7PVW34eGxTfKARUkU/qJyY=;
+        b=tBChoWxqbSzMk4R8/+zuEuGcBa5sf6jg1HuoBAZESk60iAo43npXsh05MdWoDkWdCM
+         U5UBwcp7yPVdF7hdtf7kkBLX44u2XgNqe1D9FnMeldvKTN63/pQTrZdpgs4I8eeyPE1L
+         rW4imZJgtS7Ea+hcsu6YUBVRe33i+6ErEtQeG85tfFaktA22MLxkM/uiDHakYOYn5HrA
+         vMr+g4Clo7porYLxsPHEzuNYp/jMmh7vG++iWNbP6VLD4Of6Axy8re1BytB/z8/tOnTT
+         2jN/MypPowVqN11lurkWBNCx/FLGJpBbvEUJFFEDrkY6fg1I3ZcZuCG/rZKANa27WSui
+         tBMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784878876; x=1785483676;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=2/zWtQhEGENWbHFCLZBJq7PVW34eGxTfKARUkU/qJyY=;
+        b=QbWEEBtC7FvgTmffAlHzc718zsgfEFIjv6Ne0VEIBMUThincQHwAc7MBGj3aS4aWNO
+         2zdH8rte1jNoEIAhTnaNLZuBOUWEwK8p4TaLX787WlRN0FlmLF/bnFsqsckVmnHB2hcy
+         0FRE+e/b8f6c5wBsytEFZx9UU0TgKqJ7DONs86yBg2RtX8LxCH61kloYBcdOoQjVdOrC
+         LhpYwuplaC9ziKD73hM5II2/b9aAnybk+9YeP4QCwv2jB5EkiJS7ggRZfhcqSIXiaAiS
+         R2X5A2ItWbxMwayUuH6uRgJDYFyAlcTCc4lNpxo2/8+1HufxFUwzkDPyWvhWRHI7OLrr
+         JCrg==
+X-Forwarded-Encrypted: i=1; AHgh+Rr6uexgRxbKKkc9uvuAtTQYunmSG9nR/UOYorWXVeJAewRzAF9lN1/RDAuqbHacofgGrxj76XAXmcc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwgIStQZOlriCmq6BCjlir9e+AUe5XUtPhb4kfeqWBteRwMLsvr
+	qIq6srbCx6NIt/9lSf4CLJk4hAs/AiSZNGoDLTuSIZcKAXTW4NZ1a1FfaVWh93we
+X-Gm-Gg: AR+sD11OHMnR3wa/uyQ7zuoBiRShCiP5oH4Yt3++mu9g6ONQ6/uGU7dUwUkOM5ihCNg
+	EuOpV1kBRqvhocDPu0Yet5a7Ue1bs/M5U57sYoKmn7aZnLC036kNIFTwaF61QoEyjR8JyJwL1zM
+	RbZdnzIxMUvtrkeAN0jKwvfAKBcUqU5saqs0iYKVmS2N926rUZz1QAjrg8WENRgD3wJquRnvXJr
+	i7mjR6iKykfy5mVmh2PzIsYTqqLpmorotpW9Foo4vSJm8zE8BgtweDX7V21j9OQyCdNiyEUCsaz
+	m4WllG275v2XaJSbM4AnF+poxPk0rwpTwTl9t4xoCePuEF6QXE874zfP2+K9UGMBo0S5zMHcpv5
+	nFzNfOnItt8lVy3dq9hx7AxQjful5tqP+3PlIt4Er3A16nGK2znz87+Wf7P2dTiFTP1k6
+X-Received: by 2002:a05:6a20:da12:b0:3c3:6544:5eb2 with SMTP id adf61e73a8af0-3c44b245fb7mr7317352637.55.1784878875550;
+        Fri, 24 Jul 2026 00:41:15 -0700 (PDT)
+Received: from devobuntu.lan ([2600:6c5c:6b00:ba4::23])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147e1c7ff4sm29788271eec.27.2026.07.24.00.41.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jul 2026 00:41:15 -0700 (PDT)
+From: Matt Vollrath <tactii@gmail.com>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Matt Vollrath <tactii@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] ata: libata-eh: Increase STANDBY IMMEDIATE timeout
+Date: Fri, 24 Jul 2026 03:39:42 -0400
+Message-ID: <20260724073942.1751381-1-tactii@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB2635:EE_
-X-MS-Office365-Filtering-Correlation-Id: a7ce7b36-e754-4197-c17e-08dee905e7fc
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|23010399003|10070799003|1800799024|921020|22082099003|18002099003|56012099006|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	fhTG4FoRvy0J0DSORGwc9FqJnQ2lVy/1WKsjhRLUpwf+Th8oVZ8R2ZYK2L5z9Zi02VCGF0N9SCL02t+qw6RXPg7jcPym4t15fSogpqNfKSTq9QFNOHnWSPlyh0zbPnS1AhknYsFEAeXaQGgRgFqsbUnTWbevnkS4Qs8CZH2tFFAKK0YFcZ41OCelELzNlBrzF26nmKNOb37W29VakkfRCp2FBIDmuMZGdp0byCeerzrfz8E5Z45MeF1Y3Uls1F/t4RMrih53cwWsaONLPOSqRYOa97LzU/94hz+cCsnwPdtpuvHes/uH4qxDCKW5fPdD0pp+u6l8PHjO9Hxm0d1LQkB91c0H+2GPWeEyxGl1o31vn85XQnyfaHfclvvjI4f7mbSrpDNUPA24ivo2Je+HbuEMHIejMV6dh/FzfoqHy+FL0OOSoKElCbP+DRV+YY1a4Yqa0JF9EYVxNrxh2JBYMKnxvXxvoDy0VIDwGUZaWUU3Aeiso7ozGP5hAc6qz0XhT9nqZLUGrsdV1u/V9+H6ajyKC004GcLDD/orp0KsEXJxqMt+KpkLajdOU3ZYabFQcry4glWkZzH0okLbTVY9MNDSKI7n4OdZQou4scGHG+OT57Ux/XjhVQL1Kh1sAWVgcopD5CGBPsjH5dgX/TIYxBMifxUZ/XpnW2mk/py8TEUCGKiIWJy2JjUYy7Ri3PEfBG90+hboWV+292Ysec//tA==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(23010399003)(10070799003)(1800799024)(921020)(22082099003)(18002099003)(56012099006)(10067099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?clNXUzQ0Rm9BNzlQb0NFdUY2REZFWVBOOUM2UmdZb0k4UitLL0lpVFlHaWgy?=
- =?utf-8?B?OGRWdkpTa3lZVDl5OVVncHJkQUhVVzNVclhLNDAzV28vSTdLcmx0VE1ydjZ2?=
- =?utf-8?B?L0JCSkVwTHdkb1JNRDVIbi9QNVBUSWhnb0k2QXUxUkt0VW01NjgrVjNRckJZ?=
- =?utf-8?B?TXVKdWNTY3o3SEs3SVJFQmdVZE1BZ1RvSm95Y1Bja0cydWExWkhtM1pnT1lC?=
- =?utf-8?B?eitEMFh3ZHBSc3czekphcFVjRkw0Q1hIL1k5bmx2TEJ2V3IxRFVOaWduNTJk?=
- =?utf-8?B?NWdEWUVsNnZKMHJOdkFmKzgwVURCOHVwd2UxNXdxY2RPKzVJclpSTnIzV3Ax?=
- =?utf-8?B?d0lUSGZNbVBnNkFaZFRxUU1IWUtucEZvRWtqV3NEWXF6dk9aMmJwRzhYZGJj?=
- =?utf-8?B?Zld3TE1mVlhOY1Q0VWhMVTNBTHNLTFlMVkxsWUdPZGZ0VE5GV0dXMmVHRHFq?=
- =?utf-8?B?NFJHdlZTTlA5WjJZbGVmclBaVnBsV1pwblFJdVNvd2xBTUVEaHFqbGVzTThv?=
- =?utf-8?B?OFhxSnJWV25EMm94N3FMZ3ZtQ01FcU9rUWFObFJiQm1BTmYrTUZRdWZvejVZ?=
- =?utf-8?B?WVptUGtZeko1VjA4MytralFrbzZEb2pBeEZmNi9JNkpyVHFsZmdqSUkrUXBi?=
- =?utf-8?B?djRoaVd1cktVOHVwK0Q5Ykt5MElQL2VoMC9SUE1RYlJqYTMxa09yMnpwd3Ex?=
- =?utf-8?B?K2tySHFlMy9EaThnSDRWQnZDQ2pBMDNpZ2xRek5MQzRBUEw2VW5HcWx0aWxa?=
- =?utf-8?B?QjVwWDRRWExHZWNZcGlvTWc1cTg2WjR5YlNObytya3lhb1MyQ0x6UHROSXU5?=
- =?utf-8?B?MUZCRjIyTzFidSt6RnA2U1JRbnBoaGQ3eXZ6VDYzZGFyR09CYldYb2V6UzB2?=
- =?utf-8?B?TVlOYk4yZ2N5YWtKb1JQcFhvdk1QRFA5aFVFeUs1R0FXL3h3MzEydFFXMlZq?=
- =?utf-8?B?TDhubzhBTzQzYVlIVGg0M2RpMFRVTHlQd2NFUXRReW5wQjhWNFRzZWF2ZVd6?=
- =?utf-8?B?b2poSmEvM0RRUEJLZnpwUEo0eDhDY3FRZUcvL2xVbHYxcUdZSTJwb3I0dm5Z?=
- =?utf-8?B?YVFrUWlvcDQrTDRkRVNEQVNhSUpYMGlCRXdBTVhNOERhL2RsYWthYzY3TERx?=
- =?utf-8?B?bUNuekxndFM1SzE4TWlqMGtDQVBaZUFIdUh5VGtPU0tnVUYycmdOTmcwZ21G?=
- =?utf-8?B?c0hBcThzSkordkhkWTBGUDg4aW5IK3NRZUhSUWVvZy83RXR4NENHVjdCNnY5?=
- =?utf-8?B?Ri9MNmlPVXhiRGZpRlpWeERUck0xTng2S0c3QU90WnVxTlRZd21ObkJwLzZE?=
- =?utf-8?B?VG42c3QveFlxUFBWNmtob2hYWVRzcWZpNEM5UVQrVC9GVU9xYXNhZjdNbUpx?=
- =?utf-8?B?ZG83T2JmNnAzZm9QWTZsbUFwSjdiN2tDcjgwMXhPUDZFRlRtUDBTL2tlZVh3?=
- =?utf-8?B?QW1pd0RPVW1OZW4vd3FhUGhaRzUrRW44LzVtMGpaNzVmWkx3ekVTbUx2UUhV?=
- =?utf-8?B?d21zME0rWmw2T1ZjRjZ6NHVjZEJOTmIzR2thL0M2amRDcVE3SDNURGJ5ZHJU?=
- =?utf-8?B?N2NVVE1LUXZOUWRaWVJZWG8vY0xDN0xjTXMxOEdhbUJMR2lzL1ZiK1VEOGVO?=
- =?utf-8?B?QlNSTndaWHM1Q3Rtd05iSHIyNlVUek1pbU84d1JXUGlDdjVqUHhqSTJ1b2E1?=
- =?utf-8?B?T2c0SUhaMTlPWG52MUZGdU1wU1lJR3UzQzZWbG1IdXNSL3pGRTR3QUJTR000?=
- =?utf-8?B?cERaVjVCc1IyVEFqbklMV1NYOFh1TkM2cGZFMTdEVFJoc0dHWnhUcE84Y1RV?=
- =?utf-8?B?NkQ1T2FOaDhzS1FrbUNWbVMybVdKQ20zelMvcGM1ZFdLNmZUZ0xzVHRoZUtX?=
- =?utf-8?B?VTJVOUxRMHNxeTdIeWpxZnJSbFBJRlQ1MkprYjllT2lSTDFrTUZKREFpalQ4?=
- =?utf-8?B?QUtpR21vQmJ6eXBTUVRlb1hLSEV6NUd2dU4zZ2Y3WXl6QXhMeS83L25ENzhZ?=
- =?utf-8?B?Y1BXN1FpemUvRldSN3RiNjRtNTZQRi85ZG5VMjBHR3FaN1FRZERqYXFVY0wy?=
- =?utf-8?B?MEJ3ZWJRVnhlVlYybHhvbSt2b1J6QTQxZnlHeWFlaXUxWlZXN0V4amxKL0tR?=
- =?utf-8?B?bnIzclJiYlhvZjBFYzBSMklGdzhZcVljR2oybENsa2VZb2tqa0JVNE9PQjZ3?=
- =?utf-8?B?SjNlTFQ4ZUczTmdPQUFPa2t1WnczKzA1QlhtSlNoT3dQZC9JaGh3akQ2SklS?=
- =?utf-8?B?c1U3NDEzQVJIV29NMEFPK0pmbDNsN05tS0lCbnB2V0FBTFhBZzJQdFM0Y05r?=
- =?utf-8?B?dlBnelp5cGRwZ0F5aHk2TENUd1JUUm1KYm5nbXRZT0pGbXdKa051dz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: a7ce7b36-e754-4197-c17e-08dee905e7fc
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 22:01:10.9869
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: PelTRcD9LODMA2jDHVvb7HoE5dWMXZ2nOOb7zx9LOpLxd5kp/bvUdY+QHw2V2ZC7lgGiFlNrpDZBa1D+/JGSaA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB2635
+Content-Transfer-Encoding: 8bit
 
-Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
-as remove_id_store() can free the node. Thus, make a copy in
-pci_match_device(). Also, clarify that the id parameter is only valid
-during probe.
+Correct a previous change (see Fixes) which reduced the standby timeout
+from 30 to 5 seconds. Increase it to 15 seconds.
 
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/
-Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
-Reviewed-by: Danilo Krummrich <dakr@kernel.org>
-Signed-off-by: Gary Guo <gary@garyguo.net>
+I was troubleshooting an error spotted during system suspend:
+
+    [ 1217.152867] ata1.00: Entering standby power mode
+    [ 1222.322948] ata1.00: qc timeout after 5000 msecs (cmd 0xe0)
+    [ 1222.324010] ata1.00: STANDBY IMMEDIATE failed (err_mask=0x4)
+
+This drive is a Samsung 870 EVO SSD in good SMART standing, and I wasn't
+aware of any reason it should be taking so long to standby. The issue is
+intermittent, but I observed it sometimes taking 7 seconds to manually
+standby. I assume this was interruption of background maintenance after
+a power outage.
+
+As a desktop user, I would prefer to wait the extra 2 seconds at suspend
+to let the drive finish its business rather than drop the rails from
+under it.
+
+The change from 30 to 5 seconds was implicit when switching suspend
+from START STOP UNIT to an internal command with no timeout table entry.
+No reason was stated for the change.
+
+Fixes: aa3998dbeb3a ("ata: libata-scsi: Disable scsi device manage_system_start_stop")
+Cc: stable@vger.kernel.org
+Signed-off-by: Matt Vollrath <tactii@gmail.com>
+Assisted-by: Claude:claude-5-fable
 ---
- drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
- include/linux/pci.h      |  1 +
- 2 files changed, 16 insertions(+), 13 deletions(-)
+ drivers/ata/libata-eh.c | 8 ++++++++
+ include/linux/libata.h  | 2 +-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index ab3bb756ce89..e16aa59dd7ac 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -180,6 +180,7 @@ static const struct pci_device_id pci_device_id_any = {
-  * pci_match_device - See if a device matches a driver's list of IDs
-  * @drv: the PCI driver to match against
-  * @dev: the PCI device structure to match against
-+ * @id_copy: place to store copy of pci_device_id for dynamic ID
-  *
-  * Used by a driver to check whether a PCI device is in its list of
-  * supported devices or in the dynids list, which may have been augmented
-@@ -187,9 +188,9 @@ static const struct pci_device_id pci_device_id_any = {
-  * structure or %NULL if there is no match.
-  */
- static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
--						    struct pci_dev *dev)
-+						    struct pci_dev *dev,
-+						    struct pci_device_id *id_copy)
- {
--	struct pci_dynid *dynid;
- 	const struct pci_device_id *found_id = NULL;
- 	struct pci_device_id dev_id;
- 	int ret;
-@@ -201,17 +202,16 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 05df7ea6954a..46947ed0c657 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -106,6 +106,12 @@ static const unsigned int ata_eh_flush_timeouts[] = {
+ 	UINT_MAX,
+ };
  
- 	dev_id = pci_id_from_device(dev);
- 	/* Look at the dynamic ids first, before the static ones */
--	spin_lock(&drv->dynids.lock);
--	list_for_each_entry(dynid, &drv->dynids.list, node) {
--		if (pci_match_one_id(&dynid->id, &dev_id)) {
--			found_id = &dynid->id;
--			break;
-+	scoped_guard(spinlock, &drv->dynids.lock) {
-+		struct pci_dynid *dynid;
++static const unsigned int ata_eh_standby_timeouts[] = {
++	15000,	/* Some drives may be slow to standby */
++	/* but don't hold up a suspend too long waiting for them */
++	UINT_MAX,
++};
 +
-+		list_for_each_entry(dynid, &drv->dynids.list, node) {
-+			if (pci_match_one_id(&dynid->id, &dev_id)) {
-+				*id_copy = dynid->id;
-+				return id_copy;
-+			}
- 		}
- 	}
--	spin_unlock(&drv->dynids.lock);
--
--	if (found_id)
--		return found_id;
+ static const unsigned int ata_eh_other_timeouts[] = {
+ 	 5000,	/* same rationale as identify timeout */
+ 	10000,	/* ditto */
+@@ -147,6 +153,8 @@ ata_eh_cmd_timeout_table[ATA_EH_CMD_TIMEOUT_TABLE_SIZE] = {
+ 	  .timeouts = ata_eh_other_timeouts, },
+ 	{ .commands = CMDS(ATA_CMD_FLUSH, ATA_CMD_FLUSH_EXT),
+ 	  .timeouts = ata_eh_flush_timeouts },
++	{ .commands = CMDS(ATA_CMD_STANDBYNOW1),
++	  .timeouts = ata_eh_standby_timeouts },
+ 	{ .commands = CMDS(ATA_CMD_VERIFY),
+ 	  .timeouts = ata_eh_reset_timeouts },
+ };
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 96e626d6a7ca..6c0d385b2cde 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -425,7 +425,7 @@ enum {
+ 	/* This should match the actual table size of
+ 	 * ata_eh_cmd_timeout_table in libata-eh.c.
+ 	 */
+-	ATA_EH_CMD_TIMEOUT_TABLE_SIZE = 8,
++	ATA_EH_CMD_TIMEOUT_TABLE_SIZE = 9,
  
- 	found_id = do_pci_match_id(drv->id_table, &dev_id, ret > 0);
- 	if (found_id)
-@@ -467,12 +467,13 @@ void pci_probe_flush_workqueue(void)
- static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
- {
- 	const struct pci_device_id *id;
-+	struct pci_device_id id_copy;
- 	int error = 0;
- 
- 	if (drv->probe) {
- 		error = -ENODEV;
- 
--		id = pci_match_device(drv, pci_dev);
-+		id = pci_match_device(drv, pci_dev, &id_copy);
- 		if (id)
- 			error = pci_call_probe(drv, pci_dev, id);
- 	}
-@@ -1560,12 +1561,13 @@ static int pci_bus_match(struct device *dev, const struct device_driver *drv)
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	struct pci_driver *pci_drv;
- 	const struct pci_device_id *found_id;
-+	struct pci_device_id id_copy;
- 
- 	if (pci_dev_binding_disallowed(pci_dev))
- 		return 0;
- 
- 	pci_drv = (struct pci_driver *)to_pci_driver(drv);
--	found_id = pci_match_device(pci_drv, pci_dev);
-+	found_id = pci_match_device(pci_drv, pci_dev, &id_copy);
- 	if (found_id)
- 		return 1;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 64b308b6e61c..92c17c116de6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -979,6 +979,7 @@ struct module;
-  *		function returns zero when the driver chooses to
-  *		take "ownership" of the device or an error code
-  *		(negative number) otherwise.
-+ *		The pci_device_id parameter is only valid during probe.
-  *		The probe function always gets called from process
-  *		context, so it can sleep.
-  * @remove:	The remove() function gets called whenever a device
+ 	/* User visible DMA mask for DMA control. DO NOT renumber. */
+ 	ATA_DMA_MASK_ATA	= (1 << 0),	/* DMA on ATA Disk */
 
+base-commit: 4d99a91574c420decab56cc880fad0dc15b8a7a3
 -- 
-2.54.0
+2.43.0
 
