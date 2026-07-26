@@ -1,111 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7810732B135;
-	Sat, 25 Jul 2026 15:40:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FC957DA66;
+	Sun, 26 Jul 2026 02:49:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784994052; cv=none; b=R1N/yV6AiAiTbuXRE7g9+RBwEXEoz5o+R1ktiBXE8Kj5cYeyDqsaReSWFL20qYDF2/nII96tmkq5Ato3uhA16sZlg8ofswM7xb2kR2IsED/oU9KVmuVkrTgkPhz1tQ5jYrCD504o5Vq2BfUMKcldNN8oqj+zfCFPq86btVyf0RE=
+	t=1785034163; cv=none; b=jMrVaR8lyxWUQmrzK/usB1vCTxHt4PmLYReJCyDS7s2AcTHFCkbqsK6/2bDA83VEE8lLfBTGPitJbZe0P3Goy6m+Urtpw1h2GI5V6lCh/0+YaBkLWHpYmPbLYnL9KuRMmEb09XTeeOeM6yBr+dE1DRkQ/iKhU4JWaKTbnVGCImE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784994052; c=relaxed/simple;
-	bh=rbI7JfzH8/Z3rTxnubhC5UNZdAt9heHgiDgx8XRhTuE=;
-	h=Mime-Version:Content-Type:Date:Message-Id:From:Subject:Cc:To:
-	 References:In-Reply-To; b=RCca/ML5h0OtN9LYtD01CYTm9KG7kt8ges9c/yFRiwvzxzTko2LDvIwmbLTjzLNldeddBpmDnZiznxWY5229CLu4gfDfxaNswFURLLQ+Rw1Rn+SiSsvdyiVNB16sCoi1Er5A4EN1YfOd5sd3zz0Z4e4Q00K0gDXZVlTJFsqQYfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WJcyKBAm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785034163; c=relaxed/simple;
+	bh=W/XB5VgFHVQJ65pF8zPMr+s5TcDldcDBpFn1uOTH0S4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CpvrnIvA5krEGbnSyfc/c9GG2KRaJCWleQ/bZROLOI46+BLvDiblk4HBzKtGi2noXY4299+yrQv7XRdXg3fMykO1H4xZnk7brurMFNM5GRzPcweLAtdPW2O3/r06XezrZ/6jdSf/EfbSRzR3OfTKB7mFCRJQK2daqnppW3rJBB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n/mCVzFw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WJcyKBAm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E32731F000E9;
-	Sat, 25 Jul 2026 15:40:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n/mCVzFw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFCB21F000E9;
+	Sun, 26 Jul 2026 02:49:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784994047;
-	bh=AVKIqDLaRJbWnwleOfdrA62Ss8E5oUijw4SSgsugB30=;
-	h=Date:From:Subject:Cc:To:References:In-Reply-To;
-	b=WJcyKBAmndl0QTaMHgQzStmh2LqdjdYH5aHzLFotx1+w63A678Lq11jVOtTjr3Tyh
-	 CisBSahLmQ1zuxxBSee6AnUeOapTVkgILUhAB8mBrCEifApcKUVj34WRHVEYk/nksv
-	 Wek70ZJDAdkmqYol+w7lZigtGxUv4uy4TtKoE3LFBiZL2+KH0yyN7VRI8FgiByuq/V
-	 j/ngHgk/3+si8L4KyMos8lhTskEHhuhjWjGtAq2OijlFodWHmCgvosiaCqMSmBIOme
-	 PdEnAnb6KPBKHHCfBh96ODVo36Tf0JNT6ev9C475g7+3W4V/Ml8dUNcBotREqDS84P
-	 oEvdnYre7X4RA==
+	s=k20260515; t=1785034161;
+	bh=fJrxuHciquTrsKNEPNzbpTuPw9GgZ0CiQukvxc3WI0Y=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=n/mCVzFwgglGrTWpTKpE8PiH40gpZJNlsXUKZyrSJTZlL2+C8sNfPQDHL9/Y13BEc
+	 IJTvelwtkVmPndx2C9TnrpdaJF8a/3QMZV7lP127Yfb0cNDhvIdNIK+1dcLkEUPDly
+	 /4yg2f08HdHR7Da5Z3I9bDI3+PMXW46dplOa6i5lI9idNdTUK6uZ18ge1tdB7cnsot
+	 3yTIGwBrjHSLtlzAl8rX7DvIJfHAGvOT04b1w+aBrxTC6zn23OLFpKKM7zC7nMfRcU
+	 X4SD9H02xvhdumb0gIvxQoSYf60soejSVeVTDDqHYsV6CtGrnzfkxJmAJL4I+JIAFP
+	 1QScxuC68+AbA==
+Message-ID: <343c7dd0-c16c-419b-97f6-379692266761@kernel.org>
+Date: Sun, 26 Jul 2026 11:49:19 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata: avoid kernel-doc warnings
+To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org
+References: <20260725015209.1207666-1-rdunlap@infradead.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260725015209.1207666-1-rdunlap@infradead.org>
 Content-Type: text/plain; charset=UTF-8
-Date: Sat, 25 Jul 2026 17:40:40 +0200
-Message-Id: <DK7RKTMA6TVC.11YQWH2H4VB74@kernel.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v4 7/9] PCI: Make pci_match_one_device() match on ID
- instead of device
-Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "Bjorn Helgaas"
- <bhelgaas@google.com>, "Zhenzhong Duan" <zhenzhong.duan@gmail.com>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, "Damien Le Moal" <dlemoal@kernel.org>, "Niklas Cassel"
- <cassel@kernel.org>, "GOTO Masanori" <gotom@debian.or.jp>, "YOKOTA Hiroshi"
- <yokota@netlab.is.tsukuba.ac.jp>, "James E.J. Bottomley"
- <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, "Vaibhav Gupta" <vaibhavgupta40@gmail.com>,
- "Jens Taprogge" <jens.taprogge@taprogge.org>, "Ido Schimmel"
- <idosch@nvidia.com>, "Petr Machata" <petrm@nvidia.com>, "Andrew Lunn"
- <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, "Eric
- Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>, "Paolo
- Abeni" <pabeni@redhat.com>, "David Airlie" <airlied@redhat.com>,
- <linux-pci@vger.kernel.org>, <driver-core@lists.linux.dev>,
- <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
- <linux-scsi@vger.kernel.org>, <industrypack-devel@lists.sourceforge.net>,
- <netdev@vger.kernel.org>, <dri-devel@lists.freedesktop.org>
-To: "Gary Guo" <gary@garyguo.net>
-References: <20260723-pci_id_fix-v4-7-3580726844e1@garyguo.net>
- <20260724222939.GA1065077@bhelgaas>
- <DK7N9IZPWPIT.2AKSZR5CU1H9L@garyguo.net>
-In-Reply-To: <DK7N9IZPWPIT.2AKSZR5CU1H9L@garyguo.net>
+Content-Transfer-Encoding: 7bit
 
-On Sat Jul 25, 2026 at 2:17 PM CEST, Gary Guo wrote:
-> On Fri Jul 24, 2026 at 11:29 PM BST, Bjorn Helgaas wrote:
->> On Thu, Jul 23, 2026 at 11:00:46PM +0100, Gary Guo wrote:
->>> PCI dynamic ID needs to match IDs against a new ID to see if it already
->>> exists. Existing APIs can only match IDs against devices, causing the
->>> dynamic ID insertion code to create a temporary device only for matchin=
-g
->>> purpose. Rename pci_match_one_device() to pci_match_one_id() so it can =
-be
->>> used for this purpose instead; add a pci_id_from_device() helper to mak=
-e it
->>> easy to convert users.
->>
->> s/causing the ... code to create/so the ... code creates/
->> s/purpose/purposes/
->>
->>> Similarly, convert pci_match_id() to do_pci_match_id(). But keep the
->>> existing API because there are many users.
->>>=20
->>> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
->>> Signed-off-by: Gary Guo <gary@garyguo.net>
->>
->> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> What's the merge strategy?  If these all need to be merged together,
->> feel free to include the PCI patches whereever you merge the series.
->
-> I think the series should be merged together, as I consider the driver ch=
-anges
-> included in this series being "fixing the users".
->
-> The series should probably be taken via the PCI tree. I suppose one can a=
-lso
-> argue that the lifetime issue with device IDs isn't unique to PCI bus so =
-this
-> can also be considered driver-core material, but given that Greg has alre=
-ady
-> taken the USB fixes via the USB tree the only unfixed bus left is PCI.
->
-> So unless Danilo thinks otherwise I'd suggest the series be taken as a wh=
-ole via
-> PCI.
+On 7/25/26 10:52, Randy Dunlap wrote:
+> Modify comments to prevent kernel-doc warnings:
+> - use "/*" for a non-kernel-doc comment
+> - add a Returns: section for ata_id_major_version()
+> 
+> Warning: include/linux/ata.h:770 Cannot find identifier on line:
+>  *
+> Warning: include/linux/ata.h:782 function parameter 'id' not described in 'ata_id_sct_data_tables'
+> Warning: include/linux/ata.h:782 expecting prototype for Word(). Prototype was for ata_id_sct_data_tables() instead
+> Warning: include/linux/ata.h:820 No description found for return value of 'ata_id_major_version'
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> ---
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Niklas Cassel <cassel@kernel.org>
+> Cc: linux-ide@vger.kernel.org
+> 
+>  include/linux/ata.h |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> --- linux-next-20260722.orig/include/linux/ata.h
+> +++ linux-next-20260722/include/linux/ata.h
+> @@ -767,8 +767,7 @@ static inline bool ata_id_sense_reportin
+>  	return id[ATA_ID_COMMAND_SET_4] & BIT(6);
+>  }
+>  
+> -/**
+> - *
+> +/*
+>   * Word: 206 - SCT Command Transport
+>   *    15:12 - Vendor Specific
+>   *     11:6 - Reserved
+> @@ -815,6 +814,8 @@ static inline bool ata_id_sct_supported(
+>   *
+>   *	The practical impact of this is that ata_id_major_version cannot
+>   *	reliably report on drives below ATA3.
+> + *
+> + *	Returns: major version of ATA drive level or %0 if unknown
 
-I'm happy to take it through driver-core if it helps, but the PCI tree seem=
-s to
-be the natural fit. :)
+Is the "%0% here intentional ? If yes, why ? Or is it a typo? If it is the
+latter, I can fix when applying.
+
+>   */
+>  
+>  static inline unsigned int ata_id_major_version(const u16 *id)
+
+
+-- 
+Damien Le Moal
+Western Digital Research
