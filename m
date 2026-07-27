@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53C4D423781;
-	Mon, 27 Jul 2026 18:17:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BECD35BDA4;
+	Mon, 27 Jul 2026 19:35:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785176228; cv=none; b=ek+J/Hbr2VhkDI7l2X5bUNzrucIeHm3mPblXlZwwbZ27VF5XvQaWqgK3KotsbUvn0K0OT2eyOIoXHxQXwqdEtcNetFYOMuuVa2ewdTQtObTJRN4r2pTxkfS0VPGv4RqLVJeRcfXGd8OJWCc0eBSkkv2Siw9wt0OKvCIa2JN4uNw=
+	t=1785180912; cv=none; b=Tu6uM5hiSIz9fV9VGXTFXBghmV0Ndl34iZN1Fzb9HJ5brFtoTPI4l2hkageSX2YvWL0e+EyHZ+AOj/pzzN02hnIf9pVY1pLstJCPhMrcau+c1UQ+xS8D0eX0Cl8oumkIjotN43CgH4pN+GgUXuhOn6ZrJXnJxEjqZuB5ugxLu5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785176228; c=relaxed/simple;
-	bh=NN9hA4oH+gyWR5obp0DBP57LTtk27PMUnsgLa0opeog=;
+	s=arc-20240116; t=1785180912; c=relaxed/simple;
+	bh=poxlppDpv/5LZLEdOY86GW8jDxWd0GIt+lRi24nL5gY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p3r2hNDpNTallxN+fa2ize8HX1ueSl3SLStgIYqHDezQMJZrRtMv9rjQwZ00dXAy3Q5mMNkev4WyCGsxJ2cVrLebbKtV1IZbPigmzNmfLY48TDdfKMaC5HXBcOOlhH0pZG4Jw1TCUVLoLWZ9o2squs5KcmU46UruMU1v398bxKY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y6pxkHpP; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=n2rwegcYfysRlH19MwS/Wvn3UPY3evoKIKpw10FtXoTPvDK2sgBbs83LKiQVCWPCOTn1UFjshnU/XIvab+8M/sQWLedbiXEgfbPuJqy6NjOaqP4AHp5v1xpZ/kyngdY4fzUOk0XHO0Spi95Wil/K2oAhUX17adwyTV7AJ8PGqQo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aCV6YtWR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y6pxkHpP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B8191F000E9;
-	Mon, 27 Jul 2026 18:17:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aCV6YtWR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10C061F000E9;
+	Mon, 27 Jul 2026 19:35:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785176227;
-	bh=qqVMHu9kB5Ks0CL0SYK6lnzD7+E+3e+moEikCOWFiB0=;
+	s=k20260515; t=1785180909;
+	bh=QfLVMjcWmcJp3Sq8ms9IIVN2D1jxIpmUsTwKtuwcmd4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Y6pxkHpPFbMpSE/1Dyf6s8/uxa4GECSIeUpnTpazITL0Eukgk2Tz5vicR+Q5U+W6w
-	 dPQ71ER4jaH9FRw9bO81RbrUtI7H5DahbXUiz2QdohWiiZ1eYpwB1SAE3MHwJEWQTm
-	 hn9S/LKIXW/TNvr70B8cPD4Cx5AIY3TnF+mWB6VBUciUlS+UTJyAy8YlCKWPyzqFYK
-	 S8R4apWxujYbD73z6d2oOJT+Ipb06FfhcCEXGxuvVnn42/NKmEgmP2hPgx6U7W6Xq6
-	 iXZMMwV++lpkdX5HaFvGxI/H5B2EWsqEJjorbCb1ejeAldbmY+fND/tdHKG/sBWgzP
-	 0VkS3suCVHrew==
-Date: Mon, 27 Jul 2026 20:17:02 +0200
+	b=aCV6YtWRjuh5u62n/yd0cxLXi+yyjyZqeNiai9+Oq56zhPlbh2agG5x8/FAiqYbPG
+	 m6owVtW6F7C7eJH9dg35bx5yegRe9M+RBWUv7kAtCjyTHyvuuO5NUYBRp01ZuKXE13
+	 28soufeKPj//Cw3rp8D73zA8yfC5rlWuTS5vP1pcz3mhX5ebWUghj7Yn9vK7pfCHQf
+	 IMqmtIdha0tYyIMhuAbJHLVq5tJBPR7rHs/2WIhgqtIXhsm+nxaPheXGmPeaFZk5JA
+	 5LsQo95YM4s9mrpk6ldQRsSstxfxgZlXjnIP2SS3C+NFs32RKsCaDsYfpgvVOuJ/KL
+	 ds6weW6tHjQtw==
+Date: Mon, 27 Jul 2026 21:35:03 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -36,7 +36,7 @@ Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
 	Jason Yan <yanaijie@huawei.com>
 Subject: Re: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands on
  time out
-Message-ID: <amegnsBvbDNNk2LB@ryzen>
+Message-ID: <amey54ElcsYLdizj@ryzen>
 References: <20260721064027.2081195-1-dlemoal@kernel.org>
  <20260721064027.2081195-2-dlemoal@kernel.org>
 Precedence: bulk
@@ -201,6 +201,14 @@ On Tue, Jul 21, 2026 at 03:40:26PM +0900, Damien Le Moal wrote:
 > +		 * issued, or with DID_REQUEUE if another command timed out or
 > +		 * we had a failed command. However, the block layer may re-issue
 > +		 * immediately these commands, keeping the scsi host busy and
+
+
+I am not a native speaker, but I think this should be:
+
+However, the block layer may re-issue these commands immediately, ...
+or
+However, the block layer may immediately re-issue these commands, ...
+
 > +		 * thus preventing the SCSI EH task from running.
 > +		 * So schedule EH on the port to prevent accepting new commands
 > +		 * until everything is sorted out with the error or timeout that
@@ -228,6 +236,34 @@ On Tue, Jul 21, 2026 at 03:40:26PM +0900, Damien Le Moal wrote:
 > +		 * handled the timeout so that the timed out command gets added
 > +		 * to the EH work queue with scsi_eh_scmd_add(), for later
 > +		 * handling with libata EH ata_scsi_cmd_error_handler().
+
+The first half of this comment is clear.
+However, the second half of it, starting with "Otherwise, ..."
+is quite confusing.
+
+
+I think a better comment would be something like:
+
+If we are being called from scsi_timeout(), then we have a
+non-NULL timedout_scmd.
+
+If the timed out command is for a deferred qc, terminate that
+deferred QC with DID_TIME_OUT, all other deferred QCs are
+requeued. In this case we need to return SCSI_EH_DONE, because
+the timed out command was handled.
+
+If the timed out command is not for a deferred QC, we need
+to requeue all deferred QCs, and return SCSI_EH_NOT_HANDLED
+so that the timed out command gets added to the EH work queue
+with scsi_eh_scmd_add(), for later handling with libata EH
+ata_scsi_cmd_error_handler().
+
+If timedout_scmd is NULL, we simply need to requeue all
+deferred QCs. Return value does not matter here as we were
+not called by scsi_timeout().
+
+
+
 > +		 */
 > +		if (qc->scsicmd != timedout_scmd) {
 > +			qc->scsicmd->allowed++;
@@ -275,22 +311,8 @@ On Tue, Jul 21, 2026 at 03:40:26PM +0900, Damien Le Moal wrote:
 > +	/*
 > +	 * ata_scsi_cmd_error_handler() takes care of timed-out deferred queued
 > +	 * commands. However, if we had any other command time out and we have
-
-Is this comment really true?
-
-To me, it looks like this latest version (v7), does no longer handle
-timed-out deferred queued commands in ata_scsi_cmd_error_handler().
-
-Instead, it looks like timed-out deferred queued commands are handled
-directly by ata_scsi_requeue_deferred_qc(). 
-
-
 > +	 * deferred QCs, we must let scsi_timeout() handle them with
 > +	 * scsi_eh_scmd_add() so that we do not unnecessarilly delay starting
-
-s/unnecessarilly/unnecessarily/
-
-
 > +	 * the SCSI EH task. So requeue all deferred queued commands for retry
 > +	 * through libata EH.
 > +	 */
