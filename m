@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89FF18462;
-	Mon, 27 Jul 2026 01:48:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD09C22576E;
+	Mon, 27 Jul 2026 01:49:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785116924; cv=none; b=TcOhvQqwPHgU9eVcCRuZHyq7/1YxoDgUvvTP2kXgcW9Fuahnmx340oCeeoswoUrayZTlAyEf18Ctic31cMWhrakkqY5WGm63flPtpZD+n7MXlLg7jyfA77LbQmtusCyzPJhm6hgCUzUO3N3NENj7s1Syp2MVjWQn3ETM53pEARY=
+	t=1785116957; cv=none; b=S7diUcUfJ2jXLrX7yB7PYTOkbrRklkQSNPY+2WIfyBYDv5lJnXi1mwwgOakZFwHebHT3UciBUo6ajjM/ULfI/I0mkNXhvE2f8yBdV+2tkiWWh9FAfj6eJ6PQ3KSRPaxOIWkhcg3Sx7+XUGnOOTwK0vKJeMEKn4fkHvxmvLChR80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785116924; c=relaxed/simple;
-	bh=fn0ybXLscXyBMRVMwE1yE2QATyt7aRVVmkUea1LVS/w=;
+	s=arc-20240116; t=1785116957; c=relaxed/simple;
+	bh=/R5qpTppHWjCdqfWqbd5E8fH8sYefEH1r2QS96y8KE4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=upXaBSBW/hW/01jGEBS2wyxLWA8nvdPnnQSD1X55KUaORM2lQzJBFJf6DcijhcKufbBuRQWadZyy8eP7kkQ5pkHtwP9oeqtSAs/OU9iJpiKk0iQCG2iJLt8jZyDvXr3RnTCZFAL0sUCSqnNnUq31iJOT6GBp38AqfMLIHXLTZ28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c9byJ+kT; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=aEhB/WaXab0DUXdqd3cvQ0KenhXOjvhkT8jse7pZL/16zn+7nIHi1mzFm9hPNJqKhDr3GRGXd9LjVl7QwoSl4k5gz2E/M0XWTrsmlMj1j1HvZy7K7QzhuKaP5pts95+i6OJRsk2XunlipT3PBkFJJiQ8kfTX95xZiwVoyeCRj6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OoFpagRa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c9byJ+kT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72C9E1F00A3A;
-	Mon, 27 Jul 2026 01:48:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OoFpagRa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E05C1F000E9;
+	Mon, 27 Jul 2026 01:49:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785116923;
-	bh=J16DiFtJTL/WeFkDSwaI6fDf5nafo+oCyc7XPXRXfvI=;
+	s=k20260515; t=1785116956;
+	bh=cb8FomLOlG/0LEVY2D8JFEa1/4M/pA3WZ5EOj19sQ7s=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=c9byJ+kT5sW1al8hmceUTHoS3sROZV6sdya1M9kOXOgbY2JHgRJknYFNgDtVLdcx4
-	 XCefo7jn13v/XSB2c2VZw83iumnkTbLGJ7SME+4gomV5ERg7NLE1acp3sZXLZQhCEj
-	 wOUCUFhq0XlJ8DgoFaytLyGUkY4vAEoKUmCjy+b5bwQmOKX6j7wiJkaFlVVb2o0v0R
-	 YM5K4L5pD9r7Zln1JQVhk64ZTQjTwyxAbUSG3p3J19rA7i1GRqVH4EhomQDX47W4JM
-	 Yh9L/i6BQXAnSUmlu6Up+JIStpfTgnPDzKC113hvjsrvrccaSvS5qG8PZcRN/yYNYE
-	 WoZ10kp1fyBSQ==
-Message-ID: <838ba900-1510-4fab-8ccc-3331ffcc332f@kernel.org>
-Date: Mon, 27 Jul 2026 10:48:31 +0900
+	b=OoFpagRaiWCYu4TbthNgOrhBmVFUL6IHGIfhEXIDzWeZWos+XguMpdydhzx9kU/ps
+	 HYbCjwoRhTM1H8bVm8pL2ivrwlzfwpjwSbl3R+JQetaV93eKXOhcCH5dQVnqXFvrt0
+	 Rb5XGsle5Ezc594osgv8k9MTnPnMbC8RbHTGzr5+75cZJffIDJvTMbAQ+zLZW2gpGi
+	 io72v0T7xEwK0YTIVcjrp6E8iNiIJzfUXrxgsg8/o7KotstQYNT56oTItMsXCbwCPl
+	 uFxehMCEPVWWDSzA7z2ewVkGZId34nymJhzjsPbh8NhfgyN8UGdhCOlx9VVcGgFSaJ
+	 rkIwc6Zswol3A==
+Message-ID: <6c9f7828-daf4-4770-b9c0-02efdf22c97b@kernel.org>
+Date: Mon, 27 Jul 2026 10:49:15 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,49 +35,31 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-eh: Increase STANDBY IMMEDIATE timeout
-To: Matt Vollrath <tactii@gmail.com>, Niklas Cassel <cassel@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260724073942.1751381-1-tactii@gmail.com>
+Subject: Re: [PATCH] ata: libata: avoid kernel-doc warnings
+To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org
+References: <20260725015209.1207666-1-rdunlap@infradead.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20260724073942.1751381-1-tactii@gmail.com>
+In-Reply-To: <20260725015209.1207666-1-rdunlap@infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/24/26 16:39, Matt Vollrath wrote:
-> Correct a previous change (see Fixes) which reduced the standby timeout
-> from 30 to 5 seconds. Increase it to 15 seconds.
+On 7/25/26 10:52, Randy Dunlap wrote:
+> Modify comments to prevent kernel-doc warnings:
+> - use "/*" for a non-kernel-doc comment
+> - add a Returns: section for ata_id_major_version()
 > 
-> I was troubleshooting an error spotted during system suspend:
+> Warning: include/linux/ata.h:770 Cannot find identifier on line:
+>  *
+> Warning: include/linux/ata.h:782 function parameter 'id' not described in 'ata_id_sct_data_tables'
+> Warning: include/linux/ata.h:782 expecting prototype for Word(). Prototype was for ata_id_sct_data_tables() instead
+> Warning: include/linux/ata.h:820 No description found for return value of 'ata_id_major_version'
 > 
->     [ 1217.152867] ata1.00: Entering standby power mode
->     [ 1222.322948] ata1.00: qc timeout after 5000 msecs (cmd 0xe0)
->     [ 1222.324010] ata1.00: STANDBY IMMEDIATE failed (err_mask=0x4)
-> 
-> This drive is a Samsung 870 EVO SSD in good SMART standing, and I wasn't
-> aware of any reason it should be taking so long to standby. The issue is
-> intermittent, but I observed it sometimes taking 7 seconds to manually
-> standby. I assume this was interruption of background maintenance after
-> a power outage.
-> 
-> As a desktop user, I would prefer to wait the extra 2 seconds at suspend
-> to let the drive finish its business rather than drop the rails from
-> under it.
-> 
-> The change from 30 to 5 seconds was implicit when switching suspend
-> from START STOP UNIT to an internal command with no timeout table entry.
-> No reason was stated for the change.
-> 
-> Fixes: aa3998dbeb3a ("ata: libata-scsi: Disable scsi device manage_system_start_stop")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Matt Vollrath <tactii@gmail.com>
-> Assisted-by: Claude:claude-5-fable
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-Applied to for-7.2-fixes. Thanks!
+Applied to for-7.2-fixes with the comment tweak we discussed. Thanks!
 
 -- 
 Damien Le Moal
