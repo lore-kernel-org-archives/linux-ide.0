@@ -1,105 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61A0D435AAE
-	for <linux-ide@vger.kernel.org>; Tue, 28 Jul 2026 11:53:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B051C41D659;
+	Tue, 28 Jul 2026 12:16:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785239618; cv=none; b=cv+rosq0klwHdSwjwj0YCO9O63/4+HdIbaLMco8UhDGRIIy/N7oHmo0iZ8uATyMBnuhbwdQvbgJ73sIFbrXnuZCD57va/Udo8NGdUFnLEhJaGi9zFiTyzB5ZiPJvX3rPdoC9AaOFraab/W29BEJQ3Dc1M1yXZ9WkIUEU2QW/jw4=
+	t=1785240995; cv=none; b=IzaLNCtcI9B0lj44gi8nktJPrDyzpI/AdrO3Nb4elVuv8tHyx9QU/6FUfsvh7kWFCgeXUpFUeqEppY6Zw/bEzi5YCr4Rj/TK6/4PDeiDHRXmAWU+69vj9affK30P8YItDYS2yV/V+7u/6SaF6y2Zijcxo49GfygCEMCpjTaEusE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785239618; c=relaxed/simple;
-	bh=Efbvr7fPP9sTlJ7l+Moz6DX5NE8Evj4x83g3HsIjmmg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SSLE8TI69UnIge9tEM4V5Y3aVGqcMi3aIEWhwsJ2eHkcVZgvz3dziOCN9i25Hn6bHR2zBZHd6D9kD0Vhx+NbaMzB51O7ApTbakBoPVBrxR4ndfLe2wJ0xvZ3FSgA1LA1P2BkBUrS4txPdtiMbtWhyHcm4L6KfpIY/q583q6b+Hs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JV+/Xllv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785240995; c=relaxed/simple;
+	bh=PBX+t+ETDdnWhw8cgSie+4r4sEkRAa0OjlzODL+0DTs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=riNzu4NwNTr2HMDJcaNpXOv/PF+1J2cinPkv0hg+Y+ua7szPZgwiUyD3SqWFXNIOlVH/SdPOSMuE5Nr4nFmt8komtIP0YBXdxe16f1+fG+QEg2hOgEGERwBkF3x1ea9RktDBdoNLV5zUdbgb6UiV1YV5tnQxtouKEsoKm9knMls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LyrWQv3g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JV+/Xllv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B4861F00A3D;
-	Tue, 28 Jul 2026 11:53:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LyrWQv3g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 689591F000E9;
+	Tue, 28 Jul 2026 12:16:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785239616;
-	bh=jg/FCw+UhNvhQpujvFegpLDH3pzONhRzSnOfcWFWRJg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JV+/XllvNnCsFPniDAArz34fhlFlsPBvQ6W7qWK8j0vKC+zS+3kxiwJ5MyhwwZT1j
-	 cvjnsn627Rs4oHZXmd6sX7WQKo5Vqifsth7fiPLluJ2uOaNZ0KcwNDk5ajaM1wABkc
-	 eu/FvAtJ2tW4Ktx9HWTerNeyqjoVIZzWHtUJGzrXEVbrrBZVliko+Rs7MBkeEjUX2P
-	 ESZRx4GtMd+ZUgQj5p20XdLzIo3FYXl93EHNcTMJZCtCxVUjcMHDgEfhsdm3LvOufB
-	 cNVoIgtlWMW7aB7SxA1URDHh6TD3nWn62GyRqSc2coS0vo/zjiNdQ9IyCcHACwOlQm
-	 l+YwxM1l5Q+hA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported()
- iteration
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Niklas Cassel" <cassel@kernel.org>
-Cc: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260728113841.727256-2-cassel@kernel.org>
+	s=k20260515; t=1785240994;
+	bh=sCpVF3SmGcSjqHowpdgiYHbQTO+UhVEKagl7dXUAdeM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=LyrWQv3gDpdB0nVXc48lDQ+/Qc8d/OUg44VaOhZJWNGdt6MMNVeaHIKvQCv3jTRM/
+	 hzMEjJnNkiM9uIfj7xgUOQ4O7N9RFogRSdD4mRFqdECMRjjxZcXzstxd8YDTOujyb9
+	 HoABXAMADA9RR93zMceD6BQJDo5FnN0wLS03H5ppEQEHIT2+dFGDnl0WLJRwVNBjpb
+	 GA8IRTV4ISsaCykcE3UQjVGqIplfbYZeu2vNWJFSJcZWhFKrQl9tL2SmXZkV+Pz5tx
+	 iMQGTskCE1McrS/tlYXiBIVKqphuRbdbTe3d6wxjB1/K/kmYh354yVZ1Z3BfsvYPcZ
+	 Ee6qO4CPE5TNg==
+Date: Tue, 28 Jul 2026 14:16:30 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported() iteration
+Message-ID: <amidnlBAeJOks4cw@ryzen>
 References: <20260728113841.727256-2-cassel@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 11:53:36 +0000
-Message-Id: <20260728115336.9B4861F00A3D@smtp.kernel.org>
+ <20260728115336.9B4861F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260728115336.9B4861F00A3D@smtp.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Tue, Jul 28, 2026 at 11:53:36AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> 
+> Pre-existing issues:
+> - [High] ata_scsi_lpm_supported() skips checking devices on the slave link because it uses the ATA_LITER_EDGE iterator. This allows userspace to enable Link Power Management (LPM) on a port where the slave device does not support it (has ATA_QUIRK_NOLPM).
+> --
+> 
+> --- Patch [1]: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported() iteration ---
+> commit 32bd728de2e1b6025504205f3ade16813231e703
+> Author: Niklas Cassel <cassel@kernel.org>
+> 
+> ata: libata-sata: fix ata_scsi_lpm_supported() iteration
+> 
+> This commit fixes the inner loop of ata_scsi_lpm_supported() to iterate
+> over the specific link being evaluated rather than always using the host
+> link. This prevents the LPM policy from being incorrectly applied or denied.
+> 
+> Link: https://lore.kernel.org/linux-ide/20260728112200.B99F21F000E9@smtp.kernel.org/
+> 
+> > diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> > index b0706c30da052..ad40f516c6d43 100644
+> > --- a/drivers/ata/libata-sata.c
+> > +++ b/drivers/ata/libata-sata.c
+> > @@ -913,7 +913,7 @@ static bool ata_scsi_lpm_supported(struct ata_port *ap)
+> >  		return false;
+> >  
+> >  	ata_for_each_link(link, ap, EDGE) {
+> > -		ata_for_each_dev(dev, &ap->link, ENABLED) {
+> > +		ata_for_each_dev(dev, link, ENABLED) {
+> 
+> [Severity: High]
+> This is a pre-existing issue, but does using the ATA_LITER_EDGE iterator
+> here in ata_scsi_lpm_supported() skip checking devices on the slave link?
+> 
+> Since the EDGE iterator skips ap->slave_link, it appears this loop misses
+> devices on the slave link that might have the ATA_QUIRK_NOLPM quirk.
 
-Pre-existing issues:
-- [High] ata_scsi_lpm_supported() skips checking devices on the slave link =
-because it uses the ATA_LITER_EDGE iterator. This allows userspace to enabl=
-e Link Power Management (LPM) on a port where the slave device does not sup=
-port it (has ATA_QUIRK_NOLPM).
---
+Well,
 
---- Patch [1]: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported() itera=
-tion ---
-commit 32bd728de2e1b6025504205f3ade16813231e703
-Author: Niklas Cassel <cassel@kernel.org>
+1) slave_link is only for PATA.
 
-ata: libata-sata: fix ata_scsi_lpm_supported() iteration
+Yes, I know that two sata drivers abuse this:
+drivers/ata/sata_sis.c:                 rc = ata_slave_link_init(ap);
+drivers/ata/sata_via.c:         ata_slave_link_init(host->ports[i]);
 
-This commit fixes the inner loop of ata_scsi_lpm_supported() to iterate
-over the specific link being evaluated rather than always using the host
-link. This prevents the LPM policy from being incorrectly applied or denied.
 
-Link: https://lore.kernel.org/linux-ide/20260728112200.B99F21F000E9@smtp.ke=
-rnel.org/
+2) The call to ata_eh_link_set_lpm() is protected by:
 
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index b0706c30da052..ad40f516c6d43 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -913,7 +913,7 @@ static bool ata_scsi_lpm_supported(struct ata_port *a=
-p)
->  		return false;
-> =20
->  	ata_for_each_link(link, ap, EDGE) {
-> -		ata_for_each_dev(dev, &ap->link, ENABLED) {
-> +		ata_for_each_dev(dev, link, ENABLED) {
+libata-eh.c:ata_eh_recover()
 
-[Severity: High]
-This is a pre-existing issue, but does using the ATA_LITER_EDGE iterator
-here in ata_scsi_lpm_supported() skip checking devices on the slave link?
+if (link->lpm_policy != ap->target_lpm_policy) {
+	rc = ata_eh_link_set_lpm(link, ap->target_lpm_policy, &dev);
+}
 
-Since the EDGE iterator skips ap->slave_link, it appears this loop misses
-devices on the slave link that might have the ATA_QUIRK_NOLPM quirk.=20
+And the only driver that sets ap->target_lpm_policy is AHCI.
 
-If a user or power-management tool writes to the sysfs attribute
-link_power_management_policy, ata_scsi_lpm_supported() would incorrectly
-return true. Then ata_port_schedule_eh() triggers Error Handling, and
-ata_eh_link_set_lpm() might blindly apply the unsupported policy to the
-slave link.=20
+So, I don't think we need to care about the slave link in this case.
 
-Can this result in the slave drive becoming unresponsive, leading to
-command timeouts or dropped devices?
 
->  			if (dev->quirks & ATA_QUIRK_NOLPM)
->  				return false;
->  		}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728113841.7272=
-56-2-cassel@kernel.org?part=3D1
+Kind regards,
+Niklas
