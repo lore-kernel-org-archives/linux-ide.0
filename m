@@ -1,163 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63D9643231F;
-	Mon, 27 Jul 2026 20:40:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E2812AE78
+	for <linux-ide@vger.kernel.org>; Tue, 28 Jul 2026 02:41:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785184860; cv=none; b=ltUXcmWLOMW66grW8v3O/h9fEmLI1e+FhIzRXOp2wWgZtqyING2qiUAZ2schnrlbZjzNivtixNMGqfHw5Yc020kshHDsY1FHIdS0pCAkaxOqbQQBBQo9+oYmDPpWCTQ7/PrAi6wspM84rSj2Hp1pyYPL4eS/hS4kL41e0s3hVgs=
+	t=1785206497; cv=none; b=tJczvtaqeL+cFeIWOzZplOlGuKFGHOaN9R7LpRERMDoZhQwI9wPDc2p+iui3VM6uN4uIB/Eat/BHi2z4MDQfU9o0qwFZtxrKrbLG44h4XMzuKTn8m5lhNAB/yb/GniMFQLpYwvupzIlKKg990eX2GNm28QTl9dW1wjDQvyqziA8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785184860; c=relaxed/simple;
-	bh=2NbbooRyXe3g8iNYErBgq130SL+Q1td6ph4XuIVBN2w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W+9uhPVQJpw1xSbCqek+bqNBx+qX4iEppuk6OZBU4rRRqT4P0/QpUBU1JiAg2PzWfVBjICoezbr4PErMLx20uBhe/qreInnBskfaMMFoKIP4dyLvIScMbFa8UsGslD9rS9oZCQA+3soY1ODpInSkbY9Mr51REALeB/oIdOtD9Cg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y9AZxY3k; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785206497; c=relaxed/simple;
+	bh=eQ+aPSF2o49MMvW+dAK+rnxNF5GReb17AE2PgBhkD94=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dQlszMdZMiJ7VGYhJ5rpjiCTD6OBbOzcpPJIoDV4wKsta+MULwE9EOwxe2z26ARPpF05FjWQ9JsiP15OiZNkLbqgz0mFS9TIcykArEXr6bft0HA35mdy3k+Gx21nfTSDzRDZU9b4E+68lG6hM4SqcOuGg2H8VcfmCbO0l/oA6qI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cIC4MaGW; arc=none smtp.client-ip=209.85.219.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y9AZxY3k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 716251F00A3E;
-	Mon, 27 Jul 2026 20:40:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785184858;
-	bh=j4iH9xFCazjvMHgWdG8xvMkYk8EpIQraJeYNev6OkBI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Y9AZxY3kzC5PFpqp0VSh5NL8rdB3MM9OD4gUL0XIERkytH5jGs0IIvH/GlRDynMjN
-	 FXdXosNTHWpTpY0xu0Ph5gi4EgEMoOp6Z1hp+SVW8U/VUEMAX+yoOL506E+8XfJdwf
-	 lCIIA8jQYRH68WAponqsIOyIUlVvlJbvns3eD192iEaPTkxfH9APL8Wrz9lEAZxWac
-	 K4x8zby0k6LGURuwVuXymfbrtv91t8CZyH/RnPW0hJCZXQi1WeDdgJIfObQoIOZB/4
-	 xIFKo98BukUt5/j77kwNYjhhT7q0XIFq9BGAK+eqAOgA30Q/9w35b3rDb6ceZ94/d+
-	 On4qYpaaZLaBg==
-Date: Mon, 27 Jul 2026 22:40:55 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Igor Pylypiv <ipylypiv@google.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-Message-ID: <amfCVx43BCYFWFFY@ryzen>
-References: <20260721064027.2081195-1-dlemoal@kernel.org>
- <20260721064027.2081195-2-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cIC4MaGW"
+Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-8ff88549786so33796496d6.3
+        for <linux-ide@vger.kernel.org>; Mon, 27 Jul 2026 19:41:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785206494; x=1785811294; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=KLe+nCkDPgXfI5lHYLRk/Vgw3wsM30n35xzzTJ428iQ=;
+        b=cIC4MaGW8bT3Lgsuf9CfSUKeAAgZmL4fVGTpeYe7Ix6LmwxUzAvTzoZYyCcCs9CAMa
+         NHKJTbH1APGhgfBq3o3LnjJMIIulDzxkhLGVNyNRBlHYN3F/kwPqvywCAJ49Wi6qTun1
+         I7LdvaksbkgKYcxsWINsvdPI3SfAjHfa5L7OWEsEFPJSaLDApC0SC9FaQODrY3L1sBFR
+         sBUMdf47xovaPs0wUJzP6gvtRF7D7Mpa0PArLBCMwwww7syO1pip2DWACZI1//w9KBTH
+         dV8TGHT2OVj5Y37INNtTBZmzE8cSBNX+zVqIx0++EgbqqH3mLed4CFzWKdAE6QtWcciI
+         +DSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785206494; x=1785811294;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=KLe+nCkDPgXfI5lHYLRk/Vgw3wsM30n35xzzTJ428iQ=;
+        b=ljHHdmz4uwXvjOfeCZkqkXmb03dncjVhslcK8yES3Kl2i2MON/ImRJI6aXxVsJ3j9v
+         KizI9ERXjUc1sQyVIIsJlqhQLy3lk/SGVj4w1ZCsHjMWWX6AtdjNBS6YFa9gNt7Ewl8s
+         GYiUjxQ1XfeHWUM9Rmi3cWfFJHscY3CZfOy/wHe469i+R415f6206Pil/o75iQ5xAFeh
+         YAaoyIvVywtxCGxJ3SyAb6PDgH1sdXdolP8nvLQWkvYYMKBAe5HTOVM3lTOJlgWP+Ny+
+         r+JUnGdIqurg8d+4MbEMv934kuiHv/uoaLjeryuuAco110dGK/flrvnOZqVbedSilT5h
+         xAMg==
+X-Forwarded-Encrypted: i=1; AHgh+RqP1scZT4Jigacqt8QUQL+od+fmylPwrhF+zMuNuDG8vmiyFNHPU36+mic9/v9KV/vE3hoVXgP3Fl0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwdaPoF0NSi372fjboiGtLlrTvvfGggJC0K1Wnt88AgpMAM1yp7
+	X/V1qFD9t2yp1MDx1BHZMhG6xfb65N7DkaZVyYMiop+eO91+npoe/YcEUleRVjxN
+X-Gm-Gg: AR+sD10QtcQiYBx3PguQ4FyHga4LbU1jWScCMWAueW1uUaF3uQCTcwdXspQuUtilLIi
+	l5yFEJFDxjLPohGcmDigU4phbCvzJXLnMEGMDmarvLYhxwmd4e6KjuHLYZYqE7vZmyU3eAEh8FT
+	ojSsJeNq2QNVXOtYNgRDw1p55lpFDs9y78hSFFEuf51UYxh4/1TZtuVHiGHdSnJIUtew/lE1k46
+	laUGEW+qfZkOROydPDVvQ8VweBWDHbQqfNW9aeuM6kt5tIiVkSbbXt/x9rJg6PoZLkM/2HuJnBf
+	PtLJTJAGa9AFwl4t3WB08mjTkn745G4TTP82XBA9zT2LkkDoKqs6kYisBYkHBuEljamdPCLtGvP
+	YsbyEw6W2fWBftTgqEAthUlfWhIasIp+65ViaBbno28gNZRhIM2Tw938j/A4iD8N2eRR4ZbEoNR
+	HzD/qDMQkfzr85amYBX2OavlOv/1gaTW0yB446dZzjT45i4vK1zNxkudyD1wSjTgwTX6zTzdVBD
+	D4wZljtSdg2IIv08Q==
+X-Received: by 2002:a05:6214:d89:b0:8e9:f5de:d631 with SMTP id 6a1803df08f44-908173108f0mr5326786d6.50.1785206494479;
+        Mon, 27 Jul 2026 19:41:34 -0700 (PDT)
+Received: from i4-l-hqh5357-03.ad.psu.edu ([130.203.139.71])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-907e86d7c80sm82183806d6.39.2026.07.27.19.41.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2026 19:41:34 -0700 (PDT)
+From: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Shuangpeng Bai <shuangpeng.kernel@gmail.com>,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [BUG] ata: pata_parport: KASAN slab-use-after-free in driver_find
+Date: Mon, 27 Jul 2026 22:40:13 -0400
+Message-ID: <20260728024015.2014674-1-shuangpeng.kernel@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260721064027.2081195-2-dlemoal@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jul 21, 2026 at 03:40:26PM +0900, Damien Le Moal wrote:
-> @@ -1685,26 +1685,75 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
->  	spin_unlock_irqrestore(ap->lock, flags);
->  }
->  
-> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
-> +enum scsi_timeout_action ata_scsi_requeue_deferred_qc(struct ata_port *ap,
-> +						struct scsi_cmnd *timedout_scmd)
->  {
-> +	enum scsi_timeout_action action = SCSI_EH_NOT_HANDLED;
-> +	struct ata_queued_cmd *qc;
->  	struct ata_link *link;
-> +	u32 host_byte;
->  
->  	lockdep_assert_held(ap->lock);
->  
->  	/*
-> -	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
-> -	 * do not try to be smart about what to do with this deferred command
-> -	 * and simply requeue it by completing it with DID_REQUEUE.
-> +	 * If we have deferred QCs when a reset, a timeout or an NCQ command
-> +	 * fails, do not try to be smart about what to do with the deferred
-> +	 * commands and simply terminate them and let the SCSI layer decide
-> +	 * what to do.
->  	 */
->  	ata_for_each_link(link, ap, PMP_FIRST) {
-> -		struct ata_queued_cmd *qc = link->deferred_qc;
-> +		qc = link->deferred_qc;
-> +		if (!qc)
-> +			continue;
-> +
-> +		/*
-> +		 * Clear the deferred QC so that the deferred work does not try
-> +		 * to issue it.
-> +		 */
-> +		link->deferred_qc = NULL;
-> +		cancel_work(&link->deferred_qc_work);
-> +
-> +		/*
-> +		 * We are going to complete some scsi command, either with
-> +		 * DID_TIME_OUT if the command timed out while waiting for being
-> +		 * issued, or with DID_REQUEUE if another command timed out or
-> +		 * we had a failed command. However, the block layer may re-issue
-> +		 * immediately these commands, keeping the scsi host busy and
-> +		 * thus preventing the SCSI EH task from running.
-> +		 * So schedule EH on the port to prevent accepting new commands
-> +		 * until everything is sorted out with the error or timeout that
-> +		 * got us here in the first place. Note that we set EH pending
-> +		 * on the port before calling ata_port_schedule_eh() so that we
-> +		 * do not reenter this function from ata_eh_set_pending() with
-> +		 * timedout_scmd being NULL and erroneously retry deferred QCs
-> +		 * that have timed out on other links.
-> +		 */
-> +		if (!ata_port_eh_scheduled(ap)) {
-> +			ap->pflags |= ATA_PFLAG_EH_PENDING;
-> +			ata_port_schedule_eh(ap);
-> +		}
->  
-> -		if (qc) {
-> -			link->deferred_qc = NULL;
-> -			cancel_work(&link->deferred_qc_work);
-> -			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-> +		/*
-> +		 * If we are being called from scsi_timeout(), then we have a
-> +		 * non-NULL timedout_scmd. If the timed out command is for a
-> +		 * deferred qc, terminate it with DID_TIME_OUT and tell
-> +		 * scsi_timeout() that we are done. Otherwise, ask for a retry
-> +		 * with DID_REQUEUE and tell scsi_timeout() that we have not
-> +		 * handled the timeout so that the timed out command gets added
-> +		 * to the EH work queue with scsi_eh_scmd_add(), for later
-> +		 * handling with libata EH ata_scsi_cmd_error_handler().
-> +		 */
-> +		if (qc->scsicmd != timedout_scmd) {
-> +			qc->scsicmd->allowed++;
-> +			host_byte = DID_REQUEUE;
-> +		} else {
-> +			host_byte = DID_TIME_OUT;
-> +			action = SCSI_EH_DONE;
->  		}
-> +		ata_scsi_qc_done(qc, true, host_byte << 16);
+Hi Kernel Maintainers,
 
-Might be a quite subtle difference, but I think it is much clearer if you
-would instead write this as:
+I hit the following report while testing current upstream kernel:
 
-		if (timedout_scmd && qc->scsicmd == timedout_scmd) {
-			host_byte = DID_TIME_OUT;
-			action = SCSI_EH_DONE;
-		} else {
-			host_byte = DID_REQUEUE;
-		}
-		ata_scsi_qc_done(qc, true, host_byte << 16);
+KASAN: slab-use-after-free in driver_find
 
+on commit: 62efbc768363bc7bb00f0915ad265f34b40d414e (2026-07-27)
 
-Because that more clearly highlights the special case.
-(And is more in line with my suggested comment, so it also makes it easier
-to corroborate the comment with the actual code.)
+To help trigger the bug more reliably, we applied a minimal diagnostic patch
+that only adds a delay.
 
-The special case is if timedout_scmd is non-NULL AND is the deferred QC.
+The reproducer and .config files are here.
+https://gist.github.com/shuangpengbai/a8a1b5339bc41944c2f80d9f87e01a7e
 
-For all other cases, if timedout_scmd is non-NULL but is not the deferred
-QC, or if the timedout_cmd is NULL, we want to requeue.
+I'm happy to test debug patches or provide additional information.
 
+Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
 
-Kind regards,
-Niklas
+[  755.753286][ T8297] BUG: KASAN: slab-use-after-free in driver_find (drivers/base/bus.c:1430)
+[  755.754175][ T8297] Read of size 8 at addr ffff88812200f490 by task repro.sh/8297
+[  755.755320][ T8297] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[  755.755331][ T8297] Call Trace:
+[  755.755341][ T8297]  <TASK>
+[  755.755344][ T8297]  dump_stack_lvl (lib/dump_stack.c:94 lib/dump_stack.c:120)
+[  755.755393][ T8297]  print_report (mm/kasan/report.c:378 mm/kasan/report.c:482)
+[  755.755478][ T8297]  kasan_report (mm/kasan/report.c:595)
+[  755.755487][ T8297]  driver_find (drivers/base/bus.c:1430)
+[  755.755502][ T8297]  new_device_store (drivers/ata/pata_parport/pata_parport.c:649)
+[  755.755610][ T8297]  kernfs_fop_write_iter (fs/kernfs/file.c:345)
+[  755.755615][ T8297]  vfs_write (fs/read_write.c:595 fs/read_write.c:687)
+[  755.755678][ T8297]  ksys_write (fs/read_write.c:739)
+[  755.755703][ T8297]  do_syscall_64 (arch/x86/entry/syscall_64.c:63 arch/x86/entry/syscall_64.c:94)
+[  755.755717][ T8297]  entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
+[  755.779923][ T8297] Freed by task 8297 on cpu 0 at 755.752571s:
+[  755.780598][ T8297]  kasan_save_track (mm/kasan/common.c:57 mm/kasan/common.c:78)
+[  755.781128][ T8297]  kasan_save_free_info (mm/kasan/generic.c:584)
+[  755.781700][ T8297]  __kasan_slab_free (mm/kasan/common.c:253 mm/kasan/common.c:285)
+[  755.782222][ T8297]  kfree (./include/linux/kasan.h:235 mm/slub.c:2705 mm/slub.c:6405 mm/slub.c:6720)
+[  755.782658][ T8297]  kobject_put (lib/kobject.c:689 lib/kobject.c:720 ./include/linux/kref.h:65 lib/kobject.c:737)
+[  755.783163][ T8297]  driver_find (drivers/base/bus.c:1429)
+[  755.783659][ T8297]  new_device_store (drivers/ata/pata_parport/pata_parport.c:649)
+[  755.787092][ T8297] The buggy address belongs to the object at ffff88812200f400
+[  755.787092][ T8297]  which belongs to the cache kmalloc-192 of size 192
+[  755.788598][ T8297] The buggy address is located 144 bytes inside of
+[  755.788598][ T8297]  freed 192-byte region [ffff88812200f400, ffff88812200f4c0)
 
->  	}
-> +
-> +	return action;
->  }
->  
->  static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
+Best,
+Shuangpeng
