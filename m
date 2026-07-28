@@ -1,87 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D3423839BD;
-	Tue, 28 Jul 2026 10:07:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF7073AFCF2
+	for <linux-ide@vger.kernel.org>; Tue, 28 Jul 2026 11:13:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785233245; cv=none; b=r86aFaPeqmcMNkaYR7RoPGP7j1ZeojIV/ziO3cZ+pp+Dx7a45Qa7Rji04jcWIF2Bv2GBpF8LHjayDGlqp2Wy+TnXr7Jn455pfDRy/0RSSJ7+maWqbefKZN6JvUavIOXhII/wGG/Rm0tWUudLdPkzdM/vLj98bhaegmMyTlP2PN0=
+	t=1785237196; cv=none; b=MPDPiHlGqkEMMINPj4yBFBVnai0HA3Zvr/mhjoTI3by1IffQFZbOo0wtKV2tSw87saYoUXKDmH2/5+4VJ78dC4u0bIea4m4wRUn26siJQfA97u7z9tB2CHNO9PyogBRXa3LcXGqCkS0K8UhBGJtmmYFpCnh2qcCR8n8DYFwnSp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785233245; c=relaxed/simple;
-	bh=3kPfm0VeQYjHjxFvUgHQvUYkz6jfx9BCNEBK7kGLx2E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZmIskuwrkwmxP5MHD8HH3H7g66NWqQ3haDWyrAIZ1jTwuEhy95MqjQiCjipf2DfmZbHNzQI8DbbYd9FkVhCn8oRwx+3ou1Yied6CdbklayxUx3oPL8flbM2iRnxFn9dA3649PwDDvNa1Bc++YbOQhMdYJytFlfM3YTNas5xR3T8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dFLWOYgk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785237196; c=relaxed/simple;
+	bh=VXGQdfTLzDdpKpWukPfOjWZlTawbFblrCXGw5GLA68Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=N3WI1/vQkD9EYuvGIDC3LXsRl8Xg+aOYvH1WcdS0gpQCv5lsToLoKc4JodHBkpma8Ng5T0/GpZaRbnU0qrbTKA1Hg/vWa5PGNVR3qBv5u/D3TEYstKDdZtVHv06/blTjfkZky1UBxt9t4oojcd4SvJYEdj2c+VyHauhGNZsgChE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FsgMUhMi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dFLWOYgk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81E811F00A3A;
-	Tue, 28 Jul 2026 10:07:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FsgMUhMi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7745F1F000E9;
+	Tue, 28 Jul 2026 11:13:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785233243;
-	bh=rV42LR27D2MsXO/suncZBIQ1wrLvwAMvs+7ekNnjqSg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dFLWOYgkCDTCzuC3HOEsfDRLGH8HmUFWNTXGVd875CrUPUuxw1Wtr0gqkJb7QpLv3
-	 ZEgjfjByeShv3Q8kYJJJdyMgb0r8fUg5j/ejtCm00VM7VcT9NQz76YRonuhTuCZaca
-	 nadJr84E3ovSmQQK62DCLUfyzJjB6SDIAw/Jq/42hXrAid4QEky8lcQKFFt2fP0gaU
-	 eWuKAZBcgIz6dvjaGd6IYJgf+firIG8g4nleFzuECX+JXLmWKKA9gGJe4+p5VJrLxI
-	 lJSf4NKnXglIA0ROgVQ4HH23I+LEEXrSXnQ9gL1AzI0f/HlDgtuUlNQJ2C+bOx5Jp8
-	 mOgS/2wcsIZnw==
-Date: Tue, 28 Jul 2026 12:07:18 +0200
+	s=k20260515; t=1785237195;
+	bh=6nU2pF6NVeg6B5lnmg+uE0UTe/FSV+oDeEksgFSAwpU=;
+	h=From:To:Cc:Subject:Date;
+	b=FsgMUhMifrw+XNL7ExB4OdmYZPKq6PPenYeGNyWTy+wfOPr/INR4GUX/146bK4IAo
+	 bsfx2oOvR1fGI9UJuD4KfATsODYaC84zl/bRcCeuWaAEnqszTt82PmIP11AERUAz1W
+	 /Ko1Pr+MVgrbABg8JZhuB+ZX4KGdoRlJSF4fvwcxObFoWXMal4sXKI902i+g9fh7iT
+	 cEWJoc2hZThWMotUR7qOQC9Zu+WPyPfMQD1jxcwPnvk7LjaNVWRcIp06ezcTGdcUAZ
+	 mdN88759xM+5JeJ5RpcBzNUy+5aQNfFsZ/rvCebZHZzz0fdrpP7kpdBSst61opcymW
+	 YsOs824cnBlew==
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Igor Pylypiv <ipylypiv@google.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-Message-ID: <amh_ViYTvYXVZs6U@ryzen>
-References: <20260721064027.2081195-1-dlemoal@kernel.org>
- <20260721064027.2081195-2-dlemoal@kernel.org>
- <amfCVx43BCYFWFFY@ryzen>
- <b5ca79f0-cf1d-4a44-98fb-cb470f01a102@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Ronald Garcia Vazquez <ronaldgarciavazquez@gmail.com>,
+	linux-ide@vger.kernel.org
+Subject: [PATCH 0/2] ata: disable LPM on some WDC drives
+Date: Tue, 28 Jul 2026 13:13:10 +0200
+Message-ID: <20260728111310.722450-4-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b5ca79f0-cf1d-4a44-98fb-cb470f01a102@kernel.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=360; i=cassel@kernel.org; h=from:subject; bh=VXGQdfTLzDdpKpWukPfOjWZlTawbFblrCXGw5GLA68Q=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLIy+o590ujUKss7sJ+5naf/6SXxSwd8dSKdYl17mLufV hufMd3VUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIm4TmNkWODCvUbucFPY9mmO SVHCNW7WTce/bep8JMI7eTP71SPXDRgZjiyUrpzL+WIiX3Rsz5XvhVsvtp7eHfPePzOgk2nybpb 3vAA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jul 28, 2026 at 12:31:45PM +0900, Damien Le Moal wrote:
-> On 7/28/26 05:40, Niklas Cassel wrote:
-> > Might be a quite subtle difference, but I think it is much clearer if you
-> > would instead write this as:
-> > 
-> > 		if (timedout_scmd && qc->scsicmd == timedout_scmd) {
-> > 			host_byte = DID_TIME_OUT;
-> > 			action = SCSI_EH_DONE;
-> > 		} else {
-> > 			host_byte = DID_REQUEUE;
-> > 		}
-> > 		ata_scsi_qc_done(qc, true, host_byte << 16);
-> > 
-> > 
-> > Because that more clearly highlights the special case.
-> > (And is more in line with my suggested comment, so it also makes it easier
-> > to corroborate the comment with the actual code.)
-> > 
-> > The special case is if timedout_scmd is non-NULL AND is the deferred QC.
-> > 
-> > For all other cases, if timedout_scmd is non-NULL but is not the deferred
-> > QC, or if the timedout_cmd is NULL, we want to requeue.
-> 
-> I added all your suggested comments and code changes and added the patches to
-> for-7.2-fixes.
+Hello there,
 
-Looks good, feel free to add:
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-
-On the two patches in this series.
-
+This disables LPM on some WDC drives, which, according to user reports,
+have issues with LPM.
 
 Kind regards,
 Niklas
+
+
+Niklas Cassel (2):
+  ata: libata-core: Disable LPM on some WD drives
+  ata: libata-core: Disable LPM on WD Green 2.5 480GB
+
+ drivers/ata/libata-core.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+-- 
+2.55.0
+
