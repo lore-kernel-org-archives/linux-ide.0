@@ -1,85 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3525F3B14A9;
-	Tue, 28 Jul 2026 11:38:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407013AD512;
+	Tue, 28 Jul 2026 11:40:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785238734; cv=none; b=IbvTEKbnR6NsxfKbZ3tk0QN3QrOt86fCUkx+RWOsY1KZ8WRL6ogmS1ZCw2WVEUBI3foJ4+J6nTVw8ui+5pacS3OVMqsDgDGf9QqpedRiA3w28IUZR+nlg0zoeiPtYdrR/xeUrgzhRhKxIAfVmZi8/jdJScm4TUTfYbsXGShkLYA=
+	t=1785238830; cv=none; b=Wr3WbP46Jft9gKc1gVnw6ebGdBgyMs1y/DCSdKO4d7O4TWPJHv11sqWhMxULgG/aVGe98MyRnzBk6FSkZjPA0DsHKplW7Za/zH9LjL+pA4rQVAesKreStkOVhsV9B9WPAnKdtECO+uiEmS1VM/IvwKqM8LcEytLLXHwcZo0t0YU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785238734; c=relaxed/simple;
-	bh=d2rBLQ8bgOFKB4h/ghggbtlsmqc82p3cLmh/qaETZzg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eOSEX1+t28Vaidzrq3BQdo7GoRsJKjMsunu3Hva7wDJhFDVJCxZtsFjpHriNplCGS8enNPsqQrBU+jk2DIIV0iWmeYepRmWPVe17MlppO4oCGZRKutQA21aSGd0T7YkYzW/eXAAy8K4tSLjYT1CfUjiZcxClPCOP4430SQ7LADs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K0WElU6Y; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785238830; c=relaxed/simple;
+	bh=LkUFJXcbsgc54x1qygld0cnaTFyxgsYgS2gS8sOOmns=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R9HSjKv7miZrJNylWSHjq2tnmZe7yzFGic/9apCz7dYoP+qZLNDS5IPutY7ybttj3B2NtQ+s0/Fpl2YTzDhinAwqFmrRg/q8mPDdVJWXtEPaCf1Q5Fm9uOBJzio3gfMWgVY3OiIlK/YV5p8yNGkKcHHb+K1TrssLqxuxwMzDU9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BIie/SuE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K0WElU6Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6718A1F000E9;
-	Tue, 28 Jul 2026 11:38:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BIie/SuE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF39B1F00A3A;
+	Tue, 28 Jul 2026 11:40:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785238732;
-	bh=rxqSSWpOxIo5wSUKbdlDJNm2sy8/klrtF80y0xwG840=;
-	h=From:To:Cc:Subject:Date;
-	b=K0WElU6YX1XABpdtLh8CcAD4UoGmt5t8N+O+8mpueaoUU14eeG1Mwc4UPrLFOitKZ
-	 bAp6isbsFiXPXt6i23kcyVh3iZNPi531taWiMa3TquOUJZgA6pPqeS3aT+/f9dfjhA
-	 DKoLgKESweq23RIm4HGrTPv0v2R1XDlu8jukCdJYLYqp28yRsPzX8FVJbQsyUT2pLj
-	 hDbkBA/QmRlddKvTRcyODu4sSNlZaCCi2vWiRQUvq1qyMUhvQOOyQX0EXhdFNzerrJ
-	 h75OkIDpR04lAT9g2kUT7piVhahZ162+f59KJNSNgmj47gfKuE2s9PbnOdl1se2tKC
-	 KVRTSIu6NopQg==
+	s=k20260515; t=1785238829;
+	bh=LkUFJXcbsgc54x1qygld0cnaTFyxgsYgS2gS8sOOmns=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BIie/SuEsolF2YIEmu2x8KXmHtzu/jAWrtq0q/mAX5I7sQhOl0R8HUNaaddPxuf24
+	 rOL51/TBKM/FGgyO8ZLO2nYrrio80nu+BnIYLJt9+LiF+pV9k1yn7iykVYCnIiHvJx
+	 r/j+DMHXXmm7k1iQhT3QF+O6E8nwAKNa9Nfl1J9JwRIaIT1AhwN+Q/PJEd3TTCSmCY
+	 kLQL2eEYuxLLIsMDzqkJgKj6XcN2ZunPBJEbyUxoOiiPc5Qcie61nCBf+njV6HGM4F
+	 vRH5OH2vi8CDN3iRKBWAVXs3gvFea+Y3nkjbMqTGBlbud3o3gCvRI2bwsrXHUJIOds
+	 WscFVm8KRnLQQ==
+Date: Tue, 28 Jul 2026 13:40:25 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: stable@vger.kernel.org,
-	Sashiko <sashiko-bot@kernel.org>,
+Cc: stable@vger.kernel.org, Sashiko <sashiko-bot@kernel.org>,
 	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported() iteration
-Date: Tue, 28 Jul 2026 13:38:42 +0200
-Message-ID: <20260728113841.727256-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.55.0
+Subject: Re: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported() iteration
+Message-ID: <amiVKXTt9lNVl15y@ryzen>
+References: <20260728113841.727256-2-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1320; i=cassel@kernel.org; h=from:subject; bh=d2rBLQ8bgOFKB4h/ghggbtlsmqc82p3cLmh/qaETZzg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLIyphyaFuBsdmz2A9ZVjY/PaGyTWfoq6IPJ50+h0ivUd 8za8nNXQEcpC4MYF4OsmCKL7w+X/cXd7lOOK96xgZnDygQyhIGLUwAm8qaA4X/iwz3SfKZdT5p/ z2b6vLtv2drunek7Tt00Tk9ijDk1v/YdI8N3n55YiVfzXuRbdrgoOwTE/Xb5u21HzR8lg65fji+ +OzEBAA==
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260728113841.727256-2-cassel@kernel.org>
 
-The inner loop of ata_scsi_lpm_supported() user the wrong variable when
-iterating.
+On Tue, Jul 28, 2026 at 01:38:42PM +0200, Niklas Cassel wrote:
+> The inner loop of ata_scsi_lpm_supported() user the wrong variable when
 
-It should obviously use the link that we are currently iterating over,
-rather than always using the host link.
-
-ata_scsi_lpm_supported() is used to control if a user should be allowed
-to change lpm policy (from the default) via sysfs.
-
-Thus, this bug could potentially disallow users to change the LPM policy
-for certain SATA devices via sysfs.
-
-Cc: stable@vger.kernel.org
-Fixes: 0060beec0bfa ("ata: libata-sata: Add link_power_management_supported sysfs attribute")
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://lore.kernel.org/linux-ide/20260728112200.B99F21F000E9@smtp.kernel.org/
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-sata.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 2ee54d60ea4b..5138b4e500e5 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -913,7 +913,7 @@ static bool ata_scsi_lpm_supported(struct ata_port *ap)
- 		return false;
- 
- 	ata_for_each_link(link, ap, EDGE) {
--		ata_for_each_dev(dev, &ap->link, ENABLED) {
-+		ata_for_each_dev(dev, link, ENABLED) {
- 			if (dev->quirks & ATA_QUIRK_NOLPM)
- 				return false;
- 		}
--- 
-2.55.0
-
+s/user/uses/
