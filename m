@@ -1,40 +1,60 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECBB93B5821;
-	Tue, 28 Jul 2026 12:37:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5BED377555;
+	Tue, 28 Jul 2026 16:24:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785242272; cv=none; b=ZstPP0UsZns7zu9HUvT83mQ+03f8ONesSBv3UDKpnB5b98nPXlfCu5Ud5odzGkg7k2A/t6+unsVprEI5c3QHiQWshWPeR+DHGCfw3ES6taIbkTWKsrUzfilHZH82GY4XYSSkqykd1KStXcFof1ofNqDRNP0QpiDrjwmXOD4+oUI=
+	t=1785255878; cv=none; b=ILL+O56L8ai0ClpheL2po3YfYdSSeZb7kt8i2aX04UDjqRif1BzcOrA5x6CQ9c5BLcXR3KDuf4IDZdCnTKw4ijDnS1Lc1UjS3lCM8QesfKlfODSdw46uCIOtaS/vgityyreRVqfSydFfBCv0KK2oZm9rAr6GVyh7BXMwLnQHMxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785242272; c=relaxed/simple;
-	bh=DX637y4KDCFEN1cOsV5Z70OhhhXzj8mo0h3cR/A3V+M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rnYWUw1GBizJFhM46lh5PmK4zUkemBDnTpXP5XrRGvZFLHVKa9Pc/toz4DyhJQK4T/btlONSlMQjOsK64UmGuPl+ghaWP6kwiXOE05OMMRVU0FFUJS3yHWUOVgHqxjffqEHMgte0CsQOWwng2FVWUYAeHt9Jg6YnDRc35lS489c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FVoRoJ2z; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785255878; c=relaxed/simple;
+	bh=vWMKSzzpBTfatsYmHFgZj4EoC9MVBYwvfVkGM/cJjIo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Dq9YqDhWBHw3zpiHujSZQPw4DzXPOhbFsP0dVsmuvGi60syO761ruBYLs+/bCnRh7cJbjV3IoPFHBtFcXDn1cbSKPZl6fUFGnJCUg+k+tDnGH5njklb+sOCimU4PYWGfR05kdSWEgyrVoqtXUHHeisSq6U6FevJpYEnq+u8s7xc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZDl/Eg/5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FVoRoJ2z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 987531F000E9;
-	Tue, 28 Jul 2026 12:37:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZDl/Eg/5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E87A1F000E9;
+	Tue, 28 Jul 2026 16:24:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785242270;
-	bh=UiXW4rbegDHRy0YBZonSLv4tj6oDq4B0rezonfp4rvY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FVoRoJ2zxneGsNJhQOI9ChRmxvo95TsmmH+bvQm4EGCNs8wSOvYSXSUcKQu/xgwVj
-	 3TS2gOPVGbZjAsqJeH5QHR2wNVEAonmDKHL1qhLYJPyELsxa+9MDxDpM5ISZqCE6Sy
-	 yYGrZGY+b5IZsqJrer5VLPgjCKJQAlK/dfOr2YSKAxRohzwKxJPTQIGkss4OOiPhlt
-	 3MWDiTiqCUEyDnxR95DAeLfoBlPh/w4m+mPHCSfJlGMSQyvelbUivp2VhWII5rbSPS
-	 5A9ntbDk1oYQtCYsaeFXEOijiZFwZTs1CQ0zWTVBNBG1ga1KLW47RpHQQvDkzsVDyL
-	 ZNBkN4ctIB6Ew==
-Date: Tue, 28 Jul 2026 14:37:47 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported() iteration
-Message-ID: <amiim2eAvrpsTAvp@ryzen>
-References: <20260728113841.727256-2-cassel@kernel.org>
- <20260728115336.9B4861F00A3D@smtp.kernel.org>
- <amidnlBAeJOks4cw@ryzen>
+	s=k20260515; t=1785255874;
+	bh=3fXCTqKDFPeeZSKzhi12ENj/QYFjEH9zdFLqJrbhbl0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=ZDl/Eg/5GYecAKoOepubuSjKK4tQcE2cGvzc6/PoNqMpaF64vYbLgx0hO6rO7EpAO
+	 CR1aeoc0PB9OiKpERm5of50mGf1K7fQRIrPM9+T2vqShuHZR3UKwpz9T6+KFtMivrE
+	 ZmPFWDDEKKF6AcVc+7DYIvAVXdKvJMqtCbW7W1dcBP5gvHAQ03jgr9GNVDKqUfjX4z
+	 CJHbEk3YrTKyBtHGzK5MzBc6M9WzEGs4DNRcZZsXFlKK2MH26/KoDMbrwOLia7ka3a
+	 R8zoj080ZIGAm5/xkJel9vNoQ4KasX5uHhXTPskf4j9HDYePFt6Qn8ATd20RJ9BJXs
+	 Dnw/YrDPq4taw==
+Date: Tue, 28 Jul 2026 11:24:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gary Guo <gary@garyguo.net>, David Airlie <airlied@redhat.com>,
+	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+	Jens Taprogge <jens.taprogge@taprogge.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	GOTO Masanori <gotom@debian.or.jp>,
+	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v4 7/9] PCI: Make pci_match_one_device() match on ID
+ instead of device
+Message-ID: <20260728162432.GA1322140@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -43,104 +63,57 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <amidnlBAeJOks4cw@ryzen>
+In-Reply-To: <DK7N9IZPWPIT.2AKSZR5CU1H9L@garyguo.net>
 
-On Tue, Jul 28, 2026 at 02:16:30PM +0200, Niklas Cassel wrote:
-> On Tue, Jul 28, 2026 at 11:53:36AM +0000, sashiko-bot@kernel.org wrote:
-> > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> > 
-> > Pre-existing issues:
-> > - [High] ata_scsi_lpm_supported() skips checking devices on the slave link because it uses the ATA_LITER_EDGE iterator. This allows userspace to enable Link Power Management (LPM) on a port where the slave device does not support it (has ATA_QUIRK_NOLPM).
-> > --
-> > 
-> > --- Patch [1]: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported() iteration ---
-> > commit 32bd728de2e1b6025504205f3ade16813231e703
-> > Author: Niklas Cassel <cassel@kernel.org>
-> > 
-> > ata: libata-sata: fix ata_scsi_lpm_supported() iteration
-> > 
-> > This commit fixes the inner loop of ata_scsi_lpm_supported() to iterate
-> > over the specific link being evaluated rather than always using the host
-> > link. This prevents the LPM policy from being incorrectly applied or denied.
-> > 
-> > Link: https://lore.kernel.org/linux-ide/20260728112200.B99F21F000E9@smtp.kernel.org/
-> > 
-> > > diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> > > index b0706c30da052..ad40f516c6d43 100644
-> > > --- a/drivers/ata/libata-sata.c
-> > > +++ b/drivers/ata/libata-sata.c
-> > > @@ -913,7 +913,7 @@ static bool ata_scsi_lpm_supported(struct ata_port *ap)
-> > >  		return false;
-> > >  
-> > >  	ata_for_each_link(link, ap, EDGE) {
-> > > -		ata_for_each_dev(dev, &ap->link, ENABLED) {
-> > > +		ata_for_each_dev(dev, link, ENABLED) {
-> > 
-> > [Severity: High]
-> > This is a pre-existing issue, but does using the ATA_LITER_EDGE iterator
-> > here in ata_scsi_lpm_supported() skip checking devices on the slave link?
-> > 
-> > Since the EDGE iterator skips ap->slave_link, it appears this loop misses
-> > devices on the slave link that might have the ATA_QUIRK_NOLPM quirk.
+[cc->to: Dave, Vaibhav, Jens, Greg, GOTO, YOKOTA: possible acks?
+series: https://lore.kernel.org/all/20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net]
+
+On Sat, Jul 25, 2026 at 01:17:50PM +0100, Gary Guo wrote:
+> On Fri Jul 24, 2026 at 11:29 PM BST, Bjorn Helgaas wrote:
+> > On Thu, Jul 23, 2026 at 11:00:46PM +0100, Gary Guo wrote:
+> >> PCI dynamic ID needs to match IDs against a new ID to see if it already
+> >> exists. Existing APIs can only match IDs against devices, causing the
+> >> dynamic ID insertion code to create a temporary device only for matching
+> >> purpose. Rename pci_match_one_device() to pci_match_one_id() so it can be
+> >> used for this purpose instead; add a pci_id_from_device() helper to make it
+> >> easy to convert users.
+> >
+> > s/causing the ... code to create/so the ... code creates/
+> > s/purpose/purposes/
+> >
+> >> Similarly, convert pci_match_id() to do_pci_match_id(). But keep the
+> >> existing API because there are many users.
+> >> 
+> >> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
+> >> Signed-off-by: Gary Guo <gary@garyguo.net>
+> >
+> > Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > What's the merge strategy?  If these all need to be merged
+> > together, feel free to include the PCI patches whereever you merge
+> > the series.
 > 
-> Well,
+> I think the series should be merged together, as I consider the
+> driver changes included in this series being "fixing the users".
 > 
-> 1) slave_link is only for PATA.
+> The series should probably be taken via the PCI tree. I suppose one
+> can also argue that the lifetime issue with device IDs isn't unique
+> to PCI bus so this can also be considered driver-core material, but
+> given that Greg has already taken the USB fixes via the USB tree the
+> only unfixed bus left is PCI.
 > 
-> Yes, I know that two sata drivers abuse this:
-> drivers/ata/sata_sis.c:                 rc = ata_slave_link_init(ap);
-> drivers/ata/sata_via.c:         ata_slave_link_init(host->ports[i]);
-> 
-> 
-> 2) The call to ata_eh_link_set_lpm() is protected by:
-> 
-> libata-eh.c:ata_eh_recover()
-> 
-> if (link->lpm_policy != ap->target_lpm_policy) {
-> 	rc = ata_eh_link_set_lpm(link, ap->target_lpm_policy, &dev);
-> }
-> 
-> And the only driver that sets ap->target_lpm_policy is AHCI.
-> 
-> So, I don't think we need to care about the slave link in this case.
+> So unless Danilo thinks otherwise I'd suggest the series be taken as
+> a whole via PCI.
 
-I guess theoretically, if someone uses a:
+I'm happy to take via PCI.  It would be great to have acks/reviewed-by
+from the non-PCI maintainers:
 
-sata_sis or sata_via, and forces LPM enabled via sysfs, even though it is
-not supported/initialized by any driver other than AHCI... I guess the
-drive might become unresponsive.
+  David Airlie <airlied@redhat.com> (agp)
 
-But, looking at these drivers, they don't provide a .set_lpm() callback,
-so I don't see how that could actually happen.
+  Vaibhav Gupta <vaibhavgupta40@gmail.com> (tpci200)
+  Jens Taprogge <jens.taprogge@taprogge.org> (tpci200)
+  Greg Kroah-Hartman <gregkh@linuxfoundation.org> (tpci200)
 
-
-There is another driver however, that does have a slave_link:
-drivers/ata/ata_piix.c:                 rc = ata_slave_link_init(ap);
-
-And which does have a .set_lpm() callback:
-drivers/ata/ata_piix.c: .set_lpm                = piix_sidpr_set_lpm,
-
-
-So I guess perhaps this problem could happen on ata_piix - which seems to
-be a driver for Intel PATA/SATA controllers.
-
-From a quick look, it seems like
-ata_piix.c calls ata_slave_link_init() only if:
-
-if (ap->flags & ATA_FLAG_SLAVE_POSS) {
-	rc = ata_slave_link_init(ap);
-}
-
-
-
-And:
-PIIX_PATA_FLAGS         = ATA_FLAG_SLAVE_POSS,
-PIIX_SATA_FLAGS         = ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
-
-
-And all board definitions using PIIX_PATA_FLAGS seems to have pata_* in
-their name, so I still think we can ignore this Sashiko comment.
-
-
-Kind regards,
-Niklas
+  GOTO Masanori <gotom@debian.or.jp> (nsp32)
+  YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp> (nsp32)
