@@ -1,94 +1,208 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A89C488DAC
-	for <linux-ide@vger.kernel.org>; Wed, 29 Jul 2026 13:19:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4E9E175A6D;
+	Wed, 29 Jul 2026 23:42:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785331174; cv=none; b=Xb2TaoFfDjxWF7+YJ5ZaEODqgHKQ7D1IPlCEq73CQuy+bz6IK5AxoVAPFmrLz0oYTJ2x7iVtaNx2onPkBCVTyJ+O6B5fUjnePHSUwFu/7TZMRpS+/feU2Xq0KDDlTkjxWjfmm6KML2AWOomysLsxMgtzDAqGIdwcZLYFXtL15wc=
+	t=1785368550; cv=none; b=Biy09HAVnlf122c4Dq/77TCex4nihnB4LTQs9vcWtz1hPRbaqs0XzQno2pPSWiig0Rk7XnmY50IQNa6PzwDq2wsNXJssJsogT//d9OF7ji+HR5rZyzNZq52qT4Be3STF0MU3D1OrSXdWWBHHmz+QiHF8tyMeypMFhEY65ICozhA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785331174; c=relaxed/simple;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	h=Message-ID:Subject:From:To:Date:Content-Type:MIME-Version; b=gC5pT6jsCU+6G8rh1QTLRpHyGyd9iyD3dcpd3R1moszbQiQiSddPskbcJ3MxjCbY5z9MO+58VTpC8BHXg3ig9a71KoCBrwJZn80SUljKBtaqrhGjBspqDxTEUv/QTThTjPfX+/nY+nok+dO5dnqSaiI1pKzt53Zh/R2H5OD8Bj4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TgIdg/Wn; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=H9X1gDR3; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1785368550; c=relaxed/simple;
+	bh=uN3pN/wYlQBP5r7DHmdZmCnElfzxd8hfPeb1Dmf+QBg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OHqAfCsYRbDkCCyzIsE2X7sxjeMAwo9CtFOZYtQNzhmBbsVFcMW7jBN6s/0mlgo+PaX8eUVdB5ejX0lgO2NqdkG92lZrE7uJCHYrt4dYsZjrNokHl/+z+A2XoemqSQIRcdqYnMf6cvbYfQqRDvI35UDQwXBpeJfy5QLGnUkuI/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZRqRxaZ+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TgIdg/Wn";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="H9X1gDR3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1785331171;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=TgIdg/Wn5Veq25lAJQwwQ9M/I1//XlVIFt1mFh/1yya/b5ydDQAPMC9BZA/p7tOCCV/KnH
-	lbhwyXBTG1QWPh3XSgBgqcNfNhxfrVR21IA9pg9tRaqX6zyL71nro8kLqzCpcQYl0QgiMM
-	schdMyQGFeiWojKupBc5mGZpov4HHW4=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-457-m-InF7K4M4q5ugHeI5IfJg-1; Wed, 29 Jul 2026 09:19:30 -0400
-X-MC-Unique: m-InF7K4M4q5ugHeI5IfJg-1
-X-Mimecast-MFC-AGG-ID: m-InF7K4M4q5ugHeI5IfJg_1785331169
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-51c12e43b98so10291951cf.1
-        for <linux-ide@vger.kernel.org>; Wed, 29 Jul 2026 06:19:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1785331169; x=1785935969; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type:date
-         :to:from:subject:message-id:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-        b=H9X1gDR30kHIiJYTXnDIulovMpqNGB0UTogPsEQZ+szLjqnKFVyKKYYLHFGUkC0j8V
-         4HXUP2sZPqoS0r0fuDPbAjF/+C/iMNZt/PStYgciITEbWWQ3eFIM49w2rIDe1EkLwGep
-         rv5xYQYzwhsfHPCexQJKR2flBWCFy3TSl9sggou5Lq65gJCWPhVEvvA3mZIBSjJo80x2
-         ogtcNgK0bVyv+8dstT6X7IUp9V9ZB7Zp9cLkI5R4LiRso1lNzyokfbQfOdkiylFfo7VR
-         nc2pXj/xhCxdf8PHNGQdLyihO+cQFJ8KtbjVqDQszcTmqOk6lYyPNdLcfBvUm/YRuxQN
-         Rlyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785331169; x=1785935969;
-        h=mime-version:user-agent:content-transfer-encoding:content-type:date
-         :to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-        b=PeTX/S/UQOhhUmcU469ojfkxSpTSqzJ30N2LU2PiWJYifxuE4zw0KfWCJVwkBQHMoj
-         cceGqBAek61lXVOQqbAftFSES58ogsSmNHspyBNPL1DHq6Hx0LdIQkK+FT/7ZwVgnCHG
-         OPGB+rlBTZD8QZu+prLQ8cQRp7tzOzLz1xDYKlJC7BzDeg/qK+aLKl9kO951lM0L3jG0
-         oCLSuFqHjUtvoVwEXCRE3+bbO31XePpx+wUQctjElT+biJ/4AMFCi3ziDUuDGl1jVn2R
-         d+g6zvZh2gHf7DFhKpCLwYRTEtksBRLlV4OhFgUD401+r4b73g4OcZOWwelZtXXdZWkl
-         ZesQ==
-X-Gm-Message-State: AOJu0YxqSrZVPNeHQpa5TLkt4JI7wlPziqjGQoI8E0bCg4EzBL5IRT0M
-	STGEAubx+jSIU+3tS4dV5sEQlt202asxsvfl9h0iD95qHFYyjgvJYK20FuSmz2WUkM5P3fRO3ti
-	hfX0PwO87TPI25/JZ/QJ/VZ8YSGelftrgSaJPV1mZ6Fk/AM0laXvXPlDKi1+AMewex5pNUQMvQ+
-	4IcxstEmu/qgdK/1jBtvlKgEnWyJ+2wF1C65eJC6Bq0NraQw==
-X-Gm-Gg: AR+sD10tPVMAaZvTk+PYpdGadwdh3mw1jvP+wtVwvq9J2Z0dU0AVmZp4x3okl+fQAzF
-	vrw/tFhhRwp5rMDnVG1z/BPdBcbh8HUf9yZgTfmI71lFtij2GGwQgefE9ZrjV+rK5iBzualVTww
-	ZHPOFs49rqj9wnJcIvpGFD1PMmj2tIZrVlz4O1/2wfBpBCdnHRFZZ/FRgWedBopTalxSU+ATWnB
-	9PfSs5B/g4vBkTJnlQQljPsMYSclsm7l31S9s9rxNUqGVds3vsIkCNvhw3efMraUe1j7qlOuTlU
-	XfX2YsB5KGlvxecOz32oGzshZxNpSk3g0xtWYlSmjJN9YEknuO/B4zpl3zqCXKAZ4qeGVGBRuiF
-	PUp7BAlJuDEApjgs+JSZF/ToLU3CvuaQ6WqKd
-X-Received: by 2002:a05:622a:2b4f:b0:528:5c1:f223 with SMTP id d75a77b69052e-529d7190261mr57954421cf.77.1785331169609;
-        Wed, 29 Jul 2026 06:19:29 -0700 (PDT)
-X-Received: by 2002:a05:622a:2b4f:b0:528:5c1:f223 with SMTP id d75a77b69052e-529d7190261mr57953991cf.77.1785331169041;
-        Wed, 29 Jul 2026 06:19:29 -0700 (PDT)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:dbb1:97f1:a6e6:766b])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-529e2b4f241sm18595531cf.7.2026.07.29.06.19.27
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 06:19:28 -0700 (PDT)
-Message-ID: <6d75008a5817de9bc89aaadb0eca485669678d95.camel@redhat.com>
-Subject: subscribe
-From: Laurence Oberman <loberman@redhat.com>
-To: linux-ide@vger.kernel.org
-Date: Wed, 29 Jul 2026 09:19:27 -0400
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZRqRxaZ+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6119E1F000E9;
+	Wed, 29 Jul 2026 23:42:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785368548;
+	bh=e5pinI4HjAAifd0Bo2rB77efx+tt0GIB4tRcFWSgXts=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=ZRqRxaZ+bQUdKyso+/AafcLF1QWGrKX2owQ8iDzQhfox1Okm97O3oTxX6hVKAoeJO
+	 au+pkXIGLA5ai06kntSSTt+RqO9azRah/zslnLk0NGNGomdHa44cs83RnYR8srJT/C
+	 Sl5au2ewI4HPG0dZ0QDdCZbaEkVIzIPFEzjwlWNXzMiCb7SKEjn9KP86eJOuRG9CCg
+	 uSWI8n5LiKa2R4NO3Nd0j/30WjYKRHi619cBgqNH+Q7md/yDgy/RE0zzCIqpjDAZYb
+	 1MRWW56wnG2kUuiItb5YXmGC1ZU4y+OvIRqBmS0TGZyOwYptpaK7k9g4U7L44VAMKM
+	 YajlU05BK3JeQ==
+Message-ID: <683be1d4-5df2-4426-b5c2-be217758fccf@kernel.org>
+Date: Thu, 30 Jul 2026 08:42:25 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: pata_parport: Fix use-after-free in new_device_store
+To: Pei Xiao <xiaopei01@kylinos.cn>, cassel@kernel.org, linux@zary.sk,
+ axboe@kernel.dk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: shuangpeng.kernel@gmail.com
+References: <7a9734be161cd051063ccc3bdeb377c55a83c4bf.1785327915.git.xiaopei01@kylinos.cn>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <7a9734be161cd051063ccc3bdeb377c55a83c4bf.1785327915.git.xiaopei01@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+On 7/29/26 21:27, Pei Xiao wrote:
+> The function new_device_store() calls driver_find() without any
+> protection against concurrent driver unregistration. This can lead
+> to a use-after-free (UAF) when a driver is unloaded (via rmmod)
+> in parallel with a new device addition via sysfs.
+> 
+> The race window exists because driver_find() returns a pointer to
+> the driver's private data, but does not increase its reference
+> count. The caller is responsible for ensuring the driver remains
+> valid, but new_device_store() did not hold any lock or reference
+> during the lookup and subsequent use.
+> 
+> Concurrently, pata_parport_unregister_driver() releases the
+> pi_mutex before calling driver_unregister(), allowing new_device_store
+> to proceed with a stale pointer after the driver has been freed.
+> 
+> Fix this by expanding the critical section protected by pi_mutex
+> in both functions:
+> 
+> - In new_device_store(): acquire pi_mutex before calling driver_find(),
+>   and keep it held until all uses of the found driver pointer are
+>   completed.
+> - In pata_parport_unregister_driver(): hold pi_mutex throughout the
+>   entire unregistration process, including the driver_unregister()
+>   call, so that no concurrent lookup can see a partially removed
+>   driver.
+> 
+> Thread A (new_device_store)       | Thread B (pata_parport_unregister_driver)
+>   driver_find("aten")             |
+>                                   |   mutex_lock(&pi_mutex)
+>                                   |   idr_remove(&protocols, id)
+>                                   |   mutex_unlock(&pi_mutex)
+>                                   |   driver_unregister(&pr->driver)
+>                                   |   (frees driver_private)
+>   /* continues using stale driv */|
+>   -> UAF!                         |
+> 
+> Logs:
+> BUG: KASAN: slab-use-after-free in driver_find+0xd0/0xd4
+> Read of size 8 at addr ffffff9f970dc690 by task sh/4737
+> Call trace:
+>  show_stack+0x14/0x1c (C)
+>  dump_stack_lvl+0x70/0x84
+>  print_report+0xf4/0x5a4
+>  kasan_report+0xa0/0xe4
+>  __asan_report_load8_noabort+0x18/0x20
+>  driver_find+0xd0/0xd4
+>  new_device_store+0x140/0x30c [pata_parport]
+>  bus_attr_store+0x5c/0x94
+>  sysfs_kf_write+0x1c4/0x25c
+>  ...
+> 
+> Allocated by task 4734:
+>  kasan_save_stack+0x28/0x4c
+>  kasan_save_track+0x1c/0x34
+>  kasan_save_alloc_info+0x3c/0x4c
+>  __kasan_kmalloc+0x98/0xac
+>  __kmalloc_cache_noprof+0x158/0x3cc
+>  bus_add_driver+0x70/0x4d8
+>  driver_register+0xf0/0x3b0
+>  pata_parport_register_driver+0xb8/0x1c4 [pata_parport]
+>  0xffffffc07f5ce014
+>  do_one_initcall+0xb8/0x36c
+>  do_init_module+0x230/0x6d4
+>  ...
+> 
+> Freed by task 4737:
+>  kasan_save_stack+0x28/0x4c
+>  kasan_save_track+0x1c/0x34
+>  kasan_save_free_info+0x48/0x8c
+>  __kasan_slab_free+0x5c/0x84
+>  kfree+0x174/0x3e0
+>  driver_release+0x1c/0x7c
+>  kobject_put+0x178/0x47c
+>  driver_find+0x78/0xd4
+>  new_device_store+0x140/0x30c [pata_parport]
+>  bus_attr_store+0x5c/0x94
+>  sysfs_kf_write+0x1c4/0x25c
+>  ...
+> 
+> Fixes: 72f2b0b21850 ("drivers/block: Move PARIDE protocol modules to drivers/ata/pata_parport")
+> Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+> Closes: https://lore.kernel.org/lkml/20260728024015.2014674-1-shuangpeng.kernel@gmail.com/
+> Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
+> ---
+>  drivers/ata/pata_parport/pata_parport.c | 9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+> index 40baeac594a9..34f09192a419 100644
+> --- a/drivers/ata/pata_parport/pata_parport.c
+> +++ b/drivers/ata/pata_parport/pata_parport.c
+> @@ -3,6 +3,7 @@
+>   * Copyright 2023 Ondrej Zary
+>   * based on paride.c by Grant R. Guenther <grant@torque.net>
+>   */
+> +#include <linux/cleanup.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/parport.h>
+> @@ -618,8 +619,9 @@ void pata_parport_unregister_driver(struct pi_protocol *pr)
+>  			break;
+>  	}
+>  	idr_remove(&protocols, id);
+> -	mutex_unlock(&pi_mutex);
+>  	driver_unregister(&pr->driver);
+> +	mutex_unlock(&pi_mutex);
+
+Sashiko had a comment about this that I think is very valid: if rmmod is
+executed with devices attached, what happens here?
+This entire driver seems to be lacking reference counting on the
+modules/drivers, so this all seems very fragile.
+
+> +
+>  }
+>  EXPORT_SYMBOL_GPL(pata_parport_unregister_driver);
+>  
+> @@ -646,6 +648,7 @@ static ssize_t new_device_store(const struct bus_type *bus, const char *buf, siz
+>  		port_wanted = -1;
+>  	}
+>  
+> +	guard(mutex)(&pi_mutex);
+
+Please no. We do not use these annotations anywhere in libata and I personally
+consider anything that hides code a *bad* idea. So just move the mutex_lock()
+call here and add the missing mutex_unlock() in the !drv case below.
+
+>  	drv = driver_find(protocol, &pata_parport_bus_type);
+>  	if (!drv) {
+>  		if (strcmp(protocol, "auto")) {
+> @@ -656,15 +659,12 @@ static ssize_t new_device_store(const struct bus_type *bus, const char *buf, siz
+>  	} else {
+>  		pr_wanted = container_of(drv, struct pi_protocol, driver);
+>  	}
+> -
+> -	mutex_lock(&pi_mutex);
+>  	/* walk all parports */
+>  	idr_for_each_entry(&parport_list, parport, port_num) {
+>  		if (port_num == port_wanted || port_wanted == -1) {
+>  			parport = parport_find_number(port_num);
+>  			if (!parport) {
+>  				pr_err("no such port %s\n", port);
+> -				mutex_unlock(&pi_mutex);
+>  				return -ENODEV;
+>  			}
+>  			/* walk all protocols */
+> @@ -677,7 +677,6 @@ static ssize_t new_device_store(const struct bus_type *bus, const char *buf, siz
+>  			parport_put_port(parport);
+>  		}
+>  	}
+> -	mutex_unlock(&pi_mutex);
+>  	if (!ok)
+>  		return -ENODEV;
+>  
 
 
+-- 
+Damien Le Moal
+Western Digital Research
