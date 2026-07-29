@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E798930FF36
-	for <linux-ide@vger.kernel.org>; Wed, 29 Jul 2026 01:48:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2876E2F851;
+	Wed, 29 Jul 2026 01:49:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785289704; cv=none; b=Dsp/LBIOEhsJLk1O0GdZCrd5oWISIaOExB+OrLDosUSd4sTJdjfXRNBHAR6fSMb30UKWvEfw7sqnW3EbYlFX/I4NBwX7lFSowUzrS59lvYuhGGLapTRCvlVu41hbJEd3nZSfmbYfh37pEIVxRQ9t3BKjeVXgfXMqCYFbONU8V0g=
+	t=1785289759; cv=none; b=BVh+yRPxbPKCRa8hyPkfqwyinU0jOMrLhNybA6ctcBQWrhQKMucXu4hue86EJPVbKZCJ1NkBW0ngBZdOSdDKcIeD0WsnnQ2YaLEmYsQyaloU10D1H6AHXqEdxqUOUz8BatyC4eCKUyK5KDobY30Lv+uvkmsNexBrYQkPEsDm/yI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785289704; c=relaxed/simple;
-	bh=wbgENOSlC5wcZtXa1MGckeGvW71XMlMDY8NImcmLYgQ=;
+	s=arc-20240116; t=1785289759; c=relaxed/simple;
+	bh=urwml6ZFYPDCytIWgbLjz4DmPLPX5J/0Guva5Pv4kx8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MMEEGHsDQboG5gscrHSu8mew9ZPmC3Hd1VlmU5t+ABdxpj7DdNsQEntOEj8LE5ElJogpneCK4xM7B3Ai+PzUvrnuFpX+D0DzJBZm1uovvVdViH7TmfwX4eMXqoRQgiJWc9xAtWS6qUUq5pmMfDDwF4l79gQw3qJmnUU8xACcdYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a+Np/6fj; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=eNzOFCpcPYF3k5frPgO6/PZhABwa8r9KNr0Ghf0FYhbv4xuXp2ChVoL7I407bKAMhrpXVt7WAlwN3IbqLZpiTzlI4BU+SI3+UIrOxTwxn0684Tdy0TPPjxgHz3BSBMvufwSE1+RhVhuDTea+DzSk5IkUcI9UGUZvLd5GpvJPTHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KPiJqSLZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a+Np/6fj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 386671F000E9;
-	Wed, 29 Jul 2026 01:48:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KPiJqSLZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49AF61F000E9;
+	Wed, 29 Jul 2026 01:49:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785289703;
-	bh=+15JtqQbdp6LC8yFEqyR4+iBMJx+5QW6LHUctspr/Vk=;
+	s=k20260515; t=1785289758;
+	bh=9pyw3W/GQtvmE74CCOK+KwDbDpQSHlFRnAiMSIgOMM0=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=a+Np/6fjI5iAtXYihBlonCR9pcjizWerwloSZRUEPaTXcr0oQkC+j1imzk3ng8b85
-	 X9/RNDMUKqcH6c/n/0gjzz3PAAX5wk5WLSbAGjfwqmJ8cJ8Y4Wx+n3QhjyUk0G3RVp
-	 yCjVCbVR4aIJSLjMazV8gsL2/DkuDDcqv/GYTNsuDuaMe5iNtpiH1zP4D8AnDANJpp
-	 1542xfm1y2ZrE4G/KQ+rieQumdgxTc8YZtZgINEhn7/n6M/DMEGjby2LRDJrFoEst3
-	 DMIgVfomBwaukCH6YggOkmyujYOXKWG4YZUjE18fcVUEqTQ6eQJRubl2zjNxqPZaWJ
-	 8vZU3sQhPyR8Q==
-Message-ID: <76a3e91d-ae58-440d-aec6-d9c402858013@kernel.org>
-Date: Wed, 29 Jul 2026 10:48:12 +0900
+	b=KPiJqSLZgehZreDhFOPO1Q3noUMd67qgU1SI3vG3PDqMB1A/ujeMBqXS3kCcJyMTY
+	 fTP25KQnqXNNTqx5HCJELl3WFbDT/SIsqM33U9RB0GOgb6ePbP9l7AjwTzW6qLYk4Q
+	 Bi0AnDWk8DM1a94m5Sp5MGGIklQ7Xd8unwD6nFyLNyYFG6F7ckYq6Qu6QdAhLNam7K
+	 j3HeuMweyZdixuUjUP710rv22iZ59DDWsS18deRVMJumdwBSUQCju57E1h2tdS4wEx
+	 11RdLVxtHSEie95J/4agcxfUQMrxKaAVmu2s3cJ8k2ZFqivroH1s1ItZSQysZzxPMR
+	 2lRYC2MiOe8qQ==
+Message-ID: <42d66aa3-e996-487f-a44f-ad3d1fd8be69@kernel.org>
+Date: Wed, 29 Jul 2026 10:49:13 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,33 +35,39 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] ata: disable LPM on some WDC drives
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Ronald Garcia Vazquez <ronaldgarciavazquez@gmail.com>,
+Subject: Re: [PATCH] ata: libata-sata: fix ata_scsi_lpm_supported() iteration
+To: Niklas Cassel <cassel@kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: stable@vger.kernel.org, Sashiko <sashiko-bot@kernel.org>,
  linux-ide@vger.kernel.org
-References: <20260728111310.722450-4-cassel@kernel.org>
+References: <20260728113841.727256-2-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20260728111310.722450-4-cassel@kernel.org>
+In-Reply-To: <20260728113841.727256-2-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/28/26 20:13, Niklas Cassel wrote:
-> Hello there,
+On 7/28/26 20:38, Niklas Cassel wrote:
+> The inner loop of ata_scsi_lpm_supported() user the wrong variable when
+> iterating.
 > 
-> This disables LPM on some WDC drives, which, according to user reports,
-> have issues with LPM.
+> It should obviously use the link that we are currently iterating over,
+> rather than always using the host link.
 > 
-> Kind regards,
-> Niklas
+> ata_scsi_lpm_supported() is used to control if a user should be allowed
+> to change lpm policy (from the default) via sysfs.
 > 
+> Thus, this bug could potentially disallow users to change the LPM policy
+> for certain SATA devices via sysfs.
 > 
-> Niklas Cassel (2):
->   ata: libata-core: Disable LPM on some WD drives
->   ata: libata-core: Disable LPM on WD Green 2.5 480GB
+> Cc: stable@vger.kernel.org
+> Fixes: 0060beec0bfa ("ata: libata-sata: Add link_power_management_supported sysfs attribute")
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Link: https://lore.kernel.org/linux-ide/20260728112200.B99F21F000E9@smtp.kernel.org/
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Applied to for-7.2-fixes. Thanks!
+Applied to for-7.2-fixes, with the message typo fixed. Thanks!
 
 
 -- 
