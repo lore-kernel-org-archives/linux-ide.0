@@ -1,142 +1,118 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26191330652;
-	Fri, 31 Jul 2026 21:52:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1053360EC9;
+	Fri, 31 Jul 2026 22:04:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785534761; cv=none; b=U12NBNtUgLiN7hkWcRoOlaEsL98hBM5a28A98oCuoe03/XRrAD7x8z4ZNOYY+cGXF4VktvqYytXewnZ+Wwxl0GO07027w8sW/S7NBdZ0qrXyg7hY9E8xr9PLJq+2TN+zr8iv4YqQt3N1HiAfAHxTL77l+0SLu5g0SOmco1OifLw=
+	t=1785535464; cv=none; b=WzvOoxQb4Kj5vbNXesHmntDfvcHKGqegbeEA0r2L4oEpuYtylOX44sM4inEAW38lXP56yqXqf18lwLEJgDX9maft+QKof6OqI21EakwM0nPfI/WG5Q9kpZpU+PVSsEkHEayGXpxZSdxJ1CVOQ21rfgpIU49rZxyKVdi4nC04Cww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785534761; c=relaxed/simple;
-	bh=KmYDoaG4A48TfWLPr9n3qq3A7tpoeNcbyOaCXiKLn20=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KtHrYQxkyBh0shZGxldGj6/eci73mR6fIuwkh7LtfW+V84jMDH/94gIGNDU20ZwVTfRsb2FoQf9jX2DFVSqtnJk9PzEv5gTiW5X+c+pvy1oEfDfCx54bqZwIpC5Ntcakfs+b4azv/B/SSzSiplrXbKXAN+RKIlU865f1JKHkm5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=Vm1lg9Mk; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1785535464; c=relaxed/simple;
+	bh=6v+e8J7Ga2ga/S5tc0dgUxipO+HsB0nFME2cR1qdf7g=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=TinuhUgIiZkxRWJtR2p7D//scR7QFTxLisBD1QLuDvOiXOpx4tv3QrnK7bWwQHfejRKN9C268h89mOD+ex2zZSvaUoJmg/TpwcBl2I2d6POUuwUMLOBqupBzL7F1+fBY5Aj0r+BPR9vtjtAQPlKlaviHLR6PUNZR2O7Wj+rTkyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fLJU7mEF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="Vm1lg9Mk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1785533714;
-	bh=KmYDoaG4A48TfWLPr9n3qq3A7tpoeNcbyOaCXiKLn20=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Vm1lg9Mk2gWjfHXA6TdM9KqldSsQahQ6dA3KCd8/gcnBd25tgsCSAIE3F+XpwL2yy
-	 QP5WLb1vHm/F/ni5+2Pkg6+3mfB5eiXcsUTOZUuGyy5ck0HnBax+C5BEdMIBnEH8u8
-	 HI7fC6e1SKd7nz7kbb711azQ8AYD6FpWFauelXrQ=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 9FC2EBD752;
-	Fri, 31 Jul 2026 21:35:14 +0000 (UTC)
-Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 5FB905FBAF;
-	Fri, 31 Jul 2026 22:35:14 +0100 (BST)
-From: Phil Pemberton <philpem@philpem.me.uk>
-To: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>
-Subject: [PATCH v8 1/6] ata: libata-scsi: add atapi_max_lun module parameter
-Date: Fri, 31 Jul 2026 22:34:58 +0100
-Message-ID: <20260731213503.2379771-2-philpem@philpem.me.uk>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260731213503.2379771-1-philpem@philpem.me.uk>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fLJU7mEF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F9801F00AC4;
+	Fri, 31 Jul 2026 22:04:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785535462;
+	bh=ItEfHUu31oEr5goCuZzh/Bx49TX+DqsN7M+GTN7i3g0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=fLJU7mEFJv2EyAH3w6K2m7q7WqLWBxnlA8vxTxt2RolC6YL7tTlR470Hbwya0wvT3
+	 GtEKLwoAHjMGlnAoXAxH9zvpiNBzsyiHnQjANH1RBFgyEgS5IrjtlppR7ySVhmckpL
+	 MGnoGWKbDagO4eASeyY4e7dv51DAzSabwPV7IuYDSbnHulC7DLsQUAIX36WZfodn+A
+	 Wqs/xvuzjHnlFn7V9f4WNOGh3T2RMkgzmxe/OotWIdJsyh5u+0bMMjtL1tsBcyGsFi
+	 54XTpQvXUFXRnC0Mq+2/yQXvvH5CPpzOkvvxxkM9vuONtsdVHtXZ6OMxB6BtKhivAX
+	 ckCPiEV9PPwLQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 4/6] scsi: add BLIST_NO_LUN_1F blacklist flag
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Phil Pemberton" <philpem@philpem.me.uk>
+Cc: dlemoal@kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260731213503.2379771-5-philpem@philpem.me.uk>
 References: <20260731213503.2379771-1-philpem@philpem.me.uk>
+ <20260731213503.2379771-5-philpem@philpem.me.uk>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 31 Jul 2026 22:04:22 +0000
+Message-Id: <20260731220422.8F9801F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
-so the SCSI layer never scans past LUN 0.  This blocks support for
-the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
-COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
-Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Introduce a libata module parameter, atapi_max_lun, that controls the
-upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
-current behaviour exactly: out-of-the-box only LUN 0 is scanned.
-Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling, covering
-LUN values 0..7).
+Pre-existing issues:
+- [High] Concurrent modification of `struct scsi_target` bitfields introduc=
+es a data race, potentially causing updates to `pdt_1f_for_no_lun` or `expe=
+cting_lun_change` to be lost.
+--
 
-Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
-device must both be on the SCSI device list (or carry the appropriate
-quirk) and run on a host whose atapi_max_lun has been raised before
-any extra LUNs are scanned.
+--- Patch [4]: [PATCH v8 4/6] scsi: add BLIST_NO_LUN_1F blacklist flag ---
+commit 90f0f3c59ea5fbec1b6c95c81d334666e21cd3a9
+Author: Phil Pemberton <philpem@philpem.me.uk>
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
----
- drivers/ata/libata-core.c | 5 +++++
- drivers/ata/libata-scsi.c | 2 +-
- drivers/ata/libata.h      | 1 +
- include/linux/libata.h    | 1 +
- 4 files changed, 8 insertions(+), 1 deletion(-)
+scsi: add BLIST_NO_LUN_1F blacklist flag
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d893c916df0b..15ee44cf5bf2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -122,6 +122,11 @@ int atapi_passthru16 = 1;
- module_param(atapi_passthru16, int, 0444);
- MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
- 
-+int atapi_max_lun = 1;
-+module_param(atapi_max_lun, int, 0444);
-+MODULE_PARM_DESC(atapi_max_lun,
-+	"Number of LUNs to scan on ATAPI devices flagged BLIST_FORCELUN (1 [default] = LUN 0 only, 8 = all SCSI-2 LUNs 0..7)");
-+
- int libata_fua = 0;
- module_param_named(fua, libata_fua, int, 0444);
- MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 1d225ee9eb86..04c96f3fd865 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -5154,7 +5154,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const struct scsi_host_template *s
- 		shost->transportt = &ata_scsi_transportt;
- 		shost->unique_id = ap->print_id;
- 		shost->max_id = 16;
--		shost->max_lun = 1;
-+		shost->max_lun = clamp(atapi_max_lun, 1, ATAPI_MAX_LUN);
- 		shost->max_channel = 1;
- 		shost->max_cmd_len = 32;
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 39494ab206a2..7ee3bf1a4789 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -33,6 +33,7 @@ enum {
- #define ATA_PORT_TYPE_NAME	"ata_port"
- 
- extern int atapi_passthru16;
-+extern int atapi_max_lun;
- extern int libata_fua;
- extern int libata_noacpi;
- extern int libata_allow_tpm;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 18edb36c29fc..25e4b671adfb 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -180,6 +180,7 @@ enum {
- 	ATA_SHORT_PAUSE		= 16,
- 
- 	ATAPI_MAX_DRAIN		= 16 << 10,
-+	ATAPI_MAX_LUN		= 8,	/* SCSI-2 cap (LUN values 0..7) */
- 
- 	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
- 
--- 
-2.43.0
+This commit adds the BLIST_NO_LUN_1F blacklist flag to allow devices to
+suppress spurious "No Device" entries for unpopulated LUNs returning
+PQ=3D0/PDT=3D0x1f. The flag is wired up in scsi_probe_and_add_lun() to set
+starget->pdt_1f_for_no_lun.
 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+
+[ ... ]
+
+> @@ -1296,6 +1296,9 @@ static int scsi_probe_and_add_lun(struct scsi_targe=
+t *starget,
+>  	 * PDT=3D00h Direct-access device (floppy)
+>  	 * PDT=3D1Fh none (no FDD connected to the requested logical unit)
+>  	 */
+> +	if (bflags & BLIST_NO_LUN_1F)
+> +		starget->pdt_1f_for_no_lun =3D 1;
+> +
+[Severity: High]
+This isn't a bug introduced by this patch, but could this bitfield assignme=
+nt
+introduce a data race with other bitfields in struct scsi_target?
+
+Looking at include/scsi/scsi_device.h, pdt_1f_for_no_lun shares the same
+memory word with other bitfields:
+
+    unsigned int            single_lun:1;
+    unsigned int            pdt_1f_for_no_lun:1;
+    unsigned int            no_report_luns:1;
+    unsigned int            expecting_lun_change:1;
+
+If a multi-LUN device reports a LUN change (REPORT LUNS DATA HAS CHANGED) on
+an active LUN, scsi_report_lun_change() will set expecting_lun_change =3D 1=
+ in
+softirq context.
+
+Simultaneously, if the system handles the LUN change by rescanning the
+target, scsi_probe_and_add_lun() executes in process context and sets
+pdt_1f_for_no_lun =3D 1.
+
+Because these contexts perform read-modify-write operations on the same
+memory word without mutual exclusion (the softirq does not hold
+shost->scan_mutex), one of the updates might be lost.
+
+If expecting_lun_change is lost, the SCSI layer fails to handle a LUN change
+UNIT ATTENTION correctly, which on removable devices triggers a spurious
+media-change event (cmd->device->changed =3D 1 and ACTION_FAIL), failing
+in-flight I/O. If pdt_1f_for_no_lun is lost, spurious LUNs may be added.
+
+>  	if (((result[0] >> 5) =3D=3D 1 || starget->pdt_1f_for_no_lun) &&
+>  	    (result[0] & 0x1f) =3D=3D 0x1f &&
+>  	    !scsi_is_wlun(lun)) {
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260731213503.2379=
+771-1-philpem@philpem.me.uk?part=3D4
