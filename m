@@ -1,226 +1,118 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B36737F8CB
-	for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2026 22:57:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 488CD48989D
+	for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2026 23:53:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785538648; cv=none; b=Rep3uEbs/PwdXewctBgyc6I3uRmAJNNXbQKYvFRjXdFFNnrhoT0xg5oP9SQh7fTDyw1fhV51ArVSkkkfZPoLGSUXrq6GvcY06Jj4q+o6rr6y0+7UH0MTu7XBLT0pL5lDjqGB5Ma/yIGlP6uRjmOMZgSrzIhdGv2sAodimbvm9mU=
+	t=1785541983; cv=none; b=oh1J5RoifCrTl2bvEZfRHWlYEPq7YH+rNIVoZaK3cA1TJOh6QO/9r37d/AbYrSkRJgxvmeb286+rqi5NMyZLVg3dK/ZfBld3i+vPLMr/oNa5rqyr/p3hiwJvxSTrT8c4jusFGn83W5IsLkveAqljraVrpiGrGeQg93g6eBWpbzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785538648; c=relaxed/simple;
-	bh=2uV3zpyuq9p4kd6i71yg5YhSHrVvXwr8Qs+HKV2KOFQ=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=thLaKS/xN96ull3OrOs679TEP+Ykx1s37teP943xbV5OrzkVg23Kfv7dZp9OqSFQL6TVLP3x0RhN1jwpDFJhIq99le07Q0LVJHsJwrmuFKlIUoHR3qWHoJY8xJqbgjhmJyOpFlLvVKCDDmWmSkQeSUyVEjp5iKxcpOt1/pkaBE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MkwnUOY0; arc=none smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785541983; c=relaxed/simple;
+	bh=pdrDauV8j4WMZz+JpRm73kABGbVOnX3pVlIWjmQc+/8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=N0pquwawOhIAZosjjgbYhDvb79Cgy2xlFAWmkWH4LyiGcHY/1cTP+beDEwepvtKep2f71KWXIpXyphAtMsv6WeEOxs9x3YlPCtUfYvWU/kKuQ6T8JBq1o3qgZROnPSJOoiHgjB2/TKVnW6fHr2JaPyN/jcNR2Jxoz2LS7Ag8nCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YFfd8aR/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MkwnUOY0"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-5218927884fso13572731cf.3
-        for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2026 15:57:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785538645; x=1786143445; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:msip_labels
-         :content-language:accept-language:in-reply-to:references:message-id
-         :date:thread-index:thread-topic:subject:cc:to:from:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=2uV3zpyuq9p4kd6i71yg5YhSHrVvXwr8Qs+HKV2KOFQ=;
-        b=MkwnUOY0vPalZcL2W7lH5JMA9m9Vc1qoyljJC7IYi2yhF3+F71ZxDhfeyeiSOWyvZg
-         MXqO4mDPP+Pwll1aIR/w9CWPgAReFsRoKgi6NuObdmD7KKQtlw96qXjhb+/hF2UqETKz
-         yRpCAtUKa3UEZYbLPL/QbQGzbiEBy6MCWQooC9ODUVlgBM+MV0D53fN5PiJwEzInAu+1
-         obC8qJZX1koHnrEzyeUNg/FypjWGcitOOABjz6tF/xRih/2hNZmdqrsBXTf+zDEmTbjw
-         FCAfXdFIXg3Wd+6xVhu/Y0PZqvO5YwIb6WZXujC8H+AACiOqI9J8XWrHpeqRr5giHKGN
-         NQsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785538645; x=1786143445;
-        h=mime-version:content-transfer-encoding:content-type:msip_labels
-         :content-language:accept-language:in-reply-to:references:message-id
-         :date:thread-index:thread-topic:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=2uV3zpyuq9p4kd6i71yg5YhSHrVvXwr8Qs+HKV2KOFQ=;
-        b=cSsMmJdcrxgJ479OQQbIbgbBIOCP977K5wv5yB/dXpWW/qh1vIJDCIT4NbhUXL1VTR
-         ir8geQZx9/An6JpW+aOvH2rtsxf9ujFOHZ4eFd0EHhVLUKB8gblTMkRxaAzAKCgR6uXT
-         v0SDhaGbG6c6fFGm4XigL42um7zqMa1Qn+MIIxSMvfmwF/RXBcnI3mekHSWpgH4dr5zf
-         IMDFgRJ9fqNIu87cemoDOSQ8ODjtUtrMEf+iYd9cAESFT2ATU8y5kIpZ/Nb1ET0JrbtN
-         e5G4QFq3hWn82lmNjzDnvWGDj8KSUzZ3ryyRXCCeJgzrXb0osZ2Hp0o8DhKSklqICR/d
-         gObQ==
-X-Gm-Message-State: AOJu0YxW2Njs2UibtG2Bly5v5maGCR0zpmQRdT82p42D0sLTEFLEBsSJ
-	kU0KgmEda8WJiChSHkJ24dLYnrpe4c6GYUCQi84T87bij6Gkw6cngDOTl8tiPA==
-X-Gm-Gg: AR+sD11EYqAVDQv+gn8qmVsOgb1daQJGQU8Dx6Jnf51wlwQKmZbWX3ybsl7BubsZ9Um
-	KrWWmQg9fP82oucYlT4XXcYUpfOjHHKuWCW1Hcw9RoyEJPHOOSDtzK40RLgRMCE2IsLmgDNDq5A
-	1EFQ0fBUhB+i+kTF9ppGUehunMPbOxvpZcOxUTNt6l+YVpbuve02M9XZSOCVPRGzdpHgGojNGFX
-	S4Q0dNFXOdpyOD4vqXCoV3U1bunCgOvGaxXjqT6q7m457q74sA2TuAwGZ4rE9oZrkEsUvFJIlI7
-	e8qGo6IS5K5LdEGo0pROFOQBUUW8yRpCzHO0vLIreVM8wjV1L5BSkYTUgg3ZL67w3pRXkXNig6N
-	OnB37vVwOE0z+KLeCKbF/hyUUpVYapwVS9a6QyI2Dazef0l9zKByZJDi+fIysL6PmcHCdZ1kP8q
-	zPe7mgRv/1WHz+ZlgKWHYrEc4SjNHr8HuDnAb7fEnrbm6WhpfMrWN1h4ZMlIkfnMD5m9He9f8UY
-	vUooCpOUfCM71J72NooHZI/6NBtM/Z+aBBZuphWHWNxYjnGclE=
-X-Received: by 2002:a05:622a:598e:b0:51c:981:94a6 with SMTP id d75a77b69052e-52b5674b67bmr43489311cf.23.1785538645223;
-        Fri, 31 Jul 2026 15:57:25 -0700 (PDT)
-Received: from MN2PR20MB3055.namprd20.prod.outlook.com ([2603:1036:302:40fe::5])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52b4ec01d54sm17707871cf.31.2026.07.31.15.57.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Jul 2026 15:57:24 -0700 (PDT)
-From: Ric Lewis <riclewis@gmail.com>
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-CC: "dlemoal@kernel.org" <dlemoal@kernel.org>, "cassel@kernel.org"
-	<cassel@kernel.org>, "linux-block@vger.kernel.org"
-	<linux-block@vger.kernel.org>
-Subject: Re:  APPLE SSD SM0256G: host bus errors above 1280 KiB writes since
- 9b8b84879d4a
-Thread-Topic:  APPLE SSD SM0256G: host bus errors above 1280 KiB writes since
- 9b8b84879d4a
-Thread-Index: AQHdIS8T3kaVQ/ldtEq+jVvv6yxDL7aIPWbl
-X-MS-Exchange-MessageSentRepresentingType: 1
-Date: Fri, 31 Jul 2026 22:57:24 +0000
-Message-ID:
-	<MN2PR20MB305547C6D08E07E9E96B8ABFA5C82@MN2PR20MB3055.namprd20.prod.outlook.com>
-References:
-	<MN2PR20MB3055A220221B11302F331A9AA5C82@MN2PR20MB3055.namprd20.prod.outlook.com>
-In-Reply-To:
-	<MN2PR20MB3055A220221B11302F331A9AA5C82@MN2PR20MB3055.namprd20.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-Exchange-Organization-SCL: -1
-X-MS-TNEF-Correlator:
-X-MS-Exchange-Organization-RecordReviewCfmType: 0
-msip_labels:
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YFfd8aR/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D2431F00AC4;
+	Fri, 31 Jul 2026 23:53:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785541981;
+	bh=0OGcyU6MYqJXTI5eup57HVlMd/tZMt9uN6X6ByjV5mY=;
+	h=From:To:Cc:Subject:Date;
+	b=YFfd8aR/QXEABfaixN4L/SzqH2vbXDbbrS55uRH8JlBNM7UwTDU9CS9DEQBzo9Lsv
+	 U5EM6jX2DPKhIv5bzuFbEiAWvXWNa+Dvpc3D6gJMoAbqkYxucOHPxxix9o9t17qXrd
+	 7dsLlzn254LIJ9LHNW+MXQ2kOHag0pcw/rpDeRE/h+fUMn1kEH7sfT/sd+uMvUG7EO
+	 eav7SRt0PyEyKtNhtSpUgFOec/RsuMBkx5clH8qkC6ibl1w78thevt4tUnjU1A58iy
+	 WQ4VrzMHIsxfCKyZ3q3SGKmkhQqFymaSpwZJ6MzOEm8wG0K47SutOQ3sUUucG0ce0p
+	 MoLL9l67QrA7g==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 7.2-rc6
+Date: Sat,  1 Aug 2026 08:52:49 +0900
+Message-ID: <20260731235249.273921-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-QWRkaW5nIENDcwoKICBSaWMgTGV3aXMKICByaWNsZXdpc0BnbWFpbC5jb20KCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KRnJvbTogUmljIExld2lzIDxyaWNsZXdpc0Bn
-bWFpbC5jb20+ClNlbnQ6IEZyaWRheSwgSnVseSAzMSwgMjAyNiAyOjEwIFBNClRvOiBsaW51eC1p
-ZGVAdmdlci5rZXJuZWwub3JnIDxsaW51eC1pZGVAdmdlci5rZXJuZWwub3JnPgpDYzogZGxlbW9h
-bEBrZXJuZWwub3JnIDxkbGVtb2FsQGtlcm5lbC5vcmc+OyBjYXNzZWxAa2VybmVsLm9yZyA8Y2Fz
-c2VsQGtlcm5lbC5vcmc+OyBsaW51eC1ibG9ja0B2Z2VyLmtlcm5lbC5vcmcgPGxpbnV4LWJsb2Nr
-QHZnZXIua2VybmVsLm9yZz4KU3ViamVjdDogQVBQTEUgU1NEIFNNMDI1Nkc6IGhvc3QgYnVzIGVy
-cm9ycyBhYm92ZSAxMjgwIEtpQiB3cml0ZXMgc2luY2UgOWI4Yjg0ODc5ZDRhCsKgCkhpLAoKU2lu
-Y2UgOWI4Yjg0ODc5ZDRhICgiYmxvY2s6IEluY3JlYXNlIEJMS19ERUZfTUFYX1NFQ1RPUlNfQ0FQ
-IikgdGhpcwpBcHBsZS9TYW1zdW5nIFNTRCB0aHJvd3MgQUhDSSBob3N0IGJ1cyBlcnJvcnMgb24g
-c3VzdGFpbmVkIHdyaXRlcyBhbmQgZW5kcwpyZWFkLW9ubHkuIEl0IG5lZWRzIGFuIEFUQV9RVUlS
-S19NQVhfU0VDIGVudHJ5IHdpdGggdmFsdWUgMjU2MCDigJQgdGhlCmV4aXN0aW5nIDgxOTEgZW50
-cmllcyBhcmUgbm90IGxvdyBlbm91Z2ggZm9yIHRoaXMgZGV2aWNlLgoKwqAgwqAgTWFjaGluZTog
-wqAgwqBNYWNCb29rUHJvMTEsNArCoCDCoCBDb250cm9sbGVyOiAxNDRkOmE4MDEgU2Ftc3VuZyBT
-NExOMDU4QTAxW1NTVUJYXSBBSENJIFNTRCAoQXBwbGUgc2xvdCkKwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgUENJZSAzLjAgeDQKwqAgwqAgRHJpdmU6IMKgIMKgIMKgQVBQTEUgU1NEIFNNMDI1Nkcs
-IGZ3IEJYVzFTQTBRLCAyNTEgR0IKwqAgwqAgS2VybmVsOiDCoCDCoCBVYnVudHUgNy4wLjAtMjgu
-Mjh+MjQuMDQuMSAodXBzdHJlYW0gNy4wLjEyKTsgZ29vZDogNi44LjAtMTAwCgoKIyMgTWF0cml4
-CgrCoCDCoCBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqBtYXhfc2VjdG9yc19rYiDCoCByZXN1
-bHQKwqAgwqAgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-CsKgIMKgIDYuOC4wLTEwMCDCoCDCoCDCoCDCoCDCoCAxMjgwIChkZWZhdWx0KSDCoCBQQVNTCsKg
-IMKgIDYuOC4wLTEwMCDCoCDCoCDCoCDCoCDCoCA0MDk2IChmb3JjZWQpIMKgIMKgUEFTUyDCoCA8
-LS0gdW5leHBsYWluZWQsIHNlZSBiZWxvdwrCoCDCoCA3LjAuMC0yOCDCoCDCoCDCoCDCoCDCoCDC
-oDQwOTYgKGRlZmF1bHQpIMKgIEZBSUwKwqAgwqAgNy4wLjAtMjggwqAgwqAgwqAgwqAgwqAgwqAy
-MDQ4IChmb3JjZWQpIMKgIMKgRkFJTArCoCDCoCA3LjAuMC0yOCDCoCDCoCDCoCDCoCDCoCDCoDEy
-ODAgKGZvcmNlZCkgwqAgwqBQQVNTCgpFYWNoIFBBU1MgaXMgfjI4IEdCIHBsdXMgMTYsMDAwIHNt
-YWxsIGZpbGVzIGFjcm9zcyB0aHJlZSB3b3JrbG9hZHMgaW4gb25lCmJvb3QsIDAgZXJyb3JzLgoK
-VGltZS10by1mYWlsdXJlIHZhcmllcyB3aXRoIHdvcmtsb2FkLiBXcml0aW5nIGluY29tcHJlc3Np
-YmxlIGRhdGEgZnJvbQovZGV2L3VyYW5kb20sIGEgZnJlc2ggYm9vdCBmYXVsdGVkIDU1IHMgaW4u
-IFdpdGggL2Rldi96ZXJvIGl0IG9mdGVuIHRvb2sgYQpzZWNvbmQgd29ya2xvYWQgaW4gdGhlIHNh
-bWUgYm9vdCBzZXNzaW9uLiBJIGhhdmUgbm90IGlzb2xhdGVkIHdoaWNoIGZhY3Rvcgpkb21pbmF0
-ZXMuCgpTaW5nbGUtdmFyaWFibGUgY2hlY2s6IGluIG9uZSA3LjAgc2Vzc2lvbiwgMTYgR0Igd3Jv
-dGUgY2xlYW5seSBhdCAxMjgwLAp0aGVuIHRoZSB2YWx1ZSB3YXMgcmFpc2VkIHRvIDIwNDggbGl2
-ZSDigJQgdGhlIG5leHQgd29ya2xvYWQgZmFpbGVkLiBTYW1lCmJvb3QsIHNhbWUga2VybmVsLgoK
-UmVwcm9kdWNlciAoYnVmZmVyZWQ7IE9fRElSRUNUIGRvZXMgbm90IHJlcHJvZHVjZSwgaXQgY2Fw
-cyBvbiBzZWdtZW50IGNvdW50Cn41MTEgS2lCKToKCsKgIMKgIGRkIGlmPS9kZXYvemVybyBvZj1i
-aWcuYmluIGJzPTRNIGNvdW50PTIwNDggY29udj1mc3luYwrCoCDCoCBmb3IgaSBpbiAkKHNlcSAx
-IDQwMDApOyBkbyBlY2hvIHggPiBmJGkudHh0OyBkb25lOyBzeW5jCgojIyBGYWlsdXJlCgpWZXJi
-YXRpbSwgNy4wLjAtMjgsIG1heF9zZWN0b3JzX2tiPTIwNDg6CgrCoCDCoCBhdGExLjAwOiBleGNl
-cHRpb24gRW1hc2sgMHgyMCBTQWN0IDB4M2ZmMGMwIFNFcnIgMHgwIGFjdGlvbiAweDYgZnJvemVu
-CsKgIMKgIGF0YTEuMDA6IGlycV9zdGF0IDB4MjAwMDAwMDAsIGhvc3QgYnVzIGVycm9yCsKgIMKg
-IGF0YTEuMDA6IGZhaWxlZCBjb21tYW5kOiBXUklURSBGUERNQSBRVUVVRUQKwqAgwqAgYXRhMS4w
-MDogY21kIDYxLzAwOjMwOjAwOmEwOjFkLzEwOjAwOjFiOjAwOjAwLzQwIHRhZyA2IG5jcSBkbWEg
-MjA5NzE1MiBvdXQKwqAgwqAgwqAgwqAgwqAgwqAgwqByZXMgNDAvMDA6MDA6MDA6MDA6MDAvMDA6
-MDA6MDA6MDA6MDAvMDAgRW1hc2sgMHgyMCAoaG9zdCBidXMgZXJyb3IpCgpUaGVuIGhhcmQgbGlu
-ayByZXNldCwgcmVjdXJyZW5jZSwgZXh0NCBqb3VybmFsIGFib3J0LCByZW1vdW50LXJvLgoKLSBF
-dmVyeSBpbml0aWF0aW5nIGZhaWx1cmUgaXMgYSBtYXgtc2l6ZSB3cml0ZTogYXQgNDA5NiBhbGwg
-YXJlIGBkbWEKwqAgNDE5NDMwNGAsIGF0IDIwNDggYWxsIGFyZSBgZG1hIDIwOTcxNTJgLiBTbWFs
-bGVyIHNpemVzIGFyZSBjb2xsYXRlcmFsCsKgIGZyb20gdGhlIHJlc2V0LgotIGBTRXJyIDB4MGAg
-4oCUIHRoZSBsaW5rIHJlcG9ydHMgbm90aGluZy4gSG9zdC9ETUEtc2lkZSBmYXVsdC4KLSBSYXcg
-aW50ZXJydXB0IHN0YXR1cyBpcyBgaXJxX3N0YXQgMHgyMDAwMDAwMGAgaW4gMTA4IG9mIDExMyBj
-YXNlcyAoNSB3ZXJlCsKgIGAweDIwMDAwMDA4YCksIGkuZS4gUE9SVF9JUlFfSEJVU19FUlIgKEJJ
-VCAyOSwgaG9zdCBidXMgKmZhdGFsKiBlcnJvcikg4oCUCsKgIG5ldmVyIFBPUlRfSVJRX0hCVVNf
-REFUQV9FUlIgKEJJVCAyOCwgYDB4MTAwMDAwMDBgKS4KLSA5MSBkaXN0aW5jdCBMQkFzLCBzbyBu
-b3QgYSBiYWQgcmVnaW9uLiBSZWFkcyBhcmUgY2xlYW4gKDIzMyBHQiBwYXNzLCAwCsKgIGVycm9y
-cykuCi0gTm8gRkxVU0ggaW52b2x2ZWQuIDM0IEMgYXQgZmFpbHVyZS4gU01BUlQgUEFTU0VELArC
-oCBSZWFsbG9jYXRlZF9TZWN0b3JfQ3Q9MSwgbm8gZ3Jvd3RoLgoKIyMgV29ya2Fyb3VuZCAodmVy
-aWZpZWQpCgpgbGliYXRhLmZvcmNlPW1heF9zZWM9MjU2MGAgb24gNy4wOgoKwqAgwqAgYXRhMS4w
-MDogRk9SQ0U6IG1vZGlmaWVkIChtYXhfc2VjPSkKwqAgwqAgYXRhMS4wMDogbWF4c2VjIHF1aXJr
-IGlzIHVzaW5nIHZhbHVlOiAyNTYwCgpUaGlzIHNldHMgbWF4X2h3X3NlY3RvcnNfa2I9MTI4MCAo
-c3RvY2sgMzI3NjcpLCBzbyBpdCBjYW5ub3QgYmUgcmFpc2VkIGJhY2sKdXAuIH4yOCBHQiBwbHVz
-IDE2LDAwMCBmaWxlcyBhY3Jvc3MgdGhyZWUgd29ya2xvYWRzIGluIG9uZSBib290LCAwIGVycm9y
-cy4KCiMjIFBhdGNoCgrCoCDCoCAtLS0gYS9kcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jCsKgIMKg
-ICsrKyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMKwqAgwqAgQEAgc3RhdGljIGNvbnN0IHN0
-cnVjdCBhdGFfZGV2X3F1aXJrX3ZhbHVlIF9fYXRhX2Rldl9tYXhfc2VjX3F1aXJrc1tdID0gewrC
-oCDCoCDCoOKAgnsgIklOVEVMIFNTRFNDMktHNDgwRzgiLOKAguKAguKAguKAguKAguKAgiJYQ1Yx
-MDEyMCIs4oCCODE5MSB9LArCoCDCoCAr4oCCeyAiQVBQTEUgU1NEIFNNMDI1NkciLOKAguKAguKA
-guKAguKAguKAguKAguKAgiJCWFcxU0EwUSIs4oCCMjU2MCB9LArCoCDCoCDCoOKAgnsgfSwKwqAg
-wqAgwqB9OwoKwqAgwqAgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBhdGFfZGV2X3F1aXJrc19lbnRy
-eSBfX2F0YV9kZXZfcXVpcmtzW10gPSB7CsKgIMKgIMKg4oCCeyAiREVMTEJPU1MgVkQiLOKAguKA
-giJNVi5SMDAtMCIs4oCCQVRBX1FVSVJLX01BWF9TRUMgfSwKwqAgwqAgwqAKwqAgwqAgK+KAgi8q
-CsKgIMKgICvigIIgKiBBcHBsZS9TYW1zdW5nIFM0TE4wNThBMDFbU1NVQlhdIEFIQ0kgU1NEIHJl
-cG9ydHMgaG9zdCBidXMgZXJyb3JzIG9uCsKgIMKgICvigIIgKiB3cml0ZXMgbGFyZ2VyIHRoYW4g
-MTI4MCBLaUIgc2luY2UgY29tbWl0IDliOGI4NDg3OWQ0YS4KwqAgwqAgK+KAgiAqLwrCoCDCoCAr
-4oCCeyAiQVBQTEUgU1NEIFNNMDI1NkciLOKAguKAgiJCWFcxU0EwUSIs4oCCQVRBX1FVSVJLX01B
-WF9TRUMgfSwKCsKgIMKgIEZpeGVzOiA5YjhiODQ4NzlkNGEgKCJibG9jazogSW5jcmVhc2UgQkxL
-X0RFRl9NQVhfU0VDVE9SU19DQVAiKQrCoCDCoCBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZwoK
-CiMjIFNpemUgY2hlY2sKVGhlIHNhZmUgdmFsdWUgbWVhc3VyZWQgaGVyZSBpcyAyNTYwIHNlY3Rv
-cnMgKDEyODAgS2lCKSwgdGhlIHByZS05YjhiODQ4NzlkNGEKZGVmYXVsdC7CoCBUcmllZCA4MTkx
-IHNlY3RvcnMgPSA0MDk1LjUgS2lCLCBvbmUgc2VjdG9yIHVuZGVyIDQgTWlCLiBUaGlzIGRldmlj
-ZQphbHJlYWR5IGZhaWxzIGF0IDQwOTYgc2VjdG9ycyAoMjA0OCBLaUIpLgoKCiMjIFBlcmYgSW1w
-YWN0CjYuOCwgYm90aCB2YWx1ZXMgd29ya2luZywgYnVmZmVyZWQrZnN5bmMsIGluY29tcHJlc3Np
-YmxlIGRhdGEsIGNhY2hlcwpkcm9wcGVkLCAzIHJlcHM6CgrCoCDCoCAxMjgwOiDCoDgzNC45IC8g
-ODQwLjggLyA4NDYuNyBNQi9zIMKgIChhdmcgcmVxdWVzdCB+MTE2MCBLaUIpCsKgIMKgIDQwOTY6
-IMKgODQ3LjMgLyA4MzMuNiAvIDgzOS4xIE1CL3MgwqAgKGF2ZyByZXF1ZXN0IH4zOTUwIEtpQikK
-Ck1lYW4gODQwLjggdnMgODQwLjAg4oCUIGluc2lkZSBub2lzZS4gS25vYiBjb25maXJtZWQgZW5n
-YWdlZCAoMy40eCBmZXdlciwKbGFyZ2VyIGNvbW1hbmRzIGF0IDQwOTYgZm9yIGlkZW50aWNhbCBi
-eXRlcykuIFJhdyByZWFkIGlzIH4xNjk1IE1CL3MKYWdhaW5zdCBhIH4zLjQgR0IvcyBQQ0llIDMu
-MCB4NCBjZWlsaW5nLCBzbyB0aGUgZGV2aWNlIGhhZCBoZWFkcm9vbSB0bwpiZW5lZml0IGFuZCBk
-aWQgbm90LgoKIyMgT2RkaXR5OsKgIFdoeSBkb2VzIDYuOCB0b2xlcmF0ZSA0MDk2PwpJbnN0cnVt
-ZW50ZWQgYm90aCBrZXJuZWxzIHdpdGgga3Byb2JlcyBvbiBgYWhjaV9xY19wcmVwKClgLiBUd28g
-cGxhdXNpYmxlCm1lY2hhbmlzbXMgYXJlIHJ1bGVkIG91dC4KCioqMS4gTm90IFBSRFQgZW50cnkg
-Y291bnQgb3IgU0cgY29hbGVzY2luZy4qKiBGb3IgNCBNaUIgd3JpdGVzOgoKwqAgwqAgNi44IChw
-YXNzZXMpOiDCoDEwMjQgY21kcywgcWMtPm5fZWxlbSBhdmcgNjQsIG1heCA2NiwgfjY0LDg4NSBi
-eXRlcy9zZWdtZW50CsKgIMKgIDcuMCAoZmFpbHMpOiDCoCDCoDI1OCBjbWRzLCBxYy0+bl9lbGVt
-IGF2ZyA2MywgbWF4IDY0LCB+NjUsNTE4IGJ5dGVzL3NlZ21lbnQKCkVmZmVjdGl2ZWx5IGlkZW50
-aWNhbCwgYW5kIGZhciBiZWxvdyBBSENJX01BWF9TRyAoMTY4KS4gSWYgYW55dGhpbmcgNy4wCmNv
-YWxlc2NlcyBzbGlnaHRseSBiZXR0ZXIuIE9uIDcuMCBhbGwgMjU4IG9mIHRob3NlIDQgTWlCIHdy
-aXRlcyBnZW5lcmF0ZWQKaG9zdCBidXMgZXJyb3JzLgoKKioyLiBOb3QgRE1BIGFkZHJlc3Mgd2lk
-dGggb3IgcGxhY2VtZW50LioqIFJlYWRpbmcgdGhlIGNvaGVyZW50IHN0cnVjdHVyZXMKb3V0IG9m
-IGBhaGNpX3BvcnRfcHJpdmAgKG9mZnNldHMgZnJvbSBtb2R1bGUgQlRGKSBhbmQgdGhlIGZpcnN0
-IG1hcHBlZCBTRwphZGRyZXNzOgoKwqAgwqAgYm90aCBrZXJuZWxzOiDCoGNtZF9zbG90X2RtYSAw
-eEZGRkMwMDAwCsKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgY21kX3RibF9kbWEgwqAweEZG
-RkMwNTAwCsKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgcnhfZmlzX2RtYSDCoCAweEZGRkMw
-NDAwCsKgIMKgIGFib3ZlIDQgR2lCOiDCoCAwIG9mIDc2OCAoNi44KSwgMCBvZiAyOTcgKDcuMCkg
-4oCUIGNvaGVyZW50IGFuZCBzdHJlYW1pbmcgYWxpa2UKClRoZSBjb2hlcmVudCBhZGRyZXNzZXMg
-YXJlIGJ5dGUtaWRlbnRpY2FsIGJldHdlZW4ga2VybmVscywgYW5kIG5vdGhpbmcg4oCUCmNvaGVy
-ZW50IHN0cnVjdHVyZXMgb3IgZGF0YSBzZWdtZW50cyDigJQgaXMgZXZlciBwbGFjZWQgYWJvdmUg
-NCBHaUIgb24gdGhpcwptYWNoaW5lLCBkZXNwaXRlIDE1IEdCIFJBTS4gU3RyZWFtaW5nIGRhdGEg
-bGFuZHMgYXJvdW5kIDEuOSBHQiBvbiBib3RoLgpDb25zaXN0ZW50IHdpdGggdGhpcywgYm9vdGlu
-ZyA3LjAgd2l0aCBgc3dpb3RsYj1mb3JjZWAgY2hhbmdlZCBub3RoaW5nLgoKVGhhdCBpbXBsaWVz
-IGFuIGBBSENJX0hGTEFHXzMyQklUX09OTFlgIHF1aXJrIHdvdWxkIGJlIGEgbm8tb3AgaGVyZS4K
-CkNhdmVhdDogSSBjYXB0dXJlZCBvbmx5IHRoZSBmaXJzdCBTRyBzZWdtZW50IGFkZHJlc3MgcGVy
-IGNvbW1hbmQsIG5vdCBhbGwKfjY0LCBzbyBhIGxhdGVyIHNlZ21lbnQgY3Jvc3NpbmcgYSBib3Vu
-ZGFyeSBpcyBub3QgZXhjbHVkZWQuIEkgYWxzbyBoYXZlCm5vdCBjb21wYXJlZCBIMkQgRklTIGJ5
-dGVzLCBjb21tYW5kLWhlYWRlciBvcHRzLCBvciBQeFNBQ1QvUHhDSSBhdCBpc3N1ZQp0aW1lLiBU
-aG9zZSByZW1haW4gb3Blbi4KCmBhaGNpX3FjX3ByZXAoKWAgLyBgYWhjaV9maWxsX3NnKClgIGFy
-ZSB1bmNoYW5nZWQgYmV0d2VlbiA2LjggYW5kIDcuMCwgYW5kCkFIQ0lfTUFYX1NHIC8gTElCQVRB
-X01BWF9QUkQgLyAuc2dfdGFibGVzaXplIGFyZSBpZGVudGljYWwsIHNvIHdoYXRldmVyCmRpZmZl
-cnMgaXMgbm90IGluIGxpYmF0YSdzIGFkdmVydGlzZWQgbGltaXRzLgoKCkZvciB0aGlzIGlzc3Vl
-LCBJJ20gaGFwcHkgdG8gcnVuIGZ1cnRoZXIgaW5zdHJ1bWVudGF0aW9uIOKAlCBib3RoIGtlcm5l
-bHMgYXJlIGluc3RhbGxlZApBbmQgdGhlIHJlcHJvZHVjZXIgaXMgcmVsaWFibGUuCgpJIGhhdmUg
-b25seSB0ZXN0ZWQgU00wMjU2Ry9CWFcxU0EwUSwgc28gdGhlIGVudHJ5IGlzIGRlbGliZXJhdGVs
-eSBuYXJyb3cuCgpUaGUgc2FtZSBTNExOMDU4QTAxIGNvbnRyb2xsZXIgc2hpcHMgYXMgU00wMTI4
-Ry9TTTA1MTJHL1NNMTAyNEcgaW4KMjAxMy0yMDE1IE1hY3MgYW5kIG1heSBzaGFyZSB0aGUgbGlt
-aXRhdGlvbi4gSWYgYW55b25lIHdpdGggdGhvc2UgcGFydHMgY2FuCnJlcHJvZHVjZSwgYSBgIkFQ
-UExFIFNTRCBTTSoiYCB3aWxkY2FyZCB3b3VsZCBsaWtlbHkgYmUgdGhlIGJldHRlciBlbnRyeSDi
-gJQKYnV0IEkgZGlkIG5vdCB3YW50IHRvIGFzc2VydCBjb3ZlcmFnZSBJIGhhdmUgbm90IG1lYXN1
-cmVkLgoKClRoYW5rcywKUmlj
+Linus,
+
+The following changes since commit c2130f6553f4a5cbdc259de069600117a995f197:
+
+  ata: sata_dwc_460ex: fix infinite loop in NCQ tag completion bit-scanning (2026-07-13 14:32:11 +0900)
+
+are available in the Git repository at:
+
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.2-rc6
+
+for you to fetch changes up to 3fd70e96914d761c17c376aadd0b0d1a3c9badba:
+
+  ata: libata-sata: fix ata_scsi_lpm_supported() iteration (2026-07-29 10:55:11 +0900)
+
+----------------------------------------------------------------
+ata fixes for 7.2-rc6
+
+ - Fix PCI resource initialization in the sata_mv driver to keep legacy
+   Marvell boards functional (Rosen).
+
+ - Fix ahci_ceva driver initialization error path (Radhey).
+
+ - Fix libata header file to remove a kernel doc compilation warning
+   (Randy).
+
+ - Increase the timeout for the STANDBY IMMEDIATE command to avoid
+   suspend failures with drives that are slow to respond to this command
+   (Matt).
+
+ - Fixes for the handling of timed out commands in the presence of
+   deferred non-NCQ commands, to avoid excessive delays in executing the
+   error handler (me).
+
+ - Disable link power management for a couple of WD drives that have
+   been identified as not functioning properly when power management is
+   used (Niklas).
+
+ - Fix the device iteration loop when checking for link power management
+   support to correctly handle port multiplier setups (Niklas).
+
+----------------------------------------------------------------
+Damien Le Moal (3):
+      ata: libata-scsi: terminate deferred commands on time out
+      ata: libata-scsi: schedule deferred atapi command
+      scsi: libsas: terminate deferred commands on time out
+
+Matt Vollrath (1):
+      ata: libata-eh: Increase STANDBY IMMEDIATE timeout
+
+Niklas Cassel (3):
+      ata: libata-core: Disable LPM on some WD drives
+      ata: libata-core: Disable LPM on WD Green 2.5 480GB
+      ata: libata-sata: fix ata_scsi_lpm_supported() iteration
+
+Radhey Shyam Pandey (1):
+      ata: ahci_ceva: fix error paths in ceva_ahci_platform_enable_resources()
+
+Randy Dunlap (1):
+      ata: libata: avoid kernel-doc warnings
+
+Rosen Penev (1):
+      ata: sata_mv: accept 1 or 2 resources in platform probe
+
+ drivers/ata/ahci_ceva.c             |  18 ++++--
+ drivers/ata/libata-core.c           |   9 +++
+ drivers/ata/libata-eh.c             |  37 +++++------
+ drivers/ata/libata-sata.c           |   2 +-
+ drivers/ata/libata-scsi.c           | 119 ++++++++++++++++++++++++++++++++----
+ drivers/ata/libata.h                |   3 +-
+ drivers/ata/sata_mv.c               |   2 +-
+ drivers/scsi/libsas/sas_scsi_host.c |  15 +++++
+ include/linux/ata.h                 |   6 +-
+ include/linux/libata.h              |   6 +-
+ include/scsi/libsas.h               |   2 +
+ 11 files changed, 173 insertions(+), 46 deletions(-)
