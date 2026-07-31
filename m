@@ -1,117 +1,118 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+Received: from mail-oo1-f50.google.com (mail-oo1-f50.google.com [209.85.161.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13BAC4503F4
-	for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2026 19:12:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785525131; cv=pass; b=QpVMw2ez1gQsAa67S2NIvccVlcpfNKpRr4FqHjQe6gJg6DX7yQVxNUStfJDNr52xADhLUJGG3gE6otsRu+Gf4uNeeM+dZIXdxsIwCNdsrg9SvB9d5Ct7GLkPBv4NBSeBRGLwhrzUww2Zu9fdMMiEaZPDMkhu/DT/q/Ox8aXFycI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785525131; c=relaxed/simple;
-	bh=fnAEEtOQRwyZBx8qZr0oVK0/MJ5m95HtZqcO4+SCbPU=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=aE+e7wnbKPoU4zr7ln6wMS0k651miEoAgsFlL1pq4nWbjg0/CstG8w1pgRXSPtXc+Irv48BpwI6k3bVjm9ohdYFqriDNXMtwpEDLJczWyo/sExjUICtwsGKHxyni2hb0Ba3un1Lv78F60hKX8M4OUVgXXmRDwgqm15VyyFo16mk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G+HZiIDN; arc=pass smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5079C37C93C
+	for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2026 20:53:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.50
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785531225; cv=none; b=GfDSb1g0AyYlYju66x+y5ZMUaE6LILUMHYYEarqFSlUXOaRG5mLYJucX3yWPOTuRcYOLa4QmzE1SfePsY06HfNrOfZg4vE9cSjVRIC7R/EYXFP73KI/BNMf8Hg1MoY3FzxQjNUvT2XqCDR5Y9udajiak4bXHohGzPPEt2jHHrhI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785531225; c=relaxed/simple;
+	bh=4522mCTvgT2yfneBofEbQXuDlkWezOwq6bSe0P2wqq8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IkKrFuYqSHyk2jyciS37k/4jrG/I0Ix11yZ92mqao12DTGv2ytbEMtAPGLRsrLFx/k/XKSRnDeh/PYyW2ab2zBxxwt/cMvBCuhnPcp4tsurK6eeGn/1WENZHa/uDdinvsA/vuafnrpWr3xgjEAGl5LoBk5RKS2FwGbbZDJPf7DE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=otZ+0zaL; arc=none smtp.client-ip=209.85.161.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G+HZiIDN"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-c15c42a45adso341367666b.0
-        for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2026 12:12:09 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785525128; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Ea7Cw4jPn9jUjJ0ZHxGEl8KJUrum8Kcq65DNIlXy6Ry3NTaSRmlCMC/w0/ZRSUwxmF
-         hzdtRRr5/3WIgU4Z88tv5D+HEOOJPoJdSxf3y+2I69ANnwWzTOFXO9bQ2lHZQnKbOLh9
-         8+ER54Ur1wE6WRT3LLSyuwH5uraPunEfD25q0WXD4L7PDvDBFr9OqUYfcgM1Jz1v5+Jk
-         TpEzSirxZB5HettRLhr+5ibY9dqfBz8njW2KLxvo/gFpfM8i0ySq0f4sQy1cajB1rd5d
-         jIgPJ2Pa/MFIEIz6mtpx5ZObwpMhdI0YKMwMIpZNMihNVI103sA/Lv+u1h1OVaUF6L/W
-         XXdA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=kZ5kWd7p1yGkjjOxO2SfkaE8r2IEuORhgbo13qPYIS8=;
-        fh=ztqLSSfhfzwf5R5ueAL3RXPewrpq9XyecaQfGUPz7Y4=;
-        b=Kl3ZQmoOr6R2EM0SeUweSyD7OSr00pI4KTUI0QUDDxSv2QyGEwHgN2Thni1VNppDFw
-         eF5BLe2CCZejXhjXvs8Y+evDPG8PeuOMhL/QMpakagjYkFEhogzZ2X3yZshcM+/QBEqx
-         VijiVNwdLTtFts9m/cWyqptYlu1yy1HtoIhOXdOGYhYEpzq0yuneN3Xrgrk/3GEqk1io
-         jckCcBwgescSM1aNxtj70YypE+FlcO2mjOqBVEvB1r7ps6uJ0l7Byxdza4rNxd8g059W
-         brI6cW99I2xQL1QxzCFNy/jLnS8+KcoUbJLntr/xH247CsWdAnav0BFWg1tLPG7A7vPz
-         OS7w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="otZ+0zaL"
+Received: by mail-oo1-f50.google.com with SMTP id 006d021491bc7-6acc88b9c5fso591854eaf.2
+        for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2026 13:53:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785525128; x=1786129928; darn=vger.kernel.org;
-        h=content-type:to:subject:message-id:date:from:mime-version:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=kZ5kWd7p1yGkjjOxO2SfkaE8r2IEuORhgbo13qPYIS8=;
-        b=G+HZiIDNhkXPEjoa8KKtp34CAzbRIWtqYolDPmYovQMoumsxf6TLLoIhypV2/JPu2a
-         w57WXdZ69pHy3HpwPcCRe00FJp7N2e2U2H8yc1ZNPPwB20rgH2TFof+waf5YesbtJv95
-         K67PVT+TbccvYzH9XQQoYNZ3Fr9iZDXD5c5ZoFTN7AkiGz3+mHCRLg9iw96HZIzLA9fj
-         PDRHdzrQWw3Bzw7WVgBtzuEUPrFvuOKNS9ayd/0dqpLJWXUfZP6C94DGhgTTdsBVP4Tz
-         kkvPjCopduySykGPRvTGKtGwi1w56hSQx2E4j2vEnchTHrnTGFtar5nHAR3C5SeN27m6
-         Mq0g==
+        d=gmail.com; s=20251104; t=1785531221; x=1786136021; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=SmAY5H801iHfliFhsAjZ9+4GXlwH499qZe6BQlMTr30=;
+        b=otZ+0zaLs95/vqNB/LkXHLdii4miM5GZaZoz5omcoBI2Q0q8aw0GBXVlO2SEI3w4+z
+         aQG+d91jHWE85TYa5RpK4m7p+ytl0uJNn2lrhIh7vye33q74UeL50izAp5yOxmPfl4+a
+         PEnEm7yoFdJ2K3YBB/3C3fX2ofV10RPtyXsyFOE0+fcujorPc6Ni5ijk8cXHGqHyIU6W
+         9ZDWrKM1hfFmaMrtMbpFliuJM0cAmUo6397L7xCNv0ucpNuMtePNa1oIkJSwTFQzw+vW
+         H7MoSFq/3SZQa90fzCjIo/bMRAug2sVWD55yCFmFf3fl/Px1taUTdo/nxlfMfFsPpcEz
+         34/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785525128; x=1786129928;
-        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kZ5kWd7p1yGkjjOxO2SfkaE8r2IEuORhgbo13qPYIS8=;
-        b=Xc26748gJXlK0/DlHJgpfdZ+eCQI72CKg6OsE/7PKg0jWz8jqKF2rpsfoaODpDkTYY
-         y7MkO4bUVP5iIZp2OuveMT5Qsn/Kq+UQFkL9YpJXBxNznwAMHF8swONfxvofgz8vM84a
-         SLNbv3ytdSSzWu3fGCjWvelohoJjLUkZwymnu5RIajqY1/NZ2/DlAPdgul7ScVkIdYpa
-         4OfdFJ7WKCdsDahvC6XoCYFjPcpoYP4vCo3weSzp+kHCPkWILwXqY3UDjN/cRy+KM6G6
-         +mNJZqYfyNbzAGlxF5c6BwVavyFbR10c4g2RQSJbWv8Xo6/krPwh2mh02XGQfKdVEA+G
-         5NYg==
-X-Gm-Message-State: AOJu0YyxmQB53yjJqiZpiE9RXpHm56I23KdfiPq1F2LQK+Tl7fuYD4W1
-	/zFtwqsRA+L2xBS1mIs3v8Efwiygiw3xWwQYrGvOEEHPtyg1js/AtT5+Lj1Z1TDtJMjufmbpjTR
-	YPLYeNoDN1U/jRC/a3j0p58pRJPZQOh7DIhQ9cIk=
-X-Gm-Gg: AR+sD10UCP/c8I/2LSn6YCbUaPJPadX/19+aRkRlYywW8Q8odr2u3dUgbjbgalxwenl
-	5fV+QX48x+m8JqA5ptWiM3HLAY6rNAC7LnI5KjTQB0qRqCh30Ejk54zxH5a60YAjRtVfdE64+66
-	NV/XC5PmrI8ROl3O7H+UYmNATf06pWpJwitN5AF4OpKi2w9Q3hHgHLoTaHBUDSmHR4JrdYWDyVY
-	W4aQmFDWHaOw3RUO0Yv3TZx0XOxgajcu0jLuwzl+ydOWBcNkkpSjuTHSZRAuz9GxgHPI6RA4XlJ
-	bZk1V+kr2oEjvL2YAviqs9Li+ToxCHQSN2lWAB0IuFcDcmT/yPCxeTWXRrfXiKQQj90KYf8tLAp
-	Acury6SexHNSTSQdMoUMbITM2Xn0X9b39e//A/6tzuuED0Mh0T2I7fMz/yP12/wgSsaxlxb0cUp
-	7vSIzp+O+nCovMKlwRUMM=
-X-Received: by 2002:a17:907:9446:b0:c16:242a:4744 with SMTP id
- a640c23a62f3a-c1fe7bdaeedmr45464066b.17.1785525128141; Fri, 31 Jul 2026
- 12:12:08 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1785531221; x=1786136021;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=SmAY5H801iHfliFhsAjZ9+4GXlwH499qZe6BQlMTr30=;
+        b=FTArll+jC7RqhxBjooBT4Z3c9d3Al5h1nSneHQEGXFFZZqp5PKbfpusw0H+DNmImFG
+         Kc+ma6MLf5/ypQGsn77/xfAedHFgmVX48qyZav7q2Oo7ceGW8WRJcieyw6Ce7v+Q4mra
+         U/VYooqe3Ag1P6N9krdkMMAZwb5iJv8iDae5Hjlu4Lj6KTaibXnuiJPlxh+TckfI7+8G
+         cg+BATZ21IjAl24XfHnl8U+wXRS2r5G7FfeRUSYZWQCMyecHbsPlByTPbiBRrYmQES1w
+         ZJKsIK2dEHhDNdoKRykKh74OCBE+POrozx0RmLgp74wqW9v9hrVVX5T5lQk3TyjAnz+e
+         5ONg==
+X-Gm-Message-State: AOJu0Yx07A2+qniOrtsGJwr+tRNjggVWid88do4cRhSNuMxHimaDutU2
+	Q871zc4KBEDGiqLFUf+SDgOy+mA6mC5tnq8Ypl6qTBUF3KF8HZXj/6EJ2dZERA==
+X-Gm-Gg: AR+sD11HioWxoy3Jja8OOc0c4cUlLwYSN9UjgZdibNty3lXYoc0O/tgoVurT+yU8Ezo
+	fnjoS+X++Ep7r8RUo9T1AK4vy33Po/lETnz529VUY7y4I37+kILGGLQxBAGv6Hw6i+xs/EhNl68
+	hoYrzrBiKZv1QjxRtDCDJeHzL3dE4KUDX2Zs+FEhQew+hL10y5pmQHRj+15vsAAa5KKTeXaB0cP
+	8Ic/e3sCA8xIx8QbDGjmb2rzAQcUtHvRHTdtw4Hq9U6FbcLFEKMZNNUSQdw2Q6yqH4ouynIK4io
+	9MYYtRvUGWuP1zJ4BCh+JKEKBXRkG3LjHrk4MJ7isxk98CPMiunU8qE2IRTenLpRjmSbkcMEQzd
+	LnlnNMj+GYbtt+bSjb1utr4jPvz3InsGsGCGvc6Ho5Q+10bHjtSSoATImV6MJpZw60FufdNYsgC
+	dGFPpshZp4jYH5HEwE9pKW5uI2Ex4xPq19R+WLHzoOOJyRrIicuMNYrkmw8ABsKz9yN6iHdBOfr
+	v7bDuUjUfaIInlWsKOtt+WN7WtrT0b/e64rsxNemlYj+GEzyjo9bGeyxsPTP/x8CJlCuSAZfBc4
+	zzvzx9iB9rE1qFVNRI8VtMMj+2lmx2Eem9IzsQ==
+X-Received: by 2002:a05:6820:162b:b0:6aa:e5e4:359b with SMTP id 006d021491bc7-6ae4312ae22mr3060818eaf.0.1785531221120;
+        Fri, 31 Jul 2026 13:53:41 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e34])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-458f6064d2esm2218765fac.3.2026.07.31.13.53.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 31 Jul 2026 13:53:40 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Jeff Garzik <jgarzik@redhat.com>,
+	Rafal Prylowski <prylowski@metasoft.pl>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCHv3] ata: pata_ep93xx: add missing "cc" and "memory" clobbers to inline asm
+Date: Fri, 31 Jul 2026 13:53:38 -0700
+Message-ID: <20260731205338.8011-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Hank Barta <hbarta@gmail.com>
-Date: Fri, 31 Jul 2026 14:11:56 -0500
-X-Gm-Features: AUfX_mw5e44I8RyVAlEho48wRuwx4oaWviD8MD-VENPUA_Tcd-XL2JGqG85xlLg
-Message-ID: <CABTDG8-3oiR+P7ebTx2PY-OQNGoMod3CRSk9uMaTHKW4FnRKbA@mail.gmail.com>
-Subject: "ata2.00: Enabling discard_zeroes_data" in dmesg 1/minute
-To: linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Good afternoon,
-This message is being posted to the kernel ring buffer 1/minute on one
-of my servers. I just spent a few minutes with ChatGPT tracking this
-down and ChatGPT has suggested that it may be due to a regression in
-libata. Full details of the interaction can be viewed at
-https://chatgpt.com/share/6a6cef79-9bac-83ea-86d6-5de28f09e70a
+The inline assembly in ep93xx_pata_delay() uses a "subs" instruction
+which modifies the ARM condition code flags. Add a "cc" clobber so
+the compiler knows the flags are altered. Without it, the compiler may
+reorder flag-dependent instructions across the asm block when the
+function is inlined, potentially causing incorrect control flow.
 
-As near as I can tell, the message is harmless aside from flushing the
-kernel rung buffer. Some brief details regarding this host:
+Additionally, add a "memory" clobber to prevent the compiler from
+reordering I/O accesses across this delay loop. On older ARM
+architectures like ARMv4T used in EP93xx, __iormb()/__iowmb() may
+evaluate to empty when CONFIG_ARM_DMA_MEM_BUFFERABLE is not set,
+leaving writel()/readl() without a compiler memory barrier. Without
+a "memory" clobber here, the compiler optimizer might reorder
+independent I/O accesses across the delay, violating ATA PIO timing
+requirements. This also brings the ARM path in line with the non-ARM
+fallback which uses cpu_relax() (a compiler barrier).
 
-Debian Trixie
-Linux oak 6.12.96+deb13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.96-1
-(2026-07-20) x86_64 GNU/Linux
-ZFS version   zfs-kmod-2.3.2-2
+Fixes: 2fff27512600 ("PATA host controller driver for ep93xx")
+Assisted-by: Opencode:Big-Pickle
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ v3: add memory barrier
+ v2: add Fixes tag
+ drivers/ata/pata_ep93xx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I searched to see if this had already been reported and found nothing,
-though that might reflect more WRT my search capabilities.
-
-Is this something I should submit as a bug? If so, kernel bug list or Debian?
-
-I appreciate instructions for how best to proceed if I can be of any
-assistance. (And if that's "go away" I will take no offense.)
-
-best,
-
-
+diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+index 587caadf78cb..6d948e41bc59 100644
+--- a/drivers/ata/pata_ep93xx.c
++++ b/drivers/ata/pata_ep93xx.c
+@@ -211,6 +211,7 @@ static void ep93xx_pata_delay(unsigned long count)
+ 		"bge 0b\n"
+ 		: "=r" (count)
+ 		: "0" (count)
++		: "cc", "memory"
+ 	);
+ #else
+ 	while (count--)
 -- 
-Beautiful Sunny Winfield
+2.55.0
+
