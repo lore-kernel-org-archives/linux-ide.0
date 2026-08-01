@@ -1,63 +1,246 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 151AC385D90
-	for <linux-ide@vger.kernel.org>; Sat,  1 Aug 2026 00:57:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785545878; cv=none; b=B9HwJkgUKJTo3rlRvdgdZEotXS3RSdFKaxS/dzCw/kwZEndNrCkTUyeUcuaQpsXci82DzKe6VP5SuThoxb6njz9DqNaTaW0pN7KKTdYXazN237MTvzb838qRNDmuPuesh8ZHtFAGyCilZi8I8VqmzQFn+9+DoSxcL5NTJYliDbI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785545878; c=relaxed/simple;
-	bh=M2f9xA8ICElUAUlLTetsCO/sKr7T5H78CVaGxqY4imY=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=BE2qK8gkBa6BRrhPrGiWs+t66IXArXAFGcMmm3puEOpT1EC/ecYoUniCQ7Vs3G5tCzVKCrKe2XNc2p8MMiY0rvnhLjDzLf9CAkzg0DTRtQnuHJEQfFvJIDjVUiJRz1v/2XvFvjbsM1/orFmGbBXNMfhWwBdMAbuDaAVKEV01XM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fu31JQyV; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fu31JQyV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE1061F00ACA;
-	Sat,  1 Aug 2026 00:57:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785545876;
-	bh=o2FWmD7ywwWRwiTAC3F9ErTDuu1N4AXPLztT3C8hBjw=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc;
-	b=fu31JQyVBa8VThbus9n2XQmINJVAmQkXX/WViiMERepo2e5aNWOIYSiGvsdiQSq7G
-	 AQjAfzDKMZgr1b21EkCoGvbLoDhj4/RqFXw3MfLiXEeFv7K7/LIfB4aotYziRCJ5Jk
-	 HVlB7otYXztvGDxoIdgx3mvS5Sn6zglmbpcZp0XFFmBqj2z3H2+GtbLlFbue0D2pem
-	 SEU3TrOZluQSnUBifC5pl3yRombPxRGwfUV87G+C1CQscNfBwms1yTzw07qeY3oDdr
-	 7nrUExy5B8lw/ZxWmDut+4jCBh379dip0wB5JNdD45LEu4cOqozCucMT9GQ8ugncNK
-	 k/f2SMC5LGAdw==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 93954392665F;
-	Sat,  1 Aug 2026 00:57:20 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 7.2-rc6
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20260731235249.273921-1-dlemoal@kernel.org>
-References: <20260731235249.273921-1-dlemoal@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20260731235249.273921-1-dlemoal@kernel.org>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.2-rc6
-X-PR-Tracked-Commit-Id: 3fd70e96914d761c17c376aadd0b0d1a3c9badba
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: f30ca2ce7d5e2739773f00eeeb22daf6f7b18dd9
-Message-Id: <178554583923.970149.6727319819631117766.pr-tracker-bot@kernel.org>
-Date: Sat, 01 Aug 2026 00:57:19 +0000
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 673523A8384
+	for <linux-ide@vger.kernel.org>; Sat,  1 Aug 2026 03:13:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785554029; cv=pass; b=t2TQKZMD2UalRHuV/LW5gQnH9gs3cFka6kR815AfpICblxkIFGxI3zN6l7orDxdiYJTq8nQPIyLno5UkELaIyc6xg0J2VoIw/3jYH7EcV4rKGtQR7eMRFCdATncoVIJRYpQDheuy7xhwb9DF03TCmWLsf2p/AZbyelVMIZTmPRs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785554029; c=relaxed/simple;
+	bh=95QCJbuFW0DJ4I2GQ9WngTVOHrimeZjlLTACZfyrPGs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qgGU4H3SD1rWAi7/yWFTvUtQ2v4rI05FxjrKOeN89tSBdYnkOTHXh74/vr3QoZsnjKfb2t7W7IU4yx7uZFzY+8usQv6tfAnglRdPNLwjzVJdaX060nizOUyXXhy28H5+cxgoVxsS2jsGb8W9RNzpxNvFrVsXR8K29hedZrsgcxU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=debian.or.jp; spf=pass smtp.mailfrom=gmail.com; arc=pass smtp.client-ip=209.85.128.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=debian.or.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-81dfdbd86d1so17270687b3.1
+        for <linux-ide@vger.kernel.org>; Fri, 31 Jul 2026 20:13:48 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785554027; cv=none;
+        d=google.com; s=arc-20260327;
+        b=kYipiD5ega0Pa4DLcD360ErXmCk1KNcBb5DazphAMo2mFKHLnH8HdQMxVAfOVL9/l5
+         5rwKfr5CprQ/kdnnHlCCRvMf7LLohpaE5e7a9+jGkNiD0bepdeyG9f6aRvH2eX8frZre
+         7iRuFBMtI+nzbv7Bi3vjhqYyqBeDF+kKGgHKZWcrDKcwz/MV9x7HPztGIg04eM1oGcn+
+         QmsYGCtxSxlvUHhGvCwXRs7uAYWpFBI5dV4PQqZ82d2FKmtjqzden+hhnkXF/IunEnpP
+         Hj73/Sf5YNr96gfeHzMhyXkxHG/tYrFl0cUZ/GQGpvQHfL2ZbWkjxGkssC+atMDi9sd3
+         DQwg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=SeAZ9LnHsy3/NLwDMK5sclw7WS1BzURw2kr/GeL6nEM=;
+        fh=DdKa3O87xSXXc9OET4iBPXIQj0GOS69TnVFjA8ZChS4=;
+        b=OdWo2MzqJIJXNx9p9IqNxWUm1RPqNDEkN9TKUfFx8DCj4BNHd1VXP7kpu6NVARWJpN
+         eu15HU9Nu5w7ylKjfS+HDPn8ro9VgpPq7xcRfzxHEWN+PfjKS0/U7xB6KkDC0eMXI7T7
+         zrspWzAtLBC2nrDfRu3GucHSiNT/njzDHMUbQYG+oJyNU7c4T1nq+Opp/MhyubqLfw8J
+         zC+XIGkoRbuZjl55iKkmtR08mYTRj3dMwoJNKfVERn7xCgj2jHdulbbAN8TXpD14AgVr
+         e8nmV2Q3I1SG00KOwqZx77ixLcklrsSZ+xFGBvBdQ22pxkst9xhBbKk7Q4ySOfLwi9Gs
+         XxJg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785554027; x=1786158827;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=SeAZ9LnHsy3/NLwDMK5sclw7WS1BzURw2kr/GeL6nEM=;
+        b=SMxDojBxG/pnVREakYFcwkv69bjxrQ7OVteeB+HJZuJQ2YYRz3n0Eyc30MRvB39GsW
+         V74SMBnv+lL5azbfMqCMbL1mv4Zw3+fVEGF/LIqUkDSqtPO8pVhKx/OsVs3Kcz8A5K6X
+         TFzJ16/3073sHIKuO8pVOSKeUKul8b/wM7rOXBg3jV2VPAyjKM03mnLEGkl491XbPucU
+         wYDxpOD7/8Q4jLDd6pluwfOKuMBv6kAYF04mZLOm5+x//PQZ4Kh4cLMxGzYMJfCzltyF
+         ok9MX75pqNhFLFwPp1wtAgH4TFCFFkk1uZxtPRPkDSmLXk66/GoliaObvHjOYSt60NA1
+         Gz7A==
+X-Forwarded-Encrypted: i=1; AHgh+RqE219bNr8T+asjhmOqgoZW4+Ygy/Q6Rm5gV/BA40Cqa5PfTBRXVa6cWr9IzPY4KBxyPsQZf8aCNyk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyf7VnyMFuX9Iz51PRjSeXBaV0ASbbKA9EqkLwJz4/X5Lp7WS4f
+	YcT1WwbxvgSsm3age0WWFsgydVKLqR3YWWfFM8HiVpDn9nTMMgt8Mgddwc5bgZn7Rs64Edq6xNp
+	nUKnu6ti5K3GEM+mOf1ZElDNyP00fvxM=
+X-Gm-Gg: AR+sD10fkL7elMSOFr7lXCHz7VeL50PK7acCqoDptcxhezK+Xv56/5u26rObRZuo/Z1
+	OgURBvCTnzyhIa0hnqYaw6My0Q+qEW6Tkq7I6Up7j97jTrNWcsJ3awrGz/7Uu73/9ZnfkXCpkqv
+	13xWAZANwioTBLpUZ7SUNQfKqJZ8gHeeND2ZkYWopGao8u2ElSbmEIJC2dkCiL8KhTA7o06Ze38
+	VZ48GJ4cvyqIAhg7hEH6u9h7KLWVzb04LN90D0PLEHjsCMUUBxsho2pH+8DX3F9i2gKKIxReFx/
+	A1zudP+o4QvN3045VVgWgrBQmuCID14SXzl+SHU082Qrvi/E2kl8w5JiVRrDMHe6bevpiCKlxbk
+	HxA==
+X-Received: by 2002:a05:690c:278a:b0:81c:b865:2231 with SMTP id
+ 00721157ae682-81fd4bf88ecmr32651387b3.33.1785554025363; Fri, 31 Jul 2026
+ 20:13:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net> <20260728162538.GA1325438@bhelgaas>
+In-Reply-To: <20260728162538.GA1325438@bhelgaas>
+From: Masanori Goto <gotom@debian.or.jp>
+Date: Sat, 1 Aug 2026 12:13:18 +0900
+X-Gm-Features: AUfX_mz7siEIuZSDLGecSdNp4xhgCzEOOClyi0oT7r0lmGspOzwc1eUhhS3W20M
+Message-ID: <CALZLnaEmm5Zi=30n4i7ioX9ii4KMAePnZTAhAcNScSZFSNB7UA@mail.gmail.com>
+Subject: Re: [PATCH v4 0/9] PCI: Fix UAF and TOCTOU related to dynamic ID
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gary Guo <gary@garyguo.net>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Vaibhav Gupta <vaibhavgupta40@gmail.com>, 
+	Jens Taprogge <jens.taprogge@taprogge.org>, Ido Schimmel <idosch@nvidia.com>, 
+	Petr Machata <petrm@nvidia.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, David Airlie <airlied@redhat.com>, 
+	linux-pci@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, industrypack-devel@lists.sourceforge.net, 
+	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	Sashiko <sashiko-bot@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The pull request you sent on Sat,  1 Aug 2026 08:52:49 +0900:
+I'm a "nsp32 folk", which patch version should I take a look at?
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.2-rc6
+Best regards,
+Masanori
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/f30ca2ce7d5e2739773f00eeeb22daf6f7b18dd9
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2026=E5=B9=B47=E6=9C=8829=E6=97=A5(=E6=B0=B4) 1:27 Bjorn Helgaas <helgaas@k=
+ernel.org>:
+>
+> On Thu, Jul 23, 2026 at 11:00:39PM +0100, Gary Guo wrote:
+> > While working on improving the Rust abstractions [1], Sashiko reported =
+that
+> > an existing UAF issue related to dynamic ID, which I find to be genuine=
+.
+> > When taking a look at the code I also find a TOCTOU issue where the
+> > existence check of dynamic ID happens in a separate critical section as=
+ the
+> > actual insertion. This series fix both issues.
+> >
+> > There are two exported functions pci_match_id() and pci_add_dynid() whi=
+ch I
+> > have to tweak to implement this cleanly; I created separate "do_xxx"
+> > functions to keep the existing APIs because they all have multiple user=
+s.
+> >
+> > There're a few existing users which stores their pci_device_id argument=
+ in
+> > probe callback. This is a bad pattern because nothing except driver_dat=
+a
+> > inside pci_device_id is what they want; actual ID information can be
+> > retrieved from pci_dev instead.
+> >
+> > There are two users that performs pointer arithmetic on the pci_device_=
+id;
+> > these are also problematic with dynamic ID and driver_override, so fix =
+them
+> > as well.
+> >
+> > I've used the following coccinelle script to flag all cases where the
+> > pci_device_id is used other than reading its fields.
+> >
+> > @usage@
+> > identifier fn, id;
+> > position p;
+> > @@
+> >   fn(..., struct pci_device_id *id, ...)
+> >   {
+> >     ...
+> >     id@p
+> >     ...
+> >   }
+> >
+> > // Due to cocci isomorphism this needs to be explicit
+> > @bad@
+> > identifier fn, id;
+> > type T;
+> > position usage.p;
+> > @@
+> >   fn(..., struct pci_device_id *id, ...)
+> >   {
+> >     ...
+> >     (T*)id@p
+> >     ...
+> >   }
+> >
+> > // Good use cases
+> > @good@
+> > identifier fn, id, fld;
+> > expression E;
+> > position usage.p;
+> > @@
+> >   fn(..., struct pci_device_id *id, ...)
+> >   {
+> >     ...
+> > (
+> >     id@p->fld
+> > |
+> >     E(..., id@p, ...)
+> > |
+> > // Redundant checks, but ignore
+> >     !id@p
+> > |
+> > // Redundant checks, but ignore
+> >     id ? ... : ...
+> > )
+> >     ...
+> >   }
+> >
+> > @script:python depends on usage && (bad || !good)@
+> > p << usage.p;
+> > @@
+> > coccilib.report.print_report(p[0], "suspicious use of pci_device_id")
+> >
+> > Link: https://lore.kernel.org/all/20260618-id_info-v1-0-96af1e559ef9@ga=
+ryguo.net/ [1]
+> > Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kern=
+el.org/ [2]
+> >
+> > ---
+> > Changes in v4:
+> > - Code and commit message style fixes (Bjorn)
+> > - Link to v3: https://patch.msgid.link/20260706-pci_id_fix-v3-0-2d48fc0=
+25acc@garyguo.net
+> >
+> > Changes in v3:
+> > - Fix users which uses pci_device_id for pointer arithmetic. (Sashiko)
+> > - Convert to scoped_guard. (Danilo)
+> > - For static IDs, still give out static pointers and avoid making a cop=
+y.
+> > - Link to v2: https://patch.msgid.link/20260630-pci_id_fix-v2-0-b834a98=
+c0af2@garyguo.net
+> >
+> > Changes in v2:
+> > - Fix users which store pci_device_id.
+> > - Clarify in probe documentation about the lifetime of pci_device_id
+> >   parameter.
+> > - Dynamic ID conflict check now ignores override_only. (Sashiko)
+> > - Link to v1: https://patch.msgid.link/20260626-pci_id_fix-v1-0-a35c803=
+f1b95@garyguo.net
+> >
+> > ---
+> > Gary Guo (9):
+> >       ata: ata_generic: don't store pci_device_id
+> >       scsi: nsp32: don't store pci_device_id
+> >       ipack: tpci200: don't store pci_device_id
+> >       mlxsw: pci: don't store pci_device_id
+> >       agp/via: Don't rely on address of pci_device_id
+> >       agp/amd-k7: Don't rely on address of pci_device_id
+> >       PCI: Make pci_match_one_device() match on ID instead of device
+> >       PCI: Fix dyn_id add TOCTOU
+> >       PCI: Fix UAF when probe runs concurrent to dyn ID removal
+> >
+> >  drivers/ata/ata_generic.c                 |   6 +-
+> >  drivers/char/agp/amd-k7-agp.c             |  26 +--
+> >  drivers/char/agp/via-agp.c                | 308 +++++++---------------=
+--------
+> >  drivers/ipack/carriers/tpci200.c          |   1 -
+> >  drivers/ipack/carriers/tpci200.h          |   1 -
+> >  drivers/net/ethernet/mellanox/mlxsw/pci.c |  11 +-
+> >  drivers/pci/pci-driver.c                  | 194 ++++++++++---------
+> >  drivers/pci/pci.h                         |  43 +++--
+> >  drivers/pci/search.c                      |   8 +-
+> >  drivers/scsi/nsp32.c                      |   8 +-
+> >  drivers/scsi/nsp32.h                      |   8 +-
+> >  include/linux/pci.h                       |   1 +
+> >  12 files changed, 237 insertions(+), 378 deletions(-)
+>
+> I put this on pci/enumeration and plan it for v7.3, hopefully with
+> acks from the AGP, tpci200, and nsp32 folks.
