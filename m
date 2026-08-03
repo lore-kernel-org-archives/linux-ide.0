@@ -1,69 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43D6A2F7F1F
-	for <linux-ide@vger.kernel.org>; Mon,  3 Aug 2026 14:30:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B31AE2931FA;
+	Mon,  3 Aug 2026 15:04:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785767412; cv=none; b=eSlPJ2sPKotYEDbl22En8lKK1Hb2EGK8K9BFqVI3R4bm3P72+g5Ys1oavf+Fq1G97ElLXpNfg54oqJyKJ1eLrnZVHeQqdLxlLr02uFYAL6zAvWZkrTnEpXKljE/aZDR3o4sN7QnV5G2jASx59ZTZfGLHPQr81b3LQLT23Wy49qo=
+	t=1785769443; cv=none; b=Q2sN2btSwU3S0UtwJM/WueYLj53lbPbBoQbj2CLhaeA3sdQnIuOgVLJkrBIkIFl/2rDyWISjifBNuIGS7CiXuhPDCTjqeQRKYdgNuDb0Fnbwd38+hIblA1ZxrONo302SI2vDRi+KscDg8OaCsJyoQsYjuAr5kSwyvOQ4W0ZKQpg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785767412; c=relaxed/simple;
-	bh=7+pp8IHZusvjKvk5Vf8L6JgnEri93qNj02pgHCqUB88=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=m4DHpEjRGVgXLiHlyAdDTJAtSEqB4elDnvBaFIu7Efl6EyvrfkM/iHTifCi4UY0G5Vu2cgT35zokWe5bs/toaVi4j0Wkva9Sdp+X39okLtfaWGKfctrY9V17Ol/pERr0jfHbQ56pMpeGpe28bVVeSCm364h3zabuvcI8LDMNsOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AzuESl/0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785769443; c=relaxed/simple;
+	bh=iq+SM7rJUXSs4k5NukSDtbdt4eahBkIns2wi7WY9PjU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=alBPFIWbJsXw6/uXSxHGGaX6CsmI63c0+UsJC/yCm119jdK1rLQQYjIHWBRAltG0gvT/Lpc0P+7G/mLs+79KGrH/KnIlL2z/NiivUvhbsMTBHRjjLGQyExbYvIRP7tf/NEbatxw55nywDNrkvNTrCfRp8wHi8UL4oxsKQNVzKJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eHO4BAUg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AzuESl/0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 925FE1F000E9;
-	Mon,  3 Aug 2026 14:30:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785767410;
-	bh=RkvDSBZ7pDuXtE84eolyCxxKnpEJUgTWyImV+dtZr6U=;
-	h=From:To:Cc:Subject:Date;
-	b=AzuESl/0Jev53/UM2r/cYJUdL+v+iLxhiLqyT5e6tF06dnDHw8hpQVvmUNK5CWEH+
-	 vMhb/NOnekgXgBjbqBULmYjcZU+Mfeq0aZ5hTMp4w0aLJq/hUpdi2mMo74Ih40hSZY
-	 jyQhA0YqiuNPknbNZZ2F/skRbYSkWaZdagippoWM5f14t/eFHfPTpTvxuj9oGird6G
-	 kK5BHCC2rIkuY+Q9dO67D4Vk4umBjPy+HT67z/U88lfgY26l0+i09okRoM7Y9Ai/yP
-	 fqjsd92qOfs1gQA4rwKNmRAX5o5qX43ll6v6ZfZF35Q9VvzV50OEGAp4+xBeNACf8O
-	 Djuf7wmArqx1Q==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: James Turinsky <zerodata@gmail.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: libata-core: Disable LPM on WDC WD141KFGX-68FH9N0
-Date: Mon,  3 Aug 2026 16:30:05 +0200
-Message-ID: <20260803143004.362806-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eHO4BAUg"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4F1D7C2BCFD;
+	Mon,  3 Aug 2026 15:04:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1785769443;
+	bh=iq+SM7rJUXSs4k5NukSDtbdt4eahBkIns2wi7WY9PjU=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=eHO4BAUgmSZLypj8CKJSG8yVvAXU4o6kbphvlGhwvKLVz9YMddoE+Rg1aeDG7NI9c
+	 XJEWoncTmif0rDRs79xoTMiIJr+Sjrq6Q8s26JFiAVCcpYmoVhPzoBTXvOb98XS6yc
+	 oD5vXTMv62TWgzXPUIR08v9d10Pi5JlsgkIHxaKoDWK8FU9BMiymO1V1XhsQ87OZSs
+	 bi4IcdvH3tGyI1Mt0305V9vVsoeVSvHDzj0v9OlnbmwtJY5/MLevBmxwGKsI279J6K
+	 wsob9NDhM6DmOqxOOP6AjgtdqEMEpZkf0+64Ja3KLJwSh2XOwREPM7GRCUYKIDOl1r
+	 FsOujT45jlM0w==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27019C5518F;
+	Mon,  3 Aug 2026 15:04:03 +0000 (UTC)
+From: Pawel Zalewski via B4 Relay <devnull+pzalewski.thegoodpenguin.co.uk@kernel.org>
+Date: Mon, 03 Aug 2026 16:03:51 +0100
+Subject: [PATCH 2/2] ata: ahci_seattle: drop unused
+ acpi_device_id::driver_data
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=767; i=cassel@kernel.org; h=from:subject; bh=7+pp8IHZusvjKvk5Vf8L6JgnEri93qNj02pgHCqUB88=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLIKlr45Ip8fqh7z+npEa3dLWXVysvDch7UXUxze3Vxr2 rh+hZ1ARykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACbSeI/hf1ps4PySIwejv+rY 8IXJO+Z//P1jlUDwflf/J6zBRspH1RkZfktrdGdl11xQP+ee13HxTfCa3id7M6QYtCU7TidrukR yAQA=
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260803-ata-acpi-v1-2-f606afaacad1@thegoodpenguin.co.uk>
+References: <20260803-ata-acpi-v1-0-f606afaacad1@thegoodpenguin.co.uk>
+In-Reply-To: <20260803-ata-acpi-v1-0-f606afaacad1@thegoodpenguin.co.uk>
+To: Hans de Goede <hansg@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ "Pawel Zalewski (The Capable Hub)" <pzalewski@thegoodpenguin.co.uk>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785769441; l=991;
+ i=pzalewski@thegoodpenguin.co.uk; s=20260803; h=from:subject:message-id;
+ bh=NTXTlwoJq1lj+SCnk1cP3pBirwDRzp26Eqhz/VVpz7g=;
+ b=hHVIY0FHG/LCgvw64RMEFNmMBpCnkPqpMqMd6efOPU7QrZ1NAtnXzGy3uFJjdGguQ9l7vQCEH
+ fPUT++WnuooByct+CmewiYse55NReJ8kyyscIC9owlzfOrgnPhB8n0z
+X-Developer-Key: i=pzalewski@thegoodpenguin.co.uk; a=ed25519;
+ pk=W3zk1cb/wRnj6pNGbl3/2Zf3GmPA6IBpNHpDPyJ05k8=
+X-Endpoint-Received: by B4 Relay for
+ pzalewski@thegoodpenguin.co.uk/20260803 with auth_id=913
+X-Original-From: "Pawel Zalewski (The Capable Hub)" <pzalewski@thegoodpenguin.co.uk>
+Reply-To: pzalewski@thegoodpenguin.co.uk
 
-According to a user report, WDC WD141KFGX-68FH9N0 has problems with LPM.
+From: "Pawel Zalewski (The Capable Hub)" <pzalewski@thegoodpenguin.co.uk>
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=220693
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
+This module sets the acpi_device_id::driver_data to 0 but
+the id is not actually used within the module, we can
+just drop it from the list.
+
+While we are at it - used a named initializer for the
+acpi_device_id::id field to increase readability and
+modify the list terminator to have a single space in
+between the brackets.
+
+Signed-off-by: Pawel Zalewski (The Capable Hub) <pzalewski@thegoodpenguin.co.uk>
 ---
- drivers/ata/libata-core.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ata/ahci_seattle.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 961d03fbc4d9..59e87b987d73 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4420,6 +4420,7 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
- 	 */
- 	{ "WDC WD100EFGX-68CPLN0",	NULL,	ATA_QUIRK_NOLPM },
- 	{ "WDC WD102KFBX-68M95N0",	NULL,	ATA_QUIRK_NOLPM },
-+	{ "WDC WD141KFGX-68FH9N0",	NULL,	ATA_QUIRK_NOLPM },
- 	{ "WD Green 2.5 480GB",		NULL,	ATA_QUIRK_NOLPM },
+diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
+index 3f16c1678402..9758fa0260ac 100644
+--- a/drivers/ata/ahci_seattle.c
++++ b/drivers/ata/ahci_seattle.c
+@@ -178,8 +178,8 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
+ 			 ahci_platform_resume);
  
- 	/*
+ static const struct acpi_device_id ahci_acpi_match[] = {
+-	{ "AMDI0600", 0 },
+-	{}
++	{ .id = "AMDI0600" },
++	{ }
+ };
+ MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
+ 
+
 -- 
-2.55.0
+2.54.0
+
 
