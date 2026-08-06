@@ -1,33 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0DC1A6814;
-	Thu,  6 Aug 2026 16:30:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DB5E341ABB;
+	Thu,  6 Aug 2026 17:15:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786033839; cv=none; b=Xot+f/3N/IYraCvsipJ+1o72q1idUscGPFfN7xgs4WVVqWvsoASva/CONEgi6281V9pTyE0Yxv4cFcCVtQ7v0acY/xlXz/jMGE4qaPHNSQZCYkg/otKR8h2mWPzz1RTzuBlr7Sf0N2NwXqARNT8XIXT4CgwEOCjm5I01N1YqC44=
+	t=1786036536; cv=none; b=tXdIR6HoAvX9RQVmNBc8PY/Imyxaui2SbnCvFZ7EF7f/mRCSjiNHWLXJSRvT7kYdskBREwA0psSAkZSC4PLX2KHfTpwEsO0jlFyBIO6CqVJnx/6pCdUPHJ0/Q7NFAJ1iUZ/tI6IxjxncUP0BDsqvLD+EvU3N0cf9XYWvaiqdNPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786033839; c=relaxed/simple;
-	bh=APATeCcIeGDguQSdzxOjS3PWeB2DXRBJvUcZuBpk4es=;
+	s=arc-20240116; t=1786036536; c=relaxed/simple;
+	bh=znK2/4lOEkttR/ynwvj8ugpg+t3k+UoZj77xbbcF6Rc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=C245RwwYL+F+fe2Vadm4xptqX3Eh5yOEX95COGmVNhk1FSwRzrH/g3VTiyrEQiRo7KJurX2FVwUodbwgADyfICbjOyAYPfbU5XjekaaItvOwD01U+tQBIpeIKS2cS2YglBOTlrsMU8XcNfBSH8kV+y9IL0Q5B1zOnwn6AXmpE4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQk45cNz; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=PCd4bFEDv0Kwkhfm++hyvDTjr9JHa0ZVix07ePd5OUz0/PHFm2aHt5jLqZB+RFcmNzsGDUDPuybEHlXomHgrzJap0AKOZkJ3hfUwsBjrBlkb/j6ZXMszoPzbJl6Mx509BtLDMZ7LPQUe7C0AlVyVAK3dDnsAxC9xDL/8Nqtp37Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fWfd1pY8; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQk45cNz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E651C1F000E9;
-	Thu,  6 Aug 2026 16:30:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786033838;
-	bh=5N643OcZ6TKjcgSUXv0mk+FEk5LRIN0olw3gyMmc8Ow=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=nQk45cNzbKYZ+bNorwbh3f0Q7tR7Z3+HV5CIQ3MQDGfI4LAP2RUlFD9jGgIkkBFLS
-	 syPZ+NKhtOd/jVqIjQQJ1rOeMRrF/vSeOrIll1V3sPCoxuVLnx4NNbJGd4dFy63Tth
-	 oUx2iStVPA1S/NEyxFaI1HviKL8aEqLkiA1depBAp9Oly8jFut1bHTFcKKtcCkCqLX
-	 LtK8ElpNlzi0pJDm87Uuwi4ioI61DjdflBnBZJJtP+/VTp9hjw8aDu5DPUdmaaHxKX
-	 o6TGURv5D+v37GYyRvMMEMkuB1BHsjJZ2aTblxb4O7NtJL5q2whlGBt3cE8FbckVLf
-	 dHcFy1qHNUdYw==
-Message-ID: <9bd395e3-5df4-4e13-886f-b1afeeb5d4a2@kernel.org>
-Date: Thu, 6 Aug 2026 09:30:34 -0700
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fWfd1pY8"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hGDSQ5ZWJz1XM6JY;
+	Thu,  6 Aug 2026 17:15:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1786036529; x=1788628530; bh=oZXhusvsNiVTw2LNWdGhAncH
+	7EziQoLQLzjFcfA1dQk=; b=fWfd1pY8EngREmKrsn1S8hNEj7f0sqM7rlcwqbUk
+	Grko2xpUnW/70erJE/bEDvBjLhZV81wgTuWUyPjvAx1h5f5roRtsMCAllwG1Ol+8
+	/ZTQ142f+jOnBM88ZLCYthJLY6Yupea0wr6pZp5+GMDiGlfif6xz9YiVqdlQ6QOB
+	wM+Wf9hEBJzzfolsv8WfK5/I1OIHZO7nuE4d5Q+Ut2oUZ97hDVIETpVTIq7NZH1e
+	rJij7FW+iu+cRjT4Z3juRluW+YAfZ9CJVmMXM9H4yVUAvZz861nKdtW2s1vsdX8n
+	XZdg3xAS6j5VwgUP6NC02L3/WPwlqI+4j6YwFFEonqWKDw==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id fKxYKzoNdV_x; Thu,  6 Aug 2026 17:15:29 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hGDSG5l6bz1XM31H;
+	Thu,  6 Aug 2026 17:15:26 +0000 (UTC)
+Message-ID: <9d9092bc-6bf0-4afb-9d1a-5ee16c9c501e@acm.org>
+Date: Thu, 6 Aug 2026 10:15:25 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -38,42 +53,35 @@ User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v2] scsi: core: Drop Scsi_Host.default_lock
 To: John Garry <john.g.garry@oracle.com>,
  James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org,
- linux-s390@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-usb@vger.kernel.org, John Garry <john.garry@linux.dev>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org,
+ John Garry <john.garry@linux.dev>
 References: <20260806113958.3127942-1-john.g.garry@oracle.com>
-From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
-Organization: Western Digital Research
+From: Bart Van Assche <bvanassche@acm.org>
 In-Reply-To: <20260806113958.3127942-1-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 2026/08/06 4:39, John Garry wrote:
-> From: John Garry <john.garry@linux.dev>
-> 
-> Back in the 2.6.xx days, it was possible to for low-level drivers to set
+On 8/6/26 4:39 AM, John Garry wrote:
+ > Getting the address of embedded host_lock structure just requires adding
+ > a fixed offset value to the shost pointer. However, getting the value of
+ > the host_lock pointer requires loading from a fixed offset to the shost
+ > pointer. The latter should be very slightly slower, which is relevant as
+ > this lock is used a lot throughout the core code and drivers.
 
-s/to for/for
+Hmm ... SCSI drivers for which performance matters shouldn't use the 
+SCSI host lock in their hot path.
 
-> the shost lock pointer. That is why there is a default lock and a pointer
-> to the shost lock.
-> 
-> However, support for this has long been removed, so drop
-> Scsi_Host.default_lock and make Scsi_Host.host_lock as the actual lock.
-> 
-> Getting the address of embedded host_lock structure just requires adding
-> a fixed offset value to the shost pointer. However, getting the value of
-> the host_lock pointer requires loading from a fixed offset to the shost
-> pointer. The latter should be very slightly slower, which is relevant as
-> this lock is used a lot throughout the core code and drivers.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-For the ata bits,
+ > @Bart, Can you kindly build test this? s390 and sh were causing some 
+build
+ > issues for me. Thanks
 
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
+This patch passes my build tests, but an update for the references to
+default_lock in the Documentation/ directory is missing.
 
--- 
-Damien Le Moal
-Western Digital Research
+Otherwise this patch looks good to me. So with or without the
+Documentation/ update, feel free to add:
+
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
