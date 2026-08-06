@@ -1,50 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2533C40A940
-	for <linux-ide@vger.kernel.org>; Thu,  6 Aug 2026 11:55:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D604047F2FE
+	for <linux-ide@vger.kernel.org>; Thu,  6 Aug 2026 15:57:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786017351; cv=none; b=MVXdzo+2nr06ZAHpP8V2YD6+6OJiOKF1KnzSQiVt2gLxY3TkUnRfgPxY7aCO3C23cyJ9auZJlkinEs3WzpJKPfqCEqwvkuy28gkJv2pRnjy4QqXce5QBUDScIMaEoDwLUbB0CXGd3VCLvSchjqcRKUeGM5I/KqRVmIHRL81qAmA=
+	t=1786031827; cv=none; b=h33u1D8e0WuotXLd35kZ6AvT4Vhu7fNQy4sNofCuYCnIeTYTl3ENvZlMwpRjdBevFdyiL4tFfhe2uL2ZCjIsKocixTeK17rmzI1XKVKVWR2ED0PVAjVqUXHXMoeEYaftU9wqIV6KNMmZWG7u7bNh/Ig3L4n8K2JEVRTa99pVcGs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786017351; c=relaxed/simple;
-	bh=ZoYjog3Dw6Z4RPfAyfCn3B+RZV12yo6wMZ/xGeejOu8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AAZ6qsPaWnbLt/YeFy59+WDaZvyiBDvIdGGBtmzGeJzpACRK2uiioRPbN1ZC0AUKbE2iJTIuevIvYZrwNjpSmHbukgvTMVBFMalB2cMXUIPor2OzwJcp3FSMk167jW+B1iKIcvq4K7+g9EQtNbAeR6cnem361WB7/wcIkCKe6JM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=no6L8YpL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786031827; c=relaxed/simple;
+	bh=mkuxmS/E8bTzjBoW0PzBnM15rNLoq1eEulFD6FgdHMg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=V+xRWp/eR/eCgCz0rTcSiqdAcq/6/tiYM8Vu8VtXLy5GH0lOC+0EEF/slARXBDwnbgn1Dl+7FGpKnHO7J4+lgAEsR3YNi40SZpsjiIX3L7lc02N3wzI8Oo9+wV42c5oahNNyV0c8GnSKT146oqiC7O3+6vl+grPyuYKGlIdS3xg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=japknXB/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="no6L8YpL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1187D1F000E9;
-	Thu,  6 Aug 2026 11:55:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="japknXB/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E93561F000E9;
+	Thu,  6 Aug 2026 15:57:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786017350;
-	bh=Jy02JmAcic6jC8/GbqrzyQWS7iRaMGqhBRuTqyzN00U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=no6L8YpLbQhO1jOvC2J+uSjuH/8Q39rQmoF/AY7ZG8CekxeFDPCfbRIm//mPDg932
-	 yCiBrvFIpAv+uutM7vl+EKuN7z5V0AI9bNz2CYF5/kRz8K+DxGicrGJAIWilNQuCxr
-	 BPEbTFWRtPpD31Ie9egesRSwxDNt2exXcNgl1b2HRXCwEvXRxA9BySdxJqiD+K6MT7
-	 6SVUyV0h/J4lmfaGLi5uKm3m66xNivpTpbeSAavhwC+bC08bIH/bpSzBgVt8PodWju
-	 WV3wGkKEuJUeOvpDMj/m+p/ngsia8X2TQ19T1VtBjbdwbIPFNPDKqchTi4hOjgZmGK
-	 VMf30iKG+ez6A==
-Date: Thu, 6 Aug 2026 13:55:46 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Hongyan Xu <getshell@seu.edu.cn>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	jianhao.xu@seu.edu.cn
-Subject: Re: [PATCH] ata: pata_sl82c105: fix bridge revision use-after-free
-Message-ID: <anR2QnAEP3FOzjwG@ryzen>
-References: <20260806060628.1658-1-getshell@seu.edu.cn>
+	s=k20260515; t=1786031823;
+	bh=kn56IHSbgAZbQGKaoL59Rp4SKIztyexJGlCvWfqqYLU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=japknXB/0vHOH6ZN95ZKbgezt5fPSK7RuzOeK1oyTLQdx4W3ohMrhw5PGjK35Skz1
+	 5fdfUzgL5TKFBroNgnzOIVhnUK/PQC90OgIxJRZIAOgPro5eG5PdoOke3NNV+Smv7P
+	 CsD58wvJ1GPo3cQjNJtZ3kKlAMZwDQVwoQbiW+5qCxz3bvBeSRh2V/mFcHNla/zrO+
+	 TKl+XrxogMcEqGyTgXLykXK5siIjMEgFEs5C6ISOCbgJPik7XKZbUw0cODDqRBHfuf
+	 fcdf+Iav4Dsy5hnEtygSfQ4KEneB6ytWJmTGaNVhQtWv5a8MBEA9eK7gAMg5MNzdoe
+	 yDAFBlt3Kn+Ow==
+Message-ID: <40d46bbe-bbb0-45d9-9a9c-e9e06fdb5ae7@kernel.org>
+Date: Thu, 6 Aug 2026 08:56:59 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: pata_sl82c105: fix bridge revision use-after-free
+To: Hongyan Xu <getshell@seu.edu.cn>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, jianhao.xu@seu.edu.cn
+References: <20260806060628.1658-1-getshell@seu.edu.cn>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
 In-Reply-To: <20260806060628.1658-1-getshell@seu.edu.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Aug 06, 2026 at 02:06:28PM +0800, Hongyan Xu wrote:
+On 2026/08/05 23:06, Hongyan Xu wrote:
 > pci_get_slot() returns a referenced PCI device. Commit 44c10138fd4b
 > ("PCI: Change all drivers to use pci_device->revision") replaced a
 > configuration-space read with direct access to the cached revision field,
@@ -55,36 +57,9 @@ On Thu, Aug 06, 2026 at 02:06:28PM +0800, Hongyan Xu wrote:
 > 
 > Fixes: 44c10138fd4b ("PCI: Change all drivers to use pci_device->revision")
 > Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
-> ---
->  drivers/ata/pata_sl82c105.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
-> index 2d24c6b3e9d9..25bce3fe2a10 100644
-> --- a/drivers/ata/pata_sl82c105.c
-> +++ b/drivers/ata/pata_sl82c105.c
-> @@ -264,6 +264,7 @@ static struct ata_port_operations sl82c105_port_ops = {
->  static int sl82c105_bridge_revision(struct pci_dev *pdev)
->  {
->  	struct pci_dev *bridge;
-> +	u8 revision;
->  
->  	/*
->  	 * The bridge should be part of the same device, but function 0.
-> @@ -285,8 +286,9 @@ static int sl82c105_bridge_revision(struct pci_dev *pdev)
->  	/*
->  	 * We need to find function 0's revision, not function 1
->  	 */
-> +	revision = bridge->revision;
->  	pci_dev_put(bridge);
-> -	return bridge->revision;
-> +	return revision;
->  }
->  
->  static void sl82c105_fixup(struct pci_dev *pdev)
-> -- 
-> 2.50.1.windows.1
-> 
 
-Makes sense to me:
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Applied to for-7.2-fixes. Thanks!
+
+-- 
+Damien Le Moal
+Western Digital Research
