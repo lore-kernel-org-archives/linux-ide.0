@@ -1,112 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B52E962809
-	for <linux-ide@vger.kernel.org>; Wed,  5 Aug 2026 01:12:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB78F3859DC
+	for <linux-ide@vger.kernel.org>; Thu,  6 Aug 2026 06:06:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785892352; cv=none; b=tLeUhWtAVJ5ssKEKBOhzNYa7OGujk0npnhlDB23GcZmf8WadGEX0kztq2Lf83Jj0SHIWtSFmNlRTJHzwFXVcLHsZwC7LcT99DYyGzXRm/83KDqfspj+EBkQxrEiB/Bw07GsC+gwcHXl4Oe45LWR8YNrrRO/KTIsJ657XvfaZZkc=
+	t=1785996409; cv=none; b=Mwhjq1UFgliyaQCKez8Q+5uNfswETXHQ6VZIllH9gbe1/d34DTl5enayL3rFxRfiZwtRTDYlYTnb3uFqjscRNc7ATmPAC1gl+44EmQrbCaa0+pprBGXr3eeL9RjfVxQ8+lhDhTQ8MXi545xeoYQGPjgdz4JG6+YfDddqaI4Twvk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785892352; c=relaxed/simple;
-	bh=u8t1XG3zQVroVhiBzcGuPvb9KMG05UlQUKOUJnt/l7Q=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KlRZ5R9qdjqLXixrDK7JQ6sBk2RfADtbXXm+NAUWJ7LE1wSkVHxxO7maBR2k6w1F70u58qVcC1o0kLTM3owuxq1Snn8lD2Ub2Yw/scGCT/2kTdMIcSZxrSZCJ7+dgdvRBdJZOi6qJvNEfdabxSyLHlBPqzjDaiZYiTU2DR/go9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lvKGWxrI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785996409; c=relaxed/simple;
+	bh=K3D2G2rrsaXoVYbKbRzztZhwXchlqjxiN4t5foSjAsY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q6tXP8W5+fgFff0QlCS1gpni4oq2ZjbOOg3Cd0xC8EjwUfHCgmFlJJ0YfwmgJtsC5y8S0BO1jNZVX/2BZ9UYcVZGtnS8xvl7fnmBSpEfPWO4QAxrdYWjdUVbtvFRDDWcxiowmKx200MSarG+x+AYduS+CN11Ylw2HHfYN/Ggmao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=arXc3MzE; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lvKGWxrI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D03F1F000E9;
-	Wed,  5 Aug 2026 01:12:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785892351;
-	bh=wzTcaPh6Z6MTKnIjYwLNcPTwSlb6M2+jwV/kBokhKVc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lvKGWxrIFv/VxSWOQiLBJYZUoHVMKwcdGtfnWGMVqS6ZBoMRzj7bWz8m1xtKO8C5D
-	 urtfECGCcK0oEvZg1AC9ud23ofwglSnoTcQ3urZwMa1hsL1ep4UZpkey+99R6AM7XB
-	 7XRhP8KbrwyOrykaujeSZWSAyiJhcuVW6uc/+9y6D/EBCsO3dql3fGu9JhCICVvS0W
-	 sbgjD6S7DNtOCuaa5uruqFHSF/DtxxrvRV5szabUgMB0lSvpDmuWYa0qGUsrQwt9GU
-	 CCni1hNdZXdtabhZXITbiypEaLFkS7018/UktE/TNwCr5SGh5W/QjGe7i/hHy71SHP
-	 jADK9BdIYXRAA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: sata_mv: init and power phy per-port in port_start
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rosen Penev" <rosenp@gmail.com>
-Cc: linux-ide@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260805010128.90171-1-rosenp@gmail.com>
-References: <20260805010128.90171-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 05 Aug 2026 01:12:30 +0000
-Message-Id: <20260805011231.1D03F1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="arXc3MzE"
+Received: from LAPTOP-99KJFSET (unknown [36.153.54.46])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 48fb94a2c;
+	Thu, 6 Aug 2026 14:06:41 +0800 (GMT+08:00)
+From: Hongyan Xu <getshell@seu.edu.cn>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	jianhao.xu@seu.edu.cn,
+	Hongyan Xu <getshell@seu.edu.cn>
+Subject: [PATCH] ata: pata_sl82c105: fix bridge revision use-after-free
+Date: Thu,  6 Aug 2026 14:06:28 +0800
+Message-ID: <20260806060628.1658-1-getshell@seu.edu.cn>
+X-Mailer: git-send-email 2.50.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9fd5ae499203a1kunm3926e9b128936d
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaH0NCVhhISEsaS0kZGR1IGlYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlITVVKTkhVTk9VT01ZV1kWGg8SFR0UWUFZT0tIVUpLSEpPSE
+	xVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=arXc3MzEP5L41d+4O5uZpwXzIy27lWIIp/F6dTw1MOlkpKklw42Mm5jh1Ha+poHf47whGCsLsXN2IekKv6RuyfR2MHv8V29wuJHHsJUP4Q/jbdme9zL2DMZMAUDBVDzJUs5gNfZPqbQPgmyqYKWxTz9n3Dae1jdg7jgGDNf8rVc=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=2N1OCWO9nq7UsG/qW/Ty3OOSvCOIhqvQIrwKIEgxhdE=;
+	h=date:mime-version:subject:message-id:from;
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Hardware hangs due to unpowered PHY register access.
---
+pci_get_slot() returns a referenced PCI device. Commit 44c10138fd4b
+("PCI: Change all drivers to use pci_device->revision") replaced a
+configuration-space read with direct access to the cached revision field,
+but left that access after pci_dev_put(). The bridge may therefore be freed
+before its revision is read.
 
---- Patch [1]: [PATCH] ata: sata_mv: init and power phy per-port in port_st=
-art ---
-commit f57a0363f1ffdddb1a743417b19db2e65b2fcb67
-Author: Rosen Penev <rosenp@gmail.com>
+Read the revision before dropping the reference.
 
-ata: sata_mv: init and power phy per-port in port_start
+Fixes: 44c10138fd4b ("PCI: Change all drivers to use pci_device->revision")
+Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
+---
+ drivers/ata/pata_sl82c105.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This commit moves PHY initialization and power management from the probe
-and remove paths to the per-port start and stop paths. It also reworks
-error handling in probe to rely on devres cleanup.
+diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
+index 2d24c6b3e9d9..25bce3fe2a10 100644
+--- a/drivers/ata/pata_sl82c105.c
++++ b/drivers/ata/pata_sl82c105.c
+@@ -264,6 +264,7 @@ static struct ata_port_operations sl82c105_port_ops = {
+ static int sl82c105_bridge_revision(struct pci_dev *pdev)
+ {
+ 	struct pci_dev *bridge;
++	u8 revision;
+ 
+ 	/*
+ 	 * The bridge should be part of the same device, but function 0.
+@@ -285,8 +286,9 @@ static int sl82c105_bridge_revision(struct pci_dev *pdev)
+ 	/*
+ 	 * We need to find function 0's revision, not function 1
+ 	 */
++	revision = bridge->revision;
+ 	pci_dev_put(bridge);
+-	return bridge->revision;
++	return revision;
+ }
+ 
+ static void sl82c105_fixup(struct pci_dev *pdev)
+-- 
+2.50.1.windows.1
 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index d260f04e6384b..e811202a68735 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -1711,11 +1713,23 @@ static int mv_port_start(struct ata_port *ap)
->  	mv_edma_cfg(ap, 0, 0);
->  	spin_unlock_irqrestore(ap->lock, flags);
-> =20
-> +	if (phy) {
-> +		rc =3D phy_init(phy);
-> +		if (rc)
-> +			goto out_port_free_dma_mem;
-> +
-> +		rc =3D phy_power_on(phy);
-
-[Severity: High]
-Will this cause hardware hangs or external aborts on access?
-
-It looks like we are calling mv_save_cached_regs() and mv_edma_cfg()
-just before this block, while the PHY is still unpowered.=20
-
-Since those functions read and write MAC interface registers, could this
-access unpowered hardware?
-
-[ ... ]
-
-> @@ -4144,39 +4157,12 @@ static int mv_platform_probe(struct platform_devi=
-ce *pdev)
->  	/* initialize adapter */
->  	rc =3D mv_init_host(host);
->  	if (rc)
-> -		goto err;
-> +		return rc;
-
-[Severity: High]
-Does moving the PHY power on step to port start break host initialization?
-
-When mv_platform_probe() calls mv_init_host() here, the PHY is no longer
-powered. However, mv_init_host() can execute PHY register accesses:
-
-mv_platform_probe() -> mv_init_host():
-        for (port =3D 0; port < host->n_ports; port++)
-                if (hpriv->ops->read_preamp)
-                        hpriv->ops->read_preamp(hpriv, port, mmio);
-
-Since operations like read_preamp read and write PHY registers, will this
-cause a synchronous external abort during boot?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805010128.9017=
-1-1-rosenp@gmail.com?part=3D1
