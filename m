@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D604047F2FE
-	for <linux-ide@vger.kernel.org>; Thu,  6 Aug 2026 15:57:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0DC1A6814;
+	Thu,  6 Aug 2026 16:30:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786031827; cv=none; b=h33u1D8e0WuotXLd35kZ6AvT4Vhu7fNQy4sNofCuYCnIeTYTl3ENvZlMwpRjdBevFdyiL4tFfhe2uL2ZCjIsKocixTeK17rmzI1XKVKVWR2ED0PVAjVqUXHXMoeEYaftU9wqIV6KNMmZWG7u7bNh/Ig3L4n8K2JEVRTa99pVcGs=
+	t=1786033839; cv=none; b=Xot+f/3N/IYraCvsipJ+1o72q1idUscGPFfN7xgs4WVVqWvsoASva/CONEgi6281V9pTyE0Yxv4cFcCVtQ7v0acY/xlXz/jMGE4qaPHNSQZCYkg/otKR8h2mWPzz1RTzuBlr7Sf0N2NwXqARNT8XIXT4CgwEOCjm5I01N1YqC44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786031827; c=relaxed/simple;
-	bh=mkuxmS/E8bTzjBoW0PzBnM15rNLoq1eEulFD6FgdHMg=;
+	s=arc-20240116; t=1786033839; c=relaxed/simple;
+	bh=APATeCcIeGDguQSdzxOjS3PWeB2DXRBJvUcZuBpk4es=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V+xRWp/eR/eCgCz0rTcSiqdAcq/6/tiYM8Vu8VtXLy5GH0lOC+0EEF/slARXBDwnbgn1Dl+7FGpKnHO7J4+lgAEsR3YNi40SZpsjiIX3L7lc02N3wzI8Oo9+wV42c5oahNNyV0c8GnSKT146oqiC7O3+6vl+grPyuYKGlIdS3xg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=japknXB/; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=C245RwwYL+F+fe2Vadm4xptqX3Eh5yOEX95COGmVNhk1FSwRzrH/g3VTiyrEQiRo7KJurX2FVwUodbwgADyfICbjOyAYPfbU5XjekaaItvOwD01U+tQBIpeIKS2cS2YglBOTlrsMU8XcNfBSH8kV+y9IL0Q5B1zOnwn6AXmpE4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQk45cNz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="japknXB/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E93561F000E9;
-	Thu,  6 Aug 2026 15:57:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQk45cNz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E651C1F000E9;
+	Thu,  6 Aug 2026 16:30:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786031823;
-	bh=kn56IHSbgAZbQGKaoL59Rp4SKIztyexJGlCvWfqqYLU=;
+	s=k20260515; t=1786033838;
+	bh=5N643OcZ6TKjcgSUXv0mk+FEk5LRIN0olw3gyMmc8Ow=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=japknXB/0vHOH6ZN95ZKbgezt5fPSK7RuzOeK1oyTLQdx4W3ohMrhw5PGjK35Skz1
-	 5fdfUzgL5TKFBroNgnzOIVhnUK/PQC90OgIxJRZIAOgPro5eG5PdoOke3NNV+Smv7P
-	 CsD58wvJ1GPo3cQjNJtZ3kKlAMZwDQVwoQbiW+5qCxz3bvBeSRh2V/mFcHNla/zrO+
-	 TKl+XrxogMcEqGyTgXLykXK5siIjMEgFEs5C6ISOCbgJPik7XKZbUw0cODDqRBHfuf
-	 fcdf+Iav4Dsy5hnEtygSfQ4KEneB6ytWJmTGaNVhQtWv5a8MBEA9eK7gAMg5MNzdoe
-	 yDAFBlt3Kn+Ow==
-Message-ID: <40d46bbe-bbb0-45d9-9a9c-e9e06fdb5ae7@kernel.org>
-Date: Thu, 6 Aug 2026 08:56:59 -0700
+	b=nQk45cNzbKYZ+bNorwbh3f0Q7tR7Z3+HV5CIQ3MQDGfI4LAP2RUlFD9jGgIkkBFLS
+	 syPZ+NKhtOd/jVqIjQQJ1rOeMRrF/vSeOrIll1V3sPCoxuVLnx4NNbJGd4dFy63Tth
+	 oUx2iStVPA1S/NEyxFaI1HviKL8aEqLkiA1depBAp9Oly8jFut1bHTFcKKtcCkCqLX
+	 LtK8ElpNlzi0pJDm87Uuwi4ioI61DjdflBnBZJJtP+/VTp9hjw8aDu5DPUdmaaHxKX
+	 o6TGURv5D+v37GYyRvMMEMkuB1BHsjJZ2aTblxb4O7NtJL5q2whlGBt3cE8FbckVLf
+	 dHcFy1qHNUdYw==
+Message-ID: <9bd395e3-5df4-4e13-886f-b1afeeb5d4a2@kernel.org>
+Date: Thu, 6 Aug 2026 09:30:34 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,30 +35,44 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: pata_sl82c105: fix bridge revision use-after-free
-To: Hongyan Xu <getshell@seu.edu.cn>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, jianhao.xu@seu.edu.cn
-References: <20260806060628.1658-1-getshell@seu.edu.cn>
+Subject: Re: [PATCH v2] scsi: core: Drop Scsi_Host.default_lock
+To: John Garry <john.g.garry@oracle.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org,
+ linux-s390@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-usb@vger.kernel.org, John Garry <john.garry@linux.dev>
+References: <20260806113958.3127942-1-john.g.garry@oracle.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20260806060628.1658-1-getshell@seu.edu.cn>
+In-Reply-To: <20260806113958.3127942-1-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026/08/05 23:06, Hongyan Xu wrote:
-> pci_get_slot() returns a referenced PCI device. Commit 44c10138fd4b
-> ("PCI: Change all drivers to use pci_device->revision") replaced a
-> configuration-space read with direct access to the cached revision field,
-> but left that access after pci_dev_put(). The bridge may therefore be freed
-> before its revision is read.
+On 2026/08/06 4:39, John Garry wrote:
+> From: John Garry <john.garry@linux.dev>
 > 
-> Read the revision before dropping the reference.
-> 
-> Fixes: 44c10138fd4b ("PCI: Change all drivers to use pci_device->revision")
-> Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
+> Back in the 2.6.xx days, it was possible to for low-level drivers to set
 
-Applied to for-7.2-fixes. Thanks!
+s/to for/for
+
+> the shost lock pointer. That is why there is a default lock and a pointer
+> to the shost lock.
+> 
+> However, support for this has long been removed, so drop
+> Scsi_Host.default_lock and make Scsi_Host.host_lock as the actual lock.
+> 
+> Getting the address of embedded host_lock structure just requires adding
+> a fixed offset value to the shost pointer. However, getting the value of
+> the host_lock pointer requires loading from a fixed offset to the shost
+> pointer. The latter should be very slightly slower, which is relevant as
+> this lock is used a lot throughout the core code and drivers.
+> 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+For the ata bits,
+
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
