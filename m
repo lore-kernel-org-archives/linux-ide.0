@@ -1,123 +1,165 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E4621254B
-	for <linux-ide@vger.kernel.org>; Tue, 18 Aug 2026 10:07:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C4F845FFD7;
+	Tue, 18 Aug 2026 10:33:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787047630; cv=none; b=GwORr363fyS+RZDBH79t0v/8l4QB9HdgqCYSxsFptkHy1pEzttwiucKiniZbEakadk51nHsy8u+KaaI6bCnw1VeTBqH08wf/7wvmlFUwjY53l+kLmWbwR8T/AnrjDg8DvGxzmKEbl9/MsPuwM/qJPMV24reacjeveeyfG85qHpc=
+	t=1787049204; cv=none; b=Z0M/IWoblAqMENG5YNKhTgQuDFvIgAi7Gt5hRNB2zlerWv3oIgggl4SCzV3/wDhFuO2qHIHEPrBxFeEAUtl3Y9AyWhNCCiOGKui1uN0yrQXqVOLz6ZjegSxrqCcFlQqHzkcFVQBVOc04orfPXY4PaFXqsAXekYnP4zzVTSp81PI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787047630; c=relaxed/simple;
-	bh=MLGHsRSGBIb7tUGqg9tjkYj65gskYRyOJhria+20pMM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h3F4dBPBpjVoFW7sw6ALvfPEbvffgsNh3Tohhuiy81JR0xEi7ZVdCv5k0tQRAmcRToyx7lTzHS+p4vqY4z/9iRdpzIbUFdC696aox0bS3a53EwbFctUHR+YhGKSNF/eYi6CUugLDDiqaney4/jlTZZrdd0YVzKSt/+J/yXabejE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dXVjzxSK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787049204; c=relaxed/simple;
+	bh=eeVjAgqewkozAiBbtgX+TsMljaZehV6cIUZV2YLQW+w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=n3DLbcMjwHoh1eI2s2gXc6kIF8lWi9e8ydMTdWgFfRrNIcJt7y+yFd0q7lLU2/apIVE4FuTezrjXZzJuyMxTfzM5AAyPAkIt8BhkqNRrANCORwip2UunD7fxEGXVO6pXNE6OLBNDgCf46zxlOng0qd4NcMv3Al06+lpRmzUtkeY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=uxW0jaCw; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Q+7zrDZw; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=sAB2Te+o; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=2jJxqJ5b; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dXVjzxSK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBD2E1F000E9;
-	Tue, 18 Aug 2026 10:07:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787047628;
-	bh=HmE8p6cnDmBc6HWrbSbgynp+c+D5yKH3MfWMcV5jai4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dXVjzxSKwWIJEdyhD3lIyha/uGdXBt9qIVo98UaJsJ7k8633O/8lSKiRtps+hZAL5
-	 iaYV3G8twhRdkDr3L6Ehnri4IPjxq2ORhKzs+cOgFgggIlQvaVIiDeFfFTQRYr0Ige
-	 qhoB1R42SJkWYQR2g8eCSXpaV5xjFXt3onssruoohAL183Ugp9Thsl9ok9fEfn8ndS
-	 32yudsPC62gcsB0+Xs4lcAWLMwGxubtT4fGx2moeu2oOvvpHcLWvJY8PFL6RwDF8Th
-	 UwlUUKjn80CkNrLrYJ1u1KY8NH8qAuyADued8RrLESHu6M602AmJFfl+u/Jpe4aN0P
-	 ZIYbklhbbOGcw==
-Date: Tue, 18 Aug 2026 12:07:05 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: syzbot+891c7b195b408052e519@syzkaller.appspotmail.com,
-	linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: ata_generic: Do not bind to devices that are not
- IDE controllers
-Message-ID: <aoQuyYsycb4s8mIP@ryzen>
-References: <20260818094205.2672967-2-cassel@kernel.org>
- <0543059b-13c4-4b6e-a236-6d37cbb3245e@kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="uxW0jaCw";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Q+7zrDZw";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="sAB2Te+o";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="2jJxqJ5b"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 22DE33E43;
+	Tue, 18 Aug 2026 10:33:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1787049196; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hajFIrQyCHqzUS+imbiKOjxd+SjzPOZ/FjaQYcoIJZc=;
+	b=uxW0jaCwDeghPDckED3gDJmXBF2L1KXNvWQwNQcvkpCYUTSIJFfHZQD8NmX7526XdRWgp2
+	q8qPhbmESwKShUSdmrQ7CYIxy1mXW8FK52yLzlB/+cCdeKBLD4zbl8pEvJBs+zMLAtSW+U
+	d62o1Qy70uDPutY4EMinPeCcfk/UTi0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1787049196;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hajFIrQyCHqzUS+imbiKOjxd+SjzPOZ/FjaQYcoIJZc=;
+	b=Q+7zrDZwmusR/vv2cEVcf6RWUVwCIgC/jZB9QMCaAsd79PR3XpcaW0N8AQ11UsFU3dNnNi
+	U3HxtHUAPzl54uDw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=sAB2Te+o;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=2jJxqJ5b
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1787049192; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hajFIrQyCHqzUS+imbiKOjxd+SjzPOZ/FjaQYcoIJZc=;
+	b=sAB2Te+o2xnRETmTLvuIvnoZ20uJWHJ0TYPNSy1AhUNh2dULDv0jJx0cyr241PulZOWYkV
+	t0i/It3wY+89PVMQZoJzWYNsEtcMV6VQEsZyzEntXOWaJ+hOtzUOBK4b3hUZJZiHf0vAbF
+	COtWvP6HXK5jzeY4nuU1s31K1XBQ8QQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1787049192;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hajFIrQyCHqzUS+imbiKOjxd+SjzPOZ/FjaQYcoIJZc=;
+	b=2jJxqJ5b8IzXrfXBYYTRsoDvh8gVFCNz3zZPXOA8ts03GUipyAT2CRMybaXRFNckIVx1nD
+	PkuUtCZu61m+GwAQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E5AEE22BA;
+	Tue, 18 Aug 2026 10:33:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Cp0EN+c0hGqKGQAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 18 Aug 2026 10:33:11 +0000
+Message-ID: <ef23cb9e-f358-40a2-b494-a78f4983d0ad@suse.de>
+Date: Tue, 18 Aug 2026 12:33:11 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0543059b-13c4-4b6e-a236-6d37cbb3245e@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] scsi: core: Drop Scsi_Host.default_lock
+To: John Garry <john.g.garry@oracle.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org,
+ linux-s390@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-usb@vger.kernel.org, John Garry <john.garry@linux.dev>,
+ Damien Le Moal <dlemoal@kernel.org>
+References: <20260817075324.2737619-1-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260817075324.2737619-1-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[oracle.com:email,acm.org:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,linux.dev:email,suse.de:email,suse.de:mid,suse.de:dkim];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 22DE33E43
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
 
-On Tue, Aug 18, 2026 at 06:52:45PM +0900, Damien Le Moal wrote:
-> On 8/18/26 18:42, Niklas Cassel wrote:
-> > syzbot force-bound ata_generic to 0000:00:03.0 on a QEMU arm64 virt
-> > machine. That device is a virtio-blk-pci device holding the root file
-> > system, and it reports PCI class 0x010000, i.e. PCI_CLASS_STORAGE_SCSI.
-> > 
-> > QEMU gives the virtio-blk-pci device a legacy virtio I/O BAR0 and a 4 KiB
-> > MSI-X BAR1, so both resources are non-empty, the port is not discarded,
-> > and the device control register ends up in the middle of the MSI-X table.
-> > 
-> > The emulated device rejects the byte write, and arm64 reports the
-> > resulting bus error as a fatal synchronous external abort:
-> > 
-> >   Internal error: synchronous external abort: 0000000096000050 [#1]  SMP
-> >   pc : ata_sff_freeze+0x7c/0x90 drivers/ata/libata-sff.c:1606
-> >   Call trace:
-> >    ata_sff_freeze+0x7c/0x90
-> >    ata_eh_freeze_port+0x34/0x5c
-> >    ata_host_start+0x13c/0x228
-> >    ata_pci_sff_activate_host+0x50/0x340
-> >    ata_pci_init_one+0x19c/0x1d8
-> >    ata_pci_bmdma_init_one+0x14/0x20
-> >    ata_generic_init_one+0xc4/0x1ac
-> >    local_pci_probe+0x40/0xa8
-> >    pci_device_probe+0xd8/0x288
-> >    really_probe+0xbc/0x2bc
-> >    device_driver_attach+0x48/0xb4
-> >    bind_store+0x7c/0xd8
-> > 
-> > Refuse devices which neither report the IDE class nor appear in our ID
-> > table. Table entries keep binding as before, because some of the listed
-> > controllers cannot be assumed to report the IDE class. A controller which
-> > needs ata_generic but does not report the IDE class should get an ID table
-> > entry, which is what the table is for.
-> > 
-> > Binding a driver to unrelated hardware requires root and is what
-> > driver_override is meant to do, so this does not fix a privilege boundary.
-> > 
-> > This change only stops ata_generic from binding to a PCI device which it
-> > has no reason to believe to be an IDE controller.
-> > 
-> > Reported-by: syzbot+891c7b195b408052e519@syzkaller.appspotmail.com
-> > Closes: https://lore.kernel.org/linux-ide/6a82bc54.10853dc7.22f513.001b.GAE@google.com/
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+On 8/17/26 9:53 AM, John Garry wrote:
+> From: John Garry <john.garry@linux.dev>
 > 
-> Looks sensible to me, and very surprising that this problem was not cought before...
+> Back in the 2.6.xx days, it was possible to for low-level drivers to set
+> the shost lock pointer. That is why there is a default lock and a pointer
+> to the shost lock.
 > 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> However, support for this has long been removed, so drop
+> Scsi_Host.default_lock and make Scsi_Host.host_lock as the actual lock.
+> 
+> Getting the address of embedded host_lock structure just requires adding
+> a fixed offset value to the shost pointer. However, getting the value of
+> the host_lock pointer requires loading from a fixed offset to the shost
+> pointer. The latter should be very slightly slower, which is relevant as
+> this lock is used a lot throughout the core code and drivers.
+> 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> Acked-by: Damien Le Moal <dlemoal@kernel.org> # ata parts
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+> Difference to v3:
+> - Rebase and update some annotations
+> 
+> Differences to v2:
+> - Add tags from Bart and Damien (Thanks!)
+> - Update Documentation reference to default_lock (Bart)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-I mean, syzbot using driver_override like this is kind of a stupid test.
+Cheers,
 
-If you try to use the generic ATA driver for a PCI device that is something
-completely different, e.g. an Ethernet controller... you kind of get what
-you asked for :)
-
-But it is such a small patch, so I think it makes sense, even if all it
-does it to stop us from getting more silly reports like this.
-
-
-Tell me if you prefer the other patch, which checks BAR type instead.
-BAR type I/O is very rare, since it is old x86 legacy.
-(But such a patch would still allow someone to bind a PCI device with
-BARs marked as type I/O, even if that PCI device does not have storage
-class IDE.)
-
-
-I think the main argument for the patch in $subject... is:
-if your PCI device is not class IDE... just add an entry to the match table.
-(I.e. we don't care that driver_override will not work with a device that
-does not have class IDE... If you really want the driver to work with such
-a device, you will have to add an explicit entry to the match table.)
-
-
-Kind regards,
-Niklas
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
