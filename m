@@ -1,211 +1,179 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33113429025
-	for <linux-ide@vger.kernel.org>; Wed, 19 Aug 2026 13:40:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C8B53E0B;
+	Wed, 19 Aug 2026 14:40:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787146831; cv=none; b=uhvXe8TrXH2UdgqUlI4be4Ske82Du3RYW5PtmaL2IEk9UmwMQU1cYN2cZNBgeKlv3EwajnxdIshSjm/+XdLFhzNSOcBjKy3c+yyT651D0pH+bXdoEg4F6sukom/2LyLFWcfY+jK7UBT3HjE3bH2J6EpwMXGnfLdyhAV7rgO754E=
+	t=1787150418; cv=none; b=eHgs3ujsxTtNTSyCrdEn/DBasPjbY7zR+XvIhwd1yjKOJlsJvhhgIfzu5fDwJv6jQsivPq4K/73mHsAeA+ne0WWuTk7WiwtXAArzFx+t1uFf5AlNZJdkBqU+KDTQ8r81Ng9NhqFcxvKdvlG6gAr2sG67tgtJLAfevpXnXWEHxk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787146831; c=relaxed/simple;
-	bh=snQKLeLT75NhxJLM/cLRR/hycpX5EWBrYmLePIUVu5o=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NVQbw5KUw/S1eydM7eOD+nY6c1j4o0ly8fBMI1h5A89p+xJSB8CZMyQ+VjTjUMI1fTfooKW4ZFmLhlsISVY4U66pCaKLI0DBnmSBoYVUBmA8o9/rXDmf3CgaKoDXJzOEM8keAt9ark4Au97BbvITQ8zNEXfZZ+lOQdQQjRLyOew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=APCx5B1T; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787150418; c=relaxed/simple;
+	bh=vymarJZh4YqC2L7NKmpGaLSs+LwWBnjm4Ga1t8pq/Yg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ExQ/KyznIg4qaaj+JvaTOS0N8T5Uhfx1AurFCPH1PxVj+Plvlv7/B45hEPK0cyeMR8q6uACakqYSLRykLpUK1cYPNku4EJB/peVg0yPWF4XTI2DF01TC0YMePr4j8Dq9NGcCkFbtsSv1hiWShtr8xzz3jT7OaMzcN9jtVFTP+VM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BqxIIF1N; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="APCx5B1T"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-495757ccbc1so10330595e9.2
-        for <linux-ide@vger.kernel.org>; Wed, 19 Aug 2026 06:40:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787146826; x=1787751626; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=iNZrccnluIvzYumgzhKOaTGx9wbNf2yl74yeV2pPSb8=;
-        b=APCx5B1TbUG6WCrSvg37Ca6FFFmW/b+/Pxnh584g2VpENy7j8ZYVcREarQ45NtFJM8
-         rgF9x9+7KS1gQqKC1WqTOv/rqOBHSpSxMvhkpeAHEL3LYl4nTUK7ARuyvP0lX4SaojRH
-         C8IKUlU3YM2CsVO2uy2AC2Q9rK7MDGevNqOFop70FShrBg/YElyar/L4KWrBjTRY7Ywt
-         3OvHkhyqO6BmZH89OJe5a+PfrU7r7Wtlum77GFockR8saZ7tuBjhlZ4lh6FrbDgo8/Xy
-         IWo9F3gedm4WlVJZbqwpsDhm1NU3psrod27EPbgkaBvDk4AwCH9iGdZbe1FEO4WQR5qN
-         DJsQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787146826; x=1787751626;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=iNZrccnluIvzYumgzhKOaTGx9wbNf2yl74yeV2pPSb8=;
-        b=XMIZGD04NKhRC5aQg05hCT5igPSfHaV6bfFry/cnXtQba2weyc6wdlMMsBaMmgLOXN
-         0HLkgymTzbhbKHaWlFcIsWCV/k2B2eNsx2zX4ibxAliochwgUgvC7tR2Z4yEomG6oV5X
-         msV8SiCUlUGXwJSu+cAfLLsIoIW3sVqx9mp3Uk1xiMFqZOTThnQ1R6zKamIDjv0m16vE
-         1ZFBkeftHkbgXRU+v35U8qi33Xe/S9eabx6pKNKcQlREgDK+qsdx2iaVwsRDXGJT1uRH
-         IVwmFlh2Lc/+r1K0VCgVyNgwRqq1xvuqT0l4Uw8O88qmkOMdqqmat3Xj40IQJy+YBlmh
-         Hj3A==
-X-Forwarded-Encrypted: i=1; AHgh+Rr2347R0I8NhLZnaPI6binHP/HIdZiQSe5DYSFOJo3StPdoNhG93PKFjKDArhczYyRDRp7h+ji8bC0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzlg+Z5mBAEnz9yRdghs43hwz+CCgjLGwPYu7bDv2GyYi+qMB3F
-	Tm79OHfcU5liWRJpMs3mgRJ5gzplzY2IMvaGfauMYxno9qVsVjQ3NhnZ
-X-Gm-Gg: AR+sD12WkDMu29R6cHMHGXe2+TWj7WwfNKuzWTDXKa9xizZ+NAFwinRPHwLSMfinbUh
-	vOCKVnlIl7LYAVI7X1eNZzbFdsi4KW5v9WkhML+G9lzKXP1TA/M2OJaLa5jm5Ob0nlAEaQPxIMn
-	Gus+QP2S+E329n30WKb5N++ny/ilFKjQn/2/htQxtJ+SJGWtKwqq86TCPL3EnLkLoaUHJ+Cz8p2
-	txX1z/P5fiqvKf7h+VeRYzZiWOhyVOkH5c/5vLSXZGCuDH5NTrwYnpTBBdlhH27AGlfs13Jxddx
-	Q8hdV2KUyEbqHtbdZRVuHjlMkVCATYgHIPRymmIdlBgLCOWcCKwLe1h5lw8tGbbVpJUc+MJ5nbM
-	7yKuc2jYORwAF0taGq5+DC8RAwenonFZnEDG3GXnMe998XL6zxKI+Dm4IuAB+skHui1x1lrRXr+
-	Orfb+2pfEumfXPLgQqcGdtye/S26r+/D1azVCtzU6amkXPf6V0ATwGl4jAzEtSsXaVxKSe+r3BL
-	kD+0T7Zj7Tj12NZLrK1RarfUUQDqkvL8Wul
-X-Received: by 2002:a05:600c:8b03:b0:499:621a:2ec2 with SMTP id 5b1f17b1804b1-499aa1800ecmr103322495e9.3.1787146826264;
-        Wed, 19 Aug 2026 06:40:26 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499aa0d6a84sm57126405e9.10.2026.08.19.06.40.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2026 06:40:25 -0700 (PDT)
-Date: Wed, 19 Aug 2026 14:40:24 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Juergen Gross <jgross@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Damien Le Moal
- <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Subject: Re: [PATCH v2 04/13] drivers/ata: Stop using 32-bit MSR interfaces
-Message-ID: <20260819144024.7479a0a6@pumpkin>
-In-Reply-To: <20260819102314.1499258-5-jgross@suse.com>
-References: <20260819102314.1499258-1-jgross@suse.com>
-	<20260819102314.1499258-5-jgross@suse.com>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BqxIIF1N"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1787150416; x=1818686416;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=vymarJZh4YqC2L7NKmpGaLSs+LwWBnjm4Ga1t8pq/Yg=;
+  b=BqxIIF1N7ZEtZI/U81G4LAHZ8TlBuQw8ktsi3zd56DDXMEmOd+rSh+XG
+   5erVVRW8MmGrwhW0X7cHZ9bV+LF2ysIN6PQbH3YNDKLN3KPyRjmKck/MU
+   7OTy64lYkYdZVVx8VftOPO8556H2RpjtGzt9GgnZUgLo/YBpXtxWR2Evu
+   nRrKSJB4skJHmBD53viN0TyK4pd8z/oGGaFAuk66v2KtPEqjse5jbrmNI
+   tB2NiBT+b4mARkx9oWHzRZxbVkyc/0ek52YGcqllxKUj+FhmnVW9CF4wn
+   RlCJeKTGzLIpS1a4mG7XcpmDgadYfjSE6RNoaqMSGUgmsJy8SHxDhr5b2
+   g==;
+X-CSE-ConnectionGUID: RRqddFy+R6uhUWWJmwNQvw==
+X-CSE-MsgGUID: 4A1WBr72TNeX7PQ3c89Ieg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11880"; a="86787556"
+X-IronPort-AV: E=Sophos;i="6.25,231,1779174000"; 
+   d="scan'208";a="86787556"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2026 07:40:14 -0700
+X-CSE-ConnectionGUID: DLD05uXOSQS3eQ3eQ3POPA==
+X-CSE-MsgGUID: nBdVyMTXSn+BXYA1OEkKQA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,231,1779174000"; 
+   d="scan'208";a="261366363"
+Received: from bradocaj-mobl.ger.corp.intel.com (HELO [10.125.111.233]) ([10.125.111.233])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2026 07:40:10 -0700
+Message-ID: <bd9e5b6e-07f2-459d-bca6-e290585060aa@intel.com>
+Date: Wed, 19 Aug 2026 07:40:09 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/13] x86/msr: Drop 32-bit MSR interfaces
+To: Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org,
+ x86@kernel.org, virtualization@lists.linux.dev, linux-ide@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
+ linux-crypto@vger.kernel.org, linux-gpio@vger.kernel.org,
+ linux-perf-users@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ kvm@vger.kernel.org, linux-edac@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-coco@lists.linux.dev,
+ linux-acpi@vger.kernel.org, linux-hwmon@vger.kernel.org,
+ linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org
+Cc: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+ Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Ajay Kaher <ajay.kaher@broadcom.com>,
+ Alexey Makhalov <alexey.makhalov@broadcom.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>, Damien Le Moal
+ <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ David Airlie <airlied@redhat.com>, Helge Deller <deller@gmx.de>,
+ linux-geode@lists.infradead.org, Olivia Mackall <olivia@selenic.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>, Linus Walleij <linusw@kernel.org>,
+ Bartosz Golaszewski <brgl@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Peter Zijlstra <peterz@infradead.org>,
+ Arnaldo Carvalho de Melo <acme@kernel.org>,
+ Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+ Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
+ Adrian Hunter <adrian.hunter@intel.com>, James Clark
+ <james.clark@linaro.org>, "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Sean Christopherson <seanjc@google.com>, Paolo Bonzini
+ <pbonzini@redhat.com>, Josh Poimboeuf <jpoimboe@kernel.org>,
+ Pawan Gupta <pawan.kumar.gupta@linux.intel.com>, Pu Wen <puwen@hygon.cn>,
+ Tony Luck <tony.luck@intel.com>, Reinette Chatre
+ <reinette.chatre@intel.com>, Dave Martin <Dave.Martin@arm.com>,
+ James Morse <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>,
+ Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>,
+ Vitaly Kuznetsov <vkuznets@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, Pavel Machek <pavel@kernel.org>,
+ Kiryl Shutsemau <kas@kernel.org>, Rick Edgecombe
+ <rick.p.edgecombe@intel.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ Len Brown <lenb@kernel.org>, Viresh Kumar <viresh.kumar@linaro.org>,
+ Huang Rui <ray.huang@amd.com>, Mario Limonciello
+ <mario.limonciello@amd.com>, Perry Yuan <perry.yuan@amd.com>,
+ K Prateek Nayak <kprateek.nayak@amd.com>,
+ Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+ Yazen Ghannam <yazen.ghannam@amd.com>, Guenter Roeck <linux@roeck-us.net>,
+ Artem Bityutskiy <artem.bityutskiy@linux.intel.com>,
+ Artem Bityutskiy <dedekind1@gmail.com>,
+ Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Ashok Raj <ashok.raj.linux@gmail.com>, Hans de Goede <hansg@kernel.org>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>,
+ David E Box <david.e.box@intel.com>,
+ Daniel Lezcano <daniel.lezcano@kernel.org>, Zhang Rui <rui.zhang@intel.com>,
+ Lukasz Luba <lukasz.luba@arm.com>, xen-devel@lists.xenproject.org
+References: <20260819102314.1499258-1-jgross@suse.com>
+From: Dave Hansen <dave.hansen@intel.com>
+Content-Language: en-US
+Autocrypt: addr=dave.hansen@intel.com; keydata=
+ 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
+In-Reply-To: <20260819102314.1499258-1-jgross@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On Wed, 19 Aug 2026 12:23:05 +0200
-Juergen Gross <jgross@suse.com> wrote:
+Hey Juergen,
 
-> The 32-bit MSR interfaces rdmsr() and wrmsr() are planned to be
-> removed. Use the related 64-bit variants instead.
-> 
-> In drivers/ata/pata_cs5536.c don't redefine rdmsr() and wrmsr() as
-> empty macros for avoiding misuse, but guard the affected code via
-> a simple #ifdef.
-> 
-> Signed-off-by: Juergen Gross <jgross@suse.com>
-> ---
-> V2:
-> - avoid sign extension when using wrmsrq() (Sashiko bot)
-> ---
->  drivers/ata/pata_cs5535.c | 20 ++++++++++----------
->  drivers/ata/pata_cs5536.c | 17 ++++++++---------
->  2 files changed, 18 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
-> index d793fc441b46..e16c7f4c7c27 100644
-> --- a/drivers/ata/pata_cs5535.c
-> +++ b/drivers/ata/pata_cs5535.c
-> @@ -90,7 +90,7 @@ static void cs5535_set_piomode(struct ata_port *ap, struct ata_device *adev)
->  	static const u16 pio_cmd_timings[5] = {
->  		0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131
->  	};
-> -	u32 reg, __maybe_unused dummy;
-> +	u32 reg;
->  	struct ata_device *pair = ata_dev_pair(adev);
->  
->  	int mode = adev->pio_mode - XFER_PIO_0;
-> @@ -102,16 +102,16 @@ static void cs5535_set_piomode(struct ata_port *ap, struct ata_device *adev)
->  		cmdmode = min(mode, pairmode);
->  		/* Write the other drive timing register if it changed */
->  		if (cmdmode < pairmode)
-> -			wrmsr(ATAC_CH0D0_PIO + 2 * pair->devno,
-> -				pio_cmd_timings[cmdmode] << 16 | pio_timings[pairmode], 0);
-> +			wrmsrq(ATAC_CH0D0_PIO + 2 * pair->devno,
-> +				(u32)pio_cmd_timings[cmdmode] << 16 | pio_timings[pairmode]);
+These look great. Thanks for doing it!
 
-That cast is horribly subtle.
-Perhaps change the array to be u32 and shift the values in the array initialiser?
+The only wonky thing is how we're going to actually merge it. We
+obviously can't do patches 10-11 until all the "stop using" patches have
+been applied.
 
-David
+I obviously 100% realize that it's during the merge window, but any acks
+that the maintainers of 5-9 provide in the next few weeks would be super
+helpful. Or, if any of those maintainers want to cherry pick their
+subsystem's stuff out of this series and apply it, that would be great too.
 
->  	}
->  	/* Write the drive timing register */
-> -	wrmsr(ATAC_CH0D0_PIO + 2 * adev->devno,
-> -		pio_cmd_timings[cmdmode] << 16 | pio_timings[mode], 0);
-> +	wrmsrq(ATAC_CH0D0_PIO + 2 * adev->devno,
-> +		(u32)pio_cmd_timings[cmdmode] << 16 | pio_timings[mode]);
->  
->  	/* Set the PIO "format 1" bit in the DMA timing register */
-> -	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
-> -	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg | 0x80000000UL, 0);
-> +	rdmsrq(ATAC_CH0D0_DMA + 2 * adev->devno, reg);
-> +	wrmsrq(ATAC_CH0D0_DMA + 2 * adev->devno, reg | 0x80000000UL);
->  }
->  
->  /**
-> @@ -129,16 +129,16 @@ static void cs5535_set_dmamode(struct ata_port *ap, struct ata_device *adev)
->  	static const u32 mwdma_timings[3] = {
->  		0x7F0FFFF3, 0x7F035352, 0x7F024241
->  	};
-> -	u32 reg, __maybe_unused dummy;
-> +	u32 reg;
->  	int mode = adev->dma_mode;
->  
-> -	rdmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, dummy);
-> +	rdmsrq(ATAC_CH0D0_DMA + 2 * adev->devno, reg);
->  	reg &= 0x80000000UL;
->  	if (mode >= XFER_UDMA_0)
->  		reg |= udma_timings[mode - XFER_UDMA_0];
->  	else
->  		reg |= mwdma_timings[mode - XFER_MW_DMA_0];
-> -	wrmsr(ATAC_CH0D0_DMA + 2 * adev->devno, reg, 0);
-> +	wrmsrq(ATAC_CH0D0_DMA + 2 * adev->devno, reg);
->  }
->  
->  static const struct scsi_host_template cs5535_sht = {
-> diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-> index 73e81e160c91..61d232a82b5e 100644
-> --- a/drivers/ata/pata_cs5536.c
-> +++ b/drivers/ata/pata_cs5536.c
-> @@ -32,11 +32,8 @@
->  static int use_msr;
->  module_param_named(msr, use_msr, int, 0644);
->  MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
-> +#define MAYBE_USE_MSR
->  #else
-> -#undef rdmsr	/* avoid accidental MSR usage on, e.g. x86-64 */
-> -#undef wrmsr
-> -#define rdmsr(x, y, z) do { } while (0)
-> -#define wrmsr(x, y, z) do { } while (0)
->  #define use_msr 0
->  #endif
->  
-> @@ -85,22 +82,24 @@ static const struct dmi_system_id udma_quirk_dmi_table[] = {
->  
->  static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
->  {
-> +#ifdef MAYBE_USE_MSR
->  	if (unlikely(use_msr)) {
-> -		u32 dummy __maybe_unused;
-> -
-> -		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
-> +		rdmsrq(MSR_IDE_CFG + reg, *val);
->  		return 0;
->  	}
-> +#endif
->  
->  	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
->  }
->  
-> -static int cs5536_write(struct pci_dev *pdev, int reg, int val)
-> +static int cs5536_write(struct pci_dev *pdev, int reg, u32 val)
->  {
-> +#ifdef MAYBE_USE_MSR
->  	if (unlikely(use_msr)) {
-> -		wrmsr(MSR_IDE_CFG + reg, val, 0);
-> +		wrmsrq(MSR_IDE_CFG + reg, val);
->  		return 0;
->  	}
-> +#endif
->  
->  	return pci_write_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
->  }
-
+But, the last time we did some MSR function munging, the tip tree
+carried most of the patches. I would expect we'll have a repeat of that
+here too. I'll pencil in the idea of just merging the lot around -rc1 time.
