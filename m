@@ -1,38 +1,33 @@
-Received: from mx.bauer-kirch.com (mx.bauer-kirch.com [217.11.56.43])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B4E346AE1
-	for <linux-ide@vger.kernel.org>; Mon, 24 Aug 2026 11:26:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.11.56.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68525412276;
+	Mon, 24 Aug 2026 14:13:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787570772; cv=none; b=fvycPPDQfA46/rZ0MjOX8L9kSPJr6eUmKEY6vcXncmR8AYkMHqFWP0rk6BKX2Me/Rzz52OCwXxFShc3ocquELuaE9NAqR1Up3uhsXoUhwgVOBqnFI77tlkUy7Xv3bFuUTRbeSeCm3E5a7amv3khfYnanwPIfwxZcH+diJjgHbo8=
+	t=1787580798; cv=none; b=GHBhVo3o5nDKcHiEEET+HJ4k8Da3Rrpf7SXeIAJQn0DykPfPzZo8tDQtsfyPgkoEHSsh8C6neUUBwZR7JhDcSL/pCWPAu1F0D0VKNG89TcY8p/oMZBVG5fyaKLiwVBbyh/eVqAPm42D8Gp35Qn1HO7NbbeWlKyA8dflPrPdPZRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787570772; c=relaxed/simple;
-	bh=ZHTBm4pUgsPbfFFAl38cWPehT8HAwHXva4yjl8muKGg=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=thrGpju6dzqpn434PnO5nxE/VpTsOM2gmXaAH81u/8nedqgKipTsnDjJhuXd+UHTcStIaUC83AbwWSqWNL77ceGUtGN4I3Knn8kFiGbEMtdgD8YqGHZAo2qpMc3Ge2ibSKeWLO/hpYcN+sxowKd3XFsFXMOCgpwD2vL7ghWnzgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de; spf=pass smtp.mailfrom=noerenberg.de; dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b=C/0hpwse; arc=none smtp.client-ip=217.11.56.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=noerenberg.de
+	s=arc-20240116; t=1787580798; c=relaxed/simple;
+	bh=5H0nEc59Q986HZLlpGguY+/gdQ4VjP7DPXfE8/3QAyQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IAYmEdBjYaEHeOX5D1ANvN/9yzRV6J502Tc7FuhLvNAm0hGfP1f5FoOWkTQVIP4paZcJSemOG7oy+f2LQSF+VN3EUOpWN1hoveAukDuW/P6KtZOotn8ns1eo8dUNf04zWQ3H9YxgL64tul/1cqk0cl0si+xQCaMiSm462OipKhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dtElHEPw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b="C/0hpwse"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=noerenberg.de; s=bauerkirch; h=Content-Transfer-Encoding:Content-Type:
-	Subject:From:Cc:To:MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=TisJJOJHn6Y4KcHTUyQatUMyLnpAW+EPvKimQ4g5sME=; b=C/0hpwsepNosWY48t3Mo+uHUYm
-	bDEf1MHxWWfaOEgTk/O+ZublWED5JMGCsueq5tksagnOiRMAhZWEAJWVVAp8gDxZ/qbb/N/G+PB17
-	V1yhwbsM9H1JyiEw5R1kxqtiFCPE7Lha7ka/S5z7Wx9q7oWM2jWlnFD8syuDtp6qmp9spnLWPGgHa
-	0vnqV5OCXd84Aow6vBtPMxYUOQzMN+wmRXckpDPcm8SVayk/3Dfyr6WN/WtZRPucf5SIGa5ZviuLE
-	NlPftX8orWxvuP2kSyWfGxAiyrnfqGxsOTB9n9GrD1SDv2rgdHQp7MqgbDCGCepiFUHoLkgZaTaTi
-	OHn+VGWA==;
-Received: by mail.bauer-kirch.de with ESMTPSA id 1wySoZ-00000001gOY-1LRx
-	authenticated id <420001312>
-	(TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128);
-	Mon, 24 Aug 2026 13:26:07 +0200
-Message-ID: <50ebd35a-086f-40fb-887e-576e36e7a2b8@noerenberg.de>
-Date: Mon, 24 Aug 2026 13:26:05 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dtElHEPw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A325F1F000E9;
+	Mon, 24 Aug 2026 14:12:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787580797;
+	bh=UwPdrh+01Xqj47dnasafGAdC09bKCXp4sZUyzRQNWvc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=dtElHEPwNBnUAjSebU6MFkk5JZ7wdxDH0pEu5d85rPPv2hTujo2yfk9UH2/+wIjqv
+	 MjTyMq9G4xqDacg2PwrjhRfrpgSvPAVrvTLPSoTjD4e3MFiZ6KKWsUoDlwnlRvbvzf
+	 dQ8AECA2WmANRDlw6APiZmu5Lo8JRraWXZz55CqnDE6bKhO5zrB+OU68b7V1rfaOLr
+	 2CyCTmXc4Dz7bwNos8WCzsX6/iElz8tZUBUWB9J+widR5o/CBGoZLI9IOm8CpTT7OR
+	 ZUk5UYSBeF2a9pXwVwIimwiupWnRbUcKZmhqo1P5zkLpkRrtaATyfoxZScTMsgfy+X
+	 rqC2jWaDhsoIA==
+Message-ID: <3d58eb3c-7a9d-4183-907b-46172664631c@kernel.org>
+Date: Mon, 24 Aug 2026 16:12:29 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -40,193 +35,186 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc: Pali Rohar <pali@kernel.org>, risc4all@yahoo.com
-From: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
-Subject: [PATCH] ata: ahci: clear HOST_IRQ_STAT before the ports on Marvell
- 88SE61xx
+Subject: Re: [PATCH v19 00/40] DEPT(DEPendency Tracker)
+To: NeilBrown <neil@brown.name>
+Cc: Byungchul Park <byungchul@sk.com>, linux-kernel@vger.kernel.org,
+ max.byungchul.park@gmail.com, kernel_team@skhynix.com,
+ torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+ linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+ linux-ext4@vger.kernel.org, mingo@redhat.com, peterz@infradead.org,
+ will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+ joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+ duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+ willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+ gregkh@linuxfoundation.org, kernel-team@lge.com, linux-mm@kvack.org,
+ akpm@linux-foundation.org, mhocko@kernel.org, minchan@kernel.org,
+ hannes@cmpxchg.org, vdavydov.dev@gmail.com, sj@kernel.org,
+ jglisse@redhat.com, dennis@kernel.org, cl@linux.com, penberg@kernel.org,
+ rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
+ linux-block@vger.kernel.org, josef@toxicpanda.com,
+ linux-fsdevel@vger.kernel.org, jack@suse.cz, jlayton@kernel.org,
+ dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+ dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+ melissa.srw@gmail.com, hamohammed.sa@gmail.com, harry.yoo@oracle.com,
+ chris.p.wilson@intel.com, gwan-gyeong.mun@intel.com, boqun.feng@gmail.com,
+ longman@redhat.com, yunseong.kim@ericsson.com, ysk@kzalloc.com,
+ yeoreum.yun@arm.com, netdev@vger.kernel.org, matthew.brost@intel.com,
+ her0gyugyu@gmail.com, corbet@lwn.net, catalin.marinas@arm.com, bp@alien8.de,
+ x86@kernel.org, hpa@zytor.com, luto@kernel.org, sumit.semwal@linaro.org,
+ gustavo@padovan.org, christian.koenig@amd.com, andi.shyti@kernel.org,
+ arnd@arndb.de, lorenzo.stoakes@oracle.com, Liam.Howlett@oracle.com,
+ rppt@kernel.org, surenb@google.com, mcgrof@kernel.org, petr.pavlu@suse.com,
+ da.gomez@kernel.org, samitolvanen@google.com, paulmck@kernel.org,
+ frederic@kernel.org, neeraj.upadhyay@kernel.org, joelagnelf@nvidia.com,
+ josh@joshtriplett.org, urezki@gmail.com, mathieu.desnoyers@efficios.com,
+ jiangshanlai@gmail.com, qiang.zhang@linux.dev, juri.lelli@redhat.com,
+ vincent.guittot@linaro.org, dietmar.eggemann@arm.com, bsegall@google.com,
+ mgorman@suse.de, vschneid@redhat.com, chuck.lever@oracle.com,
+ okorniev@redhat.com, Dai.Ngo@oracle.com, tom@talpey.com, trondmy@kernel.org,
+ anna@kernel.org, kees@kernel.org, bigeasy@linutronix.de,
+ clrkwllms@kernel.org, mark.rutland@arm.com, ada.coupriediaz@arm.com,
+ kristina.martsenko@arm.com, wangkefeng.wang@huawei.com, broonie@kernel.org,
+ kevin.brodsky@arm.com, dwmw@amazon.co.uk, shakeel.butt@linux.dev,
+ ast@kernel.org, ziy@nvidia.com, yuzhao@google.com,
+ baolin.wang@linux.alibaba.com, usamaarif642@gmail.com,
+ joel.granados@kernel.org, richard.weiyang@gmail.com,
+ geert+renesas@glider.be, tim.c.chen@linux.intel.com, linux@treblig.org,
+ alexander.shishkin@linux.intel.com, lillian@star-ark.net,
+ chenhuacai@kernel.org, francesco@valla.it, guoweikang.kernel@gmail.com,
+ link@vivo.com, jpoimboe@kernel.org, masahiroy@kernel.org,
+ brauner@kernel.org, thomas.weissschuh@linutronix.de, oleg@redhat.com,
+ mjguzik@gmail.com, andrii@kernel.org, wangfushuai@baidu.com,
+ linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-media@vger.kernel.org, linaro-mm-sig@lists.linaro.org,
+ linux-i2c@vger.kernel.org, linux-arch@vger.kernel.org,
+ linux-modules@vger.kernel.org, rcu@vger.kernel.org,
+ linux-nfs@vger.kernel.org, linux-rt-devel@lists.linux.dev,
+ 2407018371@qq.com, dakr@kernel.org, miguel.ojeda.sandonis@gmail.com,
+ bagasdotme@gmail.com, wsa+renesas@sang-engineering.com,
+ dave.hansen@intel.com, geert@linux-m68k.org, ojeda@kernel.org,
+ alex.gaynor@gmail.com, gary@garyguo.net, bjorn3_gh@protonmail.com,
+ lossin@kernel.org, a.hindborg@kernel.org, aliceryhl@google.com,
+ tmgross@umich.edu, rust-for-linux@vger.kernel.org
+References: <20260706061928.66713-1-byungchul@sk.com>
+ <359ea967-9b97-4584-88e6-bddb4044de2e@kernel.org>
+ <20260821042143.GA40890@system.software.com>
+ <825134a8-ceae-430c-b2fc-d1d0c7240f39@kernel.org>
+ <178730572084.2852630.7732425311008244683@noble.neil.brown.name>
+From: "David Hildenbrand (Arm)" <david@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=david@kernel.org; keydata=
+ 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
+ qIws/H2t
+In-Reply-To: <178730572084.2852630.7732425311008244683@noble.neil.brown.name>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
+Hi!
 
-ahci_single_level_irq_intr() services the ports first and clears the global
-HOST_IRQ_STAT afterwards, as recommended by AHCI 1.1 section 10.6.2.  The
-Marvell 88SE6111/6121/6145 family stops reporting interrupts for a port when
-HOST_IRQ_STAT is cleared while PxIS still holds bits: PxIS keeps its content,
-HOST_IRQ_STAT reads back as 0, the port is never looked at again, and the
-command in flight only ends in a timeout.
+>>>
+>>> That's a good news for lockdep.  (And even for DEPT :)
+>>
+>> He :) Where do you currently store the additional per-page information?
+> 
+> lockdep doesn't need to store per-page information.  Possibly DEPT
+> doesn't either.
 
-Measured on a Seagate Blackarmor NAS440 (Marvell 88F6281 Kirkwood, 88SE6121
-rev B2 behind PCIe) by polling the AHCI registers from userspace while an
-IDENTIFY was outstanding:
+That would be even better.
 
-  t=303.046  irq count 127  PxIS 0x00000000  PxCI 0x00000001   IDENTIFY issued
-  t=303.057  irq count 128  PxIS 0x00000020  PxCI 0x00000000   CI cleared, DPS
-                                                               set, one
-                                                               interrupt taken
-             ... PxIS stays 0x00000020, HOST_IRQ_STAT stays 0 ...
-  t~308.05                                                     qc timeout after
-                                                               5000 msecs
+[...]
 
-The command had completed - PxCI was clear and PxIS had DPS set - so
-ahci_qc_complete() would have completed it.  It never got the chance because
-the handler read HOST_IRQ_STAT as 0 and returned IRQ_NONE.
+> 
+> maybe you put the folio which is locked on a queue or an lru or
+> whatever.
 
-Marvell's own driver for these chips clears the two registers in the opposite
-order and says so ("clear global before channel"), and ahci_xgene handles its
-broken edge latch the same way.  Since the reordering costs at most one
-spurious interrupt per valid one on conforming controllers, do it in a private
-interrupt handler selected for board_ahci_mv instead of changing libahci for
-everyone.
+For readahead, I think that queues / lru are not involved. We submit the I/O,
+and once the I/O is done, we unlock the folio from interrupt context.
 
-With this applied, SATA-2 and SATA-3 disks work at 3.0 Gbps on the 88SE6121
-without the drive-side 1.5 Gbps jumper that was needed before:
+end_buffer_async_read() / iomap_finish_folio_read() end up calling
+folio_end_read(), where we do the magic
 
-  WDC WD5000AADS-00S9B0  port 0  identified   7 ms after link up (never before)
-  WDC WD3202ABYS-01B7A0  port 1  identified  28 ms after link up
-  WDC WD30EFRX-68EUZN0   port 1  identified 200 ms after link up, 3 TB, HPA ok
+	folio_wake_bit(folio, PG_locked);
 
-Only the 88SE6121 was tested; board_ahci_mv also covers the 88SE6145, which
-Marvell's driver treats identically.
+It's interesting, that for writeback we never unlock the folio on the I/O path,
+but instead have the dedicated page flag to tell us when writeback is complete.
 
-Link: https://lore.kernel.org/linux-ide/db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de/
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=216094
-Signed-off-by: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
+> 
+> There is no way to say "that queue owns this lock".  Maybe that could
+> usefully be added - assuming coherent semantics can be designed.
+> 
+> Somewhere else some other task takes responsibility for that folio and
+> the lock.  maybe it dequeues a page, or maybe an lru callback gives the
+> locked page to some code.
+> That code then calls
+>    lock_map_acquire_try(&the_lock_map)
 
----
-Damien,
+I'd assume that's what the unlock path would do from interrupt context.
 
-this is the resolution of the thread we had in 2024 [1], sent as a new mail
-rather than as a reply so that it does not get lost at the end of a long
-thread.
+> 
+> This says "this task is now holding this lock" (or more accurately "now
+> holding a lock of this class").
+> Note the "_try" - that says that the task didn't have to wait for the
+> lock, it just got it for free, which in fact it did.
+> 
+> Now if that task takes some other lock, lockdep will see a dependency
+> between the page lock and the new lock, and will accept or reject it as
+> you would expect.
 
-To summarize the problem again: Gen2/3 HDDs only worked with the 88SE6121
-controller in the Seagate Blackarmor NAS440 [2] when they were jumpered down
-to Gen1 (1.5 Gbit/s).  That was unsatisfactory, because the very same drives
-work at Gen2 speed (3 Gbit/s) without any jumper under the U-Boot bootloader.
-With the patch below they work at 3 Gbit/s under Linux as well.
+I guess on the interrupt path, we primarily unlock the folio lock only. But we
+might take some other spinlocks temporarily indeed, like
+iomap_finish_folio_read() does.
 
-Both of your guesses back then turned out to be right:
 
-> That is very odd. sata_lpm_ignore_phy_events() is only a couple of "if"
-> statements and there are no register accesses in there. So if the few CPU
-> cycles that takes make a difference, I would suspect that there is something
-> odd going on with the marvell adapter interrupts.
+>  But I'd like to see a coherent
+> explanation of how the functionality offered by DEPT is clearly better.
 
-> This hunk may not be directly related to the issue and commenting it out
-> simply changes the timing making things better.
+Yes, that's also what I am missing.
 
-Exactly that.  On this machine CAP.SALP is 0, so link->lpm_policy never leaves
-ATA_LPM_UNKNOWN and sata_lpm_ignore_phy_events() always returns false - the
-hunk I had commented out was dead code there.  All it did was shorten the
-window in which the interrupt goes missing.  Sorry for sending you down that
-path.
+Stating that lockdep is stable and should not be destabilized is not really a
+good argument.
 
-How it was finally pinned down: I polled the AHCI registers from userspace
-while an IDENTIFY was outstanding, which produced the trace in the commit
-message above.  Seeing PxCI clear and PxIS set while HOST_IRQ_STAT read 0 was
-the moment it became obvious.  Marvell's own driver for this chip family
-("Thor", 1.0.0.9, 2007) then confirmed it: it acknowledges the two registers
-in the opposite order from libahci, in three places, each with the comment
+-- 
+Cheers,
 
-        /* clear global before channel */
-
-and it does not use PxIS for completion at all, but derives it from
-PORT_CMD_ISSUE / PORT_SCR_ACT.
-
-Why U-Boot always worked, which puzzled me in 2024: it drives AHCI purely by
-polling PORT_CMD_ISSUE in waiting_for_cmd_completed(), there is no
-request_irq() anywhere in that driver, so a lost interrupt cannot affect it.
-And why 2.x/3.x kernels often worked: the hazard is timing dependent and the
-interrupt handler has grown over the years.  In the 3.2 log attached to the
-bug the first IDENTIFY times out as well - only the retry after the hard reset
-succeeds there.
-
-One more thing worth recording, because bug 216094 spent years on it:
-pci-mvebu is not involved.  The PCIe configuration is identical in the working
-and the failing case - same MaxPayload, MaxReadReq and LnkCap, and the same
-ABAR address with and without the DTB - there are no AER errors and PxSERR
-stays 0.  So the INTx and AER work Pali did on pci-mvebu during that
-discussion was never the missing piece.  libata was doing exactly what AHCI
-1.1 prescribes all along; this controller simply does not behave that way.
-
-Tested on 6.10-rc6 and on Debian's 6.1.0-50-marvell (armel), the latter across
-a reboot with the module replaced, so the fix also works on the boot path that
-had been broken since 3.16.
-
-Not tested on the 88SE6145, which board_ahci_mv also covers; Marvell's driver
-treats the family identically, but someone with that chip may want to confirm.
-
-[1] https://lore.kernel.org/linux-ide/db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de/
-[2] https://github.com/hn/seagate-blackarmor-nas
-
- drivers/ata/ahci.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1618,6 +1618,51 @@
- }
- #endif
-
-+/*
-+ * The Marvell 88SE6111/6121/6145 ("Thor") family stops reporting interrupts
-+ * for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits: PxIS
-+ * keeps its content, HOST_IRQ_STAT reads back as 0, the port is never looked
-+ * at again and the command in flight only ends in a timeout.  On a 88SE6121
-+ * this makes every SATA-2 or SATA-3 disk fail to IDENTIFY, while SATA-1 disks
-+ * happen to win the race often enough to work.
-+ *
-+ * Clearing the host status before servicing the ports avoids it.  Marvell's
-+ * own driver for these chips does the same and says so ("clear global before
-+ * channel"), and ahci_xgene handles its broken edge latch the same way.  The
-+ * price is at most one spurious interrupt per valid one, which is why this is
-+ * not the generic behaviour - see AHCI 1.1 section 10.6.2.
-+ *
-+ * Link: https://bugzilla.kernel.org/show_bug.cgi?id=216094
-+ */
-+static irqreturn_t ahci_mv_irq_handler(int irq, void *dev_instance)
-+{
-+       struct ata_host *host = dev_instance;
-+       struct ahci_host_priv *hpriv = host->private_data;
-+       void __iomem *mmio = hpriv->mmio;
-+       unsigned int rc;
-+       u32 irq_stat, irq_masked;
-+
-+       irq_stat = readl(mmio + HOST_IRQ_STAT);
-+       if (!irq_stat)
-+               return IRQ_NONE;
-+
-+       irq_masked = irq_stat & hpriv->port_map;
-+
-+       spin_lock(&host->lock);
-+
-+       /*
-+        * Use the unmasked value to clear the interrupt, as a spurious pending
-+        * event on a dummy port might cause a screaming IRQ.
-+        */
-+       writel(irq_stat, mmio + HOST_IRQ_STAT);
-+
-+       rc = ahci_handle_port_intr(host, irq_masked);
-+
-+       spin_unlock(&host->lock);
-+
-+       return IRQ_RETVAL(rc);
-+}
-+
- static void ahci_remap_check(struct pci_dev *pdev, int bar,
-                struct ahci_host_priv *hpriv)
- {
-@@ -1878,6 +1923,10 @@
-                return -ENOMEM;
-        hpriv->flags |= (unsigned long)pi.private_data;
-
-+       /* the Marvell "Thor" family needs HOST_IRQ_STAT cleared first */
-+       if (board_id == board_ahci_mv)
-+               hpriv->irq_handler = ahci_mv_irq_handler;
-+
-        /* MCP65 revision A1 and A2 can't do MSI */
-        if (board_id == board_ahci_mcp65 &&
-            (pdev->revision == 0xa1 || pdev->revision == 0xa2))
-
+David
