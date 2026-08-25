@@ -1,39 +1,49 @@
-Received: from mx.bauer-kirch.com (mx.bauer-kirch.com [217.11.56.43])
+Received: from out162-62-58-211.mail.qq.com (out162-62-58-211.mail.qq.com [162.62.58.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498713016FB
-	for <linux-ide@vger.kernel.org>; Tue, 25 Aug 2026 07:58:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.11.56.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BEC33DB337;
+	Tue, 25 Aug 2026 08:32:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.58.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787644709; cv=none; b=AJ6z8dLBQqVe/JU7G+SKMmpJyLabPQtbknXF3y9EHMgFF2X4rUkhAcqPeVyAdC9150L1pE3XaGdA791SWMnWADm4AZp0JTcvvYDMGXoduvBYz1ZanIC/emCR0a/7GS3GOcohcnKNNShD4FTIvztr6TnGuiPdta2U2EJfm0gu3fg=
+	t=1787646763; cv=none; b=KT7QEkjgDVAOwAiAkDfrWm6b8hQyrOqIUHE6Kb9uydSbSH6moHEpB3s0A2vhbG2p175TaxgAiP7epJMPyC/YtJ8JtxAeY6EH/CdHrhm4zWCj6N1aRlPvHaCspDf+OWtNke5CJsst076ZTwgakfFtLrRcSjB3rhgcNdlyK5uETkg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787644709; c=relaxed/simple;
-	bh=QhjmY9Oy3AmRqFyNwvvPgwydO7zFCWQyLR697kIMIhw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Gx6MuXh8/0vkhDclOsG9uvDYzE8ohYUd9VdpMVbVpe7pPNZlHeMtwo3kf9fIE5yqtNjZlecJXbNRYDDiYszWGa++f2uXdo0SSj0QSgLMf3QkfG+bCLKoeo3D64UkqzrB1BUm4n4xc70Z+5v1dZ+uP7ci9eUF5MTgUOLeKS6eMbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de; spf=pass smtp.mailfrom=noerenberg.de; dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b=p/5UWtxB; arc=none smtp.client-ip=217.11.56.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=noerenberg.de
+	s=arc-20240116; t=1787646763; c=relaxed/simple;
+	bh=gRKbq1My6HLT18UPIqy7Z1jSyt+7Sh07+9HEVpDqrYQ=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=DwhQMnX7/F/0gNIbgj8N0eem/I7xrs/LTdbljGGoJ6j3NAPx3g+QNlsiw97hAgAG2fT9m0DdVp5+R/RNZcF3li7YK97ikzjmZEqK9tDGbCQdBLXF1c2KqbvkqFrvVXMw9yVLiUeGHVDEKkVWV9vaVrIu5BBC+t3XoUHlYcdtG3g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=w8XZ27RD; arc=none smtp.client-ip=162.62.58.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b="p/5UWtxB"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=noerenberg.de; s=bauerkirch; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=eMqmVhWJNAgOENa5/oiCh+CYFRVuPym9kc4Wh1m0MEQ=; b=p/5UWtxBVPIPr0j9LlDhwa3K2S
-	N4mOQ92WcubqwPMleSoVVvi/X/XJCrOLVVJQCBUdIi8R8AiCYw8ylZB0gdonIzj9vhsGkmhEC6KOa
-	04DpW78MY3+8whdL1vefJWVJJYKVd7xg6K2li3pZ5n6bZhriBTsMeip1eYvX0eEmFjDbil/FkN9kE
-	9ONbzWlciPUz+jMYfE8zxnMx4dqlTQmwYUs0sNGuP4uVxRKcJ9cDOG+BMWESVTqfKLfeo746WTnB0
-	ux7OY2qYerqOBV+S63SrT3GTj+uE22qkt/S7XffxDV7ZTpDUM9OmkTHQ7q8swHfXTChxbLBbVkrwj
-	CfUJ1JgQ==;
-Received: by mail.bauer-kirch.de with ESMTPSA id 1wym2y-000000028eV-3yAT
-	authenticated id <420001312>
-	(TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128);
-	Tue, 25 Aug 2026 09:58:17 +0200
-Message-ID: <ed203607-19a9-4dd3-89b2-ba94b1bde4c0@noerenberg.de>
-Date: Tue, 25 Aug 2026 09:58:15 +0200
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="w8XZ27RD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1787646749; bh=gRKbq1My6HLT18UPIqy7Z1jSyt+7Sh07+9HEVpDqrYQ=;
+	h=Date:To:Cc:From:Subject;
+	b=w8XZ27RDqxpESvlSfwa8WFQKfVe8RDzupGjlD8GcccfJC5vUC3gFPMBG9DjctuIDF
+	 4d1a0l3EsQQMGn+Ae9oXf4M2z9xSCHF6TzusvnFImAV2myhQwjez+OjKrkpTsGJxwL
+	 hxRItGFkmBci9CC8Cbv9//cRxP/gs03oSKcbM1Hs=
+Received: from [192.168.255.10] ([111.206.96.146])
+	by newxmesmtplogicsvrszb51-1.qq.com (NewEsmtp) with SMTP
+	id 81B3964A; Tue, 25 Aug 2026 16:32:27 +0800
+X-QQ-mid: xmsmtpt1787646747t8e3lmu63
+Message-ID: <tencent_FA2F5F31DC5009EFE7B38D19D754AA6C4507@qq.com>
+X-QQ-XMAILINFO: NnYhxYSyuBnLp8AKhiaAgWN5xwlEmWc5PoAXbvVqOPn5LopgCwP7OVH9NAsTZm
+	 1XCEK1820Uzt4fFZ0vSR8QNJLG1TDoN1apCcpzPEhA8rYgqi0lpmicpoNJobl613JUXpbAcu5ERc
+	 nAJWVthqfLuRgwdZYx7cZoN6MTDXCmOfqL3zC3wDSlmawEaT45fO+us3IRlwBKowGx9S74FZScfX
+	 Nb1q94KQpckvlbhRaisSAxdXUxUpoT7Dd5T2Wwd0xktDpiZ40gR/yH0PjHpn2raaWHQa9e/FSOjK
+	 U+o2rGprMVagSr/RnDf/9P5Pbp0j0rRPEPl7WGcBuoeyVI255NOrpnzaKvpFraB9xXDUqJUAFxlL
+	 xb8pRHouEfuMMZUmZh79G4av0E3nUVgLTORXGvdQwJwFhP4UN4J73HbxGqecV8xnGGcyOJKp1lbV
+	 onKZzRBfRAFDoUgzatnitTOU+d4ahOfccoKCn66jIImepXHT5Z9uz4Brr/BOwTWEsuO6mwiWi5lu
+	 /SVOi8mZ8uNP/O9Fvv9tVvU3Hb9rLder55t6euq7oA//CvUHEpDqLQRROHmQ25V5y5iWl8Fd3oLd
+	 Y3vSWF93ITTmSfv65izWDlLW0J7TOkZgWp+uX65DQFz+O+ik8HtntPMCUHx+smoSWVv61fnAYNio
+	 84Zw/KI5dL+CAMRM7vL9aDDVXYE97a+RU+4aF66qEW2PT/tbb/D3tKgTmkBZs50SSyMBmzfHTHjQ
+	 /LyFy6jIu/XaA9SXvbkLllVG95kZ1xlYut71tEGEJDNCi9twAFp+VkhW6VUd4GDkEgDHqzpLdG2M
+	 dsWTJuwtHGDfu9RWdhh1+jYqyOrlRZflcX2RW627NVElPS7JLU+1MCmhTIiqqnef+b+bXLVpdYY4
+	 qfeGSCdDBz6UX/AAtlnEZp3qbZ/ZE20AZ/jWtQWPdx2KByEC+roTI8D/8iI6a+gbM/jyrGqNK70A
+	 v9A8zHLNUrC3qDl1EQqRLgCwjq7RK7RAY69VxXGnJNCpPMpXNt/RkunrhyCRMzjjCq54JaZJ5wtw
+	 hSlqkDnf86UxeKdhvPL2TDgTAx0wMygz06tsMFZA==
+X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+X-OQ-MSGID: <e44e9587-b4db-4014-8add-5654faacee6b@qq.com>
+Date: Tue, 25 Aug 2026 16:32:26 +0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -41,128 +51,43 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: ahci: clear HOST_IRQ_STAT before the ports on
- Marvell 88SE61xx
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc: Pali Rohar <pali@kernel.org>, risc4all@yahoo.com
-References: <50ebd35a-086f-40fb-887e-576e36e7a2b8@noerenberg.de>
- <df91dc9a-58a5-49e1-b208-507cb9593cd1@kernel.org>
-From: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
-In-Reply-To: <df91dc9a-58a5-49e1-b208-507cb9593cd1@kernel.org>
+To: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+From: Yang Zi <2959243019@qq.com>
+Subject: [PATCH] ata: pata_pdc2027x: fix division by zero in pdc_adjust_pll
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+pdc_adjust_pll() divides pout_required by pll_clock_khz before checking
+that pll_clock_khz is within the valid range. If the PLL input clock is
+less than 1000 Hz, pll_clock_khz is 0 and the division triggers a
+divide-by-zero error.
 
-Damien,
+Move the sanity check ahead of the division so the invalid input is
+rejected before the ratio is computed.
 
-thank you for the quick review.
-
-On 8/25/26 02:51, Damien Le Moal wrote:
-> The commit title is not great as "before the ports" is not very clear.
-> What does "clear the ports" mean? Though I do not have a better alternative
-> title (yet).
-
-Agreed, and "the ports" was meant to be the ports' PxIS registers, which the
-title does not say.  Would this be better?
-
-  ata: ahci: work around lost interrupts on Marvell 88SE61xx
-
-That names the symptom rather than the mechanism.  Happy to take any other
-suggestion.
-
-> This looks very similar to what ahci_thunderx_irq_handler() does, minus the
-> loop. That loop does make sense to me though, so shouldn't this be the same?
-> Maybe try using that same function to see if it works?
-> If it does, we can rename that function to something more generic and reuse it.
-
-I tried exactly that: a build that registers the existing
-ahci_thunderx_irq_handler() unchanged for board_ahci_mv, taken out of the
-#ifdef CONFIG_ARM64, with a dev_info() so I could be certain which handler was
-really active.  It does not work.  The controller fails exactly as it does
-without any patch.
-
-Both of the following are from one and the same boot of the same machine, on
-the same drive in the same slot, 86 seconds apart.  I only swapped the module
-with rmmod/insmod in between, nothing else changed:
-
-  [  853.732695] ahci 0000:01:00.0: TEST BUILD: setting hpriv->irq_handler =
-                                    ahci_thunderx_irq_handler
-  [  854.155483] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-  [  859.313008] ata6.00: qc timeout after 5000 msecs (cmd 0xec)
-  [  859.318692] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-  [  869.808790] ata6.00: qc timeout after 10000 msecs (cmd 0xec)
-  [  869.814554] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-  [  869.820702] ata6: limiting SATA link speed to 1.5 Gbps
-  [  901.808101] ata6.00: qc timeout after 30000 msecs (cmd 0xec)
-  [  901.813867] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-
-  ... rmmod ahci ; insmod ahci.ko with the patch from this thread ...
-
-  [  940.249339] ahci 0000:01:00.0: version 3.0-mv1
-  [  940.661512] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-  [  940.668285] ata9.00: HPA detected: current 5860531055, native 5860533168
-  [  940.675076] ata9.00: ATA-9: WDC WD30EFRX-68EUZN0, 80.00A80, max UDMA/133
-  [  940.694325] ata9.00: configured for UDMA/133
-
-With the ThunderX handler the drive is given up after 48 seconds and three
-timeouts.  With the patch from this thread it is identified 7 ms after link
-up.
-
-The reason is that the difference between the two handlers is not really the
-loop -- it is the order of the two accesses, and the loop cannot substitute
-for it:
-
-  ThunderX:  rc = ahci_handle_port_intr(host, irq_masked);
-             writel(irq_stat, mmio + HOST_IRQ_STAT);     /* IS after ports */
-
-  Marvell:   writel(irq_stat, mmio + HOST_IRQ_STAT);     /* IS before ports */
-             rc = ahci_handle_port_intr(host, irq_masked);
-
-The 88SE61xx stops reflecting PxIS in IS once IS is written while PxIS still
-holds bits.  With the ThunderX order, ahci_handle_port_intr() clears PxIS and
-then IS is written; if the device raised a new event in that window, the write
-to IS discards the pending indication, and -- this is the part the loop cannot
-fix -- the controller never re-asserts it.  The re-read of IS therefore
-returns 0, the loop exits, and the completion is lost.  The loop only catches
-events that manage to set IS *after* the write, which is precisely the case
-that is not broken here.  Clearing IS first means IS is never written while an
-unserviced PxIS bit is standing.
-
-So for this chip the ordering is load-bearing and the loop is not.
-
-I think the function this patch resembles is not the ThunderX one but
-xgene_ahci_irq_intr() in ahci_xgene.c, which does the same reordering for the
-same kind of reason and says so:
-
-  /*
-   * HOST_IRQ_STAT behaves as edge triggered latch meaning that
-   * it should be cleared before all the port events are cleared.
-   */
-  writel(irq_stat, mmio + HOST_IRQ_STAT);
-
-  rc = xgene_ahci_handle_broken_edge_irq(host, irq_masked);
-
-That is this patch, except that X-Gene needs a second workaround on top: its
-wrapper re-reads HOST_IRQ_STAT and, if it reads back as zero, checks
-PORT_IRQ_STAT by hand on the ports that IS did not flag and folds those in.
-The 88SE61xx does not need that part -- I tried the equivalent rescan on its
-own, without the reordering, and it did not help.  Marvell's own 6121 driver
-also clears in this order, with the comment "clear global before channel".
-
-As for sharing the code: a single handler that clears IS first *and* loops
-would in theory serve both chips, but I would rather not propose it.  Each of
-the three users needs something different -- X-Gene the port rescan, ThunderX
-the loop, the 88SE61xx neither -- so the merged version would be a superset
-that nobody actually wants, and I would be changing ThunderX behaviour on
-hardware I do not have and cannot test.  Keeping the handlers separate, as in
-this patch, costs about fifteen duplicated lines and no risk.
-
-For the record, the fix has meanwhile carried a full mdadm RAID10 resync
-across four 2 TB drives -- two of them on the 88SE6121, two on the Kirkwood
-SoC controller -- with no errors, so it holds up under sustained parallel load
-and not just during probe.  All of this on a machine whose SoC was released in
-2008 -- eighteen years is a long time to wait for an interrupt :)
-
-Thanks,
-Hajo
+Signed-off-by: Yang Zi <2959243019@qq.com>
+---
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index d1d1cfb22e27..c4cff4eafbe8 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -517,7 +517,7 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+     u16 pll_ctl;
+     long pll_clock_khz = pll_clock / 1000;
+     long pout_required = board_idx? PDC_133_MHZ:PDC_100_MHZ;
+-    long ratio = pout_required / pll_clock_khz;
++    long ratio;
+     int F, R;
+ 
+     /* Sanity check */
+@@ -527,6 +527,8 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+         return;
+     }
+ 
++    ratio = pout_required / pll_clock_khz;
++
+     dev_dbg(host->dev, "pout_required is %ld\n", pout_required);
+ 
+     /* Show the current clock value of PLL control register
 
