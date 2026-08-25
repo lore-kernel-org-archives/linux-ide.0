@@ -1,191 +1,168 @@
-Received: from mail-vk1-f181.google.com (mail-vk1-f181.google.com [209.85.221.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx.bauer-kirch.com (mx.bauer-kirch.com [217.11.56.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E943523E33D
-	for <linux-ide@vger.kernel.org>; Tue, 25 Aug 2026 07:53:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498713016FB
+	for <linux-ide@vger.kernel.org>; Tue, 25 Aug 2026 07:58:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.11.56.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787644413; cv=none; b=TauxyZ7elePEsKZw/SE5ZC1dWonAhvE+ODGoebh3vJc1U/ypW2V/ZFW0/8+SacVCwS9KNdvFchElgbE3ePBJzhAn6/XAst/HZpJCi+wprwTcLunBPlQO2Osh+KmcKlqc5o0F76rVCx++BaQpO1FyasnLbSQHUytNjUOD7UjgFFk=
+	t=1787644709; cv=none; b=AJ6z8dLBQqVe/JU7G+SKMmpJyLabPQtbknXF3y9EHMgFF2X4rUkhAcqPeVyAdC9150L1pE3XaGdA791SWMnWADm4AZp0JTcvvYDMGXoduvBYz1ZanIC/emCR0a/7GS3GOcohcnKNNShD4FTIvztr6TnGuiPdta2U2EJfm0gu3fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787644413; c=relaxed/simple;
-	bh=5KhXHGIN/5OkJ5Z05vnUucjZaP7hvHBv6uFtz8zGhxw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=R+3MRtlmYHtEUOW8DzqNgcX1bQCgVZaNYPULPRjo3qjOr4ERLql0KRR7s/4zAnH/gmZQeFDMdUYw60BVbKN1oZ/ZC18T61DLBiOt3H32RRyx0TBGryy0e0N40SRyOJGkOxBQmIKC8UkJXL8rLh8V0z+IWnzV8sCKRiy+0zosUlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vk1-f181.google.com with SMTP id 71dfb90a1353d-5bf5370d38fso1715886e0c.2
-        for <linux-ide@vger.kernel.org>; Tue, 25 Aug 2026 00:53:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787644411; x=1788249211;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=mY3Cs/1+UNEYSIVcDUnJkc5JJKs/5ezwJVqk+SnL2Uk=;
-        b=Bv9krjFcjTI6sGhFl6jPso5TXE63gN8/asgmCn2Ll2xv+wMjIVwhldIVdEsYvN4YVz
-         gUviXlRd1FAY1Oo/HxXRNZlSF4DgF8M+QOt9cM22/CRAzH6+SO7FzdlZ2WOP6xU+0ela
-         7PUbW666cCIjeTnt5j4YvAR38j7LrGD9Pjc566nrtUEXs1PsXkF/84BUqFWppKm6WXVS
-         ikh17EDm6f+W/FQWb7+Z8flu/RYfFcUURemzbZqJKZi9c5lOql+yg8jrtOZtuxWDHszB
-         jJsdbZT7fCJX0J51kN1+6hE6S9LMdPSrWUfLzt68eWQMpO170TG5ldve/yTMMnfdCZBX
-         oPJA==
-X-Forwarded-Encrypted: i=1; AHgh+RpgHm3QPifTVoceeu7eYt+3N3eiD4aOgwj4Sairb2j0V3LXaSRkDLsMFECHixRvJSityQdZG965io8=@vger.kernel.org
-X-Gm-Message-State: AFuF++k9kN30WiSR/OV0hb0/yanhNlUOsBQ6WZQ4kVEeMhtB8jDvm1Ce
-	fUt2IhlusoTzmAwIjIsn/w0CZ3iucOl5Bdzsf4r69f3gsV8G3n9IbvGg5YeBwZ0b108=
-X-Gm-Gg: AR+sD11v+JSIJwgqoAwH1oQbL2jSwVJjhlT17k2INEf1xTGhwjrDdraXtCMcnpjWGFK
-	3WxoA0ICv1g4dNsD8qQ95WoWp1GWy2H+CLWSHKWW0kSkzLTjR6fVw4GYGD7VX2MRaex8J52FFGR
-	l1SScS2FlboF/ck5t8XAhUXlDPoRyGnCZebP5P9DJpN5K7yqHv0ez3SHXzK+fQHk320/wEvM9Qx
-	t37ZVvWKrZTCF8fFDe+iT3oC8Nw0RjmdLorNPYJAAd7GKrNTemT/vrmrm2zDTTflNzLunp9yahi
-	RG96cCg0gVesbKqKwXuJnNf3suN44OIonpNsHGcklRFJaIxmAQ82EZh1zVr0k3Fvfex+gqKhFB9
-	rHE3SyFKmiC6czJ9F768kAlbfi1f1Dn/ISl0j6IUJ/07jqFvyIVTh0C09EWZTtjhxEtyWNC3sQ8
-	TntHvDZt8VdF/IyxaOAOk5BxQAqd3AhTGkha4L7QsIGmqnaRCdRPaCxovfMvjFRco6kVKnCkjFO
-	a6OHRYyN59btmWPEWRmP3JxOiO3X+qSy1uurw==
-X-Received: by 2002:a05:6122:50c:b0:5bd:b27c:bade with SMTP id 71dfb90a1353d-5c5ff6f5c08mr13082991e0c.5.1787644410861;
-        Tue, 25 Aug 2026 00:53:30 -0700 (PDT)
-Received: from mail-vs1-f53.google.com (mail-vs1-f53.google.com. [209.85.217.53])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5c623eb6ae3sm5749113e0c.9.2026.08.25.00.53.30
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Aug 2026 00:53:30 -0700 (PDT)
-Received: by mail-vs1-f53.google.com with SMTP id ada2fe7eead31-7777fa8f1ccso1487258137.3
-        for <linux-ide@vger.kernel.org>; Tue, 25 Aug 2026 00:53:30 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RpXdk3xZaW6UupJfRcC66VZ8JmE70oUVZ2slnrEnJzQCHlzWbqjEoHPj18C/lyK6rFjYix17Z84HMg=@vger.kernel.org
-X-Received: by 2002:a05:6102:5107:b0:778:4c28:6725 with SMTP id
- ada2fe7eead31-77a6434bfc4mr9347978137.10.1787644410431; Tue, 25 Aug 2026
- 00:53:30 -0700 (PDT)
+	s=arc-20240116; t=1787644709; c=relaxed/simple;
+	bh=QhjmY9Oy3AmRqFyNwvvPgwydO7zFCWQyLR697kIMIhw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Gx6MuXh8/0vkhDclOsG9uvDYzE8ohYUd9VdpMVbVpe7pPNZlHeMtwo3kf9fIE5yqtNjZlecJXbNRYDDiYszWGa++f2uXdo0SSj0QSgLMf3QkfG+bCLKoeo3D64UkqzrB1BUm4n4xc70Z+5v1dZ+uP7ci9eUF5MTgUOLeKS6eMbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de; spf=pass smtp.mailfrom=noerenberg.de; dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b=p/5UWtxB; arc=none smtp.client-ip=217.11.56.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=noerenberg.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b="p/5UWtxB"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=noerenberg.de; s=bauerkirch; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=eMqmVhWJNAgOENa5/oiCh+CYFRVuPym9kc4Wh1m0MEQ=; b=p/5UWtxBVPIPr0j9LlDhwa3K2S
+	N4mOQ92WcubqwPMleSoVVvi/X/XJCrOLVVJQCBUdIi8R8AiCYw8ylZB0gdonIzj9vhsGkmhEC6KOa
+	04DpW78MY3+8whdL1vefJWVJJYKVd7xg6K2li3pZ5n6bZhriBTsMeip1eYvX0eEmFjDbil/FkN9kE
+	9ONbzWlciPUz+jMYfE8zxnMx4dqlTQmwYUs0sNGuP4uVxRKcJ9cDOG+BMWESVTqfKLfeo746WTnB0
+	ux7OY2qYerqOBV+S63SrT3GTj+uE22qkt/S7XffxDV7ZTpDUM9OmkTHQ7q8swHfXTChxbLBbVkrwj
+	CfUJ1JgQ==;
+Received: by mail.bauer-kirch.de with ESMTPSA id 1wym2y-000000028eV-3yAT
+	authenticated id <420001312>
+	(TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128);
+	Tue, 25 Aug 2026 09:58:17 +0200
+Message-ID: <ed203607-19a9-4dd3-89b2-ba94b1bde4c0@noerenberg.de>
+Date: Tue, 25 Aug 2026 09:58:15 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260824153339.512487-1-p.pisati@gmail.com> <20260824153339.512487-2-p.pisati@gmail.com>
-In-Reply-To: <20260824153339.512487-2-p.pisati@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 25 Aug 2026 09:53:18 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVBjxXNX19k55Yu4D5GD1nkb31TuBJN0uFDqD9Oe5Gtsw@mail.gmail.com>
-X-Gm-Features: AcwNN1XJGQsJg3rTyiIM7ZxTIkOAoql-OOJhHfZeWEVlRKB_glDBvnY_i5ovn3w
-Message-ID: <CAMuHMdVBjxXNX19k55Yu4D5GD1nkb31TuBJN0uFDqD9Oe5Gtsw@mail.gmail.com>
-Subject: Re: [PATCH v5 1/2] ata: pata_cswarp: Add Amiga cslab ata support
-To: Paolo Pisati <p.pisati@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: ahci: clear HOST_IRQ_STAT before the ports on
+ Marvell 88SE61xx
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc: Pali Rohar <pali@kernel.org>, risc4all@yahoo.com
+References: <50ebd35a-086f-40fb-887e-576e36e7a2b8@noerenberg.de>
+ <df91dc9a-58a5-49e1-b208-507cb9593cd1@kernel.org>
+From: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
+In-Reply-To: <df91dc9a-58a5-49e1-b208-507cb9593cd1@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Paolo,
 
-On Mon, 24 Aug 2026 at 17:33, Paolo Pisati <p.pisati@gmail.com> wrote:
-> Driver for the on-board IDE interface on CS-Lab Warp Expansion Card
-> (NOTE that idemode=native has to be set in Warp Configuration)
->
-> Assisted-by: Claude_Code:claude-opus-5
-> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
+Damien,
 
-Thanks for the update!
+thank you for the quick review.
 
-> --- /dev/null
-> +++ b/drivers/ata/pata_cswarp.c
+On 8/25/26 02:51, Damien Le Moal wrote:
+> The commit title is not great as "before the ports" is not very clear.
+> What does "clear the ports" mean? Though I do not have a better alternative
+> title (yet).
 
-> +static unsigned int pata_cswarp_data_xfer(struct ata_queued_cmd *qc,
-> +                                         unsigned char *buf,
-> +                                         unsigned int buflen, int rw)
-> +{
-> +       struct ata_device *dev = qc->dev;
-> +       struct ata_port *ap = dev->link->ap;
-> +       void __iomem *data_addr = ap->ioaddr.data_addr;
-> +       unsigned int words = buflen >> 1;
-> +       u16 *buf16 = (u16 *)buf;
-> +
-> +       /* Transfer multiple of 2 bytes */
-> +       if (rw == READ)
-> +               raw_insw(data_addr, buf16, words);
-> +       else
-> +               raw_outsw(data_addr, buf16, words);
-> +
-> +       /* Transfer trailing byte, if any. */
-> +       if (unlikely(buflen & 0x01)) {
-> +               if (rw == READ)
-> +                       buf[buflen - 1] = raw_inw(data_addr) >> 8;
-> +               else
-> +                       raw_outw(buf[buflen - 1] << 8, data_addr);
-> +               words++;
-> +       }
-> +
-> +       return words << 1;
+Agreed, and "the ports" was meant to be the ports' PxIS registers, which the
+title does not say.  Would this be better?
 
-This may be one less than the actual number of bytes
-Why not buflen?
+  ata: ahci: work around lost interrupts on Marvell 88SE61xx
 
-> +}
+That names the symptom rather than the mechanism.  Happy to take any other
+suggestion.
 
-> +static int pata_cswarp_probe(struct zorro_dev *z,
-> +                            const struct zorro_device_id *ent)
-> +{
-> +       static const char board_name[] = "csWarp";
-> +       struct ata_host *host;
-> +       struct ata_port *ap;
-> +       void __iomem *base;
-> +       unsigned long board = z->resource.start;
-> +
-> +       dev_info(&z->dev, "%s IDE controller (board: 0x%lx)\n", board_name,
-> +                board);
-> +
-> +       if (!devm_request_mem_region(&z->dev, board + WARP_OFFSET_ATA, 0x1800,
-> +                                    DRV_NAME))
-> +               return -ENXIO;
-> +
-> +       host = ata_host_alloc(&z->dev, 1);
-> +       if (!host)
-> +               return -ENXIO;
-> +
-> +       ap = host->ports[0];
-> +       base = ioremap(board + WARP_OFFSET_ATA, 0x1800);
-> +
-> +       ap->ops = &pata_cswarp_ops;
-> +
-> +       ap->pio_mask = ATA_PIO4;
-> +       ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY |
-> +               ATA_FLAG_PIO_POLLING;
-> +
-> +       ap->ioaddr.data_addr            = base;
-> +       ap->ioaddr.error_addr           = base + 1 * 4;
-> +       ap->ioaddr.feature_addr         = base + 1 * 4;
-> +       ap->ioaddr.nsect_addr           = base + 2 * 4;
-> +       ap->ioaddr.lbal_addr            = base + 3 * 4;
-> +       ap->ioaddr.lbam_addr            = base + 4 * 4;
-> +       ap->ioaddr.lbah_addr            = base + 5 * 4;
-> +       ap->ioaddr.device_addr          = base + 6 * 4;
-> +       ap->ioaddr.status_addr          = base + 7 * 4;
-> +       ap->ioaddr.command_addr         = base + 7 * 4;
-> +
-> +       ap->ioaddr.altstatus_addr       = base + (0x1000 | (6UL << 2));
-> +       ap->ioaddr.ctl_addr             = base + (0x1000 | (6UL << 2));
-> +
-> +       ata_port_desc(ap, "  cmd 0x%lx ctl 0x%lx", (unsigned long)base,
-> +                     (unsigned long)ap->ioaddr.ctl_addr);
+> This looks very similar to what ahci_thunderx_irq_handler() does, minus the
+> loop. That loop does make sense to me though, so shouldn't this be the same?
+> Maybe try using that same function to see if it works?
+> If it does, we can rename that function to something more generic and reuse it.
 
-Both printed addresses are virtual addresses hence not really useful.
-If you want to print something, please print board or z->resource
-instead.
+I tried exactly that: a build that registers the existing
+ahci_thunderx_irq_handler() unchanged for board_ahci_mv, taken out of the
+#ifdef CONFIG_ARM64, with a dev_info() so I could be certain which handler was
+really active.  It does not work.  The controller fails exactly as it does
+without any patch.
 
-> +static const struct zorro_device_id pata_cswarp_zorro_tbl[] = {
-> +       { ZORRO_PROD_CSLAB_WARP_1260, 0},
-> +       { 0 }
+Both of the following are from one and the same boot of the same machine, on
+the same drive in the same slot, 86 seconds apart.  I only swapped the module
+with rmmod/insmod in between, nothing else changed:
 
-Please use named initializers, and drop unneeded zeroes, like Uwe
-just did in all existing Zorro drivers:
+  [  853.732695] ahci 0000:01:00.0: TEST BUILD: setting hpriv->irq_handler =
+                                    ahci_thunderx_irq_handler
+  [  854.155483] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+  [  859.313008] ata6.00: qc timeout after 5000 msecs (cmd 0xec)
+  [  859.318692] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+  [  869.808790] ata6.00: qc timeout after 10000 msecs (cmd 0xec)
+  [  869.814554] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+  [  869.820702] ata6: limiting SATA link speed to 1.5 Gbps
+  [  901.808101] ata6.00: qc timeout after 30000 msecs (cmd 0xec)
+  [  901.813867] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
 
-    { .id = ZORRO_PROD_CSLAB_WARP_1260 },
-    { }
+  ... rmmod ahci ; insmod ahci.ko with the patch from this thread ...
 
-> +};
+  [  940.249339] ahci 0000:01:00.0: version 3.0-mv1
+  [  940.661512] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+  [  940.668285] ata9.00: HPA detected: current 5860531055, native 5860533168
+  [  940.675076] ata9.00: ATA-9: WDC WD30EFRX-68EUZN0, 80.00A80, max UDMA/133
+  [  940.694325] ata9.00: configured for UDMA/133
 
-Gr{oetje,eeting}s,
+With the ThunderX handler the drive is given up after 48 seconds and three
+timeouts.  With the patch from this thread it is identified 7 ms after link
+up.
 
-                        Geert
+The reason is that the difference between the two handlers is not really the
+loop -- it is the order of the two accesses, and the loop cannot substitute
+for it:
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+  ThunderX:  rc = ahci_handle_port_intr(host, irq_masked);
+             writel(irq_stat, mmio + HOST_IRQ_STAT);     /* IS after ports */
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+  Marvell:   writel(irq_stat, mmio + HOST_IRQ_STAT);     /* IS before ports */
+             rc = ahci_handle_port_intr(host, irq_masked);
+
+The 88SE61xx stops reflecting PxIS in IS once IS is written while PxIS still
+holds bits.  With the ThunderX order, ahci_handle_port_intr() clears PxIS and
+then IS is written; if the device raised a new event in that window, the write
+to IS discards the pending indication, and -- this is the part the loop cannot
+fix -- the controller never re-asserts it.  The re-read of IS therefore
+returns 0, the loop exits, and the completion is lost.  The loop only catches
+events that manage to set IS *after* the write, which is precisely the case
+that is not broken here.  Clearing IS first means IS is never written while an
+unserviced PxIS bit is standing.
+
+So for this chip the ordering is load-bearing and the loop is not.
+
+I think the function this patch resembles is not the ThunderX one but
+xgene_ahci_irq_intr() in ahci_xgene.c, which does the same reordering for the
+same kind of reason and says so:
+
+  /*
+   * HOST_IRQ_STAT behaves as edge triggered latch meaning that
+   * it should be cleared before all the port events are cleared.
+   */
+  writel(irq_stat, mmio + HOST_IRQ_STAT);
+
+  rc = xgene_ahci_handle_broken_edge_irq(host, irq_masked);
+
+That is this patch, except that X-Gene needs a second workaround on top: its
+wrapper re-reads HOST_IRQ_STAT and, if it reads back as zero, checks
+PORT_IRQ_STAT by hand on the ports that IS did not flag and folds those in.
+The 88SE61xx does not need that part -- I tried the equivalent rescan on its
+own, without the reordering, and it did not help.  Marvell's own 6121 driver
+also clears in this order, with the comment "clear global before channel".
+
+As for sharing the code: a single handler that clears IS first *and* loops
+would in theory serve both chips, but I would rather not propose it.  Each of
+the three users needs something different -- X-Gene the port rescan, ThunderX
+the loop, the 88SE61xx neither -- so the merged version would be a superset
+that nobody actually wants, and I would be changing ThunderX behaviour on
+hardware I do not have and cannot test.  Keeping the handlers separate, as in
+this patch, costs about fifteen duplicated lines and no risk.
+
+For the record, the fix has meanwhile carried a full mdadm RAID10 resync
+across four 2 TB drives -- two of them on the 88SE6121, two on the Kirkwood
+SoC controller -- with no errors, so it holds up under sustained parallel load
+and not just during probe.  All of this on a machine whose SoC was released in
+2008 -- eighteen years is a long time to wait for an interrupt :)
+
+Thanks,
+Hajo
+
