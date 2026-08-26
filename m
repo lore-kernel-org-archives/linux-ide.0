@@ -1,94 +1,76 @@
-Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2043542C514;
-	Tue, 25 Aug 2026 13:19:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF913112B2
+	for <linux-ide@vger.kernel.org>; Wed, 26 Aug 2026 08:55:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787663953; cv=none; b=ksqEXK7Qj0ErkBaTzUkNBUyMzULFedBHiyoNpwgYvQzKaA2L0Sa/fx0BBcujGVczN57McazvOss79IlTGMW3aTdW2d2oTqGivIxywoNq86Pg4iLa6ChGiQRI7NQyssBwPZwkk4+xKMoRRyt52pzquMXv82+BX33o413O+Yua5NA=
+	t=1787734515; cv=none; b=Dj/Ikdk7yu2ySkI3qrPxo9/55AJJWuRUQz8D6OrGIE9b0KK775PuOLwc4brNJHZkRzuaXvx0wqCbMA/u492NVbthxWlv0DvjIZmogalotKHvJydQQ6Cbg1Th0fWCMJdWCHxTWsC+/Mm3+sk2sswkvZFB31p9Y9pDOZsR0+7M2Kk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787663953; c=relaxed/simple;
-	bh=5TVEsS2ZrICCGdu5fHn5ixwm1NzymOIz9G67H0t4KAU=;
+	s=arc-20240116; t=1787734515; c=relaxed/simple;
+	bh=O8GKQKz28ZNgMu7z5Eem7Zdo5G+exwtTeHN9QNCrjiI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=exykkL/WSFxTMP2IPwGlEYh3s8OaRUCIKjAI1IeHOjEVkhAAQuqUgsITemzr47qxk8uecc3UXAdLFrtrmreV8zkYSAFYud0GXdhtxX5xmAIRi3RdQeD7K8QiOGsdcT1CMuc3FzVx/6I1mEzeJ22ejxs9mVd2O3PsA8gTOYHQIPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sk.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
-X-AuditID: a67dfc5b-c2dff70000001609-0c-6a8d964b3a74
-Date: Tue, 25 Aug 2026 22:19:06 +0900
-From: Byungchul Park <byungchul@sk.com>
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: linux-kernel@vger.kernel.org, max.byungchul.park@gmail.com,
-	kernel_team@skhynix.com, torvalds@linux-foundation.org,
-	damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-	adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-	mingo@redhat.com, peterz@infradead.org, will@kernel.org,
-	tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
-	sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
-	johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-	willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-	gregkh@linuxfoundation.org, kernel-team@lge.com, linux-mm@kvack.org,
-	akpm@linux-foundation.org, mhocko@kernel.org, minchan@kernel.org,
-	hannes@cmpxchg.org, vdavydov.dev@gmail.com, sj@kernel.org,
-	jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-	penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-	ngupta@vflare.org, linux-block@vger.kernel.org,
-	josef@toxicpanda.com, linux-fsdevel@vger.kernel.org, jack@suse.cz,
-	jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
-	djwong@kernel.org, dri-devel@lists.freedesktop.org,
-	rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-	hamohammed.sa@gmail.com, harry.yoo@oracle.com,
-	chris.p.wilson@intel.com, gwan-gyeong.mun@intel.com,
-	boqun.feng@gmail.com, longman@redhat.com, yunseong.kim@ericsson.com,
-	ysk@kzalloc.com, yeoreum.yun@arm.com, netdev@vger.kernel.org,
-	matthew.brost@intel.com, her0gyugyu@gmail.com, corbet@lwn.net,
-	catalin.marinas@arm.com, bp@alien8.de, x86@kernel.org,
-	hpa@zytor.com, luto@kernel.org, sumit.semwal@linaro.org,
-	gustavo@padovan.org, christian.koenig@amd.com,
-	andi.shyti@kernel.org, arnd@arndb.de, lorenzo.stoakes@oracle.com,
-	Liam.Howlett@oracle.com, rppt@kernel.org, surenb@google.com,
-	mcgrof@kernel.org, petr.pavlu@suse.com, da.gomez@kernel.org,
-	samitolvanen@google.com, paulmck@kernel.org, frederic@kernel.org,
-	neeraj.upadhyay@kernel.org, joelagnelf@nvidia.com,
-	josh@joshtriplett.org, urezki@gmail.com,
-	mathieu.desnoyers@efficios.com, jiangshanlai@gmail.com,
-	qiang.zhang@linux.dev, juri.lelli@redhat.com,
-	vincent.guittot@linaro.org, dietmar.eggemann@arm.com,
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
-	chuck.lever@oracle.com, neil@brown.name, okorniev@redhat.com,
-	Dai.Ngo@oracle.com, tom@talpey.com, trondmy@kernel.org,
-	anna@kernel.org, kees@kernel.org, bigeasy@linutronix.de,
-	clrkwllms@kernel.org, mark.rutland@arm.com, ada.coupriediaz@arm.com,
-	kristina.martsenko@arm.com, wangkefeng.wang@huawei.com,
-	broonie@kernel.org, kevin.brodsky@arm.com, dwmw@amazon.co.uk,
-	shakeel.butt@linux.dev, ast@kernel.org, ziy@nvidia.com,
-	yuzhao@google.com, baolin.wang@linux.alibaba.com,
-	usamaarif642@gmail.com, joel.granados@kernel.org,
-	richard.weiyang@gmail.com, geert+renesas@glider.be,
-	tim.c.chen@linux.intel.com, linux@treblig.org,
-	alexander.shishkin@linux.intel.com, lillian@star-ark.net,
-	chenhuacai@kernel.org, francesco@valla.it,
-	guoweikang.kernel@gmail.com, link@vivo.com, jpoimboe@kernel.org,
-	masahiroy@kernel.org, brauner@kernel.org,
-	thomas.weissschuh@linutronix.de, oleg@redhat.com, mjguzik@gmail.com,
-	andrii@kernel.org, wangfushuai@baidu.com, linux-doc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
-	linaro-mm-sig@lists.linaro.org, linux-i2c@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-modules@vger.kernel.org,
-	rcu@vger.kernel.org, linux-nfs@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev, 2407018371@qq.com, dakr@kernel.org,
-	miguel.ojeda.sandonis@gmail.com, neilb@ownmail.net,
-	bagasdotme@gmail.com, wsa+renesas@sang-engineering.com,
-	dave.hansen@intel.com, geert@linux-m68k.org, ojeda@kernel.org,
-	alex.gaynor@gmail.com, gary@garyguo.net, bjorn3_gh@protonmail.com,
-	lossin@kernel.org, a.hindborg@kernel.org, aliceryhl@google.com,
-	tmgross@umich.edu, rust-for-linux@vger.kernel.org
-Subject: Re: [PATCH v19 00/40] DEPT(DEPendency Tracker)
-Message-ID: <20260825131906.GC23086@system.software.com>
-References: <20260706061928.66713-1-byungchul@sk.com>
- <359ea967-9b97-4584-88e6-bddb4044de2e@kernel.org>
- <20260821042143.GA40890@system.software.com>
- <825134a8-ceae-430c-b2fc-d1d0c7240f39@kernel.org>
- <20260825121322.GA23086@system.software.com>
- <e0c589d0-d17b-48c2-8e1b-d41b69ecaadc@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=IshF4brjr/LkiQB5MqBBjwXcgBbpfJA/mHWkRn5EkKmxoOa2TBHq2a65Nz8QwfRmCZVKCOrJxDjV+3NM2Y4XFpKcV02gGeGo/ss8vx/wZpEB//XbpvOi0nfq8SY2tmPV2zHWWEw3/mJIncx9VHAtRPqYrbhYBcHNKO2A7sLQKtg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W+kev8xo; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W+kev8xo"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-6a156627e22so3383858a12.1
+        for <linux-ide@vger.kernel.org>; Wed, 26 Aug 2026 01:55:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787734512; x=1788339312; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=2+CsASGyH2xOZDi3fuDOU1Hvcxr+b3Bmf36364fbVag=;
+        b=W+kev8xoC4jzBZMA9lrpTW+50CrVimEhcLTCr6BKTH9IFMLTGAJdk4U76n5I/Htw36
+         hQSQWglm2bWrPTF9DEly3j/B1bs4FgLaFby6X0vD9wDAbVCRJQi+EI5lUgFDp7Q3siun
+         +mH61/lB04MPdFSJo6TDlLe4Nkq7n5e+1Z7iXbNHx/Elzsf6sRGRG4YLOotmfqcVAzcK
+         gz+HojnOy7K+QMdbC9vUr8vZ8q7grOoRF/X4O1TWjqYv09az9JmKW9AxAVRuVm7q2IFM
+         ///96CEndVsgIWqp6pLQnj4E7lfT4KWaPQ526pFJ8YhHq2Ecl7vN6GREO6dFm/cdALds
+         664g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787734512; x=1788339312;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=2+CsASGyH2xOZDi3fuDOU1Hvcxr+b3Bmf36364fbVag=;
+        b=NFVChkmUeKaYCDUCx6FQ+/Uu5kqSIiXMZ19VGx65TxrqOywtQutIoMPSN+k9x/Xe/m
+         q+ioPwZR6wqPmEOTPRTdpnWL//xRcuT7ISSefWt9xSVzlbPQS1AyHLQFZwBKXj1ihPHO
+         Ay37foijsCUWsKeoR8qpGctBsQXHtckXurpYXFZa1F51FQ3A8/uj+ACf45zbcwOJgV+I
+         iWALZ7X0qy/t2hFd9XU13Vit/W/oYhZneH5I7nTJk1g90S4y4BcHINyAwrPZ2gjX9Y85
+         B964owgsE/LfRHG4TO0j1/VfUTwL5s+Co5bdIw9cYwOeamiLDEseG6lIVW2ULLbL+SAN
+         G8RA==
+X-Forwarded-Encrypted: i=1; AHgh+Rr+3+Ji+GQ3PH/oUYhNZY0ZH2kRN6kX/cw7qr/olh9NytZq7egZnOlcRZad1vVpUdA4T7WI5QAz/TM=@vger.kernel.org
+X-Gm-Message-State: AFuF++nyule66uUafRIjJFzaRVmt02eYNYR1zqm+jESc/P85aP/Dnw9Q
+	Xy+KmNwQwveu+vD+MWd280Ro1RIP/btOT20HQqjHMrMnjcL1m/H5zKUM
+X-Gm-Gg: AR+sD10CzprualggExPNci+VzQpeYyR1b/529c82n48UVDo8hHPpJ8diSl4JkNEdJKi
+	PxZS3qcy+ZflUWuu5NYBRe2HiJvcbmh+QtUMHZKm8yuZNb8Bw4GZwEOOWwAjH6dWk0V4uYciMom
+	NbE/l5QMF4v4ev5R2/vSC3TDOOUN2FGrT9vjloGEni8W0Xze7u8GSp2pPkXGV7Y17cGoEl58QX8
+	rpWxMfRzFfgdYHJ81sLu9vg8FKN6NuStO2aN3Mgcb96YqiG1YSMlXb4w0VzGRmjdbGBM6tYtGtJ
+	GDijBsuGAM/xb9yiCZ89MPbnu34/Ur73g2a8XMamS9ArmyJ08zThoR+80swmY1NFsx+VOP+xbXW
+	FJzCSVI/pd+zAPh+jh2j0ZQIkVA9+pOopc8opbebGKBpkAdR/ufdhW+CnFk/D6bmUVh7H4JgnMj
+	vn+zIcLyFGOL6Zz+tDEO/ge93E1M3LAoyRPuJ6lMA5XWeKlEZytnyxoqQuKvfxiXwLAfSEM38Q6
+	vkpcZY7ozJXlGoECZ/eXuYz+RKsmU4lgTJzoUKK7wz2S1U=
+X-Received: by 2002:a05:6402:a5d1:10b0:6a5:dfb6:360c with SMTP id 4fb4d7f45d1cf-6a5dfb63743mr3614000a12.2.1787734511805;
+        Wed, 26 Aug 2026 01:55:11 -0700 (PDT)
+Received: from gmail.com ([2a01:e11:1403:8620:78ce:12f6:160d:28db])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a5de8b641fsm3643120a12.3.2026.08.26.01.55.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 26 Aug 2026 01:55:11 -0700 (PDT)
+Date: Wed, 26 Aug 2026 10:55:10 +0200
+From: Paolo Pisati <p.pisati@gmail.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Paolo Pisati <p.pisati@gmail.com>, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 1/2] ata: pata_cswarp: Add Amiga cslab ata support
+Message-ID: <gsfi4glv5fnwzwdw3sm7r2evfwn7gl6xqzjvslxwghdfxvreeu@i6s3xc65iple>
+References: <20260824153339.512487-1-p.pisati@gmail.com>
+ <20260824153339.512487-2-p.pisati@gmail.com>
+ <CAMuHMdVBjxXNX19k55Yu4D5GD1nkb31TuBJN0uFDqD9Oe5Gtsw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -97,64 +79,44 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e0c589d0-d17b-48c2-8e1b-d41b69ecaadc@kernel.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Sa0yTZxTe+37XdnZ7rSy+4rK4LssWkjkwZDvJnLjEZF8yF5fs1y6JNvJN
-	yrhZLooLDnRoh5fWZkAoOiuOezOwXASxMhC5aIh4qelGC6K1rDB0soKzlmLLYuafk+c85znP
-	c34ckVGf5GNFXUaOrM/Qpml4JaucWXbqnU/KjqTGdwTjwT3u5WAuYGDheJONh4XKswIY7BUc
-	jPzaiGB8zoAg8HhUgH+awzyU+4tYsPgqBfBf+hhmxrs4qPGGMUyX/c3Dk+GrDJSXjiA4NeFh
-	oLV/DMFkWxDBDe9LMFR6iIeZa8cxWPc5OOi8fU6Aa9MhDI32T+GKqQpHvHkoO7MSKsv340j5
-	E8OdOosAoYkEWLRmgsdYysLQ2C0OAjcnMNgO+xiw3420FT+7eTjvGGLBsBBA0N9xB8OYbZGD
-	pkkXhiv9g5E1Sz0Lo8NGAVymewim52sYqJl7IEBRz2kWfM4DGMy+WQHauosRuI9OsXDglzMY
-	bv7ehSDo6eAgWHsJweyJMAfND2t5uG8KcBs/kh4VH2WlhpZ2LBVfX+ClQPV+Rio22ZB08a8H
-	jPRDyy7JMW9lpctVVOq0eATJas+VWuripNPn/Vj6Y/pDyd7wIy/ZZ83CZ69/qVyfLKfp8mT9
-	uxu2KVM8xmouy8Htbr9tFArRMbYEKURKEqm52cU/w50OG1OCRJElb1LfvaQozZO3qMv1mIni
-	GBJPJwf34RKkFBnS+Br9aXxAiA5WkPdpq/sQH91VEaBXL78c1ahJE6ZmZ+uSRkWW06EK71Iu
-	Q+KoK+zHUT1DVtPasBilFWQDtV3wLmW9Qt6gv7UPLGVR4lPQqYPV+L87V9GeOhdrQsTynK3l
-	OVvL/7ZWxDQgtS4jL12rS0tcm5Kfodu9dntmuh1F3ramIPRVB5od+bwXERFplqlGjh1JVXPa
-	vOz89F5ERUYTo/quoCRVrUrW5u+R9Zlb9blpcnYvWi2ympWqdfO7ktVkhzZH/laWs2T9sykW
-	FbGFKHUzfZHLEU50b+G/tllL/91c+MIHX7y3M1QVHBAvLlY2bnQix9bQ+m/2rupLqTh5OFbd
-	tqdohWHQkBhucWdtSlD0JJj7zuVOuv13lzvr1zgK7m+bSvJefzKs6Vd2dQvDTsVZ/UBD/Tpv
-	3/fbR2MOTrz96GHWTNLiBSO6IexYs/fVLRo2O0WbEMfos7VPAWCHzluyAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SfUxTZxTGfd/39vbS2O3aod6IWUxl0ZD4lWg8m4sf2RbvNDOaLEFnnHbj
-	RgqlaqsgW4xSaAZ1alttCa0ogq1M6mDlw3WujGAEUYitH6NRsJhciwQQo1QjUFhLYuY/J+c8
-	5/nlOX8chihiknmMWntQ0GlVGiUto2Rb1hQu2Ww/kbW82s5AsfEo9IRFCfxb0EJBdLSYgrO1
-	HhpizqtSKPaWSeBmt4GCwO81CMLRYgRvxp0EjL4pCmLWNimMvn0kBVsBgil/GwJ70EogFPiH
-	gKehAMOrukkaBq+/RGB7ItJQOlBAwYj7VwSOiFMKAzc2wnD4mgSmevsxdL8eQuAWJzGILb8g
-	iNmz4XxlfRy3v6BhvOsOgVJbAMGFJ70EXg70IWhoe4ygv3EMgb/aQMNTcyOBe+IHcD86QkOH
-	7TgNw8GzGJ7X0VBh8Esg2DmIoNxpRRB56MdQWFVLg73cS4Gv7y8pBAcnMPTYrRhqvN9A2B2h
-	4La5Esdvjrv+mAvO0kIcL88w2K5cw+vdiH9jPEnxl+ubMG+8G6N5zzkP4sfHrIgfdRUS3miO
-	j9eHRghfVJ/Hu24P0fxY9AHN+19XUPytSo6/WDKGeUvXEt7n6JVu3fCd7PMMQaPOFXTL1u6R
-	Zfaeckn2+yWHm/pOSY8hC2VCSQzHruR8fg8xIYah2E+4yNN1CZlmF3Gh0FuS6JPZ5Vz/TQM2
-	IRlD2JqPuTPhdmli8RG7mmvoOU4nWDkL3J1bHyY8CrYWc9YHDdMeOTuL6ygTp7MIm8aFJgdw
-	wk/YFO7SJJOQk9i1nKdZnM6azS7kWprasRnJHe/Rjvdox/90BSKXUbJam5ujUmtWLdVnZ+Zr
-	1YeX/rgvx4viT+k+MmH5E43e29iKWAYpZ8oDlhNZCokqV5+f04o4hiiT5T8fMWUp5Bmq/J8E
-	3b7dukMaQd+KUhhKOVe+KV3Yo2D3qg4K2YKwX9C922Imad4xZG4v2TX/i5IFXak7872z1Zlf
-	Pg6EijTN5KTPtmOoSL/z+23LtKldaYcaXdVKU2k0b05VimgNlnV7A2dM4WrX1XLVloX2Hzqp
-	zzIu8es76hbvdVZ9Onzh24ruPEPqb191bp+RHli3Rvza0pceOdCcc9r899SMzQvuh3J3Tww+
-	G+/A55WUPlO1Io3o9Kr/AKCz9huQAwAA
-X-CFilter-Loop: Reflected
+In-Reply-To: <CAMuHMdVBjxXNX19k55Yu4D5GD1nkb31TuBJN0uFDqD9Oe5Gtsw@mail.gmail.com>
 
-On Tue, Aug 25, 2026 at 03:10:28PM +0200, David Hildenbrand (Arm) wrote:
-> >> As the saying goes, it's hard to teach old dogs new tricks, but in the end
-> >> taking care of two dogs is likely harder than only a single dog? :)
-> >
-> > Or it's better to train a unmatured hunting dog than to teach a pet dog,
-> > how to hunt, for better hunting, even though the pet dog might
-> > eventually become able to.
+On Tue, Aug 25, 2026 at 09:53:18AM +0200, Geert Uytterhoeven wrote:
+> > +static unsigned int pata_cswarp_data_xfer(struct ata_queued_cmd *qc,
+> > +                                         unsigned char *buf,
+> > +                                         unsigned int buflen, int rw)
+> > +{
+> > +       struct ata_device *dev = qc->dev;
+> > +       struct ata_port *ap = dev->link->ap;
+> > +       void __iomem *data_addr = ap->ioaddr.data_addr;
+> > +       unsigned int words = buflen >> 1;
+> > +       u16 *buf16 = (u16 *)buf;
+> > +
+> > +       /* Transfer multiple of 2 bytes */
+> > +       if (rw == READ)
+> > +               raw_insw(data_addr, buf16, words);
+> > +       else
+> > +               raw_outsw(data_addr, buf16, words);
+> > +
+> > +       /* Transfer trailing byte, if any. */
+> > +       if (unlikely(buflen & 0x01)) {
+> > +               if (rw == READ)
+> > +                       buf[buflen - 1] = raw_inw(data_addr) >> 8;
+> > +               else
+> > +                       raw_outw(buf[buflen - 1] << 8, data_addr);
+> > +               words++;
+> > +       }
+> > +
+> > +       return words << 1;
 > 
-> I'm not sure whether "pet dog" is the right analogy to lockdep in that scenario,
-> though ;)
+> This may be one less than the actual number of bytes
+> Why not buflen?
 
-Ah.  Okay.  I will be careful in using terms.
+Cause every other driver (e.g. buddha, falcon, gayle, etc) is actually returning
+words << 1: i think we are returning the "whole number of bytes" read
+from the bus/ATA register here, or at least that's how i understood it.
 
-I wanted to tell DEPT has its strength, lockdep has its own, and they
-are different.
-
-	Byungchul
-
-> 
-> --
-> Cheers,
-> 
-> David
+Anyhow, thanks for the review, i'll send a V6 addressing all comments.
+-- 
+bye,
+p.
