@@ -1,203 +1,138 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+Received: from mail-vs1-f43.google.com (mail-vs1-f43.google.com [209.85.217.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AC3F3CFF6F
-	for <linux-ide@vger.kernel.org>; Wed, 26 Aug 2026 19:31:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C598335C696
+	for <linux-ide@vger.kernel.org>; Thu, 27 Aug 2026 07:29:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787772699; cv=none; b=s7ZkZ55lMwtCIdtHpMHrhg50Gs9vn7jObyH4NwBPrumq63TVQDeN025XFeD6EumnJJ0zOGO2qwzJhTQk+tmgkFS9R8vfrZWnF85Mg4nrMvK2nAU1ilvOzx04AtBn2PXgyF6kqBgA2n8GhEQSaY2QgulLaAANVwVDIsfbf+FlX7c=
+	t=1787815769; cv=none; b=qLUGoHcbKeA2uR/DTKOiwYkfEEUMeyhMG9zh7Ep1Y5OUIKokK5yr+PXmPGnWFJ1wCVRsqJUOwMw2WroDH3NGZf9XqQhesGxO5pbRTwCXYXiVklVp+35qKCKrXz/sIOr/5tsOo16q1H7Ll3/pYfVw4Z5GwJW5dMt2z/Y+6GboIuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787772699; c=relaxed/simple;
-	bh=SGfLYuzawYM7CArQUCVBEeD5eD6OckEYf0HNwbCiXAo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fLhZ2uXnD6/pF8M0GVe71sHRQwjEfE7uJs39ZjygPP1biijHHzNdd8WBfm5vXo11MLiPPSyPbVw0D406AFj0Dd/cHlYpClK1dhRHkNBMZXqNf1HABD3bOqa46f6qUN81HXrdcSyxb/5IOYp35A+tFr9rwCLJji1+GakIqRdYG30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eTkQvk8W; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+	s=arc-20240116; t=1787815769; c=relaxed/simple;
+	bh=mP+PND9MZnfOzg3J+drMZ/8E/kF9YudaTPVbTh6JzI4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=esyf6BU1tROufjNrZepQ5bHOxd/mU58/GJdCoaQJZiEL8FgGiIIbU8x3ILieyTj9lCz8caieUp9/Q31kFRqz1arDQa6Icv8IDF1EsG3xEWiZYvNvZ7JA8dV7ujrcgSxUFCWiF4Gv45BqrYgJ1nlGXtrs5YDhryGtWIEtln3P028=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.217.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eTkQvk8W"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-cc11a905ba5so951149a12.2
-        for <linux-ide@vger.kernel.org>; Wed, 26 Aug 2026 12:31:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787772689; x=1788377489; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=87q+5ivROSLtYuJS4l3dPY+myx5uTzr/xnq7BAcE3WU=;
-        b=eTkQvk8WMa6mlDzcSyV11t0wN9va+X95JuON5Yg0VnIoWdT+OXtWRhY8Ov9dizgPbl
-         C/sdl5KXw2vMPgE8vNIB42TIz0h6BGIojgFazpMx1qwFKT/2z1m3a8KiES7M8h3ohz+l
-         gl53EBCR3gtRQdumbv8MCTfFubHY31ivSW7xmhRE4Fawaw0xMoiBOKJEHrVvhM8tmWCe
-         AEHSNGKjKZaTFxDGTcvWeWG4fl8dHWSBEUy82gMRgizQwEo6xZYq4tyfPbrwGiNgQjYW
-         bajbn5Aqdl1MCol/2ovKpm43TLiGcQOPttPURiXR+KLYdE8tEOwMMxVGucajnTRQGHXd
-         cGrg==
+Received: by mail-vs1-f43.google.com with SMTP id ada2fe7eead31-77e35e008e8so643640137.1
+        for <linux-ide@vger.kernel.org>; Thu, 27 Aug 2026 00:29:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787772689; x=1788377489;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=87q+5ivROSLtYuJS4l3dPY+myx5uTzr/xnq7BAcE3WU=;
-        b=rOds/Yg55SSex9GCdfPQWB+5x2Ti+iJSnqU8rXE7WBwupJS6qnhJPnC1oRNCkV51pG
-         oa3V/bZG7wJsluX0+5wPlWMOQTsCN8Zjwh0V3idWG84sYSKucXs/fRCA/ccN6x4//Pz9
-         FWNMM/okAleK41Crz+/JCyU86uvU7NveTgV4dm4Wjxo1ADZhcLrXXfgrfIWdbmfLPp/k
-         DA1N+dcVlTXPug268mwTnIML4fTHoWz58nbwtcRVyyjWJUjr8GpHCbjeUO4hdqMKmc7k
-         NJWg+oEuKIO565uBAPlYc+09SitdE7XHtB+j/9JiRsEbN73ViuGqLlH1CatvY92+MWqU
-         XN9Q==
-X-Forwarded-Encrypted: i=1; AHgh+RrYBZeCISK8t7foDR88gNbTt1HjuYH194N+hEIRaqQUakKe/nXjKdA4wcl8MCnVh0q9rwDxXQvT3cs=@vger.kernel.org
-X-Gm-Message-State: AFuF++mkItZ+hprGbtA57f8B78fwiEfcuESe1QYL8Zm0gx/0ln3NTLHJ
-	gvx7/2ztCnkou8b9kfE7W+0ADcSdOkMhV5qdvPonAEAUxFuK/bCSHUPd
-X-Gm-Gg: AR+sD13afLWWVHvjDGneA1xeSJz6K1ApSwcVzlJutc3Gz2ID1rF3yOL3VaeR9qLvnJO
-	JHi9MExdLLwasHZNTbHzhdru/Ut9nWnW5XWvGuvlk1liYZThbhxhZyStxuzDem3RYUzAJm4PWaU
-	Irpi6hOS01SHwEdzGcWPbxyC70q0McFK/Ci6+PdSMUWCt1SAtpgzLczm/DKjLFEnz1VFvjINxYL
-	ETDm48naC4aGN/TcwCe5v1BtdB9Q52p8rHeX988oeDydelqcv6ANE17yJCE020C8EJRzVvdbeia
-	NBA5Jv/VyO/SaUNfHRAUeq1nbk8I0IRs/7P94q2nrEhS2UylzwvpEGtgfajSAcVPtxC1que6mx4
-	r7T2dvkdltJQSaDGePm8qN9QyvxCxZS4FLPod0EifwygqCMlB8NBb5ChIHuOO/IVsw+GAFKziz7
-	1cuNCUTeug9Ri/AqIretXGl8g/UnuunWKz98OkedFu0ml9wly4CQjP8ZXIkunNEqkrVx48n7Zbr
-	UhqXvVkfELgRf8nLsFCG8h6B9Ug/6LHKti+waqcTNPUaIn7SDTr3OxU3zy376Eadv1rX82YiFix
-X-Received: by 2002:a17:90b:4b0f:b0:37f:e1b6:4c7d with SMTP id 98e67ed59e1d1-3966d1d9579mr17435841a91.6.1787772688569;
-        Wed, 26 Aug 2026 12:31:28 -0700 (PDT)
-Received: from ?IPV6:2001:df0:0:200c:b984:9fe3:5dce:f291? ([2001:df0:0:200c:b984:9fe3:5dce:f291])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3965547159asm7952454a91.12.2026.08.26.12.31.24
+        d=1e100.net; s=20251104; t=1787815766; x=1788420566;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=A0FUFGzTaYR2pVts5J1GWb7YxO4YjT4Q+LUng3iGalw=;
+        b=HInG4F30PHdpJOyq5Vv2kPqpCrYtYpTTwzilW3JiAA/yCSEp+v/6+SJKPtCeGkGWnZ
+         ch8d3761S5B0teNQaCw2dJqikmjznIoLKXly54rl3ObQhhRJw9fZH8OMgB33inwd5szo
+         jP/M2aXmw3sCiRoPKgt58Un9lIu4ymJo4RvU7gUUYMkLYN8jI15o6DgUH1sb2nH066jH
+         d24Sy0TXUKeNpTO55BtVa61vY/OwA6543woEkYMtZZpDiq60+hOg7+zH/FRxeAknDMZ8
+         sqlEWTbyhN6qzIJL4PPqUnhs4Zq7teaLW/L+2HmbAeut7YsXH7AP0hUNMJMXKOdN7L0k
+         AIaA==
+X-Forwarded-Encrypted: i=1; AHgh+Rq0GaxWVXkC3dgf6U0YtDMb1YMLwDummTBiLlPlJ63SqmefP5zr+QX0NU+o9ggm7yf1VC66fztvOvw=@vger.kernel.org
+X-Gm-Message-State: AFuF++lIbGdNjQngvjLh95amzkpdxS5H+Wv3uDxp8qiFHVH9R0VcjdW9
+	2nhBm4Lb8RYa0xWa9n3VzbTvmrOQb+DHneuHlYBKi36OIG50Ogh4awoGrs6rfghH
+X-Gm-Gg: AR+sD13ZIPo/CgyeK4e7iyhT7vkFM9s5lZYZQhmqeJ5NwGRvhRZNvNSsN+DtoLwlXl1
+	BGwrXaXAhpQk6I/UQWAG/drUhS5+UDZF3nGXVUZjuGx9yWMMvU2y2iLT1ZdC0Slv/zVCtylxPgM
+	xrfxBCz64ggMjuI8Wb/ry2JmUEeZLrZfy0Vx8iORrM9CH8iWZVMCy7MoozvmytKNOmUJp8ayttG
+	U3K+HYOgNdzCyMErHSVpnGS5mgK4sKuADbTyS5aumeStnekCyT7KpwTjifBQQpD0mc4wcPuIPgJ
+	S93nMSOahs2xuNIZ7EKm+4IWY+mvL6y7x7zGiKqT4ROGvFExTePp/m//SJcszw2m+Y5zsruee4y
+	Ys1hi1W+Kwdb6tfsN8mWVA9sUeoCKEz9g5c3R7hqprSxV6/8qhNw365aMA1sr8tvgHOJhXIOo13
+	gO6Kji1EpawBV1Vu8o0eBmftSx5YudAir7oGEhRg2+a1jwKeYAXxKmGEjbAweSri6otOrjdLL5U
+	RtEHEdHOnNVlNldRTfBBCnQ0Q==
+X-Received: by 2002:a05:6102:2b85:b0:782:7519:ae8a with SMTP id ada2fe7eead31-7841d2495femr1188220137.3.1787815766588;
+        Thu, 27 Aug 2026 00:29:26 -0700 (PDT)
+Received: from mail-ua1-f50.google.com (mail-ua1-f50.google.com. [209.85.222.50])
+        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-783081c3988sm3877974137.11.2026.08.27.00.29.26
+        for <linux-ide@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 26 Aug 2026 12:31:28 -0700 (PDT)
-Message-ID: <b010c98c-ecd5-439c-b07d-3efad26de7f2@gmail.com>
-Date: Thu, 27 Aug 2026 07:31:22 +1200
+        Thu, 27 Aug 2026 00:29:26 -0700 (PDT)
+Received: by mail-ua1-f50.google.com with SMTP id a1e0cc1a2514c-977ba4d3b49so532417241.1
+        for <linux-ide@vger.kernel.org>; Thu, 27 Aug 2026 00:29:26 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RpqQlEQBwz+p80XzU3PNLhWMoc1xG/+ojffPXHyFTxWxcEaTfvomvPZMXSb/QY2Kc9ajRuu95ogMGk=@vger.kernel.org
+X-Received: by 2002:a05:6102:2253:b0:783:c17c:e7de with SMTP id
+ ada2fe7eead31-7841d55ca7bmr886817137.9.1787815766141; Thu, 27 Aug 2026
+ 00:29:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <20260824153339.512487-1-p.pisati@gmail.com> <20260824153339.512487-2-p.pisati@gmail.com>
+ <CAMuHMdVBjxXNX19k55Yu4D5GD1nkb31TuBJN0uFDqD9Oe5Gtsw@mail.gmail.com> <b010c98c-ecd5-439c-b07d-3efad26de7f2@gmail.com>
+In-Reply-To: <b010c98c-ecd5-439c-b07d-3efad26de7f2@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 27 Aug 2026 09:29:14 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVqu-ayQYeJTsA8LoAX-=hP1nVJRJDv0ovOM+D3eLxhnA@mail.gmail.com>
+X-Gm-Features: AcwNN1WfBH6kKUpC9SplHRabqGM1MYPdaAcm9zslNQlogkHifqiVLaGwh4s0nUM
+Message-ID: <CAMuHMdVqu-ayQYeJTsA8LoAX-=hP1nVJRJDv0ovOM+D3eLxhnA@mail.gmail.com>
 Subject: Re: [PATCH v5 1/2] ata: pata_cswarp: Add Amiga cslab ata support
-To: Geert Uytterhoeven <geert@linux-m68k.org>,
- Paolo Pisati <p.pisati@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
- linux-kernel@vger.kernel.org
-References: <20260824153339.512487-1-p.pisati@gmail.com>
- <20260824153339.512487-2-p.pisati@gmail.com>
- <CAMuHMdVBjxXNX19k55Yu4D5GD1nkb31TuBJN0uFDqD9Oe5Gtsw@mail.gmail.com>
-Content-Language: en-US
-From: Michael Schmitz <schmitzmic@gmail.com>
-In-Reply-To: <CAMuHMdVBjxXNX19k55Yu4D5GD1nkb31TuBJN0uFDqD9Oe5Gtsw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Paolo Pisati <p.pisati@gmail.com>, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
+	linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Geert,
+Hi Michael,
 
-On 25/08/26 19:53, Geert Uytterhoeven wrote:
->> +static unsigned int pata_cswarp_data_xfer(struct ata_queued_cmd *qc,
->> +                                         unsigned char *buf,
->> +                                         unsigned int buflen, int rw)
->> +{
->> +       struct ata_device *dev = qc->dev;
->> +       struct ata_port *ap = dev->link->ap;
->> +       void __iomem *data_addr = ap->ioaddr.data_addr;
->> +       unsigned int words = buflen >> 1;
->> +       u16 *buf16 = (u16 *)buf;
->> +
->> +       /* Transfer multiple of 2 bytes */
->> +       if (rw == READ)
->> +               raw_insw(data_addr, buf16, words);
->> +       else
->> +               raw_outsw(data_addr, buf16, words);
->> +
->> +       /* Transfer trailing byte, if any. */
->> +       if (unlikely(buflen & 0x01)) {
->> +               if (rw == READ)
->> +                       buf[buflen - 1] = raw_inw(data_addr) >> 8;
->> +               else
->> +                       raw_outw(buf[buflen - 1] << 8, data_addr);
->> +               words++;
->> +       }
->> +
->> +       return words << 1;
-> This may be one less than the actual number of bytes
-> Why not buflen?
+On Wed, 26 Aug 2026 at 21:31, Michael Schmitz <schmitzmic@gmail.com> wrote:
+> On 25/08/26 19:53, Geert Uytterhoeven wrote:
+> >> +static unsigned int pata_cswarp_data_xfer(struct ata_queued_cmd *qc,
+> >> +                                         unsigned char *buf,
+> >> +                                         unsigned int buflen, int rw)
+> >> +{
+> >> +       struct ata_device *dev = qc->dev;
+> >> +       struct ata_port *ap = dev->link->ap;
+> >> +       void __iomem *data_addr = ap->ioaddr.data_addr;
+> >> +       unsigned int words = buflen >> 1;
+> >> +       u16 *buf16 = (u16 *)buf;
+> >> +
+> >> +       /* Transfer multiple of 2 bytes */
+> >> +       if (rw == READ)
+> >> +               raw_insw(data_addr, buf16, words);
+> >> +       else
+> >> +               raw_outsw(data_addr, buf16, words);
+> >> +
+> >> +       /* Transfer trailing byte, if any. */
+> >> +       if (unlikely(buflen & 0x01)) {
+> >> +               if (rw == READ)
+> >> +                       buf[buflen - 1] = raw_inw(data_addr) >> 8;
+> >> +               else
+> >> +                       raw_outw(buf[buflen - 1] << 8, data_addr);
+> >> +               words++;
+> >> +       }
+> >> +
+> >> +       return words << 1;
+> > This may be one less than the actual number of bytes
+> > Why not buflen?
+> >
+> words = buflen >> 1;
 >
-words = buflen >> 1;
-
-followed by
-
-if (buflen & 0x01) words++;
-
-makes 'words' the correct (i.e. rounded upwards if buflen was odd) 
-number of words transferred.
-
-The return value is then either correct, or one larger than the actual 
-number of bytes?
-
-I believe the template for these functions was 
-drivers/ata/libata-sff.c:ata_sff_data_xfer() which follows the exact 
-same logic.
-
-Cheers,
-
-MIchael
-
->> +}
->> +static int pata_cswarp_probe(struct zorro_dev *z,
->> +                            const struct zorro_device_id *ent)
->> +{
->> +       static const char board_name[] = "csWarp";
->> +       struct ata_host *host;
->> +       struct ata_port *ap;
->> +       void __iomem *base;
->> +       unsigned long board = z->resource.start;
->> +
->> +       dev_info(&z->dev, "%s IDE controller (board: 0x%lx)\n", board_name,
->> +                board);
->> +
->> +       if (!devm_request_mem_region(&z->dev, board + WARP_OFFSET_ATA, 0x1800,
->> +                                    DRV_NAME))
->> +               return -ENXIO;
->> +
->> +       host = ata_host_alloc(&z->dev, 1);
->> +       if (!host)
->> +               return -ENXIO;
->> +
->> +       ap = host->ports[0];
->> +       base = ioremap(board + WARP_OFFSET_ATA, 0x1800);
->> +
->> +       ap->ops = &pata_cswarp_ops;
->> +
->> +       ap->pio_mask = ATA_PIO4;
->> +       ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY |
->> +               ATA_FLAG_PIO_POLLING;
->> +
->> +       ap->ioaddr.data_addr            = base;
->> +       ap->ioaddr.error_addr           = base + 1 * 4;
->> +       ap->ioaddr.feature_addr         = base + 1 * 4;
->> +       ap->ioaddr.nsect_addr           = base + 2 * 4;
->> +       ap->ioaddr.lbal_addr            = base + 3 * 4;
->> +       ap->ioaddr.lbam_addr            = base + 4 * 4;
->> +       ap->ioaddr.lbah_addr            = base + 5 * 4;
->> +       ap->ioaddr.device_addr          = base + 6 * 4;
->> +       ap->ioaddr.status_addr          = base + 7 * 4;
->> +       ap->ioaddr.command_addr         = base + 7 * 4;
->> +
->> +       ap->ioaddr.altstatus_addr       = base + (0x1000 | (6UL << 2));
->> +       ap->ioaddr.ctl_addr             = base + (0x1000 | (6UL << 2));
->> +
->> +       ata_port_desc(ap, "  cmd 0x%lx ctl 0x%lx", (unsigned long)base,
->> +                     (unsigned long)ap->ioaddr.ctl_addr);
-> Both printed addresses are virtual addresses hence not really useful.
-> If you want to print something, please print board or z->resource
-> instead.
+> followed by
 >
->> +static const struct zorro_device_id pata_cswarp_zorro_tbl[] = {
->> +       { ZORRO_PROD_CSLAB_WARP_1260, 0},
->> +       { 0 }
-> Please use named initializers, and drop unneeded zeroes, like Uwe
-> just did in all existing Zorro drivers:
+> if (buflen & 0x01) words++;
 >
->      { .id = ZORRO_PROD_CSLAB_WARP_1260 },
->      { }
+> makes 'words' the correct (i.e. rounded upwards if buflen was odd)
+> number of words transferred.
+
+Thanks, I had completely missed that increment.
+
+> The return value is then either correct, or one larger than the actual
+> number of bytes?
 >
->> +};
-> Gr{oetje,eeting}s,
->
->                          Geert
->
+> I believe the template for these functions was
+> drivers/ata/libata-sff.c:ata_sff_data_xfer() which follows the exact
+> same logic.
+
+Then Life's Good ;-)
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
