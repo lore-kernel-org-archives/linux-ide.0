@@ -1,146 +1,199 @@
-Received: from mail-ot1-f53.google.com (mail-ot1-f53.google.com [209.85.210.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 985C6369D60
-	for <linux-ide@vger.kernel.org>; Fri, 28 Aug 2026 16:42:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A841F353A74
+	for <linux-ide@vger.kernel.org>; Fri, 28 Aug 2026 19:04:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787935338; cv=none; b=OoWCz5Ae+9G19TmaqtHA7LjEYlDyi5KsKBITkrStnUD8Hc/zFHgoAuoqa3mH5iGzk3GwbAUOXppotGpGzoAY3BlGLn/3HDMw8QbdPWBZRAHR1Nh7K00D6e6DEW2eNOxgfxUa7H1u+zPFCCnQjLhktswcctZ2f80X12VfzQc93NA=
+	t=1787943894; cv=none; b=Jpv+tOech+cOzsy/dPrUQU8w6x27lCf2ZfSeW/Cld2SlOfUajciCxnIX94GmIyL7KvEra+7vE7CYjF0m+3Z6TPJ0A+aNKKTgpQTSbCHgYWv2sR/MJ3F633n6o0UxS7QwVFvU3c8CnmlvyIcWOM5NyYVrgLpwbmeAZ/hfsNBZDqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787935338; c=relaxed/simple;
-	bh=iWJRGJo8GOhSzF7hKjM4hSEZnaMvnsnJxm8SvJPRXuM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=rQZDHRn7heLY+fcJYcb4wzIIrJcdVMzVjNYVcWb8NuwrhxvF403bj1UJsLekOFaxU99FSXCpZT9hvheYfhMsxPajHpch5NaSUCcFkEsYzsXXienvAKz38MBEGwoQ5an62VbSX11cKfMVV+gX3KYl9Q8XoiEKFcDMvR9A60imsW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PihfvZO9; arc=none smtp.client-ip=209.85.210.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787943894; c=relaxed/simple;
+	bh=DhLO+J2p2uzXx1cL4Wn3uGQmc11yzo3STsVZdwFYiOo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uvCQXsUD2+MjC5cNfcnJQ2asdK2MhtTawHTVwkI3iy4Zu1Tgp6oVwzCKKE+wDPLVTeJ3czBHh+713lCbK5RbmUJdfPPfpj47MwbH/ncgSy5/7KFSXMiSHcpeE45Sl+uhU/8wcwWKX/buxDTb+CQWgt/SQyhCXrLYVWiOKQxvmn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H9Mtjcsc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PihfvZO9"
-Received: by mail-ot1-f53.google.com with SMTP id 46e09a7af769-7e9ecb1e13cso1409052a34.3
-        for <linux-ide@vger.kernel.org>; Fri, 28 Aug 2026 09:42:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787935335; x=1788540135; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=qltHbqH6zAk9rxLPd6W/XN3mLDgy50kN6vVpjpgbgd0=;
-        b=PihfvZO9ZaJ5nvVrvqlF6DSFY2QuWc76EKVWxusYSPPGBvmUNWDB7wRk8Wx43G7rnZ
-         hUdhH70NGhzzut2arpYwa1Nk67asR9yC2f2ivTow62WhyRVLc5EfkI5PqrtDo2lIMrgD
-         m7yHJAtMYiIeKPRIr5Xnf1EhVYODO/ArRmBkRiHX6Pv2FhFrfWPoKDsjCZR918ahPEnS
-         736o3pPtOj3jbwTG4+IskKG7FLHuSYLDArfUAgT5NUA+UBhSEVA5Tvz7ZJaKY5FfJENK
-         WO64LAX/TenFuq2G+cQoTT0LRQKa9IawYCj/HkZA3ps+k58Z43NaQPsxtcRzhAJUk8xs
-         sRVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787935335; x=1788540135;
-        h=mime-version:content-transfer-encoding:content-type:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qltHbqH6zAk9rxLPd6W/XN3mLDgy50kN6vVpjpgbgd0=;
-        b=AS9OjzJaVY10USqknCMUYwCeYe8j+7ZnRsWA+3mrHMX5EgjkBMKzbg53e8jFqnYsg7
-         L+ES4DV+MmKRibtGQLmTgbVf0SbfUAEQ1e0T50+xB2WJb/ym6SzzOAiiKGA8tqx/HTag
-         IebLeJ0FAe3eaVv98gHK/WA0EH9Cz1b/kXm3H2Aas9l45cxw+MqGpZqMRyTOhHSwpmbq
-         1TQJkj2gmyBuE8J9zajtvzv4wPozINHOXrUM054IEOJdIk6r9cZeH3NPnzVgImHYCEez
-         a4rBQXxhK1l47Yo6PN9pBbFXzrMZvV86OJDkZT/vXul0BNtbQz16czCiV1FDYhEkSSjd
-         rpOg==
-X-Forwarded-Encrypted: i=1; AHgh+RpbjitWaxFuBDBVmHcSSthmG04NFgWBqy2wexNDMmYJPKzlikiN8yEI5O42Kz+RYUa+2ERwu/DgAFI=@vger.kernel.org
-X-Gm-Message-State: AFuF++lzVKKg4yI7HLutIObPtPjOWLYgW2UqLZJUeGICkvFutRoOR80U
-	r9yl30PL/RhJJiidZsD++dxyA7migi77IyA3tYWLAbfkIBYj8d4as/Wf
-X-Gm-Gg: AR+sD11sqBZLLeBEf1k2Br8ZuwKgv8mtSJ4lWjfJUviURwN/QaS25zKca5HuVqMVjo3
-	1wHHdRwCZM27bnJzIw3qJw2jwYLI2YkNll8jzKB6WaJ03YszYAeujhJIqpUDBjgUNHUQ+GO83EI
-	sJ2C3lNNk5cZCHB+VoVXSAfAE0jHopBBIMHS3C06MXeH6uxJF02W+/a+3UeuTliHBJ2NI1ZjMaI
-	lS9XIPvFi5rFB//omJ/c8vcPieI0R1XcVb95dszp7wGyTdgBuADIthHxDU7fxem/YNRbsjZkKho
-	U20nQ5DF/SrrCGiLPVzkx1IWEDsuz6zkNAI54NaIAy2+qIeTIl9rGrDP9WkswbocsQIVy+YZJ6s
-	P6p2YjSw5dfmajR05eGerM86PnWJfteNSFV4BDMAjTiboPHk4dVK3uyFJpGHtKN0gYo9w9ZfFmy
-	VeKhnQHODBQHjKCE/dxSNWGV59NoKdc8Fv6E5oid1rqfXJc9iKen3HryrJwxcEZHmjmV//MOnsM
-	JLz0nNYLA0wlaAnqY2cqLXOKQ9KblZIKp1Tlzu1nzmbLIK0bZ2hrgUN+YuBSKXrX94I
-X-Received: by 2002:a05:6830:4491:b0:7f4:eb7e:c8f7 with SMTP id 46e09a7af769-7f4f2365bb9mr8713253a34.5.1787935335216;
-        Fri, 28 Aug 2026 09:42:15 -0700 (PDT)
-Received: from [127.0.1.1] (ppp-124-121-113-94.revip2.asianet.co.th. [124.121.113.94])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f4fa99d87fsm1567760a34.20.2026.08.28.09.42.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2026 09:42:14 -0700 (PDT)
-From: Mikael Etienne <mikael1022bzh@gmail.com>
-To: Mario.Limonciello@amd.com, vasant.hegde@amd.com, iommu@lists.linux.dev,
- linux-ide@vger.kernel.org, linux-block@vger.kernel.org
-Cc:
- regressions@lists.linux.dev, joro@8bytes.org, suravee.suthikulpanit@amd.com
-Subject: Re: [REGRESSION] Silent SATA read corruption with dma-iommu on AMD
- 600-series AHCI (6.19 good, 7.0+ bad)
-Date: Fri, 28 Aug 2026 23:42:09 +0700
-Message-ID: <178793532947.1861819.4688629821762072134@gmail.com>
-In-Reply-To: <d49add14-c8de-4b6b-9049-4a07e5692ee9@amd.com>
-References:
- <CAHEgv3TiJUvS=Hustyem0ts8jkbFVAdzBazmPhCbv2sNnTsZkg@mail.gmail.com>
- <c5c2b503-e273-4aa5-ad9f-f7afee02ab9e@amd.com>
- <178791494900.1152725.12728124457005560389@gmail.com>
- <fb875f14-3b47-4d43-ae3a-0d0b17e1c64a@amd.com>
- <178793069172.1699234.13635367891277204598@gmail.com>
- <d49add14-c8de-4b6b-9049-4a07e5692ee9@amd.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H9Mtjcsc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAA831F000E9;
+	Fri, 28 Aug 2026 19:04:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787943892;
+	bh=Ea0sHq+wpD6PPHw8US8jIo700rhj2JKOb+r2KXTiZUE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=H9MtjcscQ9F/tygfWxlFMFbU8rGoillnhmRvYVLFYi+tnBs2R7mkKbjMnFMfJlVYI
+	 lZNoVBm72HVhYUZSpoAe4KfdLdUKRHIJGdbT4zt7ov7cW7/OnefD8dFKZS0Pc7XUkr
+	 EEctkhwPMTKmp4sM0tjxMwc1aXG+indJPH3jD2SMXgxrkqwOOqQXHnDcEtURpZ+La6
+	 CE9kDW1PWKxEi5RNLNn8kStKbT5jUSQtx+IJLkC43qF98cKp4YJ+u0Wv37+hTr/9qM
+	 0Mt2dvD2lgmiqsXzKTgNRv1Ycg5Hsc8KWThLlRZFKCGKCqHgS5KLjUg5jvvYlemT/R
+	 vGZSjTIDIrvPA==
+Received: by pali.im (Postfix)
+	id 48F7F4E4; Fri, 28 Aug 2026 21:04:52 +0200 (CEST)
+Date: Fri, 28 Aug 2026 21:04:52 +0200
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	risc4all@yahoo.com
+Subject: Re: [PATCH v2] ata: ahci: work around lost interrupts on Marvell
+ 88SE61xx
+Message-ID: <20260828190452.ic5j5bdnnbx2hs4f@pali>
+References: <3d72cab2-d491-4e86-8e69-a735242ec862@noerenberg.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3d72cab2-d491-4e86-8e69-a735242ec862@noerenberg.de>
+User-Agent: NeoMutt/20180716
 
-On 8/28/26 10:37, Limonciello, Mario wrote:
-> By chance did this issue coincide with you switching from something
-> different to the Ryzen 7 8700G?  For example switching from Raphael or
-> Granite Ridge parts to that Phoenix part.
+On Friday 28 August 2026 09:05:21 Hajo Noerenberg wrote:
+> ahci_single_level_irq_intr() services the ports first and clears the
+> global HOST_IRQ_STAT afterwards, as recommended by AHCI 1.1 section
+> 10.6.2.  The Marvell 88SE6111/6121/6145 family stops reporting interrupts
+> for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits:
+> PxIS keeps its content, HOST_IRQ_STAT reads back as 0, the port is never
+> looked at again, and the command in flight only ends in a timeout.
+> 
+> Measured on a Seagate Blackarmor NAS440 (Marvell 88F6281 Kirkwood,
+> 88SE6121 rev B2 behind PCIe) by polling the AHCI registers from userspace
+> while an IDENTIFY was outstanding:
+> 
+>   t=303.046  irqs 127  PxIS 0x00000000  PxCI 0x00000001
+>              IDENTIFY issued
+>   t=303.057  irqs 128  PxIS 0x00000020  PxCI 0x00000000
+>              CI cleared, DPS set, one interrupt taken
+>              ... PxIS stays 0x00000020, HOST_IRQ_STAT stays 0 ...
+>   t~308.05   qc timeout after 5000 msecs
+> 
+> The command had completed - PxCI was clear and PxIS had DPS set - so
+> ahci_qc_complete() would have completed it.  It never got the chance
+> because the handler read HOST_IRQ_STAT as 0 and returned IRQ_NONE.
+> 
+> Marvell's own driver for these chips clears the two registers in the
+> opposite order and says so ("clear global before channel"), and
+> ahci_xgene handles its broken edge latch the same way.  Since the
+> reordering costs at most one spurious interrupt per valid one on
+> conforming controllers, do it in a private interrupt handler selected for
+> board_ahci_mv instead of changing libahci for everyone.
+> 
+> With this applied, SATA-2 and SATA-3 disks work at 3.0 Gbps on the
+> 88SE6121 without the drive-side 1.5 Gbps jumper that was needed before.
+> Time from link up to a successful IDENTIFY:
+> 
+>   WDC WD5000AADS-00S9B0  port 0    7 ms  (never identified before)
+>   WDC WD3202ABYS-01B7A0  port 1   28 ms
+>   WDC WD30EFRX-68EUZN0   port 1  200 ms  (3 TB, HPA detection ok)
+> 
+> Only the 88SE6121 was tested; board_ahci_mv also covers the 88SE6145,
+> which Marvell's driver treats identically.
+> 
+> Link: https://lore.kernel.org/linux-ide/db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de/
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=216094
+> Signed-off-by: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
 
-No -- same CPU throughout, no hardware change at all.
+Thank you for successfully addressing this issue after working on it for
+a longer time.  It is very nice to see a successful story at the end.
 
-My persistent journal goes back to 2026-02-27 and every boot in it reports the
-same part:
+For me the change looks good.
 
-  smpboot: CPU0: AMD Ryzen 7 8700G w/ Radeon 780M Graphics
-  family 25, model 117, stepping 2
+Acked-by: Pali Rohár <pali@kernel.org>
 
-That covers 2026-03-17, 03-27, 05-04, 06-03, 08-23 and today. Same board, same
-CPU, same SATA controller. The 8 TB drive that first showed the problem has been
-in the machine since 2026-03-11, on the same port, and it absorbed two full
-multi-TB backup reads on 2026-04-01 and 2026-05-01 with zero storage errors
-under 6.18.16 / 6.19.x.
+As this change is fixing the support for more disks, I would suggest to
+backport this change also into older kernels, ideally by cc: stable
+line (so it would be automatic).
 
-So on this machine the only thing that changed between "three months clean" and
-"corruption" is the kernel: 6.19.14 until 2026-05-10, then 7.0.4. First
-corruption 2026-06-02.
-
-I realise that sits awkwardly next to your internal issue not following a kernel
-version. Two readings I can think of, without picking one:
-
-  - the hardware/firmware behaviour is constant, and something in 7.0 changed
-    how quickly or how often the 32-bit IOVA space gets exhausted here, so the
-    latent problem simply became reachable; or
-  - they are genuinely two different problems that happen to share a
-    workaround.
-
-I have no way to tell those apart from here, and I am not going to guess.
-
-> We do have a reproducer in our lab environment that will rapidly
-> allocate and trip this issue which is how we could analyze it and root
-> cause it.
-
-Good -- then I will not spend the evening trying to build a fast one, and I will
-drop the bisection idea unless you tell me it would still add something. If at
-some point you want my slow reproducer run against a specific kernel or debug
-patch, I am happy to do that; it is only my time that is expensive, not the
-machine's.
-
-> I don't yet have any confirmation we can patch this at runtime.  If I do
-> come up with a way to do that which works will let you know.
-
-Thank you, that is appreciated. For reference, iommu=pt has been completely
-clean here: 40 consecutive 256 GiB verification passes, 10 TiB re-read over 17 h,
-btrfs corruption counters at zero. I am running with it permanently for now and I
-am not in any hurry.
-
-If it helps your case, I am happy to be a data point on the SATA/AHCI side of
-this, since the ASM1166 report and mine are both ASMedia silicon advertising
-CAP.S64A.
-
-Thanks,
-Mikael Etienne
+> 
+> ---
+> Damien,
+> 
+> as requested, resent with the new title.  The patch itself is byte for byte
+> v1 [1]; only the commit message changed.
+> 
+> v2:
+>  - retitle "clear HOST_IRQ_STAT before the ports" -> "work around lost
+>    interrupts", per review
+>  - rewrap the commit log at 75 columns and reflow the register trace, which
+>    had lines up to 79 characters
+>  - no functional change
+> 
+> The answer to your review question is in that thread as well: registering
+> ahci_thunderx_irq_handler() unchanged for board_ahci_mv does not work on this
+> chip.  It still clears HOST_IRQ_STAT after servicing the ports, and the loop
+> cannot make up for that, because once IS has been written while an unserviced
+> PxIS bit was standing, this controller never re-asserts it -- the re-read
+> returns 0 and the loop exits.
+> 
+> [1] https://lore.kernel.org/linux-ide/50ebd35a-086f-40fb-887e-576e36e7a2b8@noerenberg.de/
+> 
+>  drivers/ata/ahci.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 49 insertions(+)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1618,6 +1618,51 @@
+>  }
+>  #endif
+> 
+> +/*
+> + * The Marvell 88SE6111/6121/6145 ("Thor") family stops reporting interrupts
+> + * for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits: PxIS
+> + * keeps its content, HOST_IRQ_STAT reads back as 0, the port is never looked
+> + * at again and the command in flight only ends in a timeout.  On a 88SE6121
+> + * this makes every SATA-2 or SATA-3 disk fail to IDENTIFY, while SATA-1 disks
+> + * happen to win the race often enough to work.
+> + *
+> + * Clearing the host status before servicing the ports avoids it.  Marvell's
+> + * own driver for these chips does the same and says so ("clear global before
+> + * channel"), and ahci_xgene handles its broken edge latch the same way.  The
+> + * price is at most one spurious interrupt per valid one, which is why this is
+> + * not the generic behaviour - see AHCI 1.1 section 10.6.2.
+> + *
+> + * Link: https://bugzilla.kernel.org/show_bug.cgi?id=216094
+> + */
+> +static irqreturn_t ahci_mv_irq_handler(int irq, void *dev_instance)
+> +{
+> +       struct ata_host *host = dev_instance;
+> +       struct ahci_host_priv *hpriv = host->private_data;
+> +       void __iomem *mmio = hpriv->mmio;
+> +       unsigned int rc;
+> +       u32 irq_stat, irq_masked;
+> +
+> +       irq_stat = readl(mmio + HOST_IRQ_STAT);
+> +       if (!irq_stat)
+> +               return IRQ_NONE;
+> +
+> +       irq_masked = irq_stat & hpriv->port_map;
+> +
+> +       spin_lock(&host->lock);
+> +
+> +       /*
+> +        * Use the unmasked value to clear the interrupt, as a spurious pending
+> +        * event on a dummy port might cause a screaming IRQ.
+> +        */
+> +       writel(irq_stat, mmio + HOST_IRQ_STAT);
+> +
+> +       rc = ahci_handle_port_intr(host, irq_masked);
+> +
+> +       spin_unlock(&host->lock);
+> +
+> +       return IRQ_RETVAL(rc);
+> +}
+> +
+>  static void ahci_remap_check(struct pci_dev *pdev, int bar,
+>                 struct ahci_host_priv *hpriv)
+>  {
+> @@ -1878,6 +1923,10 @@
+>                 return -ENOMEM;
+>         hpriv->flags |= (unsigned long)pi.private_data;
+> 
+> +       /* the Marvell "Thor" family needs HOST_IRQ_STAT cleared first */
+> +       if (board_id == board_ahci_mv)
+> +               hpriv->irq_handler = ahci_mv_irq_handler;
+> +
+>         /* MCP65 revision A1 and A2 can't do MSI */
+>         if (board_id == board_ahci_mcp65 &&
+>             (pdev->revision == 0xa1 || pdev->revision == 0xa2))
