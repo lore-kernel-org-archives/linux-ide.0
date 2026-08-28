@@ -1,102 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 940391E515
-	for <linux-ide@vger.kernel.org>; Fri, 28 Aug 2026 07:10:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5E883CBE66
+	for <linux-ide@vger.kernel.org>; Fri, 28 Aug 2026 11:02:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787901013; cv=none; b=MZI/LMJu/5DGbuAyuHC6RrZHjHTQPz+Gm6qXgnDA1pRTWTJQxgiW/DTP3xkCj2BfyOPX4dnJ43ribG7vQOAhJRFOZE4yKhdRvvQbaA4bTdqZ417YbqLZnBZjkcemMnAGl2NVbcLIXZs+e8YQzERpU3hnKqkJPta2ILVvycjP9UY=
+	t=1787914959; cv=none; b=sf0iaoibjGcQqZTG03LqC6FADrOoBj/CbaLx9g8ofiURcj3JRMi7ucGmwrYN/sCfl4lTRjvG3bWEmiK29g5VT8tmtyC58O6edUGsYOTmXV+n+kjRFH6YX6doAlw9c3gpPIlKyJqQgqwQJEmWc1wU1omsXoEupTvgumXTLKVvbPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787901013; c=relaxed/simple;
-	bh=8cdfRe1Er+WCohwID1nWeX4xeZ87bkCcb6SmqmTMEQs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OugSzodrQIqc2xqWevGCcnJLMLJoYC6YAXkvm4lZIH+E5ZZk6nEUcFw2aef9GgM8fv9dDfouXBu5wAdI8PduF562OmBjntP0zTp0rpBLE8Gg4B1ObI2jZvZ0HONCet7ImjYoOK/hlEW/CTg0M7Gg33orXia+HI006DylL8JI/Mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I+IP3LGz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787914959; c=relaxed/simple;
+	bh=PZOxbkSyo2Wd9KRPQTNlBN8b6sV2MpnNkaeoZtqPgYM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=BDhw3nNrkSK3baEAJpK/xTzDmFLDrI9PE7ZVJg0kH3I/A8DXesFRJcSi0oQm0qvVdWA3LI+zzWKX4+f+WqTNGmduUPCyMGNDCJ2Zv8fGzWNx3k/VgfYRLLM/nFDMK85gwtlUYQ8/juh11BLVNhWrlTdNST8o63Junn8ZNwZP80U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aqSgQxr3; arc=none smtp.client-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I+IP3LGz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84DE11F000E9;
-	Fri, 28 Aug 2026 07:10:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787901010;
-	bh=XLcW3NH96CZvcxGmlohiT7hW4r0kS0CRBA2fDUS3S5I=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=I+IP3LGzpRo3EAQyoUNdPKeUI+avq2Xls4P4relmvaT5Usqk6HEKyOE4Md9mSxI43
-	 vRIRyfA8zbLnjDJCpi1jxPaBL4UlwfYlercUF3efgxE4O6m7zVgZYwagSDeIxfkssu
-	 9u2G0a7RXuwDZ55IUVBbMBmZrdcn5ka3UtB0HOE5FioSnyDW6UbzbeMZJKk+5oN0Nl
-	 P0D6hlAxk5DlsOJMrAtG91y4VIFC0B4+Gr+QhOwzFWAGTYvH5s86rtqPR5dHfkBWsN
-	 Xbl2Iu5/pwLlLPhn1CbmK/gbxig4kAah1ojrFnSU9RGn412WiEgTIAyk4vTQIyq2TQ
-	 zFfW8v9NxwTyw==
-Message-ID: <633fedbe-49dd-425e-b941-0c26dc33283b@kernel.org>
-Date: Fri, 28 Aug 2026 16:10:08 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aqSgQxr3"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-39647aa9d52so864975a91.0
+        for <linux-ide@vger.kernel.org>; Fri, 28 Aug 2026 04:02:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787914957; x=1788519757; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=JfxjOcdt/cjC9WpCoszCuxVA1vXbX2Ek4UTj+Uf54lQ=;
+        b=aqSgQxr3VtPvynNQCTvXglqW3WdOWjcu2Bi+wiJ3MZs5Lvf5dMxQUBKDP8JBRWawYr
+         lmhIZLW9kvl8heuCjhsnh8VfFuuYAcKkUcN73VjtQwFO8JA1yb4I1qQFqYJs+jGFHpk8
+         78VvoWufK21rby5Yt/mJ8ES9ceJV5fOwJi75o150EZjvhnOdCZsgrFzyldpMBJkGv8xu
+         JgOMOUY+4XrQV5lIas4gi0DLPww7xQ/0nu36Td90yfKaH2xik+yKxv6plTWXX5ReTVft
+         hGxEpzjWx+hqNS1qJhUjsRwjX0igsI4gD5K0Y42SyPibNE6wjgUF99wAa4iByc6ysPUr
+         mqOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787914957; x=1788519757;
+        h=mime-version:content-transfer-encoding:content-type:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=JfxjOcdt/cjC9WpCoszCuxVA1vXbX2Ek4UTj+Uf54lQ=;
+        b=JZKkhbGRpykslFplTkx7NkVl5eR+tu1N09YFKoar30vCTGl1tuYX7uMIDcv/DQE29Z
+         OiPyYrJ6uwC+piMwMug3Wh9QSNAAgvWP/48u3ORP/rG1/8hdcG47YOLh/gerXZilmRhQ
+         CiCOy/DoA9Ba+vjXVVUTSe0FUdJMdXmS6vELg+QKD6JTgXHZvu5V7crIUeRJILd4QmJa
+         vpW/XKBE0YHXsDOVCOnhBRTEiNz7BIBWmtIhkwVYkpluT33rXGP8s6OUNsPKtN49wpkc
+         nyxzdO4Q+hfyveBtu5Hvi9t94WZzNj3oXDJBoxfZVVA0K8dXI0JDCcjKBjqDUMR045xb
+         uB5g==
+X-Forwarded-Encrypted: i=1; AHgh+RoxmEEU37jKB7o067El7RBaIhoeXvIWpbIMe/JKtFyEilKOkdUrNjKBaUGi47JB/qgtd+oUOoX15RQ=@vger.kernel.org
+X-Gm-Message-State: AFuF++kyXMj1iaws0q3srDxG1JTgbGt8N4QgbyPCv2hwwdclMjtJYKXi
+	MgmvFmx7kY/LfVHL5srBF3FtteBC85gOkK35j4qecXmAaObmxlusMsCE
+X-Gm-Gg: AR+sD12Nlj5LYgrclhDAcT5JKEF3ihMxO8Tc63Ze5EVqEuuFXwZtkEeEBvpXxhmjQOK
+	gFVDdJwIp4yzu05g37G8NK/sC7YMNwJb1oqBYd03icXtRdMRzYq2D8mtHy5w2WQCDVmAIdyxM8z
+	AO/JZUAhil7s8eEXWrg9qb3fCetnjoscmDVG1stPkzI8BROYdBOLnxqrEVN5j5w1Dgf9OVlDPbB
+	zmpVLAOAmxzlmpZufPXw8Bg+lBjRIT5HwcsdC399VtsdQmnq4kEiUjzBtoP/n1Y88aRMSnvRLQh
+	5rmyui2vUuEbqiyt8KOrHaykm+VqRsqSR6G5JezzgHIUG8UTug3hqNpcPPQ2pH/A3cov4DerMm8
+	dmiHCyRJyP8/u0ZsVl0g1wHNBBcJaTdDx9IDmK5cAJgYC2tEZnnWxmMtk8KHwISGtYDcQOL4627
+	tM7MVNysbxQO/p8yveGtfeoBYjSoL8PRO2bnl6RepOpRUBi3PBsGDqHJViLYLCei0gYuw6ihOqG
+	OmulapHNyxqNZYRrun5YF4Ehyw/GIdbTtOIFWR1XZtiobNwaXFnbFYrrYxce8o6Fvw=
+X-Received: by 2002:a17:90b:3945:b0:38e:4f31:8412 with SMTP id 98e67ed59e1d1-3969bc02508mr20315417a91.11.1787914957056;
+        Fri, 28 Aug 2026 04:02:37 -0700 (PDT)
+Received: from [127.0.1.1] (ppp-124-121-113-94.revip2.asianet.co.th. [124.121.113.94])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-142e0dc898dsm5088597c88.9.2026.08.28.04.02.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 28 Aug 2026 04:02:35 -0700 (PDT)
+From: Mikael Etienne <mikael1022bzh@gmail.com>
+To: vasant.hegde@amd.com, iommu@lists.linux.dev, linux-ide@vger.kernel.org,
+ linux-block@vger.kernel.org
+Cc: regressions@lists.linux.dev, joro@8bytes.org,
+ suravee.suthikulpanit@amd.com, Mario.Limonciello@amd.com
+Subject: Re: [REGRESSION] Silent SATA read corruption with dma-iommu on AMD
+ 600-series AHCI (6.19 good, 7.0+ bad)
+Date: Fri, 28 Aug 2026 18:02:29 +0700
+Message-ID: <178791494900.1152725.12728124457005560389@gmail.com>
+In-Reply-To: <c5c2b503-e273-4aa5-ad9f-f7afee02ab9e@amd.com>
+References:
+ <CAHEgv3TiJUvS=Hustyem0ts8jkbFVAdzBazmPhCbv2sNnTsZkg@mail.gmail.com>
+ <c5c2b503-e273-4aa5-ad9f-f7afee02ab9e@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: ahci: work around lost interrupts on Marvell
- 88SE61xx
-To: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>, linux-ide@vger.kernel.org
-Cc: Pali Rohar <pali@kernel.org>, risc4all@yahoo.com
-References: <3d72cab2-d491-4e86-8e69-a735242ec862@noerenberg.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <3d72cab2-d491-4e86-8e69-a735242ec862@noerenberg.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 8/28/26 16:05, Hajo Noerenberg wrote:
-> 
-> ahci_single_level_irq_intr() services the ports first and clears the
-> global HOST_IRQ_STAT afterwards, as recommended by AHCI 1.1 section
-> 10.6.2.  The Marvell 88SE6111/6121/6145 family stops reporting interrupts
-> for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits:
-> PxIS keeps its content, HOST_IRQ_STAT reads back as 0, the port is never
-> looked at again, and the command in flight only ends in a timeout.
-> 
-> Measured on a Seagate Blackarmor NAS440 (Marvell 88F6281 Kirkwood,
-> 88SE6121 rev B2 behind PCIe) by polling the AHCI registers from userspace
-> while an IDENTIFY was outstanding:
-> 
->   t=303.046  irqs 127  PxIS 0x00000000  PxCI 0x00000001
->              IDENTIFY issued
->   t=303.057  irqs 128  PxIS 0x00000020  PxCI 0x00000000
->              CI cleared, DPS set, one interrupt taken
->              ... PxIS stays 0x00000020, HOST_IRQ_STAT stays 0 ...
->   t~308.05   qc timeout after 5000 msecs
-> 
-> The command had completed - PxCI was clear and PxIS had DPS set - so
-> ahci_qc_complete() would have completed it.  It never got the chance
-> because the handler read HOST_IRQ_STAT as 0 and returned IRQ_NONE.
-> 
-> Marvell's own driver for these chips clears the two registers in the
-> opposite order and says so ("clear global before channel"), and
-> ahci_xgene handles its broken edge latch the same way.  Since the
-> reordering costs at most one spurious interrupt per valid one on
-> conforming controllers, do it in a private interrupt handler selected for
-> board_ahci_mv instead of changing libahci for everyone.
-> 
-> With this applied, SATA-2 and SATA-3 disks work at 3.0 Gbps on the
-> 88SE6121 without the drive-side 1.5 Gbps jumper that was needed before.
-> Time from link up to a successful IDENTIFY:
-> 
->   WDC WD5000AADS-00S9B0  port 0    7 ms  (never identified before)
->   WDC WD3202ABYS-01B7A0  port 1   28 ms
->   WDC WD30EFRX-68EUZN0   port 1  200 ms  (3 TB, HPA detection ok)
-> 
-> Only the 88SE6121 was tested; board_ahci_mv also covers the 88SE6145,
-> which Marvell's driver treats identically.
-> 
-> Link: https://lore.kernel.org/linux-ide/db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de/
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=216094
-> Signed-off-by: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
+On 8/28/2026 11:13 AM, Vasant Hegde wrote:
+> Can you please apply Commit 1e75a8255f11c81fb and retest. Also boot with
+> `amd_iommu=pgtbl_v2`?
+>
+> @Mario, Can you look into this issue? Is this similar to the one you were
+> debugging internally?
 
-Looks OK to me.
+Hi Vasant,
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Thanks for the quick response.
 
--- 
-Damien Le Moal
-Western Digital Research
+I checked before testing, and I believe that commit is already in my kernel.
+CVE-2026-68329 lists it as fixed in 7.1.6 with 02f8cefa2ad95ea3754f0cfd6fbae7f866202ccb
+(and in 7.2-rc5 with 1e75a8255f11c81fb07e81e5029cfd75804350a0, the one you
+pointed at). I am running Fedora's 7.1.10-200.fc44, whose changelog says
+"Linux v7.1.10", so the 7.1.y backport should be present.
+
+And I have reproduced the corruption on kernels that already contain it. On
+7.1.9 my journal has 119 corruption lines for a single boot on 2026-08-23, and
+the 20-million-error run described in my first mail was on 7.1.10.
+
+There is a second, independent reason to think it may not be my bug: that CVE
+says the race was introduced in 3.0. My persistent journal goes back to
+2026-02-27 and shows zero storage errors under 6.18.16 and 6.19.x, including two
+full multi-TB backup reads of the same drive on 2026-04-01 and 2026-05-01. If I
+were hitting the 2011 race, I would expect it to show there too. What I see
+looks like something that appeared between 6.19 and 7.0.
+
+I may of course be wrong about the Fedora build. If you want me to verify the
+exact source, tell me what to check and I will.
+
+On amd_iommu=pgtbl_v2: I can run it, and I will report numbers rather than
+impressions -- bytes re-read, wall time and the exact workload. Two constraints,
+so you know what to expect:
+
+  - It is a production machine, and testing means removing the iommu=pt
+    workaround. I also assume a misdirected DMA can land in RAM belonging to
+    unrelated processes, not just in the read buffer, so I will stop all
+    services for the test rather than run it live.
+
+  - My only quantified data point in translated mode is a single failure after
+    768 GiB / 3h25m of verification reads. To honestly call a setting clean I
+    would want on the order of 15 TB re-read, which is roughly a day. I will
+    not report "this fixes it" on a short clean run.
+
+A 7 TB integrity verification is currently running on this machine and I would
+rather let it finish before rebooting. Given the above, would you still like the
+pgtbl_v2 run, or is there a cheaper test that would tell you more? I am equally
+happy to try libaio instead of io_uring, iommu.strict=1, or amd_iommu=off, in
+whatever order is most useful to you.
+
+Mario -- if the issue you were debugging internally has a comparable signature,
+I would be glad to compare. I have the raw btrfs csum lines showing eleven
+consecutive 4 KiB blocks returned in exact reverse order around a pivot, plus
+full dmesg, kernel config, lspci -nnvv and IOMMU domain dumps for both the
+failing and the working configuration. I can also collect whatever specific
+diagnostics you want, including with a debug patch if you provide one.
+
+Thanks,
+Mikael Etienne
