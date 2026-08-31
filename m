@@ -1,191 +1,464 @@
-Received: from mx.bauer-kirch.com (mx.bauer-kirch.com [217.11.56.43])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E926938239E;
-	Mon, 31 Aug 2026 12:44:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.11.56.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62A4B4D90A6;
+	Mon, 31 Aug 2026 13:39:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788180287; cv=none; b=BLV0/ww9ukaOf4T0u9rk2gac6tpc2L1UBetlr3yZXTxCUZTggaifRcdY/iBvT/QMROc/1hSfg3cZcQd4AHJxQ82tpqNZS7G3tWH8Fv1cS+b1uV3aGjufzCVUdVYJ7+yafOnxVW1zyFk1+bogBWzWoLQxZYjWH8cnNZq7mQrLDYU=
+	t=1788183557; cv=none; b=UZjwAU8L3gtbI4ly5s9CozGKrdHYqIGbMH+FF5BiFmiH0dOWnav9rCioFWKGA0JcnrPCnyRFfNzKDgvCZIp0tXECz7RsjmUJbc9rD9C5hLgAnVUN7sYaY4kZoZ/9ic0bp7sJ8piSK/FwUQ2fYG4C1o79iGKHpozCoTJTfudgQwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788180287; c=relaxed/simple;
-	bh=4YMqLEY/02rlxcwK4XS/MbUoJEdwhJKjJRK02XpYQww=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=rXOGgwVKhNE2DOSh12IEPJINpCTMP0GxOOZr/DtiHda5czrXSRz+QaIKZMNzu/FbvMdoCS3VMrYGjtG9O96+8l1FUBDN0xeoBvs7xRBHkUaUFUsQt6Y7B25/TOm0EJSp7HNBcN8Jnet5hk6ot/pu8iMKkSqfnHhc7v96zZa82v0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de; spf=pass smtp.mailfrom=noerenberg.de; dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b=S5kIyLPx; arc=none smtp.client-ip=217.11.56.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=noerenberg.de
+	s=arc-20240116; t=1788183557; c=relaxed/simple;
+	bh=zXSEC+PScyHpIcyKNxQf7u+rMee1LdsYgIq7m0w8Dos=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=U/OL4aWgAQM08bhUYZqs2gfd5GH3ZzpPiJxtd5tIk3DMasN+Hdyb3T0Wy035j/Mxa8ptOhTGksGMf2mq1d7q4alRx4TGoIOwYWqGzOOPixHKdSJtReH/KRZMrgenltAz8Mw945h2gzNvAwJYF8kmknanXb4mxfagYTYVC5tnpYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A2jh3rVm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b="S5kIyLPx"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=noerenberg.de; s=bauerkirch; h=Content-Transfer-Encoding:MIME-Version:
-	Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=MJ0i4E3zi2QieHzwj19yLMfwI8aGXPJyv1POOjDril4=; b=S5kIyLPxQv5SAL9cCXfqQGu/m5
-	wprd6IQjnSPgnVVTjxuOZrjtprRz5KwDc04rBBFShLsaG6IOfb2QPSguW10pLKDFA6CV8p1Tg2YIY
-	HXok0st9SEoljX1gSndtUkPS/ntNpr6h+levpV502v61egkarxiTA4NchG2NNI7rpVFkTQpZOhAkk
-	IA15kEMoud7sDlc1tDgrLz57KalYEW1KrSwvGE17VE/iZbMUmL+JFXsfTNp0DaGi8quoJNyF+is16
-	UMvTVZF7aYj1c+jXmrFIC8ktlUbIyLNTt4KCS1C6EcH16Cn5DdAGtfWDjrNfmQjImtfv82yADYnm3
-	Mv3+hntw==;
-Received: from xdsl-89-1-135-213.nc.de ([89.1.135.213] helo=flux.rw17.noerenberg.de)
-	by mail.bauer-kirch.de with ESMTPSA id 1x11NG-000000055Ae-3oxC
-	authenticated id <420001312>
-	(TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256);
-	Mon, 31 Aug 2026 14:44:30 +0200
-From: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
-To: Damien Le Moal <dlemoal@kernel.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A2jh3rVm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E4B61F000E9;
+	Mon, 31 Aug 2026 13:39:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788183554;
+	bh=rBbaTnPP66E6NVrCPUIGYm100iaFgrQu/I6rBFxujmM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=A2jh3rVmUidxYIGGQqd+LPYGWYVB6eJQHzGODv2NEvMYkZ5qr/Srz8Wla9hNP8BqD
+	 vd1UWsy2PZaQ2HXX0e2hd//eibRjeezadMlPEerz79A7jDca1HIrXNL3yr/anXTF6z
+	 H/FQQLArCqylazcWG1I6hhrcZWrmxjVDmqhJw1wgBtkyQRyOTnrqMHO9hV2HJHmKDb
+	 jjoj2i6tbQJk/Ma5cfoZPY2gzHCAdK3ofqO4CjO+U5R8Od10nyFu3Niov6MTfmO+w5
+	 iHeeCX8QqeA8nb9ylMOQpTFcTH/sNR1WltLg4VW194Yt/nsNVludP1Hxh/ViFPxfsY
+	 kwZ6QT3ns2IrA==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: liyouhong <liyouhong@kylinos.cn>,
+	Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	linux-ide@vger.kernel.org
-Cc: Pali Rohar <pali@kernel.org>,
-	stable@vger.kernel.org,
-	risc4all@yahoo.com,
-	linux-kernel@vger.kernel.org,
-	Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
-Subject: [PATCH v3] ata: ahci: work around lost interrupts on Marvell 88SE61xx
-Date: Mon, 31 Aug 2026 14:43:03 +0200
-Message-Id: <20260831124303.920391-1-hajo-linux-ide@noerenberg.de>
-X-Mailer: git-send-email 2.39.5
+	Sasha Levin <sashal@kernel.org>,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-5.10] ata: ahci: fail probe if BAR too small for claimed ports
+Date: Mon, 31 Aug 2026 09:23:14 -0400
+Message-ID: <20260831133314.4125787-166-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
+References: <20260831133314.4125787-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.18.48
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-ahci_single_level_irq_intr() services the ports first and clears the
-global HOST_IRQ_STAT afterwards, as recommended by AHCI 1.1 section
-10.6.2.  The Marvell 88SE6111/6121/6145 family stops reporting interrupts
-for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits:
-PxIS keeps its content, HOST_IRQ_STAT reads back as 0, the port is never
-looked at again, and the command in flight only ends in a timeout.
+From: liyouhong <liyouhong@kylinos.cn>
 
-Measured on a Seagate Blackarmor NAS440 (Marvell 88F6281 Kirkwood,
-88SE6121 rev B2 behind PCIe) by polling the AHCI registers from userspace
-while an IDENTIFY was outstanding:
+[ Upstream commit c4086c6e1af757e1ff26fa2d2926b3ec0195de79 ]
 
-  t=303.046  irqs 127  PxIS 0x00000000  PxCI 0x00000001
-             IDENTIFY issued
-  t=303.057  irqs 128  PxIS 0x00000020  PxCI 0x00000000
-             CI cleared, DPS set, one interrupt taken
-             ... PxIS stays 0x00000020, HOST_IRQ_STAT stays 0 ...
-  t~308.05   qc timeout after 5000 msecs
+When an AHCI controller is disabled in BIOS, its HOST_CAP register may
+contain a bogus value, e.g. 0xFFFFFFFF.
 
-The command had completed - PxCI was clear and PxIS had DPS set - so
-ahci_qc_complete() would have completed it.  It never got the chance
-because the handler read HOST_IRQ_STAT as 0 and returned IRQ_NONE.
+Since CAP.NP (Number of Ports) is a zeroes based 5-bit register field,
+a value of 0x1f means 32 ports. If CAP.NP claims more ports than can
+physically fit within the mapped BAR region, accessing port registers
+beyond the BAR boundary causes a kernel panic.
 
-Marvell's own driver for these chips clears the two registers in the
-opposite order and says so ("clear global before channel"), and
-ahci_xgene handles its broken edge latch the same way.  Since the
-reordering costs at most one spurious interrupt per valid one on
-conforming controllers, do it in a private interrupt handler selected for
-board_ahci_mv instead of changing libahci for everyone.
+Add validation in ahci_init_one() to check that the BAR size is
+sufficient for the number of ports claimed in CAP.NP. The check
+calculates the required MMIO size as:
 
-With this applied, SATA-2 and SATA-3 disks work at 3.0 Gbps on the
-88SE6121 without the drive-side 1.5 Gbps jumper that was needed before.
-Time from link up to a successful IDENTIFY:
+  required_size = 0x100 (global registers) + max_ports * 0x80
 
-  WDC WD5000AADS-00S9B0  port 0    7 ms  (never identified before)
-  WDC WD3202ABYS-01B7A0  port 1   28 ms
-  WDC WD30EFRX-68EUZN0   port 1  200 ms  (3 TB, HPA detection ok)
+If required_size exceeds the actual BAR size, the probe fails with
+-ENODEV, preventing the panic and providing a clear error message.
 
-Only the 88SE6121 was tested; board_ahci_mv also covers the 88SE6145,
-which Marvell's driver treats identically.
-
-Fixes: cd70c26617f4 ("[libata] AHCI: Add support for Marvell AHCI-like chips (initially 6145)")
-Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/linux-ide/db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de/
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=216094
-Signed-off-by: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
+Reported-by: liyouhong <liyouhong@kylinos.cn>
+Closes: https://lore.kernel.org/all/20260422080322.1006592-1-dayou5941@163.com/
+Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+Suggested-by: Niklas Cassel <cassel@kernel.org>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Acked-by: Pali Rohar <pali@kernel.org>
+Signed-off-by: liyouhong <liyouhong@kylinos.cn>
+[cassel: commit log]
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+
+LLM Generated explanations, may be completely bogus:
+
+# Stable Backport Analysis: `ata: ahci: fail probe if BAR too small for
+claimed ports`
+
+**Local tree:** Linux **6.18.44** (`git describe HEAD` → `v6.18.44`)
 
 ---
-Niklas, sorry for the wasted round trip.  Kernel patches are not my daily
-business and I had not realised how far the tree I was working against had
-drifted - v2 was generated against 6.10-rc6.  Rebased on v7.3-rc1 now, and
-the base commit is recorded at the bottom so this cannot happen unnoticed
-again.  Thank you for taking the time to look at it anyway.
 
-v3:
- - rebase onto v7.3-rc1; v2 did not apply
- - add Fixes: and Cc: stable@vger.kernel.org, as requested
- - collect Reviewed-by from Damien and Acked-by from Pali
- - no code change
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-v2:
- - retitle "clear HOST_IRQ_STAT before the ports" -> "work around lost
-   interrupts", per review
+### Step 1.1: Subject line
+**Record:** `[ata: ahci]` `[fail]` — Fail AHCI PCI probe when the mapped
+BAR is smaller than the MMIO space required by the port count claimed in
+`HOST_CAP.NP`.
 
- drivers/ata/ahci.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+### Step 1.2: Tags
+**Record:**
+- **Reported-by:** liyouhong \<liyouhong@kylinos.cn\> — real-world
+  reporter (Kylin OS)
+- **Closes:** https://lore.kernel.org/all/20260422080322.1006592-1-
+  dayou5941@163.com/ — original bug report thread
+- **Suggested-by:** Damien Le Moal \<dlemoal@kernel.org\>, Niklas Cassel
+  \<cassel@kernel.org\>
+- **Reviewed-by:** Damien Le Moal \<dlemoal@kernel.org\> — libata
+  maintainer review
+- **Signed-off-by:** liyouhong, Niklas Cassel
+- No `Fixes:`, no `Cc: stable@vger.kernel.org` (expected for manual
+  review)
+- No syzbot / sanitizer tags
+
+### Step 1.3: Body analysis
+**Record:**
+- **Bug:** When an AHCI controller is disabled in BIOS, `HOST_CAP` can
+  read as `0xFFFFFFFF`. `CAP.NP` (5-bit, zero-based) then reports 32
+  ports. The driver later accesses per-port MMIO at `0x100 + port *
+  0x80`, which can extend past the actual BAR → **kernel panic**.
+- **Symptom:** Kernel panic during AHCI probe (boot-time PCI
+  enumeration).
+- **Root cause:** No validation that BAR size can accommodate all ports
+  implied by `CAP.NP`.
+- **Fix:** In `ahci_init_one()`, after `pcim_iomap()`, compute
+  `required_size = 0x100 + max_ports * 0x80`; if it exceeds
+  `pci_resource_len()`, return `-ENODEV` with a warning.
+
+### Step 1.4: Hidden bug fix?
+**Record:** Not disguised — this is an explicit crash-prevention fix,
+not cleanup or optimization.
+
+---
+
+## PHASE 2: DIFF ANALYSIS
+
+### Step 2.1: Inventory
+**Record:**
+- **Files:** `drivers/ata/ahci.c` only (+22 / -0)
+- **Functions:** New `ahci_validate_bar_size()`; call added in
+  `ahci_init_one()`
+- **Scope:** Single-file, surgical fix
+
+### Step 2.2: Code flow change
+**Record:**
+- **Hunk 1 (new function):** After MMIO mapping, read `HOST_CAP`, derive
+  `max_ports` via `ahci_nr_ports()`, compute `last_port_end = 0x100 +
+  max_ports * 0x80`, compare to `pci_resource_len()`. Return `-ENODEV`
+  if BAR is too small.
+- **Hunk 2 (`ahci_init_one`):** Call validation immediately after
+  `pcim_iomap()`, before `ahci_remap_check()` and
+  `ahci_pci_save_initial_config()`.
+- **Path affected:** PCI probe initialization path (normal boot, not
+  error recovery).
+
+### Step 2.3: Bug mechanism
+**Record:** **Buffer overflow / out-of-bounds MMIO access.** Bogus
+`CAP.NP` causes the driver to touch port register space beyond the
+mapped BAR. Downstream accessors like `__ahci_port_base()` and
+`readl(port_mmio + PORT_CMD)` in `ahci_save_initial_config()` and
+`ahci_mark_external_port()` can panic.
+
+### Step 2.4: Fix quality
+**Record:**
+- **Obviously correct:** Matches AHCI register layout (`0x100` global +
+  `0x80` per port); uses existing `ahci_nr_ports()` helper.
+- **Minimal:** 22 lines, no unrelated changes.
+- **Regression risk:** Very low. Legitimate controllers have BARs sized
+  for their port count; only broken/disabled configurations are
+  rejected.
+- **False negative risk:** A controller with bogus `CAP` but a large
+  enough BAR could still probe; that is not worse than today and is
+  outside this patch’s scope.
+
+---
+
+## PHASE 3: GIT HISTORY INVESTIGATION
+
+### Step 3.1: Blame
+**Record:** `pcim_iomap()` at lines 1987–1989 last touched by
+`bdcddd0cdc39d` (Oct 2024, PCI deprecation cleanup). The missing
+validation has been present since `ahci_init_one()` existed; the
+vulnerability is long-standing, not a recent regression.
+
+### Step 3.2: Fixes: tag
+**Record:** N/A — no `Fixes:` tag.
+
+### Step 3.3: Related file history
+**Record:**
+- Related but distinct: `62ced8e065787` — “Do not read the per port area
+  for unimplemented ports” (PI-register compliance; does not address
+  bogus `CAP.NP` vs BAR size).
+- No other “BAR too small” fix in this tree.
+- Patch series: v2 → v5 (Apr 25–28, 2026); committed version is v5.
+
+### Step 3.4: Author context
+**Record:** liyouhong is the reporter/fix author. Niklas Cassel
+(AHCI/libata maintainer) applied the patch. Damien Le Moal (libata
+maintainer) reviewed it.
+
+### Step 3.5: Dependencies
+**Record:** **Standalone.** Uses `ahci_nr_ports()` (inline in `ahci.h`
+since `365cfa1ed5a36`), `readl()`, `pci_resource_len()`, `HOST_CAP` —
+all present in 6.18.44. No series prerequisites.
+
+---
+
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+
+### Step 4.1: Original discussion
+**Record:**
+- **b4 dig -c c4086c6:**
+  https://patch.msgid.link/20260428020935.2049617-1-dayou5941@163.com
+- **b4 dig -a:** v2 (Apr 25), v3/v4 (Apr 27), v5 (Apr 28, 2026) —
+  committed version is latest
+- **Key feedback:** Niklas Cassel applied to libata `for-7.2`, corrected
+  commit-log wording about `CAP.NP` range (1–32 is valid per spec; the
+  issue is BAR mismatch, not “impossible” port count). No NAKs.
+
+### Step 4.2: Reviewers
+**Record:** **b4 dig -w** CC’d: `linux-ide@vger.kernel.org`,
+`dlemoal@kernel.org`, `cassel@kernel.org`, `liyouhong@kylinos.cn`.
+Appropriate maintainers were involved.
+
+### Step 4.3: Bug report
+**Record:** Reported-by from Kylin OS. Commit Closes original report at
+lore `20260422080322`. Panic mechanism described in patch and maintainer
+reply. No stack trace in the retrieved mbox thread, but the OOB MMIO
+path is verifiable in code.
+
+### Step 4.4: Series context
+**Record:** Standalone 1/1 patch. Five revision rounds addressed review
+feedback; no companion patches required.
+
+### Step 4.5: Stable list history
+**Record:** No `Cc: stable` nomination found in the retrieved thread.
+Absence is not a negative signal per review instructions.
+
+---
+
+## PHASE 5: CODE SEMANTIC ANALYSIS
+
+### Step 5.1: Key functions
+**Record:** `ahci_validate_bar_size()` (new), `ahci_init_one()`,
+`ahci_nr_ports()`, `ahci_pci_save_initial_config()` →
+`ahci_save_initial_config()`, `__ahci_port_base()`.
+
+### Step 5.2: Callers
+**Record:** `ahci_init_one()` is the `.probe` handler for
+`ahci_pci_driver` (line 673), registered via `module_pci_driver()`.
+Called during PCI device enumeration at boot or module load.
+
+### Step 5.3: Callees
+**Record:** `readl(hpriv->mmio + HOST_CAP)` (offset 0, always within
+BAR), `ahci_nr_ports()`, `pci_resource_len()`.
+
+### Step 5.4: Reachability
+**Record:** **Userspace-triggerable indirectly** via PCI hotplug/module
+load, but primary scenario is **boot** when the AHCI controller is
+present in PCI space but disabled/misconfigured in BIOS. Any system with
+`CONFIG_SATA_AHCI` and such hardware is affected.
+
+### Step 5.5: Similar patterns
+**Record:** `__ahci_port_base()` at `mmio + 0x100 + port_no * 0x80` is
+the canonical layout used throughout AHCI. The validation formula
+matches this exactly. No duplicate fix elsewhere in `drivers/ata/`.
+
+---
+
+## PHASE 6: CROSS-REFERENCE AGAINST LOCAL TREE (6.18.44)
+
+### Step 6.1: Buggy code present?
+**Record:** **YES.** Current `ahci_init_one()` maps MMIO at line 1987
+and proceeds directly to `ahci_remap_check()` /
+`ahci_pci_save_initial_config()` with no BAR-size check.
+`ahci_validate_bar_size()` is **absent**. Upstream commit `c4086c6` is
+**not** an ancestor of HEAD (`merge-base --is-ancestor` exit 1).
+
+### Step 6.2: Backport complications
+**Record:** **Clean apply.** `git format-patch -1 c4086c6 --stdout | git
+apply --check` succeeded on HEAD. Line context around `pcim_iomap()`
+matches the patch.
+
+### Step 6.3: Related fixes already present?
+**Record:** `62ced8e065787` (skip unimplemented ports in
+`ahci_mark_external_port`) is present but does not address this
+BAR/CAP.NP mismatch. No duplicate BAR validation found.
+
+---
+
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+
+### Step 7.1: Subsystem criticality
+**Record:** **drivers/ata/ahci** — IMPORTANT. AHCI is the standard SATA
+driver on most x86/ARM desktops, laptops, and servers.
+
+### Step 7.2: Activity
+**Record:** Actively maintained in 6.18.y (recent commits: LPM quirks,
+JMicron DMA, unimplemented-port fix). The underlying probe path is
+mature; this bug has existed without validation for years.
+
+---
+
+## PHASE 8: IMPACT AND RISK ASSESSMENT
+
+### Step 8.1: Who is affected
+**Record:** Systems with an AHCI PCI device present but disabled or
+misconfigured in BIOS (bogus `HOST_CAP`). Common on dual-controller or
+unused-SATA configurations. Affects anyone building `CONFIG_SATA_AHCI`
+(default on most distros).
+
+### Step 8.2: Trigger conditions
+**Record:** Boot or `modprobe ahci` when PCI enumerates a disabled AHCI
+controller reporting `HOST_CAP = 0xFFFFFFFF` (or any `CAP.NP` value
+whose port space exceeds BAR size). Not a race; deterministic on
+affected hardware.
+
+### Step 8.3: Failure mode severity
+**Record:** **Kernel panic** from OOB MMIO access → **CRITICAL** (boot
+failure, no graceful recovery).
+
+### Step 8.4: Risk-benefit
+**Record:**
+- **Benefit:** HIGH — prevents boot-time panic on real hardware; clear
+  `-ENODEV` + warning instead.
+- **Risk:** VERY LOW — 22-line defensive check, reviewed by maintainer,
+  applies cleanly.
+- **Ratio:** Strongly favors backport.
+
+---
+
+## PHASE 9: FINAL SYNTHESIS
+
+### Step 9.1: Evidence summary
+
+**FOR backport:**
+- Fixes real kernel panic on probe (user-reported, Kylin OS)
+- Reviewed by libata maintainer; applied by AHCI maintainer
+- Small, self-contained, no dependencies
+- Buggy code exists in 6.18.44; fix not yet present
+- Applies cleanly
+- Fails probe gracefully (`-ENODEV`) instead of panicking
+
+**AGAINST backport:**
+- None significant. Disabled-controller scenario is somewhat niche, but
+  panic severity outweighs rarity.
+
+**Unresolved:**
+- Full stack trace from original bug report not retrieved (lore Anubis
+  blocked direct fetch; mbox thread contained patch discussion, not the
+  original oops log). Panic mechanism is confirmed by code path
+  analysis.
+
+### Step 9.2: Stable rules checklist
+1. Obviously correct and tested? **PASS** — simple arithmetic;
+   maintainer-reviewed; v5 after four revision rounds.
+2. Fixes a real bug affecting users? **PASS** — Reported-by from
+   production distro user.
+3. Important issue? **PASS** — kernel panic (CRITICAL).
+4. Small and contained? **PASS** — 22 lines, one file.
+5. No new features or APIs? **PASS** — probe-time validation only.
+6. Can apply to local tree? **PASS** — `git apply --check` clean on
+   6.18.44.
+
+### Step 9.3: Exception categories
+**Record:** N/A (not a device ID, quirk, DT, build, or docs fix).
+Qualifies on crash-fix merits alone.
+
+### Step 9.4: Decision rationale
+For Linux **6.18.44**, systems with a BIOS-disabled AHCI controller can
+hit OOB MMIO during `ahci_init_one()` probe and panic the kernel. The
+fix adds an early, spec-aligned BAR size check and fails probe safely.
+It is small, maintainer-reviewed, standalone, and applies cleanly to
+this tree. This is appropriate stable material.
+
+---
+
+## Verification
+
+- **[Phase 1]** Parsed subject, tags, body; identified panic-on-probe
+  bug with BIOS-disabled AHCI scenario.
+- **[Phase 2]** Diff: +22 lines in `drivers/ata/ahci.c`; new
+  `ahci_validate_bar_size()`, call in `ahci_init_one()`; OOB MMIO bug
+  class.
+- **[Phase 3]** `git blame -L 1987,1992 drivers/ata/ahci.c`: iomap area
+  from `bdcddd0cdc39d` (2024); no `Fixes:` tag; related commit
+  `62ced8e065787` is distinct; `ahci_nr_ports()` present since
+  `365cfa1ed5a36`.
+- **[Phase 3]** `git merge-base --is-ancestor c4086c6 HEAD` → exit 1
+  (fix **not** in 6.18.44).
+- **[Phase 4]** `b4 dig -c c4086c6`: lore URL found; `b4 dig -a`: v2–v5
+  series; `b4 dig -w`: maintainers CC’d; mbox: Damien Le Moal Reviewed-
+  by, Niklas applied, no NAKs, no stable Cc.
+- **[Phase 5]** `ahci_init_one` is `.probe` for `ahci_pci_driver` (line
+  673); panic path via `ahci_save_initial_config()` `readl(port_mmio +
+  PORT_CMD)` at `libahci.c:590-592` and `__ahci_port_base()` at
+  `ahci.h:453-458`.
+- **[Phase 6]** `git describe HEAD` → v6.18.44; `make kernelversion`
+  equivalent → 6.18.44; `ahci_validate_bar_size` absent; `git apply
+  --check` clean.
+- **[Phase 8]** Failure mode: OOB MMIO → kernel panic; severity
+  CRITICAL; trigger: BIOS-disabled AHCI with bogus `HOST_CAP`.
+
+**YES****Verdict: YES** — backport to this tree (Linux 6.18.44).
+
+The patch adds a small check in `ahci_init_one()` so probe fails with
+`-ENODEV` when `HOST_CAP.NP` claims more ports than the BAR can hold.
+That avoids out-of-bounds MMIO access and a kernel panic when an AHCI
+controller is disabled in BIOS but still shows up on PCI with bogus
+registers (e.g. `HOST_CAP = 0xFFFFFFFF`).
+
+It’s a 22-line, single-file fix, maintainer-reviewed, applies cleanly to
+6.18.44, and the bug is still present there.
+
+ drivers/ata/ahci.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1d73a53370cf3..b4e5d347151a9 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -2614,6 +2614,51 @@
- }
- #endif
+@@ -1888,6 +1888,24 @@ static ssize_t remapped_nvme_show(struct device *dev,
  
-+/*
-+ * The Marvell 88SE6111/6121/6145 ("Thor") family stops reporting interrupts
-+ * for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits: PxIS
-+ * keeps its content, HOST_IRQ_STAT reads back as 0, the port is never looked
-+ * at again and the command in flight only ends in a timeout.  On a 88SE6121
-+ * this makes every SATA-2 or SATA-3 disk fail to IDENTIFY, while SATA-1 disks
-+ * happen to win the race often enough to work.
-+ *
-+ * Clearing the host status before servicing the ports avoids it.  Marvell's
-+ * own driver for these chips does the same and says so ("clear global before
-+ * channel"), and ahci_xgene handles its broken edge latch the same way.  The
-+ * price is at most one spurious interrupt per valid one, which is why this is
-+ * not the generic behaviour - see AHCI 1.1 section 10.6.2.
-+ *
-+ * Link: https://bugzilla.kernel.org/show_bug.cgi?id=216094
-+ */
-+static irqreturn_t ahci_mv_irq_handler(int irq, void *dev_instance)
+ static DEVICE_ATTR_RO(remapped_nvme);
+ 
++static int ahci_validate_bar_size(struct pci_dev *pdev, int bar,
++				  struct ahci_host_priv *hpriv)
 +{
-+	struct ata_host *host = dev_instance;
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	void __iomem *mmio = hpriv->mmio;
-+	unsigned int rc;
-+	u32 irq_stat, irq_masked;
++	u32 cap = readl(hpriv->mmio + HOST_CAP);
++	unsigned int max_ports = ahci_nr_ports(cap);
++	u32 last_port_end = 0x100 + (max_ports * 0x80);
++	resource_size_t bar_size = pci_resource_len(pdev, bar);
 +
-+	irq_stat = readl(mmio + HOST_IRQ_STAT);
-+	if (!irq_stat)
-+		return IRQ_NONE;
++	if (last_port_end > bar_size) {
++		dev_warn(&pdev->dev,
++			 "BAR%d too small for %u ports (last port ends at %#x, BAR %pa)\n",
++			 bar, max_ports, last_port_end, &bar_size);
++		return -ENODEV;
++	}
 +
-+	irq_masked = irq_stat & hpriv->port_map;
-+
-+	spin_lock(&host->lock);
-+
-+	/*
-+	 * Use the unmasked value to clear the interrupt, as a spurious pending
-+	 * event on a dummy port might cause a screaming IRQ.
-+	 */
-+	writel(irq_stat, mmio + HOST_IRQ_STAT);
-+
-+	rc = ahci_handle_port_intr(host, irq_masked);
-+
-+	spin_unlock(&host->lock);
-+
-+	return IRQ_RETVAL(rc);
++	return 0;
 +}
 +
- static void ahci_remap_check(struct pci_dev *pdev, int bar,
- 		struct ahci_host_priv *hpriv)
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  {
-@@ -2917,6 +2962,10 @@
+ 	unsigned int board_id = ent->driver_data;
+@@ -1988,6 +2006,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!hpriv->mmio)
  		return -ENOMEM;
- 	hpriv->flags |= (unsigned long)pi.private_data;
  
-+	/* the Marvell "Thor" family needs HOST_IRQ_STAT cleared first */
-+	if (board_id == board_ahci_mv)
-+		hpriv->irq_handler = ahci_mv_irq_handler;
++	rc = ahci_validate_bar_size(pdev, ahci_pci_bar, hpriv);
++	if (rc)
++		return rc;
 +
- 	/* MCP65 revision A1 and A2 can't do MSI */
- 	if (board_id == board_ahci_mcp65 &&
- 	    (pdev->revision == 0xa1 || pdev->revision == 0xa2))
+ 	/* detect remapped nvme devices */
+ 	ahci_remap_check(pdev, ahci_pci_bar, hpriv);
+ 
+-- 
+2.53.0
 
-base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
