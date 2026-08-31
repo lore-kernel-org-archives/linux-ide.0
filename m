@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A64139934A;
-	Mon, 31 Aug 2026 02:36:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41DC9390C8A;
+	Mon, 31 Aug 2026 02:45:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788143801; cv=none; b=g9UjLGul2uxtVLJ0/mxQ3HRauBuM/C6kUmT9w6eU3wH9vLSe2e9zPui3wFJy3ElKWsETQf27jThuXV8uy5u9yRAl0CcA/A6KM2wZNWKo+BcfHG4f9h4pqCRaKGBhbzcFaefDUIecrFWzqY9qTFZ3pxaUZohOz2SDoA0Eyr/T02M=
+	t=1788144348; cv=none; b=SYErBLw4qnzcHPCu1MKhx8u+8mVWT2gTATJVAjuwXXq/H3j6e9bzB9sP5YB64THAxwGM1LgKv6Gp2TN8Sw9xT1e9WsGIdwz3u+O8KmpbqF9V224uABAgvD2/2pKVNAmUyQUWZC6J6kf842o6OvrehP+dQcRrOTFtYfqzXKojK/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788143801; c=relaxed/simple;
-	bh=r1C7GnYwLduXYMEJrOXyGJDt8ZLZKQxhYBdTN3i8vRo=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=YFA2JaNrlNtsag07xR5vu8l6jHc3MeoK5h70+y7Im9xSuSYA9BK7nazvrpzR6LQDtQGvFZjZhcqWuZZK1qpovzYc93Neh58anh6yW0a11yWIv9IOo0SC05xtJhICftZkSqA0HaMlmbfGWBkgjoLz9XHWKpyniv37C+sNNtz3GzM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OOkF0kuA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788144348; c=relaxed/simple;
+	bh=7zZeTt2eDzvlQsHjRw7GEeN47tXKMet8vNLBOd2KMoE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=D+C/osHJj5XA96ps1IAtiZPc7ghKLrjaz21U9MDNdzX8D+ZhewPNRH4IBsYviheEwWeozu//GjF9TNID6MbwlCRGYEWgK+MBJCl+TaM+Qx5fZJGZQyh9QBBYl4R1XuFPbxXlpiudOOluJ38SDcHUnPInzr0/ObEUrQUaSnpmsiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JFMfGgav; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OOkF0kuA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 267221F000E9;
-	Mon, 31 Aug 2026 02:36:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JFMfGgav"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FBD01F000E9;
+	Mon, 31 Aug 2026 02:45:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788143798;
-	bh=j96XL+ikEWynERwj6I8Ro7MJ4JE2LhGGJR2I5M386OU=;
-	h=Date:Subject:From:To:References:In-Reply-To;
-	b=OOkF0kuAPR3Cz+rrDV/FGPp1CvXKsgW10/KriJrHluHHtAC39Nadn4HeQly5wfQjY
-	 thQAUsXhUCYcrjeSkDaiNBNgGUmYCQFJ1X1N/Wk9kVQDNBkaJJ5pbB0xfw88RdFZPJ
-	 6cZZmjC+ZMNEScDyJEN4f3B7UU1rbXq284D0k+0Cfn9bbQgeb3EIp8PjlOVkcWccwD
-	 sGWjsq9Jr/KE5MKu5bnBdrZNAFMlMXoHCoJTy9QHJ9x2IzPzAIH8LYLaxlUGUrkPCN
-	 rG6z308xKULwvahfaVLl6SL/awvbV+hLNKotV4+JiAKB9YpQ3Up/nol2+Jfq5LOIdP
-	 gkdGdZIO+tAoQ==
-Message-ID: <d9f9c3e8-a24e-4da7-82c4-862e4b85e3eb@kernel.org>
-Date: Mon, 31 Aug 2026 11:36:25 +0900
+	s=k20260515; t=1788144344;
+	bh=1w0s5jSSQtVjtHpRtzem0HjXULLO6/kYnUZWtU9nwtc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=JFMfGgav43BxHjrZINv0XZQndfXqoapjEWevfcTnSsr+aaAr1EUg8vQZQ5bHl6awr
+	 EFkgQYCB4qzokk0ccpQyMwC58bmBi9//4HvwB/zaqdb/VZI4GTnU81jJNamkdTH5Zj
+	 H8dwd8Kwp5Ab31EKVWVtHMXEiZ0SuJONPIcDsErfsSy0z1B5SSYm8MmYBtpg6UK7P0
+	 Y7Oai/WMC3FofX4fNoVuvNwCnj3OimzqwBJBF2/Rg3QwCRP+DhQDguqZjyc12VEfBs
+	 zd6lyIjnPatrqTRtRztQfHilpfrdzDV9DCRF+OesDFqCx1cEkjF2kwPd7A45WQLAH8
+	 0fLDFLjHqlzgQ==
+Message-ID: <38fbb154-b195-4fbb-9961-afa926ae2816@kernel.org>
+Date: Mon, 31 Aug 2026 11:45:32 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,42 +35,30 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/37] Use defined 16-bits ASC/ASCQ combinations
+Subject: Re: [PATCH v6 1/2] ata: pata_cswarp: Add Amiga cslab ata support
+To: Paolo Pisati <p.pisati@gmail.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+ linux-kernel@vger.kernel.org
+References: <20260826160911.460165-1-p.pisati@gmail.com>
+ <20260826160911.460165-2-p.pisati@gmail.com>
 From: Damien Le Moal <dlemoal@kernel.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
- Alan Stern <stern@rowland.harvard.edu>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20260831020451.585944-1-dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20260831020451.585944-1-dlemoal@kernel.org>
+In-Reply-To: <20260826160911.460165-2-p.pisati@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 8/31/26 11:04, Damien Le Moal wrote:
-> Martin, James,
+On 8/27/26 01:09, Paolo Pisati wrote:
+> Driver for the on-board IDE interface on CS-Lab Warp Expansion Card
+> (NOTE that idemode=native has to be set in Warp Configuration)
 > 
-> This patch series defines as macros all ASC/ASCQ combinations present in
-> https://www.t10.org/lists/asc-num.txt and converts the SCSI core code and
-> SCSI low level drivers to use these macros instead of hard-coded
-> ASC/ASCQs. To do this, struct scsi_sense_hdr and struct scsi_failure are
-> modified to replace the asc and ascq 8-bits fields with a 16-bits
-> sense_code field.
-> 
-> This cleans up the code in many places and makes it easier, and self
-> documented, to test sense codes in the case of errors.
-> 
-> Overall, there should be no functional chnages here.
+> Assisted-by: Claude_Code:claude-opus-5
+> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
 
-Sashiko pointed out a couple of valid mistakes in this series that I fixed
-locally. I will wait for further comments before sending v2.
+Looks OK to me.
 
-Sashiko also pointed out further pre-existing issues that I am not going to
-address with this series.
-
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
