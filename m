@@ -1,71 +1,162 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAE7B44AB81;
-	Mon, 31 Aug 2026 14:27:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26286366806
+	for <linux-ide@vger.kernel.org>; Mon, 31 Aug 2026 14:46:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788186464; cv=none; b=kEvrf72S6AznfegWA19tXukKiqEszKBmTuJGSMloKNNE7sZulQJgtiilfggbBickd9dixJidWj09BHmql8IdaD5/J9QtLXbJf4slUaYttzfuMP3AxoAj9Dh+X7DNLgTLNr0nhP6LcsUPly9KCENBd0qruVD3E0EBnDD18DK/iQE=
+	t=1788187593; cv=none; b=OXbky17WCH6WUl0vkrk/8gxVhfiGb7+UYqAx0phE/OpJ6DeIzZzEnnkZ9aakJCvTp74s7vKITHIC+/N9Hh6+taMgdx64mZThF9nE8U1P4OXw65coNC7Bn2O7jrzOL4qqoma8W2eqo9hb7lkDVLDRGaATdLxFryKF30tyzc+SGcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788186464; c=relaxed/simple;
-	bh=N7ntS6/a1BJleRWibV0tA5ZsQcTNaVz31IVjeKiAO1A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ICPQP6wcpP3N+whtvjIYR2AhXhkS43/VbOT5EI8OG6Jfk9MoMjPQxbeOTKFPK793sLvUTKeqZgkI/2KNVWA4oHbG61/kamFdXkbNrFFiJIzQ1k3WvNHXa0XRF7N76mEspYD5kv9myOiNwsknorp116oTR066dAbdlJVcSkVxWu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JXzVQERp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788187593; c=relaxed/simple;
+	bh=4kr85yNhWTs++cbbn3s9pkwa4u0ZXD2D2Ybs+yzzvY4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=dlXlkfd527wJvayVCgc1/j5U9uBnOveIvYx8I7iHK2ugCv1/MtqXLMNhkzYvdwjZKyTTpPswKO4grgs24RweaeCRDyDGRLeUGq8FEqFEIkrDRtNCjrX2Nk4oZA7bDAcZWr3R7LJtBDhrqjmeIOW67z3zE+c9OFA9kzyRyMeqpVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WjhDLwFB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JXzVQERp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD0EF1F00A3D;
-	Mon, 31 Aug 2026 14:27:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WjhDLwFB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C0E61F00A3D;
+	Mon, 31 Aug 2026 14:46:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788186463;
-	bh=DBrEplS9tEm0O1i1zVQFrY1jf2Qns4axU8H/tgkbP1s=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=JXzVQERpNVxdm7PtnwuTnkFebaCOX7e2iKTx7n282+kD3Us9ZkSfBQqf1i3nCROVI
-	 IpRx4NRRSMw0BBsoh9dFvsSzRFrd75IBQTDF+01gwDQ2vYs4JWJbv2MaZXAGyVyThi
-	 OY05JiXqGzluqsUW89DO1J8EGQKZO5kEUW6XOk/GH/BZRFm6728K/4zfit+TW3wmM0
-	 vs1jOjnW8VZWlg8WaGsOEx0lDsxI84WKy/BZ42bhPgta88vSoX9N1AyHZEL5oXqv4e
-	 6evDUGp2qty08QQHhYjmimJzY1bcY+pe1d84thcVk2dZkhW0VpGc11CTfVmcj6iVS0
-	 UsVFe6ptQ0/SA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	linux-ide@vger.kernel.org,
-	Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
-Cc: Niklas Cassel <cassel@kernel.org>,
-	Pali Rohar <pali@kernel.org>,
-	stable@vger.kernel.org,
-	risc4all@yahoo.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] ata: ahci: work around lost interrupts on Marvell 88SE61xx
-Date: Mon, 31 Aug 2026 16:27:24 +0200
-Message-ID: <178818641418.216562.3155723702033731494.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260831124303.920391-1-hajo-linux-ide@noerenberg.de>
-References: <20260831124303.920391-1-hajo-linux-ide@noerenberg.de>
+	s=k20260515; t=1788187591;
+	bh=ptyIYjKiP7gIZ+hxD0mE3795FoGnn0s6uS2HtzdA5sU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=WjhDLwFBbbzNspk3oFGZUAN0KWafXOAK/gvZZYjrEm/4rLpOzb1ahcBiwXo18mM0g
+	 paF+kgt4yNuOzsMHQ5VBJ2NUyynjHM9NPnNM1VSP0F1i13jfXfJ8PjuD3YgaAR2OLv
+	 /KqwldPICTeQ0OMUrdMBchBi6hI4jepP+ye7Bs0Nfhy4JGCVCxJkCh3jfQ0EV1lZkJ
+	 7LUhfeICwax41sLlIYKniXxxEYd/sh033f/tIrAORStF8DbjdtAvo3DJwrbLgrrxrH
+	 eKL4Kdjn5AbsxOY3ytvGAmCBjEBw32F7o4G7Lu70TVELNgjJ2p8ghW0Fs6maPmuTDs
+	 IED+UlRh3OgWg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH AUTOSEL 6.18-5.10] ata: ahci: fail probe if BAR too
+ small for claimed ports
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sasha Levin" <sashal@kernel.org>
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
+In-Reply-To: <20260831133314.4125787-166-sashal@kernel.org>
+References: <20260831133314.4125787-1-sashal@kernel.org>
+ <20260831133314.4125787-166-sashal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 31 Aug 2026 14:46:31 +0000
+Message-Id: <20260831144631.8C0E61F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=709; i=cassel@kernel.org; h=from:subject:message-id; bh=N7ntS6/a1BJleRWibV0tA5ZsQcTNaVz31IVjeKiAO1A=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLKm9vt2L5qwX/XqliOvtmb5HmyYyt/zes217dzTt7r6l W7Yc3o6Q0cpC4MYF4OsmCKL7w+X/cXd7lOOK96xgZnDygQyhIGLUwAmsuw3wz8t66b++88//eHL X5Dt/dQmw1PGvGOf0pWWGerfNp/9ctmY4Z8an8iOoqIXP+bt5Nuw6HzUyt/MM+dazZHV+lB2T3n hj/ucAA==
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
 
-On Mon, 31 Aug 2026 14:43:03 +0200, Hajo Noerenberg wrote:
-> ahci_single_level_irq_intr() services the ports first and clears the
-> global HOST_IRQ_STAT afterwards, as recommended by AHCI 1.1 section
-> 10.6.2.  The Marvell 88SE6111/6121/6145 family stops reporting interrupts
-> for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits:
-> PxIS keeps its content, HOST_IRQ_STAT reads back as 0, the port is never
-> looked at again, and the command in flight only ends in a timeout.
-> 
-> [...]
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] The BAR size validation incorrectly assumes the maximum port index=
+ is bounded by HOST_CAP.NP, but the driver actually accesses ports up to fl=
+s(HOST_PORTS_IMPL), allowing out-of-bounds MMIO accesses to bypass the chec=
+k.
+- [High] The BAR size validation relies strictly on HOST_CAP.NP and rejects=
+ the device if the BAR is smaller than required for the maximum claimable p=
+orts, which can break working devices.
+--
 
-Applied to libata/linux.git (for-7.4), thanks!
+commit 93586245aa8cac6edeb231c78f24de78d4e9a254
+Author: liyouhong <liyouhong@kylinos.cn>
+Subject: ata: ahci: fail probe if BAR too small for claimed ports
 
-[1/1] ata: ahci: work around lost interrupts on Marvell 88SE61xx
-      https://git.kernel.org/libata/linux/c/22f2ba34
+This patch adds validation in ahci_init_one() to check if the BAR size is
+sufficient for the number of ports claimed in HOST_CAP.NP. If the required
+size exceeds the actual BAR size, the probe fails with -ENODEV to prevent
+kernel panics from out-of-bounds MMIO access.
 
-Kind regards,
-Niklas
+Link: https://lore.kernel.org/all/20260422080322.1006592-1-dayou5941@163.co=
+m/
+
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 7a7f88b3fa2b1..bbf6e83abd880 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1874,6 +1874,24 @@ static ssize_t remapped_nvme_show(struct device *d=
+ev,
+> =20
+>  static DEVICE_ATTR_RO(remapped_nvme);
+> =20
+> +static int ahci_validate_bar_size(struct pci_dev *pdev, int bar,
+> +				  struct ahci_host_priv *hpriv)
+> +{
+> +	u32 cap =3D readl(hpriv->mmio + HOST_CAP);
+> +	unsigned int max_ports =3D ahci_nr_ports(cap);
+> +	u32 last_port_end =3D 0x100 + (max_ports * 0x80);
+
+[Severity: High]
+Does this validation actually prevent all out-of-bounds MMIO accesses?
+
+The validation uses HOST_CAP.NP (via ahci_nr_ports) to determine the requir=
+ed
+BAR size, ignoring the actually implemented ports in HOST_PORTS_IMPL.
+
+Looking at ahci_save_initial_config(), it only clears port_map if the total
+count of set bits (map_ports) exceeds CAP.NP:
+
+drivers/ata/libahci.c:ahci_save_initial_config() {
+	...
+		if (map_ports > ahci_nr_ports(cap)) {
+			dev_warn(dev,
+				 "implemented port map (0x%lx) contains more ports than nr_ports (%u), =
+using nr_ports\n",
+				 port_map, ahci_nr_ports(cap));
+			port_map =3D 0;
+		}
+	...
+}
+
+If a controller reports CAP.NP =3D 0 (1 port) but sets bit 31 in HOST_PORTS=
+_IMPL,
+map_ports is 1. Since 1 > 1 is false, port_map is not cleared.
+
+The loop will then execute for index 31, accessing MMIO out of bounds:
+
+drivers/ata/libahci.c:ahci_save_initial_config() {
+	...
+	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
+		if (hpriv->saved_port_cap[i])
+			continue;
+
+		port_mmio =3D __ahci_port_base(hpriv, i);
+	...
+}
+
+If the BAR size is 0x200, ahci_validate_bar_size() allows the probe to
+continue (since max_ports is 1, and 0x180 < 0x200), resulting in an OOB acc=
+ess
+and the exact panic this patch intended to prevent.
+
+> +	resource_size_t bar_size =3D pci_resource_len(pdev, bar);
+> +
+> +	if (last_port_end > bar_size) {
+> +		dev_warn(&pdev->dev,
+> +			 "BAR%d too small for %u ports (last port ends at %#x, BAR %pa)\n",
+> +			 bar, max_ports, last_port_end, &bar_size);
+> +		return -ENODEV;
+
+[Severity: High]
+Could this strict validation break working devices?
+
+If a device's generic IP block hardcodes CAP.NP to 31 (claiming 32 ports,
+requiring a 0x1100 byte BAR), but the manufacturer only implemented 2 ports
+(reflected in HOST_PORTS_IMPL) and mapped a standard 4KB (0x1000 byte) BAR,
+the validation will fail (0x1100 > 0x1000).
+
+Before this patch, the driver correctly relied on HOST_PORTS_IMPL to determ=
+ine
+which ports to access and safely initialized within the 4KB BAR. This patch
+introduces a strict check that rejects the device if the BAR is smaller than
+required for the maximum claimable ports in CAP.NP.
+
+Should this warn instead of failing the probe entirely, or base the check on
+the maximum port actually enabled in HOST_PORTS_IMPL?
+
+> +	}
+> +
+> +	return 0;
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831133314.4125=
+787-166-sashal@kernel.org?part=3D1
