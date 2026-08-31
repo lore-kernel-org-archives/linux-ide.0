@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62A4B4D90A6;
-	Mon, 31 Aug 2026 13:39:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36F904E9B00;
+	Mon, 31 Aug 2026 13:40:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183557; cv=none; b=UZjwAU8L3gtbI4ly5s9CozGKrdHYqIGbMH+FF5BiFmiH0dOWnav9rCioFWKGA0JcnrPCnyRFfNzKDgvCZIp0tXECz7RsjmUJbc9rD9C5hLgAnVUN7sYaY4kZoZ/9ic0bp7sJ8piSK/FwUQ2fYG4C1o79iGKHpozCoTJTfudgQwo=
+	t=1788183623; cv=none; b=jz4qvlFVT9oexeJ3T+8sY8OpQT3Yshh6Z7OY62r84ZaedngprYqJN6h2+FtVHzhFBIrGjcUP6UZ7JKgmkjPwNIxT2KSSJKfiO30dVlx9n3yntKVOkn8UiYNMnCz01WvSW0z4r5O7Wxl2H7TFmcMUzNsp2PqVojvfJbUAcjZ+qb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183557; c=relaxed/simple;
-	bh=zXSEC+PScyHpIcyKNxQf7u+rMee1LdsYgIq7m0w8Dos=;
+	s=arc-20240116; t=1788183623; c=relaxed/simple;
+	bh=7VU6EBvKdu9V2132/+pAb/fWDhTlUWMzrPyzYRRQtqE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=U/OL4aWgAQM08bhUYZqs2gfd5GH3ZzpPiJxtd5tIk3DMasN+Hdyb3T0Wy035j/Mxa8ptOhTGksGMf2mq1d7q4alRx4TGoIOwYWqGzOOPixHKdSJtReH/KRZMrgenltAz8Mw945h2gzNvAwJYF8kmknanXb4mxfagYTYVC5tnpYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A2jh3rVm; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=qIwtLYb7i27Pgz04Qtr0huM8Q/3NpDkqcGlWih6Cku1NNTU6BITLdmhi4a0+AhXj/QE+10DmA1yxvYnrDLTWaWpb1hbE2R/6/OTiQGolhSocHql4iSOEe4z31rWFOYAM5QV9NW5twGea0h5WtlE6SkkHzx9qGk/ryuP7CX5ID6E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nahUJm9P; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A2jh3rVm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E4B61F000E9;
-	Mon, 31 Aug 2026 13:39:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nahUJm9P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 240FF1F000E9;
+	Mon, 31 Aug 2026 13:40:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183554;
-	bh=rBbaTnPP66E6NVrCPUIGYm100iaFgrQu/I6rBFxujmM=;
+	s=k20260515; t=1788183621;
+	bh=16fH6e5R7tsJGJsq534FImcYfyPN+jw0vbm2JZqfOLI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=A2jh3rVmUidxYIGGQqd+LPYGWYVB6eJQHzGODv2NEvMYkZ5qr/Srz8Wla9hNP8BqD
-	 vd1UWsy2PZaQ2HXX0e2hd//eibRjeezadMlPEerz79A7jDca1HIrXNL3yr/anXTF6z
-	 H/FQQLArCqylazcWG1I6hhrcZWrmxjVDmqhJw1wgBtkyQRyOTnrqMHO9hV2HJHmKDb
-	 jjoj2i6tbQJk/Ma5cfoZPY2gzHCAdK3ofqO4CjO+U5R8Od10nyFu3Niov6MTfmO+w5
-	 iHeeCX8QqeA8nb9ylMOQpTFcTH/sNR1WltLg4VW194Yt/nsNVludP1Hxh/ViFPxfsY
-	 kwZ6QT3ns2IrA==
+	b=nahUJm9PoKWebUxDQBgEVjxxES8IVlQDoAg4jDxBIna8y3Kr2wXARB/sE/VGXkigN
+	 ni3TXA16sQ1TfmzrZ6uogqfNButAVh/x/+SDTTvq+5HRopRMBw5/Kw1DnoBZD0dUZX
+	 YdvwjAZtHF9baPEqE2iAa49HX5VsQokUUIMCkqqmOg3OSdjAtYNEvYWOTLxrS+clWp
+	 dOz+nEMIFu0fH74ZQrWBGSLXHtGlTCw7Hnx7EpqcKhDJRqmYFn9VhtSnechrKUcVdZ
+	 UjZVuj3ylduS5YghZCFXfxOLJv544CzQYCyxfQLcCbXLUV57LNMgYOFzYvgY3GBTle
+	 sGcukEcQRXDog==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: liyouhong <liyouhong@kylinos.cn>,
+Cc: Niklas Cassel <cassel@kernel.org>,
 	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-ide@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] ata: ahci: fail probe if BAR too small for claimed ports
-Date: Mon, 31 Aug 2026 09:23:14 -0400
-Message-ID: <20260831133314.4125787-166-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.12] ata: libata-core: Disable LPM on some WD drives
+Date: Mon, 31 Aug 2026 09:23:51 -0400
+Message-ID: <20260831133314.4125787-203-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,412 +52,358 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: liyouhong <liyouhong@kylinos.cn>
+From: Niklas Cassel <cassel@kernel.org>
 
-[ Upstream commit c4086c6e1af757e1ff26fa2d2926b3ec0195de79 ]
+[ Upstream commit 356d8241cf3c7b07a4a491dbab43b5a41513ca86 ]
 
-When an AHCI controller is disabled in BIOS, its HOST_CAP register may
-contain a bogus value, e.g. 0xFFFFFFFF.
+According to a user report WDC WD100EFGX-68CPLN0 and WDC WD102KFBX-68M95N0
+have problems with LPM.
 
-Since CAP.NP (Number of Ports) is a zeroes based 5-bit register field,
-a value of 0x1f means 32 ports. If CAP.NP claims more ports than can
-physically fit within the mapped BAR region, accessing port registers
-beyond the BAR boundary causes a kernel panic.
-
-Add validation in ahci_init_one() to check that the BAR size is
-sufficient for the number of ports claimed in CAP.NP. The check
-calculates the required MMIO size as:
-
-  required_size = 0x100 (global registers) + max_ports * 0x80
-
-If required_size exceeds the actual BAR size, the probe fails with
--ENODEV, preventing the panic and providing a clear error message.
-
-Reported-by: liyouhong <liyouhong@kylinos.cn>
-Closes: https://lore.kernel.org/all/20260422080322.1006592-1-dayou5941@163.com/
-Suggested-by: Damien Le Moal <dlemoal@kernel.org>
-Suggested-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: liyouhong <liyouhong@kylinos.cn>
-[cassel: commit log]
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220693
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `ata: ahci: fail probe if BAR too small for
-claimed ports`
+## Phase 1: Commit Message Forensics
 
-**Local tree:** Linux **6.18.44** (`git describe HEAD` → `v6.18.44`)
+**Step 1.1 — Subject line**
+- Record: `[ata: libata-core]` `[Disable]` — Add ATA device quirks to
+  disable Link Power Management (LPM) on two specific Western Digital
+  drive models.
 
----
+**Step 1.2 — Tags**
+- Record:
+  - `Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220693`
+  - `Signed-off-by: Niklas Cassel <cassel@kernel.org>` (author/subsystem
+    maintainer)
+  - `Signed-off-by: Damien Le Moal <dlemoal@kernel.org>` (libata
+    maintainer)
+  - No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, or `Cc:
+    stable@vger.kernel.org` tags
+  - Notable: bugzilla closure link; maintainer sign-offs from libata
+    maintainers
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+**Step 1.3 — Body analysis**
+- Record:
+  - **Bug:** WDC WD100EFGX-68CPLN0 and WDC WD102KFBX-68M95N0 have
+    problems with LPM
+  - **Symptom (from bugzilla):** "SATA bus goes offline after a while"
+    (bug 220693, reported 2025-10-22)
+  - **Version info:** None in commit message
+  - **Root cause (from patch comment):** Existing
+    `ATA_QUIRK_WD_BROKEN_LPM` only applies to SATA Gen1 drives; these
+    modern WD models need unconditional `ATA_QUIRK_NOLPM`
 
-### Step 1.1: Subject line
-**Record:** `[ata: ahci]` `[fail]` — Fail AHCI PCI probe when the mapped
-BAR is smaller than the MMIO space required by the port count claimed in
-`HOST_CAP.NP`.
-
-### Step 1.2: Tags
-**Record:**
-- **Reported-by:** liyouhong \<liyouhong@kylinos.cn\> — real-world
-  reporter (Kylin OS)
-- **Closes:** https://lore.kernel.org/all/20260422080322.1006592-1-
-  dayou5941@163.com/ — original bug report thread
-- **Suggested-by:** Damien Le Moal \<dlemoal@kernel.org\>, Niklas Cassel
-  \<cassel@kernel.org\>
-- **Reviewed-by:** Damien Le Moal \<dlemoal@kernel.org\> — libata
-  maintainer review
-- **Signed-off-by:** liyouhong, Niklas Cassel
-- No `Fixes:`, no `Cc: stable@vger.kernel.org` (expected for manual
-  review)
-- No syzbot / sanitizer tags
-
-### Step 1.3: Body analysis
-**Record:**
-- **Bug:** When an AHCI controller is disabled in BIOS, `HOST_CAP` can
-  read as `0xFFFFFFFF`. `CAP.NP` (5-bit, zero-based) then reports 32
-  ports. The driver later accesses per-port MMIO at `0x100 + port *
-  0x80`, which can extend past the actual BAR → **kernel panic**.
-- **Symptom:** Kernel panic during AHCI probe (boot-time PCI
-  enumeration).
-- **Root cause:** No validation that BAR size can accommodate all ports
-  implied by `CAP.NP`.
-- **Fix:** In `ahci_init_one()`, after `pcim_iomap()`, compute
-  `required_size = 0x100 + max_ports * 0x80`; if it exceeds
-  `pci_resource_len()`, return `-ENODEV` with a warning.
-
-### Step 1.4: Hidden bug fix?
-**Record:** Not disguised — this is an explicit crash-prevention fix,
-not cleanup or optimization.
+**Step 1.4 — Hidden bug fix detection**
+- Record: Not disguised — this is an explicit hardware quirk/workaround
+  fix, though the subject says "Disable" rather than "fix". Classic
+  device-specific LPM workaround pattern.
 
 ---
 
-## PHASE 2: DIFF ANALYSIS
+## Phase 2: Diff Analysis
 
-### Step 2.1: Inventory
-**Record:**
-- **Files:** `drivers/ata/ahci.c` only (+22 / -0)
-- **Functions:** New `ahci_validate_bar_size()`; call added in
-  `ahci_init_one()`
-- **Scope:** Single-file, surgical fix
+**Step 2.1 — Change inventory**
+- Record:
+  - Files: `drivers/ata/libata-core.c` (+8 lines, 0 removed)
+  - Functions: modifies `__ata_dev_quirks[]` static table only
+  - Scope: single-file, surgical quirk-table addition
 
-### Step 2.2: Code flow change
-**Record:**
-- **Hunk 1 (new function):** After MMIO mapping, read `HOST_CAP`, derive
-  `max_ports` via `ahci_nr_ports()`, compute `last_port_end = 0x100 +
-  max_ports * 0x80`, compare to `pci_resource_len()`. Return `-ENODEV`
-  if BAR is too small.
-- **Hunk 2 (`ahci_init_one`):** Call validation immediately after
-  `pcim_iomap()`, before `ahci_remap_check()` and
-  `ahci_pci_save_initial_config()`.
-- **Path affected:** PCI probe initialization path (normal boot, not
-  error recovery).
+**Step 2.2 — Code flow change**
+- Record:
+  - **Hunk (quirk table):** Before — no quirk entries for WD100EFGX or
+    WD102KFBX; LPM enabled normally. After — both models matched via
+    `glob_match()` and assigned `ATA_QUIRK_NOLPM`, which forces
+    `ATA_LPM_MAX_POWER` in `ata_dev_config_lpm()` and prevents LPM in
+    `ata_scsi_lpm_supported()`.
 
-### Step 2.3: Bug mechanism
-**Record:** **Buffer overflow / out-of-bounds MMIO access.** Bogus
-`CAP.NP` causes the driver to touch port register space beyond the
-mapped BAR. Downstream accessors like `__ahci_port_base()` and
-`readl(port_mmio + PORT_CMD)` in `ahci_save_initial_config()` and
-`ahci_mark_external_port()` can panic.
+**Step 2.3 — Bug mechanism**
+- Record:
+  - **Category:** Hardware workaround (LPM incompatibility)
+  - **Mechanism:** These WD drives malfunction when SATA link power
+    management is used (slumber/partial states). Without the quirk,
+    `ata_dev_config_lpm()` does not disable LPM. With `ATA_QUIRK_NOLPM`,
+    LPM is disabled at probe and the port policy is forced to max power,
+    preventing the drive from dropping off the SATA bus.
 
-### Step 2.4: Fix quality
-**Record:**
-- **Obviously correct:** Matches AHCI register layout (`0x100` global +
-  `0x80` per port); uses existing `ahci_nr_ports()` helper.
-- **Minimal:** 22 lines, no unrelated changes.
-- **Regression risk:** Very low. Legitimate controllers have BARs sized
-  for their port count; only broken/disabled configurations are
-  rejected.
-- **False negative risk:** A controller with bogus `CAP` but a large
-  enough BAR could still probe; that is not worse than today and is
-  outside this patch’s scope.
+**Step 2.4 — Fix quality**
+- Record:
+  - Obviously correct: uses established `ATA_QUIRK_NOLPM` mechanism
+    already used for ADATA, Seagate, Samsung, and other drives in the
+    same table
+  - Minimal and surgical: two model strings plus explanatory comment
+  - Regression risk: very low; only affects exact model matches; trade-
+    off is slightly higher power consumption on those drives (standard
+    accepted cost of NOLPM quirks)
 
 ---
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+## Phase 3: Git History Investigation
 
-### Step 3.1: Blame
-**Record:** `pcim_iomap()` at lines 1987–1989 last touched by
-`bdcddd0cdc39d` (Oct 2024, PCI deprecation cleanup). The missing
-validation has been present since `ahci_init_one()` existed; the
-vulnerability is long-standing, not a recent regression.
+**Step 3.1 — Blame**
+- Record: WD `ATA_QUIRK_WD_BROKEN_LPM` entries date to commit
+  `ecd75ad514d73` ("libata: disable LPM for some WD SATA-I devices"),
+  present since v4.6 era. The buggy behavior (no quirk for these models)
+  is simply the absence of entries — not a recently introduced
+  regression in libata code.
 
-### Step 3.2: Fixes: tag
-**Record:** N/A — no `Fixes:` tag.
+**Step 3.2 — Fixes: tag**
+- Record: N/A — no `Fixes:` tag present.
 
-### Step 3.3: Related file history
-**Record:**
-- Related but distinct: `62ced8e065787` — “Do not read the per port area
-  for unimplemented ports” (PI-register compliance; does not address
-  bogus `CAP.NP` vs BAR size).
-- No other “BAR too small” fix in this tree.
-- Patch series: v2 → v5 (Apr 25–28, 2026); committed version is v5.
+**Step 3.3 — File history**
+- Record: Recent stable-tree libata LPM quirk backports include:
+  - `2229b4cf97301` — ADATA SU680 NOLPM (backported to 6.18.y)
+  - `87f0349beaaca` — ST1000DM010 NOLPM
+  - `a70fd483c4b93` — ST2000DM008 NOLPM
+  - Standalone fix; part of a 2-patch series on mainline (patch 2 adds a
+    different WD Green model) but patch 1 is self-contained.
 
-### Step 3.4: Author context
-**Record:** liyouhong is the reporter/fix author. Niklas Cassel
-(AHCI/libata maintainer) applied the patch. Damien Le Moal (libata
-maintainer) reviewed it.
+**Step 3.4 — Author context**
+- Record: Niklas Cassel is libata maintainer; Damien Le Moal is primary
+  libata maintainer. Both signed off. Maintainer applied series to
+  `for-7.2-fixes` per lore reply.
 
-### Step 3.5: Dependencies
-**Record:** **Standalone.** Uses `ahci_nr_ports()` (inline in `ahci.h`
-since `365cfa1ed5a36`), `readl()`, `pci_resource_len()`, `HOST_CAP` —
-all present in 6.18.44. No series prerequisites.
-
----
-
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-
-### Step 4.1: Original discussion
-**Record:**
-- **b4 dig -c c4086c6:**
-  https://patch.msgid.link/20260428020935.2049617-1-dayou5941@163.com
-- **b4 dig -a:** v2 (Apr 25), v3/v4 (Apr 27), v5 (Apr 28, 2026) —
-  committed version is latest
-- **Key feedback:** Niklas Cassel applied to libata `for-7.2`, corrected
-  commit-log wording about `CAP.NP` range (1–32 is valid per spec; the
-  issue is BAR mismatch, not “impossible” port count). No NAKs.
-
-### Step 4.2: Reviewers
-**Record:** **b4 dig -w** CC’d: `linux-ide@vger.kernel.org`,
-`dlemoal@kernel.org`, `cassel@kernel.org`, `liyouhong@kylinos.cn`.
-Appropriate maintainers were involved.
-
-### Step 4.3: Bug report
-**Record:** Reported-by from Kylin OS. Commit Closes original report at
-lore `20260422080322`. Panic mechanism described in patch and maintainer
-reply. No stack trace in the retrieved mbox thread, but the OOB MMIO
-path is verifiable in code.
-
-### Step 4.4: Series context
-**Record:** Standalone 1/1 patch. Five revision rounds addressed review
-feedback; no companion patches required.
-
-### Step 4.5: Stable list history
-**Record:** No `Cc: stable` nomination found in the retrieved thread.
-Absence is not a negative signal per review instructions.
+**Step 3.5 — Dependencies**
+- Record: No dependencies. `ATA_QUIRK_NOLPM`, `ata_dev_quirks()`,
+  `ata_dev_config_lpm()`, and `glob_match()` all exist in this tree.
+  Applies cleanly (`git apply --check` passed).
 
 ---
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 4: Mailing List and External Research
 
-### Step 5.1: Key functions
-**Record:** `ahci_validate_bar_size()` (new), `ahci_init_one()`,
-`ahci_nr_ports()`, `ahci_pci_save_initial_config()` →
-`ahci_save_initial_config()`, `__ahci_port_base()`.
+**Step 4.1 — Original discussion**
+- Record:
+  - Lore URL:
+    https://patch.msgid.link/20260728111310.722450-5-cassel@kernel.org
+  - Series: v1 only (no further revisions)
+  - Damien Le Moal: "Applied to for-7.2-fixes. Thanks!"
+  - No NAKs; no explicit stable nomination in thread
 
-### Step 5.2: Callers
-**Record:** `ahci_init_one()` is the `.probe` handler for
-`ahci_pci_driver` (line 673), registered via `module_pci_driver()`.
-Called during PCI device enumeration at boot or module load.
+**Step 4.2 — Reviewers**
+- Record: CC'd to `linux-ide@vger.kernel.org`, Damien Le Moal, Ronald
+  Garcia Vazquez (likely reporter contact). Maintainers directly
+  involved.
 
-### Step 5.3: Callees
-**Record:** `readl(hpriv->mmio + HOST_CAP)` (offset 0, always within
-BAR), `ahci_nr_ports()`, `pci_resource_len()`.
+**Step 4.3 — Bug report**
+- Record:
+  - Bugzilla 220693: "SATA bus goes offline after a while"
+  - Reported by Emerson Pinter, 2025-10-22
+  - Marked as regression with bisect to `459779d04ae8` (block read-ahead
+    change) — that commit is **not** in the 6.18.y tree; the LPM quirk
+    fix addresses the drive-specific failure mode regardless
+  - Severity: disk/bus disappearance is a serious usability and
+    potential data-integrity issue
 
-### Step 5.4: Reachability
-**Record:** **Userspace-triggerable indirectly** via PCI hotplug/module
-load, but primary scenario is **boot** when the AHCI controller is
-present in PCI space but disabled/misconfigured in BIOS. Any system with
-`CONFIG_SATA_AHCI` and such hardware is affected.
+**Step 4.4 — Related patches**
+- Record: Patch 2/2 (`WD Green 2.5 480GB`) is a separate one-line quirk
+  for a different model; not required for this commit to function.
 
-### Step 5.5: Similar patterns
-**Record:** `__ahci_port_base()` at `mmio + 0x100 + port_no * 0x80` is
-the canonical layout used throughout AHCI. The validation formula
-matches this exactly. No duplicate fix elsewhere in `drivers/ata/`.
-
----
-
-## PHASE 6: CROSS-REFERENCE AGAINST LOCAL TREE (6.18.44)
-
-### Step 6.1: Buggy code present?
-**Record:** **YES.** Current `ahci_init_one()` maps MMIO at line 1987
-and proceeds directly to `ahci_remap_check()` /
-`ahci_pci_save_initial_config()` with no BAR-size check.
-`ahci_validate_bar_size()` is **absent**. Upstream commit `c4086c6` is
-**not** an ancestor of HEAD (`merge-base --is-ancestor` exit 1).
-
-### Step 6.2: Backport complications
-**Record:** **Clean apply.** `git format-patch -1 c4086c6 --stdout | git
-apply --check` succeeded on HEAD. Line context around `pcim_iomap()`
-matches the patch.
-
-### Step 6.3: Related fixes already present?
-**Record:** `62ced8e065787` (skip unimplemented ports in
-`ahci_mark_external_port`) is present but does not address this
-BAR/CAP.NP mismatch. No duplicate BAR validation found.
+**Step 4.5 — Stable list**
+- Record: No stable-list discussion found for this specific commit.
+  Precedent: ADATA SU680 NOLPM quirk (`2229b4cf97301`) was explicitly
+  nominated with `Cc: stable@vger.kernel.org` and backported to 6.18.y.
 
 ---
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+## Phase 5: Code Semantic Analysis
 
-### Step 7.1: Subsystem criticality
-**Record:** **drivers/ata/ahci** — IMPORTANT. AHCI is the standard SATA
-driver on most x86/ARM desktops, laptops, and servers.
+**Step 5.1 — Key functions**
+- Record: `__ata_dev_quirks[]` (modified), `ata_dev_quirks()`
+  (consumer), `ata_dev_config_lpm()` (applies NOLPM),
+  `ata_scsi_lpm_supported()` (checks NOLPM)
 
-### Step 7.2: Activity
-**Record:** Actively maintained in 6.18.y (recent commits: LPM quirks,
-JMicron DMA, unimplemented-port fix). The underlying probe path is
-mature; this bug has existed without validation for years.
+**Step 5.2 — Callers**
+- Record: `ata_dev_quirks()` called from device identification path at
+  line 2978 (`dev->quirks |= ata_dev_quirks(dev)`), during normal SATA
+  device probe/enumeration — common boot and hotplug path.
 
----
+**Step 5.3 — Callees**
+- Record: `glob_match()` for model string matching; quirk bits consumed
+  by `ata_dev_config_lpm()` and `ata_scsi_lpm_supported()`.
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+**Step 5.4 — Reachability**
+- Record: Triggered automatically when a matching WD drive is detected
+  on any SATA controller using libata. No special config needed beyond
+  `CONFIG_ATA`.
 
-### Step 8.1: Who is affected
-**Record:** Systems with an AHCI PCI device present but disabled or
-misconfigured in BIOS (bogus `HOST_CAP`). Common on dual-controller or
-unused-SATA configurations. Affects anyone building `CONFIG_SATA_AHCI`
-(default on most distros).
-
-### Step 8.2: Trigger conditions
-**Record:** Boot or `modprobe ahci` when PCI enumerates a disabled AHCI
-controller reporting `HOST_CAP = 0xFFFFFFFF` (or any `CAP.NP` value
-whose port space exceeds BAR size). Not a race; deterministic on
-affected hardware.
-
-### Step 8.3: Failure mode severity
-**Record:** **Kernel panic** from OOB MMIO access → **CRITICAL** (boot
-failure, no graceful recovery).
-
-### Step 8.4: Risk-benefit
-**Record:**
-- **Benefit:** HIGH — prevents boot-time panic on real hardware; clear
-  `-ENODEV` + warning instead.
-- **Risk:** VERY LOW — 22-line defensive check, reviewed by maintainer,
-  applies cleanly.
-- **Ratio:** Strongly favors backport.
+**Step 5.5 — Similar patterns**
+- Record: Extensive existing NOLPM quirk entries in the same table
+  (ADATA SU680, ST1000DM010, ST2000DM008, Samsung SSDs, etc.) —
+  identical fix pattern.
 
 ---
 
-## PHASE 9: FINAL SYNTHESIS
+## Phase 6: Cross-Reference Against Local Tree
 
-### Step 9.1: Evidence summary
+**Step 6.1 — Buggy code in tree**
+- Record: Local tree is **Linux 6.18.44** (`v6.18.44-2-g1b9e1abadee04`,
+  detached from `stable/linux-6.18.y`). The WD100EFGX/WD102KFBX quirk
+  entries are **absent**; commit `356d8241cf3c7` is on `master` only
+  (`NOT_IN_CURRENT_TREE`). The quirk infrastructure and
+  `ATA_QUIRK_NOLPM` are fully present. Bug affects any user with these
+  drive models on 6.18.y.
 
-**FOR backport:**
-- Fixes real kernel panic on probe (user-reported, Kylin OS)
-- Reviewed by libata maintainer; applied by AHCI maintainer
-- Small, self-contained, no dependencies
-- Buggy code exists in 6.18.44; fix not yet present
-- Applies cleanly
-- Fails probe gracefully (`-ENODEV`) instead of panicking
+**Step 6.2 — Backport complications**
+- Record: Clean apply confirmed. Line numbers differ slightly (stable
+  table ends at line 4373 vs mainline 4413) but patch applies without
+  conflict.
 
-**AGAINST backport:**
-- None significant. Disabled-controller scenario is somewhat niche, but
-  panic severity outweighs rarity.
+**Step 6.3 — Related fixes already present**
+- Record: Similar NOLPM quirks for ADATA SU680, ST1000DM010, ST2000DM008
+  already in 6.18.y. No duplicate fix for these WD models.
 
-**Unresolved:**
-- Full stack trace from original bug report not retrieved (lore Anubis
-  blocked direct fetch; mbox thread contained patch discussion, not the
-  original oops log). Panic mechanism is confirmed by code path
-  analysis.
+---
 
-### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — simple arithmetic;
-   maintainer-reviewed; v5 after four revision rounds.
-2. Fixes a real bug affecting users? **PASS** — Reported-by from
-   production distro user.
-3. Important issue? **PASS** — kernel panic (CRITICAL).
-4. Small and contained? **PASS** — 22 lines, one file.
-5. No new features or APIs? **PASS** — probe-time validation only.
-6. Can apply to local tree? **PASS** — `git apply --check` clean on
-   6.18.44.
+## Phase 7: Subsystem and Maintainer Context
 
-### Step 9.3: Exception categories
-**Record:** N/A (not a device ID, quirk, DT, build, or docs fix).
-Qualifies on crash-fix merits alone.
+**Step 7.1 — Subsystem criticality**
+- Record: `drivers/ata/` — IMPORTANT (storage stack; affects users with
+  affected hardware)
 
-### Step 9.4: Decision rationale
-For Linux **6.18.44**, systems with a BIOS-disabled AHCI controller can
-hit OOB MMIO during `ahci_init_one()` probe and panic the kernel. The
-fix adds an early, spec-aligned BAR size check and fails probe safely.
-It is small, maintainer-reviewed, standalone, and applies cleanly to
-this tree. This is appropriate stable material.
+**Step 7.2 — Subsystem activity**
+- Record: Actively maintained in 6.18.y with recent stable backports
+  including LPM quirks, error handling fixes, and SCSI path fixes.
+
+---
+
+## Phase 8: Impact and Risk Assessment
+
+**Step 8.1 — Who is affected**
+- Record: Users with WDC WD100EFGX-68CPLN0 or WDC WD102KFBX-68M95N0
+  drives on any libata SATA port. WD Red/Black enterprise/consumer HDDs
+  — real, commonly deployed hardware.
+
+**Step 8.2 — Trigger conditions**
+- Record: Occurs during normal operation when LPM is active on the SATA
+  link — not exotic. Triggered on every boot/probe for matching drives;
+  failure manifests over time ("after a while").
+
+**Step 8.3 — Failure mode severity**
+- Record: SATA bus goes offline → drive disappears, I/O errors,
+  potential data loss. Severity: **HIGH** (serious functional failure,
+  possible data integrity impact).
+
+**Step 8.4 — Risk-benefit**
+- Record:
+  - Benefit: **High** for affected hardware — restores reliable disk
+    operation
+  - Risk: **Very low** — 8-line quirk addition, exact model match only,
+    established mechanism
+  - Ratio: strongly favors backport
+
+---
+
+## Phase 9: Final Synthesis
+
+**Step 9.1 — Evidence summary**
+
+FOR backporting:
+- Fixes real user-reported bug (bugzilla 220693)
+- Hardware quirk — explicit stable exception category
+- Identical pattern to NOLPM quirks already backported to 6.18.y
+- Small, surgical, applies cleanly
+- Subsystem maintainer authored and applied
+- Serious failure mode (SATA bus offline)
+
+AGAINST backporting:
+- No `Tested-by:` on this specific commit (minor; ADATA quirk had one)
+- No explicit `Cc: stable` tag (not a negative signal per instructions)
+- Bugzilla regression bisect points elsewhere, but fix targets
+  documented LPM failure mode
+
+**Step 9.2 — Stable rules checklist**
+1. Obviously correct and tested? **PASS** — standard quirk mechanism;
+   maintainer-reviewed
+2. Fixes a real bug affecting users? **PASS** — bugzilla user report,
+   SATA bus offline
+3. Important issue? **PASS** — drive/bus failure, HIGH severity
+4. Small and contained? **PASS** — 8 lines, one file
+5. No new features or APIs? **PASS** — quirk table entries only
+6. Can apply to local tree? **PASS** — clean apply verified
+
+**Step 9.3 — Exception category**
+- Record: **Hardware quirk/workaround** — automatic stable
+  qualification.
+
+**Step 9.4 — Decision rationale**
+
+This commit adds two model-specific `ATA_QUIRK_NOLPM` entries for WD
+drives that drop off the SATA bus when LPM is enabled. The fix uses
+infrastructure already present and proven in 6.18.y through prior NOLPM
+backports. It is not in the current 6.18.44 tree but applies cleanly and
+addresses a serious, user-visible hardware failure. This is textbook
+stable material.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed subject, tags, body; identified panic-on-probe
-  bug with BIOS-disabled AHCI scenario.
-- **[Phase 2]** Diff: +22 lines in `drivers/ata/ahci.c`; new
-  `ahci_validate_bar_size()`, call in `ahci_init_one()`; OOB MMIO bug
-  class.
-- **[Phase 3]** `git blame -L 1987,1992 drivers/ata/ahci.c`: iomap area
-  from `bdcddd0cdc39d` (2024); no `Fixes:` tag; related commit
-  `62ced8e065787` is distinct; `ahci_nr_ports()` present since
-  `365cfa1ed5a36`.
-- **[Phase 3]** `git merge-base --is-ancestor c4086c6 HEAD` → exit 1
-  (fix **not** in 6.18.44).
-- **[Phase 4]** `b4 dig -c c4086c6`: lore URL found; `b4 dig -a`: v2–v5
-  series; `b4 dig -w`: maintainers CC’d; mbox: Damien Le Moal Reviewed-
-  by, Niklas applied, no NAKs, no stable Cc.
-- **[Phase 5]** `ahci_init_one` is `.probe` for `ahci_pci_driver` (line
-  673); panic path via `ahci_save_initial_config()` `readl(port_mmio +
-  PORT_CMD)` at `libahci.c:590-592` and `__ahci_port_base()` at
-  `ahci.h:453-458`.
-- **[Phase 6]** `git describe HEAD` → v6.18.44; `make kernelversion`
-  equivalent → 6.18.44; `ahci_validate_bar_size` absent; `git apply
-  --check` clean.
-- **[Phase 8]** Failure mode: OOB MMIO → kernel panic; severity
-  CRITICAL; trigger: BIOS-disabled AHCI with bogus `HOST_CAP`.
+- [Phase 1] Parsed commit `356d8241cf3c7`: subject, tags, body, bugzilla
+  link
+- [Phase 2] Full diff reviewed: 8 lines added to `__ata_dev_quirks[]` in
+  `drivers/ata/libata-core.c`
+- [Phase 3] `git describe HEAD`: v6.18.44 (6.18.y stable tree)
+- [Phase 3] `git merge-base --is-ancestor 356d8241cf3c7 HEAD`:
+  NOT_IN_CURRENT_TREE
+- [Phase 3] `git blame` on WD_BROKEN_LPM lines: introduced in
+  `ecd75ad514d73` (v4.6 era)
+- [Phase 3] Prior NOLPM backports in stable: `2229b4cf97301`,
+  `87f0349beaaca`, `a70fd483c4b93` confirmed
+- [Phase 4] `b4 dig -c 356d8241cf3c7`: lore thread found
+- [Phase 4] `b4 dig -a`: v1 only, no later revisions
+- [Phase 4] `b4 dig -w`: CC to linux-ide, Damien Le Moal, reporter
+- [Phase 4] Mbox: Damien Le Moal applied to for-7.2-fixes; patch 2/2 is
+  separate drive
+- [Phase 4] Bugzilla 220693: "SATA bus goes offline after a while",
+  reported 2025-10-22
+- [Phase 5] `grep ata_dev_quirks`: called from device probe at line 2978
+- [Phase 5] Read `ata_dev_config_lpm()`: NOLPM forces
+  `ATA_LPM_MAX_POWER`
+- [Phase 5] Read `ata_scsi_lpm_supported()`: checks `ATA_QUIRK_NOLPM`
+- [Phase 6] `grep WD100EFGX|WD102KFBX` in tree: no matches (bug present)
+- [Phase 6] `git format-patch | git apply --check`: applies cleanly
+- [Phase 6] `ATA_QUIRK_NOLPM` defined in `include/linux/libata.h`:
+  present
+- [Phase 8] Bugzilla regression bisect commit `459779d04ae8`: NOT in
+  6.18.y tree (irrelevant to applicability)
 
-**YES****Verdict: YES** — backport to this tree (Linux 6.18.44).
+**YES**The background checks finished and match the earlier analysis:
 
-The patch adds a small check in `ahci_init_one()` so probe fails with
-`-ENODEV` when `HOST_CAP.NP` claims more ports than the BAR can hold.
-That avoids out-of-bounds MMIO access and a kernel panic when an AHCI
-controller is disabled in BIOS but still shows up on PCI with bogus
-registers (e.g. `HOST_CAP = 0xFFFFFFFF`).
+- **Master search:** Found commit `356d8241cf3c7` — "ata: libata-core:
+  Disable LPM on some WD drives"
+- **Tree check:** That commit is on `master` only, **not** in the
+  current 6.18.44 stable checkout
 
-It’s a 22-line, single-file fix, maintainer-reviewed, applies cleanly to
-6.18.44, and the bug is still present there.
+The backport recommendation stands: **YES** — add the two WD
+`ATA_QUIRK_NOLPM` entries for WD100EFGX and WD102KFBX; the patch applies
+cleanly to this tree.
 
- drivers/ata/ahci.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ drivers/ata/libata-core.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 1d73a53370cf3..b4e5d347151a9 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1888,6 +1888,24 @@ static ssize_t remapped_nvme_show(struct device *dev,
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index f0753f5e57a8e..ae1e5f82026c5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4372,6 +4372,14 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+ 	{ "WDC WD3000JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+ 	{ "WDC WD3200JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
  
- static DEVICE_ATTR_RO(remapped_nvme);
- 
-+static int ahci_validate_bar_size(struct pci_dev *pdev, int bar,
-+				  struct ahci_host_priv *hpriv)
-+{
-+	u32 cap = readl(hpriv->mmio + HOST_CAP);
-+	unsigned int max_ports = ahci_nr_ports(cap);
-+	u32 last_port_end = 0x100 + (max_ports * 0x80);
-+	resource_size_t bar_size = pci_resource_len(pdev, bar);
++	/*
++	 * WD drives with LPM issues (irrespective of supported SATA speeds).
++	 * (Unlike ATA_QUIRK_WD_BROKEN_LPM, which is only applied if the drive
++	 * exposes SATA Gen1 speed support, and SATA Gen1 speed support only.)
++	 */
++	{ "WDC WD100EFGX-68CPLN0",	NULL,	ATA_QUIRK_NOLPM },
++	{ "WDC WD102KFBX-68M95N0",	NULL,	ATA_QUIRK_NOLPM },
 +
-+	if (last_port_end > bar_size) {
-+		dev_warn(&pdev->dev,
-+			 "BAR%d too small for %u ports (last port ends at %#x, BAR %pa)\n",
-+			 bar, max_ports, last_port_end, &bar_size);
-+		return -ENODEV;
-+	}
-+
-+	return 0;
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	unsigned int board_id = ent->driver_data;
-@@ -1988,6 +2006,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (!hpriv->mmio)
- 		return -ENOMEM;
- 
-+	rc = ahci_validate_bar_size(pdev, ahci_pci_bar, hpriv);
-+	if (rc)
-+		return rc;
-+
- 	/* detect remapped nvme devices */
- 	ahci_remap_check(pdev, ahci_pci_bar, hpriv);
- 
+ 	/*
+ 	 * This sata dom device goes on a walkabout when the ATA_LOG_DIRECTORY
+ 	 * log page is accessed. Ensure we never ask for this log page with
 -- 
 2.53.0
 
