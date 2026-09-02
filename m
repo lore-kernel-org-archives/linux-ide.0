@@ -1,126 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D0E6477285;
-	Wed,  2 Sep 2026 11:29:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADF82480335;
+	Wed,  2 Sep 2026 11:51:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788348555; cv=none; b=g3DQBdmCDTx8VINirO52IF1/mz44tSpQV0E3zRvcyPiQ6Cyc1hiwftXQoN6nP4tsqlcTn2JfIchXuwokyzXyOPvAN2Tlpbciug9LEtI/e652PYNWY43AuFK+c8G/9hbPymlBaFXhku+zEXvU5L/2SAHaHJGmWPqBwnDxXmRsgDc=
+	t=1788349878; cv=none; b=FcSnDOxuYDoofCLULrLI1WQpsonI+mA692E0YpUgLiTCSOswGXcGNEJiNgCJ5iE6sctnTArrB17YJuC8D8yOq6h3ZcdiNUg1+UJ1mKsh8N7Wtq5ppAjCS7KYC3GeNtrYy/BtP66QI8kY2YS3aAkyUAxs8K+bJr4dhW/YqX0Zk80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788348555; c=relaxed/simple;
-	bh=gyzdEzme7lFDjf/tquEWQWPcfPYvp1lu54rae5judD4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sn7jE8k70C1Y1kW7iRh7jk4wT2XTUlYMcYVsO2+lci+zf6T5/a/WbZCTEwniiJLtdxnd/gNlBUfpesdEAszs/ogyGEjVy6RV6fQVlCoT3F6FWsAVdbHBHxjXUcR+vYO0yZ3EceuWpKBMCZQ4UaMESk8sizxGU0TEp9ok85Nkrzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zkt52PJ9; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zkt52PJ9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B8EC1F000E9;
-	Wed,  2 Sep 2026 11:29:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788348545;
-	bh=G6COaUZJxKf9AGZAlBdJyQBoWIGyZnpHatyadIQjBbg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Zkt52PJ9a88hpa5jhEaOJqpqUfcWv8ZrSFe9g+kH6Ec+aPlWpgblc9ub2QEr/dx25
-	 e9sLHmsuT87DHC/2sn0R124Gr9tIOgbYyGT1On7OWRKdjOJ2K+cAJton1hOs9vCCjI
-	 P93Wm9K6JXfES3JV2egwB+jYQBamQ+Pz/Nt1UENvz6gwNIqslTF7UZxcAOJk/ECxIT
-	 uW0mJwkwj4DnFWz1dEXczyRRyzQh7nPG2AiKiUR51kvFcwubaOMwV2kXjtDxMpevvE
-	 IKTfsoNzSyR13fJIWBeFvq+Z9odqrOB5Y2fxQKuM5w9zMObUCunsIcU5ldaLmEIErv
-	 MSzfL55YiY5JQ==
-Date: Wed, 2 Sep 2026 13:29:01 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 36/37] ata: libata: use 16-bits defined sense codes
-Message-ID: <apgIfRr9MjNov6FV@ryzen>
-References: <20260831020451.585944-1-dlemoal@kernel.org>
- <20260831020451.585944-37-dlemoal@kernel.org>
+	s=arc-20240116; t=1788349878; c=relaxed/simple;
+	bh=c2MCUwGVgB+jp4/L0INUSJHmSsjvg493eqYrcrbGdkQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=nl0Q+Vvz18yd39a+dKkOz73OQhSxuLlY3mpsiPV/U05lmWYRflaOXDCqOG1e4rcw8Ei2wUyiBObUm56JhTv9mxnBqBJAO4DRw2Us+xNFnoXWsyEy8NSYe8B+y8DhsWEz6PvxvYrio5DOCWMFJqLpjZh13r77LHCWllK8LIswrRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 8c3a123ca6c411f19a56ed5b684f684d-20260902
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:4ffb6898-2eab-4694-b3d4-93e0a3d87012,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:ee6c3793bdab207ccc3914c9c8f18244,BulkI
+	D:nil,BulkQuantity:0,SF:81|82|102|850|865|898,TC:nil,Content:0|15|50,EDM:-
+	3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,A
+	V:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 8c3a123ca6c411f19a56ed5b684f684d-20260902
+X-User: xiaopei01@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <xiaopei01@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 865646420; Wed, 02 Sep 2026 19:50:52 +0800
+From: Pei Xiao <xiaopei01@kylinos.cn>
+To: dlemoal@kernel.org,
+	cassel@kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: shuangpeng.kernel@gmail.com,
+	Pei Xiao <xiaopei01@kylinos.cn>
+Subject: [PATCH 2/2] ata: pata_parport: unregister devices on protocol unregister
+Date: Wed,  2 Sep 2026 19:50:27 +0800
+Message-Id: <7215874eab207352d52473a72b59433b8470ade8.1788349317.git.xiaopei01@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <cover.1788349317.git.xiaopei01@kylinos.cn>
+References: <cover.1788349317.git.xiaopei01@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260831020451.585944-37-dlemoal@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Aug 31, 2026 at 11:04:50AM +0900, Damien Le Moal wrote:
-> Refactor libata core code to use the 16-bits sense_code field of
-> struct scsi_sense_hdr and replace all hard-coded additional sense codes
-> and additional sense code qualifiers with the enum values defined in
-> include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
-> being processed are easier to test and self-documented.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  drivers/ata/libata-eh.c   |  13 +-
->  drivers/ata/libata-sata.c |  14 +-
->  drivers/ata/libata-scsi.c | 346 +++++++++++++++++++++++---------------
->  drivers/ata/libata.h      |   5 +-
->  4 files changed, 226 insertions(+), 152 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index c93c24b22d9c..71961fbaa42f 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -1516,11 +1516,13 @@ static bool ata_eh_request_sense(struct ata_queued_cmd *qc)
->  	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
->  	/* Ignore err_mask; ATA_ERR might be set */
->  	if (tf.status & ATA_SENSE) {
-> -		if (ata_scsi_sense_is_valid(tf.lbah, tf.lbam, tf.lbal)) {
-> +		u16 sense_code = scsi_sense_code(tf.lbam, tf.lbal);
+When a protocol module registers multiple protocols and a later
+registration fails (e.g. kbic_init registering k951 then k971), the
+rollback path calls pata_parport_unregister_driver() on the already
+registered protocol. This removes the protocol from the IDR and
+unregisters the driver, but leaves the dynamically created pi_adapter
+devices untouched.
 
-Here you take asc and ascq and combine them to one.
-I see the reason, since ata_scsi_sense_is_valid() takes a u16 sense code.
-That is fine, and I think makes ata_scsi_sense_is_valid() easier to read.
+Since the module init then fails, the module loader frees the module
+memory, bypassing the references held by the devices. Any later removal
+of these dangling devices (e.g. via sysfs delete_device or parport
+detach) hits pi_remove_one() -> pi_disconnect() -> pi->proto->disconnect,
+dereferencing the freed module memory and crashing the kernel.
 
+Tear down all pi_adapters using the protocol in
+pata_parport_unregister_driver(), before driver_unregister(), while the
+module is still alive so the ->disconnect / ->release_proto callbacks
+are safe to call.
 
-> +
-> +		if (ata_scsi_sense_is_valid(tf.lbah, sense_code)) {
->  			/* Set sense without also setting scsicmd->result */
-> -			scsi_build_sense_buffer(dev->flags & ATA_DFLAG_D_SENSE,
-> -						cmd->sense_buffer, tf.lbah,
-> -						tf.lbam, tf.lbal);
-> +			scsi_set_sense_buffer(dev->flags & ATA_DFLAG_D_SENSE,
-> +					      cmd->sense_buffer, tf.lbah,
-> +					      sense_code);
+Fixes: 246a1c4c6b7f ("ata: pata_parport: add driver (PARIDE replacement)")
+Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
+---
+ drivers/ata/pata_parport/pata_parport.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-However, here you call scsi_set_sense_buffer() which is just an inline
-function that calls:
-scsi_build_sense_buffer(desc, buf, key, scsi_sense_code_asc(code),
-			scsi_sense_code_ascq(code));
+diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+index 7462f9b1acc5..4ee518807031 100644
+--- a/drivers/ata/pata_parport/pata_parport.c
++++ b/drivers/ata/pata_parport/pata_parport.c
+@@ -612,6 +612,18 @@ int pata_parport_register_driver(struct pi_protocol *pr)
+ }
+ EXPORT_SYMBOL_GPL(pata_parport_register_driver);
+ 
++static int pi_remove_by_proto(struct device *dev, void *data)
++{
++	struct pi_protocol *pr = data;
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct pi_adapter *pi = host->private_data;
++
++	if (pi->proto == pr)
++		pi_remove_one(dev);
++
++	return 0;
++}
++
+ void pata_parport_unregister_driver(struct pi_protocol *pr)
+ {
+ 	struct pi_protocol *pr_iter;
+@@ -623,6 +635,8 @@ void pata_parport_unregister_driver(struct pi_protocol *pr)
+ 			break;
+ 	}
+ 	idr_remove(&protocols, id);
++	/* remove adapters using this protocol while the module is still alive */
++	bus_for_each_dev(&pata_parport_bus_type, NULL, pr, pi_remove_by_proto);
+ 	driver_unregister(&pr->driver);
+ 	mutex_unlock(&pi_mutex);
+ 
+-- 
+2.25.1
 
-which will call scsi_sense_code_asc() and scsi_sense_code_ascq() to
-split sense_code to asc and ascq again.
-
-It seems that you series has decided to not kill scsi_build_sense_buffer().
-
-As long as scsi_build_sense_buffer() exists, and since we already have asc
-and ascq stored in separate variables, I think we should let this code
-continue calling scsi_build_sense_buffer().
-
-Especially since, even after this series, we still will have a call to
-scsi_build_sense_buffer() in libata-sata.c:ata_eh_get_ncq_success_sense().
-
-I think either this function and ata_eh_get_ncq_success_sense() should both
-call scsi_build_sense_buffer(), or both should call scsi_set_sense_buffer().
-
-
-
-Is there a reason why you don't convert all scsi_build_sense_buffer() users
-to scsi_set_sense_buffer() and drop scsi_build_sense_buffer() ?
-You could even keep the same function name (scsi_build_sense_buffer()) and
-just have it take an u16 sense_code instead of u8 asc + u8 ascq?
-
-(Doing a git grep scsi_build_sense_buffer shows a few users even after this
-series.)
-
-
-Kind regards,
-Niklas
