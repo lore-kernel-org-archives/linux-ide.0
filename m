@@ -1,103 +1,205 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-24427.protonmail.ch (mail-24427.protonmail.ch [109.224.244.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3556234F27F
-	for <linux-ide@vger.kernel.org>; Thu,  3 Sep 2026 20:03:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A439C5111B7
+	for <linux-ide@vger.kernel.org>; Thu,  3 Sep 2026 20:13:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788465843; cv=none; b=sO8cU+tqiPiO+Z1ikMi/bCjGTpeFbGEViTYVIyKDoz8hIaaTI8KZljWI2eIIvGuL0iFSl/t/KheJ9/U5rPfI+UYxPcGOq9i+2T9v0YyJG3RKbPaiJTOSU5w2cHalM452+gIzq0Mg+NBKKgWDc2TqlVwK5ZthsWYu8LG9+P17DRA=
+	t=1788466398; cv=none; b=Ya8iLA3r/+/aAH1wt5b3YaUkkY+Sae1WgHsp7XtFN7DhNrSk/Jg9km42gF/y4fjzhE+QcdLtoHAC+ymowsdqNOGuyjVva8RdIhMB7yCWJTtPbGTLaKxhY1jliXyYpEduCJehUX+bylbgbDEHx7r+Y6Aqn7wkvCMbKFMPpP8fYpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788465843; c=relaxed/simple;
-	bh=UgkM5lpGshtq4VtTQLh6Kwi7KXhMXI5wrhCP0csoa40=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I6oBshl76EZh3iFJOR6U7QiqvWTNNiuZjk8AkLgcatNdRj3hudWIKAyTnzySnefNdA6OEoHBULzBrkMlWiWGbT7xri122yvkNdg8hUzajTAl69ggAcUUhNgssRSmFJf9415p0faV77gbR7UPcz1Z4kQn4oUwvGsOgCK7hG+TETc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UHc3DPJQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788466398; c=relaxed/simple;
+	bh=LXHjJr+IdbhrkkyqJFRv5MyLW8lrOrhx7fkq0H/K5hc=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=l/HmH13M2WndUPadOp7uYuhSEUQGy4rrwMS47LHHxJTjNKYrzbQeVtSYpqs6coYr8YlXNF+hvSxwOH0atxH7SuP+yw7XGSdm/VCO8yBgsMQIgYOWIgZ4DG1H2ZgrwcQPw4hYHd/MLG8R7VbUUUNGnAVUbkhB9FHG5iqAc9jqgH0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=XbporsVL; arc=none smtp.client-ip=109.224.244.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UHc3DPJQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4042E1F000E9;
-	Thu,  3 Sep 2026 20:03:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788465835;
-	bh=6i0o0MMVctdmn8q9Uc6BstuPd5XzBtpuIfK55cg53Mg=;
-	h=From:To:Cc:Subject:Date;
-	b=UHc3DPJQKEUaUheOviH9dWWG9nj99diWlKk2zCm6bRzcPKPsXouECTI3VOy0Eyw+t
-	 3S3aVe758XE3RcvzBisEx27Ylgznj0nJLUP0yCj/mDLrGjLkRXNbe0hehEYZeqRDMA
-	 xUaqhyUY4CMdQaJM8Y/hwurS5DiumnGrEQJSnUH0Ue/g2Xwuz1mBnH5fqG3ulM4gHQ
-	 zxuWcUL5mLDmUUZ8sq3zhhQGSYE6/ANcSD/TsiQ0qQOebKQhBM78BnIBbJJ1uOeFxU
-	 hCXfoOkCs16z5IkSK9THyIgQFDU7Wdw4b2hAz4zijhJmguWnC93pEO8gStQsdmmuip
-	 o4m9j2scelY9A==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Roland Waltersson <roland.waltersson@netinsight.net>,
-	linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH] ata: libahci: clear PxCLBU and PxFBU for AHCI_HFLAG_32BIT_ONLY
-Date: Thu,  3 Sep 2026 22:03:50 +0200
-Message-ID: <20260903200349.1316460-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="XbporsVL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+	s=protonmail3; t=1788466381; x=1788725581;
+	bh=DX0hZiadBDtqHKQzOVVnh8pL7Hr0j8UUMfOlW+lf5nI=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=XbporsVLFH8Dk7hx6XxO/XjiAUo1nEmR1sizrryQZRvKpccspeGyRl6Vf20DAEIlx
+	 TJ2W/ATRCHz4AfixzsUyVw783PNC/OdJ0cWNCY8cpc3zDQ/9sYVsIq1uwYMxWeMq6L
+	 eVl/wwdLTAsXlOOcuUS8eqmQ7ojvW7b4FycFnwPcQDcCpwiYlEqR0Bl2aDCJKxYl0Z
+	 Po0Fss/sbmqxAnilZoaWBuj5db2dZBMR0Is7jfRZbjI19vB60q00CCO3jYn/ZnSljJ
+	 ud+pMGSelD1TwKvZ63syp/oLW4aN2mjix4h6oTbZDpGk+ncqPitFmqGmBO3cFyWr2j
+	 ZGhKJaL1/DNLw==
+Date: Thu, 03 Sep 2026 20:12:56 +0000
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+From: jhon cadena <jhon_jairo_cadena@protonmail.com>
+Cc: "regressions@lists.linux.dev" <regressions@lists.linux.dev>, "linux-pcmcia@lists.infradead.org" <linux-pcmcia@lists.infradead.org>
+Subject: [REGRESSION] pata_pcmcia: ~80 second delay after physically removing PC Card CF device
+Message-ID: <1zX3C-O2LeyhM2Zkz1FCkoqLUvxXWI_b5CfSB7DfI37xPsH9vIz1YlzPLWxAWUJi4rYcww6jDfuyKWZRBRQrzfUb0aLwkSHQxm9z_OHyMLU=@protonmail.com>
+Feedback-ID: 9628936:user:proton
+X-Pm-Message-ID: d9590fee390a352da29b1a65e999e0f2b5780017
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2406; i=cassel@kernel.org; h=from:subject; bh=UgkM5lpGshtq4VtTQLh6Kwi7KXhMXI5wrhCP0csoa40=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJmXlra80c02SZ/EwP7d56Jrw79tI0u+yKTdGlG4d9Xh 451Tbvf0VHKwiDGxSArpsji+8Nlf3G3+5TjindsYOawMoEMYeDiFICJ8M1h+F8gtTfaW8ZCIPms y8F4Cf3lfFa29cx918+cVtTV2qu5TpGR4dPWeU6120JWxS2TO3FUrKOLWdZhjqZrsc1BvdanM7d 48QMA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-A user reported that commit 105c42566a55 ("ata: ahci: force 32-bit DMA for
-JMicron JMB582/JMB585") made the JMicron JMB585 unusable on his board.
+Hello,
 
-The failure is seen as soon as the ahci driver is probed, and booting with
-iommu=off does not solve the problem.
+I am reporting a possible regression in the PCMCIA/PATA/libata handling of =
+a CompactFlash card used through a PC Card adapter.
 
-Looking at the AHCI specification, PxCLBU and PxFBU are both read only '0'
-for HBAs that do not support 64-bit addressing.
+The same type of PC Card storage worked normally on Debian 9 on my previous=
+ Toughbook. After moving to Debian 11 with a newer kernel, physically remov=
+ing the card causes an approximately 79-second delay while the kernel conti=
+nues trying to access the device before finally disabling it.
 
-For HBAs that support 64-bit addressing, the registers are read write,
-with a reset value that is Implementation Specific.
+The problem is reproducible.
 
-When using the AHCI_HFLAG_32BIT_ONLY flag, the HBA does support 64-bit
-addressing, but we are simply setting a 32-bit DMA mask. Thus, in this
-case, we need to explicitly clear the registers to 0.
+Hardware:
 
-Fixes: c7a42156d99b ("ahci: disable 64bit dma on sb600")
-Reported-by: Roland Waltersson <roland.waltersson@netinsight.net>
-Closes: https://lore.kernel.org/linux-ide/IA0PR17MB668730A4ECCD65F7A1DC3EDC9EB62@IA0PR17MB6687.namprd17.prod.outlook.com/
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libahci.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+-   Laptop: Panasonic Toughbook CF-31
+   =20
+-   CardBus controller: Ricoh Co Ltd CardBus bridge [1180:e476], rev 02
+   =20
+-   Storage: PQI Industrial CF Card
+   =20
+-   CF card capacity reported by the kernel: 245760 sectors (~120 MiB)
+   =20
+-   Interface: PC Card/CardBus -> PCMCIA -> PATA -> libata -> SCSI
+   =20
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 6d72eb017b49..3a40ea926588 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -748,11 +748,25 @@ void ahci_start_fis_rx(struct ata_port *ap)
- 	if (hpriv->cap & HOST_CAP_64)
- 		writel((pp->cmd_slot_dma >> 16) >> 16,
- 		       port_mmio + PORT_LST_ADDR_HI);
-+	/*
-+	 * On HBAs that do not support 64-bit addressing PxCLBU is read only,
-+	 * however, when forcing a HBA that has CAP.S64A in 32-bit only mode,
-+	 * the register is RW, and the reset value is Implementation Specific.
-+	 */
-+	else if (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)
-+		writel(0, port_mmio + PORT_LST_ADDR_HI);
- 	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
- 
- 	if (hpriv->cap & HOST_CAP_64)
- 		writel((pp->rx_fis_dma >> 16) >> 16,
- 		       port_mmio + PORT_FIS_ADDR_HI);
-+	/*
-+	 * On HBAs that do not support 64-bit addressing PxFBU is read only,
-+	 * however, when forcing a HBA that has CAP.S64A in 32-bit only mode,
-+	 * the register is RW, and the reset value is Implementation Specific.
-+	 */
-+	else if (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)
-+		writel(0, port_mmio + PORT_FIS_ADDR_HI);
- 	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
- 
- 	/* enable FIS reception */
--- 
-2.55.0
+Current software:
 
+-   Debian 11
+   =20
+-   Kernel: 5.10.0-46-amd64
+   =20
+-   Architecture: amd64
+   =20
+-   Desktop: MATE
+   =20
+
+The device is detected as:
+
+ata20: PATA max PIO0 cmd 0x9100 ctl 0x910e irq 19
+ata20.00: ATA-4: PQI Industrial CF Card, ra6h.a01, max UDMA/33
+ata20.00: 245760 sectors, multi 0: LBA
+
+It then appears as /dev/sdb.
+
+Reproduction:
+
+1.  Insert the CF card into the PC Card slot.
+   =20
+2.  Mount the filesystem normally.
+   =20
+3.  Use Caja's "Eject" operation to unmount the filesystem.
+   =20
+4.  Physically remove the PC Card.
+   =20
+5.  The kernel then spends approximately 79 seconds trying to revalidate th=
+e ATA device before finally disabling it.
+   =20
+
+The relevant messages are:
+
+pcmcia_socket pcmcia_socket0: pccard: card ejected from slot 0
+sd 6:0:0:0: [sdb] Stopping disk
+
+Approximately 32 seconds later:
+
+ata20: drained 65536 bytes to clear DRQ
+
+Then:
+
+ata20.00: qc timeout (cmd 0xec)
+ata20.00: qc timeout (cmd 0xec)
+ata20.00: qc timeout (cmd 0xec)
+ata20.00: revalidation failed (errno=3D-5)
+ata20.00: disabled
+
+followed by:
+
+sd 6:0:0:0: [sdb] Start/Stop Unit failed
+... Not Ready ...
+hard reset required
+
+The total time from physical removal to the device being disabled is approx=
+imately 79 seconds.
+
+There is an important workaround which also provides a useful comparison:
+
+If I first unmount the filesystem using Caja and then run:
+
+sudo pccardctl eject 0
+
+before physically removing the card, the problem does not occur. The card c=
+an then be physically removed and another card inserted immediately, withou=
+t the approximately 79-second delay.
+
+This makes me suspect that the physical PCMCIA removal path is not synchron=
+izing correctly with the ATA/libata device removal/revalidation path, altho=
+ugh I do not know which component is responsible.
+
+Another important observation is that I previously used Debian 9 on a diffe=
+rent Panasonic Toughbook and did not experience this delay with PC Card sto=
+rage. I do not have the old installation available at the moment, so I cann=
+ot currently provide the exact kernel version that worked.
+
+I have also checked:
+
+cat /sys/module/libata/parameters/ata_probe_timeout
+
+which returns:
+
+0
+
+The current kernel command line is:
+
+BOOT_IMAGE=3D/boot/vmlinuz-5.10.0-46-amd64 root=3DUUID=3Df252ab9c-ab0e-4769=
+-b123-4bac307fc566 ro quiet
+
+I would appreciate any advice on whether this is a known issue or regressio=
+n in pata_pcmcia/libata/PCMCIA handling, and what additional information or=
+ testing would be useful.
+
+I can reproduce the problem and run additional tests if needed.
+
+Thank you.
+
+
+
+dmesg output:
+
+[58935.824119] =C2=A0sdb: sdb1[58940.922179] pcmcia_socket pcmcia_socket0: =
+pccard: card ejected from slot 0
+[58940.923642] sd 6:0:0:0: [sdb] Stopping disk
+[58971.634659] ata22: drained 65536 bytes to clear DRQ
+[58976.801978] ata22.00: qc timeout (cmd 0xec)
+[58976.801986] ata22.00: failed to IDENTIFY (I/O error, err_mask=3D0x5)
+[58976.801989] ata22.00: revalidation failed (errno=3D-5)
+[58987.041967] ata22.00: qc timeout (cmd 0xec)
+[58987.041974] ata22.00: failed to IDENTIFY (I/O error, err_mask=3D0x5)
+[58987.041977] ata22.00: revalidation failed (errno=3D-5)
+[59018.530087] ata22.00: qc timeout (cmd 0xec)
+[59018.530094] ata22.00: failed to IDENTIFY (I/O error, err_mask=3D0x5)
+[59018.530096] ata22.00: revalidation failed (errno=3D-5)
+[59018.530102] ata22.00: disabled
+[59018.694228] sd 6:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=
+=3DDID_OK driverbyte=3DDRIVER_SENSE
+[59018.694239] sd 6:0:0:0: [sdb] Sense Key : Not Ready [current]
+[59018.694246] sd 6:0:0:0: [sdb] Add. Sense: Logical unit not ready, hard r=
+eset required
+
+
+J.C. Electric--lifetime warranty--
+Jhon Cadena
+Cel. 098700-9321
+Whatsapp: 0995012430
+Av. V=C3=ADctor Cartagena S6-78 y Argentina
+Cayambe-Ecuador
+
+Si al finalizar el d=C3=ADa, a=C3=BAn tienes energ=C3=ADa...significa que n=
+o hiciste todo lo que pudiste haber hecho....
+
+Enviado desde un correo electr=C3=B3nico seguro de Proton Mail.
