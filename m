@@ -1,70 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B12E4B26F5
-	for <linux-ide@vger.kernel.org>; Thu,  3 Sep 2026 14:14:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3556234F27F
+	for <linux-ide@vger.kernel.org>; Thu,  3 Sep 2026 20:03:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788444872; cv=none; b=l8wCRhDIPzPiRHWo1iPWFOJEX3NuFqbfzAyY2M4mhZh0vqT1qx3TNgcoHaOovMFXWDXA76L/Bt3XUr2drCOEz4Wr01ajzGaS3xOCqrfNvnPiZlu86ik1vY4lpk4UBrQIt6Nr25pTrlFI/ai/wBvwy2EGMyNGICbKy3uzDOC+vZw=
+	t=1788465843; cv=none; b=sO8cU+tqiPiO+Z1ikMi/bCjGTpeFbGEViTYVIyKDoz8hIaaTI8KZljWI2eIIvGuL0iFSl/t/KheJ9/U5rPfI+UYxPcGOq9i+2T9v0YyJG3RKbPaiJTOSU5w2cHalM452+gIzq0Mg+NBKKgWDc2TqlVwK5ZthsWYu8LG9+P17DRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788444872; c=relaxed/simple;
-	bh=bKgAP+ciRNoqE8KGNQGrSSlSO8o+yvE0LWtmFSOL3c0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VkO4a9cMWnA6CnOmY8hBH1SxRAFzPKyTL6uoBoOCP3x49LELXG+I78ogg0a5LiDyUEDINfssnAxw9qeyCivH5rZP22CE7BWmHmizFpHGYfv4fAmiI3JQNjAn+Nyu9SGSsQrK58HXbzwwpBxEmh5XDO0oa2xLTFv8pMasTVAcshA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oogexUYV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788465843; c=relaxed/simple;
+	bh=UgkM5lpGshtq4VtTQLh6Kwi7KXhMXI5wrhCP0csoa40=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I6oBshl76EZh3iFJOR6U7QiqvWTNNiuZjk8AkLgcatNdRj3hudWIKAyTnzySnefNdA6OEoHBULzBrkMlWiWGbT7xri122yvkNdg8hUzajTAl69ggAcUUhNgssRSmFJf9415p0faV77gbR7UPcz1Z4kQn4oUwvGsOgCK7hG+TETc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UHc3DPJQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oogexUYV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B02C1F00AC4;
-	Thu,  3 Sep 2026 14:14:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UHc3DPJQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4042E1F000E9;
+	Thu,  3 Sep 2026 20:03:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788444867;
-	bh=FX0nnMkRZx5U+wDqJAuG9eJdnIVMYFam888tmm95J+o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=oogexUYV/J+e/Cah17fiYvLc2OB5nLvXtWmu2hCSlQOpIniQ80blOvGdUKrQy7vS+
-	 JEnRMkM41T6OCHqj/sZtQXNTrwI6mm+MAFkR/0PIu8tw9elo3KXrnfDwufloP6Awrk
-	 KyoZoyzqVd8PgP/KapJTIrKNmagNIIHKqCQ2u3AfqkaStTcJArZXNF3uqJBil+jcFn
-	 m9htvj0WQGhVsJT0slqiZng5ABMOqRqfG25cmkOGE4FAXcLyql5riUR8hJvAe6kkKe
-	 XlxFxB5oQIFYTm54fiBQIexWyfObeDCwiQ5VHbanpqvZwAQPk8ejHaVdn6eMZiPoIH
-	 YpmNDgrdZ0BxA==
+	s=k20260515; t=1788465835;
+	bh=6i0o0MMVctdmn8q9Uc6BstuPd5XzBtpuIfK55cg53Mg=;
+	h=From:To:Cc:Subject:Date;
+	b=UHc3DPJQKEUaUheOviH9dWWG9nj99diWlKk2zCm6bRzcPKPsXouECTI3VOy0Eyw+t
+	 3S3aVe758XE3RcvzBisEx27Ylgznj0nJLUP0yCj/mDLrGjLkRXNbe0hehEYZeqRDMA
+	 xUaqhyUY4CMdQaJM8Y/hwurS5DiumnGrEQJSnUH0Ue/g2Xwuz1mBnH5fqG3ulM4gHQ
+	 zxuWcUL5mLDmUUZ8sq3zhhQGSYE6/ANcSD/TsiQ0qQOebKQhBM78BnIBbJJ1uOeFxU
+	 hCXfoOkCs16z5IkSK9THyIgQFDU7Wdw4b2hAz4zijhJmguWnC93pEO8gStQsdmmuip
+	 o4m9j2scelY9A==
 From: Niklas Cassel <cassel@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>
-Cc: Niklas Cassel <cassel@kernel.org>
-Subject: Re: [PATCH] ata: libata-scsi: do not raise UA for storage element depopulation and restoration
-Date: Thu,  3 Sep 2026 16:14:15 +0200
-Message-ID: <178844476378.884761.15363491611365136485.b4-ty@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Roland Waltersson <roland.waltersson@netinsight.net>,
+	linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH] ata: libahci: clear PxCLBU and PxFBU for AHCI_HFLAG_32BIT_ONLY
+Date: Thu,  3 Sep 2026 22:03:50 +0200
+Message-ID: <20260903200349.1316460-2-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260902020828.1436048-1-dlemoal@kernel.org>
-References: <20260902020828.1436048-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=872; i=cassel@kernel.org; h=from:subject:message-id; bh=bKgAP+ciRNoqE8KGNQGrSSlSO8o+yvE0LWtmFSOL3c0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJmNuw4KDtvj+5nyQgr35iPt8uZt7tmTWr0F5wnXvZtW bS66TexjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEykUZPhf+mT2OLEmZIRESWH Lx+6vqxH/49P76MY5arCQ8J53z1S2hgZTiY1OK16rcwhkuvRlnWAd5Lxqg961/nKooP+vvgxMbu JEwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2406; i=cassel@kernel.org; h=from:subject; bh=UgkM5lpGshtq4VtTQLh6Kwi7KXhMXI5wrhCP0csoa40=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJmXlra80c02SZ/EwP7d56Jrw79tI0u+yKTdGlG4d9Xh 451Tbvf0VHKwiDGxSArpsji+8Nlf3G3+5TjindsYOawMoEMYeDiFICJ8M1h+F8gtTfaW8ZCIPms y8F4Cf3lfFa29cx918+cVtTV2qu5TpGR4dPWeU6120JWxS2TO3FUrKOLWdZhjqZrsc1BvdanM7d 48QMA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-On Wed, 02 Sep 2026 11:08:28 +0900, Damien Le Moal wrote:
-> Currently, the translation of the trnalated ATA commands REMOVE ELEMENT
-> AND TRUNCATE and RESTORE ELEMENTS AND REBUILD are completed using the
-> function ata_scsi_depop_ua_cap_changed_complete(). This completion
-> function raises a UNIT ATTENTION with the additional sense code CAPACITY
-> DATA CHANGED. But doing so, the scsi layer seeing the UNIT ATTENTION sense
-> key ends up failing the command, even if the command result is in fact OK.
-> 
-> [...]
+A user reported that commit 105c42566a55 ("ata: ahci: force 32-bit DMA for
+JMicron JMB582/JMB585") made the JMicron JMB585 unusable on his board.
 
-I fixed up the commit message as suggested in the thread and also
-s/CAPACITY DATA CHANGED/CAPACITY DATA HAS CHANGED/
+The failure is seen as soon as the ahci driver is probed, and booting with
+iommu=off does not solve the problem.
 
+Looking at the AHCI specification, PxCLBU and PxFBU are both read only '0'
+for HBAs that do not support 64-bit addressing.
 
-Applied to libata/linux.git (for-7.3-fixes), thanks!
+For HBAs that support 64-bit addressing, the registers are read write,
+with a reset value that is Implementation Specific.
 
-[1/1] ata: libata-scsi: do not raise UA for storage element depopulation and restoration
-      https://git.kernel.org/libata/linux/c/6d81700a
+When using the AHCI_HFLAG_32BIT_ONLY flag, the HBA does support 64-bit
+addressing, but we are simply setting a 32-bit DMA mask. Thus, in this
+case, we need to explicitly clear the registers to 0.
 
-Kind regards,
-Niklas
+Fixes: c7a42156d99b ("ahci: disable 64bit dma on sb600")
+Reported-by: Roland Waltersson <roland.waltersson@netinsight.net>
+Closes: https://lore.kernel.org/linux-ide/IA0PR17MB668730A4ECCD65F7A1DC3EDC9EB62@IA0PR17MB6687.namprd17.prod.outlook.com/
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libahci.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 6d72eb017b49..3a40ea926588 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -748,11 +748,25 @@ void ahci_start_fis_rx(struct ata_port *ap)
+ 	if (hpriv->cap & HOST_CAP_64)
+ 		writel((pp->cmd_slot_dma >> 16) >> 16,
+ 		       port_mmio + PORT_LST_ADDR_HI);
++	/*
++	 * On HBAs that do not support 64-bit addressing PxCLBU is read only,
++	 * however, when forcing a HBA that has CAP.S64A in 32-bit only mode,
++	 * the register is RW, and the reset value is Implementation Specific.
++	 */
++	else if (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)
++		writel(0, port_mmio + PORT_LST_ADDR_HI);
+ 	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
+ 
+ 	if (hpriv->cap & HOST_CAP_64)
+ 		writel((pp->rx_fis_dma >> 16) >> 16,
+ 		       port_mmio + PORT_FIS_ADDR_HI);
++	/*
++	 * On HBAs that do not support 64-bit addressing PxFBU is read only,
++	 * however, when forcing a HBA that has CAP.S64A in 32-bit only mode,
++	 * the register is RW, and the reset value is Implementation Specific.
++	 */
++	else if (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)
++		writel(0, port_mmio + PORT_FIS_ADDR_HI);
+ 	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
+ 
+ 	/* enable FIS reception */
+-- 
+2.55.0
+
