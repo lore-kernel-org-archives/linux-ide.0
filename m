@@ -1,168 +1,204 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 264EE44E673;
-	Fri,  4 Sep 2026 10:11:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788516708; cv=fail; b=tIeYeW2ipI7GuRek220hGsS6I74JkpQ6kh1Tp7Em/fehwpZkru/SqvJ72dcS8S+6woNYrzs1huGsCRg43ZF8W2qE++x0//6FjXXKoOceej4z9FXatvro5CBzYGa1CyUNsx/2G4i5LQXRWrCSQ4QFqu3R0SNyQPA/1wi4nQtZhZ4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788516708; c=relaxed/simple;
-	bh=0hFm4yO+V2KgeQG0ik8lLOHczCQdLX2syeEcd394fgI=;
-	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Wd43EtDbuY+lOytFQFOUIxJjjK3iZ0CLRy04SYVPNpt1/JcidU08GKv0eDQ8GCRCEWlw4mgXBCELo1v1WE0KULL92bjtZ3Ao+6FyC/E0HuNDYI26NB5UVNPgudtngi/jgT5lPfcvBk3UcwDFHqVGTF8DvrC1I56McfHQOIoX+BU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=bt+89BBE; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=jNxOL66y; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E90BB47CA79
+	for <linux-ide@vger.kernel.org>; Fri,  4 Sep 2026 11:14:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788520447; cv=none; b=SD9U24kGlxbUXMWzUk98EV83F+Grgnh+pfNN+FU6viiUbtVuhQwN4I9aKdgTGjH4Tuix6jzqAVMxnDPpwKFyETofidthMU2ozXDoa/vkqOi8fbT+19P/YbaQJOkJQhJgZsI9nCz38fnvd5fl2r884X86SSvxcGAllKggKWDKp9o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788520447; c=relaxed/simple;
+	bh=MiTmowmkfQGLNz9+EutXaNrn5K5QXJogCdE9MCadfYk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bfEgwhOSImwvzpfJRBUluAVmDL166/3jZxIjzHudvHpjrgyU8yTUMoFbz1oe6RK+hMv8nDx+rRRI+U7pqzT8FuC/WjvpZeFUr+c3FzOTPFeq8TbSFi5oY0bxAbtepj3YnAZx9tYlR9O1RK+rcveaD5uEDUHB7uyj4uyGMnKSoiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ic9cuQ8h; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="bt+89BBE";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="jNxOL66y"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1788516707; x=1820052707;
-  h=message-id:date:subject:to:references:from:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=0hFm4yO+V2KgeQG0ik8lLOHczCQdLX2syeEcd394fgI=;
-  b=bt+89BBEJz8oDa5xY4IX+LylnfcG8pHnzMSMVeNEpQBg9bUhW5t85/CR
-   eOXGskw75eNZuolcwGKHJztneAH7q6RALxId8jCQ+z0hEkPVquti3ior/
-   oCuVTUOrqHgSQvxc0O91p/muP2iDilETa1ej3mtKMnARH3641eL+bTroj
-   CRoHPWTL+X34BXHMAuMpUNf46YBKKs9kD8YqcqZw9AGt/YtMulpTi7FkA
-   6ooJIQYrU07ea66/pobY7uvY3CtG9ol/g3TCzaAFTHPhbLvmE9K2EZyPu
-   c/ExjSUlKgXBG+dljf309SGg5ov93F57qtx69xGEC5kvuORO/BHA9KxI6
-   w==;
-X-CSE-ConnectionGUID: dCj5cxhhRRGBlM9eM1YEsA==
-X-CSE-MsgGUID: ZTb5IZm7RhKxJXnIrUOdzA==
-X-IronPort-AV: E=Sophos;i="6.25,260,1779120000"; 
-   d="scan'208";a="153370241"
-Received: from mail-westusazon11012039.outbound.protection.outlook.com (HELO SJ2PR03CU001.outbound.protection.outlook.com) ([52.101.43.39])
-  by ob1.hgst.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 04 Sep 2026 18:11:45 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=TPbuDUaSa6hAHrAkeylbSSdatBgjkYluc53eurwmNwXkWScibGemlJ0WJLvTG01SxYqnPTiic5P3HAb0chvNpKqeGdvzktH+IDAeo2/gHIyPAOtzZlFmX/FDl6kRtXj/xTw8e6Q4RSncZUslkByMbS+AjOjNbAoTSwnzDdaiImYUb7zbq5yJkoRAR5YHj6VeAaMMITjXxbzu40elzJ1rJa7miqIPXyg/iZb8LptcU617uGxSVn3hjPAhiXvYzPIeoYc1tdRiCKpvzV1tOtBDQiYnCFjr6eZ69N6w8qT8Wx7MbPYG7r5KKcZpW4wm9Rfjo+d9fTrUSwf9I5u6vXOYDQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0hFm4yO+V2KgeQG0ik8lLOHczCQdLX2syeEcd394fgI=;
- b=qiIeVjS6+vJv/YJemD2/avHBq8Uc/R1J5vqBsmtJ8LIQdY4XRQA63D+qfvF8UFApusiyuQ/mRp6sOo8cSi23BZ5mIFO0T+g2i9emtX4M7j+8DSC/EBrNw24n1+rQjxP3vkKCYKIWXAbfOhVsq+GOafkGcrPPTsmhbaNDT2uGij3amCJtkfqlVtw6Kr77IoqUzsiX8wbt+RKzo1Pm7hanhGvhPb1Yd8YOWELhdGlhQyLJH6kRrHhY4GpR+Qgz4O7Z8TgdQRbRYkFMyF2Kl3nkYJTGqHRYVGeyo/E1+2nZYHRaWBC0rDIRaEPhpmwehDEhgQ3z/iqKeQM7KAoT9SRYFA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0hFm4yO+V2KgeQG0ik8lLOHczCQdLX2syeEcd394fgI=;
- b=jNxOL66yheo6NTiuaHU6c/7rkffZAYXUksh1RUTAaQZE6PKImQuuvS7MSmtglXbofOWnIGoeX3MPrmQAC1dyWnQSJQB4SrMfJDxnHDmwiC8o7TgvVEXJei6mNGNkILh02/w+RuZ0AvN+MA0tuaGs4P91j9YQC+dmtOav/pXBdYY=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-Received: from SA6PR04MB9447.namprd04.prod.outlook.com (2603:10b6:806:436::21)
- by CH4PR04MB9153.namprd04.prod.outlook.com (2603:10b6:610:229::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Fri, 4 Sep
- 2026 10:11:44 +0000
-Received: from SA6PR04MB9447.namprd04.prod.outlook.com
- ([fe80::14c6:1c14:485f:1825]) by SA6PR04MB9447.namprd04.prod.outlook.com
- ([fe80::14c6:1c14:485f:1825%6]) with mapi id 15.21.0360.008; Fri, 4 Sep 2026
- 10:11:44 +0000
-Message-ID: <e6305243-7ce8-4998-a532-f0861d83ecc2@wdc.com>
-Date: Fri, 4 Sep 2026 12:11:39 +0200
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 06/40] scsi: use struct scsi_sense_hdr to log sense
- keys and codes
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
- Alan Stern <stern@rowland.harvard.edu>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
- Heiko Carstens <hca@linux.ibm.com>
-References: <20260904002644.157668-1-dlemoal@kernel.org>
- <20260904002644.157668-7-dlemoal@kernel.org>
-Content-Language: en-US
-From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-In-Reply-To: <20260904002644.157668-7-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR4P281CA0185.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:ca::18) To SA6PR04MB9447.namprd04.prod.outlook.com
- (2603:10b6:806:436::21)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ic9cuQ8h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0295D1F00A3D;
+	Fri,  4 Sep 2026 11:14:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788520445;
+	bh=KshH7oS1pYkYOAK8/hcpDhHOqex23+XuqmFlwlf7gZg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ic9cuQ8h2AOJ408daCJjBA8bspnQ/wdktr2/BK2joTFOD295qfzL3DY8VbTdLaKOK
+	 /DHuGyAjQlJyiMWbLL/I9aX90MNFFiq2hXlgLzfPPhId27qfjdmlw2fJGpYAOGE9dM
+	 jbvOuBfK3LtYKilpjd69frh68E56btCWJEMloOiE3LuunpJ0CPL44ooaDSAuprCpWz
+	 u/P5pddS4Q6NN4TdZl7l+VVPKcqTaxRfA0691rRhZ3lnXJE8X8n7bNe5/9/2o9RjtW
+	 /bT0tfc7p+xTDK/rgj039j7cUmtXox8EtFgc/CbRZMgrOlUNIZrqgI693IgqijuA2I
+	 j3dHSF6bOlRrg==
+Date: Fri, 4 Sep 2026 13:14:01 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Roland Waltersson <roland.waltersson@netinsight.net>
+Cc: Mario Limonciello <mario.limonciello@amd.com>,
+	"artmoty@gmail.com" <artmoty@gmail.com>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	David Laight <david.laight.linux@gmail.com>,
+	Mikael Etienne <mikael1022bzh@gmail.com>,
+	Alvin Lim <alvinwylim@gmail.com>,
+	Lennert Buytenhek <kernel@wantstofly.org>
+Subject: Re: [PATCH] ahci: force 32-bit DMA for JMicron JMB582/JMB585
+Message-ID: <apqn-bdMi4y4l1gE@ryzen>
+References: <IA0PR17MB668730A4ECCD65F7A1DC3EDC9EB62@IA0PR17MB6687.namprd17.prod.outlook.com>
+ <apnpZ4d-utWZM_Ux@ryzen>
+ <78dae3f6-3b3d-43c8-b2a2-595fd6e6a00b@amd.com>
+ <IA0PR17MB66878CE05C135A2BA1F1DD079EB52@IA0PR17MB6687.namprd17.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA6PR04MB9447:EE_|CH4PR04MB9153:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3f00ff12-abc3-45fa-5de2-08df0a6cebe1
-WDCIPOUTBOUND: EOP-TRUE
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|19092799006|1800799024|23010399003|7416014|376014|10067099003|4143699003|11063799006|56012099006|22082099003|18002099003|921020;
-X-Microsoft-Antispam-Message-Info:
-	QFr26uN2Ir0vKvQFmmnxHR0+fHo5YpLZ0GEFxgiqBVXrEv9Pa3etY2sPcUQZEqj9aW32k3ZXnLusIdeqK+9+wA9o+mfg1w59st0tF1MTgTaSXRDW3qU8zl0+/GMXQUpeIcT1gtyvVsnLoKNewNO5OfWVs6TSmRpAyfBj1L920QQPtB8vZ6ZIQ6SUsfR3l/a/VnuXx84Ey6NLxr77q3UDLb9/tU+zOGZigdytP5benDrGIQ7JUCIk3WQaFs9B+I0LhpZsGB6q2fGLyzDDGqNj6QjYjqsrGqDlF3uwOW0c9ZVbVMDMM+0fhCPoSf/BbbFzBvWlewnc/rHhZPx4YpkDEgBkKVupTX4P6ng6NeIj90jr2QshnppUh5tc99UEVYOaojSb/kGKDel5OXpN8XHtPb5RQVkk2xqI7fnpJSb86b3LHA6VLlm5+TH4mkRnmsK54jR+P+fjewc2TYqcykvqiKBNw3vewvYT/UL/EYX5WODBu+ETYUWvUABzLMBBDxZvNvx0ifECpqAQKJH3OZjAl0VIowMqS7Ds7qwLg5BAb/3MP8DinYuonfaZHRzmDp3c18YUlf7fqFzMsLCEJW/+WcMQ2CBKFScOufX4pMFOEbPTB0pIqYgYAkyxi90o1XQApkqYdTnZsCp4LRyMLtLu8TRwDrNQReLy5BNFgz2iTJUmS5DEaVt7oHxjQdax4hp/ICfeik5oqYUjXHyaFE/Yxw==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA6PR04MB9447.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(1800799024)(23010399003)(7416014)(376014)(10067099003)(4143699003)(11063799006)(56012099006)(22082099003)(18002099003)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?RFU0S1FqZHR6SGlEWUtyTjNJUFVaWm9zM3pPRENTSDY0K2Iza2dqN0VDL1BP?=
- =?utf-8?B?TjdKRlJ4VW9VTXJhenBRNkdPWVBPdXllaG5Cak5FUlYwWngzbkpwcVlKcTFy?=
- =?utf-8?B?SXNtTVgycGJZN01NOGQ1UmxCVnZpRWdONnQwZXpLVGsyRTN4TXZLMVV0bHY2?=
- =?utf-8?B?U0gzbzhSaWk5aTNjT3FJdktKVkRFVU9uUDhSejloSFlUdFNQNkU1SExrUDho?=
- =?utf-8?B?WTUzb0F3WDI0bzhGMVArTEtyQkxmSWRWdlZLTW1STW1CQXNra2EybHd5TmJv?=
- =?utf-8?B?OXBQK0MrOTNOOG41ZWxReExOTy9ma2hQRldFd0w4aDExaXBxVVlCNmxvM0Jm?=
- =?utf-8?B?djFqWlJuUDN6WmlIOU1QZ2dwc0hYMjBOOUYxQWtoSDRSR05EQ3JNWEFiQzVa?=
- =?utf-8?B?cFgvQXM3RHZ5L21kaUdSS0R0NEpSTDBuQXErUlNXTFluZnZUODFTNFJjOWls?=
- =?utf-8?B?QUFxekRaOE1rYVV4T2FCeXQ1aVBXZUVFVGlZY3ZvTjRTekFGejlWK0UxNUZm?=
- =?utf-8?B?OHgzS1loTURkcmxHc3gxenMvaWtqT3RzN05wb3RvYllGbE9sb2hLR0QvalBr?=
- =?utf-8?B?UC9jQzVHZUhTcTRxbzIrNTcrYXp2b1hhb3Zwc3dDbmZMRE14Q2pHRGFOMVVV?=
- =?utf-8?B?eXZmNWNRRndkRVhJMnVxQU1QVytNOC9NTlhDTEx6Qkloa21jYUw2cWVlNzF5?=
- =?utf-8?B?aEpwUFdMRFhqSm43ZnJYMmloZ2JVTGZWZGRyREk0YlN3NGc2QmpVcUhIaDRa?=
- =?utf-8?B?R1dONEx5RkhqQmxOOE9BbGR6MnVXazAzNDY3RU4xeVcyMktFLzZTQ1duaFhT?=
- =?utf-8?B?OGQ2dmROaFJYVS9YbFNGS3dtSFp0eVMyZDZtUDYzRVJHbDVRSlMzeTYxYVhi?=
- =?utf-8?B?M01lWnNFNTVKOTNDRGUvSDRCUWg2UGlpMCtpUG5YSnZSb3ZTTmFrb2J3V1Vw?=
- =?utf-8?B?TmpMT1Uyb29WZW81VjJ6UFozR1lvd0YzLzhsdkVkc3JnZ0pMQmtEOVRRSmI5?=
- =?utf-8?B?N3NuanRaMjhJZEMweVZTeEJHVldTbHBwbVNPUmEraEtIZEVkUzg4eFNTYkcy?=
- =?utf-8?B?MFhtdk9iUjk2SVJobWc4S3NXTnpTQmhYV1FoNFZnSURHS1MvWE5ZL3RpOEtj?=
- =?utf-8?B?T3MwektpY3FRRkt4NW5DeWZPWWsvVDdXbXE3Kzk5M1oxQ0NjTlVkMWRoOUFQ?=
- =?utf-8?B?cWEzQVpqVnBTc2tNOThCVnNWbW81NUFNSFJqUENCVUlyR0k4Z25STFJqbU5L?=
- =?utf-8?B?SWU1M3FwcHF2eUlzMk1hRVpQSlRhVEQxZEhSUmhoSWVmZVpaeXpqTTZpZlox?=
- =?utf-8?B?dVhOMzdDMXUvSVVTY1VaeVRRckcrelhjSlJNeUtOK1k1cWlad2tqMXlMdUFz?=
- =?utf-8?B?RmVSb05ReDE3ZUkvSTJPa2IxSUE1eTY1UjQvenlvSExBSi9DcVREWC9JbXl1?=
- =?utf-8?B?bGdpcXFSZmw2K1BuZW5MY2M1enlkdUlyc1g0a2QvSjNOZHZyNnlGTkJDQ1ox?=
- =?utf-8?B?K3EzRVJpakZpNG5TUHBVM1ZhZ3B1cmlValJ5NjdFNUlOTVl3Z0xMMTM1YnlY?=
- =?utf-8?B?TWZWa3Mxa1BvWVVmMVRRUWM1ejRVdFVuZW1BenRxUklUdkxnQ0x6ektuVnVp?=
- =?utf-8?B?SjBHNXRrZVk0ZENlWDdKQUZWeWRMRXlTRTFIcnVTRFB4WlVXbyswWHFLUjBV?=
- =?utf-8?B?emJadTQ3dng5ZUZPaFgrazJrZmJub0tpRWZtSXgxcXdsR01QeFNFKzJNMk41?=
- =?utf-8?B?L0VqYUZXbHZ5bWJqY1lyamhEOUNZRmZjajlDU3BFNEptMzJjdG5HOEpITW1l?=
- =?utf-8?B?T1NhdmF0dGlBK1RhQ3R4cnhJSFJSTWF5VHhVSXl5VzJNTUtqZ2pNcnkwRXpP?=
- =?utf-8?B?WG5Yd0t6Wml1RTJPTHFLWHpQdkJzSXA1Y0VDT1pUQ2tFK1FZL1hJT0MrSGll?=
- =?utf-8?B?TVhBRFdGTzRmQjhmc1M1N0UzV0hYOWdXUkpMRDlUVzdUcGxYK1FCT3AveWNx?=
- =?utf-8?B?bW1JSGpkVmpPYmYvTUgweFVYVHNNN3FERmkvL3d1NGtlTVY3a24zOHNnSjJR?=
- =?utf-8?B?QVhWNlVVV24xY1V5SGFUR2hpUW1kMExwREYyMXllM0s2cXFVS3cxaUY2SEdr?=
- =?utf-8?B?SkVEdG1EN3c5MWtrOTVWZXkwa3R3eFRYSWRaZkFBOEVtWG50eXNTbnJaV0Vq?=
- =?utf-8?B?Y2t1OWZUZytub1FvcEd1YjR1dTZ6WVJ5b3FZTk0rS0hlclpVRnhtMTRTdXBo?=
- =?utf-8?B?enl5R3BoNHE0bVBiQmFnWTFBUWEvbzhaQVIyaEVnMUJTd0VZNVNVVlk1QnFv?=
- =?utf-8?B?QlVHZ2gyOGJEbjhXdHljVjRLMkJVNU9GNm52M2kyUnE5OGFDTytCenVUUmVS?=
- =?utf-8?Q?7bFI8kdHTDrmhn0k=3D?=
-X-Exchange-RoutingPolicyChecked:
-	jpAVxd2dHjpH1izCBJDvXwWnVYs/jWjRn47yDGFVol1fzxVfjw8jM3Czfj9Z6lzVUGv3CbvHavRZSW7MfDLGJP7Ze6mWAoAHiTQ+EzVdAPuGCWWwhFVSoZvGWP6Sa53kHB02ftkTvkORoi88KbQlXV+k9I40mtLfAPf2eUUmC0J/AyRKitwRDWKxl4QTI4FrV3+J+9DWviqhTiNazN1lgesyCntArWZAHX1yK+JU8Z3Z8WBRoC9OSvTHbAxK5uJIznJqcrYZxFo+m8hpMVMYo+PHsT/ZHCEYerMaWpJbCnO0wn5XhqM9xJqbEZf4HtWE3BdeZRoc3j8nCleHkjzg+Q==
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	NZq8rXk2KeQvUlFzl6GplSZ34YF9hWA+hUJuXVmIYsl5w8KYs2FGjUa5jZpue8/SO2kj/5lyZHThRma1f9ADJdpqYpgZ2YifrUqJwjHrYbxrHulvN5HVVB9Yqyh6pnmHhMvEBK27APVsL9T22xlNNsaiJkM2blM3QPzCIw0+HsedKuDoi7Q/UdCW/Cp1rpGAblRT+RPMvGGEBjScgX0E7msfk16etY0QNuI047V0SpxYs3msXXCCV7IRd1OE/cXGkQSGZkeghnYLhXFHLQn3SoMKf5LT6Z9fU2/grtcXMyEBYrX/zbTk1PFfKgcuqUPuF259/mxWYcxdv8O014LSSoUFbKTr68ZIOlQSuh9IWs4ncHZOXyqBPNy06BGHJnrWNwUT1O38CJ559pVYjYos1964EjVF1QsNu+P4fuaNqe7WL+LNlETwuslfg/j6IhSE52CCl4CgmZk27a/9Vqld9f0uEhVWiprLERa3l8nDSa3RTDGp/PRS6EzzNKWEaaaiJem4RkqkwfTaJa7Kd7uVVrtlDZQGs/JzcR2WsMdwqgt5KFuZLP5RrPZyZjFJxXXatis5bXxMX0Cwyv3JDIYQLFaFdh2OZmMJ1aMa9k9fygTexu6ITwfYqjyG9lQ5Oij9
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3f00ff12-abc3-45fa-5de2-08df0a6cebe1
-X-MS-Exchange-CrossTenant-AuthSource: SA6PR04MB9447.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Sep 2026 10:11:44.2295
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: oYr5SdNxKNazCNRPrg9XT5iUxDPl1zpyDyQVyccNxNjld0IwrDaf4oQLrg4H4C/uHpgpUJ+Xwv6muTQ/p6FDeIIw2ZJ54J3SnpuaMpCH6hI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH4PR04MB9153
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <IA0PR17MB66878CE05C135A2BA1F1DD079EB52@IA0PR17MB6687.namprd17.prod.outlook.com>
 
-Looks good,
+Hello Mario,
 
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+On Fri, Sep 04, 2026 at 05:20:06AM +0000, Roland Waltersson wrote:
+> Here are some debug printouts. Note that I am on 5.15 so amd_smn_debugfs_enable is not available - I printed the registers anyway:
+> 
+> root@maglin25:NCA ~ # root=00:00.0
+> root@maglin25:NCA ~ # lspci -nn -s $root          # sanity-check: must be a 1022: AMD root complex
+> 
+> 00:00.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] Device [1022:14e8]
+> root@maglin25:NCA ~ #
+> root@maglin25:NCA ~ # for a in 0x111401d0 0x111411d0 0x111421d0 0x111431d0 0x111441d0 \
+> >          0x112401d0 0x112411d0 0x112421d0 0x112431d0 0x112441d0 0x112451d0 \
+> >          0x113401d0 0x114401d0; do
+> >     setpci -s $root 60.l=$a
+> >     v1=$(setpci -s $root 64.l)
+> >     setpci -s $root 60.l=$a
+> >     v2=$(setpci -s $root 64.l)
+> >     printf '%s: 0x%s%s\n' "$a" "$v1" "$([ "$v1" = "$v2" ] || echo "  MISMATCH 0x$v2")"
+> > done
+> 0x111401d0: 0x00000100
+> 0x111411d0: 0x00000000
+> 0x111421d0: 0x00000100
+> 0x111431d0: 0x00000100
+> 0x111441d0: 0x00000000
+> 0x112401d0: 0x00000100
+> 0x112411d0: 0x00000100
+> 0x112421d0: 0x00000100
+> 0x112431d0: 0x00000100
+> 0x112441d0: 0x00000100
+> 0x112451d0: 0x00000100
+> 0x113401d0: 0x00000100
+> 0x114401d0: 0x00000100
 
+Just to clarify, Roland is not one of the people who has been complaining
+about silent corruption after exhausting the 32-bit IOVA space.
+
+Roland complained that the AHCI_HFLAG_32BIT_ONLY quirk is making his JMB585
+SATA controller not even detect his drive when probing the driver, so he
+can't even mount his filesystem. So this is a separate issue.
+
+
+You should probably reach out to someone who has seen the 32-bit IOVA space
+exhaustion issue, i.e.:
+
+Mikael Etienne - issue with addresses larger than 32-bit on AMD SATA controller
+https://lore.kernel.org/linux-ide/178789300872.392066.15963676631650361573@gmail.com/
+He claims that he cannot reproduce the corruption when using iommu=pt
+
+or
+
+Arthur Husband - issue with addresses larger than 32-bit on JMicron JMB585
+https://lore.kernel.org/linux-ide/20260406222335.379935-1-artmoty@gmail.com/
+His github claims that he cannot reproduce the corruption when using amd_iommu=pgtbl_v2
+https://github.com/artmoty-dev/n5pro-jmb585-fix
+
+or
+
+Alvin Lim - issue with addresses larger than 32-bit for ASMedia ASM1166
+https://lore.kernel.org/linux-ide/20260621100844.1224301-1-alvinwylim@gmail.com/
+His github claims that he cannot reproduce it with amd_iommu=off
+https://github.com/Alvinwylim/asm1166-iommu-dma-corruption
+but it also claims that iommu=pt is insufficient.
+Note that we never merged this patch, because we never to any confirmation
+from ASMedia that the controller was at fault.
+
+
+I don't know why Alvin claimed that iommu=pt was insufficient, but for Mikael
+the problem was not reproducible with iommu=pt. Could there perhaps be
+different versions of the AMD IOMMU?
+
+The only thing that I have seen in common so far, is that all bug reports,
+JMicron JMB582/585 / ASMedia ASM1166 / AMD SATA controller, have been using
+an AMD IOMMU.
+
+
+Note that there is one separate problem, Lennert Buytenhek actually got
+AMD IOMMU page faults, rather than silent corruption:
+https://lore.kernel.org/linux-ide/ZaZ2PIpEId-rl6jv@wantstofly.org/
+This was actually verified by ASMedia to be a controller issue that they
+only support 43-bit DMA, and they provided a list of affected controllers:
+https://lore.kernel.org/linux-ide/ZbopwKZJAKQRA4Xv@x1-carbon/
+Note that these controllers where quirked with 43-bit DMA, and that
+ASM1166 - which Alvin had issues with even for 32-bit addresses - was not
+in that list.
+
+
+Knowing what we know now, we would never have accepted the 32-bit only DMA
+quirk for the JMicron JMB582/585 controllers, without at least seeing a
+single bug report from a user with an Intel or ARM IOMMU.
+
+
+We probably want to send a patch that drops the JMicron JMB582/585 32-bit DMA
+quirk. But first we want:
+
+1) Someone with an JMicron JMB582/585 + Intel IOMMU or ARM IOMMU
+running in enforcing mode, to run the reproducer written by Mikael:
+
+####
+fio, io_uring engine (libaio not tested yet).
+
+Write the canary once:
+
+  fio --name=canary --filename=/srv/12to/.sata-canary --size=256G --bs=128k \
+      --ioengine=io_uring --direct=1 --iodepth=32 \
+      --verify=crc32c --verify_interval=4096 --rw=write \
+      --do_verify=0 --fsync_on_close=1
+
+Then loop the verification until it fails:
+
+  while :; do
+      fio --name=canary --filename=/srv/12to/.sata-canary --size=256G --bs=128k \
+          --ioengine=io_uring --direct=1 --iodepth=32 \
+          --verify=crc32c --verify_interval=4096 --rw=write \
+          --verify_only=1 --verify_fatal=1 || break
+  done
+
+The reboot-without-rewrite protocol: when it fails, reboot and re-run only the
+verification loop above. The canary file is never rewritten. It verifies clean.
+####
+
+With the 32-bit only quirk dropped:
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 58f512f8952a..1cee901f8e72 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -215,8 +214,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	},
+ 	/* JMicron JMB582/585: 64-bit DMA is broken, force 32-bit */
+ 	[board_ahci_jmb585] = {
+-		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR |
+-				 AHCI_HFLAG_32BIT_ONLY),
++		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+
+
+To verify that this is actually not a SATA controller problem.
+
+
+2) A fix for the AMD IOMMU driver to be merged, and backported to stable,
+such that us writing a fix that drops the 32-bit only DMA quirk for JMicron
+JMB582/585, which when backported to stable, will not cause users with an
+AMD IOMMU to silently get their filesystem corrupted.
+
+
+Kind regards,
+Niklas
