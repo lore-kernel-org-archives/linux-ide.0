@@ -1,125 +1,208 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 185B822370A
-	for <linux-ide@vger.kernel.org>; Thu,  3 Sep 2026 23:54:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3A7A131E49;
+	Fri,  4 Sep 2026 00:26:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788479681; cv=none; b=fn8Sf01eqqUUmhMi/pztQSUfVGsthRRnr6SKoQM6cM/okBnFmex0J4conIsNWOVBO4xN3gCd96dEHx8WJoO7pWzJtPpgotWdAzE4OQa6B/ySIuQveVu7SG79t6RJGl277NYNvZG2BTk0rfO1yso1cZWwnxwlO7OqPG6MALFa/nA=
+	t=1788481619; cv=none; b=aOqUtot6xLvv9Gn6dmPA2zTEb2KSN2n7vYkFMANG4LWU/DE/MRvtdAJW1YkJDdHwJs2CoClKYxGJMwcdU237FmRxZRDXEOSQLoj83Hm/waSW//PTj69ReW8ers6HP56385ZseX0cIU4bmDkARImnjh2MIzLLoSu2t64IZLFp5Nk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788479681; c=relaxed/simple;
-	bh=gQNUGGNPhCamWPH5CKGlGvVVEnsuIp9vbJTpSejCkxY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=StqjaRwLHxR1CTdbLj8lyRvDPR4KTI14oXh/4IJoOhDg01wIv0jd9czGzc31k7fPns4sck981pwxl2IeiUrumJXWMi77KuTzfbGa4NS/Y0CbJTb9UwyTA+TxsAtFDIdCx1FEkvxbrpG2dnPmUjUWUhIOFGT5/4ab7CYRec3RbmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R+mGKAU9; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788481619; c=relaxed/simple;
+	bh=YIrU1a5LIk8R8UmC4YvL7asVO1wT4Xei6fV+VatqJp4=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=lqaC9ZDAkKS3rDyWIqPoVHCK+8Q2AMBogJ3E6NPZlcQvXqccBI1rwdgCLKtbwQu8khWmyFjkOnYL+37jw6qXuyVXQmRPd58mpI9Jg9FyNFZhDfeE2QuWVgZ1X0LV6qe9tFNbW7b8qQ6by+aoxpYDtsMmKPYSo95Q2MgMbjc3/Hk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ug91L3qe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R+mGKAU9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A2EB1F000E9;
-	Thu,  3 Sep 2026 23:54:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ug91L3qe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 336831F000E9;
+	Fri,  4 Sep 2026 00:26:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788479680;
-	bh=Rhi33AX+gVhtapbeT+9w4DELXOqeW3L8CAV1I4s2Jvg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=R+mGKAU9O+woPwqrlmt9kdMcQkGirgwtaUvyH21FJetMJMCClLpV1ggsRdmQkMoyn
-	 pkAPwC+ArMz2kRIGWvaZYchYQgj/vh++0/CEjkrn5rQQahJ7l6eNxfjmhl1HWThkFs
-	 XEUWlCrqOpcRFvarR2vS0lUmTV8c2FyhNT11p894FqZyRduwBgQv9DRQBeQSx9FT4U
-	 XzppSRCe1cfgiQBvoHiV4OsmE8OcsnxSGbFY5eGtoU67kG8cpIcSqmtp3SZ5ehOemD
-	 StIjWP3NieDYFgQEG6iSt5FSPustZ6QnstH25hjP1wdqAm6uaTqZE78PPyHpB/RtcZ
-	 0WUVaC8YI9jwA==
-Message-ID: <1a39c034-ecee-42cb-beea-c15f32c831c0@kernel.org>
-Date: Fri, 4 Sep 2026 08:54:37 +0900
+	s=k20260515; t=1788481617;
+	bh=OWri4F0Svaj3nnPmZom/8lW/4zU2p7+FpDTOdKpLxjk=;
+	h=From:To:Subject:Date;
+	b=Ug91L3qeN3VWPF/oWIIteU79HpBhrHU56r0rR0vYbGUXaS/XDVxZTJg1CZIXg2bD1
+	 m/ztJErq9m683IV9tp0+V1gC9QdDjwTYhK+SdXCyV/Rq3nwou8qUoSgT8ad7eQCYDz
+	 biK8vrFyS1Wx+Fb73eJy4m7VIl8Lng4qRmTkSbggv4oeOgSd6v6RaBAiRAm5AaFV7M
+	 G+9wNebQMcUBzHUK0dL5gErh6Rajvakja0hZ3hJHMagVb76LqPNzuOGasn0xmqHs/N
+	 3ydxrzufkKLr7fFL4ymJVkMXwJMJ0HiNCA6fh6pqdKgZav5BFoEWxHuwFaCabzABiG
+	 9wlx2gXKW+6eQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-usb@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-s390@vger.kernel.org,
+	Heiko Carstens <hca@linux.ibm.com>
+Subject: [PATCH v3 00/40] Use defined 16-bits ASC/ASCQ combinations 
+Date: Fri,  4 Sep 2026 09:26:04 +0900
+Message-ID: <20260904002644.157668-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libahci: clear PxCLBU and PxFBU for
- AHCI_HFLAG_32BIT_ONLY
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Roland Waltersson <roland.waltersson@netinsight.net>,
- linux-ide@vger.kernel.org
-References: <20260903200349.1316460-2-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260903200349.1316460-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 9/4/26 05:03, Niklas Cassel wrote:
-> A user reported that commit 105c42566a55 ("ata: ahci: force 32-bit DMA for
-> JMicron JMB582/JMB585") made the JMicron JMB585 unusable on his board.
-> 
-> The failure is seen as soon as the ahci driver is probed, and booting with
-> iommu=off does not solve the problem.
-> 
-> Looking at the AHCI specification, PxCLBU and PxFBU are both read only '0'
-> for HBAs that do not support 64-bit addressing.
-> 
-> For HBAs that support 64-bit addressing, the registers are read write,
-> with a reset value that is Implementation Specific.
-> 
-> When using the AHCI_HFLAG_32BIT_ONLY flag, the HBA does support 64-bit
-> addressing, but we are simply setting a 32-bit DMA mask. Thus, in this
-> case, we need to explicitly clear the registers to 0.
-> 
-> Fixes: c7a42156d99b ("ahci: disable 64bit dma on sb600")
-> Reported-by: Roland Waltersson <roland.waltersson@netinsight.net>
-> Closes: https://lore.kernel.org/linux-ide/IA0PR17MB668730A4ECCD65F7A1DC3EDC9EB62@IA0PR17MB6687.namprd17.prod.outlook.com/
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/ata/libahci.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index 6d72eb017b49..3a40ea926588 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -748,11 +748,25 @@ void ahci_start_fis_rx(struct ata_port *ap)
->  	if (hpriv->cap & HOST_CAP_64)
->  		writel((pp->cmd_slot_dma >> 16) >> 16,
->  		       port_mmio + PORT_LST_ADDR_HI);
-> +	/*
-> +	 * On HBAs that do not support 64-bit addressing PxCLBU is read only,
-> +	 * however, when forcing a HBA that has CAP.S64A in 32-bit only mode,
-> +	 * the register is RW, and the reset value is Implementation Specific.
-> +	 */
-> +	else if (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)
-> +		writel(0, port_mmio + PORT_LST_ADDR_HI);
+Martin, James,
 
-I find the comment very confusing as it is not directly describing what is being
-done here. Furthermore, it says "when forcing a HBA that has CAP.S64A in 32-bit
-only mode", but the added code is an "else" of "if (hpriv->cap & HOST_CAP_64))",
-so that is for the case where the adapter is not 64-bits DMA capable. I am not
-understanding something here...
+This patch series defines as macros all ASC/ASCQ combinations present in
+https://www.t10.org/lists/asc-num.txt and converts the SCSI core code and
+SCSI low level drivers to use these macros instead of hard-coded
+ASC/ASCQs. To do this, struct scsi_sense_hdr and struct scsi_failure are
+modified to replace the asc and ascq 8-bits fields with a 16-bits
+sense_code field.
 
-Could you clarify please ? Also, please move the code comment above the "if" so
-that it describes both the "if" and "else". Having the comment in the middle of
-this if/else makes things hard to read.
+This cleans up the code in many places and makes it easier, and self
+documented, to test sense codes in the case of errors.
 
->  	writel(pp->cmd_slot_dma & 0xffffffff, port_mmio + PORT_LST_ADDR);
->  
->  	if (hpriv->cap & HOST_CAP_64)
->  		writel((pp->rx_fis_dma >> 16) >> 16,
->  		       port_mmio + PORT_FIS_ADDR_HI);
-> +	/*
-> +	 * On HBAs that do not support 64-bit addressing PxFBU is read only,
-> +	 * however, when forcing a HBA that has CAP.S64A in 32-bit only mode,
-> +	 * the register is RW, and the reset value is Implementation Specific.
-> +	 */
-> +	else if (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)
-> +		writel(0, port_mmio + PORT_FIS_ADDR_HI);
+Overall, there should be no functional chnages here.
 
-Same thing here. Comment needs to move up and needs to be improved because (at
-least I) find it not clear.
+Note: this dwiseries currently applies cleanly to Linus tree, but will
+have a conflict with a libata fix patch that will be sent out for 7.3rc2.
 
->  	writel(pp->rx_fis_dma & 0xffffffff, port_mmio + PORT_FIS_ADDR);
->  
->  	/* enable FIS reception */
+Changes from v2:
+ - Removed unintended duplication of KUNIT_EXPECT_EQ() call in patch 7
+   (Sashiko comment).
+ - Improved patch 38 to directly use 16-bits sense code instead of passing
+   only an ascq around (Sashiko comment).
+ - Added missing local variable initialization in
+   spc_emulate_request_sense() in patch 34 (Sashiko comment).
+ - Added review tags
 
+Sashiko also did comment about several pre-existing issues for different
+drivers, but I am not addressing these issues in this series.
+
+Changes from v1:
+ - Addressed Sashiko comments signaling missing "ASC_" prefix when using
+   the named macros for ASC codes.
+ - Fixed up patch 7 to correct trace event print of asc/ascq. Also
+   extended the use of scsi_set_sense() in place of scsi_build_sense().
+ - Modified patch 37 to extend the use of scsi_set_sense_buffer() in place
+   of scsi_build_sense_buffer().
+ - Added patch 34 and 38 to extend the use of scsi_set_sense() in place of
+   scsi_build_sense().
+ - Added patch 40 to remove scsi_build_sense() and
+   scsi_build_sense_buffer().
+
+Damien Le Moal (40):
+  scsi: define all additional sense codes and their qualifiers
+  scsi: constants: use defined sense codes
+  scsi: constants: rename internal struct field names
+  scsi: rename sense field of struct scsi_failure
+  scsi: prepare for using 16-bits defined sense codes
+  scsi: use struct scsi_sense_hdr to log sense keys and codes
+  scsi: core: use 16-bits defined sense codes
+  scsi: sd: use 16-bits defined sense codes
+  scsi: sr: use 16-bits defined sense codes
+  scsi: ses: use 16-bits defined sense codes
+  scsi: ch: use 16-bits defined sense codes
+  scsi: st: use 16-bits defined sense codes
+  scsi: device_handlers: hp_sw: use 16-bits defined sense codes
+  scsi: device_handlers: rdac: use 16-bits defined sense codes
+  scsi: device_handlers: emc: use 16-bits defined sense codes
+  scsi: device_handlers: alua: use 16-bits defined sense codes
+  scsi: mpt3sas: use 16-bits defined sense codes
+  scsi: mpi3mr: use 16-bits defined sense codes
+  scsi: 3w-xxxx: use 16-bits defined sense codes
+  scsi: leapraid: use 16-bits defined sense codes
+  scsi: megaraid: use 16-bits defined sense codes
+  scsi: myrX: use 16-bits defined sense codes
+  scsi: smartpqi: use 16-bits defined sense codes
+  scsi: qla2xxx: use 16-bits defined sense codes
+  scsi: ps3rom: use 16-bits defined sense codes
+  scsi: lpfc: use 16-bits defined sense codes
+  scsi: stex: use 16-bits defined sense codes
+  scsi: mvumi: use 16-bits defined sense codes
+  scsi: libiscsi: use 16-bits defined sense codes
+  scsi: ibmvscsi_tgt: use 16-bits defined sense codes
+  scsi: scsi_debug: use 16-bits defined sense codes
+  scsi: hpsa: use 16-bits defined sense codes
+  scsi: storvsc: use 16-bits defined sense codes
+  target: use 16-bits defined sense codes
+  usb: storage: use 16-bits defined sense codes
+  cdrom: use 16-bits defined sense codes
+  ata: libata: use 16-bits defined sense codes
+  s390: scsi: use 16-bits defined sense codes
+  scsi: cleanup scsi_proto.h
+  scsi: remove scsi_build_sense() and scsi_build_sense_buffer()
+
+ drivers/ata/libata-eh.c                      |   13 +-
+ drivers/ata/libata-sata.c                    |   20 +-
+ drivers/ata/libata-scsi.c                    |  346 ++-
+ drivers/ata/libata.h                         |    5 +-
+ drivers/cdrom/cdrom.c                        |   10 +-
+ drivers/s390/scsi/zfcp_ext.h                 |    2 +-
+ drivers/s390/scsi/zfcp_fsf.c                 |    9 +-
+ drivers/s390/scsi/zfcp_scsi.c                |    6 +-
+ drivers/scsi/3w-xxxx.c                       |    3 +-
+ drivers/scsi/ch.c                            |   55 +-
+ drivers/scsi/constants.c                     |   61 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c   |   55 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c    |   28 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c  |   29 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c   |   55 +-
+ drivers/scsi/hpsa.c                          |   69 +-
+ drivers/scsi/hpsa_cmd.h                      |   23 -
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c     |    5 +-
+ drivers/scsi/leapraid/leapraid_func.h        |    7 -
+ drivers/scsi/leapraid/leapraid_os.c          |   15 +-
+ drivers/scsi/libiscsi.c                      |    3 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                |   18 +-
+ drivers/scsi/megaraid.c                      |    8 +-
+ drivers/scsi/megaraid/mega_common.h          |    2 -
+ drivers/scsi/megaraid/megaraid_mbox.c        |   12 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c              |    3 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c              |   50 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c         |   69 +-
+ drivers/scsi/mvumi.c                         |    2 +-
+ drivers/scsi/myrb.c                          |   67 +-
+ drivers/scsi/myrs.c                          |   23 +-
+ drivers/scsi/ps3rom.c                        |    5 +-
+ drivers/scsi/qla2xxx/qla_isr.c               |    9 +-
+ drivers/scsi/scsi.c                          |    3 +-
+ drivers/scsi/scsi_common.c                   |   24 +-
+ drivers/scsi/scsi_debug.c                    |  332 +--
+ drivers/scsi/scsi_error.c                    |   94 +-
+ drivers/scsi/scsi_ioctl.c                    |    3 +-
+ drivers/scsi/scsi_lib.c                      |  133 +-
+ drivers/scsi/scsi_lib_test.c                 |   95 +-
+ drivers/scsi/scsi_logging.c                  |   22 +-
+ drivers/scsi/scsi_scan.c                     |   22 +-
+ drivers/scsi/scsi_transport_spi.c            |   12 +-
+ drivers/scsi/sd.c                            |  126 +-
+ drivers/scsi/sd_zbc.c                        |    2 +-
+ drivers/scsi/sense_codes.h                   | 2496 ++++++++++++------
+ drivers/scsi/ses.c                           |   23 +-
+ drivers/scsi/smartpqi/smartpqi_init.c        |   31 +-
+ drivers/scsi/sr.c                            |    3 +-
+ drivers/scsi/sr_ioctl.c                      |   29 +-
+ drivers/scsi/st.c                            |   35 +-
+ drivers/scsi/stex.c                          |    3 +-
+ drivers/scsi/storvsc_drv.c                   |   15 +-
+ drivers/target/target_core_spc.c             |   11 +-
+ drivers/target/target_core_transport.c       |   11 +-
+ drivers/target/target_core_ua.c              |   28 +-
+ drivers/target/target_core_ua.h              |    7 +-
+ drivers/usb/gadget/function/f_mass_storage.c |   34 +-
+ drivers/usb/gadget/function/storage_common.h |   71 +-
+ drivers/usb/storage/debug.c                  |   12 +-
+ drivers/usb/storage/debug.h                  |    4 +-
+ drivers/usb/storage/transport.c              |    7 +-
+ include/scsi/scsi_cmnd.h                     |    3 +-
+ include/scsi/scsi_common.h                   |   16 +-
+ include/scsi/scsi_dbg.h                      |    6 +-
+ include/scsi/scsi_device.h                   |   26 +-
+ include/scsi/scsi_proto.h                    |   71 +-
+ include/scsi/scsi_sense.h                    |  943 +++++++
+ include/trace/events/scsi.h                  |    4 +-
+ 69 files changed, 3829 insertions(+), 2015 deletions(-)
+ create mode 100644 include/scsi/scsi_sense.h
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.55.0
+
