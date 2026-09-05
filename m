@@ -1,115 +1,179 @@
-Received: from mail.andi.de1.cc (mail.andi.de1.cc [178.238.236.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37DA63859F4;
-	Sat,  5 Sep 2026 17:47:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.238.236.174
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788630459; cv=none; b=BvcXE7o+R4YaCFkDsv1/iyplD8a8XM/iHEvOq5+F5DwyMMpLZ5GS9Ukd/J4WQXgY2wPgVg4KGTe77TBHahEZb9AmKDj49YdNMUg/SP75k7po3J4Hz5yrnIkpMDBhBcSXUdQhnwRUw+W+HEuiV5FqVw3tJWWoGfZ5xX8dQYo2G2s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788630459; c=relaxed/simple;
-	bh=CkJ/0EmYuXfRStYAopAldPSBIapJMn38/FN0YmwhAbw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=j/DhFSxmL0/47NPqFEBbSN95kqMPp06CZnH1NHVhPlf6Maba5h61mJHyUKsnF2VWrzHxOLgHbJv/km6UvCHytEmU8JUPYL7RI9gSOMBMvKo0eMi8jMAXpJzobNFWO+3cCwZchwXahe9SUSEgpbk734g5CY78GNEhfmD8xXq5wGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kemnade.info; spf=pass smtp.mailfrom=kemnade.info; dkim=pass (2048-bit key) header.d=kemnade.info header.i=@kemnade.info header.b=LCbtUmKe; arc=none smtp.client-ip=178.238.236.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kemnade.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kemnade.info
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABEA033998
+	for <linux-ide@vger.kernel.org>; Sat,  5 Sep 2026 17:49:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.170
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788630552; cv=pass; b=WC55ssyROQXJ74p/oTi+HYNHgavzqne2vxWAj4XdlIhYf1ENycyqyRUww5Ejjka7LGWqfQwG0doxFT4JYE/DcMiN9FCpEHR2z+jt0+A2B3yAh63rmyu2pWBfafmCKp5wVnYoGVWEc4TNTMCpHUb7kvCKmYcXIC+REQ3y+ZzUUL8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788630552; c=relaxed/simple;
+	bh=3LyyokutBxcAjfcGRumvVjoScViISOI7AqKTnE+qbTY=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=fG1g7mTe+zdyESKnDe/FStu2dODZDsC3TwQ+R9VIUamjCQ9R9Is1KBAHSEqcSGy3nLcWSewjgRztxuOnunGwwXJSnTWSW5nRAIF7GehdAzupSJJiXyWnHfcItwj4i9gXijhhECvarmlOs0ycUFxSwUIFAZ4TbTjRjX/c+ZzdXfk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=USg/EQaq; arc=pass smtp.client-ip=209.85.208.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kemnade.info header.i=@kemnade.info header.b="LCbtUmKe"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=kemnade.info; s=20220719; h=References:In-Reply-To:Subject:Cc:To:From:
-	Reply-To:Content-ID:Content-Description;
-	bh=yJzSvffykzz4KpBF67EvSr407WyQ7fUBSQHgOIRPsn4=; t=1788630458; x=1789840058; 
-	b=LCbtUmKeKIrtFYlEiB6Lvqvx5ipMuFbTjxxJJrCzJgwjgOBqAqeK+UIkE+FXw/fIT0CUHwM8pRV
-	PcDjq+bzYZCMPoDknERmVk5/sUwlWMZDw24Yo5fX1T5qfGsck/THJXxYLtfLGPcStJVR5in+2ietn
-	pmkLH0KizM16cqciS6TiuProQdSk/DuW1aZboa3QzrMhHFS12FHvvEtqs/86f7/EdVtsB9JJ2azz9
-	ldrLHoMfRgMjpbcv3n5IAbO9OIq3+CoRK0Btb3EhZq8mPu9C28PBfukdDX7xSunj/oc/WPbbBwsE5
-	s5G5rVcZfSEeVHSrrOOLH+ixInQCUsTvQU6g==;
-Date: Sat, 5 Sep 2026 19:47:20 +0200
-From: Andreas Kemnade <andreas@kemnade.info>
-To: Karl Mehltretter <kmehltretter@gmail.com>
-Cc: Borislav Petkov <bp@alien8.de>, Jonathan Corbet <corbet@lwn.net>, Geert
- Uytterhoeven <geert@linux-m68k.org>, linux-m68k@lists.linux-m68k.org,
- Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input@vger.kernel.org,
- linux-doc@vger.kernel.org, Shuah Khan <skhan@linuxfoundation.org>, Randy
- Dunlap <rdunlap@infradead.org>, Thomas Gleixner <tglx@kernel.org>, Ingo
- Molnar <mingo@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>,
- x86@kernel.org, Steve Wahl <steve.wahl@hpe.com>, Dimitri Sivanich
- <dimitri.sivanich@hpe.com>, Mike Travis <mike.travis@hpe.com>, Tony Luck
- <tony.luck@intel.com>, linux-edac@vger.kernel.org, Krzysztof Kozlowski
- <krzk@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
- linux-samsung-soc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- Tony Lindgren <tony@atomide.com>, Kevin Hilman <khilman@baylibre.com>,
- linux-omap@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- linux-ide@vger.kernel.org, Ethan Nelson-Moore <enelsonmoore@gmail.com>,
- Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH v2 3/9] docs: kernel-parameters: Drop the edac_report=
- entry
-Message-ID: <20260905194720.7033b956@kemnade.info>
-In-Reply-To: <apxDtqM8UMN5KNjs@gmail.com>
-References: <20260905094649.41996-1-kmehltretter@gmail.com>
-	<20260905094649.41996-4-kmehltretter@gmail.com>
-	<20260905151345.GAapwxqT93wPWHF7u4@fat_crate.local>
-	<apwzmSr6b0WEkW86@gmail.com>
-	<20260905153336.GBapw2UFa7Sdc0ve_A@fat_crate.local>
-	<871pb7zn36.fsf@trenco.lwn.net>
-	<20260905162742.GCapxC_ra7hJd27LDR@fat_crate.local>
-	<apxDtqM8UMN5KNjs@gmail.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.49; aarch64-unknown-linux-gnu)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="USg/EQaq"
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-3a468f4c547so6194571fa.0
+        for <linux-ide@vger.kernel.org>; Sat, 05 Sep 2026 10:49:10 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788630548; cv=none;
+        d=google.com; s=arc-20260327;
+        b=OK/EOsU11vDdJjej9PiHR0VmJS/5MmRRig3uHOkbhQmztooSNOm7RKOAM5mX/Non2w
+         uBcssS5tYoEcyZ4/Izf6/GQO88uAUGieMc6i+CsjwwVTYCobH8yX8O4Xda1qxNuNMYsS
+         BZPrbw1valwXYgdzdr79qL1u9a1zegM/R0Z6EP4BxLTKIIS8WcDCedFMgwdXgj8D7S9F
+         7ry0nB0okrStTaEK8K7yHJNE2icnSSK1mSSy7EE40T/MdskQDX7QZnspDNhVhXRzE5R/
+         f2Ma5Qhh2f0IJoF/ao6OK7UuSnXn71/mC0B+gn2jevLetSXCr50XkzHsMBVn3/jisL7h
+         VpNA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=w3+5gfKK+1zlUjdiuSCjWDIkfjdLdSqOfUHivha/O9M=;
+        fh=yWZo4es5zoZ7kHtDHJ2TmkE8gzjRr0wtXET0a7oso6E=;
+        b=I3j8ups//BKJ+9OjabVlrmIgeE3O3ekvvnkGFyIi+5duDalMpF2Qht7p7lfS8o11Tm
+         1Wqgyk6A8LvY0/cNP0+aHOI5+cCPE4I8qOPT9AjCeu5me7RxF4Soal8wdQVKJ+V/SfYs
+         SUdCXVt8by0I7pyE0Jef6D76R0/P7oZK1BLfVLNPZJ4zN5pJ+UhUEOAfnGb1zfiyr1HN
+         4pam3PV7if9rni8EuFByiV9+vvZlWCVMS0iWvpKcqyeOH1pvEiH5n3O1eH5+yf3i8uJw
+         cYWs3iHMxjDyrSa7vN6tlvA9GvLjOCYmhX701CITfkrNv/MRXuyuZC/dQVunnlQ/LBzX
+         SiCg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788630548; x=1789235348; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=w3+5gfKK+1zlUjdiuSCjWDIkfjdLdSqOfUHivha/O9M=;
+        b=USg/EQaqOSZA9QFtWSuAPi+GSUJpzKyt95f4hphJ752CmBgdDUEsFuq9M3azXu1ms3
+         ziZJ3Qkitxdbx4ET9UhiCEwaKvFobD8kQrOu7eJb/ZrNYceSVgHMpUPefCnKwVCDD6nf
+         E8LaptyTDOccxVGWniCHE3T1VAEdRcU3tjpH1O6gusKAwgc7MB+YPK1LVq3qRs4/lz4l
+         PhG5W4X83qVvC5cOcc5xEWlyDDmRSwnK7jOWbDGq3+LUmP0Dlb4ANUMTWfFqxXNq/+H9
+         9RxaUWjSH0azlzIXZWGqMGZVD6vgDLWfxpjG8qbqaraqgyc3e26R4RdGtkpt4glIVeA1
+         /Fnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788630548; x=1789235348;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=w3+5gfKK+1zlUjdiuSCjWDIkfjdLdSqOfUHivha/O9M=;
+        b=j4IOh1bHgfcnL4Iu9POpH+hD4rGHjd+huDxTANyuMtaOzQLz+Vw3He4yxUzZiGaxQu
+         jwK8DfapLmWYSmaiLZcyEDsChjkz7tEKkn/rkmBhW+z3bjOEESzBraMkC4Xov6lyo4Km
+         4xxhJsbXmLP5MDcC84pBia1s8cFd5yzWkLyci2rjUnF5iBkTIVtq7AHoISbCqM8P7CtF
+         hfiJtFElmP2wRlQiXIHt0mJw746pghMHLX+MEHpevLT022HnsJB/ggJy1rYySPqYa2Fj
+         nz5FF1QCQalC5yHwo0LBqm/oDVjtdNHrEqnaFLgms30QdY2SoSwAenamD+Sr/4mlFDZp
+         Y7TQ==
+X-Gm-Message-State: AFuF++kP9OUyd069u2zjVEVXhZazFcNatmMtpECuLURqYggXgI8KT3k1
+	lSgiXeGk+hoU21O4ghQFW6D7FOJkiFPLwh1TRhztTgsqWnFj8ta0k8kIHpG2qdvsDt43N5QwZgo
+	HqHBqDAqULrsG4Ln3qKY0me9xNYTBXqNXiBKP
+X-Gm-Gg: AYBFou0jiTMSe1Q+qpyAWjYtkXKdFuCN7HVgMPXDJYs4MnUzRwEz/68MxIX27i/SsyT
+	gb176YnMMJ7AEdsFlCvFe3FmzoKH+rHhW2X6Va1mcRsS2o10x9Nn0cmSYvPcDJmMbLQQymVGh0g
+	kjM3Ypo5VlojjPm5y9zmb3fwpwSaSrrrzkQC/74GILBWPbtXL6KzBMU+9xwdFeKyjX5y7Pu4J0y
+	CFTLLNxGMFCDsoex9yyfQcdTMVMv8O9WfTP2ZhS7wdFxtx6EFolO6RzLlM+2fz8aYQoeTwoumR9
+	5YLxebapK7z9WcUfAIIxsKLhHLRNmjWT+9o59Qb9j/xFMBLQIrGceVffAfnUKuXXDuv7XYBXbE1
+	+2l2srA6ayGsjEUPRPO6tEIgi
+X-Received: by 2002:a05:651c:43cc:20b0:3a3:1391:fb19 with SMTP id
+ 38308e7fff4ca-3a371bb39e7mr11104281fa.9.1788630548430; Sat, 05 Sep 2026
+ 10:49:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: John Smith <imjohnsmith4000@gmail.com>
+Date: Sat, 5 Sep 2026 20:48:56 +0300
+X-Gm-Features: AcwNN1Xu-VurMgpls7HqOcG3u1WJMxdYGE5yaeczLyplTxIcSs8C8GkSUdfXWtc
+Message-ID: <CAJ_jo9SD9UqRQe6UGcXAZjU8CbYzQwnwrz=muGd1HaAPGT-jYw@mail.gmail.com>
+Subject: Re: [REGRESSION] Silent SATA read corruption with dma-iommu on AMD
+ 600-series AHCI (6.19 good, 7.0+ bad)
+To: linux-ide@vger.kernel.org
+Cc: mikael1022bzh@gmail.com, mario.limonciello@amd.com, cassel@kernel.org, 
+	dlemoal@kernel.org, vasant.hegde@amd.com, alvinwylim@gmail.com, 
+	iommu@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, 5 Sep 2026 18:45:07 +0200
-Karl Mehltretter <kmehltretter@gmail.com> wrote:
+Hi all,
 
-> On Sat, Sep 05, 2026 at 09:27:42AM +0100, Borislav Petkov wrote:
-> > On Sat, Sep 05, 2026 at 10:20:45AM -0600, Jonathan Corbet wrote:  
-> > > I would like to emphasize this - slow down a bit and maybe you won't
-> > > overwhelm the system entirely.  
-> 
-> Got it.
-> 
-> > 
-> > I find myself telling more and more new submitters to slow down. Sounds like
-> > they don't read our documentation before submitting patches. Especially if the
-> > file is even called submitting-patches:
-> > 
-> > From: Documentation/process/submitting-patches.rst
-> > 
-> > Don't get discouraged - or impatient
-> > ------------------------------------
-> > 
-> > After you have submitted your change, be patient and wait.  Reviewers are
-> > busy people and may not get to your patch right away.
-> > 
-> > Once upon a time, patches used to disappear into the void without comment,
-> > but the development process works more smoothly than that now.  You should
-> > receive comments within a week or so; if that does not happen, make sure
-> > that you have sent your patches to the right place.  Wait for a minimum of
-> > 						     ^^^^^^^^^^^^^^^^^^^^^
-> > 
-> > one week before resubmitting or pinging reviewers - possibly longer during
-> > ^^^^^^^^  
-> 
-> That's for "not getting any answers" which is not the case here.
-> 
-> Sending a vX update sometimes feels more urgent because you don't want other 
-> people to read your buggy old version. But yes, some patience is also good
-> there. 
-> 
-Well, here it is a bit border line. You do not have answers on all patches,
-so technically it is some resubmitting.
+another data point for this thread, from a third platform: the same
+"Using 64-bit DMA addresses" trigger, the same silent zero reads, and
+the same cure (identity mapping). It adds one detail that may be useful:
+the size boundary of the corruption matches the IOVA rcache limit
+exactly.
 
-But if the main maintainers (which is a bit harder to say in this series) found
-time to review, than IMHO (also seen from my maintainer perspective), improve
-as soon as you find time and submit the improved version.
+Platform
+--------
+  Board:   AOOSTAR WTR MAX (DMI: TianBei "WTR MAX"), AMI BIOS 0.01,
+           release date 2025-04-27, BIOS revision 5.29
+  CPU:     AMD Ryzen 7 PRO 8845HS (family 25 model 117 stepping 2)
+  RAM:     32 GB (30 GiB usable; highest System RAM at 0x83E2FFFFF)
+  SATA:    ASMedia ASM1166 [1b21:1166] rev 02, subsystem [1b21:2116],
+           PCIe 8GT/s x2; the only SATA controller on the board;
+           two 4 TB HDDs attached
+  Kernel:  7.0.14-11-pve (Proxmox VE, Ubuntu-derived 7.0)
+  IOMMU:   "iommu: Default domain type: Translated",
+           "DMA domain TLB invalidation policy: lazy mode",
+           "AMD-Vi: Using global IVHD EFR:0x246577efa2054ada, EFR2:0x0"
+           (v1 page tables in use; EFR bit 48 GIOSup is set)
+  No VFIO / device assignment, no untrusted PCI devices.
 
-Regards,
-Andreas
+What happened
+-------------
+Three incidents in 12 days on one uptime (booted 2026-08-24). Each was
+preceded by exactly one kernel line for the SATA controller, with
+nothing else logged in the surrounding minutes:
+
+  2026-08-25T07:56:41+03:00 ahci 0000:67:00.0: Using 64-bit DMA addresses
+  2026-08-31T23:23:59+03:00 ahci 0000:67:00.0: Using 64-bit DMA addresses
+  2026-09-05T03:01:27+03:00 ahci 0000:67:00.0: Using 64-bit DMA addresses
+
+First symptom afterwards (ext4 "iget: checksum invalid", files that look
+corrupt, or the write/read canary failing): 2 h 05 min, 12 min and 3 min
+later respectively. No AMD-Vi IO_PAGE_FAULT or any other AMD-Vi event at
+any point, no ATA errors, SMART clean, AER counters zero.
+
+The line appeared three times because the device was re-probed twice in
+between (manual "echo 1 > remove; echo 1 > rescan" on 08-26 and again on
+09-01), which re-arms pci_32bit_workaround. Each re-probe made the
+problem disappear for 4 to 6 days.
+
+Measurements while faulted (2026-09-05, ~11:00 +03)
+---------------------------------------------------
+  * 4 KiB O_DIRECT reads of the GPT header / ext4 superblock: correct.
+  * 1 MiB and 8 MiB O_DIRECT reads at several offsets on BOTH drives:
+    all bytes zero, identical and repeatable
+    (md5 of an 8 MiB read == md5 of 8 MiB of zeros, 96995b58...).
+  * 1 MiB from /dev/urandom -> cp onto the ext4 fs -> sync -> O_DIRECT
+    read back: 0 of 1048576 bytes non-zero, 3 of 3 attempts.
+  * After the fix all of the above return correct data, and everything
+    that had been WRITTEN during the fault window (20,519 video
+    segments, 47.8 GB, plus the ext4 metadata) verified intact. So on
+    this platform only device-to-memory transfers went wrong;
+    memory-to-device transfers landed correctly.
+  * On 08-26, files that "went bad" had zero-filled holes starting at a
+    uniform ~128-160 KB offset.
+
+The 128 KiB boundary is IOVA_RANGE_CACHE_MAX_SIZE: allocations up to
+32 pages keep getting recycled low IOVAs from the rcache, larger ones
+hit the rbtree and, after the flip, get IOVAs at the top of the 64-bit
+range. That is why a small-read health check stays green while every
+large transfer is garbage.
+
+Fix / current state
+-------------------
+  * Live: unbound ahci, "echo identity > /sys/kernel/iommu_groups/26/type"
+    (the group holds only the ASM1166), rebound: correct data at once.
+  * Persistent: iommu=pt on the kernel command line, rebooted
+    2026-09-05 16:02 +03. Clean so far; a 1 MiB write/read canary runs
+    every 5 minutes and the machine alerts on any new "Using 64-bit DMA"
+    line. I will follow up if it recurs.
+  * amd_iommu=pgtbl_v2 not tested here. Note that this 8845HS advertises
+    GIOSup (EFR bit 48 = 1), so v2 page tables should be selectable on
+    this platform, contrary to what was reported earlier for the 8845HS.
+  * Not related to the ASM106x 43-bit limitation: the ASM1166 handled
+    32-bit IOVAs for 12 days of heavy I/O, and handles physical
+    addresses up to 2^36 under identity mapping without issue.
+
+Happy to run the fio verify canary with iommu.forcedac=1, and/or
+amd_iommu=pgtbl_v2 iommu.forcedac=1, or to provide lspci -vvv / SMN
+register dumps, if that helps.
+
+Thanks,
+John Smith
