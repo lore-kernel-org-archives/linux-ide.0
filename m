@@ -1,179 +1,146 @@
-Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABEA033998
-	for <linux-ide@vger.kernel.org>; Sat,  5 Sep 2026 17:49:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.170
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788630552; cv=pass; b=WC55ssyROQXJ74p/oTi+HYNHgavzqne2vxWAj4XdlIhYf1ENycyqyRUww5Ejjka7LGWqfQwG0doxFT4JYE/DcMiN9FCpEHR2z+jt0+A2B3yAh63rmyu2pWBfafmCKp5wVnYoGVWEc4TNTMCpHUb7kvCKmYcXIC+REQ3y+ZzUUL8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788630552; c=relaxed/simple;
-	bh=3LyyokutBxcAjfcGRumvVjoScViISOI7AqKTnE+qbTY=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=fG1g7mTe+zdyESKnDe/FStu2dODZDsC3TwQ+R9VIUamjCQ9R9Is1KBAHSEqcSGy3nLcWSewjgRztxuOnunGwwXJSnTWSW5nRAIF7GehdAzupSJJiXyWnHfcItwj4i9gXijhhECvarmlOs0ycUFxSwUIFAZ4TbTjRjX/c+ZzdXfk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=USg/EQaq; arc=pass smtp.client-ip=209.85.208.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B6014AFE2A;
+	Sat,  5 Sep 2026 18:51:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788634289; cv=none; b=GzQl6TkdXeClOnZYRlljvsQLaUYlxAsF5hsvfoTy9VUNRE4T5pnzTf5GOUTqpdCGTlhZrbaXbKFgzQJGGjyDrlTdsQOmnZGuQ7Onf7o/rpEwB5s6bk1OGtyyJrpem8qdKEoEeXx6otawA63Fkw/Wko7dxWt+1EfETUQlMeNClvg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788634289; c=relaxed/simple;
+	bh=ofRB7v39ubcw+Y/8Vz/QMz1zIkNRg+f+DK6oNCvx0tk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DtJaNCDZe1mwSZILN0K9WiZlrW8q+MHXL7qtjnMwnkUbfTsAWa1T2L7eYTVYPbvZIQxo56eUEuwOgb4UbDyVUsHhGgKSw/tOFCSUMW1Yw2R95Xp1tDH0i6mcCfZUekPPqZf6n/5yI68CNhtUiMN/rT4tTc+kCoo2lczyXgDhllo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=Fjeu0EDH; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="USg/EQaq"
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-3a468f4c547so6194571fa.0
-        for <linux-ide@vger.kernel.org>; Sat, 05 Sep 2026 10:49:10 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788630548; cv=none;
-        d=google.com; s=arc-20260327;
-        b=OK/EOsU11vDdJjej9PiHR0VmJS/5MmRRig3uHOkbhQmztooSNOm7RKOAM5mX/Non2w
-         uBcssS5tYoEcyZ4/Izf6/GQO88uAUGieMc6i+CsjwwVTYCobH8yX8O4Xda1qxNuNMYsS
-         BZPrbw1valwXYgdzdr79qL1u9a1zegM/R0Z6EP4BxLTKIIS8WcDCedFMgwdXgj8D7S9F
-         7ry0nB0okrStTaEK8K7yHJNE2icnSSK1mSSy7EE40T/MdskQDX7QZnspDNhVhXRzE5R/
-         f2Ma5Qhh2f0IJoF/ao6OK7UuSnXn71/mC0B+gn2jevLetSXCr50XkzHsMBVn3/jisL7h
-         VpNA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=w3+5gfKK+1zlUjdiuSCjWDIkfjdLdSqOfUHivha/O9M=;
-        fh=yWZo4es5zoZ7kHtDHJ2TmkE8gzjRr0wtXET0a7oso6E=;
-        b=I3j8ups//BKJ+9OjabVlrmIgeE3O3ekvvnkGFyIi+5duDalMpF2Qht7p7lfS8o11Tm
-         1Wqgyk6A8LvY0/cNP0+aHOI5+cCPE4I8qOPT9AjCeu5me7RxF4Soal8wdQVKJ+V/SfYs
-         SUdCXVt8by0I7pyE0Jef6D76R0/P7oZK1BLfVLNPZJ4zN5pJ+UhUEOAfnGb1zfiyr1HN
-         4pam3PV7if9rni8EuFByiV9+vvZlWCVMS0iWvpKcqyeOH1pvEiH5n3O1eH5+yf3i8uJw
-         cYWs3iHMxjDyrSa7vN6tlvA9GvLjOCYmhX701CITfkrNv/MRXuyuZC/dQVunnlQ/LBzX
-         SiCg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788630548; x=1789235348; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=w3+5gfKK+1zlUjdiuSCjWDIkfjdLdSqOfUHivha/O9M=;
-        b=USg/EQaqOSZA9QFtWSuAPi+GSUJpzKyt95f4hphJ752CmBgdDUEsFuq9M3azXu1ms3
-         ziZJ3Qkitxdbx4ET9UhiCEwaKvFobD8kQrOu7eJb/ZrNYceSVgHMpUPefCnKwVCDD6nf
-         E8LaptyTDOccxVGWniCHE3T1VAEdRcU3tjpH1O6gusKAwgc7MB+YPK1LVq3qRs4/lz4l
-         PhG5W4X83qVvC5cOcc5xEWlyDDmRSwnK7jOWbDGq3+LUmP0Dlb4ANUMTWfFqxXNq/+H9
-         9RxaUWjSH0azlzIXZWGqMGZVD6vgDLWfxpjG8qbqaraqgyc3e26R4RdGtkpt4glIVeA1
-         /Fnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788630548; x=1789235348;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=w3+5gfKK+1zlUjdiuSCjWDIkfjdLdSqOfUHivha/O9M=;
-        b=j4IOh1bHgfcnL4Iu9POpH+hD4rGHjd+huDxTANyuMtaOzQLz+Vw3He4yxUzZiGaxQu
-         jwK8DfapLmWYSmaiLZcyEDsChjkz7tEKkn/rkmBhW+z3bjOEESzBraMkC4Xov6lyo4Km
-         4xxhJsbXmLP5MDcC84pBia1s8cFd5yzWkLyci2rjUnF5iBkTIVtq7AHoISbCqM8P7CtF
-         hfiJtFElmP2wRlQiXIHt0mJw746pghMHLX+MEHpevLT022HnsJB/ggJy1rYySPqYa2Fj
-         nz5FF1QCQalC5yHwo0LBqm/oDVjtdNHrEqnaFLgms30QdY2SoSwAenamD+Sr/4mlFDZp
-         Y7TQ==
-X-Gm-Message-State: AFuF++kP9OUyd069u2zjVEVXhZazFcNatmMtpECuLURqYggXgI8KT3k1
-	lSgiXeGk+hoU21O4ghQFW6D7FOJkiFPLwh1TRhztTgsqWnFj8ta0k8kIHpG2qdvsDt43N5QwZgo
-	HqHBqDAqULrsG4Ln3qKY0me9xNYTBXqNXiBKP
-X-Gm-Gg: AYBFou0jiTMSe1Q+qpyAWjYtkXKdFuCN7HVgMPXDJYs4MnUzRwEz/68MxIX27i/SsyT
-	gb176YnMMJ7AEdsFlCvFe3FmzoKH+rHhW2X6Va1mcRsS2o10x9Nn0cmSYvPcDJmMbLQQymVGh0g
-	kjM3Ypo5VlojjPm5y9zmb3fwpwSaSrrrzkQC/74GILBWPbtXL6KzBMU+9xwdFeKyjX5y7Pu4J0y
-	CFTLLNxGMFCDsoex9yyfQcdTMVMv8O9WfTP2ZhS7wdFxtx6EFolO6RzLlM+2fz8aYQoeTwoumR9
-	5YLxebapK7z9WcUfAIIxsKLhHLRNmjWT+9o59Qb9j/xFMBLQIrGceVffAfnUKuXXDuv7XYBXbE1
-	+2l2srA6ayGsjEUPRPO6tEIgi
-X-Received: by 2002:a05:651c:43cc:20b0:3a3:1391:fb19 with SMTP id
- 38308e7fff4ca-3a371bb39e7mr11104281fa.9.1788630548430; Sat, 05 Sep 2026
- 10:49:08 -0700 (PDT)
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="Fjeu0EDH"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id B28E340E020D;
+	Sat,  5 Sep 2026 18:51:23 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id oSbgdzpBFeS3; Sat,  5 Sep 2026 18:51:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1788634273; bh=hXOMrLP4Jcf3qb5J5x0VYBAY8+oENz4ptR3d/QTvXLI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Fjeu0EDHJFgKNW5CFsNfbhfUsVkaD/II9wBzUdjPy19Qz5c9qCWHt2GaqETLRyYfl
+	 ozqt388uOm5DJ1buXKFpNR6t2K5InO+k8x3sAc8omTSmaNIiNvOz2EU7pcx4cW7Co2
+	 bj9uSPWz7aAU5Sn0rEMJPg9fIAhy1icFtlUJrbtz7OwM3WnDixfLv6CEnxgkdXuAnF
+	 0jtCEXsX8O3iFXdpwooOfexHl7CYQg56dl8DRlRz3iTEDawCD69QFp7ViRfGeeSFpL
+	 olO0RACzUr4cBADYRA431hoROmDyfR0FF4HbaInqPRITvYFkZ+d9+jpDJiku5+Qnu2
+	 4rrOfrNE+8gmY5VVOmmWd6XtVVZvq4LV2K8eUnfuy7IH4EiGbIO3/VZeh1hug1fk3h
+	 /yMd3cdqNcfruu4oOPod1hE9AzjYIXhsJ+ztpuQrKAQRuZQid1i8yJ98tMZ4t4CMKK
+	 +f8EnC9RHcTRmYlRv0bZCqQ62a/2hfY5RYywF9+9fjorjR2iVBZwF8LBHrpPOB/uUL
+	 hZCABu7vIm3QmM+bvYHH/zABlwXwyE6Q+wYyGqADUyv2oaTQvK3q9S6/+EW31L4pRF
+	 BNRZSFgLovezUDQlCyRJG9oPzyNLR63CPReK/jD1NU3Rydjw/VKFTK2yxl96ZyecU5
+	 gjEhHE0HJ/GN1J4OZO2cA31M=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::1f])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id D806540E02C2;
+	Sat,  5 Sep 2026 18:50:40 +0000 (UTC)
+Date: Sat, 5 Sep 2026 11:50:37 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Andreas Kemnade <andreas@kemnade.info>,
+	Karl Mehltretter <kmehltretter@gmail.com>
+Cc: Jonathan Corbet <corbet@lwn.net>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-m68k@lists.linux-m68k.org,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	linux-input@vger.kernel.org, linux-doc@vger.kernel.org,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	Steve Wahl <steve.wahl@hpe.com>,
+	Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+	Mike Travis <mike.travis@hpe.com>, Tony Luck <tony.luck@intel.com>,
+	linux-edac@vger.kernel.org, Krzysztof Kozlowski <krzk@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, linux-samsung-soc@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Tony Lindgren <tony@atomide.com>,
+	Kevin Hilman <khilman@baylibre.com>, linux-omap@vger.kernel.org,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
+	Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+	Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH v2 3/9] docs: kernel-parameters: Drop the edac_report=
+ entry
+Message-ID: <20260905185037.GDapxkfbPNUxJgaMH8@fat_crate.local>
+References: <20260905094649.41996-1-kmehltretter@gmail.com>
+ <20260905094649.41996-4-kmehltretter@gmail.com>
+ <20260905151345.GAapwxqT93wPWHF7u4@fat_crate.local>
+ <apwzmSr6b0WEkW86@gmail.com>
+ <20260905153336.GBapw2UFa7Sdc0ve_A@fat_crate.local>
+ <871pb7zn36.fsf@trenco.lwn.net>
+ <20260905162742.GCapxC_ra7hJd27LDR@fat_crate.local>
+ <apxDtqM8UMN5KNjs@gmail.com>
+ <20260905194720.7033b956@kemnade.info>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: John Smith <imjohnsmith4000@gmail.com>
-Date: Sat, 5 Sep 2026 20:48:56 +0300
-X-Gm-Features: AcwNN1Xu-VurMgpls7HqOcG3u1WJMxdYGE5yaeczLyplTxIcSs8C8GkSUdfXWtc
-Message-ID: <CAJ_jo9SD9UqRQe6UGcXAZjU8CbYzQwnwrz=muGd1HaAPGT-jYw@mail.gmail.com>
-Subject: Re: [REGRESSION] Silent SATA read corruption with dma-iommu on AMD
- 600-series AHCI (6.19 good, 7.0+ bad)
-To: linux-ide@vger.kernel.org
-Cc: mikael1022bzh@gmail.com, mario.limonciello@amd.com, cassel@kernel.org, 
-	dlemoal@kernel.org, vasant.hegde@amd.com, alvinwylim@gmail.com, 
-	iommu@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260905194720.7033b956@kemnade.info>
 
-Hi all,
+On Sat, Sep 05, 2026 at 07:47:20PM +0200, Andreas Kemnade wrote:
+> > That's for "not getting any answers" which is not the case here.
 
-another data point for this thread, from a third platform: the same
-"Using 64-bit DMA addresses" trigger, the same silent zero reads, and
-the same cure (identity mapping). It adds one detail that may be useful:
-the size boundary of the corruption matches the IOVA rcache limit
-exactly.
+No, that's the case ALWAYS. If you spam maintainers with too often
+submissions, you end up achieving the opposite to what you're trying to do.
 
-Platform
---------
-  Board:   AOOSTAR WTR MAX (DMI: TianBei "WTR MAX"), AMI BIOS 0.01,
-           release date 2025-04-27, BIOS revision 5.29
-  CPU:     AMD Ryzen 7 PRO 8845HS (family 25 model 117 stepping 2)
-  RAM:     32 GB (30 GiB usable; highest System RAM at 0x83E2FFFFF)
-  SATA:    ASMedia ASM1166 [1b21:1166] rev 02, subsystem [1b21:2116],
-           PCIe 8GT/s x2; the only SATA controller on the board;
-           two 4 TB HDDs attached
-  Kernel:  7.0.14-11-pve (Proxmox VE, Ubuntu-derived 7.0)
-  IOMMU:   "iommu: Default domain type: Translated",
-           "DMA domain TLB invalidation policy: lazy mode",
-           "AMD-Vi: Using global IVHD EFR:0x246577efa2054ada, EFR2:0x0"
-           (v1 page tables in use; EFR bit 48 GIOSup is set)
-  No VFIO / device assignment, no untrusted PCI devices.
+If you spam me way too often, I will send you to /dev/null because you're not
+the only one who needs attention. Just imagine you're on the receiving end of
+multiple tens of patchsets at any given time and everyone needs to have
+her/his reviewed first. You'll do the same.
 
-What happened
--------------
-Three incidents in 12 days on one uptime (booted 2026-08-24). Each was
-preceded by exactly one kernel line for the SATA controller, with
-nothing else logged in the surrounding minutes:
+> > Sending a vX update sometimes feels more urgent because you don't want other 
+> > people to read your buggy old version.
 
-  2026-08-25T07:56:41+03:00 ahci 0000:67:00.0: Using 64-bit DMA addresses
-  2026-08-31T23:23:59+03:00 ahci 0000:67:00.0: Using 64-bit DMA addresses
-  2026-09-05T03:01:27+03:00 ahci 0000:67:00.0: Using 64-bit DMA addresses
+That's not a problem - everyone sees when it is buggy and if it is not clear,
+you can respond to yourself and say that it'll be fixed in the next one. We
+all have done it - no problem there. And if you document it, everyone is clear
+what's going on.
 
-First symptom afterwards (ext4 "iget: checksum invalid", files that look
-corrupt, or the write/read canary failing): 2 h 05 min, 12 min and 3 min
-later respectively. No AMD-Vi IO_PAGE_FAULT or any other AMD-Vi event at
-any point, no ATA errors, SMART clean, AER counters zero.
+> > But yes, some patience is also good there. 
 
-The line appeared three times because the device was re-probed twice in
-between (manual "echo 1 > remove; echo 1 > rescan" on 08-26 and again on
-09-01), which re-arms pci_32bit_workaround. Each re-probe made the
-problem disappear for 4 to 6 days.
+With the amount of work all maintainers are swamped with and no one really
+helping them out with patch review and testing, patience is the only virtue
+here.
 
-Measurements while faulted (2026-09-05, ~11:00 +03)
----------------------------------------------------
-  * 4 KiB O_DIRECT reads of the GPT header / ext4 superblock: correct.
-  * 1 MiB and 8 MiB O_DIRECT reads at several offsets on BOTH drives:
-    all bytes zero, identical and repeatable
-    (md5 of an 8 MiB read == md5 of 8 MiB of zeros, 96995b58...).
-  * 1 MiB from /dev/urandom -> cp onto the ext4 fs -> sync -> O_DIRECT
-    read back: 0 of 1048576 bytes non-zero, 3 of 3 attempts.
-  * After the fix all of the above return correct data, and everything
-    that had been WRITTEN during the fault window (20,519 video
-    segments, 47.8 GB, plus the ext4 metadata) verified intact. So on
-    this platform only device-to-memory transfers went wrong;
-    memory-to-device transfers landed correctly.
-  * On 08-26, files that "went bad" had zero-filled holes starting at a
-    uniform ~128-160 KB offset.
+> Well, here it is a bit border line. You do not have answers on all patches,
+> so technically it is some resubmitting.
+> 
+> But if the main maintainers (which is a bit harder to say in this series) found
+> time to review, than IMHO (also seen from my maintainer perspective), improve
+> as soon as you find time and submit the improved version.
 
-The 128 KiB boundary is IOVA_RANGE_CACHE_MAX_SIZE: allocations up to
-32 pages keep getting recycled low IOVAs from the rcache, larger ones
-hit the rbtree and, after the flip, get IOVAs at the top of the 64-bit
-range. That is why a small-read health check stays green while every
-large transfer is garbage.
+If you want an earlier submission, feel free to ask the person.
 
-Fix / current state
--------------------
-  * Live: unbound ahci, "echo identity > /sys/kernel/iommu_groups/26/type"
-    (the group holds only the ASM1166), rebound: correct data at once.
-  * Persistent: iommu=pt on the kernel command line, rebooted
-    2026-09-05 16:02 +03. Clean so far; a 1 MiB write/read canary runs
-    every 5 minutes and the machine alerts on any new "Using 64-bit DMA"
-    line. I will follow up if it recurs.
-  * amd_iommu=pgtbl_v2 not tested here. Note that this 8845HS advertises
-    GIOSup (EFR bit 48 = 1), so v2 page tables should be selectable on
-    this platform, contrary to what was reported earlier for the 8845HS.
-  * Not related to the ASM106x 43-bit limitation: the ASM1166 handled
-    32-bit IOVAs for 12 days of heavy I/O, and handles physical
-    addresses up to 2^36 under identity mapping without issue.
+In the general case, though, one should do a good testing before submitting
+and all the issues caught after that, one can work in in her/his next version
+locally and perhaps even state so.
 
-Happy to run the fio verify canary with iommu.forcedac=1, and/or
-amd_iommu=pgtbl_v2 iommu.forcedac=1, or to provide lspci -vvv / SMN
-register dumps, if that helps.
+Maintainers feel a lot better about a patchset when the whole evolution of the
+patches is done on the mailing list and is documented. But shooting out a new
+pile every day is just too fast, too much, too unnecessary.
 
-Thanks,
-John Smith
+I sincerely hope that explains it better.
+
+Thx.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
