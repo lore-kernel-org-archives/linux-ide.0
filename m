@@ -1,125 +1,143 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx.bauer-kirch.com (mx.bauer-kirch.com [217.11.56.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2F0426C3BD
-	for <linux-ide@vger.kernel.org>; Sat,  5 Sep 2026 12:29:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BC6E446859;
+	Sat,  5 Sep 2026 12:30:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.11.56.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788611394; cv=none; b=YEmgoAhVtcSHloynFe+1F9S4zeYP2iyVatzlsFcQxPH3Kl3Rk2z3RNSOoFNa1b1+W3Azyt0Cg76+tAhOYufskUW42CsItK1QU3ziu7wXKYI2rIyemptZLUIyOJv7Zir6xtU7rEYVo9h9EZNcj9jamH2AjQkA06V+CUKCXxlV95w=
+	t=1788611432; cv=none; b=I4AywTkr9fif5nqs+wNBku0Hd02NQCc1eUg5UNgOM5AtHUuyTSn9ZcGQZxtlqCkHzt85aQDMWXi4wt7Kw2jvow/Pi7ZtQ/xu+MoO1S2OGsZhZkbm6RVL3kxBtPUzJWJgMPIDvan/TcXPxTYQu8qlxBM1rTQge+YAZx7yUR709CI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788611394; c=relaxed/simple;
-	bh=hMg7RJefHBNDjWx7qlSUPFnIqApIedOx+ccA1coGGAs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WURxd+l2MrJ34PS/Bse1AH7MMBr5p8DPKA513JQU5EbPEH1joFXZUyL5VK9EO8aKDKFOx0DZMIc9rVvrrJWj4XztUkBmGD3Hp46D6hQcEHDhGT6xMIygCNNKPPl14DjMxpfgFPKzIavTZ6DwzVZePc7vvht8JXKX8BOG35KlGOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lUIYRGfZ; arc=none smtp.client-ip=209.85.128.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788611432; c=relaxed/simple;
+	bh=bWy7GMIyL2IQUwXGeHbE3TO5SQZ99P/sX9mNj/HmZ5k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Klv5UmnG0m8+4Mx3p82evLmabZONaZGLf6qbBt3yPLD8zc/FYBLob8OonT9VU+6t6vzUvH/7uxndbbdrX9HzmKFyFUrrr5a4Du0KLJkSnX3y7key26LiZ9zcbrqcQYx22wUftVkvJI+Yj03esmtWm9+Dw1ETVGpGMLgZZl999gs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de; spf=pass smtp.mailfrom=noerenberg.de; dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b=mjKywjxN; arc=none smtp.client-ip=217.11.56.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=noerenberg.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lUIYRGfZ"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4995b0343c1so26060285e9.3
-        for <linux-ide@vger.kernel.org>; Sat, 05 Sep 2026 05:29:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788611389; x=1789216189; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=IR0+lkethKHvrwCdwLXMATakzMSwaAKd6EpWxgPc0oQ=;
-        b=lUIYRGfZzMxbh71ntNcHdfaX7qcD4W21aZLxy5KXsV9jI0WlTJMjwPTfoYUixE1+ax
-         8VMCo0qv0LwmCspW/ZecFnFlkVR/KWFcMLPa2gNvG5MNCnXFfHJGsX+HiBRcZJ2ULwdo
-         RvT44Vy9q5hmqgqqogM2Cc/pWIFt34PI1TYu6UM1fZZKQdezEwJ0jtWE3CE3gK1KDF8S
-         3s9Z4ISt+ScI0rYlwygCxRJXM0UkOQIvcunGyvlinYZKEdEPhUHdzXkfTsnhGqdCHcCY
-         2XMYd2un7S7NmKo52rrnRaQq+5CXgSSsvwGK0AMrnk/flDzw/NIk2/cvhhGqIXR9IfgN
-         SBIw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788611389; x=1789216189;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=IR0+lkethKHvrwCdwLXMATakzMSwaAKd6EpWxgPc0oQ=;
-        b=Esy8/KVyfoAMuNGfoewE0/rnj9xfiLsTVAyNaExNkZF7Je96wmaurMV/RP9PWsLvH9
-         DFS84lWAj5R9vS6KnX9BUr+TEC5TjeDysw7HTEpyOqyYohkJqfxvcaDHtkgwaeuqdXH7
-         yZPkgchC6zk5C/5JXQ9KncCOeR449GSPGxUB1SNBF3T4RzkRLlEhdBJtcQ5hwf+S2pEl
-         Y1nfDTT7YHl9p55MSfwGf3gvr0etJj4b1NQ0BOk/+qORwojm05Uf/FnsCetPhpDIjoZe
-         Nr5wCUGkN7BBe/9Zdvs3p8+LXdW+6p3ooUwX2MPRjdjATW1l6ovTWzKGwKrBsHxZK4bN
-         cPmA==
-X-Forwarded-Encrypted: i=1; AKwUvBz/t+wx+4/USwtTkMVKPkVxcwmmNHq9BJeg2ygPMy8l79wq9PZzNPOa/fmcZbBpgUgcyTlWtIhiqZY=@vger.kernel.org
-X-Gm-Message-State: AFuF++ld0Ic3NVBfag9RPsyLx9pm+aujy72FQ7+ag6wzOSs/GQpfXxv0
-	2bkseNQwyhnwbfkazj5MBhme4LJm80nfXAUdY/JiiwmfvBmQSphbL/hZ
-X-Gm-Gg: AYBFou1HtO++krPpxs4EI4H6+xwPaw/ZOFj0cen3emRdyuq9EjWKIC+mu3AqiqTUVgP
-	iUmNqh9F0t/UE7qAPLwfxxHvmNjBMJ1OsNNuc9oYIZ/tKa7zNys2gNvxm8yT/XZKoIz7Z0Q9Oq7
-	2cHyt7Bu3TWZerU9Ty0ikewPQe1vvKBaN/vBJCwUoUoX5mgOrqYO+w0Cm9cZzIlbPHM+fpYnlJC
-	bGstK8DHtg2VmpIY9TBuSabSrW5EDZHGKJM1hHOXdEYIpoAHQCYsfL2HBsH8xawh5XrCI6FWlMl
-	EZZRknCNJQAg0nXSGqMqpfo4hhfMSjMx/V4GpcjI5juaaCXi7RZBlmRCFUyveUbVnYgM3QIW+93
-	m91ON92PrLoPaNFqPV7+lekxMaMU4dk2HcsH1Ig1iVKTqleJQzzit5EPW7gsxaFFt6Q5Ht3h8uX
-	SQyjKkmkhlmTfDJudncTG1j+i0WQsLt1udC8jgcqmDUw8fwgEgd7/bsOMYMFH8os8u9SK6BpPBM
-	jJosAFgPpeI9BGZh98JiH/gL65wXsJFzXlT+VGmA54BcXADCU7btxinlYaobkriTOFf7EGrqY4c
-	HfsXkOm04VSF6c8fNANi7EUPnH4ePTvOzWWhOUMv1X9mdH+HhCttKc5TafVJY2kU
-X-Received: by 2002:a05:600c:3495:b0:496:c1f3:e8f8 with SMTP id 5b1f17b1804b1-49cf8244bc5mr116977535e9.7.1788611388275;
-        Sat, 05 Sep 2026 05:29:48 -0700 (PDT)
-Received: from unknown748F3CBA5068 (dynamic-2a02-3100-a4eb-3001-c06d-af27-9fa2-ea53.310.pool.telefonica.de. [2a02:3100:a4eb:3001:c06d:af27:9fa2:ea53])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cfbdacc45sm118555475e9.11.2026.09.05.05.29.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 05:29:47 -0700 (PDT)
-Date: Sat, 5 Sep 2026 14:29:46 +0200
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, 
-	linux-m68k@lists.linux-m68k.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
-	linux-input@vger.kernel.org, linux-doc@vger.kernel.org, 
-	Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, 
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Steve Wahl <steve.wahl@hpe.com>, 
-	Dimitri Sivanich <dimitri.sivanich@hpe.com>, Mike Travis <mike.travis@hpe.com>, 
-	Tony Luck <tony.luck@intel.com>, linux-edac@vger.kernel.org, 
-	Krzysztof Kozlowski <krzk@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-samsung-soc@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, Tony Lindgren <tony@atomide.com>, 
-	Kevin Hilman <khilman@baylibre.com>, linux-omap@vger.kernel.org, 
-	Dominik Brodowski <linux@dominikbrodowski.net>, Damien Le Moal <dlemoal@kernel.org>, 
-	Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
-	Ethan Nelson-Moore <enelsonmoore@gmail.com>, Michael Schmitz <schmitzmic@gmail.com>, 
-	Andreas Kemnade <andreas@kemnade.info>
-Subject: Re: [PATCH v2 9/9] docs: kernel-parameters: Drop the pata_legacy.qdi
- and pata_legacy.winbond entries
-Message-ID: <apwKitEmOv3ZwLkd@gmail.com>
-References: <20260905094649.41996-1-kmehltretter@gmail.com>
- <20260905094649.41996-10-kmehltretter@gmail.com>
+	dkim=pass (2048-bit key) header.d=noerenberg.de header.i=@noerenberg.de header.b="mjKywjxN"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=noerenberg.de; s=bauerkirch; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=5ITPFuJqQ9bc1g+KLNA5tgoiip+tB0mLLOz4hIT1zRg=; b=mjKywjxNBq/hXSjMmfZ1vHDgpu
+	14T+ZtKidPkVOpkXqf+CG3sEa6d4wcmL83UjOSP/WpsXxFcad3nDl2/9vb5tfZVz2FpP3Wr4C7pzK
+	vIrLteaW3FNTox9RCyoFpA1a7yniPzb2hkHEn6daPXPmTRbI7+EPQei8CmVJLZOofATdIy045HCqN
+	pkUSvjMRWtjSM/Ny1e7ruM0sHcVKJwwn9Ba6FHAScpumQf1J2/DZNZBftWmEuooBjeKXnobWjR7GW
+	rMn+wJXjHvG+7GVsOUl8zAsKnynJAoxQpvhoMXt/h/QaaavJgxlKgae9j/XEwM1XYigyVuTl7Kxy0
+	likD/Zog==;
+Received: by mail.bauer-kirch.de with ESMTPSA id 1x2pXE-00000007tRb-1tZA
+	authenticated id <420001312>
+	(TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128);
+	Sat, 05 Sep 2026 14:30:16 +0200
+Message-ID: <1fed10ef-4a5d-4c49-bf23-34c4c30c5884@noerenberg.de>
+Date: Sat, 5 Sep 2026 14:30:14 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260905094649.41996-10-kmehltretter@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] ata: ahci: work around lost interrupts on Marvell
+ 88SE61xx
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ linux-ide@vger.kernel.org
+Cc: Pali Rohar <pali@kernel.org>, stable@vger.kernel.org, risc4all@yahoo.com,
+ linux-kernel@vger.kernel.org
+References: <20260831124303.920391-1-hajo-linux-ide@noerenberg.de>
+ <178818641418.216562.3155723702033731494.b4-ty@kernel.org>
+ <aprZi3G9Yks1Gq9-@ryzen>
+From: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
+In-Reply-To: <aprZi3G9Yks1Gq9-@ryzen>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sat, Sep 05, 2026 at 11:46:49AM +0100, Karl Mehltretter wrote:
-> pata_legacy no longer has the qdi and winbond module parameters:
-> commit 3c4d783f6922 ("ata: pata_legacy: remove VLB support") removed
-> both together with the VLB controller support. The entries also refer
-> to CONFIG_PATA_QDI_MODULE and CONFIG_PATA_WINBOND_VLB_MODULE, which do
-> not exist either.
+On 04.09.2026 at 16:45 Niklas Cassel wrote:
+> On Mon, Aug 31, 2026 at 04:27:24PM +0200, Niklas Cassel wrote:
+>> On Mon, 31 Aug 2026 14:43:03 +0200, Hajo Noerenberg wrote:
+>>> ahci_single_level_irq_intr() services the ports first and clears the
+>>> global HOST_IRQ_STAT afterwards, as recommended by AHCI 1.1 section
+>>> 10.6.2.  The Marvell 88SE6111/6121/6145 family stops reporting interrupts
+>>> for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits:
+>>> PxIS keeps its content, HOST_IRQ_STAT reads back as 0, the port is never
+>>> looked at again, and the command in flight only ends in a timeout.
+>>>
+>>> [...]
+>>
+>> Applied to libata/linux.git (for-7.4), thanks!
+>>
+>> [1/1] ata: ahci: work around lost interrupts on Marvell 88SE61xx
+>>       https://git.kernel.org/libata/linux/c/22f2ba34
 > 
-> Drop both entries.
+> Decided to send this for 7.3-rc2 instead:
+> https://lore.kernel.org/linux-ide/20260904144228.1473602-1-cassel@kernel.org/T/#u
 > 
-> Fixes: 3c4d783f6922 ("ata: pata_legacy: remove VLB support")
-> Assisted-by: LLM
-> Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
-> Acked-by: Damien Le Moal <dlemoal@kernel.org>
+Niklas,
 
-This one is actually a duplicate, I just found out. Ethan posted a more
-complete patch in June that removes all six pata_legacy entries which
-commit 3c4d783f6922 ("ata: pata_legacy: remove VLB support") left
-behind, this patch covers only two of them:
+thanks for moving it to 7.3-rc2.
 
-  https://lore.kernel.org/r/20260607064053.195166-1-enelsonmoore@gmail.com/
+I spent a lot of time on this bug, mostly because I did not know what I was
+looking for.  Now that it has a name, searching for it actually works - and
+out of idle curiosity I went looking a moment ago, only to find that FreeBSD
+has been carrying the same workaround for years.
 
-It has a Reviewed-by tag from Randy, but does not seem to
-have been picked up yet. 
+In FreeBSD's sys/dev/ahci/ahci_pci.c all four chips of the family are tagged
+AHCI_Q_EDGEIS:
 
-So I suggest: drop 9/9 and take Ethan's patch instead.
-The other patches of this series are not affected.
+  {0x611111ab, ... "Marvell 88SE6111", ... AHCI_Q_1CH | AHCI_Q_EDGEIS},
+  {0x612111ab, ... "Marvell 88SE6121", ... AHCI_Q_2CH | AHCI_Q_EDGEIS | ...},
+  {0x614111ab, ... "Marvell 88SE6141", ... AHCI_Q_4CH | AHCI_Q_EDGEIS | ...},
+  {0x614511ab, ... "Marvell 88SE6145", ... AHCI_Q_4CH | AHCI_Q_EDGEIS | ...},
 
-Thanks,
-Karl
+and in ahci_intr() the quirk does precisely what this patch does:
+
+  /* Some controllers have edge triggered IS. */
+  if (ctlr->quirks & AHCI_Q_EDGEIS)
+          ise |= is;
+  if (ise != 0)
+          ATA_OUTL(ctlr->r_mem, AHCI_IS, ise);
+  for (...)
+          ctlr->interrupt[unit].function(arg);
+  /* AHCI declares level triggered IS. */
+  if (!(ctlr->quirks & AHCI_Q_EDGEIS))
+          ATA_OUTL(ctlr->r_mem, AHCI_IS, is);
+
+That is an independent confirmation of both the diagnosis and the fix, by
+people who knew nothing about this bug report.
+
+It also suggests Linux covers less of the family than it could.  board_ahci_mv
+lists 0x6121 and 0x6145 only, FreeBSD tags 0x6111 and 0x6141 as well, and
+Marvell's own driver for these chips knows 6101, 6111, 6121, 6122, 6141 and
+6145.  A 88SE6111 or 88SE6141 in AHCI mode therefore ends up on the generic
+class entry and plain board_ahci - not only without the new handler, but also
+without AHCI_HFLAG_NO_NCQ and AHCI_HFLAG_NO_PMP that the two listed siblings
+get.  I have neither chip and no report of one failing, so this is a remark,
+not a patch proposal.
+
+FreeBSD does make a silicon revision distinction, but only for the 88SE912x:
+1b4b:9123 gets AHCI_Q_EDGEIS below revision 0x11 and AHCI_Q_ALTSIG from 0x11
+on, so Marvell appears to have fixed it there in later silicon.  Linux has no
+special handling for either of those - 1b4b:9120 is not in ahci.c at all, and
+1b4b:9123 gets board_ahci_yes_fbs.  I have none of that hardware either, so
+again, an observation and nothing more.
+
+For the 6111/6121/6141/6145 family there is no such silicon revision
+distinction anywhere.  FreeBSD sets AHCI_Q_EDGEIS for every revision of all
+four, and Marvell's own driver does the reordering unconditionally at all
+three places it acknowledges interrupts, with no revision check near any of
+them - the only revision-dependent branch in that whole driver is for an
+unrelated chip.  Applying the fix unconditionally, as this patch does, is
+therefore in line with both.
+
+Unrelated to the interrupt problem: FreeBSD also tags these chips
+AHCI_Q_NOCOUNT, which makes it ignore the command header's bytecount field
+when computing the transfer residual.  I have seen no symptom of that on Linux
+and have not checked whether libata uses that field at all; mentioning it for
+completeness.
+
+Thanks again,
+Hajo
+
