@@ -1,236 +1,239 @@
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7C224C06A
-	for <linux-ide@vger.kernel.org>; Sat,  5 Sep 2026 11:38:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA6EF486BBA
+	for <linux-ide@vger.kernel.org>; Sat,  5 Sep 2026 12:25:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788608338; cv=none; b=PbmJaTzw5jcHUOoNLJLnx9dR3SD8rTNeZXB1o+wgXDqJUin6yzAjSAWZW9+jowF1+z4+IW1TMq8uBaGZUP6QJCYwot+GqOM9rRtB/XIyrmjW+wlLDoSeJc//DO7M39Cc6DK/Qs2NfnNgpi8rmXCKEpgorNEpBBs6opXaFIkdEw4=
+	t=1788611110; cv=none; b=nvVjNkKUOrRKd2YdW/VGYDVWDItr9ZmH/eTYct5qmjzcUPEiTHQsY15m5bPJfvnNZaCRXjeE1J0d4Qr/LDCYLlfaN3A0aPJERxNnYEaHbN/Xp0vg/mF30vKevItpsc4AMprPBk+UKgzO1iM7ug2M1w6UzTNoKgdXXsHFhs/pSiU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788608338; c=relaxed/simple;
-	bh=eelufCio3ajFbj0v4pcK9zPlboHobzfZh+K6niicKjo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Yfk6TfibvftkWKBQ+lGena3n3Y5bOo3enPouKhpAl5Wy6XEyH7iFo7APfrgtkC4ZAnZEjDNICJhOGe15YbGJQnUx8O41izAKVlP1Cr5X+wF43rHkBJAzWFmzOuoPksx8dLFClG1pJVYDeov96sG7p4F81FTxwOQmHcEWTZ3fyxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iCnKH3OA; arc=none smtp.client-ip=209.85.215.181
+	s=arc-20240116; t=1788611110; c=relaxed/simple;
+	bh=7FDVdWewnpg54EuU9ucLHlKJB14SIxO1UfQn4Ib5/nI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BfTsNZRCv4g87Z6TefJydA3YAWOX0kqXxVvHgwwvQzlJy5mqzJM3eo/wYHIkTIf2+KelbU9AVab2jNCfpLMcU88/LiwtiRDA/7o1JUCVWpul4VF2+sPaR9yw20ypnndseMTqcDUwMW1laGr/6r3ughsgTKDiHlFKY/C8DEyWMyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NIppZdlg; arc=none smtp.client-ip=209.85.221.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iCnKH3OA"
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cc2276e6daeso1468102a12.0
-        for <linux-ide@vger.kernel.org>; Sat, 05 Sep 2026 04:38:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NIppZdlg"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-4843e9c5960so1955954f8f.0
+        for <linux-ide@vger.kernel.org>; Sat, 05 Sep 2026 05:25:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788608335; x=1789213135; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=CJTgqTURHJILMT4uRM83+AU7uLG2hO9Xrjamyvkwg1Q=;
-        b=iCnKH3OACUx09FGQK6R0OEyGIZdKUfYgR5aCC45FUguG68kU9Hm1uD40hyjjhY4nVS
-         XszgVecvkofxbrL+ztZwlhDJDOXm+xQaCHdyeFE8XhCjPNLsoBXJiGHcGEyy9XlqYQSP
-         mfBjT3GvWgtW8eNIIgd9fU2Zqe003mHiDdm4fuKJMHqDazwcINqUQQ7QTb/hdkwu0fLn
-         R0xtC+SDryhlf1ry22Kf39NZuAq0K0B830Ogbxv9U2Bx5QV5dPOMkbOLvNlpg7/SlCwL
-         EnQmgcnV8Bs9XIhbB2zfRxLjTMsNQEdqbXCBsnrWQPQBaiBKoBPXotiuHnukxixC+poS
-         K8tg==
+        d=gmail.com; s=20251104; t=1788611107; x=1789215907; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=6jyEkPF9QjFxAuLX7joeVpRJHHAcWObix5FAN064Z/Y=;
+        b=NIppZdlgCAPQoL9WttB6AfgdCQRal5wFr5AQEERkH6DIce3Ho5ioUFe8AsyN6mXF9X
+         WTTLdt+yXULuDEsYVloplBF5n/DkRxynvvEDu8QzFlq983/ccKEtRGDoYtIGDzuhDQGy
+         szamzdSZUWmm0H2dVvJyYZ2SAxK2uruAjLFEeTSx//uFzCfaqKK9B8LjdX2yIvIgFQw/
+         opc6X+p+Qz/vZykF3mkz59Wkj+ik/zH4gU6pkTwM6mRUq9BCOmXeuPQPy5IIZlEY3Gbp
+         OnF1+6TLj7aJtaC9kVDZRK7DgVMt72mQKzvVKHsXAPYlL707BaFhHimeyEAaI0zC6f0s
+         8FRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788608335; x=1789213135;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=CJTgqTURHJILMT4uRM83+AU7uLG2hO9Xrjamyvkwg1Q=;
-        b=FyslFsXZ/IIAyeC6NioQFbPt4fyEOhMm0p4d75PvGzOv3LT92sAp0rcZu74aYqDTEI
-         uGjtR7tzg0ljWCIdlXrLBwOYUdUBAi6MDp7cqutjTb6aubWbHXev5LLNie9NM/WZA6yE
-         e4yHUQ9m0apzUiLoqF3JbWLrg1P3SM9yW0nklwAWBYEcb3ZXSkQ0GzM6pl4vPyIhrTr6
-         atqN8WqGIWGNY5sHqwALNdV3arIdsEZ79ilpZU7uGrQpw83jwHP1w7VD+vgguQV1V2GJ
-         B5fDk0qugPo8sJfpl762UILX8ZMqYgLHnh2GvmT4UzBkL2NySOvCuJrm9QPFZArBKfXg
-         NOcw==
-X-Forwarded-Encrypted: i=1; AKwUvBxUK1Cyu1vBkbzO3JdQRU8OhBUaqd78PtlbNMXimH7xqfu0kv5Vk9LPNV9mPJ0oQGhdlKnzB6Go9EM=@vger.kernel.org
-X-Gm-Message-State: AFuF++lPJ8Wnv1mvzAfKI+9UYI2Qnz/KKl2MNcEE3zNP7zUYfymUfbET
-	ubzou+287Kmk7Swu9cRvD5ASwYpayh6MXjoGvgwksyL7C6eAaKdN4lnN
-X-Gm-Gg: AYBFou08+gZOTFL1ZjgDZdT+/DVUjmUKPEu8M1C9DBWxS4/sRYAKsg4jquZl1QtmKnR
-	Ey5BEG3s+YymPFq3HWK0Wdo8rfAXw4hNV+XohQ8KnzhNlXq9qSukeCFpfvMdlHV+VK69teiGrzK
-	hcnOSrxEJlbD068hC5JwsVO3KoIkOj2ZV1dubgZSYbHeHB/Zdm0vubeBst9Qzs+HToe1ob5k9/W
-	nymcfYcg/ec7kH19KGFYBK0mnHLrTjd0yzI285lXV1RCJjGljbY9BgkUz/hhNF7uYofWdOlOyDc
-	OqLg2lX4ZX9E53FviJscVu+OQB2ZY5BCiPR6upTX7b4MHeqeWisq0zWIwwrb2+m5hCUPnso3yTw
-	3U4wDKJlAdSm5tkuP+bWlnKmrnr6Bcuy+UClMN8xMbmilur+Mnacm3+EHkhEVssOllc00CMzRBN
-	7Lnpd75q3BWU1PjFFmtc6oDYDlEe6w9uePdkMDol+lSHAZAj4ofUgWH53kNCYymyu7yEmOFTZ40
-	ELC
-X-Received: by 2002:a17:90b:3149:b0:393:194d:5366 with SMTP id 98e67ed59e1d1-39b2618060cmr19540300a91.10.1788608334984;
-        Sat, 05 Sep 2026 04:38:54 -0700 (PDT)
-Received: from pve-storage.hammies.cc ([165.173.24.245])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39ae60891b2sm7148989a91.0.2026.09.05.04.38.51
+        d=1e100.net; s=20251104; t=1788611107; x=1789215907;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=6jyEkPF9QjFxAuLX7joeVpRJHHAcWObix5FAN064Z/Y=;
+        b=T142ZaazFsY8XGykjEHJH/36wMuBzJLdOof+KWsEW/4pF9Wc7Gd4oEafJUeo1QSWAM
+         SmZSsoydY7qMG8VgKPtJRhNmO89fUhAkuLHba8XAuCactRV9EyDbxN/KYLkmW+1F1ZWK
+         j+NMs9tXpBxIV2EdLeUfoo08PAE4eQhkiptR3GICdUP3nKv/m7HeGqpfG5at5tCXHPGz
+         S5VyXqz6Fvp+dIKbW916dgVfm9hQKvWRhtdKIKDMGPYOK3Ubm/wsXd/ZJD3yCfi+fibO
+         5/2wf9PP3pWLd7FXqnuOVSF18W3uoGJUxGnp5Dc128koknRXDDjucVaBAO/pOzD5TSwh
+         gMng==
+X-Forwarded-Encrypted: i=1; AKwUvBzHZqZ1kphCo5xQ3P1waCBKhi33wydd+hXi3AtOQ6BJibNc/AlmeQ20sRUC/FvO/nxpHdqPVRdoZM8=@vger.kernel.org
+X-Gm-Message-State: AFuF++m1wR5mc7IsGO04A10YK6scfzgytSYfmu/KajaRJIQND3xPBaUb
+	8Ubz101x6vspb2Qxkq1Ygo0bql/Pbi+jCFKZXZf+i1n7/fhirAYfY4kq
+X-Gm-Gg: AYBFou2+1c5saNe6sDYW0ES4q6/Jk2B1X6jxDfEyYz9PMjY/eeiMk07ADPBI/0buqXH
+	3V64JsuARQGF3NyyTeZ5UF5TcIdTgq+92NkOHmoZvKVMi5NYbAmxMxrKSzBG10yVkH0MNQghQbh
+	rhN8UknD87w3y9tjKZdiGLBMUyKFmADAO+XI2gpWqvPX/J1pvE6g0pTX1yZW+wMoTYlp3gk82Y7
+	nl7KOVQOfvGe+YGCD6K4zYu8tSz4Xd9rMwg8lWlfoeEfu+WTpPmUXCOLeCkp7sw9f8FXgfHaLzR
+	VE2S15yd0YC6E7fGO1WdfPY4aLPRXZnL+LLvzO/gTr+YQPOOsb/h6JUwSundmKPv2YuYmfhJ567
+	MOdP4DcDJ14FxVhZW97cY4BL0SSlIeRUbeVvx208IxLbFzArRG0dF0OQJ2PaHp54BEf8F5Scz6a
+	sRatOK5QXNWvUnETcmnraDJCJ1kUcK6b2b0VRvApFU/l40WUhKqFC87u6ZUp4ziGGJiY83ZIcPD
+	23tgdaraxdYJ1mVFB515IxU4fOgWB5P9uS8zwPCqW7YPCn7AIbOeYoN0B7wV6KYPKyD0nzuKdOJ
+	dttWs72yPGlF1uAhIF65Ig+wamVbdhAC48y7ROJY1BcaqUEbihBCs4ZJqKus3VZo
+X-Received: by 2002:a05:6000:41db:b0:485:82f9:44b4 with SMTP id ffacd0b85a97d-4858709c044mr15925496f8f.7.1788611106580;
+        Sat, 05 Sep 2026 05:25:06 -0700 (PDT)
+Received: from unknown748F3CBA5068 (dynamic-2a02-3100-a4eb-3001-c06d-af27-9fa2-ea53.310.pool.telefonica.de. [2a02:3100:a4eb:3001:c06d:af27:9fa2:ea53])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48588392b3esm15549562f8f.12.2026.09.05.05.25.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 04:38:53 -0700 (PDT)
-From: Alvin Lim <alvinwylim@gmail.com>
-To: mikael1022bzh@gmail.com,
-	cassel@kernel.org,
-	mario.limonciello@amd.com
-Cc: roland.waltersson@netinsight.net,
-	artmoty@gmail.com,
-	linux-ide@vger.kernel.org,
-	david.laight.linux@gmail.com,
-	kernel@wantstofly.org
-Subject: Re: [PATCH] ahci: force 32-bit DMA for JMicron JMB582/JMB585
-Date: Sat,  5 Sep 2026 19:38:48 +0800
-Message-ID: <20260905113848.1397882-1-alvinwylim@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <178854093896.541085.18395405788748617410@gmail.com>
-References: <178854093896.541085.18395405788748617410@gmail.com>
+        Sat, 05 Sep 2026 05:25:05 -0700 (PDT)
+Date: Sat, 5 Sep 2026 14:25:02 +0200
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jonathan Corbet <corbet@lwn.net>, 
+	Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@lists.linux-m68k.org, 
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input@vger.kernel.org, linux-doc@vger.kernel.org, 
+	Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, 
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Steve Wahl <steve.wahl@hpe.com>, 
+	Dimitri Sivanich <dimitri.sivanich@hpe.com>, Mike Travis <mike.travis@hpe.com>, 
+	Tony Luck <tony.luck@intel.com>, "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>, 
+	Krzysztof Kozlowski <krzk@kernel.org>, linux-samsung-soc@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, Tony Lindgren <tony@atomide.com>, 
+	Kevin Hilman <khilman@baylibre.com>, Linux-OMAP <linux-omap@vger.kernel.org>, 
+	Dominik Brodowski <linux@dominikbrodowski.net>, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
+	Ethan Nelson-Moore <enelsonmoore@gmail.com>, Michael Schmitz <schmitzmic@gmail.com>, 
+	Andreas Kemnade <andreas@kemnade.info>
+Subject: Re: [PATCH v2 0/9] docs: kernel-parameters: Remove ten entries for
+ parameters that no longer exist
+Message-ID: <apwIbDr0kyquxVoL@gmail.com>
+References: <20260905094649.41996-1-kmehltretter@gmail.com>
+ <693303da-350b-4295-b008-6fee8bb4c591@app.fastmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <693303da-350b-4295-b008-6fee8bb4c591@app.fastmail.com>
 
-On Fri, Sep 04, 2026 at 11:55:38PM +0700, Mikael Etienne wrote:
-> That would be particularly worth it for Alvin, since iommu=pt is
-> insufficient for him while it is completely clean for me -- that is the
-> only divergence between our reports.
+On Sat, Sep 05, 2026 at 12:12:51PM +0100, Arnd Bergmann wrote:
+> On Sat, Sep 5, 2026, at 11:46, Karl Mehltretter wrote:
+> > kernel-parameters.txt still documents ten boot parameters whose parsing
+> > code was removed with the drivers or platforms that used them, one of
+> > them (atarimouse=) since before the git history. One patch per
+> > parameter, each with a Fixes: tag for the commit that removed the
+> > parser, so the maintainers of that area are on their own patch only;
+> > the two pata_legacy module parameters share the last one. Each entry
+> > was checked with git grep for its __setup(), early_param() and
+> > module_param() handler and with git log -S for the removing commit.
+> 
+> These all look good to me,
+> 
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
+> 
+> If you have a script that you can easily run on another tree,
+> could you send me the script or the output for this one?
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git/log/?h=board-remove
+> 
 
-There is no divergence, and the fault is mine. I owe the thread an
-apology.
+Thanks for the review! Yes, here is the script, improved a bit since the
+series was made.
 
-My writeup stated that iommu=pt is insufficient. I never tested it. I have
-no data on iommu=pt on this machine in either direction, and I am not now
-claiming the opposite either -- only that the statement was not mine to
-make and should be disregarded wherever it has been read.
+It does not show anything on your branch though. board-remove at
+c12d647b0229 removes 40 registrations, none of them a documented
+parameter that loses its parser. The three documented names among them
+(debug, irq, noalign) are still registered by other code.
 
-The cause was poor discipline in my own record keeping. My incident notes
-recorded some things I had measured and some things I had picked up from
-other people's reports about other hardware, and by the time I wrote them
-up for publication the distinction had been lost. The published page then
-read as though all of it were my own result. That is how an untested
-claim ended up being cited on this list, and it is a fair description of
-what went wrong.
+Run it with
+    check-kernel-parameters.py -C ~/soc --diff 8d3ae59288f1 board-remove
 
-I am cleaning that up now. The rewritten page contains only what I
-personally tested and observed on this machine, plus an explicit section
-listing what I did not test, so nobody has to guess which is which. The
-previous version stays in git history rather than being quietly replaced.
+Its report mode turned up a second batch of stale entries on mainline
+(r128=, mga=, i810=, tdfx=, smart2=, shapers=, hd=, goldfish, js= and a
+few more), which I might send later.
 
-What I actually observed
-------------------------
+Thanks
+Karl
 
-  Controller : ASMedia ASM1166 [1b21:1166] rev 02, all 6 SATA bays
-  Kernel     : 7.0.6-2-pve (Proxmox) at the time of the corruption
-  IVHD       : AMD-Vi: Using global IVHD EFR:0x246577efa2054ada, EFR2:0x0
+The script:
 
-(Full platform details are at the end of this mail, in case they help
-with deciding who tests what.)
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0
+"""Find documented boot parameters that nothing parses any more.
 
-Symptom, with the IOMMU enabled: silent non-deterministic read corruption
-on every SATA disk. A single isolated read was often clean; six concurrent
-reads of one file returned six different md5s. SMART clean, no link
-resets, no MCE. NVMe on the same host was unaffected. On-disk data turned
-out to be intact -- it was entirely a read-path problem.
+Reads Documentation/admin-guide/kernel-parameters.txt at a git revision and
+looks for the registration of every documented name in the code at the same
+revision: __setup(), early_param(), core_param(), module_param() and friends.
+Names without a registration are printed together with whether the name at
+least still appears as a string somewhere (cmdline_find_option() style
+parsing), so a human can decide. A parameter that was only ever parsed by
+hand, without any of the macros, is invisible in both modes.
 
-The fix I applied was amd_iommu=off, and nothing else. The machine's RAM
-was later changed, so it has now run under that single parameter at two
-different physical address ranges:
+Usage:
+    check-kernel-parameters.py [-C tree] [REV]           report for one revision
+    check-kernel-parameters.py [-C tree] --diff A B      names parsed at A but not at B
 
-  2026-06-17 -> 2026-08-01   45 days   32 GB   (30 GiB visible)
-  2026-08-01 -> 2026-09-05   35 days   96 GB   (92 GiB visible)
+Runs entirely on git objects (git grep / git show), no checkout needed.
+"""
+import argparse, re, subprocess, sys
 
-Kernel error lines on this host, same grep either side of the fix:
+REG = r'(__setup|__setup_param|early_param|early_param_on_off|core_param|core_param_unsafe|late_param|module_param|module_param_unsafe|module_param_named|module_param_named_unsafe|module_param_cb|module_param_cb_unsafe|module_param_call|device_param_cb|module_param_string|module_param_array|module_param_array_named|module_param_hw|module_param_hw_named|module_param_hw_array|__core_param_cb|torture_param|param_check_\w+)\s*\('
+LEGEND_STOP = 'Kernel parameters'   # the tag legend ends at this heading, the parameter list follows
 
-  2026-06-15 -> 06-17 16:00   (~2.5 days)    4240
-  2026-06-17 16:00 -> now     (80 days)         0
+def git(tree, *a):
+    r = subprocess.run(['git', '-C', tree, *a], capture_output=True, text=True, errors='replace')
+    if r.returncode and 'grep' not in a[0]:
+        sys.exit(f'git {a[0]} failed: {r.stderr.strip()}')
+    return r.stdout
 
-Zero corruption to date in both memory configurations.
+def documented(tree, rev):
+    """Return {name: line} for every parameter entry in kernel-parameters.txt at rev."""
+    txt = git(tree, 'show', f'{rev}:Documentation/admin-guide/kernel-parameters.txt')
+    names = {}
+    in_list = False
+    for n, line in enumerate(txt.split('\n'), 1):
+        if not in_list:
+            if line.strip() == LEGEND_STOP: in_list = True
+            continue
+        m = re.match(r'^\t([A-Za-z][A-Za-z0-9_.-]*)(?:=|\s|$)', line)
+        if not m: continue
+        name = m.group(1)
+        if name.isupper() and '.' not in name: continue     # a stray tag, not a parameter
+        names.setdefault(name, n)
+    return names
 
-One further correction I have to make, because it wrongly closed off a
-test. My writeup said this part lacks GIOSup, so amd_iommu=pgtbl_v2 could
-not work. I read that off the "Extended features" boot line and treated
-the absence of the name there as absence of the feature. Decoding the
-register instead, bit 48 (GIOSUP) and bit 4 (GT) are both set here, so on
-my reading of amd_iommu_v2_pgtbl_supported() it should be available on
-this box. I have not tested pgtbl_v2 either -- I have only established
-that my stated reason for ruling it out was invalid.
+def registered(tree, rev):
+    """Return the set of names registered by the parameter macros at rev."""
+    out = git(tree, 'grep', '-h', '-E', REG, rev, '--', ':!Documentation', ':!tools', ':!scripts')
+    names = set()
+    for line in out.split('\n'):
+        for m in re.finditer(REG + r'\s*"?([A-Za-z0-9_.-]+)', line):
+            name = m.group(2)
+            if m.group(1) == 'torture_param':     # torture_param(type, name, init, msg): the type comes first
+                mm = re.search(r'torture_param\s*\(\s*\w+\s*,\s*([A-Za-z0-9_]+)', line)
+                if mm: name = mm.group(1)
+            names.add(name.rstrip('='))
+    return names
 
-What I did NOT test on this machine
------------------------------------
+def string_hits(tree, rev, name):
+    """Files at rev that contain the name as a quoted string (manual command line parsing);
+    a dotted name is looked up whole first (arm64.nobti style tables), then by its last part."""
+    for probe in ([name, name.rsplit('.', 1)[-1]] if '.' in name else [name]):
+        out = git(tree, 'grep', '-l', '-F', f'"{probe}', rev, '--', ':!Documentation', ':!tools', ':!scripts')
+        hits = [l.split(':', 1)[1] for l in out.split('\n') if l]
+        if hits: return hits
+    return []
 
-  - iommu=pt
-  - amd_iommu=pgtbl_v2
-  - iommu.forcedac=1
-  - any other kernel version
-  - the 32-bit DMA quirk itself; no kernel was ever built with it
-  - which DMA addresses were actually in play; never instrumented, so I
-    cannot say whether the failing addresses were above or below 4 GB
-  - any controller other than this ASM1166, and any non-AMD platform
+def parsed_at(tree, rev):
+    docs = documented(tree, rev)
+    regs = registered(tree, rev)
+    def ok(name):
+        if name in regs: return True
+        base = name.rsplit('.', 1)[-1]          # module.param= is registered as module_param(param)
+        return base in regs
+    return docs, {n for n in docs if ok(n)}
 
-I know the symptom, I know amd_iommu=off removes it, and I know this
-controller handles physical addresses far above 4 GB without error. I do
-not know the mechanism, and I should not have implied otherwise.
+def report(tree, rev):
+    docs, ok = parsed_at(tree, rev)
+    missing = sorted(n for n in docs if n not in ok)
+    print(f'{len(docs)} documented parameters at {rev}, {len(missing)} without a registration macro:')
+    for n in missing:
+        hits = string_hits(tree, rev, n)
+        tag = f'string appears in {hits[0]}' + (f' (+{len(hits)-1})' if len(hits) > 1 else '') if hits else 'NOT FOUND anywhere'
+        print(f'  {n:40} kernel-parameters.txt:{docs[n]:<6} {tag}')
 
-Accordingly, please treat my ASM1166 patch as withdrawn:
+def diff(tree, a, b):
+    docs_a, ok_a = parsed_at(tree, a)
+    docs_b, ok_b = parsed_at(tree, b)
+    lost = sorted(n for n in ok_a if n in docs_b and n not in ok_b)
+    print(f'documented parameters parsed at {a} but no longer at {b}: {len(lost)}')
+    for n in lost:
+        hits = string_hits(tree, b, n)
+        print(f'  {n:40} kernel-parameters.txt:{docs_b[n]:<6} ' + (f'string still in {hits[0]}' if hits else 'no string left either'))
 
-  https://lore.kernel.org/linux-ide/20260621100844.1224301-1-alvinwylim@gmail.com/
-
-I never built or ran a kernel with that quirk, and the submission did not
-disclose that. Its premise -- that the controller cannot address above
-4 GB -- is contradicted by the 80 days above.
-
-The submission also carried a Fixes: tag naming commit 3bf614106094
-("ata: ahci: add identifiers for ASM2116 series adapters"), together with
-Cc: stable@vger.kernel.org. That Fixes tag was wrong, and I want to be
-clear why rather than leave it as an assertion.
-
-ahci_pci_tbl ends with a generic catch-all,
-PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) -> board_ahci,
-which is present in v5.10 and v6.1, both well before that commit. So the
-ASM1166 already bound to board_ahci through the catch-all, and adding its
-explicit ID did not change how it was handled. Nothing about DMA differed
-before and after, so there was no regression for that commit to have
-introduced.
-
-That matters because of what the two tags do together: Fixes: is what the
-stable tooling reads to decide which series a backport applies to, so with
-Cc: stable@ beside it the pair would have aimed an untested patch at every
-stable series containing that commit. Nothing came of it, because the
-patch was never applied. It should not have been there all the same.
-
-What I can offer as a test platform
------------------------------------
-
-Setting this out in full, so nobody has to reconstruct it from earlier
-messages when deciding who should test what.
-
-  Board      : AOOSTAR WTR MAX (6-bay mini NAS)
-  CPU        : AMD Ryzen 7 PRO 8845HS (Zen 4)
-  IOMMU      : AMD. EFR 0x246577efa2054ada, EFR2 0x0
-               GIOSup (bit 48) and GT (bit 4) both set
-  SATA       : one ASMedia ASM1166 [1b21:1166] rev 02, 6 ports,
-               6 HDDs, 98 TB total, 2-3 TB free per filesystem
-  NVMe       : present, on separate controllers, never affected
-  OS         : Proxmox VE (Debian). Kernel 7.0.14-14-pve now;
-               7.0.6-2-pve when the corruption happened
-  Current    : running amd_iommu=off since 2026-06-17
-
-What I do NOT have, so please do not wait on me for it: no JMicron
-JMB582/585, no Intel or ARM IOMMU machine, and no SATA controller other
-than this ASM1166. The JMB585-plus-Intel/ARM test asked for earlier in
-this thread is not one I can run.
-
-What I can do:
-
-  - any boot parameter combination: amd_iommu=pgtbl_v2, iommu.forcedac=1,
-    iommu=pt, or back to amd_iommu=off
-  - older kernels from the Proxmox archive
-  - build and run a custom kernel, if a patch needs testing
-  - run the fio crc32c canary; there is room for a 256 GB canary and I can
-    leave verification looping overnight
-
-One constraint, stated up front rather than discovered later: this is a
-live NAS and the affected controller carries real data, including a Ceph
-OSD. Any test with the IOMMU re-enabled needs a scheduled window with the
-filesystems unmounted and that OSD stopped. I would write the canary first
-under amd_iommu=off, through the path I know is good, and then run
-verify-only passes in the test configuration, so nothing is ever written
-through a path under suspicion.
-
-So: tell me which test would actually be useful and I will run it and
-report the result either way, including a negative one. I would rather
-spend the window on the question you want answered than guess at it.
-
-Alvin Lim
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-C', dest='tree', default='.')
+    ap.add_argument('--diff', nargs=2, metavar=('A', 'B'))
+    ap.add_argument('rev', nargs='?', default='HEAD')
+    a = ap.parse_args()
+    if a.diff: diff(a.tree, *a.diff)
+    else: report(a.tree, a.rev)
