@@ -1,239 +1,208 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013020.outbound.protection.outlook.com [40.93.196.20])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA6EF486BBA
-	for <linux-ide@vger.kernel.org>; Sat,  5 Sep 2026 12:25:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788611110; cv=none; b=nvVjNkKUOrRKd2YdW/VGYDVWDItr9ZmH/eTYct5qmjzcUPEiTHQsY15m5bPJfvnNZaCRXjeE1J0d4Qr/LDCYLlfaN3A0aPJERxNnYEaHbN/Xp0vg/mF30vKevItpsc4AMprPBk+UKgzO1iM7ug2M1w6UzTNoKgdXXsHFhs/pSiU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788611110; c=relaxed/simple;
-	bh=7FDVdWewnpg54EuU9ucLHlKJB14SIxO1UfQn4Ib5/nI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BfTsNZRCv4g87Z6TefJydA3YAWOX0kqXxVvHgwwvQzlJy5mqzJM3eo/wYHIkTIf2+KelbU9AVab2jNCfpLMcU88/LiwtiRDA/7o1JUCVWpul4VF2+sPaR9yw20ypnndseMTqcDUwMW1laGr/6r3ughsgTKDiHlFKY/C8DEyWMyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NIppZdlg; arc=none smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C55CC2E736F
+	for <linux-ide@vger.kernel.org>; Sat,  5 Sep 2026 12:26:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.20
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788611216; cv=fail; b=RT7vXUK7zIXnKPkVcSqotbVqp3oYwscHGkkyPBDDi3rzFMdXKxRrBO0TCrbZSA9ghkoxVBqG2TvoIoEMCR3RkOfJZ143jSZlTtHXOSq7KKy+6Ta+1cMlJA5hG/kvR13oOFKFV15oD9vU9PHfWqm0zTH+lGVJAAgHhHBWCZBjU5A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788611216; c=relaxed/simple;
+	bh=D67v62YCyr2Op5ka/mNpkCuUgxRs4ad6S71UNqskpGo=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=gU+hswC9rVgApYEgzNNH7jag4+78wtnbMVg4gGwc4jT2Uf8h0ogEwDogRgVe624phlowv8RgAP8PokrbRlAbXAu435THToskzloPxK6TNIQlgdkOjwO14tZEZFuXmHaGMhQTxWWUk+yKDvtksc7Z7jkIdliDqnE5RJNJtGxKsXU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=udEaOzvN; arc=fail smtp.client-ip=40.93.196.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NIppZdlg"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-4843e9c5960so1955954f8f.0
-        for <linux-ide@vger.kernel.org>; Sat, 05 Sep 2026 05:25:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788611107; x=1789215907; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=6jyEkPF9QjFxAuLX7joeVpRJHHAcWObix5FAN064Z/Y=;
-        b=NIppZdlgCAPQoL9WttB6AfgdCQRal5wFr5AQEERkH6DIce3Ho5ioUFe8AsyN6mXF9X
-         WTTLdt+yXULuDEsYVloplBF5n/DkRxynvvEDu8QzFlq983/ccKEtRGDoYtIGDzuhDQGy
-         szamzdSZUWmm0H2dVvJyYZ2SAxK2uruAjLFEeTSx//uFzCfaqKK9B8LjdX2yIvIgFQw/
-         opc6X+p+Qz/vZykF3mkz59Wkj+ik/zH4gU6pkTwM6mRUq9BCOmXeuPQPy5IIZlEY3Gbp
-         OnF1+6TLj7aJtaC9kVDZRK7DgVMt72mQKzvVKHsXAPYlL707BaFhHimeyEAaI0zC6f0s
-         8FRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788611107; x=1789215907;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6jyEkPF9QjFxAuLX7joeVpRJHHAcWObix5FAN064Z/Y=;
-        b=T142ZaazFsY8XGykjEHJH/36wMuBzJLdOof+KWsEW/4pF9Wc7Gd4oEafJUeo1QSWAM
-         SmZSsoydY7qMG8VgKPtJRhNmO89fUhAkuLHba8XAuCactRV9EyDbxN/KYLkmW+1F1ZWK
-         j+NMs9tXpBxIV2EdLeUfoo08PAE4eQhkiptR3GICdUP3nKv/m7HeGqpfG5at5tCXHPGz
-         S5VyXqz6Fvp+dIKbW916dgVfm9hQKvWRhtdKIKDMGPYOK3Ubm/wsXd/ZJD3yCfi+fibO
-         5/2wf9PP3pWLd7FXqnuOVSF18W3uoGJUxGnp5Dc128koknRXDDjucVaBAO/pOzD5TSwh
-         gMng==
-X-Forwarded-Encrypted: i=1; AKwUvBzHZqZ1kphCo5xQ3P1waCBKhi33wydd+hXi3AtOQ6BJibNc/AlmeQ20sRUC/FvO/nxpHdqPVRdoZM8=@vger.kernel.org
-X-Gm-Message-State: AFuF++m1wR5mc7IsGO04A10YK6scfzgytSYfmu/KajaRJIQND3xPBaUb
-	8Ubz101x6vspb2Qxkq1Ygo0bql/Pbi+jCFKZXZf+i1n7/fhirAYfY4kq
-X-Gm-Gg: AYBFou2+1c5saNe6sDYW0ES4q6/Jk2B1X6jxDfEyYz9PMjY/eeiMk07ADPBI/0buqXH
-	3V64JsuARQGF3NyyTeZ5UF5TcIdTgq+92NkOHmoZvKVMi5NYbAmxMxrKSzBG10yVkH0MNQghQbh
-	rhN8UknD87w3y9tjKZdiGLBMUyKFmADAO+XI2gpWqvPX/J1pvE6g0pTX1yZW+wMoTYlp3gk82Y7
-	nl7KOVQOfvGe+YGCD6K4zYu8tSz4Xd9rMwg8lWlfoeEfu+WTpPmUXCOLeCkp7sw9f8FXgfHaLzR
-	VE2S15yd0YC6E7fGO1WdfPY4aLPRXZnL+LLvzO/gTr+YQPOOsb/h6JUwSundmKPv2YuYmfhJ567
-	MOdP4DcDJ14FxVhZW97cY4BL0SSlIeRUbeVvx208IxLbFzArRG0dF0OQJ2PaHp54BEf8F5Scz6a
-	sRatOK5QXNWvUnETcmnraDJCJ1kUcK6b2b0VRvApFU/l40WUhKqFC87u6ZUp4ziGGJiY83ZIcPD
-	23tgdaraxdYJ1mVFB515IxU4fOgWB5P9uS8zwPCqW7YPCn7AIbOeYoN0B7wV6KYPKyD0nzuKdOJ
-	dttWs72yPGlF1uAhIF65Ig+wamVbdhAC48y7ROJY1BcaqUEbihBCs4ZJqKus3VZo
-X-Received: by 2002:a05:6000:41db:b0:485:82f9:44b4 with SMTP id ffacd0b85a97d-4858709c044mr15925496f8f.7.1788611106580;
-        Sat, 05 Sep 2026 05:25:06 -0700 (PDT)
-Received: from unknown748F3CBA5068 (dynamic-2a02-3100-a4eb-3001-c06d-af27-9fa2-ea53.310.pool.telefonica.de. [2a02:3100:a4eb:3001:c06d:af27:9fa2:ea53])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48588392b3esm15549562f8f.12.2026.09.05.05.25.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 05:25:05 -0700 (PDT)
-Date: Sat, 5 Sep 2026 14:25:02 +0200
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jonathan Corbet <corbet@lwn.net>, 
-	Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@lists.linux-m68k.org, 
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input@vger.kernel.org, linux-doc@vger.kernel.org, 
-	Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, 
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Steve Wahl <steve.wahl@hpe.com>, 
-	Dimitri Sivanich <dimitri.sivanich@hpe.com>, Mike Travis <mike.travis@hpe.com>, 
-	Tony Luck <tony.luck@intel.com>, "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>, 
-	Krzysztof Kozlowski <krzk@kernel.org>, linux-samsung-soc@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, Tony Lindgren <tony@atomide.com>, 
-	Kevin Hilman <khilman@baylibre.com>, Linux-OMAP <linux-omap@vger.kernel.org>, 
-	Dominik Brodowski <linux@dominikbrodowski.net>, Damien Le Moal <dlemoal@kernel.org>, 
-	Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org, 
-	Ethan Nelson-Moore <enelsonmoore@gmail.com>, Michael Schmitz <schmitzmic@gmail.com>, 
-	Andreas Kemnade <andreas@kemnade.info>
-Subject: Re: [PATCH v2 0/9] docs: kernel-parameters: Remove ten entries for
- parameters that no longer exist
-Message-ID: <apwIbDr0kyquxVoL@gmail.com>
-References: <20260905094649.41996-1-kmehltretter@gmail.com>
- <693303da-350b-4295-b008-6fee8bb4c591@app.fastmail.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="udEaOzvN"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cTR5C8MtP+u0N+9pPXtUe5MDRCxQ0kH6daCbMapMriebYfHlGziHOCoTNQ56M9XuCkBATCcB2sn3cl52/uyo4+5G0/7Oq6EpFxZHP24ufm8snTuitSkA+ojU0LIsFfszR/urVYQ7A4NEjrblnpDqBmFT689Sph5+3U6z+kzM3qtdSKynJMhcElGSDWSRn8tDFG3JnmJfddsaHyFOsyCCCMKChCUmaTEOBUKY6XxGQOSnC5UITm8cUTLex/SW1GJOcBKN5qRNgvrywF3FEsKTFAtxolRKDpZ98CLh4uFd0rYq1zQOvRqkJkIUnhvCZDLm5+HKYow+cgHSWbw1zdhXXQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jdyphbsop5+49hIloiC2SP5fOGY5reLh/fsAopXUlYc=;
+ b=c64khv2B31CLA5js7C1rM/XwrkV0eUST5nl81eDkBh2brnsxCA/LNF1GMd3E0f2zC0CDh7DeUYPS5NmqmlpVmuxsz4r8BiIsMqeEeP2BTQ1i88Gl54XJzzlxX0fnDcPBSqvAuq2aDik0T8d3tR0tOMxWefrYuyQjRknHRedYZKYdzobvQ6doySbFAweuGjUGb/CrvSMnvftFcWCbSWbPTyqxpZLi9SLxYX9OtZvA/E/9uJtowhhKyb6MPrypbykWPQG/JArM5/XARYs1XuB+djDHo8QH9MTE3eTjQsNdWnw/swC7S/utB2FOGzv78vk/YdzpZJDcPcS/nIxFU2PaRw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jdyphbsop5+49hIloiC2SP5fOGY5reLh/fsAopXUlYc=;
+ b=udEaOzvNqLKf3d3LTEvXeiiHdDQZ31+6SJlikf0LuD9TycRBqEt3SThzEBrKz6k7E1Oikzdaeig8ZR7nFmZStEqxMNoELU8IMyA9CamXGZ2qJZtZZz1qyvhUpwl9VLLOG4eF13LaVpaD5enjw90oVtK2mLHKH1lysk2B1Zf5ugo=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
+ by DS2PR12MB880722.namprd12.prod.outlook.com (2603:10b6:8:404::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.10; Sat, 5 Sep
+ 2026 12:26:52 +0000
+Received: from PH8PR12MB6914.namprd12.prod.outlook.com
+ ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
+ ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0382.007; Sat, 5 Sep 2026
+ 12:26:52 +0000
+Message-ID: <1c3df04b-7929-4b43-adb7-6007347a954e@amd.com>
+Date: Sat, 5 Sep 2026 07:26:49 -0500
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH] ahci: force 32-bit DMA for JMicron JMB582/JMB585
+To: Alvin Lim <alvinwylim@gmail.com>, mikael1022bzh@gmail.com,
+ cassel@kernel.org
+Cc: roland.waltersson@netinsight.net, artmoty@gmail.com,
+ linux-ide@vger.kernel.org, david.laight.linux@gmail.com,
+ kernel@wantstofly.org
+References: <178854093896.541085.18395405788748617410@gmail.com>
+ <20260905113848.1397882-1-alvinwylim@gmail.com>
+Content-Language: en-US
+From: Mario Limonciello <mario.limonciello@amd.com>
+In-Reply-To: <20260905113848.1397882-1-alvinwylim@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: BN9PR03CA0040.namprd03.prod.outlook.com
+ (2603:10b6:408:fb::15) To PH8PR12MB6914.namprd12.prod.outlook.com
+ (2603:10b6:510:1cb::21)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <693303da-350b-4295-b008-6fee8bb4c591@app.fastmail.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|DS2PR12MB880722:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2a6207cf-4c81-403d-d734-08df0b48f6f5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|23010399003|1800799024|3023799007|11063799006|5023799004|4143699003|56012099006|18002099003|22082099003|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	ZuSCs2Ny1fGYSfZLknfjm3wCbwLroqp10t7+nHTr094lzCSDCJSKY7GjKzUDJLqkCm4CaGrl6sOtt2wOOeaXdtbTXYyAbV2Loshbql4lIZ5dryUL+X7Q2aMGfcS47GrSEPuNdMFBh5hIoE1YBWVMuYaY/5+Xc2kQMVKaVgv9sTXW0hnMoTOU+D7Io80dg/ziyAskvQOvbid6cs2cM/oX/BihgvKnBPBzgQOG6BKh4SF+mhn0yhweu2NqJr/eEd4zF7+S7fv9GlrzCL1+eJj0UWktLm38HHaDXdlX16w6EtM/QCaUbP1lq+Sv7gBnZb7LYVFDM3udFInHTBS2jDgmnyk+47aUpOFf0AwAs4iIASpvuE0PEYY+1JDdJmE/o6vZWGinFVOl+GOKPdUjs7SZtTdtyHi00n9I+gNKsR3tqKvkmELNI94Lr1mPCHTp+8EpFdDftpcen7jST6KSua8I4vc6A+FSvYG0rh/IdpZFY4gBRBCpJGBk97KuVJw38hLG6C1nNnT5jCUe7sWQHtBrESdatLqiSFtthXjPVZfCGkErpWNjpIMFWkKcuoR/0U7pOc0cq8kO7gCqvuBUEdOwZg/ijz1VlrBb1V8giYkvdCdynexfzY/uPH5EMBDHyO0m5Ab2emPTwhOB9+4sELsqFrN99n8PkxeiJQoXZ+dkMRM=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(23010399003)(1800799024)(3023799007)(11063799006)(5023799004)(4143699003)(56012099006)(18002099003)(22082099003)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WE9YVEp6QmY2QTFCVy9uaVdFd2p3K1RWWVA2dVN0aFM0TGJPcHBsUnZueGpV?=
+ =?utf-8?B?KzMyMzY2T2FZeHJ1bGJRWHJmcVFLbUhkRVpCMWREeVgzYnlZeGlaNjhrY1Rz?=
+ =?utf-8?B?Qm9RWFhnbVIrdHphSzZLOTF4YmlmWTU5UGloRG9PRjZ0OHRvM0c0cXZ5bWRN?=
+ =?utf-8?B?Tmw3Q1NlS25BWG5ZK0xvZXFRS2Z0dEtBZHpySW55ZDUrdVg4U1BjZW52MnlQ?=
+ =?utf-8?B?RlhXYjRONnVNK005aWl1NndPa21YM1IrTW9DZGx5QzhRZDliK1NkY2syelRN?=
+ =?utf-8?B?U3BKdmxTSjk0NDlnM3UzQ1ZPWDltcU5BeFc1aXBhZ0t6NG1RMHUvcnd0Tlp6?=
+ =?utf-8?B?WVprekh5STNJaFV6SkFRVWNhYjlObWRCV2lSUFNkbUZEeENtVzI0QmhmTG5R?=
+ =?utf-8?B?cXhoc3U3d3pPc2hnMkViQmlwR1QwWHl3MVc2TkkzR0oyWWYxOXFHZzFyRStD?=
+ =?utf-8?B?Wk9wTDd3Y1VSTXZmZHplZE5kclFBdis2cUdJWERMT3Q0QmkvMFZzVEFUMVhK?=
+ =?utf-8?B?SEcySWRLN1ZITGRCZGUrQUl5OHdjYWNrMXpkZTZBaE5oV2ZFYWtGS29sSVVl?=
+ =?utf-8?B?UXJSU1lNWE4vUVU3ZTRTdWRaa0h5eVB1YkU1QlFnZUcrdW5QNS92elNxRnYz?=
+ =?utf-8?B?bnBuZ1hIQnlwdU5jekR4SCtGeHE5eHpOVGFXcTBLbUsrNDVXeGpodDNlWEg0?=
+ =?utf-8?B?SU1SaTFvT3h0MU9QQkhLaDVOeXNTbGxSRmw4WEE4TXpoRXlBMEJCSVIzZEVm?=
+ =?utf-8?B?Ky9aOFhGMlZHQVRTTEpKQ2JsWjZpYVJPc0FObCt0MVhKZFpvZlhVTVhCWjRB?=
+ =?utf-8?B?ME1DRWJnV2xjMXhSWmM4VUQyNDVwcnJHTGpwakpTcTRmcnBtdkhCREg2dmRJ?=
+ =?utf-8?B?NERjSFQ1Sm9MTHVvUk9LLzBXOGVKT3Z4bUNwNU9tUWhpdXRDOVU5ZHpIR2c4?=
+ =?utf-8?B?R1MyYzlGMmJjZzZ5SVBXaHFaejBOT0tjRDV2c3VsQ3pWOFVjQ0xaSytmUExZ?=
+ =?utf-8?B?Ym5iRGFUTHdDeDkzTXhxT1d0dWd3U3UxZG9tcHNFQUhBMUpaVWdWb1RjNTZq?=
+ =?utf-8?B?amdLV25BZWZnaHZBK29sSExNbk9jb1hMcVFETTZyYUNqSGhRcUtPSER2ZnR0?=
+ =?utf-8?B?eVBtajFMVjJJbnRMMFM3TFd1dllNZDVnV1Nvem02c0FleUNEeVUya3U1L0Fh?=
+ =?utf-8?B?NW51ejhrbVN0U2lld0RDdjgwWFZ3K0cvbGIzNWQxWUpuOGdTdjNpd3VoeVpS?=
+ =?utf-8?B?MFZCb1RidDFHcjR3UVU2em9FV2JUc2QvMmNWR1pGZ054REVkRDNIWm5MeDlv?=
+ =?utf-8?B?aDdEMHc5Z0tSTzNJRVVsbzNvOTlhb2NzVHRRcWJZdDBLOURUTkp1bGZRUmVh?=
+ =?utf-8?B?Ry9ROWExOXJybFRzTmRKOFk0T0hmVTRpOXYyUWtYZUpyUEtRMnFxakxxQ1BD?=
+ =?utf-8?B?WktHblJHTlRxT2N6eUc4SWlIcDhuR2diMkh3Z3l4d0JKeWRpVzhRNDg1eE15?=
+ =?utf-8?B?UGY0aWMxRUNUeUFkclJaaUh1cS9RTjdCam5USEZLZm12ak1WSHVDanpIamdk?=
+ =?utf-8?B?Sms2WktIOEJOZDlVNWJTWWY3QnI4YnlLeFdhTVJLaHZxU2R0aWFITDh1WHYx?=
+ =?utf-8?B?MFc0ZlVHbnRBL3MzM1ZKSnB2R0lES0VCYUNwWklZeWVGMTU5RFVnVDBtMHBi?=
+ =?utf-8?B?WjAxTVE4QlhnNmJycThXRDhIQTQwWWhSVkQrSHRONkg0SVNnckM4Z2Z6MDdB?=
+ =?utf-8?B?TXVPdjZpN0dBVEUrV3h2NnoxZDBzcEUyNWVSdHliQmFrVWhqUWZoa2NVRUdM?=
+ =?utf-8?B?aDl4SHZjVXJpTXdpbnFabXE3VVNHcUsralZRL0I1bURZTGtNK0RVYUJZZlpF?=
+ =?utf-8?B?NHA0RW4xbm5kazlkWnRic1Blc1pCY01jMzcrQ3BjY0F1bk9EQnorNHVmNTN6?=
+ =?utf-8?B?TFdFajFyd3BmM2lQNERxeUNNeDl1dXJEUjhzT0dUR29RbnlvOHdwN2I2TFcr?=
+ =?utf-8?B?b0l5T0FKMHpDckRhTmt6U3BySjVSQk1wVFcxNjg0blpMWlBNdTc0ZWRKamFW?=
+ =?utf-8?B?bUFsWFlYZ29Mc2liTnpaSzV2VjRKUzg5UWNwdWRLZjh6ai9BU3lvQWtFT1RZ?=
+ =?utf-8?B?SlA1cTdIaFI0UlZ2SnZHNW5wM0FQWVBCYTRKRERxZ2ljTlA1Sm5rMHNuU3pN?=
+ =?utf-8?B?TXh5VUkwWnRiV0x3VXB1ZVRWNHFpQk4zdXkvM3ZkbGc5ZWo2YzdNT3JMS0gw?=
+ =?utf-8?B?UmQ1bGNjOXQ0QXlCT2o0UjlKb3prVEx1ZlIrWDk0Y0JMWW1FL0hkVU1xMmMr?=
+ =?utf-8?B?QnRvNUpWQmZDNTNHZzVDeWhzMm1tdk9YbEF3Mk93SzhDL2FGRGhidz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2a6207cf-4c81-403d-d734-08df0b48f6f5
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Sep 2026 12:26:52.0911
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: K8ndN8dI1oULMsLhc3OzLmXPKbOFNRXE/dpYqqPxT7xXiBqFSIybop+v0/c8fd18LVVhmxwdQilvryCoQpxBEg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR12MB880722
 
-On Sat, Sep 05, 2026 at 12:12:51PM +0100, Arnd Bergmann wrote:
-> On Sat, Sep 5, 2026, at 11:46, Karl Mehltretter wrote:
-> > kernel-parameters.txt still documents ten boot parameters whose parsing
-> > code was removed with the drivers or platforms that used them, one of
-> > them (atarimouse=) since before the git history. One patch per
-> > parameter, each with a Fixes: tag for the commit that removed the
-> > parser, so the maintainers of that area are on their own patch only;
-> > the two pata_legacy module parameters share the last one. Each entry
-> > was checked with git grep for its __setup(), early_param() and
-> > module_param() handler and with git log -S for the removing commit.
+< snip >
+
+> So: tell me which test would actually be useful and I will run it and
+> report the result either way, including a negative one. I would rather
+> spend the window on the question you want answered than guess at it.
 > 
-> These all look good to me,
-> 
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> If you have a script that you can easily run on another tree,
-> could you send me the script or the output for this one?
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git/log/?h=board-remove
-> 
+> Alvin Lim
 
-Thanks for the review! Yes, here is the script, improved a bit since the
-series was made.
+Two things:
 
-It does not show anything on your branch though. board-remove at
-c12d647b0229 removes 40 registrations, none of them a documented
-parameter that loses its parser. The three documented names among them
-(debug, irq, noalign) are still registered by other code.
+1. lspci -ttvvnn
+2. Turn on  amd_smn_debugfs_enable=1 on kernel command line.
+Then use debugfs to get me the outputs from the SMN reads of these 
+registers:
 
-Run it with
-    check-kernel-parameters.py -C ~/soc --diff 8d3ae59288f1 board-remove
 
-Its report mode turned up a second batch of stale entries on mainline
-(r128=, mga=, i810=, tdfx=, smart2=, shapers=, hd=, goldfish, js= and a
-few more), which I might send later.
+        0x111401d0,
+        0x111411d0,
+        0x111421d0,
+        0x111431d0,
+        0x111441d0,
+        0x112401d0,
+        0x112411d0,
+        0x112421d0,
+        0x112431d0,
+        0x112441d0,
+        0x112451d0,
+        0x113401d0,
+        0x114401d0,
 
-Thanks
-Karl
+Something like this might work.
 
-The script:
+sudo bash <<'EOF'
+set -euo pipefail
 
-#!/usr/bin/env python3
-# SPDX-License-Identifier: GPL-2.0
-"""Find documented boot parameters that nothing parses any more.
+if ! mountpoint -q /sys/kernel/debug; then
+     mount -t debugfs debugfs /sys/kernel/debug
+fi
 
-Reads Documentation/admin-guide/kernel-parameters.txt at a git revision and
-looks for the registration of every documented name in the code at the same
-revision: __setup(), early_param(), core_param(), module_param() and friends.
-Names without a registration are printed together with whether the name at
-least still appears as a string somewhere (cmdline_find_option() style
-parsing), so a human can decide. A parameter that was only ever parsed by
-hand, without any of the macros, is invisible in both modes.
+dir=/sys/kernel/debug/x86/amd_smn
+test -d "$dir" || {
+     echo "Missing $dir; verify CONFIG_DEBUG_FS and 
+amd_smn_debugfs_enable=1"
+     exit 1
+}
 
-Usage:
-    check-kernel-parameters.py [-C tree] [REV]           report for one revision
-    check-kernel-parameters.py [-C tree] --diff A B      names parsed at A but not at B
+addresses=(
+     0x111401d0
+     0x111411d0
+     0x111421d0
+     0x111431d0
+     0x111441d0
+     0x112401d0
+     0x112411d0
+     0x112421d0
+     0x112431d0
+     0x112441d0
+     0x112451d0
+     0x113401d0
+     0x114401d0
+)
 
-Runs entirely on git objects (git grep / git show), no checkout needed.
-"""
-import argparse, re, subprocess, sys
+printf '0\n' > "$dir/node"
 
-REG = r'(__setup|__setup_param|early_param|early_param_on_off|core_param|core_param_unsafe|late_param|module_param|module_param_unsafe|module_param_named|module_param_named_unsafe|module_param_cb|module_param_cb_unsafe|module_param_call|device_param_cb|module_param_string|module_param_array|module_param_array_named|module_param_hw|module_param_hw_named|module_param_hw_array|__core_param_cb|torture_param|param_check_\w+)\s*\('
-LEGEND_STOP = 'Kernel parameters'   # the tag legend ends at this heading, the parameter list follows
+for address in "${addresses[@]}"; do
+     printf '%s\n' "$address" > "$dir/address"
 
-def git(tree, *a):
-    r = subprocess.run(['git', '-C', tree, *a], capture_output=True, text=True, errors='replace')
-    if r.returncode and 'grep' not in a[0]:
-        sys.exit(f'git {a[0]} failed: {r.stderr.strip()}')
-    return r.stdout
+     old=$(cat "$dir/value")
+     [[ $old =~ ^0x[[:xdigit:]]{8}$ ]] || {
+         echo "$address: invalid read: $old"
+         exit 1
+     }
 
-def documented(tree, rev):
-    """Return {name: line} for every parameter entry in kernel-parameters.txt at rev."""
-    txt = git(tree, 'show', f'{rev}:Documentation/admin-guide/kernel-parameters.txt')
-    names = {}
-    in_list = False
-    for n, line in enumerate(txt.split('\n'), 1):
-        if not in_list:
-            if line.strip() == LEGEND_STOP: in_list = True
-            continue
-        m = re.match(r'^\t([A-Za-z][A-Za-z0-9_.-]*)(?:=|\s|$)', line)
-        if not m: continue
-        name = m.group(1)
-        if name.isupper() and '.' not in name: continue     # a stray tag, not a parameter
-        names.setdefault(name, n)
-    return names
-
-def registered(tree, rev):
-    """Return the set of names registered by the parameter macros at rev."""
-    out = git(tree, 'grep', '-h', '-E', REG, rev, '--', ':!Documentation', ':!tools', ':!scripts')
-    names = set()
-    for line in out.split('\n'):
-        for m in re.finditer(REG + r'\s*"?([A-Za-z0-9_.-]+)', line):
-            name = m.group(2)
-            if m.group(1) == 'torture_param':     # torture_param(type, name, init, msg): the type comes first
-                mm = re.search(r'torture_param\s*\(\s*\w+\s*,\s*([A-Za-z0-9_]+)', line)
-                if mm: name = mm.group(1)
-            names.add(name.rstrip('='))
-    return names
-
-def string_hits(tree, rev, name):
-    """Files at rev that contain the name as a quoted string (manual command line parsing);
-    a dotted name is looked up whole first (arm64.nobti style tables), then by its last part."""
-    for probe in ([name, name.rsplit('.', 1)[-1]] if '.' in name else [name]):
-        out = git(tree, 'grep', '-l', '-F', f'"{probe}', rev, '--', ':!Documentation', ':!tools', ':!scripts')
-        hits = [l.split(':', 1)[1] for l in out.split('\n') if l]
-        if hits: return hits
-    return []
-
-def parsed_at(tree, rev):
-    docs = documented(tree, rev)
-    regs = registered(tree, rev)
-    def ok(name):
-        if name in regs: return True
-        base = name.rsplit('.', 1)[-1]          # module.param= is registered as module_param(param)
-        return base in regs
-    return docs, {n for n in docs if ok(n)}
-
-def report(tree, rev):
-    docs, ok = parsed_at(tree, rev)
-    missing = sorted(n for n in docs if n not in ok)
-    print(f'{len(docs)} documented parameters at {rev}, {len(missing)} without a registration macro:')
-    for n in missing:
-        hits = string_hits(tree, rev, n)
-        tag = f'string appears in {hits[0]}' + (f' (+{len(hits)-1})' if len(hits) > 1 else '') if hits else 'NOT FOUND anywhere'
-        print(f'  {n:40} kernel-parameters.txt:{docs[n]:<6} {tag}')
-
-def diff(tree, a, b):
-    docs_a, ok_a = parsed_at(tree, a)
-    docs_b, ok_b = parsed_at(tree, b)
-    lost = sorted(n for n in ok_a if n in docs_b and n not in ok_b)
-    print(f'documented parameters parsed at {a} but no longer at {b}: {len(lost)}')
-    for n in lost:
-        hits = string_hits(tree, b, n)
-        print(f'  {n:40} kernel-parameters.txt:{docs_b[n]:<6} ' + (f'string still in {hits[0]}' if hits else 'no string left either'))
-
-if __name__ == '__main__':
-    ap = argparse.ArgumentParser()
-    ap.add_argument('-C', dest='tree', default='.')
-    ap.add_argument('--diff', nargs=2, metavar=('A', 'B'))
-    ap.add_argument('rev', nargs='?', default='HEAD')
-    a = ap.parse_args()
-    if a.diff: diff(a.tree, *a.diff)
-    else: report(a.tree, a.rev)
+     printf '%s: %s\n' "$address" "$old"
+done
+EOF
