@@ -1,264 +1,418 @@
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazolkn19010017.outbound.protection.outlook.com [52.103.32.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71AF23168EE
-	for <linux-ide@vger.kernel.org>; Sun,  6 Sep 2026 11:48:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.32.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C587126C02
+	for <linux-ide@vger.kernel.org>; Sun,  6 Sep 2026 19:27:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.172
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788695299; cv=fail; b=eLC2jWQmfN/wULr3LlW/5n8VZuaZnaQDrnnxBqL5+1zo9FCPHxd3x+oapZrRrnlZj9+xfUFPqf+TnxYVPSLZaTGK73J/deTEE3EKHz6b0ow70+3n+qg20CC93jyvkYWDU0/DnH+fIDNk2eKJlV9ecJeY74UCnCoMBAvqFcAI1gc=
+	t=1788722856; cv=pass; b=QUeNF8xJMeaT4fC8pohluf1Tio3k9pqZxaw4oj2syw9y90EJtsOdwYDOMpZvwqBcL8cZDsJn3e1spjgY08EgU/Kg0dOwj2n9xyf9Px6r7KInjIx0KSKMqFTG/kM5ouO37if51TPRNgcT6zjBbmVkQB5TpPW7Nw2uIo8Y7sfbq64=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788695299; c=relaxed/simple;
-	bh=3ZYklOJsu65C28BiSpmne8hmDe1medO2Pv7Fu8fUyAQ=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=B8Y6ZT/YIVmw7NFT3KajiZ1ZzLbMOX6PFGkUaRuHSYQnULYU+PBQYsk6yjBUPQQOSGzeVufUIANfHNJ9Ak+pa53cXp+3tS7l8swP/3clVzxdYo8ehVCIRLA+WfeJaFVDmU7K4q5TnldwT4/sWRxfLtkL0zZlNaJGSdswEa/w7C4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.nl; spf=pass smtp.mailfrom=live.nl; dkim=pass (2048-bit key) header.d=LIVE.NL header.i=@LIVE.NL header.b=m+uvY/08; arc=fail smtp.client-ip=52.103.32.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.nl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=live.nl
+	s=arc-20240116; t=1788722856; c=relaxed/simple;
+	bh=5OweQGiTeJcs1LWIU4U2QP6BdkWLadqYP8WX0koz1/Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=f9dBntC5PMwEW5BiO03v8toDLRgCPFEFIfO8pVIeD+kTsvbwOxQSvQiK70+Gv1FePc0Ou4J3ol6sR9xI01IVqjucRz7rgAq3q+QrEu79PDV7uK1a2Kq4zZT51lsg3K1Ky22uZ4s10n/AAHic9ZYyL81f3CFClot88LBEIQ0QQCg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kSD+851M; arc=pass smtp.client-ip=209.85.208.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=LIVE.NL header.i=@LIVE.NL header.b="m+uvY/08"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=WXcdbvXOwvEL3ZDd2XJnrZJV9vb94OStgMA3RElM+QO3y5NH3Z3YKlSJMfgemxAlW77Fs4pllHoxFap6yyuNyxq5z2mE3WmGibCOHNNtuWH5FaRo+jwlgWSVDKOsuvv4CClsvlPBj6aSGlz7tdC68EFYgZNd9DP/pTHDvHsJq2pwSvIscXdtWvFuTTznxVY5Yj+znug7Af98oM09e3iGeAWF7YcUND1BjYrrLlV4AS55ESdd5+JCX68UmcvQZZd5MpfUgzR+XMHrNF9sRGhhm56b4QWAY/4rU3Ih+LMGIPNJZIvjTSqA2hWGXgJoAirlU53zrj6BcxuD69/XLa3Swg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZrR4XygyT+2l8wlbClBfCSnkRvWzdBXcbbftCXs8Eow=;
- b=DTxmB8cavEHsY+CTAR6lyk1hUIMRZUxrkVwjQP85yNPjoGPaeMyp5XlAuSCIQbx6QiA2Jq/x84CMOLP8D6LqCV5wofP4nZLpJlakx5vsGHINcdHfDtXOnWXM4YpQa1wGcq4ECtAKrpgNWARZgiRKj3/OZqAsBkhLtxNeDZyTDTMEKMzckZka24LWFD4GW//3unX50S8CvIaodrWSi6qra0IPyZBbteQC6SGB7YxGcnOaQ9g3foGHLxqWIkDHXWwZIeIP9TVmKrDUSm/1ZdRgrGCWI9ODnXdCpF5ixE1nH+MpjkR72GdF9Cwno3ZdL7XCVapTniz7tLCV9+EeliMHow==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=LIVE.NL; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZrR4XygyT+2l8wlbClBfCSnkRvWzdBXcbbftCXs8Eow=;
- b=m+uvY/083nKpDGYAvC3uNfwYgYCNrDOMWGj43JYzLdXVS7tshvK9KMm7QfMKZuGwXh1Vh9udVD3P0tiyh8NbAZpOKLLudeod3FsDQQw9ANU1YntqmzaQKor95eKu7SoYsd4jvxPr1TRSPYbWcCp0cRoq0HByVMo2ranH0LPyzpANYeXdmSUY/fKa2EHzIWWDj2mEUV8GC10Ju0QgAGXpmjzNVNIClhoP+0syN/k0wUo+e3TYyIUbcfRzYGZo3Uow2q2i7+/GZUeoBVWFEyRrczhWug9dyCS6Op5QvAxQg2BREGoD0aef41GzKfkyq+wC59mKElGxdhOrPH5286YUNw==
-Received: from GV4P193MB2649.EURP193.PROD.OUTLOOK.COM (2603:10a6:150:28b::13)
- by DB8P193MB0487.EURP193.PROD.OUTLOOK.COM (2603:10a6:10:157::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.15; Sun, 6 Sep
- 2026 11:48:14 +0000
-Received: from GV4P193MB2649.EURP193.PROD.OUTLOOK.COM
- ([fe80::4dd5:52df:60fd:7c0f]) by GV4P193MB2649.EURP193.PROD.OUTLOOK.COM
- ([fe80::4dd5:52df:60fd:7c0f%5]) with mapi id 15.21.0382.014; Sun, 6 Sep 2026
- 11:48:13 +0000
-From: snoep <snoepke@live.nl>
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: [PATCH] ahci: force 32-bit DMA for JMicron JMB582/JMB585
-Thread-Topic: [PATCH] ahci: force 32-bit DMA for JMicron JMB582/JMB585
-Thread-Index: AQHdPfUq2nUgAicd6UKaWT3J9EhUDA==
-Date: Sun, 6 Sep 2026 11:48:13 +0000
-Message-ID:
- <GV4P193MB26497ED32435527C96B10DB9A9B32@GV4P193MB2649.EURP193.PROD.OUTLOOK.COM>
-Accept-Language: nl-NL, en-US
-Content-Language: nl-NL
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: GV4P193MB2649:EE_|DB8P193MB0487:EE_
-x-ms-office365-filtering-correlation-id: 907d17f6-6c9c-4d64-ecb7-08df0c0cbbaf
-x-microsoft-antispam:
- BCL:0;ARA:14566002|8062599012|8060799015|12121999013|19110799012|24021099003|25010399006|13031999006|31061999003|15030799006|15080799012|51005399006|440099028|3412199025|26104999009|102099032|40105399003|2607281247196008|10035399007;
-x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?ZkU1HpZWjl2yHgwJlvXSSkoOQdbZ6c8IhkirXf1h3Cie3Nk+plqAPl85cR?=
- =?iso-8859-1?Q?hSWdpYtqADeRFhx3JA8P7aX4xkmvkmPfSZqsgrRuVjvkhVatNU5Zn1DAoj?=
- =?iso-8859-1?Q?gos7wL4+GDWyZq0Ok+ktJ6VT/6HV3/rIZTAqCkM7UUOK7Pcl8vbYuPqKEt?=
- =?iso-8859-1?Q?ht1MlEpK0PSSjmUafJN1ouIDi9X6tcjgwkINh4dOI3Qo3nrun4J0urVpaP?=
- =?iso-8859-1?Q?GDsBQJO7CAP04c0x6L/0YmPoJFONtauOEvp7wFQek1NwG2AxfRf77fo15i?=
- =?iso-8859-1?Q?Vbt1ccDzCf+v//bOBtSQuwNNeWDjjBhZksFKs8Mb9WQXJbfrp7l2Tzum7a?=
- =?iso-8859-1?Q?tEyaW23QVf2tnnBoBZLVuh0CvfVl2pwq5CjzL8an8eyDNAgz2f8hbaqsYW?=
- =?iso-8859-1?Q?KvHMx9ehJfp/MZ2HZATNC8iq1RaKjjEqVtJXP/nq/M3tFqzgJ3zLMzmBhO?=
- =?iso-8859-1?Q?p++42QFbExuqaqRm+qa48qmrYCkmPO0CwIhMoMno7vARufOq/G0Q5QmJ4X?=
- =?iso-8859-1?Q?krEilu5RhY8mnb/A3tnctq+S5TEGR0qhb4LnVpBfAfYtTnV8VdpUv+3EA7?=
- =?iso-8859-1?Q?M9PdI7vcb4MmhFy8vLQifd9ZFhNJVRO+HVM7G51Z5GsDN91xdtO+SnMxrx?=
- =?iso-8859-1?Q?p5DraK2RcYNDV0k2E2wwS6da6rkA2xRf/bGPemqV8UIO/Ou/6NCohGC3UO?=
- =?iso-8859-1?Q?DU6pcQdCBhrT9q8Ac0BR5ja02k5I2Ai7zDkOqE2Sh/OfYaiE28y8ExVH8+?=
- =?iso-8859-1?Q?bhY/9SeuIFfJPvZtMX5LNcKGJj6UcfBuVWAlGy4cbogiWUIcp9vUtnseNX?=
- =?iso-8859-1?Q?Blo4DAdMeu6ePJBE/hKGFIA2RtZWDK1cbw+8o5DlwXii2QNyQggVwm9ezj?=
- =?iso-8859-1?Q?HRMd+/yWl4Jq4MjHmhefzUfEfikKyneaeGN0qxEgLLeO7pGbDF0bPJobUP?=
- =?iso-8859-1?Q?6iwrc13feYAP9FIOXV9BJl+9dSGiw5NTFzrvhZwZOFLRSIJbQmrAF3PtdT?=
- =?iso-8859-1?Q?Oy+ivSf/TNwtx5fQ7iALg7N87rEJYZZGg2PpYNw+XRuPSkbkAc2w1C9SPE?=
- =?iso-8859-1?Q?Pw=3D=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?zSVONvMFvrLq452V15M5COg791trql2j3RSBZ8Sp1ZKl4eGPJzlXK0F8J2?=
- =?iso-8859-1?Q?Np4Vy/J8dEmbDg2F4bvoBagt6Jkw8dHq2sWNDcssIUeOOuBMlrSP7RCB8P?=
- =?iso-8859-1?Q?ODRonngBJe3BcyX/EpYP8LSHlB9dh1VxVX0SZhZbQHFAyo6NencjOJcSZg?=
- =?iso-8859-1?Q?9mba4WLplj0zBoejaaRDkE6ni1m6/4M20Sldt5JT7CHhRHL64zSqMZBd75?=
- =?iso-8859-1?Q?JDVXGdqpksuxoFSRvpmD9XvUsXCGTX5DMWD1WBEOhE8zfi0WTKo0GIpSLC?=
- =?iso-8859-1?Q?rfUlhoRiDj9JuCnDV8NmtobecNfxUQuNGKVClmfc4gdSbvLnyaCLFLSx6S?=
- =?iso-8859-1?Q?NNTJbJ/dQfWkOMZ5kYp67Qw7FqyKnwhms6ej7tm224J269bVK/UmQ/lPAV?=
- =?iso-8859-1?Q?A0UI6Wdo+Ke+I51xjCqshQyWoqrsZAhKgatXgVYqT56pnDDjPWPCx6UiEy?=
- =?iso-8859-1?Q?bsQ510BJ5aalhLmTRp276UFhEg/tAqHeIT+UBUI/GkpHyPlNppi+YlTp9M?=
- =?iso-8859-1?Q?ddGWBtnbSl3Yu+3F2CDdvHcz7zHRhIdDlFHVrnqFVqV6o8+7F4VpCqaPn8?=
- =?iso-8859-1?Q?iEN26sCyMSv/gVAawLZ+5inKDIu4EBZs6utUk+wjmq9xic60htArDNq/Fq?=
- =?iso-8859-1?Q?BvsSRLJkxice1FysojSkrK2iWiq8ydb0+tuS7SIoZxJBwjsBetkZHPStcG?=
- =?iso-8859-1?Q?ZlUEBFQ4dF8P84ZDeEyOMqNFXOufXfsf4OtS76Kja2GXPaKXqI6Ren8+c1?=
- =?iso-8859-1?Q?p3TinqhyIMG0CanOq1U4NGWeYZQlI8EWbzyNDIDKeTO8AHQ2XL9qSXsIbF?=
- =?iso-8859-1?Q?tYPyn721Hysh0zJ34JDqY8xsOswf+kKv5mu3OFG+4HDRFMN+kst9wiaREa?=
- =?iso-8859-1?Q?hyY8p8fYRXVqs9cnKu8ZsDgODAXaQIJ6w0pOwtb/MBcqrx+SJMTlTsRfx9?=
- =?iso-8859-1?Q?NumyrWMp1NN2dJEmxzthNtiXvgHKORvq5DBd4FqGhYuI3kTms0wTXvqMLJ?=
- =?iso-8859-1?Q?n0EpEeLdETWkTZrtw36aJlmF1DtwqCflQHCFF3Mu6E7/lT1gOlHeKie7NU?=
- =?iso-8859-1?Q?FgLyvu/XpEh935oCLE1Ve1k0zrZ/CIAyz86PyU0gwRCPWerXYJUrr8JDrA?=
- =?iso-8859-1?Q?VaoVfg46Vb0/pawc661aINOTbGGzBjnVRw57yon+voUJAQSlPvQgIYhbc3?=
- =?iso-8859-1?Q?tOMpfo50mQrLMTGp8TNXuuSiDgHfg1crM6E/g2bQdNZ01LR49xXyyEsL6L?=
- =?iso-8859-1?Q?lccD8Hu9vGgRUXLXZZVLT5JmA3cEnWAAFng1L5BD9iHnBbzLYpMy32XIUd?=
- =?iso-8859-1?Q?pWfX3XwAgljxV+f703eXEsglN7ICuu6+Dd+Ee2uAEovaDtxbnH5NJJ1N6F?=
- =?iso-8859-1?Q?WW5W8tR0RjFJyJXbEYVXmrR4O6SIe5Iw=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kSD+851M"
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3a1981228f8so23357971fa.1
+        for <linux-ide@vger.kernel.org>; Sun, 06 Sep 2026 12:27:33 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788722852; cv=none;
+        d=google.com; s=arc-20260327;
+        b=oD6W2RG2MwuYW+t89EzAI3DQqwUS16Y88hFhcLM9zNWKjzClOCV7fuogjX1Z/mkLK0
+         c12Rv9VWZXr4GtU61ssvoPO6HW90G6FwAEuHhV32oa4i9WSGiKFgQUoh2d/YjpYwrMJm
+         KfE3jmOYSHQaO12MBRBAwD63M5AGfxRs+NeH32efsFPTfe/qKPFKrx+cYrONQUiZ8SiB
+         lMwnPuTum7sYcMii/beIiXErTMn+UmC4ob47bUPmhKDvYXLJ2jGZX1IpRxXIaMcxLxn1
+         ELJoaRu7TEbgvLyZABoFH/OZ7YQgOGXBCR/LORH/jHg2cxmf/6xYEPsx9Dzk2qz2VV/1
+         MQ6w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=VukCt2X5KCLhroDMmTc/7bRt8mQvMO1+fqQxWh+08+I=;
+        fh=rR4rJTl1Kz+kBS3v/HQSt0aVlXSSqzLPhkDVREhiwZ8=;
+        b=Il8X2Um2prac+9V8ZZqbttajbiVpKmBmMF+JnPc09gcH9+hTkRp3yWozHp2LYOFCgB
+         nmkABvOItVZZ9uYwnVOVhYDWuW+P5WQ3yA4fhSN2QAriqlNWOSMrRm8spjx2Tq2gQ4b2
+         M4SVV0HTPkghe7TSZzBhWlTSaXzaWTtvDpB3iYry6RP9faliTqiCLlM4rMTk+Y5aj+9k
+         wBEFKrngHxf8zmznROL2D81NPt4jP61WiI3QlNzJxev6+i/kCaAR8FzmbT1Whfdmjutq
+         6rcoxQKg16R7rMBwLDg73Jz4GV2tHBelXh96gddVoRQAH3ayKXSfyuxo8RdcmHwezECH
+         7LUQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788722852; x=1789327652; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=VukCt2X5KCLhroDMmTc/7bRt8mQvMO1+fqQxWh+08+I=;
+        b=kSD+851Mcqs0daSp9Sj2/FNgJlVH9oMphuPzTDZTHdyvoPhwxO8m0MzJOWhiO09uvT
+         v14swu1PNPtPJQ45SB/7ZkuOyoU7l5YXj/ms9fJ7rofXpo6SdjprYOJBF5GxvKHl85cU
+         eiT916QfwOaRWpiLyGAIroq2DhkxL9dWN28MHUpDP1GdnObGlbzaXYczh1TfXsG//lmO
+         h65clVwZ57yh2RE5eLAxCbDDXWnjUZYrSpYLIktI0kJST+1v5zKKlMDMS7kCtAbe9RSM
+         cu5J2v0TI3AjIcFWFVzee4vUcwGaNaYzd9F1+6lH+c2nnkHOsdVM7cmsQNOr4quiwN20
+         V4Dw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788722852; x=1789327652;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=VukCt2X5KCLhroDMmTc/7bRt8mQvMO1+fqQxWh+08+I=;
+        b=iETfqY6eDe5zR/BG7mpzguARFS4K03tVBqYJewZlAci7Fsoovnq6wxMtCLqQGoe1Ix
+         hhNFryhBqmqHpyMILyPsHgjSGOoVajM2pCfLKCHDqxTLCGCFBxX1RNBKOWdlEvhr6RFR
+         ISxbSgU6rYX/KOLsfO/7FODNrIuDj+Xaq+cbs7jbOML8/1PVrBY6h9R8rI7cfXdoDbQP
+         y1ztiPd3IIDz9WD9xlSDuPwdAl13HuVZr0W4uqAd66ihBBxIxG+fd1HCVA2351lawX7+
+         yLTbwMEoDJQfLkPl4lNncL0CeuqtMUu4iDGQ6Vyzn421t52YiXKx2TzikcgX0CMzbxjF
+         /96Q==
+X-Forwarded-Encrypted: i=1; AKwUvBzpg7Kb4xxK2Z0OLCzf0bNHZ+Ew2V1qlm41mxI9Lp0wIFLAjwH7wyHMHktT3Zc2S/xeHlQRjkepH4o=@vger.kernel.org
+X-Gm-Message-State: AFuF++n9AMEeWNX/xPiEk+aus9ToAX4JBD7ygPDEVRDdTnAkM/obqGl9
+	hKFSnAGoIscaM3VJFxtyM73j/n4P6g1M3QmKXWsSV5G6l099t79f3+KT+LWMJFSSOYRG9D9dIMI
+	2FrN3ZdEpj/eHoXquRPHACuCPkpj/iUo=
+X-Gm-Gg: AYBFou05dygThfpgbBwXapYdVDHtrST1V7EGmy3KtmhHJInivwtP6hRJsuesPBX+cQZ
+	oJYnen9MIOWioNf7v7qQNW13cFkRDwr9WJ0PxReBpJ9dUUBopk3u5tps0QARn0+XNFQUmEOk2cu
+	OzsuFKFSSyOLAPtcIhqRGng+2q9U59c3oBzBMd4KJigUzHY1zWyKrMuQrDpTJ6WOyhVX7rJOEF1
+	BDipbfmcC87znCmR99UQkdyjjR0cfQ9dgkKMCjLHHAsgwKa5eQegJveSeD9M3lscQk3OstiKaH0
+	gCaoEVZpbaRJgcM1I+fiVXIfENhOzBtH2HLqiBNxOK4yFoLeb3mGoG65ou0tVTAoQgmcZfqsY6p
+	qnhjvDY+nRUhp89npWzDg9R1V
+X-Received: by 2002:a2e:bc1f:0:b0:39a:d7f7:981d with SMTP id
+ 38308e7fff4ca-3a371bd88aemr20205641fa.12.1788722851521; Sun, 06 Sep 2026
+ 12:27:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-b2714.templateTenant
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: GV4P193MB2649.EURP193.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 907d17f6-6c9c-4d64-ecb7-08df0c0cbbaf
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Sep 2026 11:48:13.7620
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB8P193MB0487
+References: <178854093896.541085.18395405788748617410@gmail.com>
+ <20260905113848.1397882-1-alvinwylim@gmail.com> <1c3df04b-7929-4b43-adb7-6007347a954e@amd.com>
+ <20260906050501.1309388-1-alvinwylim@gmail.com>
+In-Reply-To: <20260906050501.1309388-1-alvinwylim@gmail.com>
+From: John Smith <imjohnsmith4000@gmail.com>
+Date: Sun, 6 Sep 2026 22:27:20 +0300
+X-Gm-Features: AcwNN1U1rTI5JTn3FGLiYTzmPjsXhJNMnzOhKZABmEjtdYio8WIEYKaZWVjVi8Q
+Message-ID: <CAJ_jo9Sh07jNoAXk3zCPUq4XArxt8kgFdP8egMpNrCg+CFE-Ug@mail.gmail.com>
+Subject: Re: [PATCH] ahci: force 32-bit DMA for JMicron JMB582/JMB585
+To: Alvin Lim <alvinwylim@gmail.com>
+Cc: mario.limonciello@amd.com, mikael1022bzh@gmail.com, cassel@kernel.org, 
+	roland.waltersson@netinsight.net, artmoty@gmail.com, 
+	linux-ide@vger.kernel.org, david.laight.linux@gmail.com, 
+	kernel@wantstofly.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Niklas, all,=0A=
-=0A=
-I have an additional JMB585 data point from a Raspberry Pi 5.=0A=
-=0A=
-I ran Mikael's fio reproducer on a JMicron JMB585 (197b:0585).=0A=
-There is one important limitation: the JMB585 on this Raspberry Pi 5=0A=
-does not have an IOMMU group:=0A=
-=0A=
-  iommu_group: NONE=0A=
-=0A=
-Therefore this does not satisfy the specific request for a JMB582/JMB585=0A=
-behind an Intel or ARM IOMMU in enforcing mode.=0A=
-=0A=
-I still hope the results are useful, because this same Raspberry Pi 5=0A=
-and Penta SATA HAT setup previously showed repeated EXT4 metadata=0A=
-corruption which I have not yet been able to explain.=0A=
-=0A=
-The previous investigation and actual filesystem errors are documented=0A=
-here:=0A=
-=0A=
-Radxa forum:=0A=
-https://forum.radxa.com/t/repeated-ext4-metadata-corruption-on-raspberry-pi=
--5-with-penta-sata-hat-jmb585-despite-healthy-ssds-and-raid1/31393/6=0A=
-=0A=
-Raspberry Pi forum:=0A=
-https://forums.raspberrypi.com/viewtopic.php?p=3D2386959#p2386959=0A=
-=0A=
-The original corruption occurred on an EXT4 filesystem on Linux md RAID1.=
-=0A=
-SMART and SATA CRC counters were clean, the RAID1 remained healthy, and=0A=
-for one known bad EXT4 directory block both physical RAID members returned=
-=0A=
-the same data.=0A=
-=0A=
-For this reproducer I used a single dedicated SSD behind the same JMB585.=
-=0A=
-=0A=
-Test system:=0A=
-=0A=
-  Raspberry Pi 5, 8 GB=0A=
-  JMicron JMB585, PCI ID 197b:0585=0A=
-  Linux 6.18.34+rpt-rpi-2712=0A=
-  fio 3.39=0A=
-  Kingston SEDC500R960G=0A=
-  AHCI driver=0A=
-  PCIe Gen2=0A=
-  io_uring=0A=
-=0A=
-The 256 GiB canary used:=0A=
-=0A=
-  bs=3D128k=0A=
-  direct=3D1=0A=
-  iodepth=3D32=0A=
-  verify=3Dcrc32c=0A=
-  verify_interval=3D4096=0A=
-=0A=
-Test 1: normal Raspberry Pi PCIe configuration / 64-bit DMA=0A=
-=0A=
-I did not enable:=0A=
-=0A=
-  dtoverlay=3Dpcie-32bit-dma-pi5=0A=
-=0A=
-Runtime state:=0A=
-=0A=
-  dma_mask_bits: 64=0A=
-  consistent_dma_mask_bits: 64=0A=
-  iommu_group: NONE=0A=
-=0A=
-AHCI reported:=0A=
-=0A=
-  flags: 64bit ncq sntf stag pm led clo pmp fbs pio slum part ccc apst boh=
-=0A=
-=0A=
-I wrote the 256 GiB canary once and completed more than 20 full=0A=
-verify-only passes, approximately 5 TiB of verified reads.=0A=
-=0A=
-No fio CRC32C verification failure occurred.=0A=
-=0A=
-SMART remained clean and there were no relevant ATA/AHCI/EXT4 errors=0A=
-in the kernel log.=0A=
-=0A=
-Test 2: Raspberry Pi 32-bit PCIe DMA overlay=0A=
-=0A=
-I then enabled:=0A=
-=0A=
-  dtoverlay=3Dpcie-32bit-dma-pi5=0A=
-=0A=
-After reboot:=0A=
-=0A=
-  dma_mask_bits: 31=0A=
-  consistent_dma_mask_bits: 31=0A=
-  iommu_group: NONE=0A=
-=0A=
-I first verified the original 256 GiB canary written during the=0A=
-64-bit DMA test. That complete verification passed.=0A=
-=0A=
-I then wrote a new 256 GiB canary with the 31-bit DMA mask active and=0A=
-ran exactly 20 verify-only passes.=0A=
-=0A=
-Results:=0A=
-=0A=
-  original 64-bit-written canary cross-check: PASS=0A=
-  new 32-bit canary write: PASS=0A=
-  32-bit verify passes: 20/20 PASS=0A=
-  reads during the automated 32-bit test: 5376 GiB=0A=
-  writes during the automated 32-bit test: 256.02 GiB=0A=
-=0A=
-Final counters:=0A=
-=0A=
-  Raw_Read_Error_Rate: 0=0A=
-  SATA_Phy_Error_Count: 0=0A=
-  Reported_Uncorrect: 0=0A=
-  Reallocated_Event_Count: 0=0A=
-  SATA_CRC_Error_Count: 0=0A=
-  CRC_Error_Count: 0=0A=
-  Read_Fail_Count: 0=0A=
-  Interface CRC Errors: 0=0A=
-  Command failed due to ICRC error: 0=0A=
-=0A=
-So I was unable to reproduce the corruption on this Raspberry Pi 5=0A=
-with either the normal 64-bit DMA configuration or the Raspberry Pi=0A=
-32-bit PCIe DMA overlay.=0A=
-=0A=
-Again, since this JMB585 has no IOMMU group, I do not consider this a=0A=
-test of the Intel/ARM IOMMU enforcing-mode case.=0A=
-=0A=
-However, I am still trying to determine what caused the repeated EXT4=0A=
-metadata corruption in the original RAID1 setup, and I would appreciate=0A=
-guidance on what would be most useful to test next.=0A=
-=0A=
-Would repeating a sustained checksumming workload with the original=0A=
-two-SSD md RAID1 setup be useful, or is there another workload, tracing=0A=
-option, kernel configuration or test that would better help distinguish=0A=
-between the JMB585/PCIe path, md RAID1, EXT4, or another component?=0A=
-=0A=
-I have kept the test installation, both canary files and the complete=0A=
-fio, SMART and kernel logs, so I can run additional tests if requested.=0A=
-=0A=
-Kind regards,=0A=
-Sven=
+Hi Alvin, Mario,
+
+second WTR MAX data point, same 13 registers, same procedure
+(amd_smn_debugfs_enable=3D1, Mario's script, node 0):
+
+  0x111401d0: 0x00000100
+  0x111411d0: 0x00000100
+  0x111421d0: 0x00000000
+  0x111431d0: 0x00000100
+  0x111441d0: 0x00000100
+  0x112401d0: 0x00000100
+  0x112411d0: 0x00000100
+  0x112421d0: 0x00000100
+  0x112431d0: 0x00000100
+  0x112441d0: 0x00000100
+  0x112451d0: 0x00000100
+  0x113401d0: 0x00000100
+  0x114401d0: 0x00000100
+
+Byte-identical to Alvin's readings, including 0x111421d0 =3D=3D 0x00000000,
+so that value looks typical for this board rather than specific to his
+unit. Read on kernel 7.0.14-11-pve (Proxmox), AMI BIOS 0.01 dated
+2025-04-27, booted with iommu=3Dpt (IOMMU enabled, passthrough default
+domain), not amd_iommu=3Doff. The box has stayed clean under iommu=3Dpt
+since 2026-09-05 16:02 +03 with a 1 MiB O_DIRECT write/read canary every
+5 minutes and no new "Using 64-bit DMA addresses" line.
+
+lspci -ttvvnn:
+
+-[0000:00]-+-00.0  Advanced Micro Devices, Inc. [AMD] Phoenix Root
+Complex [1022:14e8]
+           +-00.2  Advanced Micro Devices, Inc. [AMD] Phoenix IOMMU [1022:1=
+4e9]
+           +-01.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy
+Host Bridge [1022:14ea]
+           +-01.1-[69]--
+           +-01.2-[6a]----00.0  MAXIO Technology (Hangzhou) Ltd. NVMe
+SSD Controller MAP1202 (DRAM-less) [1e4b:1202]
+           +-01.4-[6b-6e]----00.0-[6c-6e]--+-03.0-[6e]----00.0  Global
+Unichip Corp. Coral Edge TPU [1ac1:089a]
+           |                               \-07.0-[6d]----00.0  Global
+Unichip Corp. Coral Edge TPU [1ac1:089a]
+           +-02.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy
+Host Bridge [1022:14ea]
+           +-02.2-[64]--+-00.0  Intel Corporation Ethernet Controller
+X710 for 10GbE SFP+ [8086:1572]
+           |            \-00.1  Intel Corporation Ethernet Controller
+X710 for 10GbE SFP+ [8086:1572]
+           +-02.3-[65]----00.0  Intel Corporation Ethernet Controller
+I226-V [8086:125c]
+           +-02.4-[66]----00.0  Intel Corporation Ethernet Controller
+I226-V [8086:125c]
+           +-02.5-[67]----00.0  ASMedia Technology Inc. ASM1166 Serial
+ATA Controller [1b21:1166]
+           +-02.6-[68]----00.0  Samsung Electronics Co Ltd NVMe SSD
+Controller SM981/PM981/PM983 [144d:a808]
+           +-03.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy
+Host Bridge [1022:14ea]
+           +-03.1-[04-63]--
+           +-04.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy
+Host Bridge [1022:14ea]
+           +-08.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy
+Host Bridge [1022:14ea]
+           +-08.1-[01]--+-00.0  Advanced Micro Devices, Inc. [AMD/ATI]
+Phoenix3 [1002:1900]
+           |            +-00.1  Advanced Micro Devices, Inc. [AMD/ATI]
+Radeon High Definition Audio Controller [Rembrandt/Strix] [1002:1640]
+           |            +-00.2  Advanced Micro Devices, Inc. [AMD]
+Phoenix CCP/PSP 3.0 Device [1022:15c7]
+           |            +-00.3  Advanced Micro Devices, Inc. [AMD]
+Device [1022:15b9]
+           |            +-00.4  Advanced Micro Devices, Inc. [AMD]
+Device [1022:15ba]
+           |            +-00.5  Advanced Micro Devices, Inc. [AMD]
+Audio Coprocessor [1022:15e2]
+           |            \-00.6  Advanced Micro Devices, Inc. [AMD]
+Family 17h/19h/1ah HD Audio Controller [1022:15e3]
+           +-08.2-[02]--+-00.0  Advanced Micro Devices, Inc. [AMD]
+Phoenix Dummy Function [1022:14ec]
+           |            \-00.1  Advanced Micro Devices, Inc. [AMD] AMD
+IPU Device [1022:1502]
+           +-08.3-[03]--+-00.0  Advanced Micro Devices, Inc. [AMD]
+Phoenix Dummy Function [1022:14ec]
+           |            +-00.3  Advanced Micro Devices, Inc. [AMD]
+Device [1022:15c0]
+           |            +-00.4  Advanced Micro Devices, Inc. [AMD]
+Device [1022:15c1]
+           |            \-00.5  Advanced Micro Devices, Inc. [AMD]
+Pink Sardine USB4/Thunderbolt NHI controller #1 [1022:1668]
+           +-14.0  Advanced Micro Devices, Inc. [AMD] FCH SMBus
+Controller [1022:790b]
+           +-14.3  Advanced Micro Devices, Inc. [AMD] FCH LPC Bridge [1022:=
+790e]
+           +-18.0  Advanced Micro Devices, Inc. [AMD] Phoenix Data
+Fabric; Function 0 [1022:14f0]
+           +-18.1  Advanced Micro Devices, Inc. [AMD] Phoenix Data
+Fabric; Function 1 [1022:14f1]
+           +-18.2  Advanced Micro Devices, Inc. [AMD] Phoenix Data
+Fabric; Function 2 [1022:14f2]
+           +-18.3  Advanced Micro Devices, Inc. [AMD] Phoenix Data
+Fabric; Function 3 [1022:14f3]
+           +-18.4  Advanced Micro Devices, Inc. [AMD] Phoenix Data
+Fabric; Function 4 [1022:14f4]
+           +-18.5  Advanced Micro Devices, Inc. [AMD] Phoenix Data
+Fabric; Function 5 [1022:14f5]
+           +-18.6  Advanced Micro Devices, Inc. [AMD] Phoenix Data
+Fabric; Function 6 [1022:14f6]
+           \-18.7  Advanced Micro Devices, Inc. [AMD] Phoenix Data
+Fabric; Function 7 [1022:14f7]
+
+Happy to read any further registers or run a reproducer if that helps.
+
+Thanks,
+John Smith
+
+=D0=B2=D1=81, 6 =D1=81=D0=B5=D0=BD=D1=82. 2026=E2=80=AF=D0=B3. =D0=B2 08:05=
+, Alvin Lim <alvinwylim@gmail.com>:
+>
+> On Sat, Sep 05, 2026 at 07:26:49AM -0500, Mario Limonciello wrote:
+> > Two things:
+> >
+> > 1. lspci -ttvvnn
+> > 2. Turn on  amd_smn_debugfs_enable=3D1 on kernel command line.
+>
+> Both below. Your script ran unmodified.
+>
+> Conditions
+> ----------
+>
+>   Board      : AOOSTAR WTR MAX (DMI: TianBei "WTR MAX")
+>   BIOS       : AMI 0.01, 2025-04-27, revision 5.29
+>   CPU        : AMD Ryzen 7 PRO 8845HS
+>   SATA       : ASMedia ASM1166 [1b21:1166] rev 02, 6 HDDs
+>                subsystem [1b21:2116], PCIe 8GT/s x2
+>   Cmdline    : root=3D/dev/mapper/pve-root ro amd_iommu=3Doff quiet
+>                amd_iommu=3Doff amd_smn_debugfs_enable=3D1
+>
+> amd_iommu=3Doff was in force for every reading below. I did not re-enable
+> the IOMMU at any point, so these are values as seen in the configuration
+> this machine has run since 2026-06-17.
+>
+> I took the same maintenance window to apply a pending Proxmox kernel
+> security update, and captured twice so the reboot was not wasted:
+>
+>   7.0.14-14-pve   the kernel I quoted in my earlier mail
+>   7.0.14-15-pve   after the update
+>
+> The two captures are byte-identical, so on this box the values do not
+> depend on which of those two kernels is running. That is an observation,
+> not a conclusion -- I have no basis for saying more than that.
+>
+> To be explicit, since I would rather foreclose the misreading than
+> correct it later: this is not a test of the corruption on the newer
+> kernel. amd_iommu=3Doff was set for both boots, so neither capture
+> exercised the failing path, and nothing here says anything about whether
+> 7.0.14-15 behaves differently.
+>
+> SMN registers
+> -------------
+>
+>   0x111401d0: 0x00000100
+>   0x111411d0: 0x00000100
+>   0x111421d0: 0x00000000
+>   0x111431d0: 0x00000100
+>   0x111441d0: 0x00000100
+>   0x112401d0: 0x00000100
+>   0x112411d0: 0x00000100
+>   0x112421d0: 0x00000100
+>   0x112431d0: 0x00000100
+>   0x112441d0: 0x00000100
+>   0x112451d0: 0x00000100
+>   0x113401d0: 0x00000100
+>   0x114401d0: 0x00000100
+>
+> All thirteen read cleanly; no invalid reads and nothing stalled. I have
+> not tried to interpret them and am not going to guess at what they mean.
+>
+> lspci -ttvvnn
+> -------------
+>
+> -[0000:00]-+-00.0  Advanced Micro Devices, Inc. [AMD] Phoenix Root Comple=
+x [1022:14e8]
+>            +-00.2  Advanced Micro Devices, Inc. [AMD] Phoenix IOMMU [1022=
+:14e9]
+>            +-01.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy Host =
+Bridge [1022:14ea]
+>            +-01.1-[6a]--
+>            +-01.2-[6b]----00.0  Samsung Electronics Co Ltd NVMe SSD Contr=
+oller SM951/PM951 [144d:a802]
+>            +-01.3-[6c]----00.0  Micron/Crucial Technology P510 NVMe PCIe =
+SSD (DRAM-less) [c0a9:560a]
+>            +-01.5-[6d]----00.0  Samsung Electronics Co Ltd NVMe SSD Contr=
+oller 980 (DRAM-less) [144d:a809]
+>            +-02.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy Host =
+Bridge [1022:14ea]
+>            +-02.2-[64-65]--+-00.0  Intel Corporation Ethernet Controller =
+X710 for 10GbE SFP+ [8086:1572]
+>            |               \-00.1  Intel Corporation Ethernet Controller =
+X710 for 10GbE SFP+ [8086:1572]
+>            +-02.3-[66]----00.0  Intel Corporation Ethernet Controller I22=
+6-V [8086:125c]
+>            +-02.4-[67]----00.0  Intel Corporation Ethernet Controller I22=
+6-V [8086:125c]
+>            +-02.5-[68]----00.0  ASMedia Technology Inc. ASM1166 Serial AT=
+A Controller [1b21:1166]
+>            +-02.6-[69]----00.0  Micron/Crucial Technology T500 NVMe PCIe =
+SSD [c0a9:5415]
+>            +-03.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy Host =
+Bridge [1022:14ea]
+>            +-03.1-[04-63]--
+>            +-04.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy Host =
+Bridge [1022:14ea]
+>            +-08.0  Advanced Micro Devices, Inc. [AMD] Phoenix Dummy Host =
+Bridge [1022:14ea]
+>            +-08.1-[01]--+-00.0  Advanced Micro Devices, Inc. [AMD/ATI] Ph=
+oenix3 [1002:1900]
+>            |            +-00.1  Advanced Micro Devices, Inc. [AMD/ATI] Ra=
+deon High Definition Audio Controller [Rembrandt/Strix] [1002:1640]
+>            |            +-00.2  Advanced Micro Devices, Inc. [AMD] Phoeni=
+x CCP/PSP 3.0 Device [1022:15c7]
+>            |            +-00.3  Advanced Micro Devices, Inc. [AMD] Device=
+ [1022:15b9]
+>            |            +-00.4  Advanced Micro Devices, Inc. [AMD] Device=
+ [1022:15ba]
+>            |            +-00.5  Advanced Micro Devices, Inc. [AMD] Audio =
+Coprocessor [1022:15e2]
+>            |            \-00.6  Advanced Micro Devices, Inc. [AMD] Family=
+ 17h/19h/1ah HD Audio Controller [1022:15e3]
+>            +-08.2-[02]--+-00.0  Advanced Micro Devices, Inc. [AMD] Phoeni=
+x Dummy Function [1022:14ec]
+>            |            \-00.1  Advanced Micro Devices, Inc. [AMD] AMD IP=
+U Device [1022:1502]
+>            +-08.3-[03]--+-00.0  Advanced Micro Devices, Inc. [AMD] Phoeni=
+x Dummy Function [1022:14ec]
+>            |            +-00.3  Advanced Micro Devices, Inc. [AMD] Device=
+ [1022:15c0]
+>            |            +-00.4  Advanced Micro Devices, Inc. [AMD] Device=
+ [1022:15c1]
+>            |            \-00.5  Advanced Micro Devices, Inc. [AMD] Pink S=
+ardine USB4/Thunderbolt NHI controller #1 [1022:1668]
+>            +-14.0  Advanced Micro Devices, Inc. [AMD] FCH SMBus Controlle=
+r [1022:790b]
+>            +-14.3  Advanced Micro Devices, Inc. [AMD] FCH LPC Bridge [102=
+2:790e]
+>            +-18.0  Advanced Micro Devices, Inc. [AMD] Phoenix Data Fabric=
+; Function 0 [1022:14f0]
+>            +-18.1  Advanced Micro Devices, Inc. [AMD] Phoenix Data Fabric=
+; Function 1 [1022:14f1]
+>            +-18.2  Advanced Micro Devices, Inc. [AMD] Phoenix Data Fabric=
+; Function 2 [1022:14f2]
+>            +-18.3  Advanced Micro Devices, Inc. [AMD] Phoenix Data Fabric=
+; Function 3 [1022:14f3]
+>            +-18.4  Advanced Micro Devices, Inc. [AMD] Phoenix Data Fabric=
+; Function 4 [1022:14f4]
+>            +-18.5  Advanced Micro Devices, Inc. [AMD] Phoenix Data Fabric=
+; Function 5 [1022:14f5]
+>            +-18.6  Advanced Micro Devices, Inc. [AMD] Phoenix Data Fabric=
+; Function 6 [1022:14f6]
+>            \-18.7  Advanced Micro Devices, Inc. [AMD] Phoenix Data Fabric=
+; Function 7 [1022:14f7]
+>
+> What I can still do cheaply
+> ---------------------------
+>
+> I deliberately left amd_smn_debugfs_enable=3D1 on the command line, so
+> more SMN reads cost me nothing -- no reboot, no maintenance window. If
+> you want further registers, or the same ones under different
+> conditions, just send the list.
+>
+> I can also still run any boot parameter combination (amd_iommu=3Dpgtbl_v2=
+,
+> iommu.forcedac=3D1, iommu=3Dpt), older kernels from the Proxmox archive, =
+a
+> custom kernel with a debug patch, or a long fio crc32c canary. The one
+> constraint I mentioned before still applies: this is a live NAS and the
+> ASM1166 carries real data including a Ceph OSD, so anything that
+> re-enables the IOMMU needs a scheduled window with the filesystems
+> unmounted, and I would write the canary first through the path I know
+> is good.
+>
+> Still not something I can offer: no JMicron JMB582/585, no Intel or ARM
+> IOMMU machine, and no SATA controller other than this ASM1166.
+>
+> A note for John Smith, added to Cc
+> ----------------------------------
+>
+> John -- I have added you because you are running the same machine I am,
+> and one of the readings above may be worth your attention.
+>
+> You reported a TianBei WTR MAX with AMI BIOS 0.01 dated 2025-04-27,
+> revision 5.29, an ASM1166 with subsystem [1b21:2116], and IVHD EFR
+> 0x246577efa2054ada. I checked each of those against this box today
+> rather than assuming, and every field matches.
+>
+> The EFR needed a different route, which may be useful to you: with
+> amd_iommu=3Doff there is no AMD-Vi line in dmesg to read it from, so I
+> took it from the IVRS ACPI table instead --
+>
+>   od -An -tx1 /sys/firmware/acpi/tables/IVRS
+>
+> parsing the IVHD type 11h/40h blocks, where the EFR image sits at offset
+> 0x18. Both blocks give 0x246577efa2054ada, EFR2 0, with GIOSup (bit 48)
+> and GT (bit 4) set. That is a live reading from this machine, not the
+> figure quoted from my earlier mail.
+>
+> The thing that stands out: of the thirteen registers above, twelve read
+> 0x00000100 and one -- 0x111421d0 -- reads 0x00000000. From a single
+> machine I cannot tell whether that is ordinary for this board or
+> specific to my unit, and you are the only person I know of with an
+> identical one, so your numbers would be directly comparable to mine.
+>
+> That is the whole reason for the Cc. No obligation, and no request
+> attached -- I just did not think it was right to sit on it without
+> telling you.
+>
+> Alvin Lim
