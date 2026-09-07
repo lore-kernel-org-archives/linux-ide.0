@@ -1,40 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0E74435537;
-	Mon,  7 Sep 2026 08:00:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B77B22E4257;
+	Mon,  7 Sep 2026 09:45:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788768028; cv=none; b=kWpIhaopdgq/9BIi7iK9lnIGSJYdTJMCFgxjG2/3s+1tpjwzx7EPTRb//mOwaxUURDFIQClW2A+gWmiysih3KLN3Tyl3FZMr7kYWAc+YlnXdMY589k/QzTtjkuPIJ7bN+XpAMp7fPTHPwASaTesuAQPQ4WuTPdiKvLZTqOB2/uw=
+	t=1788774318; cv=none; b=UTQ6tdwVA16rjUyxbquWWJP1Ew0XJ8ac4OoyLHkLqwykxlCXAvevzm0ru9fDBmFE7+7C9TB3VN30Jzh6LPqz+GNYXIZnwAzI+gFvUuTTN/gmoZxEox929OytMEYXxMWycJmNy0ojT6hO8aGWvCxeOXSX4XIAiw4k+N3UdHj2K6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788768028; c=relaxed/simple;
-	bh=S5Dj3dy+babxMTZ/ffJ5H6c2DLn63XlmlJwcbxNrIQE=;
+	s=arc-20240116; t=1788774318; c=relaxed/simple;
+	bh=QulMtI4ceP4x8mHEkb9qFFuaT4z3oTepjm9z8xEWagA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WpqXTJq6Xio5iKSGuiE8z8X38Mi+XCXTz9m/foajkSMYWQ2CfMog1at6e8GRvzNKAJF7K83Rlg5VsKZoZgE14WCUVh7TQYxKWOZtoo1lSbuUytHAjgPXV8MM/II4YrnrEhwn1usUO8pYEjz3bQg/LdKuLVt/F4evTduknTV8Ft4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LCr/s5lB; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ezaiTiII8K43hSl+7pHIwNxQx/Up78D52gNK8H/tJd0spufWrw1GXO7aScQ97XCuJH6ysg1TJ174z4mywcZhO7NJ/o+U6dBOikzMPC7uK5HSuL5YFrcaTyS2SKJ6wJ2xdGkFlw0utFnhl/MM/8ucJi0UU496h1/gigSd1GSFa4M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NjdblaSn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LCr/s5lB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FBB91F00A3A;
-	Mon,  7 Sep 2026 08:00:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NjdblaSn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6FC11F00A3A;
+	Mon,  7 Sep 2026 09:45:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788768024;
-	bh=bTN70k/xFuZtgpBT3cRG92womfN5G6d4sTAzvaHkyi4=;
+	s=k20260515; t=1788774317;
+	bh=Ng0muayWWjw6g2DxYAEFys5pXOUfKx7shtKSJ8X6pxU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=LCr/s5lBzoQWo9eF/diAjxfGt2wHCGqsBQYFqg3oMGMV8/L+lbA9u36/U4boBFvSR
-	 7ZJFJ3BPA4de9/lKzQHqYURnx6g58s+uhLPRApJmRguePlpYMP7k9G95/3SRHuUe14
-	 uHR0bDZTnNPLpcbU4BAoWFBjI/qZoIeqmCE5j1b5FAjg4WOoiTg6w3piNWUb/cVhJh
-	 LKLi7aW94R4PrMLF914fzD3pofU+lgjqEDPwj5iGtf7fOD+wGESPPjelJOix9j0cdl
-	 rz70e+bB59LHvLNAG0vQLUCy7kEbb6dOXEoMDPQrvjbrdX4yO59LmyTdc6s0bqeVKG
-	 z7yKed/pDzJxw==
-Date: Mon, 7 Sep 2026 10:00:20 +0200
+	b=NjdblaSnKikkiedYP09hXyxIwVPShiPhId1lAdrI/ae7x+vuyqX3/d95/p5Z8HVI5
+	 yIao6+F9Wz++8CHrAjIkh5yaobpSGuLauhaxPxhm860iszNHfvgW/t01tnOnO1iyXE
+	 ZksPoI9MdCjx1vnvl/NKN4wFnt3GiYgNCrSO7NQs5qSHT1cPlcMLa6syH5ooKVPU9v
+	 7X2PrSgvu7orrWwFBGNfiwbdtzIkgVxm5g1a8w7znResfoFvrZMeM7XBFCktL7jz+u
+	 hu7OnXCSvBW6uv9AWRhsGLbqjFW3aGkqENK3837Xy+eAeXzSNKrrlb7/1ZkJ87Xy71
+	 oDY710N2Suk7Q==
+Date: Mon, 7 Sep 2026 11:45:12 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Roland Waltersson <roland.waltersson@netinsight.net>
+To: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
 Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2] ata: libahci: clear PxCLBU and PxFBU for
- AHCI_HFLAG_32BIT_ONLY
-Message-ID: <ap5vFBMRkoe0NF73@ryzen>
-References: <20260904134310.1465051-2-cassel@kernel.org>
+	Pali Rohar <pali@kernel.org>, stable@vger.kernel.org,
+	risc4all@yahoo.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] ata: ahci: work around lost interrupts on Marvell
+ 88SE61xx
+Message-ID: <ap6HqG5ZwCxfb8OJ@ryzen>
+References: <20260831124303.920391-1-hajo-linux-ide@noerenberg.de>
+ <178818641418.216562.3155723702033731494.b4-ty@kernel.org>
+ <aprZi3G9Yks1Gq9-@ryzen>
+ <1fed10ef-4a5d-4c49-bf23-34c4c30c5884@noerenberg.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -43,35 +47,52 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260904134310.1465051-2-cassel@kernel.org>
+In-Reply-To: <1fed10ef-4a5d-4c49-bf23-34c4c30c5884@noerenberg.de>
 
-On Fri, Sep 04, 2026 at 03:43:11PM +0200, Niklas Cassel wrote:
-> A user reported that commit 105c42566a55 ("ata: ahci: force 32-bit DMA for
-> JMicron JMB582/JMB585") made the JMicron JMB585 unusable on his board.
-> 
-> The failure is seen as soon as the ahci driver is probed, and booting with
-> iommu=off does not solve the problem.
-> 
-> Looking at the AHCI specification, PxCLBU and PxFBU are both read only '0'
-> for HBAs that do not support 64-bit addressing.
-> 
-> For HBAs that do support 64-bit addressing, the registers are read write,
-> with a reset value that is Implementation Specific.
-> 
-> When using the AHCI_HFLAG_32BIT_ONLY flag, the HBA does support 64-bit
-> addressing, and a 32-bit DMA mask is set by simply clearing HOST_CAP_64.
-> Thus, in this case, we need to explicitly clear the registers to 0.
-> 
-> Fixes: 105c42566a55 ("ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585")
-> Fixes: c7a42156d99b ("ahci: disable 64bit dma on sb600")
-> Cc: stable@vger.kernel.org
-> Reported-by: Roland Waltersson <roland.waltersson@netinsight.net>
-> Closes: https://lore.kernel.org/linux-ide/IA0PR17MB668730A4ECCD65F7A1DC3EDC9EB62@IA0PR17MB6687.namprd17.prod.outlook.com/
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Hello Hajo,
 
-Hello Roland,
+On Sat, Sep 05, 2026 at 02:30:14PM +0200, Hajo Noerenberg wrote:
+> On 04.09.2026 at 16:45 Niklas Cassel wrote:
+> > On Mon, Aug 31, 2026 at 04:27:24PM +0200, Niklas Cassel wrote:
+> >> On Mon, 31 Aug 2026 14:43:03 +0200, Hajo Noerenberg wrote:
+> >>> ahci_single_level_irq_intr() services the ports first and clears the
+> >>> global HOST_IRQ_STAT afterwards, as recommended by AHCI 1.1 section
+> >>> 10.6.2.  The Marvell 88SE6111/6121/6145 family stops reporting interrupts
+> >>> for a port when HOST_IRQ_STAT is cleared while PxIS still holds bits:
+> >>> PxIS keeps its content, HOST_IRQ_STAT reads back as 0, the port is never
+> >>> looked at again, and the command in flight only ends in a timeout.
+> >>>
+> >>> [...]
+> >>
+> >> Applied to libata/linux.git (for-7.4), thanks!
+> >>
+> >> [1/1] ata: ahci: work around lost interrupts on Marvell 88SE61xx
+> >>       https://git.kernel.org/libata/linux/c/22f2ba34
+> > 
+> > Decided to send this for 7.3-rc2 instead:
+> > https://lore.kernel.org/linux-ide/20260904144228.1473602-1-cassel@kernel.org/T/#u
+> > 
+> Niklas,
+> 
+> thanks for moving it to 7.3-rc2.
+> 
+> I spent a lot of time on this bug, mostly because I did not know what I was
+> looking for.  Now that it has a name, searching for it actually works - and
+> out of idle curiosity I went looking a moment ago, only to find that FreeBSD
+> has been carrying the same workaround for years.
+> 
+> In FreeBSD's sys/dev/ahci/ahci_pci.c all four chips of the family are tagged
+> AHCI_Q_EDGEIS:
+> 
+>   {0x611111ab, ... "Marvell 88SE6111", ... AHCI_Q_1CH | AHCI_Q_EDGEIS},
+>   {0x612111ab, ... "Marvell 88SE6121", ... AHCI_Q_2CH | AHCI_Q_EDGEIS | ...},
+>   {0x614111ab, ... "Marvell 88SE6141", ... AHCI_Q_4CH | AHCI_Q_EDGEIS | ...},
+>   {0x614511ab, ... "Marvell 88SE6145", ... AHCI_Q_4CH | AHCI_Q_EDGEIS | ...},
 
-Any chance to get a Tested-by from you?
+Thank you for the information.
+
+If Marvell (or anyone in the community) cares about these controllers,
+patches are more than welcome.
 
 
 Kind regards,
