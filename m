@@ -1,101 +1,160 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 823571A0BF3
-	for <linux-ide@vger.kernel.org>; Mon,  7 Sep 2026 10:28:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0136D485CE7;
+	Mon,  7 Sep 2026 12:01:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788776910; cv=none; b=oPswNzwMh7VMF2yYJH/rhyHTkwRineImEbpVQz3fLWambIpDNIjNVBfnPyh07MW1fYKjG3H1G9Y7nXhLBR/ENI5dXfThl3iOxqq8yKmmZU/EI0Jo0wdaJpgww0zsvNBXAC7fuh1qs1PBHLUJl78bpjeDl1PdYHfw1mlx42VCsXI=
+	t=1788782508; cv=none; b=iVPSPIf7XKVb+lJwzMoBYhmhgbIIybMUFI2nX+mX1S0qVThACA1MUay32byFvoKthpicBsMwoNw76TtNkjJtWupPPXFPP7rQWFJ22x8AcgSqsO+Qm3TIFu1kHQWZdNMTKxa1lepSmF8b2qO84sWuey/Fo2FgwhKbMgsf9Tv6/0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788776910; c=relaxed/simple;
-	bh=rHP8qJHLRiyZ50UWTys8y/pKgCB0FhAjy2/7o2DU4kM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a2qnwbo8KqKXUlMACViW73yfbsFk1eXLKJkroUtatoeMEb+wdoEeCCriJ4Va+LBFp2XsXi2jDNqJgg3Djw9dVXGV/0de+SDjRX6KnMyuruuDRB2m6yZl4J78SIcbFCFZ5R2C06uBl77qePlseIqwOCUaPx1QYNd6GAZXXzVQxG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WH3euKCw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788782508; c=relaxed/simple;
+	bh=dMHnmjwu27crGzN/UzreDdArC2CWvVpmNlWflGYErtE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=etoHy10EH/lMapg9UDs+HFI2r3DCmH/0CNKnHbDmiuSHHveRblfkK7C4gfU0G5T8319k6TF7Au5jVZg2DmAlH0VYLF3RrtUIwJLPWq1iGYtzZ/U1EVsX46UmhcP1fhZ68Z/a7jkdRrayWn1R9DfE2UThppSXQy5CKL3BMsyidm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=V+VWqBg7; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=uPvk18oY; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=b08zxQyM; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mE1LxPcc; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WH3euKCw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B0EE1F00A3D;
-	Mon,  7 Sep 2026 10:28:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788776909;
-	bh=fTFBwJe8z5HD+mydoN8a+5j/S2ositrTiZG5gjHEHPo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WH3euKCwg5cIX5LHRKwpbb261AGoXUs9farQoJG4MCJNlW9Zsw16ERvD/3n5zYpbh
-	 HhU5oTylleYvtEIlm7NaPIXQrDOyNCHslkAQl0RslkOQjH0IIAy5Nk2WHaUqjLqR8I
-	 UJKhGU4pm78P5o66It4qp/nGhggI0pecWANCBP+e+igN08uw2O0iYewLYjgGXE1PpT
-	 ti7qM4dxgqhcxL1H+wKU1ksikJ/Dch/xOY6lG1nltiRX3nWC4iuC7gy8XNQhLbSTyU
-	 G4FA+k5CFAwgpahq0EeIMDsWMAxl1dN/OThOUJU2+Dy3mgzExLKvf4RISp4jzOW6IY
-	 8tUb8LHlR8uhg==
-Date: Mon, 7 Sep 2026 12:28:24 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: snoep <snoepke@live.nl>
-Cc: "alvinwylim@gmail.com" <alvinwylim@gmail.com>,
-	"artmoty@gmail.com" <artmoty@gmail.com>,
-	"david.laight.linux@gmail.com" <david.laight.linux@gmail.com>,
-	"kernel@wantstofly.org" <kernel@wantstofly.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"mario.limonciello@amd.com" <mario.limonciello@amd.com>,
-	"mikael1022bzh@gmail.com" <mikael1022bzh@gmail.com>,
-	"roland.waltersson@netinsight.net" <roland.waltersson@netinsight.net>
-Subject: Re: [PATCH] ahci: force 32-bit DMA for JMicron JMB582/JMB585
-Message-ID: <ap6RyP28fxXNjRWS@ryzen>
-References: <AM8P193MB2659454F98AD53DEB002CF8AA9B42@AM8P193MB2659.EURP193.PROD.OUTLOOK.COM>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="V+VWqBg7";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="uPvk18oY";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="b08zxQyM";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mE1LxPcc"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id B2ECB1F456;
+	Mon,  7 Sep 2026 12:01:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1788782500; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UElMWw7XB6EgXNG4BtTRuNwNiddbEoaGBASiod9R/zw=;
+	b=V+VWqBg7L//f9zZK/ZEzZwLx5SzNUm/u45eBW2PTYs8mnJM+7/EBY9jYnofLfi7S99rThU
+	KhXt1o9tcvjvpyLBWcvSYsgXwUAzh34bAqlDNIoPgZ/HzOAi07DLfWjBPfMUzZE8SIep9W
+	ksGBX4YfKHdroUXdPciCJpfIwrKoasw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1788782500;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UElMWw7XB6EgXNG4BtTRuNwNiddbEoaGBASiod9R/zw=;
+	b=uPvk18oYIWlis1i6Zr2DYSOHaG21IeUM63ML/tD7sN8O2NBdtbBFPnmYR+yZScC29ERRtH
+	bYEsVdW8Vvl1H5Bw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1788782496; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UElMWw7XB6EgXNG4BtTRuNwNiddbEoaGBASiod9R/zw=;
+	b=b08zxQyMuWIlh7tOaFctBFwbV5MIXVV69zAOhGdP4kpshCVvvNRp5IL6z0WIUBwDEi0uir
+	T7CKWPlMcmkGvsMsfYjUzpzgY1npPY0c+2tH8dqDwzyVW6cRD+TMQAcJM9NA/ZfVn3pfz9
+	fPKoica7UkDPd22TNjrRyZtNwkFfqpc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1788782496;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UElMWw7XB6EgXNG4BtTRuNwNiddbEoaGBASiod9R/zw=;
+	b=mE1LxPccWGiSAL4Hku293BGSrk0nj20oJEg0X+QIyVzTkqkGkmv+hHHIk6VTDCfZZv90kI
+	okbcaMP8V9glRWCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5BAB91339B;
+	Mon,  7 Sep 2026 12:01:36 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id oZU1FaCnnmopFAAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 07 Sep 2026 12:01:36 +0000
+Message-ID: <d4b8f5e6-5291-4260-84be-21bcb546e7c1@suse.de>
+Date: Mon, 7 Sep 2026 14:01:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <AM8P193MB2659454F98AD53DEB002CF8AA9B42@AM8P193MB2659.EURP193.PROD.OUTLOOK.COM>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 01/40] scsi: define all additional sense codes and
+ their qualifiers
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
+ Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
+ Heiko Carstens <hca@linux.ibm.com>
+References: <20260903034201.112211-1-dlemoal@kernel.org>
+ <20260903034201.112211-2-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260903034201.112211-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.993];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
 
-Hello Sven,
-
-On Sat, Sep 05, 2026 at 09:04:57PM +0000, snoep wrote:
-> So I was unable to reproduce the corruption on this Raspberry Pi 5
-> with either the normal 64-bit DMA configuration or the Raspberry Pi
-> 32-bit PCIe DMA overlay.
+On 9/3/26 5:41 AM, Damien Le Moal wrote:
+> Introduce the file include/scsi/scsi_sense.h to define all existing
+> additional sense codes and their combinations with additional sense code
+> qualifiers, according to the most current T10 list available at
+> https://www.t10.org/lists/asc-num.txt.
 > 
-> Again, since this JMB585 has no IOMMU group, I do not consider this a
-> test of the Intel/ARM IOMMU enforcing-mode case.
-
-Thank you for your testing!
-
-Considering that Rasberry Pi seems to hand out 64-bit PCI addresses by
-default, which is why they even have the (from JMB585's point of view)
-completely meaningless pcie-32bit-dma-pi5 DT overlay.
-
-Considering that you could run the reproducer for several iterations
-without any issues, I am confident that JMB585 does indeed handle
-64-bit DMA addresses perfectly fine, and we will drop the JMB585 quirk
-as soon as there is fix for the AMD IOMMU issue.
-
-
+> Additional sense codes (ASCs) are individually defined as an 8-bit value
+> with the ASC_ name prefix. The combination of all ASCs with T10 defined
+> possible non-zero code qualifiers are defined as 16-bits values. The
+> 16-bits value for ASCs with a zero ASCQ are defined together with the ASC
+> 8-code using the ASC() macro.
 > 
-> However, I am still trying to determine what caused the repeated EXT4
-> metadata corruption in the original RAID1 setup, and I would appreciate
-> guidance on what would be most useful to test next.
+> The sense key macro definitions in include/scsi/scsi_proto.h are also
+> moved into this new file and scsi_sense.h is included in scsi_proto.h. The
+> helper function scsi_sense_code() is defined to facilitate generating a
+> 16-bits sense code from 8-bits ASC and ASCQ. The accessors
+> scsi_sense_code_asc() and scsi_sense_code_ascq() are defined for the
+> reverse operation, that is, to respectively extract an ASC and an ASCQ
+> from a 16-bits sense code.
 > 
-> Would repeating a sustained checksumming workload with the original
-> two-SSD md RAID1 setup be useful, or is there another workload, tracing
-> option, kernel configuration or test that would better help distinguish
-> between the JMB585/PCIe path, md RAID1, EXT4, or another component?
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   include/scsi/scsi_proto.h |  20 +-
+>   include/scsi/scsi_sense.h | 943 ++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 944 insertions(+), 19 deletions(-)
+>   create mode 100644 include/scsi/scsi_sense.h
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-I have no idea why you saw corruption on ext4 using 6.12.75+rpt-rpi-2712
-downstream kernel.
+Cheers,
 
-Considering that they seem okay with carrying dirty workarounds for issues
-for several months, that they don't even bother reporting to upstream, I
-would strongly recommend running an upstream kernel instead.
-
-
-I did see some reports from people that the JMB585 could overheat:
-https://github.com/geerlingguy/raspberry-pi-pcie-devices/issues/354
-https://forums.truenas.com/t/jmb585-m-2-to-sata-card-doesnt-see-ssd/8231
-
-If you don't have a heatsink, perhaps it could be something to try.
-
-
-Kind regards,
-Niklas
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
