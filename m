@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6E34509EE0;
-	Tue,  8 Sep 2026 09:03:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1899E50EC11;
+	Tue,  8 Sep 2026 09:04:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788858245; cv=none; b=DXBdudNVBeFNu8eftu81dSW9BkCHPi8jULxX6wNFtoO0anRWM+wCiBrFLQnC9MJha7wF/crFpXQ73Bi+InlnJ/l6jzz1sBSfc30XMIMcsnLhjPips49fA7C/Uj+c+lzyO63HJP6zbhwiL6vVihT3hYFTfK4aw//CjTJ5wlX4AG8=
+	t=1788858248; cv=none; b=qcBim9XQAnJhpkttlEg/PxDFwjK3FZLDBZOVl5ayUilvtRD3qRrj0Pu8t7acc7cPpW3cZ4KhqRhbQz4MxbtqLo/aTWasXlcX4Rd6wooK7XcAFRFSvKTONDvUVbTr1WQOPJuDT2QYThCQzqGAE4xE7ZOdJayn0iaTWzuu1ACIjh8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788858245; c=relaxed/simple;
-	bh=MyNvnl3Z/gzIlbbheISGznPOi3eT0VqgWiaKJSty43s=;
+	s=arc-20240116; t=1788858248; c=relaxed/simple;
+	bh=br3cC5PucbK2XpA+kdu6o77Fdw+5gMc3N/ze5qZIuT4=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cDIiQ8vS0C8JbIxEhNO7QrxCxpCmO4OdBDg2eQ334df1O8aa9jstB9eY5MgycpR3YKHkQfLesgL1k1I6nK17JkS4NdUZqrD6OWcJjx7pO6XK1v/1XOVuGIwVwXFMmPPYEknLS4G1upjDKOaSgP9SAkgATsh8zI31TmIXsu3R9eU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lePohSzS; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=oOL1Ayg1KgFHFfuDcYgy4rCvelY4igDEkzoX88IAItfYjFX7CYUMtcLaQuKPIMehxnIcxPVXPcRTFdwWcfZB0Zq4MniUoQtavmFYtnPhcy5df135TAmhklSm20Hw8Qp+H4MUEse4ZQv6avjpxvz1lcPhh36SApeA75Hh2JdUkq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b7vA9Y0V; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lePohSzS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCE751F00A3F;
-	Tue,  8 Sep 2026 09:03:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b7vA9Y0V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 140C01F00A3D;
+	Tue,  8 Sep 2026 09:04:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788858239;
-	bh=zQ+7CMSUlrTncycgE3+H55CA/Y09DbZ6OJHsmp8w6xA=;
+	s=k20260515; t=1788858244;
+	bh=R03Gnbon/kqVwY0vHCIAx6DwVIT9dulIZm4csDbvUA4=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=lePohSzSvrrbsDMHEviCua8Uhr/XnZlxY74AUwYHfhdfaySlBt9PH9yjW+zbiAjWC
-	 QZQINYr28jr5yGJK5XEeCGRaBEkvbnaRnImhJOF9MBzrtTWiEr1rDzWXufs8ero9lF
-	 Ib47LKfKDnLMPN5JDjmhtrPJggghyr6QPh6tPopyNZxL/ltPScOGTOI6fbt2ZLMF74
-	 3RCihqyeNWwHVUYLmA3lWYdPd18Yh1mhQkhWqhNa6bKro+TE2+JW4iZwiU1ZRcA4PN
-	 r6pDee8HfmIY65ZJ+6a3iTOnL7CvfIAN9DQvw+RRtNc1qMj6nr5tltLLXgtsSZT6KV
-	 SIHwLLUwwzInQ==
+	b=b7vA9Y0V9YR74LZWvJsV9fvsYe1vvr29G5k6GSK4p7GwIWRazVFO87YGJBiIxLVdF
+	 RTgVrtC1xFTtCWQX19+Y6/VjOoa3HfUx/HtiHRRQ+cenCA2Ppa4u3uKqiMKaFYXl0j
+	 +jcEzSfh5/HoWKhdJ1yqoTxaq9B7J3Gsqbt6nSoa4vZLdHUnQfAdYmfCWwCnmOIQIL
+	 PqMhSU1Hpq8XS99I8MC0d1I7XS5+BrshYccgJObBcDg7xMXJuQfO4B2Yw6cL6WXwmG
+	 C0w4/Jbhc5WWay2W1oDSMKaNYZHqT/2MotGs2xhi7A2zVadaJaYLkihClEZiLJK+27
+	 K99yvGbexfwcA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v6 22/40] scsi: myrX: use 16-bits defined sense codes
-Date: Tue,  8 Sep 2026 18:02:50 +0900
-Message-ID: <20260908090308.1085097-23-dlemoal@kernel.org>
+Subject: [PATCH v6 25/40] scsi: ps3rom: use 16-bits defined sense codes
+Date: Tue,  8 Sep 2026 18:02:53 +0900
+Message-ID: <20260908090308.1085097-26-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260908090308.1085097-1-dlemoal@kernel.org>
 References: <20260908090308.1085097-1-dlemoal@kernel.org>
@@ -51,8 +51,7 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the Mylex RAID controller driver to use scsi_set_sense() and the
-16-bits sense_code field of struct scsi_sense_hdr and replace all
+Refactor the PS3 DVD driver to use scsi_set_sense() and replace all
 hard-coded additional sense codes and additional sense code qualifiers
 with the enum values defined in include/scsi/scsi_sense.h. This helps with
 code clarity as the sense codes being processed are easier to test and
@@ -64,253 +63,32 @@ Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/myrb.c | 67 +++++++++++++++++++++++----------------------
- drivers/scsi/myrs.c | 23 ++++++++++------
- 2 files changed, 48 insertions(+), 42 deletions(-)
+ drivers/scsi/ps3rom.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index 3678b66310ed..95df6e5345f7 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -314,17 +314,19 @@ static void myrb_get_event(struct myrb_hba *cb, unsigned int event)
- 		scsi_normalize_sense(ev_buf->sense, 32, &sshdr);
- 
- 		if (sshdr.sense_key == VENDOR_SPECIFIC &&
--		    sshdr.asc == 0x80 &&
--		    sshdr.ascq < ARRAY_SIZE(myrb_event_msg))
-+		    scsi_sense_asc(&sshdr) == 0x80 &&
-+		    scsi_sense_ascq(&sshdr) < ARRAY_SIZE(myrb_event_msg))
- 			shost_printk(KERN_CRIT, cb->host,
- 				     "Physical drive %d:%d: %s\n",
- 				     ev_buf->channel, ev_buf->target,
--				     myrb_event_msg[sshdr.ascq]);
-+				     myrb_event_msg[scsi_sense_ascq(&sshdr)]);
- 		else
- 			shost_printk(KERN_CRIT, cb->host,
- 				     "Physical drive %d:%d: Sense: %X/%02X/%02X\n",
- 				     ev_buf->channel, ev_buf->target,
--				     sshdr.sense_key, sshdr.asc, sshdr.ascq);
-+				     sshdr.sense_key,
-+				     scsi_sense_asc(&sshdr),
-+				     scsi_sense_ascq(&sshdr));
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index a9c727d22931..c63c581b493c 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -233,7 +233,8 @@ static enum scsi_qc_status ps3rom_queuecommand_lck(struct scsi_cmnd *cmd)
  	}
  
- 	dma_free_coherent(&cb->pdev->dev, sizeof(struct myrb_log_entry),
-@@ -1398,7 +1400,7 @@ myrb_mode_sense(struct myrb_hba *cb, struct scsi_cmnd *scmd,
- static void myrb_request_sense(struct myrb_hba *cb,
- 		struct scsi_cmnd *scmd)
- {
--	scsi_build_sense(scmd, 0, NO_SENSE, 0, 0);
-+	scsi_set_sense(scmd, 0, NO_SENSE, NO_ADDITIONAL_SENSE_INFORMATION);
- 	scsi_sg_copy_from_buffer(scmd, scmd->sense_buffer,
- 				 SCSI_SENSE_BUFFERSIZE);
- }
-@@ -1446,8 +1448,8 @@ static enum scsi_qc_status myrb_ldev_queuecommand(struct Scsi_Host *shost,
- 		return 0;
- 	case INQUIRY:
- 		if (scmd->cmnd[1] & 1) {
--			/* Illegal request, invalid field in CDB */
--			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
-+			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+				       INVALID_FIELD_IN_CDB);
- 		} else {
- 			myrb_inquiry(cb, scmd);
- 			scmd->result = (DID_OK << 16);
-@@ -1461,8 +1463,8 @@ static enum scsi_qc_status myrb_ldev_queuecommand(struct Scsi_Host *shost,
- 	case MODE_SENSE:
- 		if ((scmd->cmnd[2] & 0x3F) != 0x3F &&
- 		    (scmd->cmnd[2] & 0x3F) != 0x08) {
--			/* Illegal request, invalid field in CDB */
--			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
-+			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+				       INVALID_FIELD_IN_CDB);
- 		} else {
- 			myrb_mode_sense(cb, scmd, ldev_info);
- 			scmd->result = (DID_OK << 16);
-@@ -1472,15 +1474,15 @@ static enum scsi_qc_status myrb_ldev_queuecommand(struct Scsi_Host *shost,
- 	case READ_CAPACITY:
- 		if ((scmd->cmnd[1] & 1) ||
- 		    (scmd->cmnd[8] & 1)) {
--			/* Illegal request, invalid field in CDB */
--			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
-+			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+				       INVALID_FIELD_IN_CDB);
- 			scsi_done(scmd);
- 			return 0;
- 		}
- 		lba = get_unaligned_be32(&scmd->cmnd[2]);
- 		if (lba) {
--			/* Illegal request, invalid field in CDB */
--			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
-+			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+				       INVALID_FIELD_IN_CDB);
- 			scsi_done(scmd);
- 			return 0;
- 		}
-@@ -1493,8 +1495,8 @@ static enum scsi_qc_status myrb_ldev_queuecommand(struct Scsi_Host *shost,
- 		return 0;
- 	case SEND_DIAGNOSTIC:
- 		if (scmd->cmnd[1] != 0x04) {
--			/* Illegal request, invalid field in CDB */
--			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
-+			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+				       INVALID_FIELD_IN_CDB);
- 		} else {
- 			/* Assume good status */
- 			scmd->result = (DID_OK << 16);
-@@ -1503,8 +1505,8 @@ static enum scsi_qc_status myrb_ldev_queuecommand(struct Scsi_Host *shost,
- 		return 0;
- 	case READ_6:
- 		if (ldev_info->state == MYRB_DEVICE_WO) {
--			/* Data protect, attempt to read invalid data */
--			scsi_build_sense(scmd, 0, DATA_PROTECT, 0x21, 0x06);
-+			scsi_set_sense(scmd, 0, DATA_PROTECT,
-+				       ATTEMPT_TO_READ_INVALID_DATA);
- 			scsi_done(scmd);
- 			return 0;
- 		}
-@@ -1517,8 +1519,8 @@ static enum scsi_qc_status myrb_ldev_queuecommand(struct Scsi_Host *shost,
- 		break;
- 	case READ_10:
- 		if (ldev_info->state == MYRB_DEVICE_WO) {
--			/* Data protect, attempt to read invalid data */
--			scsi_build_sense(scmd, 0, DATA_PROTECT, 0x21, 0x06);
-+			scsi_set_sense(scmd, 0, DATA_PROTECT,
-+				       ATTEMPT_TO_READ_INVALID_DATA);
- 			scsi_done(scmd);
- 			return 0;
- 		}
-@@ -1531,8 +1533,8 @@ static enum scsi_qc_status myrb_ldev_queuecommand(struct Scsi_Host *shost,
- 		break;
- 	case READ_12:
- 		if (ldev_info->state == MYRB_DEVICE_WO) {
--			/* Data protect, attempt to read invalid data */
--			scsi_build_sense(scmd, 0, DATA_PROTECT, 0x21, 0x06);
-+			scsi_set_sense(scmd, 0, DATA_PROTECT,
-+				       ATTEMPT_TO_READ_INVALID_DATA);
- 			scsi_done(scmd);
- 			return 0;
- 		}
-@@ -1544,8 +1546,8 @@ static enum scsi_qc_status myrb_ldev_queuecommand(struct Scsi_Host *shost,
- 		block_cnt = get_unaligned_be32(&scmd->cmnd[6]);
- 		break;
- 	default:
--		/* Illegal request, invalid opcode */
--		scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x20, 0);
-+		scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+			       INVALID_COMMAND_OP_CODE);
- 		scsi_done(scmd);
- 		return 0;
+ 	if (res) {
+-		scsi_build_sense(cmd, 0, ILLEGAL_REQUEST, 0, 0);
++		scsi_set_sense(cmd, 0, ILLEGAL_REQUEST,
++			       NO_ADDITIONAL_SENSE_INFORMATION);
+ 		cmd->result = res;
+ 		priv->curr_cmd = NULL;
+ 		scsi_done(cmd);
+@@ -316,7 +317,7 @@ static irqreturn_t ps3rom_interrupt(int irq, void *data)
+ 		goto done;
  	}
-@@ -2328,20 +2330,19 @@ static void myrb_handle_scsi(struct myrb_hba *cb, struct myrb_cmdblk *cmd_blk,
- 		dev_dbg(&scmd->device->sdev_gendev,
- 			"Bad Data Encountered\n");
- 		if (scmd->sc_data_direction == DMA_FROM_DEVICE)
--			/* Unrecovered read error */
--			scsi_build_sense(scmd, 0, MEDIUM_ERROR, 0x11, 0);
-+			scsi_set_sense(scmd, 0, MEDIUM_ERROR,
-+					 UNRECOVERED_READ_ERROR);
- 		else
--			/* Write error */
--			scsi_build_sense(scmd, 0, MEDIUM_ERROR, 0x0C, 0);
-+			scsi_set_sense(scmd, 0, MEDIUM_ERROR, SSC_WRITE_ERROR);
- 		break;
- 	case MYRB_STATUS_IRRECOVERABLE_DATA_ERROR:
- 		scmd_printk(KERN_ERR, scmd, "Irrecoverable Data Error\n");
- 		if (scmd->sc_data_direction == DMA_FROM_DEVICE)
--			/* Unrecovered read error, auto-reallocation failed */
--			scsi_build_sense(scmd, 0, MEDIUM_ERROR, 0x11, 0x04);
-+			scsi_set_sense(scmd, 0, MEDIUM_ERROR,
-+				UNRECOVERED_READ_ERROR_AUTO_REALLOCATE_FAILED);
- 		else
--			/* Write error, auto-reallocation failed */
--			scsi_build_sense(scmd, 0, MEDIUM_ERROR, 0x0C, 0x02);
-+			scsi_set_sense(scmd, 0, MEDIUM_ERROR,
-+				       WRITE_ERROR_AUTO_REALLOCATION_FAILED);
- 		break;
- 	case MYRB_STATUS_LDRV_NONEXISTENT_OR_OFFLINE:
- 		dev_dbg(&scmd->device->sdev_gendev,
-@@ -2351,8 +2352,8 @@ static void myrb_handle_scsi(struct myrb_hba *cb, struct myrb_cmdblk *cmd_blk,
- 	case MYRB_STATUS_ACCESS_BEYOND_END_OF_LDRV:
- 		dev_dbg(&scmd->device->sdev_gendev,
- 			    "Attempt to Access Beyond End of Logical Drive");
--		/* Logical block address out of range */
--		scsi_build_sense(scmd, 0, NOT_READY, 0x21, 0);
-+		scsi_set_sense(scmd, 0, NOT_READY,
-+			       LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		break;
- 	case MYRB_STATUS_DEVICE_NONRESPONSIVE:
- 		dev_dbg(&scmd->device->sdev_gendev, "Device nonresponsive\n");
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index afd68225221a..1192b01fab8e 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -816,7 +816,7 @@ static void myrs_log_event(struct myrs_hba *cs, struct myrs_event *ev)
- 	struct Scsi_Host *shost = cs->host;
- 	struct scsi_device *sdev;
- 	struct scsi_sense_hdr sshdr = {0};
--	unsigned char sense_info[4];
-+	unsigned char asc, sense_info[4];
- 	unsigned char cmd_specific[4];
  
- 	if (ev->ev_code == 0x1C) {
-@@ -829,9 +829,11 @@ static void myrs_log_event(struct myrs_hba *cs, struct myrs_event *ev)
- 			memcpy(cmd_specific, &ev->sense_data[7], 4);
- 		}
- 	}
-+	asc = scsi_sense_asc(&sshdr);
- 	if (sshdr.sense_key == VENDOR_SPECIFIC &&
--	    (sshdr.asc == 0x80 || sshdr.asc == 0x81))
--		ev->ev_code = ((sshdr.asc - 0x80) << 8 | sshdr.ascq);
-+	    (asc == 0x80 || asc == 0x81))
-+		ev->ev_code = scsi_sense_code(asc - 0x80,
-+					      scsi_sense_ascq(&sshdr));
- 	while (true) {
- 		ev_code = myrs_ev_list[ev_idx].ev_code;
- 		if (ev_code == ev->ev_code || ev_code == 0)
-@@ -891,8 +893,9 @@ static void myrs_log_event(struct myrs_hba *cs, struct myrs_event *ev)
- 	case 'S':
- 		if (sshdr.sense_key == NO_SENSE ||
- 		    (sshdr.sense_key == NOT_READY &&
--		     sshdr.asc == 0x04 && (sshdr.ascq == 0x01 ||
--					    sshdr.ascq == 0x02)))
-+		     (sshdr.sense_code == LU_IS_IN_PROCESS_OF_BECOMING_READY ||
-+		      sshdr.sense_code ==
-+		      LU_NOT_READY_INITIALIZING_COMMAND_REQUIRED)))
- 			break;
- 		shost_printk(KERN_INFO, shost,
- 			     "event %d: Physical Device %d:%d %s\n",
-@@ -900,7 +903,8 @@ static void myrs_log_event(struct myrs_hba *cs, struct myrs_event *ev)
- 		shost_printk(KERN_INFO, shost,
- 			     "Physical Device %d:%d Sense Key = %X, ASC = %02X, ASCQ = %02X\n",
- 			     ev->channel, ev->target,
--			     sshdr.sense_key, sshdr.asc, sshdr.ascq);
-+			     sshdr.sense_key, scsi_sense_asc(&sshdr),
-+			     scsi_sense_ascq(&sshdr));
- 		shost_printk(KERN_INFO, shost,
- 			     "Physical Device %d:%d Sense Information = %02X%02X%02X%02X %02X%02X%02X%02X\n",
- 			     ev->channel, ev->target,
-@@ -1603,7 +1607,8 @@ static enum scsi_qc_status myrs_queuecommand(struct Scsi_Host *shost,
+-	scsi_build_sense(cmd, 0, sense_key, asc, ascq);
++	scsi_set_sense(cmd, 0, sense_key, scsi_sense_code(asc, ascq));
  
- 	switch (scmd->cmnd[0]) {
- 	case REPORT_LUNS:
--		scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x20, 0x0);
-+		scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+			       INVALID_COMMAND_OP_CODE);
- 		scsi_done(scmd);
- 		return 0;
- 	case MODE_SENSE:
-@@ -1612,8 +1617,8 @@ static enum scsi_qc_status myrs_queuecommand(struct Scsi_Host *shost,
- 
- 			if ((scmd->cmnd[2] & 0x3F) != 0x3F &&
- 			    (scmd->cmnd[2] & 0x3F) != 0x08) {
--				/* Illegal request, invalid field in CDB */
--				scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
-+				scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+					       INVALID_FIELD_IN_CDB);
- 			} else {
- 				myrs_mode_sense(cs, scmd, ldev_info);
- 				scmd->result = (DID_OK << 16);
+ done:
+ 	priv->curr_cmd = NULL;
 -- 
 2.55.0
 
