@@ -1,183 +1,157 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E790654A7C5;
-	Tue,  8 Sep 2026 14:29:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 472085476D1
+	for <linux-ide@vger.kernel.org>; Tue,  8 Sep 2026 14:30:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788877784; cv=none; b=EKqa/FRTZM+y5ERQwoHBA90d4xCM4YFmEAyFG9OFameLZlC6b09fQBAz0dRD35dypQBHXbFNitj4iD67GlSKEE3D3PGSjwTSZY5JLzdR4vaUX5CKcL2HMrLu6DZHTZBrs8Eqye1zNL4NFqgB03NHWPpx7dsRDR8drzMrHpAokVU=
+	t=1788877854; cv=none; b=m3C1PPydzR4mTmXTanQJSMYA2EPrErMwCGpld7NnNDkcPTgCY84i2MlQNo5BISVoqCEGeERomiFNf4bhJDginjQPvfwk2H0O+CsjU2AKy6h71eCyH2d7ZztdldVtYMUjef7Ssj8VhvpsW4V0ACx8FZD5WiIIS2MN/Bt6CPoforM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788877784; c=relaxed/simple;
-	bh=qt2b9KsboVT1GH0s38SD5C3UCiKfrPzq7yTqTpYYpAs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=WtzbAezzgMDm28h5wRxPKu7g+JvTygUwo1Zh76lMJI/qBh/XpwZGBv2DVbTIG3mphEVkc+Weg+mgWh54xsgfiJZp4xQL9RK5gqBwUmgDBzsva/v2JbN8G7JIMDEDIZvrpENYzx53lls8/F+IFM6mMyANOQ6bSwAAlq7jPuA9EaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1dwBb2Rl; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=swJ5enVK; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=KZaC3ne5; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nWi+jAOx; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1dwBb2Rl";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="swJ5enVK";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="KZaC3ne5";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nWi+jAOx"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 7C8551F834;
-	Tue,  8 Sep 2026 14:29:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788877759; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V32DLLYQQzWVcX1Q3n4upFOrQoOskBDe9ipQikXd1rI=;
-	b=1dwBb2RlsCgbTmDPzZZd5VK4bbh/9mmHXfknvR1z3LBQ2lcHtttWheqn9qaYjcuCiURoTD
-	HvYVTnZVUVLg2VKYVScndhfM6Zs6tF02Ld/t13d7kt4Qr73uMNGxvRj6EeQF8+d8LrCEVc
-	15R3oh33S58asl7FxUMgY+TgBhF05PU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788877759;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V32DLLYQQzWVcX1Q3n4upFOrQoOskBDe9ipQikXd1rI=;
-	b=swJ5enVKMTghuLLSIrrBVZT4R2zWG9wsEfCzvbIkOLuCOqZ2r7o9138WB2d1rvr0U5JvYh
-	EVavVyk1Lo27s4Ag==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788877755; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V32DLLYQQzWVcX1Q3n4upFOrQoOskBDe9ipQikXd1rI=;
-	b=KZaC3ne5RBRn9Ms6r4LECAce1E+jANgnVZd5s9kFmkXEnDoDOW2ZzKO7OGL3E0zuhtdBNi
-	A/1k93WBvz7NIbn2rcCwsUP8qOgN3LXqKGG3dCylbu/OE9siUUN82RtadR256MtbZHZWfS
-	GOAi7BfTh0Eg90GQqcygxIOwcBGPbzQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788877755;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V32DLLYQQzWVcX1Q3n4upFOrQoOskBDe9ipQikXd1rI=;
-	b=nWi+jAOxKDy51dcKwNqN/PVFA23mk1shNMn5bzfX5QYON5J7U28EPtUdq/Oi0FZB1Y5oZn
-	he54jjJHmmg6OsAA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 29D161347F;
-	Tue,  8 Sep 2026 14:29:15 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id zsatCbsboGqJCwAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 08 Sep 2026 14:29:15 +0000
-Message-ID: <fa7b32d0-6e1d-4550-af0b-85b89b0fafd3@suse.de>
-Date: Tue, 8 Sep 2026 16:29:14 +0200
+	s=arc-20240116; t=1788877854; c=relaxed/simple;
+	bh=83bCcCYzU+tCGGiq6j1/NGbit4da5Dx1tWQ7RFR+mAk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=aN/gIgV5GHIIm7fYflKa2bSTuBuExR7wksMhdHhSjaOQZ7izz5jo818wEJT2Jopq0OSQHlgk4anfAMMc3Joy/f62tXEjYimMd2ZacfDQgVMls4MwDdW9lZcsYeNs/oxTUA/Ua4IitpOru/pFlZCuw6B/RckduCoN+mQG2OCn/Ck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 964151F00A3D;
+	Tue,  8 Sep 2026 14:30:42 +0000 (UTC)
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ata: sata_dwc_460ex: Don't enable interrupt if libATA
+ core registration fails
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nikolay Borisov" <nik.borisov@suse.com>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, cassel@kernel.org
+In-Reply-To: <20260908141538.731237-1-nik.borisov@suse.com>
+References: <20260908141538.731237-1-nik.borisov@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 08 Sep 2026 14:30:39 +0000
+Message-Id: <20260908143042.964151F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 05/40] scsi: prepare for using 16-bits defined sense
- codes
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
- Alan Stern <stern@rowland.harvard.edu>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
- Heiko Carstens <hca@linux.ibm.com>
-References: <20260903034201.112211-1-dlemoal@kernel.org>
- <20260903034201.112211-6-dlemoal@kernel.org>
- <cb08459f-ac72-4f37-b241-b4cc047f4890@suse.de>
- <2d926172-4ae8-458b-a7c3-e870e36e043d@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <2d926172-4ae8-458b-a7c3-e870e36e043d@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spam-Score: -4.30
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.996];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[11];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
 
-On 9/8/26 2:22 AM, Damien Le Moal wrote:
-> On 9/7/26 21:16, Hannes Reinecke wrote:
->>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->>> index e321471e8ca2..11910142ac50 100644
->>> --- a/include/scsi/scsi_device.h
->>> +++ b/include/scsi/scsi_device.h
->>> @@ -518,6 +518,7 @@ extern void scsi_sanitize_inquiry_string(unsigned char
->>> *s, int len);
->>>     * to match any sense key, ASC, and ASCQ value.
->>>     */
->>>    #define SCMD_FAILURE_SENSE_KEY_ANY    0xff
->>> +#define SCMD_FAILURE_SENSE_CODE_ANY    0xffff
->>>    #define SCMD_FAILURE_ASC_ANY        0xff
->>>    #define SCMD_FAILURE_ASCQ_ANY        0xff
->>>    /* Always retry a matching failure. */
->>> @@ -526,8 +527,18 @@ extern void scsi_sanitize_inquiry_string(unsigned char
->>> *s, int len);
->>>    struct scsi_failure {
->>>        int result;
->>>        u8 sense_key;
->>> -    u8 asc;
->>> -    u8 ascq;
->>> +    union {
->>> +        struct {
->>> +#if defined(__BIG_ENDIAN)
->>> +            u8 asc;
->>> +            u8 ascq;
->>> +#elif defined(__LITTLE_ENDIAN)
->>> +            u8 ascq;
->>> +            u8 asc;
->>> +#endif
->>> +        };
->>> +        u16 sense_code;
->>> +    };
->>>        /*
->>>         * Number of times scsi_execute_cmd will retry the failure. It does
->>>         * not count for the total_allowed.
->>
->> Why do we have two definitions for the sense code header? Can't we combine it
->> with the definitions in scsi_common.h ?
-> 
-> This is *not* the sense header. This is the struct used to filter errors for
-> internal SCSI commands issued with scsi_execute_cmd(). And since that function
-> is devlared in scsi_device.h, this struct declaration is here too.
-> 
-Oh, I know. I just thought we could combine them.
-But if not that's fine, too.
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+s) to consider:
 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+New issues:
+- [Low] The patch introduces a `goto err;` statement in `sata_dwc_probe()`,=
+ but there is no label named `err:` defined in the function, resulting in a=
+ compilation error.
 
-Cheers,
+Pre-existing issues:
+- [High] Missing cleanup of legacy DMA controller registration on error pat=
+hs in `sata_dwc_probe()` leads to leaked DMA resources and a Use-After-Free=
+ in the dmaengine subsystem.
+- [High] The error path unconditionally calls `phy_exit()` even if `phy_ini=
+t()` fails, corrupting the PHY initialization reference count.
+- [High] The allocated DMA channel is not released if `phy_power_on()` fail=
+s in `sata_dwc_port_start()`.
+- [Medium] The host is registered and exposed to libata before hardware int=
+errupts are enabled, causing a potential race condition with the asynchrono=
+us probe thread.
+--
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+commit 3b0d1baec2d2645cdd4b2283d5c10d4927e37dd2
+Author: Nikolay Borisov <nik.borisov@suse.com>
+Subject: ata: sata_dwc_460ex: Don't enable interrupt if libATA core registr=
+ation fails
+
+This commit updates the probe function to fail the registration process if
+ata_host_activate() fails. It aims to prevent interrupts from being enabled
+when the device is not registered with the libATA core.
+
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index 8e3fc713891af..c3df2fce4af73 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -1185,8 +1185,10 @@ static int sata_dwc_probe(struct platform_device *=
+ofdev)
+>  	 * error_handler() to execute a dummy Softreset EH session
+>  	 */
+>  	err =3D ata_host_activate(host, irq, sata_dwc_isr, 0, &sata_dwc_sht);
+> -	if (err)
+> +	if (err) {
+>  		dev_err(dev, "failed to activate host");
+> +		goto err;
+
+[Severity: Low]
+Does this code attempt to jump to an undefined label? There is no label
+named "err" in this function, which will cause a compilation failure.
+Should this jump to "error_out" instead?
+
+> +	}
+> =20
+>  	/* Enable SATA Interrupts */
+>  	sata_dwc_enable_interrupts(hsdev);
+
+[Severity: Medium]
+This is a pre-existing issue, but does this order of operations expose the
+port to the asynchronous EH worker before the hardware interrupt mask is
+configured?
+
+ata_host_activate() registers the host with libata and schedules the
+async_port_probe thread, which issues a softreset. If the async thread
+issues a command relying on hardware interrupts before
+sata_dwc_enable_interrupts() is called, could this result in a command
+timeout during device detection?
+
+[Severity: High]
+This is a pre-existing issue, but does the error exit path in
+sata_dwc_probe() miss cleaning up the legacy DMA controller?
+
+If sata_dwc_dma_init_old() succeeds, the controller is registered via
+dw_dma_probe(). If a subsequent initialization step fails and the code
+jumps to the error path:
+
+drivers/ata/sata_dwc_460ex.c:sata_dwc_probe()
+    ...
+error_out:
+	phy_exit(hsdev->phy);
+	return err;
+
+Can bypassing sata_dwc_dma_exit_old() cause a use-after-free when devres
+frees the memory but the dmaengine device remains registered?
+
+[Severity: High]
+This is a pre-existing issue, but does the error path unconditionally exit
+the PHY even if phy_init() fails?
+
+drivers/ata/sata_dwc_460ex.c:sata_dwc_probe()
+	err =3D phy_init(hsdev->phy);
+	if (err)
+		goto error_out;
+    ...
+error_out:
+	phy_exit(hsdev->phy);
+	return err;
+
+If phy_init() fails, it leaves phy->init_count at 0. Calling phy_exit() will
+decrement the count to -1, which could lead to a permanent initialization
+failure on subsequent probe attempts since phy_init() will see a non-zero
+count and skip initialization.
+
+[Severity: High]
+This is a pre-existing issue, but is there a potential resource leak in
+sata_dwc_port_start() if phy_power_on() fails?
+
+drivers/ata/sata_dwc_460ex.c:sata_dwc_port_start()
+	err =3D sata_dwc_dma_get_channel(hsdevp);
+	if (err)
+		goto CLEANUP_ALLOC;
+    ...
+	err =3D phy_power_on(hsdev->phy);
+	if (err)
+		goto CLEANUP_ALLOC;
+    ...
+CLEANUP_ALLOC:
+	kfree(hsdevp);
+
+If phy_power_on() fails, the code jumps to CLEANUP_ALLOC but misses a call
+to dma_release_channel(), which could eventually exhaust all available DMA
+channels.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908141538.7312=
+37-1-nik.borisov@suse.com?part=3D1
