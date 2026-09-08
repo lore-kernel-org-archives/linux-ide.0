@@ -1,182 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BC7E4F30D9;
-	Tue,  8 Sep 2026 09:04:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74CA74A3F23
+	for <linux-ide@vger.kernel.org>; Tue,  8 Sep 2026 09:04:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788858274; cv=none; b=eVvxr1bx/aoxcSqRkOt9/aXSRRhu4F6Uz2L+sdvsS83JY0Ny46svmsZuS4UKB3KyfL2nI/7dMyZfM0SeVeHPotw9KwLdT9TVFyzUCn9Q9aGCreZMJZFpvJuNUoefP/BH0AsuJMamCubcWsIMK5InehrY0pjVXnpZ5Y2cV7lhxEk=
+	t=1788858279; cv=none; b=K9Z0uUCDUTcdbB0KJB6/kP97q+W8juy4LPGDhPblB2w/XqlSlgR/6xG1T1uIcCagwS49PBS+aHijy5Fo6Kw6OVw9RKDzTNMbJ9JTJVHyCakgvW09oNnmdSCuTYVQa8UgC+EmuPgRZNbzieGEVyxxlrcDwTwOrZx1vZP5Fx/HPjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788858274; c=relaxed/simple;
-	bh=ZJNeg5pTZ18uzsm4DHJLk7inYrbR9OO62tp3hjKMD2k=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YxxOytcS84dLanR2ins/HwyknqEkPY0cRYzC7Hr5nlU1WA1DukKpMFlSS4Ftnpp5pJPqpSPZas9dlnRNrvrBMeO50UFvt/eE2of9mmL+QDAfbMpF3Z7ctiQtXK1sPjS5BAG9xzmTsWexx1epinuFmEL1qK2OhCV/xd+wY0/QBsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MJq7VnIR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788858279; c=relaxed/simple;
+	bh=nl0TXoKBPlA5zlwPstopqWen+goLxqiQjU57GvWWoCU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pssKMYDB2du0N/FFhLOOB0t51Oq7MLQOoZ0QNyEHiqGCg4INkgJ9nl9EF/KOqVPuuDS9WYcV7WoDB0wb4sdprg+dMONGHzQOXOF7umotTeQu22se59tyHrfbvTyExD3CC8mu7y1rs5EbtImq3UkT4GnD+Slo2r90PzJO5TFcjlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jXTo7dds; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MJq7VnIR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1D601F00A3A;
-	Tue,  8 Sep 2026 09:04:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jXTo7dds"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20D9F1F00A3A;
+	Tue,  8 Sep 2026 09:04:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788858270;
-	bh=HcQa/6bn55Lq4aamp8nGE30jzN4IQu4r4mmmH1jXWMI=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=MJq7VnIRA1h/jA0+2bSuUBJ0xuESFMN3y8borARDuSX7XFzs12QMPSyR9qKFzxEQN
-	 70wLv/vXbNcmlkw7zuP20e/fze6rPbguknpIlCo+OWzDD33/ZnobTnW+233nFko78Z
-	 uhhAeSq7cEYlfdc0YPowNViKEBW1I8v80a++oQYbCcOHRzRo2RUcTN3cO2O9S+vmqj
-	 MXDavS7FAV7ulHMMS5KMabyFOYMdphm2yrwhoDyCkbv6EqpueorrfuMR8yzxw1yZAx
-	 pmu9wrsKFKoQEwEu32Qg36M77vBeNdm1BblKPElSJUspc1wcrny8r8Zt5Q9SRZxtZJ
-	 /1hyeCd9zZTDg==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-scsi@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-usb@vger.kernel.org,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-s390@vger.kernel.org,
-	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v6 40/40] scsi: remove scsi_build_sense() and scsi_build_sense_buffer()
-Date: Tue,  8 Sep 2026 18:03:08 +0900
-Message-ID: <20260908090308.1085097-41-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260908090308.1085097-1-dlemoal@kernel.org>
-References: <20260908090308.1085097-1-dlemoal@kernel.org>
+	s=k20260515; t=1788858276;
+	bh=eBcJE46qpGOaQ5YTi/ar0FSLNCcMkg5PRiwG1QACxsA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=jXTo7ddsbX07a6PkdlLnLf0Po/zzUb1B1CsuevTZyQT0/bLAFdT8K8ClPlsBtp3tc
+	 4FiJOxG+r8vQAT0F+V8MGhwBsWd6usxe3ug2Lf0B0aWJfXFn0HmsoSS5RU9vOez1d6
+	 vFHHX74MBWgQqXBYTV+aXtn166iq0PGODSTNM2qmy7RWE2IhAqhF51l/fjwlOk9Ni4
+	 GMLPT4XwM+Z5CuGO6v+5Qz8X796d0mvRqmjP0Ob7VU3AlBJtIFzLwIjqhGbr6Jf/7n
+	 20kUGhqLfLOAUNDKEUVtYsuw4etRZtXRDewM3xJqerGF7DYQW2Rqt81+C3JfZZLgya
+	 a6sV0FY/GwCPg==
+Message-ID: <ee7fe885-9ccd-44b3-9f5a-4ec14e2b76b2@kernel.org>
+Date: Tue, 8 Sep 2026 18:04:32 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] ata: ahci_da850: switch to DEFINE_SIMPLE_DEV_PM_OPS
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Li Jun <lijun01@kylinos.cn>, linux-ide@vger.kernel.org
+References: <20260908061025.3580261-1-lijun01@kylinos.cn>
+ <e0412d20-6503-4737-8c9c-94f44f2c397a@kernel.org> <ap_LL-EaGZUmCaaq@ryzen>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <ap_LL-EaGZUmCaaq@ryzen>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Now that all code has been converted to use 16-bits sense codes and to
-initialize sense with scsi_set_sense() and scsi_set_sense_buffer(), remove
-the inline definitions of these new functions, change scsi_build_sense()
-and scsi_build_sense_buffer() to use a single 16-bits sense code as
-argument (instead of separate arguments for the ASC and ASCQ), and
-rename them to scsi_set_sense()  and scsi_set_sense_buffer().
+On 9/8/26 17:45, Niklas Cassel wrote:
+> On Tue, Sep 08, 2026 at 03:13:49PM +0900, Damien Le Moal wrote:
+>> On 9/8/26 15:10, Li Jun wrote:
+>>> Replace the deprecated SIMPLE_DEV_PM_OPS macro with the recommended
+>>> DEFINE_SIMPLE_DEV_PM_OPS. Use pm_ptr(&ahci_da850_pm_ops) to complete
+>>> the API migration and allow the structure to be correctly dropped
+>>> when CONFIG_PM=n.
+>>>
+>>> Signed-off-by: Li Jun <lijun01@kylinos.cn>
+>>> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+>>> ---
+>>> changelogs:
+>>> -add pm_ptr for ahci_da850_pm_ops in ahci_da850_driver.
+>>> -revise grammar and alignment issues.
+>>> ---
+>>>  drivers/ata/ahci_da850.c | 6 +++---
+>>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+>>> index 4e53ff96d712..469cf015bbf0 100644
+>>> --- a/drivers/ata/ahci_da850.c
+>>> +++ b/drivers/ata/ahci_da850.c
+>>> @@ -218,8 +218,8 @@ static int ahci_da850_probe(struct platform_device *pdev)
+>>>  	return rc;
+>>>  }
+>>>  
+>>> -static SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
+>>> -			 ahci_platform_resume);
+>>> +static DEFINE_SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
+>>> +								ahci_platform_resume);
+>>
+>> You resent the same v3... Did you mean to send a fixed v4? Or is it me for some
+>> reason getting the same patch email twice?
+> 
+> I just received a single v2 and a single v3.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
----
- drivers/scsi/scsi_common.c | 12 +++++++-----
- drivers/scsi/scsi_lib.c    | 11 +++++------
- include/scsi/scsi_cmnd.h   | 10 +---------
- include/scsi/scsi_common.h |  8 +-------
- 4 files changed, 14 insertions(+), 27 deletions(-)
+Indeed, I missed v3 in the email subject.
 
-diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-index 2cabc932acd4..94b160336247 100644
---- a/drivers/scsi/scsi_common.c
-+++ b/drivers/scsi/scsi_common.c
-@@ -276,17 +276,19 @@ const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
- EXPORT_SYMBOL(scsi_sense_desc_find);
- 
- /**
-- * scsi_build_sense_buffer - build sense data in a buffer
-+ * scsi_set_sense_buffer - build sense data in a buffer
-  * @desc:	Sense format (non-zero == descriptor format,
-  *              0 == fixed format)
-  * @buf:	Where to build sense data
-  * @key:	Sense key
-- * @asc:	Additional sense code
-- * @ascq:	Additional sense code qualifier
-+ * @code:	Additional sense code and sense code qualifier
-  *
-  **/
--void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
-+void scsi_set_sense_buffer(int desc, u8 *buf, u8 key, u16 code)
- {
-+	u8 asc = scsi_sense_code_asc(code);
-+	u8 ascq = scsi_sense_code_ascq(code);
-+
- 	if (desc) {
- 		buf[0] = 0x72;	/* descriptor, current */
- 		buf[1] = key;
-@@ -301,7 +303,7 @@ void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
- 		buf[13] = ascq;
- 	}
- }
--EXPORT_SYMBOL(scsi_build_sense_buffer);
-+EXPORT_SYMBOL(scsi_set_sense_buffer);
- 
- /**
-  * scsi_set_sense_information - set the information field in a
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7b1684379021..db64470f5229 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3585,21 +3585,20 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
- EXPORT_SYMBOL(scsi_vpd_tpg_id);
- 
- /**
-- * scsi_build_sense - build sense data for a command
-+ * scsi_set_sense - build sense data for a command
-  * @scmd:	scsi command for which the sense should be formatted
-  * @desc:	Sense format (non-zero == descriptor format,
-  *              0 == fixed format)
-  * @key:	Sense key
-- * @asc:	Additional sense code
-- * @ascq:	Additional sense code qualifier
-+ * @code:	Additional sense code and sense code qualifier
-  *
-  **/
--void scsi_build_sense(struct scsi_cmnd *scmd, int desc, u8 key, u8 asc, u8 ascq)
-+void scsi_set_sense(struct scsi_cmnd *scmd, int desc, u8 key, u16 code)
- {
--	scsi_build_sense_buffer(desc, scmd->sense_buffer, key, asc, ascq);
-+	scsi_set_sense_buffer(desc, scmd->sense_buffer, key, code);
- 	scmd->result = SAM_STAT_CHECK_CONDITION;
- }
--EXPORT_SYMBOL_GPL(scsi_build_sense);
-+EXPORT_SYMBOL_GPL(scsi_set_sense);
- 
- #ifdef CONFIG_SCSI_LIB_KUNIT_TEST
- #include "scsi_lib_test.c"
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index bf6d69f0249f..2f2364c96457 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -391,15 +391,7 @@ static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
- 	return xfer_len;
- }
- 
--extern void scsi_build_sense(struct scsi_cmnd *scmd, int desc,
--			     u8 key, u8 asc, u8 ascq);
--
--static inline void scsi_set_sense(struct scsi_cmnd *scmd, int desc,
--				  u8 key, u16 code)
--{
--	scsi_build_sense(scmd, desc, key, scsi_sense_code_asc(code),
--			 scsi_sense_code_ascq(code));
--}
-+void scsi_set_sense(struct scsi_cmnd *scmd, int desc, u8 key, u16 code);
- 
- struct request *scsi_alloc_request(struct request_queue *q, blk_opf_t opf,
- 				   blk_mq_req_flags_t flags);
-diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-index 405512554ee8..88a076c1a137 100644
---- a/include/scsi/scsi_common.h
-+++ b/include/scsi/scsi_common.h
-@@ -99,13 +99,7 @@ static inline u8 scsi_sense_ascq(const struct scsi_sense_hdr *sshdr)
- extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 				 struct scsi_sense_hdr *sshdr);
- 
--extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
--
--static inline void scsi_set_sense_buffer(int desc, u8 *buf, u8 key, u16 code)
--{
--	scsi_build_sense_buffer(desc, buf, key, scsi_sense_code_asc(code),
--				scsi_sense_code_ascq(code));
--}
-+void scsi_set_sense_buffer(int desc, u8 *buf, u8 key, u16 code);
- 
- int scsi_set_sense_information(u8 *buf, int buf_len, u64 info);
- int scsi_set_sense_field_pointer(u8 *buf, int buf_len, u16 fp, u8 bp, bool cd);
+> 
+> The commit log is different from v2 and v3, and your Review-tag was picked
+> up. However, the indentation still looks wrong. It seems to have 8 tabs
+> instead of 4.
+
+And yes, the indentation is still wrong.
+Maybe fix it when applying?
+
+> 
+> 
+> Kind regards,
+> Niklas
+
+
 -- 
-2.55.0
-
+Damien Le Moal
+Western Digital Research
