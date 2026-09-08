@@ -1,145 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011058.outbound.protection.outlook.com [52.101.52.58])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3E3F58494E;
-	Tue,  8 Sep 2026 18:22:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788891726; cv=none; b=WODpZ4AXjSspkiOjTvkazDzFOvZOvClebS/jPAIENSlh3vnqki0TM/5BKWBQDukok6wc35jQTfcGPXE/RMgoI9QLVS/+C5GIl4SrZfce03Rq1IvrJIuxb6c0w41hPwc762ZVtL1Yr7h6e8t0Yt1GT25DuG0kfZO74nKsoY6QdkM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788891726; c=relaxed/simple;
-	bh=pZUGW3mxkjzlt6qWdkhwhkzsYVZmmQwBD7ygtdVa8ck=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=AEBTaqlWQ8h11lY1vO1AVYRdP+Y14U1BrtDLx1eg/DQ0uaMzxDV/lTQhtMajFENzWkeFlHdbt2xOh+zU3Cz3nGzvQYKyM0inZvG8pSGlWvIuW+U5jbrl4/dLlfU153Po6G3LhIfi1NFh4jTBGzCLj8NQ6sU8CFZb/lgFzEKDH+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TiT4BGm9; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD30656C634;
+	Tue,  8 Sep 2026 19:06:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.58
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788894383; cv=fail; b=JuofD9rRfLaDPILZ/JOTpnY7AkUy3Co70Zebi+Y3R5bHtQ58HCa9PGC76Qnljv6FrPUBoQjPNbuMz6J3EXR0+NmGVkk/vMhQXNwMQ8FJDUfLawtE4vsprPXKRYNMaVuuY7XfqM3FkD3nS2czRDEQ3qEqMCexwyPDD/cmwTjYVrs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788894383; c=relaxed/simple;
+	bh=EZPQtm+bPefTUj5lMp6MUzxAtHVgAahOZ5Xk3wIIUAs=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=LmyHwZvYhy3f8PbTN0H6QLQoPUCiGE8D7B12z3s0coIa85tY5JDtmRWOu9AOyLy8ETUU2SFAroydB+/71Kgl5Joaqp4KE02j/08AiZ0XDyuDr1NrUC6/+s3X3rcjXCKhOJ1OIU/8lBpCGIZ9L5eMA793GWo1rzomQMSwmzwIVDA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=sSXjIVSJ; arc=fail smtp.client-ip=52.101.52.58
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TiT4BGm9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06DD31F00A3E;
-	Tue,  8 Sep 2026 18:22:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788891725;
-	bh=KOkqH9+KsQ/pfEOXoQXs/QBpMjFn4xAHhMmlbJfXtIs=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=TiT4BGm938ZXzhfpCXXPU+WVWM5OoeDt3/bK+ZLWDhhs1eF+y1t+MrjCirtWxjCPV
-	 ZHP4C4FEGNTUf8kWLhlej6CO2Qx1qbgXw4xIjE7QUe9bCLx1nUVQI2rW/JUoxquQ7s
-	 obT6lVwnBhVjEUczZ6TqcKkztvD8bpofHYkv7K9t1HnaGWzgSdYAKrCuN4TENKgGfV
-	 d9avD5WoNmq9IrbBkHbWi1UkwqZqnl/tdmc5/MMAfq6LXh+FpWaDM72bj1zWFHRZIx
-	 dzAZ2PFKU8Z4apXP1uNN/BQdakhpCGb887ZATF8v/HYvAj1EdK9FGG7ExGmqRj6aLU
-	 cLy+eplHy6ggA==
-Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
-	by mailfauth.ams.internal (Postfix) with ESMTP id 62F16198003A;
-	Tue,  8 Sep 2026 14:22:02 -0400 (EDT)
-Received: from ams-imap-03 ([10.64.2.23])
-  by ams-compute-02.internal (MEProxy); Tue, 08 Sep 2026 14:22:02 -0400
-X-ME-Sender: <xms:R1KganhWojexTaEkcE9JNG2cPj7XgDgOFoXrGK4XmayHCNKPiO9VaQ>
-    <xme:R1Kgau10_SvGPB3yfP4vC7fFqFw7CFxNWNHyAOuKkR1D3WdEFe3_l1bs_81OVeuT-
-    TvpIP0I9YyFC9FtFqLdEAVy259vPupVkwojcM3tDj-Ur1n7W8HVZA>
-X-ME-Proxy-Cause: dmFkZTF3Xbdz07cy4boaCVQHFkenJCqc2sn4pb294JKVq2iAU/ryEnJrbS5rHRz/45kLdP
-    XWVPpmR29IIAjw31EDFDOoChR5dpk7oDeztrPOMK6Ck6rUZyoBVx+gU/Dj+v2ezibRn/3Z
-    6copKQyaHQTnzkXFaRPpL+YsGtqzZF8KdZn0FKgRlMOihu7MmoU83A9qIw5BuKzEDvlTFC
-    hkYrh2QdS2qnv5wk8D0+zIgWAi+fdBqzJoR6DSey3OStD8Far5kE1hHrAv5MW+cSE92604
-    C0JRxb+rlMAsR5nZZHdab1pbHPOU2NsD1PcNS9z4aUCnOnSHzZzNZWET46rcpd7ZG3n6Zp
-    23NB5BYR9Bd2vlT99ZOgkZynr7E8I3RD8qiC3VJf7Vwao2PfWxTnJpoGsqCAkB7VUl2RiA
-    iFQniTW0DmVYGD4YR/R1+UC0pImIplV9uP1J5d8ZROiVKPwGAQyS2/iK42Fmxof1ON/y7c
-    8HYLyRpBRPmYiSuAw8UZ7v+MaAJjjPcBzs4AGz7ScKQdHquEMdlRoBfggT0viLHZSI7dey
-    6sGEL6e5OCUhAEgk0wFO/27J+MEfYUkM3vdmBLb5bFJgJ2CA3jtJ7Yeo5xke8uESS3zrAl
-    /pg3sPxHGz8QeYtfQ6nR+fsf9bPOlUF4X3Z7E/Zv5bzYrIY2S3/tLiBS4wOw
-X-ME-Proxy: <xmx:SlKgakKMyflVPzT2IaiVNPoit3F_v_SjIGgTR7F9CFExNsQVJHhdWg>
-    <xmx:SlKgasG6ovtp0PxJslZBsEexayDxOMD1Ftz_o4s2LvqKcOfBVP1pMA>
-    <xmx:SlKgar7zpPWvSZN0h6Z3E1JiiiuQfAWt1u4bCGJuv8NIIDx0iClvNw>
-    <xmx:SlKgan3ZQ1aVDog9cCn7AS2QRAKeDXuh--6GdSSWbM_NUMzrG7ow7A>
-    <xmx:SlKgang6dUc9NvIN_N5Ch2nIpi01dqxYKTTh1R4UYO_yWH9JD0MboRxU>
-Feedback-ID: i36794607:Fastmail
-Received: by mailuser.ams.internal (Postfix, from userid 501)
-	id 8F55A32A0078; Tue,  8 Sep 2026 14:21:59 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="sSXjIVSJ"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=c+CeKItBpE3qUh9tXOp1WQ8aeliYcRM47oDP4rGTlg/wtOTKg7RqMxbIVcEC47Bv+NnAmfSIlIfigQVawts7dguzkOxqCwjv/whlaLsTy2UZUUV6BpxlXPkItUMbgVPI9T69joks74ve1ZhoTq1pnWY8mlIEOlOaGIl5vJbRkEIQwumGN1m4MQlIBCc77RMwazbC6D5bYA47wLmCaGbm92USJfSieeU7BV0jYtdK7C1G/1E04q/Z0dTPHmsg9qh37xbV0iyA3dw6vQqe1gmq+07Zp/0lmqPYvXWOy5U1if5/rVmDEOhm4NjiwmRtFh25pHRfUwMwhQtZ5M9BIPcw+Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LtbcFJYtEf/HtRnVfcDYZKKsZHb9247CR5SHn7RNmXU=;
+ b=NBDDqpPiMohbN7LDQh2hXP5loXt98i3WBS3cX+hhk4kbv9k7a0kvtQ3qUiV5dFCJQXWNxg0pb4uI82zDIUW+qvTiiuHIcxDPsWvjGxn3mFU6fpYFrb84IohbVoMMTdfySMILDt4wsNfGtt2rbQkKfq8c5RTp2FNaBRqZMu9GE2N2WLm75LKMb50My5hue8aYz9YYOLnycRQyy7GUn1qLgT93tWFFFk3spWYz2QmV2sTcon1ryaOpdiaW7OstRZBuwYp/pxE+fKjyzzdxKCXSMmXDxXLHdz4GDsQ9FB/a1TF3c8UHhsu6CtabAo3tYF29jZApqnmPvpIq3NxxJumBOQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LtbcFJYtEf/HtRnVfcDYZKKsZHb9247CR5SHn7RNmXU=;
+ b=sSXjIVSJaLlAhdvz7Jr4taqINeDL9kpc4pOQWE8ndFdhkRKiHatLpDavKjYlLSdCK/KA6IF5AVvScntjh3nrtOeW7802l13dUoduk5L8OANAStUty45ZsAclXd/dAetCt1LQDTiXKuOceiYD7/gDtOgae7tdKgMhju+DdjeFVt8=
+Received: from BN9PR03CA0108.namprd03.prod.outlook.com (2603:10b6:408:fd::23)
+ by CY3PR12MB9607.namprd12.prod.outlook.com (2603:10b6:930:103::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.7; Tue, 8 Sep 2026
+ 19:06:17 +0000
+Received: from BN2PEPF000044AB.namprd04.prod.outlook.com
+ (2603:10b6:408:fd:cafe::6e) by BN9PR03CA0108.outlook.office365.com
+ (2603:10b6:408:fd::23) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.406.6 via Frontend Transport; Tue, 8
+ Sep 2026 19:06:17 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
+Received: from satlexmb08.amd.com (165.204.84.17) by
+ BN2PEPF000044AB.mail.protection.outlook.com (10.167.243.106) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.406.5 via Frontend Transport; Tue, 8 Sep 2026 19:06:17 +0000
+Received: from Satlexmb09.amd.com (10.181.42.218) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 8 Sep
+ 2026 14:06:16 -0500
+Received: from aus0006770c4n-lx01.amd.com (10.180.168.240) by
+ satlexmb09.amd.com (10.181.42.218) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.46; Tue, 8 Sep 2026 14:06:15 -0500
+From: Mario Limonciello <mario.limonciello@amd.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+CC: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
+	"maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>, "H .
+ Peter Anvin" <hpa@zytor.com>, "open list:PCI SUBSYSTEM"
+	<linux-pci@vger.kernel.org>, "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)"
+	<linux-kernel@vger.kernel.org>, "open list:LIBATA SUBSYSTEM (Serial and
+ Parallel ATA drivers)" <linux-ide@vger.kernel.org>, Mario Limonciello
+	<mario.limonciello@amd.com>
+Subject: [PATCH v2 0/2] Fix for storage corruption w/ AMD IOMMU on 64-bit addressing
+Date: Tue, 8 Sep 2026 14:05:58 -0500
+Message-ID: <20260908190600.226485-1-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: ANqE0jO8KCPJ
-Date: Tue, 08 Sep 2026 20:21:39 +0200
-From: "Arnd Bergmann" <arnd@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
- "Damien Le Moal" <dlemoal@kernel.org>, linux-rtc@vger.kernel.org,
- "Neil Armstrong" <neil.armstrong@linaro.org>,
- "Vinod Koul" <vkoul@kernel.org>,
- "Alexandre Belloni" <alexandre.belloni@bootlin.com>,
- "Vladimir Oltean" <olteanv@gmail.com>, "Frank Li" <Frank.Li@kernel.org>,
- linux-pci@vger.kernel.org, "Rob Herring" <robh@kernel.org>,
- "Conor Dooley" <conor+dt@kernel.org>, imx@lists.linux.dev,
- "Niklas Cassel" <cassel@kernel.org>, linux-ide@vger.kernel.org,
- linux-watchdog@vger.kernel.org
-Message-Id: <71266564-7be5-4621-ab03-29cf9ec49287@app.fastmail.com>
-In-Reply-To: <20260908161125.E4A331F00A3A@smtp.kernel.org>
-References: <20260908152808.3928630-1-arnd@kernel.org>
- <20260908152808.3928630-6-arnd@kernel.org>
- <20260908161125.E4A331F00A3A@smtp.kernel.org>
-Subject: Re: [PATCH 05/13] ARM: orion/dove/mv78xx0: remove all board files
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb09.amd.com
+ (10.181.42.218)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN2PEPF000044AB:EE_|CY3PR12MB9607:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4666a240-656d-44f5-74e0-08df0ddc4296
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|1800799024|82310400026|7416014|376014|36860700016|10067099003|56012099006|11063799006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	8YUI3p8RYrr3GqLn+83RFAgX1eXgvOKOC857aEccRgWYqSBw8BHBeWpiRzUGe2yqYsqfH3aazLlE9oV7PXF1QX78lKpJiMQHiTtb2CIdn5AXaI7fZuybHc8IYtpDm3JTseOJB2yW/rgfZwLJtAW1cXuRf3xkX9Bh9ViQonn3QTaY+BGQXrUAgIGYgMeH1SgDlXIgZTSe3jQNUBpPzvy9jVB4sBEKLTwFtA1r9NtLkcQL75VSSkLGNt/R8vhuZMpP11XLx59mgtTqM9sa3pyToR95HTz6FItiNbcC/ApUgTiydClaFhmKXj7RHhQFGATbGyc0Mzdel1Vj7LeKErJC9a03F2CVJCX6ylkbHrKqm27CgRQ6Ja8SZ9WCq+0REWOXja+tIapvrEJxQ26LOPeMyFI0VmrASTced93Os9r4vzNBdjB7DSQPMj11F5lw4UuZls7tiv+SoPvkIqe376+IN41NfiOCXPjcgXn7aQas3EEypD4+OyP1dIqsECt74jzqMCwWResHAW6rUpG1yJv5rr8d/6DdjWAjnRxQC+SLHg7YwFBMP7nyJTLnd9ZP3SL7EEMMEyRh2sGBvF9GdLQWtGWay27ALzjgGGWQ3r9cWM/8GRsqzizgOFCS0fjPNzN+TgTi9IhOIw0ZizNa2wQDeDytHAB4bLP2xsSuwYlljAVuU2R4rvwxOFLPx52tBg/10lb7YU8nNf8vF9aAect65g==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(82310400026)(7416014)(376014)(36860700016)(10067099003)(56012099006)(11063799006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	mOT0VTj/getcgCCDGf/oUhCfoLTR+2UVd4Nu2dauu/kJoZRobetyNbzrjnqNfsGAyctg9MRghpw/ly/sUzL0gq11uXJZ3gVFptTLgmTHHomC/MuFGJep2N44K5S6DFH/56YV9l80DRhVwWp2IHvsr0W25h31nPRUZglGkNyqvMHg7Kj/a8/sLR+dhAcUH0dORfPFyAKpM+fd4GpKOAMAc4rB4zU2gkJHK66cmqRfSEO4iHuLejtcTYaDsWTiSNOAgrhMMM1F10H7iRkJ6bnu7g2vuVpNZ2rNNYdw0eIvhfU1aNJcaW67K869n8fyQre2pV0DTix5aRtPlkjG5vVlUqJrC/HqXulxAXTlYJp0pnes7VnrqSqwTtUp3JV+9Z/917e8UTCLspEngVEYgGjkx5bbAHTHz31TVtj1J2u5CHMbZu7YSMHdYq5tn6tCMsH7
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Sep 2026 19:06:17.0613
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4666a240-656d-44f5-74e0-08df0ddc4296
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN2PEPF000044AB.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY3PR12MB9607
 
-On Tue, Sep 8, 2026, at 18:11, sashiko-bot@kernel.org wrote:
-> [Severity: Low]
-> Since all the board files like arch/arm/mach-orion5x/ts78xx-setup.c are
-> removed in this patch, should the MAINTAINERS entry for the TS-78xx platform
-> further down in this file also be removed?
->
-> The pattern F: arch/arm/mach-orion5x/ts78xx-* now points to deleted files,
-> which leaves an orphaned entry for Alexander Clouter.
+An issue has been reported by a number of people that corruption
+was occurring on storage for desktop systems.  It's notably reported
+on SATA, but the same issue also appears on NVME.
 
-I fixed this instance now. I tried to automate this with a script
-but could not figure out how to deal with wildcard matches and
-only did the ones that have an exact file match.
+At a glance it looks like an IOMMU issue as turning off the IOMMU helps
+the issue, but it's actually a problem that occurs specifically with any
+IOVA addressed >58 bits.
 
-If anyone has suggestions for doing this better, please let me know,
-or run your script on 
-https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git/log/?h=board-remove-7.3
-and send me the results.
+This is because the BIOS on these systems is enabling a feature of the
+root port called 'enhanced atomics' which repurposes those upper 5 bits
+of address space.  That feature should only be enabled by the BIOS when
+the partner device supports it, but it's instead needlessly enabled on a
+number of root ports.
 
-> [ ... ]
->
->> diff --git a/arch/arm/mach-orion5x/Makefile b/arch/arm/mach-orion5x/Makefile
->> index 6f54d7fef27a7..7e9634e043185 100644
->> --- a/arch/arm/mach-orion5x/Makefile
->> +++ b/arch/arm/mach-orion5x/Makefile
->> @@ -2,15 +2,6 @@
->>  ccflags-y := -I$(srctree)/arch/arm/plat-orion/include
->>  
->>  obj-y				+= common.o pci.o irq.o mpp.o
->> -obj-$(CONFIG_MACH_KUROBOX_PRO)	+= kurobox_pro-setup.o
->> -obj-$(CONFIG_MACH_TERASTATION_PRO2)	+= terastation_pro2-setup.o
->
-> [Severity: Low]
-> Are irq.o and mpp.o now completely unreachable code?
->
-> Since all the board files that called into these APIs have been removed,
-> it appears these objects are now unnecessarily compiled into the kernel
-> image. Should they be removed from obj-y here?
+As some of these systems probably won't receive BIOS updates and there is
+active reports of data corruption root caused to this add a quirk to
+disable it on affected models, and also remove the quirk that was
+introduced to work around this issue in drivers/ata.
 
-Added this to the patch, removing the two files and recursively
-seven more that become orphaned afterwards:
+v2:
+ *  Added resume fixups for the affected AMD PCIe ports
 
- arch/arm/mach-orion5x/Makefile                |   2 +-
- arch/arm/mach-orion5x/irq.c                   |  51 ---
- arch/arm/mach-orion5x/irqs.h                  |   9 -
- arch/arm/mach-orion5x/mpp.c                   |  41 --
- arch/arm/mach-orion5x/mpp.h                   | 130 ------
- arch/arm/plat-orion/Makefile                  |   4 +-
- arch/arm/plat-orion/gpio.c                    | 616 --------------------------
- arch/arm/plat-orion/include/plat/irq.h        |  15 -
- arch/arm/plat-orion/include/plat/mpp.h        |  34 --
- arch/arm/plat-orion/include/plat/orion-gpio.h |  38 --
- arch/arm/plat-orion/irq.c                     |  39 --
- arch/arm/plat-orion/mpp.c                     |  82 ----
- 13 files changed, 2 insertions(+), 1066 deletions(-)
+Mario Limonciello (2):
+  x86/PCI: Disable enhanced atomics on some AMD PCIe ports
+  Revert "ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585"
 
-This leaves only pcie.{c,h} in arch/arm/plat-orion/, which
-should be folded into arch/arm/mach-orion5x/pci.c, along
-with parts of arch/arm/kernel/bios32.c that nothing else
-uses any more. I don't have a patch for that yet.
+ arch/x86/pci/fixup.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/ahci.c   | 18 --------
+ 2 files changed, 99 insertions(+), 18 deletions(-)
 
-      Arnd
+-- 
+2.43.0
+
