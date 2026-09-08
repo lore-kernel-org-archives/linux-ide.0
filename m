@@ -1,132 +1,133 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9635548552;
-	Tue,  8 Sep 2026 15:34:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25CA3563FB7;
+	Tue,  8 Sep 2026 16:11:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788881688; cv=none; b=BiHv4jP8tqQqeWluC3FVIS5wdSnEiDMas2rV9C+QFVXLHHs6ODKAlvNmypDgzf8m1+ggGIDNtFZ20ZJOfi8j9LzFehM4ZtAk+K/emXk1bWxGq5L5ES1FS2TTqBg7KB2RR+su9AZEHdlJ0s45R1dTWEzYaDTVtQ2whqRSlUr0ph0=
+	t=1788883888; cv=none; b=OGCoh9uQ3nlggzQ8KVgSa4Dpxs8KHLx5QjufANOkbrW2OUdLOPnwwPMxUTanWJYYNnsv0WONj5qir6vIYlmwHa9v1biLOcANBUX4sUAWq5kwwLqaF/mljUctY3Fd5nOgbGmS2Dh0v4VthpLcVzIP4sAx1mbm3m4vWBR+WPa032Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788881688; c=relaxed/simple;
-	bh=2xdZ+I35O5wMzCJuFztU21SdXhO0KTe6CqKTPCSHmFo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J/9AVwprOejM4oE3Ve1X+534Z+PfR9S8Kwjs1ikES1eC86BJnfA5sprLc50XJZt1yMVNjRZB0xQ/Nylj/q2XgU7UCRanA1N0VJlPV0kBMJmXZ6ZGjeLvr2YlQHXjZiIjfp1V2kf6JRpLr5KTMu64wgMY8sHY9L7ej/641J7/dfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OBCoJrEg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788883888; c=relaxed/simple;
+	bh=LCJB/bBSJ6Qr8C+a3E//aJEMDEm/ATsf1wj8b7Yqqlk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=lB9oYUVL83QkAttG7QLEZoMYYgEHJxoAcNsoPYcGAPTzFeUOOI9Q/h28JYLTe9g2vomQNeOQsevoGeFAj9AEKopBN1eD1kd1Ojt66uBHg8DjgMOl7/eyt/DbEVzNMuQHgD2NKaebeQFJ0f4HOE1+zmTZ3NYTEFFGyIb0NEdx2BU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KeQoNOP2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBCoJrEg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 654811F00A3A;
-	Tue,  8 Sep 2026 15:34:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KeQoNOP2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4A331F00A3A;
+	Tue,  8 Sep 2026 16:11:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788881679;
-	bh=2xdZ+I35O5wMzCJuFztU21SdXhO0KTe6CqKTPCSHmFo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=OBCoJrEgKyTIogjTC/andPa6J0fJ1vFRHhoBRsIEo6UKgKKpa/UE9KjPF+prT18B6
-	 +WU/mwHOifa5Vb3wnHcP1QKhgfPzJTG3QFZn3oU1n8nTn09O4NY9KcMRLwd72CLBOq
-	 WcC+5KRMiI+BLF0jeV0TNM6ukmdxL1YkiDt0ykTh4FzcPaBpInMJuRzL56Y7YyPrBk
-	 9CjpQGx2c0/yHP+IEP+94P46/Og36DHw9BvOpAcA40cfSStyY3HAwEDtUGKRnsduzU
-	 tSv50jVo+Ac7sXDU/zwy9lKX1QZUxOczMJvb42m3GZ1+Ja6tAkwTz9Q3vkVDJsWNyx
-	 1PBqPdZbzC2gg==
-Date: Tue, 8 Sep 2026 16:34:24 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: Krzysztof Kozlowski <krzk@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	Linus Walleij <linusw@kernel.org>,
-	Russell King <linux@armlinux.org.uk>,
-	Drew Fustini <fustini@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Sudeep Holla <sudeep.holla@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>, Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Vladimir Zapolskiy <vz@mleia.com>, Stefan Agner <stefan@agner.ch>,
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Alexandre Torgue <alexandre.torgue@foss.st.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Andreas Kemnade <andreas@kemnade.info>,
-	Kevin Hilman <khilman@baylibre.com>,
-	Roger Quadros <rogerq@kernel.org>, Tony Lindgren <tony@atomide.com>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@bootlin.com>,
-	Robert Jarzmik <robert.jarzmik@free.fr>,
-	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
-	Ethan Nelson-Moore <enelsonmoore@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Alexander Sverdlin <alexander.sverdlin@siemens.com>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Karl Mehltretter <kmehltretter@gmail.com>,
-	"David Hildenbrand (Arm)" <david@kernel.org>,
-	Nicolas Pitre <npitre@baylibre.com>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, imx@lists.linux.dev,
-	linux-stm32@st-md-mailman.stormreply.com,
-	linux-omap@vger.kernel.org, Alexander Clouter <alex@digriz.org.uk>,
-	"Jeremy J. Peper" <jeremy@jeremypeper.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, Ulf Hansson <ulfh@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Daniel Lezcano <daniel.lezcano@kernel.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	Thomas Weissschuh <thomas.weissschuh@linutronix.de>,
-	linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
-	linux-rtc@vger.kernel.org, linux-pm@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-sound@vger.kernel.org,
-	linux-gpio@vger.kernel.org
+	s=k20260515; t=1788883886;
+	bh=eQtOv7eD6H20m0zWo+xhl+DuKQqGCiyKfHcdLqZ0so4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=KeQoNOP2/AbBnkNeFbs6XXLyde3Oo327CnQL++APk9XwN5MCbaW/Qh1rTloh9A6Nt
+	 Gn3aUI8A7IY+4ooXj8sdx5yq1De/+RNBK8Bh/xScHsfxmAXI3x+Pr9nKNY6fZeG1nM
+	 f9eOjDMBhb36++NBYBApMj7BdNSEvS8vBHvQvdnri/FTP5U7pCqkJ4HRQpNzw701HN
+	 SaS4B7B4HirV+fPe1PbSpvmRPXMZtZNGzl5RPy4YnMtLgqryF/5zZ1NjBZS1T++Lgz
+	 HobDVTwXGEZPQCMQ2ykRxdBZpoE5EMlVIcLam5TkXxifdVGpxyO1dXWHmqy1ux6aLu
+	 yW+D8TQZT9EBw==
+From: sashiko-bot@kernel.org
 Subject: Re: [PATCH 05/13] ARM: orion/dove/mv78xx0: remove all board files
-Message-ID: <c38b1d3e-fcb7-419d-b62d-200eb552df52@sirena.org.uk>
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Arnd Bergmann" <arnd@kernel.org>
+Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org, dlemoal@kernel.org, linux-rtc@vger.kernel.org, neil.armstrong@linaro.org, vkoul@kernel.org, "Alexandre
+ Belloni" <alexandre.belloni@bootlin.com>, olteanv@gmail.com, Frank.Li@kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, imx@lists.linux.dev, cassel@kernel.org, linux-ide@vger.kernel.org, linux-watchdog@vger.kernel.org
+In-Reply-To: <20260908152808.3928630-6-arnd@kernel.org>
 References: <20260908152808.3928630-1-arnd@kernel.org>
  <20260908152808.3928630-6-arnd@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 08 Sep 2026 16:11:25 +0000
+Message-Id: <20260908161125.E4A331F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="Io5kq1JWW/hrTr1x"
-Content-Disposition: inline
-In-Reply-To: <20260908152808.3928630-6-arnd@kernel.org>
-X-Cookie: The world is not octal despite DEC.
 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Low] Orphaned MAINTAINERS entry for the TS-78xx platform.
+- [Low] Legacy IRQ, MPP, and GPIO implementations are now unreachable dead =
+code and unnecessarily compiled.
+--
 
---Io5kq1JWW/hrTr1x
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+commit 67c50c71bc1677d3a7c7538373463163afb7b062
+Author: Arnd Bergmann <arnd@arndb.de>
+Subject: ARM: orion/dove/mv78xx0: remove all board files
 
-On Tue, Sep 08, 2026 at 05:27:55PM +0200, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
->=20
-> The 'orion' platform is the predecessor to what linux now calls the
-> 'mvebu' line of Marvell SoCs, and originally covered orion5x,
-> mv78xx0, kirkwood, dove and a few others that do not have any
-> upstream support at the moment.
+This commit removes the legacy board files for the Orion, Dove, and MV78xx0=
+=20
+platforms. These files were retained in 2022 due to support in Debian/OpenW=
+RT,=20
+which is now gone.
 
-Acked-by: Mark Brown <broonie@kernel.org>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index fdd75b73bf293..2bb036e8ddcd9 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -3080,8 +3080,6 @@ F:	Documentation/devicetree/bindings/arm/marvell/ma=
+rvell,orion5x.yaml
+>  F:	Documentation/devicetree/bindings/soc/dove/
+>  F:	arch/arm/boot/dts/marvell/dove*
+>  F:	arch/arm/boot/dts/marvell/orion5x*
+> -F:	arch/arm/mach-dove/
+> -F:	arch/arm/mach-mv78xx0/
+>  F:	arch/arm/mach-orion5x/
+>  F:	arch/arm/plat-orion/
+>  F:	drivers/bus/mvebu-mbus.c
 
---Io5kq1JWW/hrTr1x
-Content-Type: application/pgp-signature; name="signature.asc"
+[Severity: Low]
+Since all the board files like arch/arm/mach-orion5x/ts78xx-setup.c are
+removed in this patch, should the MAINTAINERS entry for the TS-78xx platform
+further down in this file also be removed?
 
------BEGIN PGP SIGNATURE-----
+The pattern F: arch/arm/mach-orion5x/ts78xx-* now points to deleted files,
+which leaves an orphaned entry for Alexander Clouter.
 
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmqgKwAACgkQJNaLcl1U
-h9DsUAgAhTBN3De8z6XWQRAaxTKXnxOI2ZAZ09YuAC1G51g140wYOj1XcTcrgluM
-7wjICW1rmG/S2w60M9udCHUfMPlo9rW6GIGO2B1qfb0m4qgWkKLQATvB5YsJ2zfW
-L99pWEuasrdzP7KGhnrxKZNOdQCFpTgvdUjqnrbSnWylQvyy6wvJ0mk9b3x8Cg60
-MEJcm4MwHcaLV1P15o/WmXRf66ZBs3I0qbjeg/jQFAAqYtR525BYiKvMuPc/ASW/
-/wP2S0zxYLYrFdPFpCGcfbozjD/XENGuCLe3va+eSiqYc2zPA7sSRG5+j5CJNRV+
-v0dE8G7KZ/6VC0eWNsgkbHlxV41eIg==
-=fCpR
------END PGP SIGNATURE-----
+[ ... ]
 
---Io5kq1JWW/hrTr1x--
+> diff --git a/arch/arm/mach-orion5x/Makefile b/arch/arm/mach-orion5x/Makef=
+ile
+> index 6f54d7fef27a7..7e9634e043185 100644
+> --- a/arch/arm/mach-orion5x/Makefile
+> +++ b/arch/arm/mach-orion5x/Makefile
+> @@ -2,15 +2,6 @@
+>  ccflags-y :=3D -I$(srctree)/arch/arm/plat-orion/include
+> =20
+>  obj-y				+=3D common.o pci.o irq.o mpp.o
+> -obj-$(CONFIG_MACH_KUROBOX_PRO)	+=3D kurobox_pro-setup.o
+> -obj-$(CONFIG_MACH_TERASTATION_PRO2)	+=3D terastation_pro2-setup.o
+
+[Severity: Low]
+Are irq.o and mpp.o now completely unreachable code?
+
+Since all the board files that called into these APIs have been removed,
+it appears these objects are now unnecessarily compiled into the kernel
+image. Should they be removed from obj-y here?
+
+[ ... ]
+
+> diff --git a/arch/arm/plat-orion/Makefile b/arch/arm/plat-orion/Makefile
+> index e8c7580df8caf..dfde39cdd992b 100644
+> --- a/arch/arm/plat-orion/Makefile
+> +++ b/arch/arm/plat-orion/Makefile
+> @@ -5,5 +5,5 @@
+>  ccflags-y :=3D -I$(src)/include
+> =20
+>  orion-gpio-$(CONFIG_GPIOLIB)      +=3D gpio.o
+> -obj-$(CONFIG_PLAT_ORION_LEGACY)   +=3D irq.o pcie.o time.o common.o mpp.o
+> +obj-$(CONFIG_PLAT_ORION_LEGACY)   +=3D irq.o pcie.o mpp.o
+>  obj-$(CONFIG_PLAT_ORION_LEGACY)   +=3D $(orion-gpio-y)
+
+[Severity: Low]
+Similarly, does this leave irq.o, mpp.o, and the orion-gpio-y objects as de=
+ad
+code as well?
+
+Since their corresponding entry points in the board files were deleted,
+could these also be removed from the build?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908152808.3928=
+630-1-arnd@kernel.org?part=3D5
