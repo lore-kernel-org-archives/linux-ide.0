@@ -1,72 +1,72 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B9203F9287
-	for <linux-ide@vger.kernel.org>; Tue,  8 Sep 2026 21:39:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6C774A2A55
+	for <linux-ide@vger.kernel.org>; Tue,  8 Sep 2026 21:42:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788903601; cv=none; b=nO9Oq3VRualAwJoNUkpIAzHlDdFR+uMpW6JjFBol1GcUThIArSu5O6v9/rQHXtKaKZlPKffCcng9f226nQlTCLyjYyySAcPdcHVyY2VZpM+MSaiZ/6ydfRSnd118XbMPcF8P6UO1knFKiFfRcZz1SGGfXM8kJc719XZKTwNLxD8=
+	t=1788903738; cv=none; b=MmmquKtcYojcSZnnHcoAPT9SeuiJqxpexcJkkJOSrAxazjT2wNpxTtIjlkzCwT9tPOSL+6++/T808GIepoRjWe5nCb6tIRKZbDvoM1doLS4s9gGvdR5SLKSQdYPqr00+/X5ME27xQTEul6xQgiTSIixAWWvvl+ILAMYbzOrj3BU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788903601; c=relaxed/simple;
-	bh=977pn0LLyZC5BVOhDeyI3JoMJCmiQAyuFK2zDe4vhWU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TX9n/0b9TAtWJStN5Ns7o6Si7jXCEUeahji2LRdsMUXD5nXTDbJPdd0BDfytkxWxt7xIV0Adn3K7DERGUVXE6kSnLc5kaZJJHHWCbt5M/9OHjKChQi3LvWCHhfiBYHhJl8get+n6xdSoqkpchtaMW0qHSKi/5XaOq+b8JqWUTo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EeaQ3MKc; arc=none smtp.client-ip=209.85.215.173
+	s=arc-20240116; t=1788903738; c=relaxed/simple;
+	bh=B3RlepYw+gz7j/lHhtDy+Q356KPKjQOJnndOnA4AUCo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CEHUoanj1EPIYNI8Ae1X6pmhATCdRBGifQiNPczaV+Up0kLtnOS6NJo9wWeb7GmC2XHGoTZqR4jB/tLZFGfvGw9+8mKPkUzB7UzynG9kmYD6Oy/mz3w6DoWdFhT+AdBtmzl5+kgTyQjTr/p//OFV4+jfWBQb/Lbb4k2/zc69jGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=s0CvCtLh; arc=none smtp.client-ip=74.125.227.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EeaQ3MKc"
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-cc1d57602e8so4534931a12.3
-        for <linux-ide@vger.kernel.org>; Tue, 08 Sep 2026 14:39:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s0CvCtLh"
+Received: by mail-pj2-f12.google.com with SMTP id 98e67ed59e1d1-396ccdaea76so651795a91.0
+        for <linux-ide@vger.kernel.org>; Tue, 08 Sep 2026 14:42:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788903599; x=1789508399; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788903734; x=1789508534; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1sgkB+Y1tN2PwIL85ID71m07+dCgaqo9yFxVcudQGYo=;
-        b=EeaQ3MKcQwWfAgytO0Z+WIcBjLZfThYEeoz5gLALwD+O2Hd/4jjBKTad8rbne2wuab
-         VmCFMsjDxcJKIbSeg9IYj2w+lWbPkEEgp+ViCaMff7SI2Tev7LavbEG5G+sGsJJkbTns
-         GYSu2Yx/+0UZAo/x24p/DPp5veTCs1c3kRpwbpJA2dcbmLdVBWEtDw8WsPbCPlY76WEB
-         vBcoWJNN4RCrAE3xnMXev4EqHfF02NO6Co7rsGn57paqdxWH47/8YoXSKvb7lbP39/eF
-         1PPo6uPvpcHrosNWthJ4mWaUAKZRGwY2NLwOD+XP4wr3RWixdhFq1JymkDsO+RNgNxmr
-         mNHA==
+        bh=UHrD1W/xUh8N3eKgAHmZMqC6W7o0uzrtTZ6P6CfRVxQ=;
+        b=s0CvCtLhGK0KihJ+6z5+msKxL6UdhziavUMMVU0NoXn6rJk9MLJYooxSNThz02K80L
+         o5ft5G6TOA6/wTO7a/brDlf7ve82ciQOpB3XwRMLa30yni8H4ntN5OK8A7J5xSxT/0+C
+         12rDj5ewVTqe9dfJeNkyWQCbAtxa+DlTs8rSpzRTEl28UwKyp4IZpME764ycMhmr19zp
+         ATAi70Cibn1GmFXTqCkitLkmcHA2WMkfvgAQlNTZVSrAB7bIUqLoLmld3ASdKcvD27Jt
+         dR8v2xvMtoheY0JUZIQgoy/iOdW6+xLQgHtA8skEkXmkh44CSI2p602rBav601lgIsEs
+         rSZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788903599; x=1789508399;
+        d=1e100.net; s=20251104; t=1788903734; x=1789508534;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=1sgkB+Y1tN2PwIL85ID71m07+dCgaqo9yFxVcudQGYo=;
-        b=q31XtyOO1E7f7sTsJS/vpWv1Gb/9ckNtdZiEImgLInGOqHDWYnfz7kYs5KqMvbna2N
-         oWCPtT08qPWfou9wbugiR7z4C8Uu4T+2A6tswZFK/n5sfAc3w1+WuJT6Rr5sAd+fJZ+G
-         wB3xQfb/EnVjWFsrffomS2CgUeRMDdGOVnyKnnBLbeFtNvSMX3wazl9pa80xYW+7ETNW
-         bFBsxqg4tjwU9Fi5nefGzSI4HhnwKKYfQS6JgYxuKXrNhKABJZHAYpEjIsHbUgrWr5jW
-         MwzGkOFLP9oPK6+MlvkCLtrz6VIZyBxJDlMEBr1QiaQoQmziMobNNBGu6vo533EAPFBJ
-         45MA==
-X-Gm-Message-State: AFuF++nkz2O+Ffh+FmOCwKIc73HeGxngkpvoDx03p97j0zFL/LEcdbt9
-	dRMml/ZS5g35cYb/U05iTusOdFzpgYnhL0h8Z1PWQiAyAzXd/Wf4koVBwqeQ+g==
-X-Gm-Gg: AYBFou0ALC1fHT8hb7cbI2khPQATsLySnhIJBsVDvYa7349FANPJ5YskCX8u7dPL2X7
-	5BvU4+Q92rcnYFPq1tSH97ck5uDf1B+6Ri4qUG1z9v78bbTRqAvL/TO/ahnjNCFPCj9PMxp8r8Y
-	nYxN0lLcaN022A/ZQI+nZYnGDUBLWXvrCkInV01BLzOt417lh0Mx9HZDAG/9Gotf6QhNoP0QvCz
-	5mHSqw1onoJ6Uu/ERc7o2NQR2eJbg0toVEsLMjw/0A5EP8CETzk7zhf3t/mFVw0ODQfbmgtcv9X
-	C6Nh/WthH6hkoARib1RVGDirpntmI6UF9s6TfwKRnV6iw3Y+EivpSln84DaZ6XX6IML0i9zY+6y
-	kJ5ELqO2jWB9w/Wf0Ddt+A05Bnf/XkpRCkzHeEvNVAdBsoAiwOU4IFWxwu3Fd9JYkO6wyqWtsHG
-	diSuwfHVodD10xVF+YtO8MsbG3nmxT7nFqpkPkonNjWuCYgDB8T6a2RmmqWZeMKlGjdV5TlKIFH
-	5vm+a+Tyqp6Lk9wKn4P19c49d38E4OuuWAhGj01hF3r6T+KJ6b4+SWRSJprP9LLml8cl43SwPEr
-	p96Sxe40tG5HFANAwVs2EKxTGwDFP+iyiqslcw==
-X-Received: by 2002:a05:6a21:6110:b0:3d1:3c2:85b6 with SMTP id adf61e73a8af0-3da39b43743mr50588659637.5.1788903598992;
-        Tue, 08 Sep 2026 14:39:58 -0700 (PDT)
+        bh=UHrD1W/xUh8N3eKgAHmZMqC6W7o0uzrtTZ6P6CfRVxQ=;
+        b=GatZqfL9jV7C+/8DtV+eaxORD4ZzZUiaE7alCKCxVI6bph/2sgQbVxEyreEBkEiT9M
+         OatCXt+0Yc7al+3iDmRcR5YQj4HAEh5L1z9d7S0NjG/A2WGX+bjO69vkgO4cnmDTq8se
+         /oWDe2IPwz4sRaxNnoowFKg1rCred8lMgb6X+qm5pY+tJKWeSlwOLwWkGmGCHPZWQ8ps
+         9xOjdcWfIIwO45FQAnigmypw3T+z73a9IxwUjr4p4FG5bvpt5JWsWLWNpJYYixqRn+Am
+         PR1BQLdASLwenqP2RJNUUbTeE6V1c5zrZmLyi4qDlqMZhb/5b+0egPhZry6SfDoSOcg8
+         7u/w==
+X-Gm-Message-State: AFuF++mdh5z5a9ukmrOlok0DxgoO28De4AzpEkashSVbeK7+4S9p6Ec5
+	LlJGcJ6LNcO4/Ha2u1CP4qfKBREAz03t4N0SM51J9cTQfqm5K5GWaBRrVJmGng==
+X-Gm-Gg: AYBFou0rUNs9Rws4+1R/gZwzYfWZ3vQit22p/c7/QSWNPLElkNDzTghMobE+Nopvu7n
+	rC+Kffx8Vfh7TTsE3fdq1SWD2HGjpojrHIN0jQxE1YtSq/nZep1v46qooaJuaSkC77n9K7nD2fT
+	9IHcaxm1DKxBNLafHyTkkvGlqTcZ2FRqU4GUVUmBQ7T0aIovIx3tjHm15++P84EdqZXeUtwfzEr
+	J8iPa1DHFmkYU+LnHe43sH0ZCYQw85oq91Z/1NWOl5imeL4CcKGpst8e9bdtOiABPIIXmtWNzCS
+	jk3Ghhw/nNLQxs6RFp9XRXIPsQOH1Qreb/UeA+hxNkwO3nV2Ao8SvUpiY9F/BLb9Fz4NDSaxek6
+	J2A1Uw8mW/LdDRqP0nPcoku+sGOP6nHI7mvnqoP0BU5z+cw55Yfjy5+mbmZNogQroZLKTlGkoxj
+	OGoqOz6ecG6Xk8aHBRqNx8qLfycFo/dglxUqXVIYd/PUm0/wtvZUXDFctMWh6IbiOrxlDYDZSTO
+	4fya7JNF3YsH3yauGuMTMUy3XZ20sp1Fn6VluQ+eZR4ixuI8P3HpdK5tHjLhk7ZA4ulevHWdcox
+	IRx47Izv/pGtAMQ89dGRbEEc1FsPSrK4urUx0w==
+X-Received: by 2002:a17:90b:58eb:b0:398:ceef:edde with SMTP id 98e67ed59e1d1-39b8bf497edmr7045541a91.15.1788903734330;
+        Tue, 08 Sep 2026 14:42:14 -0700 (PDT)
 Received: from ryzen.lan ([2601:644:8000:7a86::e34])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc45e15604fsm5608261a12.0.2026.09.08.14.39.57
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39b3312f9a8sm25576005a91.2.2026.09.08.14.42.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2026 14:39:58 -0700 (PDT)
+        Tue, 08 Sep 2026 14:42:13 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-ide@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	Mans Rullgard <mans@mansr.com>,
 	Tejun Heo <tj@kernel.org>,
+	Mans Rullgard <mans@mansr.com>,
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv2] ata: sata_dwc_460ex: fix PHY lifecycle ordering on device removal
-Date: Tue,  8 Sep 2026 14:39:57 -0700
-Message-ID: <20260908213957.596103-1-rosenp@gmail.com>
+Subject: [PATCHv2] ata: sata_dwc_460ex: fix data race on hsdev->sactive_issued in interrupt handler
+Date: Tue,  8 Sep 2026 14:42:12 -0700
+Message-ID: <20260908214212.597139-1-rosenp@gmail.com>
 X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -76,113 +76,37 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-sata_dwc_remove() calls phy_exit() while phy_power_off() is still
-pending in sata_dwc_port_stop(), which runs later during device
-teardown.  This violates the expected PHY sequencing of power_off
-before exit.
+hsdev->sactive_issued is written locklessly in sata_dwc_isr() before
+acquiring host->lock, while sata_dwc_qc_complete() performs a
+read-modify-write on the same field under the lock.  This creates a
+data race that can corrupt NCQ tag tracking state.
 
-Fixes: 0f48debdb906 ("ata: sata_dwc_460ex: add phy support")
+Move the zero assignment inside the critical section so all accesses
+to sactive_issued are serialized by host->lock.
+
+Fixes: 2d20da00c324b ("ata: sata_dwc_460ex: get rid of global data")
 Assisted-by: opencode:big-pickle
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
  v2: resend as standalone patch
- drivers/ata/sata_dwc_460ex.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 8e3fc713891a..8a1d80ac906a 100644
+index 8a1d80ac906a..73bacdfd0bd3 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -851,10 +851,14 @@ static int sata_dwc_port_start(struct ata_port *ap)
- 	if (err)
- 		goto CLEANUP_ALLOC;
+@@ -465,9 +465,9 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
+ 	int handled, port = 0;
+ 	uint intpr, sactive, sactive2, tag_mask;
+ 	struct sata_dwc_device_port *hsdevp;
+-	hsdev->sactive_issued = 0;
  
--	err = phy_power_on(hsdev->phy);
-+	err = phy_init(hsdev->phy);
- 	if (err)
- 		goto CLEANUP_ALLOC;
+ 	spin_lock_irqsave(&host->lock, flags);
++	hsdev->sactive_issued = 0;
  
-+	err = phy_power_on(hsdev->phy);
-+	if (err)
-+		goto CLEANUP_PHY;
-+
- 	for (i = 0; i < SATA_DWC_QCMD_MAX; i++)
- 		hsdevp->cmd_issued[i] = SATA_DWC_CMD_ISSUED_NOT;
- 
-@@ -880,6 +884,8 @@ static int sata_dwc_port_start(struct ata_port *ap)
- 	dev_dbg(ap->dev, "%s: done\n", __func__);
- 	return 0;
- 
-+CLEANUP_PHY:
-+	phy_exit(hsdev->phy);
- CLEANUP_ALLOC:
- 	kfree(hsdevp);
- CLEANUP:
-@@ -897,6 +903,7 @@ static void sata_dwc_port_stop(struct ata_port *ap)
- 	dmaengine_terminate_sync(hsdevp->chan);
- 	dma_release_channel(hsdevp->chan);
- 	phy_power_off(hsdev->phy);
-+	phy_exit(hsdev->phy);
- 
- 	kfree(hsdevp);
- 	ap->private_data = NULL;
-@@ -1163,6 +1170,10 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 	if (irq < 0)
- 		return irq;
- 
-+	hsdev->phy = devm_phy_optional_get(dev, "sata-phy");
-+	if (IS_ERR(hsdev->phy))
-+		return PTR_ERR(hsdev->phy);
-+
- #ifdef CONFIG_SATA_DWC_OLD_DMA
- 	if (!of_property_present(dev->of_node, "dmas")) {
- 		err = sata_dwc_dma_init_old(ofdev, hsdev);
-@@ -1171,29 +1182,26 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 	}
- #endif
- 
--	hsdev->phy = devm_phy_optional_get(dev, "sata-phy");
--	if (IS_ERR(hsdev->phy))
--		return PTR_ERR(hsdev->phy);
--
--	err = phy_init(hsdev->phy);
--	if (err)
--		goto error_out;
--
- 	/*
- 	 * Now, register with libATA core, this will also initiate the
- 	 * device discovery process, invoking our port_start() handler &
- 	 * error_handler() to execute a dummy Softreset EH session
- 	 */
- 	err = ata_host_activate(host, irq, sata_dwc_isr, 0, &sata_dwc_sht);
--	if (err)
-+	if (err) {
- 		dev_err(dev, "failed to activate host");
-+		goto error_out;
-+	}
- 
- 	/* Enable SATA Interrupts */
- 	sata_dwc_enable_interrupts(hsdev);
- 	return 0;
- 
- error_out:
--	phy_exit(hsdev->phy);
-+#ifdef CONFIG_SATA_DWC_OLD_DMA
-+	if (!device_property_present(dev, "dmas"))
-+		sata_dwc_dma_exit_old(hsdev);
-+#endif
- 	return err;
- }
- 
-@@ -1205,8 +1213,6 @@ static void sata_dwc_remove(struct platform_device *ofdev)
- 
- 	ata_host_detach(host);
- 
--	phy_exit(hsdev->phy);
--
- #ifdef CONFIG_SATA_DWC_OLD_DMA
- 	/* Free SATA DMA resources */
- 	sata_dwc_dma_exit_old(hsdev);
+ 	/* Read the interrupt register */
+ 	intpr = sata_dwc_readl(&hsdev->sata_dwc_regs->intpr);
 -- 
 2.55.0
 
