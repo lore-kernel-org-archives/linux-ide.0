@@ -1,78 +1,99 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 428BC531B11;
-	Tue,  8 Sep 2026 11:47:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89589534471
+	for <linux-ide@vger.kernel.org>; Tue,  8 Sep 2026 12:08:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788868070; cv=none; b=YOsQV6rX9Vbt3iYcLnkd0fmwmdr9IlXJUQ0Vs4cql1ym/DNEyfPykkSUFOm7ETUy9PaBdw4YPFkzHy9BL4svKk3vQbbHDIUug5ky1GrbrlZKvffEZN0RAyGk6z9Q4U1EgmqJa4v5Qq/eHsLJGwYYmsE0UPOjc1ZLNfmDXxFJ1Cc=
+	t=1788869347; cv=none; b=Iy/iaPLIs5vapY0KByvT5z6GB3UveaBhPi/d01FHgpWs9RaOkGh0lC0Fpf30Rt8lUDMS3Rnx66MwZ+yVLmonLDfLvie4PFTexcIwamYV2WyLooZG+1ed54LAJk8FuRoSrdhvyrRWn4ljxLdqtPzgv+A4tp5yU8ES0HP1AhjZZqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788868070; c=relaxed/simple;
-	bh=1U+N1Ns/Lf9TvGJixS7NaMGSRzmp2O8ivTkY/Pzdl6w=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AfHTn/8MFJICd6sOi10GfcvBwJay+8fT4YXIc8e/IcLZQC8OAhq9+niRKEkuGEyEV5ANOgIhlQeCmPgld+wrsd6Z6nn8s4n/r++VzxdbXNBpGkH4xmvXEqRsnSaYrO5/P/D0CLi3BjrQ4yKb0pkzZQ7+nzYFORKb9mcYRUbgJ6o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 13502bf2ab7b11f19a56ed5b684f684d-20260908
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:b0082c63-06c8-4f86-8041-e79ea5e7efc4,IP:0,U
-	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:25
-X-CID-META: VersionHash:7db8b62,CLOUDID:43031b9f34de78c825aeb3e2470fff37,BulkI
-	D:nil,BulkQuantity:0,SF:102|850|865|898,TC:nil,Content:0|15|50|99,EDM:5,IP
-	:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,
-	LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 13502bf2ab7b11f19a56ed5b684f684d-20260908
-X-User: xiaopei01@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <xiaopei01@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 215187228; Tue, 08 Sep 2026 19:47:31 +0800
-From: Pei Xiao <xiaopei01@kylinos.cn>
-To: dlemoal@kernel.org,
-	cassel@kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Pei Xiao <xiaopei01@kylinos.cn>
-Subject: [PATCH v2 0/2] ata: pata_parport: fix UAF on protocol module unload
-Date: Tue,  8 Sep 2026 19:47:26 +0800
-Message-Id: <cover.1788867690.git.xiaopei01@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1788869347; c=relaxed/simple;
+	bh=7RKHwp6T33SyQoqeRz8LS3Sm6/HL70Tu6AqVvOoUqk0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=hwz2oYiLAQrRA6Ur3CaM/pIQmiDmgAbjXgwNeRfCHsuHAYi9imozY7zcAlI6urY5dyLcWDv78Emuwkp4y04QLpjgD3A2MxqJdpnE/OFbdmglK0Tb3IU9ZZ3ZZxT0JvvOfDeU/V4n0Di/+MymxLhN9esSvWopXF34wOJqEQ7o5XE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+NQsbLO; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+NQsbLO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F34F1F00A3A;
+	Tue,  8 Sep 2026 12:08:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788869335;
+	bh=LMJ/UHrdU3Ks/ihTzgSipkRye3JvLf3xfmqbebltmrc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=b+NQsbLO4vdru3ppaSXzd/fjrBUDgx1LE2yA53irbBlwXGC56BfOy7dKmYgaPt/fY
+	 ujydsw5XJvIyvgO4d25o5Q85BO2L7uUJCZw4YsMMpdvvfPypMe0OSEC6ywhFnhXCNn
+	 Yo0CSOTykTrmBmYk/JH7tK1kediOWws93R4i/zCnZPqkcpXDoNMpUYLNY2ZRxoFavO
+	 XW3OKEFY409vgOSFdTaujKwyiMvKUyovZSukpeZmp6B6qwY/63uhWPgZ3UGIG3tQV5
+	 1VRV6PfEUaVeMxH1uaBN3PnX/wN7Rt68p3XbzkB8GHkt5XA2QESs5AZTvwJOQTUmFr
+	 oUJUrE62l4FwA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/2] ata: pata_parport: unregister devices on
+ protocol unregister
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Pei Xiao" <xiaopei01@kylinos.cn>
+Cc: cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org
+In-Reply-To: <cec58ea83362df88f516ba7a5b895cf07edd7728.1788867690.git.xiaopei01@kylinos.cn>
+References: <cover.1788867690.git.xiaopei01@kylinos.cn>
+ <cec58ea83362df88f516ba7a5b895cf07edd7728.1788867690.git.xiaopei01@kylinos.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 08 Sep 2026 12:08:55 +0000
+Message-Id: <20260908120855.9F34F1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-This series fixes use-after-free issues in pata_parport when a protocol
-module goes away while pi_adapter devices created by it are still
-attached.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Patch 1 pins the protocol module before the device becomes visible.
-Previously try_module_get() ran after device_register(), so a forced
-module unload in between left pi->proto dangling from the moment the
-device appeared on the bus.
+Pre-existing issues:
+- [High] pata_parport_attach fails for all parports except port 0
+--
 
-Patch 2 makes pata_parport_unregister_driver() tear down all adapters
-using the protocol. Without this, the rollback path of a multi-protocol
-module init (e.g. kbic registering k951 then k971) left the devices of
-the already-registered protocol alive while the module loader freed the
-module memory; removing such a dangling device later crashed in
-pi_disconnect() dereferencing pi->proto->disconnect.
+commit b043c5b13721ce815e34642853318549a000ffd3
+Author: Pei Xiao <xiaopei01@kylinos.cn>
 
-Pei Xiao (2):
-  ata: pata_parport: pin the protocol module before device_register()
-  ata: pata_parport: unregister devices on protocol unregister
+ata: pata_parport: unregister devices on protocol unregister
 
- drivers/ata/pata_parport/pata_parport.c | 28 ++++++++++++++++++++-----
- 1 file changed, 23 insertions(+), 5 deletions(-)
+When a protocol module registers multiple protocols and a later
+registration fails, the rollback path unregisters the protocol but leaves
+dynamically created devices untouched. Later removal of these dangling
+devices dereferences freed module memory, crashing the kernel. This commit
+tears down all pi_adapters using the protocol before unregistering the
+driver.
 
--- 
-2.25.1
+> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_p=
+arport/pata_parport.c
+> index 046ab7e3adbcf..712209882ab75 100644
+> --- a/drivers/ata/pata_parport/pata_parport.c
+> +++ b/drivers/ata/pata_parport/pata_parport.c
+[ ... ]
 
+While reviewing this, I noticed a pre-existing issue in pata_parport_attach=
+():
+
+drivers/ata/pata_parport/pata_parport.c:pata_parport_attach() {
+    ...
+	mutex_lock(&pi_mutex);
+	id =3D idr_alloc(&parport_list, port, port->number, port->number,
+		       GFP_KERNEL);
+	if (id < 0) {
+    ...
+}
+
+[Severity: High]
+This is a pre-existing issue, but does this idr_alloc() call fail for all
+parports except port 0?
+
+Since the end parameter of idr_alloc() is exclusive, when port->number > 0,
+it computes max =3D end - 1. Because start is equal to port->number, the
+condition start > max evaluates to true, causing it to return -ENOSPC.
+
+Would this cause attaching any parport with a number greater than 0 to
+silently fail and completely break functionality for those ports?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1788867690.gi=
+t.xiaopei01@kylinos.cn?part=3D2
