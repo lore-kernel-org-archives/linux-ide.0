@@ -1,88 +1,239 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8B4042E8FF
-	for <linux-ide@vger.kernel.org>; Tue,  8 Sep 2026 08:45:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC3D4D98FB;
+	Tue,  8 Sep 2026 09:03:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788857141; cv=none; b=FHWpQvs2RT9sFZiXsCO+aQHLZi6EAF+IpBOWy6vaAqRuw37TI/c2ujZoc0dHzRQdVHkBxs1GpVEjhowNG8icD0zghrA4XA3zNrSQquimpumBKmzA66GCgMP1s2v5Hy1I5cwzbbppROCXnJGTcNdscwx9i+Tv0faK+KwxchS/XwY=
+	t=1788858213; cv=none; b=gzP5zr9D/02zLfaFrdsemyU6sMUCWUEjpZcXQiidE8yWqX5Vv6AlC86PC+gfmlt2fquLbx4fDS5bUglnd5sgeCYMZ0Kv6052C9obyes/mFyojY+FJHm5fwG/bJTL9QNmBo3jn450eyuKqlcTIGR1kGMbup3h1Fsb0pXV5B8p+xc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788857141; c=relaxed/simple;
-	bh=hsjIKUAGcmlp6aAkkuYz6N1Ty8K4YuUFvPcRAo2bznY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BQMqxxApy63T3cazQ6zSCzXhl03IkK+CoJbzpHk6tDsm3pCIpwy1Yq8EgUY2XcHDUXphukRTmxHrDcYANAuR9b6UtsALAGhjUUwnmG3Yqh24yq+MNyy61/vPARDJTQ8okNS40+GdCygwTIB87DlDXpUVXYEPYfwn+k7pRUFTOAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ysj3oIU7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788858213; c=relaxed/simple;
+	bh=e/ij1bHo8sI9yjGPL2+MAwWbBgY6lZXpWa68cJ0oBKY=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=DkpeN8b1uONPhkpKzcI5RP/LwQobXq8A5yWTTuy/1tpoaM+IZTQNeTsxsHysL8s/xW8Ae5otuUZqeXe1Kz+w8p3ejc0FvQ2OyZD6mG6Gth143M/FgS490klxkrmTyx/BzOewAUpZXOhDTkVbYImNoALqUUUxsMEWONNq6fSAXSc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fcReR6f+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ysj3oIU7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6DD01F00A3A;
-	Tue,  8 Sep 2026 08:45:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fcReR6f+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDCAE1F00A3D;
+	Tue,  8 Sep 2026 09:03:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788857139;
-	bh=awLf0NLAJGBidAzsl3RF5a4gIkFhbfOBObElI8HPIg0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ysj3oIU7q4UNqhNvB5K5bUcbI57dQqRxUokIHHfqhz+NG/lMyxn5NyqpDIvtStqn7
-	 kPlcYHId4chwRhm2pUbxxBLn82eCC7fkT0KB4vj5pM3IX9QpcvxY6TORPPnHxV5Iqb
-	 sWk5IczizL8WMV6xS2VRay0XusXC77qt2/HJAeA2/+fsnuQ621JvWWEHMqHkttXp9f
-	 VMuPJv7750UErCPdXvKt0CsXb1rUR09DyxPKzYYzO0q/1oY1O3kYJiyqxCdOSJ5ffJ
-	 vNsiR6BqTn8fr0hol9DOm9Je6OXlAG1qbPvqcr1LDTADUsXAUpz+3xTDxXQHjlMmrN
-	 gIcyZl7vXVdbg==
-Date: Tue, 8 Sep 2026 10:45:35 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Li Jun <lijun01@kylinos.cn>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3] ata: ahci_da850: switch to DEFINE_SIMPLE_DEV_PM_OPS
-Message-ID: <ap_LL-EaGZUmCaaq@ryzen>
-References: <20260908061025.3580261-1-lijun01@kylinos.cn>
- <e0412d20-6503-4737-8c9c-94f44f2c397a@kernel.org>
+	s=k20260515; t=1788858201;
+	bh=+QjR80V/Vz2l9XlfoaawYF5+QY82PGY0lNWwRTnTFiw=;
+	h=From:To:Subject:Date;
+	b=fcReR6f+13i1aFDpT2wEMBaALo98CiFEiviD/pVH+XiDQSaPqBkkwrmX8fFJvXnT7
+	 /fzbbFpRwZLDQx5DCDdNzQsRE7X9ZIQoOIDxAJZLYKspTe/I8pwGH/0R9v4tKcfG6L
+	 gvZogBdTynfjsnXbJFNKWjqBdxBoFcPrbvdJHjsPhsLMbi4bFfeDdDc057lJrp2s4l
+	 7AWa1+j/KWmEfjCMS7ORDs9RzZJyq5icHFjJvUPp3iEKUH0EsPfz/mgdIwPHLbihcx
+	 mEXGw5hsqN/xnFdRWXyobIgU0jW49l+4TV52vjTnp+br9CeqdB1U/+zxOgQcLpgbRS
+	 WqS1VlMavPFpg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-usb@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-s390@vger.kernel.org,
+	Heiko Carstens <hca@linux.ibm.com>
+Subject: [PATCH v6 00/40] Use defined 16-bits ASC/ASCQ combinations 
+Date: Tue,  8 Sep 2026 18:02:28 +0900
+Message-ID: <20260908090308.1085097-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e0412d20-6503-4737-8c9c-94f44f2c397a@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 08, 2026 at 03:13:49PM +0900, Damien Le Moal wrote:
-> On 9/8/26 15:10, Li Jun wrote:
-> > Replace the deprecated SIMPLE_DEV_PM_OPS macro with the recommended
-> > DEFINE_SIMPLE_DEV_PM_OPS. Use pm_ptr(&ahci_da850_pm_ops) to complete
-> > the API migration and allow the structure to be correctly dropped
-> > when CONFIG_PM=n.
-> > 
-> > Signed-off-by: Li Jun <lijun01@kylinos.cn>
-> > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> > ---
-> > changelogs:
-> > -add pm_ptr for ahci_da850_pm_ops in ahci_da850_driver.
-> > -revise grammar and alignment issues.
-> > ---
-> >  drivers/ata/ahci_da850.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-> > index 4e53ff96d712..469cf015bbf0 100644
-> > --- a/drivers/ata/ahci_da850.c
-> > +++ b/drivers/ata/ahci_da850.c
-> > @@ -218,8 +218,8 @@ static int ahci_da850_probe(struct platform_device *pdev)
-> >  	return rc;
-> >  }
-> >  
-> > -static SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
-> > -			 ahci_platform_resume);
-> > +static DEFINE_SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
-> > +								ahci_platform_resume);
-> 
-> You resent the same v3... Did you mean to send a fixed v4? Or is it me for some
-> reason getting the same patch email twice?
+Martin, James,
 
-I just received a single v2 and a single v3.
+This patch series defines as macros all ASC/ASCQ combinations present in
+https://www.t10.org/lists/asc-num.txt and converts the SCSI core code and
+SCSI low level drivers to use these macros instead of hard-coded
+ASC/ASCQs. To do this, struct scsi_sense_hdr and struct scsi_failure are
+modified to replace the asc and ascq 8-bits fields with a 16-bits
+sense_code field.
 
-The commit log is different from v2 and v3, and your Review-tag was picked
-up. However, the indentation still looks wrong. It seems to have 8 tabs
-instead of 4.
+This cleans up the code in many places and makes it easier, and self
+documented, to test sense codes in the case of errors.
+
+Overall, there should be no functional chnages here.
+
+Note: this series currently applies cleanly only to the scsi-staging tree.
+It does not apply to Linus tree as commit 6d81700ad7c4 ("ata: libata-scsi:
+do not raise UA for storage element depopulation and restoration") creates
+a conflict with patch 37. The conflict is trivial to resolve, but this
+will create a conflict in linux-next. Could you maybe rebase scsi-staging
+on rc2 ?
+
+Also please note that sashiko did comment about several pre-existing
+issues for different drivers, but I am not addressing these issues in
+this series.
+
+Changes from v5:
+ - In patch 1, renamed the WARNING and WRITE_ERROR ASC with the SSC_
+   prefix to make these names less generic.
+ - Modified patch 2, 22 and 31 to accomodate for the renaming.
+ - Pass struct scsi_sense_hdr as a const pointer in patch 6.
+ - Added review tags.
+
+Changes from v4:
+ - Modified path 24 to add some conversions to using the macro that were
+   missed previously (from sashiko comment).
+ - Added review tags
+
+Changes from v3:
+ - Fixed patch 8 to test only the INVALID FIELD IN CDB ASC in
+   sd_zbc_complete().  Testing the full sense code for INVALID FIELD IN
+   CDB with a zero ASCQ is actually correct and as defined per ZBC
+   specifications for zone management operations issued to conventional
+   zones. But as Sashiko suggests, some devices may not strictly follow
+   that, so we keep to loosen test.
+ - Rebased on scsi-staging branch
+ - Added review and ack tags
+
+Changes from v2:
+ - Removed unintended duplication of KUNIT_EXPECT_EQ() call in patch 7
+   (Sashiko comment).
+ - Improved patch 38 to directly use 16-bits sense code instead of passing
+   only an ascq around (Sashiko comment).
+ - Added missing local variable initialization in
+   spc_emulate_request_sense() in patch 34 (Sashiko comment).
+ - Added review tags
+
+Changes from v1:
+ - Addressed Sashiko comments signaling missing "ASC_" prefix when using
+   the named macros for ASC codes.
+ - Fixed up patch 7 to correct trace event print of asc/ascq. Also
+   extended the use of scsi_set_sense() in place of scsi_build_sense().
+ - Modified patch 37 to extend the use of scsi_set_sense_buffer() in place
+   of scsi_build_sense_buffer().
+ - Added patch 34 and 38 to extend the use of scsi_set_sense() in place of
+   scsi_build_sense().
+ - Added patch 40 to remove scsi_build_sense() and
+   scsi_build_sense_buffer().
+
+Damien Le Moal (40):
+  scsi: define all additional sense codes and their qualifiers
+  scsi: constants: use defined sense codes
+  scsi: constants: rename internal struct field names
+  scsi: rename sense field of struct scsi_failure
+  scsi: prepare for using 16-bits defined sense codes
+  scsi: use struct scsi_sense_hdr to log sense keys and codes
+  scsi: core: use 16-bits defined sense codes
+  scsi: sd: use 16-bits defined sense codes
+  scsi: sr: use 16-bits defined sense codes
+  scsi: ses: use 16-bits defined sense codes
+  scsi: ch: use 16-bits defined sense codes
+  scsi: st: use 16-bits defined sense codes
+  scsi: device_handlers: hp_sw: use 16-bits defined sense codes
+  scsi: device_handlers: rdac: use 16-bits defined sense codes
+  scsi: device_handlers: emc: use 16-bits defined sense codes
+  scsi: device_handlers: alua: use 16-bits defined sense codes
+  scsi: mpt3sas: use 16-bits defined sense codes
+  scsi: mpi3mr: use 16-bits defined sense codes
+  scsi: 3w-xxxx: use 16-bits defined sense codes
+  scsi: leapraid: use 16-bits defined sense codes
+  scsi: megaraid: use 16-bits defined sense codes
+  scsi: myrX: use 16-bits defined sense codes
+  scsi: smartpqi: use 16-bits defined sense codes
+  scsi: qla2xxx: use 16-bits defined sense codes
+  scsi: ps3rom: use 16-bits defined sense codes
+  scsi: lpfc: use 16-bits defined sense codes
+  scsi: stex: use 16-bits defined sense codes
+  scsi: mvumi: use 16-bits defined sense codes
+  scsi: libiscsi: use 16-bits defined sense codes
+  scsi: ibmvscsi_tgt: use 16-bits defined sense codes
+  scsi: scsi_debug: use 16-bits defined sense codes
+  scsi: hpsa: use 16-bits defined sense codes
+  scsi: storvsc: use 16-bits defined sense codes
+  target: use 16-bits defined sense codes
+  usb: storage: use 16-bits defined sense codes
+  cdrom: use 16-bits defined sense codes
+  ata: libata: use 16-bits defined sense codes
+  s390: scsi: use 16-bits defined sense codes
+  scsi: cleanup scsi_proto.h
+  scsi: remove scsi_build_sense() and scsi_build_sense_buffer()
+
+ drivers/ata/libata-eh.c                      |   13 +-
+ drivers/ata/libata-sata.c                    |   20 +-
+ drivers/ata/libata-scsi.c                    |  346 ++-
+ drivers/ata/libata.h                         |    5 +-
+ drivers/cdrom/cdrom.c                        |   10 +-
+ drivers/s390/scsi/zfcp_ext.h                 |    2 +-
+ drivers/s390/scsi/zfcp_fsf.c                 |    9 +-
+ drivers/s390/scsi/zfcp_scsi.c                |    6 +-
+ drivers/scsi/3w-xxxx.c                       |    3 +-
+ drivers/scsi/ch.c                            |   55 +-
+ drivers/scsi/constants.c                     |   61 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c   |   55 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c    |   28 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c  |   29 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c   |   55 +-
+ drivers/scsi/hpsa.c                          |   69 +-
+ drivers/scsi/hpsa_cmd.h                      |   23 -
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c     |    5 +-
+ drivers/scsi/leapraid/leapraid_func.h        |    7 -
+ drivers/scsi/leapraid/leapraid_os.c          |   15 +-
+ drivers/scsi/libiscsi.c                      |    3 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                |   18 +-
+ drivers/scsi/megaraid.c                      |    8 +-
+ drivers/scsi/megaraid/mega_common.h          |    2 -
+ drivers/scsi/megaraid/megaraid_mbox.c        |   12 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c              |    3 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c              |   50 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c         |   69 +-
+ drivers/scsi/mvumi.c                         |    2 +-
+ drivers/scsi/myrb.c                          |   67 +-
+ drivers/scsi/myrs.c                          |   23 +-
+ drivers/scsi/ps3rom.c                        |    5 +-
+ drivers/scsi/qla2xxx/qla_isr.c               |    9 +-
+ drivers/scsi/qla2xxx/qla_target.c            |   99 +-
+ drivers/scsi/qla2xxx/qla_target.h            |    3 -
+ drivers/scsi/scsi.c                          |    3 +-
+ drivers/scsi/scsi_common.c                   |   24 +-
+ drivers/scsi/scsi_debug.c                    |  332 +--
+ drivers/scsi/scsi_error.c                    |   94 +-
+ drivers/scsi/scsi_ioctl.c                    |    3 +-
+ drivers/scsi/scsi_lib.c                      |  133 +-
+ drivers/scsi/scsi_lib_test.c                 |   95 +-
+ drivers/scsi/scsi_logging.c                  |   22 +-
+ drivers/scsi/scsi_scan.c                     |   22 +-
+ drivers/scsi/scsi_transport_spi.c            |   12 +-
+ drivers/scsi/sd.c                            |  126 +-
+ drivers/scsi/sd_zbc.c                        |    2 +-
+ drivers/scsi/sense_codes.h                   | 2496 ++++++++++++------
+ drivers/scsi/ses.c                           |   23 +-
+ drivers/scsi/smartpqi/smartpqi_init.c        |   31 +-
+ drivers/scsi/sr.c                            |    3 +-
+ drivers/scsi/sr_ioctl.c                      |   29 +-
+ drivers/scsi/st.c                            |   35 +-
+ drivers/scsi/stex.c                          |    3 +-
+ drivers/scsi/storvsc_drv.c                   |   15 +-
+ drivers/target/target_core_spc.c             |   11 +-
+ drivers/target/target_core_transport.c       |   11 +-
+ drivers/target/target_core_ua.c              |   28 +-
+ drivers/target/target_core_ua.h              |    7 +-
+ drivers/usb/gadget/function/f_mass_storage.c |   34 +-
+ drivers/usb/gadget/function/storage_common.h |   71 +-
+ drivers/usb/storage/debug.c                  |   11 +-
+ drivers/usb/storage/debug.h                  |    4 +-
+ drivers/usb/storage/transport.c              |    7 +-
+ include/scsi/scsi_cmnd.h                     |    3 +-
+ include/scsi/scsi_common.h                   |   16 +-
+ include/scsi/scsi_dbg.h                      |    6 +-
+ include/scsi/scsi_device.h                   |   26 +-
+ include/scsi/scsi_proto.h                    |   71 +-
+ include/scsi/scsi_sense.h                    |  950 +++++++
+ include/trace/events/scsi.h                  |    4 +-
+ 71 files changed, 3887 insertions(+), 2065 deletions(-)
+ create mode 100644 include/scsi/scsi_sense.h
 
 
-Kind regards,
-Niklas
+base-commit: e83b47309f73313e75c3888d7839666aba5b2b2a
+-- 
+2.55.0
+
