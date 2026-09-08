@@ -1,97 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28D55478859
-	for <linux-ide@vger.kernel.org>; Tue,  8 Sep 2026 09:38:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D174FC8EE;
+	Tue,  8 Sep 2026 09:39:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788860331; cv=none; b=ZNBd6DJ1PF+NniptawZCysOosqHY058/mHNthYpR8YS2/e2C1+7bOvbfkYBLZhqgEoBfadt+HjaiZjQDzL/J/dJhg6ft4Ug9rPM5uTxRg1FveA2swvpVoDqpaoC7k00rbpcJ1MKaUbIgUX/X/4WLi2QAunyNFWEffisBbTlQBAM=
+	t=1788860353; cv=none; b=EbJEVizskp8r80biMGtF/8NwwjF7+tVGC8bZlzKfaAvPmFEm5Vc/BV3cKSPNoge6JfHXHwuaHLhML/Tx8BYsC/IV0X9g0cPGyeyIH8KAX6VV8M5g6fK+oBZSz/Jty1l4lL2RW5tESZZXY5G3ezvXkt/gFvO3ijRGGc65n61h08g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788860331; c=relaxed/simple;
-	bh=YBT29ZsGaLNgPYWWXymQ/228mtDYhD9Ci2acJD52ogo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uKYn1VufSGdopJFcdqJ8lbOLbG+paD3T3IoTSqll1AsQO2cNfSBF1KRNChBVm0ycWBT5PVnVq2NkYDh3RdB5gFSKXgGwP3PHVcVYlHq7O1oBZNyvHOq56ZsO4O45r6b0udc/fvgFYq0JY0sdaiuiqSw5DeWiigjGT4LYPAF5NQo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dgDDKCVS; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788860353; c=relaxed/simple;
+	bh=S8clsrPc+ER9FfmU+FjsP9a66CoXHe0bkW4QfBeQmWA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=eJDv9OzVsKdov/4X5QateNpaIJi1tq6N49bp8jD857OtFh8GOVOyBMN00vgf9Nu6fdJ8nx/JGIkhj30YxsT500AE14MkKGA973dczfKAFqyg4VN5yB63MDIkbWQY8XKcFF+C+p8BtJkR3M+3wvH8PG/YA6j+lgXdXy+crjumacU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=osoeWKT/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dgDDKCVS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF9AA1F00A3A;
-	Tue,  8 Sep 2026 09:38:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="osoeWKT/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54AB51F00A3E;
+	Tue,  8 Sep 2026 09:39:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788860329;
-	bh=rg+b8wv3ZmV6/16yQXX+3ZgsjysAHycVYreNBRGRtO8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dgDDKCVSNS7v/CjrE0onq6AykY2R+eaaht5Hi7tBcwiw30yVHI8aTeHIfQc9cLTTv
-	 n3FvXEQjENbNXLaBqW9wRigg/r17+hsv7TD4SFWXf6/9d/GhKWGxOG+yLsqZjecFSV
-	 KFYSLs78mjLqRTnH7x2dcvgGFT8JdjhPNPJJB0HTj4z564Xo7+xGheqLv8ea9JnhlV
-	 +AkBWBn0y9vUYDk+hr/tzoqNoVJcjqupgiz71t9UDNBpT8CgMfeAnnl1SjxJKpMWJl
-	 XoKX7BFr0OBsF/caFkklcSLHRHCwDEr3R+M62WYFxv0NK1ms1vUkmEkZiHXpqpHSdc
-	 tEB2UqDwjNXqw==
-Date: Tue, 8 Sep 2026 11:38:46 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Li Jun <lijun01@kylinos.cn>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v4] ata: ahci_da850: switch to DEFINE_SIMPLE_DEV_PM_OPS
-Message-ID: <ap_Xplv4nXb5SsxY@ryzen>
-References: <20260908090936.1961634-1-lijun01@kylinos.cn>
+	s=k20260515; t=1788860351;
+	bh=S8clsrPc+ER9FfmU+FjsP9a66CoXHe0bkW4QfBeQmWA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=osoeWKT/Tu2jEZI81u8plqgv1ALsPj9HATWzqB3IY88EGUz3AuAyh6aWBLrqc/0G2
+	 G1u2chbeoaqv6qfe/V5Y7NHvE7SIrqZr0ZMcK6J1wF+UhcyH6po+vXUGgsGGa1K28y
+	 XvNx/+B2RaS/o5bkhiIfbu56SG4lFXuD6upW1cshoIP9uwobFvH9RA75DsPssmkpkm
+	 UDz/X6O0l9zhkl18GcF9zcWlM3Ta+sq2TvPG0S4Q8cfFKlFJ+uuuA7XRunvu3ze0GD
+	 Ck+If+gfxqctnqB/8MI5/ukl+bCL+334EPEkyTt46Qadjxn4/O4IQoGzStR8uEcPWB
+	 54TVoa6qCUCeA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 01/40] scsi: define all additional sense codes and
+ their qualifiers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Damien Le Moal" <dlemoal@kernel.org>
+Cc: linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, "Heiko Carstens" <hca@linux.ibm.com>, linux-ide@vger.kernel.org, dlemoal@kernel.org, "Vasily
+ Gorbik" <gor@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>
+In-Reply-To: <20260908090308.1085097-2-dlemoal@kernel.org>
+References: <20260908090308.1085097-1-dlemoal@kernel.org>
+ <20260908090308.1085097-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 08 Sep 2026 09:39:10 +0000
+Message-Id: <20260908093911.54AB51F00A3E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260908090936.1961634-1-lijun01@kylinos.cn>
 
-On Tue, Sep 08, 2026 at 05:09:36PM +0800, Li Jun wrote:
-> Replace the deprecated SIMPLE_DEV_PM_OPS macro with the recommended
-> DEFINE_SIMPLE_DEV_PM_OPS. Use pm_ptr(&ahci_da850_pm_ops) to complete
-> the API migration and allow the structure to be correctly dropped
-> when CONFIG_PM=n.
-> 
-> Signed-off-by: Li Jun <lijun01@kylinos.cn>
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
-> changelogs:
-> -add pm_ptr for ahci_da850_pm_ops in ahci_da850_driver.
-> -revise grammar and alignment issues.
-> -Align parentheses
-> ---
->  drivers/ata/ahci_da850.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-> index 4e53ff96d712..febebf713748 100644
-> --- a/drivers/ata/ahci_da850.c
-> +++ b/drivers/ata/ahci_da850.c
-> @@ -218,8 +218,8 @@ static int ahci_da850_probe(struct platform_device *pdev)
->  	return rc;
->  }
->  
-> -static SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
-> -			 ahci_platform_resume);
-> +static DEFINE_SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
-> +				ahci_platform_resume);
->  
->  static const struct of_device_id ahci_da850_of_match[] = {
->  	{ .compatible = "ti,da850-ahci", },
-> @@ -233,7 +233,7 @@ static struct platform_driver ahci_da850_driver = {
->  	.driver = {
->  		.name = DRV_NAME,
->  		.of_match_table = ahci_da850_of_match,
-> -		.pm = &ahci_da850_pm_ops,
-> +		.pm = pm_ptr(&ahci_da850_pm_ops),
+> Introduce the file include/scsi/scsi_sense.h to define all existing
+> additional sense codes and their combinations with additional sense code
+> qualifiers, according to the most current T10 list available at
+> https://www.t10.org/lists/asc-num.txt.
+>=20
+> Additional sense codes (ASCs) are individually defined as an 8-bit value
+> with the ASC_ name prefix. The combination of all ASCs with T10 defined
+> possible code qualifiers are defined as 16-bits values without any name
+> prefix. The 16-bits value for ASCs with a zero ASCQ are defined together
+> with the ASC 8-code using the ASC() macro. For names that may potentially
+> create conflicts with other subsystems (e.g. WARNING or WRITE_ERROR), the
+> SSC_ prefix is added to the sense code name.
+>=20
+> The sense key macro definitions in include/scsi/scsi_proto.h are also
+> moved into this new file and scsi_sense.h is included in scsi_proto.h.
+> The helper function scsi_sense_code() is defined to facilitate generating
+> a 16-bits sense code from 8-bits ASC and ASCQ. The accessors
+> scsi_sense_code_asc() and scsi_sense_code_ascq() are defined for the
+> reverse operations, that is, to respectively extract an ASC and an ASCQ
+> from a 16-bits sense code.
+>=20
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-pm_ptr() is for drivers implementing Runtime PM or a mix of
-runtime and sleep PM.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-The proper macro seems to be to use pm_sleep_ptr() for drivers
-only implementing system sleep callbacks (suspend/resume).
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908090308.1085=
+097-1-dlemoal@kernel.org?part=3D1
 
-See e.g.
-408ba1d06ee1 ("spi: bcm63xx-hsspi: use modern PM macros")
-65172b5d381a ("spi: dw-pci: use modern PM macros")
-
-
-Kind regards,
-Niklas
