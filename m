@@ -1,119 +1,120 @@
-Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AF8855C1BA;
-	Wed,  9 Sep 2026 12:54:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08F9657EDB7;
+	Wed,  9 Sep 2026 16:13:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788958495; cv=none; b=bDaZjj3NPAaT4PUxWWsrmmGgdN/DnzD6RzCm5FSMyUDcydiiXF9J30UxzSF0lDYw4KdnByvv6UcR4eMHchle/o/AKUbfVbxP5CgdA8FF/dpCQH+NMjmZYYDViA41yePgH69P+hf6ixqMKc7M5tU9eSd8nnC43MjBaBESMHOl+SM=
+	t=1788970388; cv=none; b=m1hUC2pf9910lRoorojwoItNiqj0y5iQzM+e3G3iadJcxem4v+dcnGRSW2dDz/gVhMI88v3MEJ4xE65L5/vKsSWlQyMgLZ3NqGjqEMFgNram8dDUdY2fruTPrdaqM7B6mVghJzv+2XeQtIfLY95MVnxAOUxm1czHdz90OoLvGlI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788958495; c=relaxed/simple;
-	bh=jAH9WRQ0ggsOvsHdlKlkxoYUhZgdRnYF6+2XNgzh1NU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=cOQu0AXTWcS6+NtZrrP67Yw5/aSeyr/Y0crOMfGxwfu5jXee7G834kubXHZwq984QZ3wm89w/ZYQ9wqLB5pfRRoC0j61PFRC6yNOJquvXWm4ujQ1e9xO9tG6K0NsVAZy7AzC7bYKpaOpICbNL7G2bJhD3IZmRGNIodf8CW3kRsQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=pBXlcIme; arc=none smtp.client-ip=185.246.85.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1788970388; c=relaxed/simple;
+	bh=byE+OFkcdTjyJQc+32oKlCFAplREh8utA4QZ6OpXB9A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RvDnG2k9b0rRX41HoOTAznYpKy5D3nfHE1hknMpZ+5NkCfDAeINjZGDb2EJnLkuTQSwn5owgc8t1oS3La+y8W5N+LwpXSw7IHks6r1pi6yolybuegUH70Q1A/2SnllshbJJAnUywq6U+Yxg7SKOPb2mPmowqPUC2Re15Dd/44vM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=REdSnzo8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="pBXlcIme"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-03.galae.net (Postfix) with ESMTPS id 207554E415A4;
-	Wed,  9 Sep 2026 12:54:51 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id CB77D6053C;
-	Wed,  9 Sep 2026 12:54:50 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 2B09611C7AF7D;
-	Wed,  9 Sep 2026 14:54:35 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1788958485; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=jAH9WRQ0ggsOvsHdlKlkxoYUhZgdRnYF6+2XNgzh1NU=;
-	b=pBXlcImemWNdneh0k1Hj1bg9DcpIx2uZGLw6KPAxLtiNBI2GNPFvvdAYeKNLB46Nt29ChS
-	7LCgusQF9x2Ekjb4zSDxGZBUL2Jj8oUdPBhE2yFI7GtWt3vKV7gGXVE6jYhTaX4gyOWj4w
-	yIYiVLSGoNRWEL+p0q+2aWVNhR1O/OQhR6kt2DoT3gas73BfLJjMuYOUyDlLSJt1zgXZ5U
-	Ndz67fuFW6UK0Iv8f407aA9RfKgde8mwABubg6je9fsY6zVCMuEnkrBf+HGvomebcuAHIj
-	SURtqMPp/Cy8qmP4OE8V1F0901A3D0YsFs69NnBTkUh3QG4F2ZShHXEPHPqrGw==
-From: Gregory CLEMENT <gregory.clement@bootlin.com>
-To: Arnd Bergmann <arnd@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>,
- Alexandre Belloni <alexandre.belloni@bootlin.com>, Linus Walleij
- <linusw@kernel.org>, Russell King <linux@armlinux.org.uk>
-Cc: Drew Fustini <fustini@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Rob
- Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Liviu Dudau
- <liviu.dudau@arm.com>, Sudeep Holla <sudeep.holla@kernel.org>, Lorenzo
- Pieralisi <lpieralisi@kernel.org>, Frank Li <Frank.Li@nxp.com>, Sascha
- Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team
- <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, Vladimir
- Zapolskiy <vz@mleia.com>, Stefan Agner <stefan@agner.ch>, Maxime Coquelin
- <mcoquelin.stm32@gmail.com>, Alexandre Torgue
- <alexandre.torgue@foss.st.com>, Aaro Koskinen <aaro.koskinen@iki.fi>,
- Andreas Kemnade <andreas@kemnade.info>, Kevin Hilman
- <khilman@baylibre.com>, Roger Quadros <rogerq@kernel.org>, Tony Lindgren
- <tony@atomide.com>, Nicolas Ferre <nicolas.ferre@microchip.com>, Claudiu
- Beznea <claudiu.beznea@tuxon.dev>, Andrew Lunn <andrew@lunn.ch>, Sebastian
- Hesselbarth <sebastian.hesselbarth@gmail.com>, Robert Jarzmik
- <robert.jarzmik@free.fr>, Kristoffer Ericson
- <kristoffer.ericson@gmail.com>, Ethan Nelson-Moore
- <enelsonmoore@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>,
- Alexander Sverdlin <alexander.sverdlin@siemens.com>, Shawn Guo
- <shawnguo@kernel.org>, Karl Mehltretter <kmehltretter@gmail.com>, "David
- Hildenbrand (Arm)" <david@kernel.org>, Nicolas Pitre
- <npitre@baylibre.com>, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- devicetree@vger.kernel.org, imx@lists.linux.dev,
- linux-stm32@st-md-mailman.stormreply.com, linux-omap@vger.kernel.org,
- Alexander Clouter <alex@digriz.org.uk>, "Jeremy J. Peper"
- <jeremy@jeremypeper.com>, Damien Le Moal <dlemoal@kernel.org>, Niklas
- Cassel <cassel@kernel.org>, Ulf Hansson <ulfh@kernel.org>, Krzysztof
- =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam
- <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul
- <vkoul@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Daniel
- Lezcano <daniel.lezcano@kernel.org>, Guenter Roeck <linux@roeck-us.net>,
- Mark Brown <broonie@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>,
- Thomas Weissschuh <thomas.weissschuh@linutronix.de>,
- linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
- linux-rtc@vger.kernel.org, linux-pm@vger.kernel.org,
- linux-watchdog@vger.kernel.org, linux-sound@vger.kernel.org,
- linux-gpio@vger.kernel.org
-Subject: Re: [PATCH 05/13] ARM: orion/dove/mv78xx0: remove all board files
-In-Reply-To: <20260908152808.3928630-6-arnd@kernel.org>
-References: <20260908152808.3928630-1-arnd@kernel.org>
- <20260908152808.3928630-6-arnd@kernel.org>
-Date: Wed, 09 Sep 2026 14:54:34 +0200
-Message-ID: <87pkymmvp1.fsf@BLaptop.bootlin.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="REdSnzo8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5329C1F00A3A;
+	Wed,  9 Sep 2026 16:13:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788970386;
+	bh=+XLjACGlnf7x3hBb2vIi5wesWQ0LmqewDIS0LFCfzI4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=REdSnzo861ortOykg6YtqA1EKE7giP5iyOdFahxCM9znsrOBHmMo8nSpjG4UOTRbI
+	 j60outPVgGUHBO8z01uANqdJvfLzxzvRaN7IJfymydvT2LDwjjaLc0/NWvcH2GCQWd
+	 oYJK3ro2/WF1AEMk1w54FSzNqw+VAeJRstoRYgErJpvGP6zBTlYw4MaYMk6ReEA7Iv
+	 cGs5fJ1qm3jpqLyiqKB7TKAfAL8a2Lck2k9qyXHqs382dB60leksSGcko/j5w8YtsU
+	 O2OqydBhH47tPJxSTh9/nxOteXqlVtWg+laCqySy2ShOhuX0M0Vosxfc3Xw7OGcUA3
+	 CXpECC/62534g==
+Date: Wed, 9 Sep 2026 18:13:02 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: Nikolay Borisov <nik.borisov@suse.com>, linux-ide@vger.kernel.org,
+	dlemoal@kernel.org, Rosen Penev <rosenp@gmail.com>
+Subject: Re: [PATCH v2] ata: sata_dwc_460ex: Don't enable interrupt if libATA
+ core registration fails
+Message-ID: <aqGFjsuIMRIy5xfv@ryzen>
+References: <20260909112426.811456-1-nik.borisov@suse.com>
+ <20260909113821.A72011F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260909113821.A72011F00A3A@smtp.kernel.org>
 
-Arnd Bergmann <arnd@kernel.org> writes:
+On Wed, Sep 09, 2026 at 11:38:21AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> 
+> New issues:
+> - [High] Inverted teardown sequence for the PHY on probe error path, calling phy_power_off() after phy_exit().
 
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> The 'orion' platform is the predecessor to what linux now calls the
-> 'mvebu' line of Marvell SoCs, and originally covered orion5x,
-> mv78xx0, kirkwood, dove and a few others that do not have any
-> upstream support at the moment.
->
-> Only a few board files remain here, these are the ones left
-> in 2022 board file purge because they had some level of support
-> in Debian or OpenWRT, mostly for commercial NAS or router boxes.
-> This distro support is now gone, and nobody has converted the
-> board files to devicetree, though the orion5x and dove platforms
-> also come with devicetree support for some other machines.
->
+Looking at ahci_platform.c:ahci_probe()
 
-Acked-by: Gregory CLEMENT <gregory.clement@bootlin.com>
+ahci_probe() calls
+ahci_platform_enable_resources() which calls ahci_platform_enable_phys()
+which calls
+phy_init() and phy_power_on().
 
-Thanks,
+ahci_probe() later calls
+ahci_platform_init_host() which calls ahci_host_activate()
 
-Gregory
---=20
-Gr=C3=A9gory CLEMENT, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+if ahci_platform_init_host() fails, ahci_probe() calls
+
+calls ahci_platform_disable_resources(), which calls
+phy_power_off() and and phy_exit().
+
+
+So the problem is that sata_dwc_460ex calls phy_power_on() in
+->port_stop.
+(And that it calls phy_power_on() in ->port_start()).
+
+
+These calls should just be in sata_dwc_probe().
+I don't see any other driver doing phy_power_on()/phy_power_off()
+in ->port_start()/->port_stop().
+
+It seems very wrong... Because sata_dwc_460ex will call phy_power_off()
+for the same phy, when having multiple ports. phy_power_off() should
+not be called multiple times on the same phy.
+
+
+This driver is quite broken.
+
+You could just send a patch that does:
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 8e3fc713891a..0690e31719d2 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1185,11 +1185,12 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+         * error_handler() to execute a dummy Softreset EH session
+         */
+        err = ata_host_activate(host, irq, sata_dwc_isr, 0, &sata_dwc_sht);
+-       if (err)
++       if (err) {
+                dev_err(dev, "failed to activate host");
+-
+-       /* Enable SATA Interrupts */
+-       sata_dwc_enable_interrupts(hsdev);
++       } else {
++               /* Enable SATA Interrupts */
++               sata_dwc_enable_interrupts(hsdev);
++       }
+        return 0;
+ 
+ error_out:
+
+
+Or if you want to clean this up, create a patch that moves
+the phy_power_on() from ->port_start() to sata_dwc_probe()
+and phy_power_off() from ->port_stop() to sata_dwc_probe().
+
+Then you will be able to call goto error_out; on ata_host_activate() failure.
+
+
+Kind regards,
+Niklas
