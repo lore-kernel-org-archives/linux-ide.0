@@ -1,69 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 686D05328AE;
-	Wed,  9 Sep 2026 10:52:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BECEA4AF69B;
+	Wed,  9 Sep 2026 10:58:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788951172; cv=none; b=KqVEsVYDb/aNeXYKD3o8iRi6wbAcWTh4+WMxGRI3Fh99a0oAY8tCIPTanGhLbahJm9Fg7G7+mAfNAda2wZodDuGpmrRPoGOTI5SjIUu5LXHB0/wq34QHwajiaTpWrUtSzS35vX3/NR8plg2m8G2hLPdJPhoJs9W/tUaUyKQ3ils=
+	t=1788951486; cv=none; b=bkdLOmfVMORKeCX/RloZs3BaxK+yYnotUnT/oPscsNFPS2mYwBV213GgPOWxhADRXFrFp+HfhGPewYz5RjofIJRcQ864FAzHcA0TNhCy3JuUQnrskwQ0UI+JREzDxyRgMGhviI6HL/L7fSeeaThjU1jGhrmH3urhhhq0VLiwhWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788951172; c=relaxed/simple;
-	bh=ZHjqnq9NH+Ikvi2NYFMSMojFJbnnQdXm7+7u1FfH6II=;
-	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=f10IiiLAH0pzB6zmilTsDJVnin/i2xoAISNaBbI9tcP1YwBQ+VjAbh39ok7gZl+uLOzGK8E9afm2qJUAAJxM6KZzQsIu+FSSOsDLwRZIj70OhK44awWeC4zECXMPmY4zmUNCFN1IHAEm+yk1y2cL51GgrQegvrgHcKubdj2aTqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U6EJG5bG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788951486; c=relaxed/simple;
+	bh=IB30haaMQc+CRjCxPP5ufooWqCGMlQrEvA2ADOz2CsE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rcxPMDQygHcYJVHPWBG8xw9JJtylyFVRGGbKZc53cGE98PntAosESPwG06zsyhdQ47rNeftRZaPyziwjkCM+1Fao8X4fHbqKiCodcG+qimQ+K+F8NJpxjCwJDd3nfw68i2JcDtmPTVIGdOWojzKmZwim2pb+G2e3DsBXx3zXmfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cfsz9S9e; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U6EJG5bG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5F061F00A3A;
-	Wed,  9 Sep 2026 10:52:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfsz9S9e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78FF01F00A3A;
+	Wed,  9 Sep 2026 10:58:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788951168;
-	bh=3cKbNd616wWNajTVIynaWeEJ6Kr7Ap1typJBO+6xdFY=;
-	h=From:To:In-Reply-To:References:Subject:Date;
-	b=U6EJG5bGMtJmCAwQTsKf0cleAiy0ViPCIn+7Ik4WoiMNuHveOr7iwkYam78TW5Fe8
-	 G6SCv9XsjqKftEszV66xLYboeMdlFgzCKJ0ziKFSHXscHxNhhSN/4FmIwSQLTXWJ1I
-	 Dt4wtkLslWzSF5ToXGbTzK6blnOFpH+2fnkxG1RFX985gQXrZjQkETa/brLBYIil2e
-	 xSynt53+avZxRAPEKsrkZygJpa++lfLaqz9aO+wRX2CSD5VgyUPK8xDWSuPt4tq+fZ
-	 +nd9R/DxdzuBSr7ZJEMbxbVJy2zbcfPoU7xlmY7huPhPc9BleP9Q9b2bX8ZBu7/GKr
-	 p82KBbDTtClwQ==
+	s=k20260515; t=1788951485;
+	bh=LZMz4NgLdZkzAN05hF6jIWp6y0ebT0w6T9WIRbFYJHc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=cfsz9S9eYt50PcqDw01unIXgIivixip+nXw/NrMYuKTppXIiAwGj/6zydRsvyEkra
+	 AxBXtESsK6q/htK9j0xvSYu5SCz8uNTzRkREz7zc3sSiqW/+qLnxo3ewCSt+OBH5hC
+	 RaCGIR0nPQDE0BbECmeHLgwpm9qak7/BCDEuf0C1D3D84FHWFX6ASf/rnupJ8aF6Nf
+	 jWGZVcFOXgRI3Gnpz6yH8C3+ZWzK8AdGgTlng3q0+eiUwCPLOBqtNn9PK84rluwZgf
+	 MofkHZ2lc2DYHLbM1Fq6WlIakY4gnJ18HT3fVUDTkrh0xGKNByNt8UoVKAYyJOWMYv
+	 KgQP2yiF+mcCw==
+Date: Wed, 9 Sep 2026 12:58:01 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: dlemoal@kernel.org, linux-ide@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Pei Xiao <xiaopei01@kylinos.cn>
-In-Reply-To: <cover.1788867690.git.xiaopei01@kylinos.cn>
-References: <cover.1788867690.git.xiaopei01@kylinos.cn>
-Subject: Re: [PATCH v2 0/2] ata: pata_parport: fix UAF on protocol module
- unload
-Message-Id: <178895116744.2768460.12721406127250514018.b4-ty@kernel.org>
-Date: Wed, 09 Sep 2026 12:52:47 +0200
+To: Roland Waltersson <roland.waltersson@netinsight.net>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2] ata: libahci: clear PxCLBU and PxFBU for
+ AHCI_HFLAG_32BIT_ONLY
+Message-ID: <aqE7uftz1jdjT_w5@ryzen>
+References: <20260904134310.1465051-2-cassel@kernel.org>
+ <ap5vFBMRkoe0NF73@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ap5vFBMRkoe0NF73@ryzen>
 
-On Tue, 08 Sep 2026 19:47:26 +0800, Pei Xiao wrote:
-> This series fixes use-after-free issues in pata_parport when a protocol
-> module goes away while pi_adapter devices created by it are still
-> attached.
+On Mon, Sep 07, 2026 at 10:00:20AM +0200, Niklas Cassel wrote:
+> On Fri, Sep 04, 2026 at 03:43:11PM +0200, Niklas Cassel wrote:
+> > A user reported that commit 105c42566a55 ("ata: ahci: force 32-bit DMA for
+> > JMicron JMB582/JMB585") made the JMicron JMB585 unusable on his board.
+> > 
+> > The failure is seen as soon as the ahci driver is probed, and booting with
+> > iommu=off does not solve the problem.
+> > 
+> > Looking at the AHCI specification, PxCLBU and PxFBU are both read only '0'
+> > for HBAs that do not support 64-bit addressing.
+> > 
+> > For HBAs that do support 64-bit addressing, the registers are read write,
+> > with a reset value that is Implementation Specific.
+> > 
+> > When using the AHCI_HFLAG_32BIT_ONLY flag, the HBA does support 64-bit
+> > addressing, and a 32-bit DMA mask is set by simply clearing HOST_CAP_64.
+> > Thus, in this case, we need to explicitly clear the registers to 0.
+> > 
+> > Fixes: 105c42566a55 ("ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585")
+> > Fixes: c7a42156d99b ("ahci: disable 64bit dma on sb600")
+> > Cc: stable@vger.kernel.org
+> > Reported-by: Roland Waltersson <roland.waltersson@netinsight.net>
+> > Closes: https://lore.kernel.org/linux-ide/IA0PR17MB668730A4ECCD65F7A1DC3EDC9EB62@IA0PR17MB6687.namprd17.prod.outlook.com/
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 > 
-> Patch 1 pins the protocol module before the device becomes visible.
-> Previously try_module_get() ran after device_register(), so a forced
-> module unload in between left pi->proto dangling from the moment the
-> device appeared on the bus.
+> Hello Roland,
 > 
-> [...]
+> Any chance to get a Tested-by from you?
 
-Applied to libata/linux.git (for-7.4), thanks!
+If we get a Tested-by, we could send it for v7.3-rc3 which will
+release on Sunday.
 
-[1/2] ata: pata_parport: pin the protocol module before device_register()
-      https://git.kernel.org/libata/linux/c/5d3355c7
-[2/2] ata: pata_parport: unregister devices on protocol unregister
-      https://git.kernel.org/libata/linux/c/d82c5cf6
+If you are busy, I don't see any problem of sending it sometime
+next week to target v7.3-rc4.
+
 
 Kind regards,
 Niklas
-
