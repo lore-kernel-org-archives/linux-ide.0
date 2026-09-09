@@ -1,86 +1,136 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BECEA4AF69B;
-	Wed,  9 Sep 2026 10:58:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F6ED54281E
+	for <linux-ide@vger.kernel.org>; Wed,  9 Sep 2026 11:24:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788951486; cv=none; b=bkdLOmfVMORKeCX/RloZs3BaxK+yYnotUnT/oPscsNFPS2mYwBV213GgPOWxhADRXFrFp+HfhGPewYz5RjofIJRcQ864FAzHcA0TNhCy3JuUQnrskwQ0UI+JREzDxyRgMGhviI6HL/L7fSeeaThjU1jGhrmH3urhhhq0VLiwhWw=
+	t=1788953086; cv=none; b=JkZk+xRpAikZmih2pOWNlxh7un6jMTC2ULvzOyutT5LxK68XFILl/3HaLGRkQbTf5BnwberkHoJxiKABQvkcKeTpd0NWjfFaKaMdYUN0uNkv2e1zKzoIjy1p8FJtvCta7UAKKONRxBbnumYDXbcGdpq5l619LfTvGL57wXdwjW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788951486; c=relaxed/simple;
-	bh=IB30haaMQc+CRjCxPP5ufooWqCGMlQrEvA2ADOz2CsE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rcxPMDQygHcYJVHPWBG8xw9JJtylyFVRGGbKZc53cGE98PntAosESPwG06zsyhdQ47rNeftRZaPyziwjkCM+1Fao8X4fHbqKiCodcG+qimQ+K+F8NJpxjCwJDd3nfw68i2JcDtmPTVIGdOWojzKmZwim2pb+G2e3DsBXx3zXmfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cfsz9S9e; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788953086; c=relaxed/simple;
+	bh=+vYyZvxNMXm+ZRKUBT915b8ELxfryNitX56nos8CV+E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nuNNaMhrZ3zFyjZ7yZ5urpJJMNpbs0lLW3JE6zJ8FyGHN8nULR7l59e0KBNO4rReXx/LTimmgu87Kkp0gsSFL8G9EfVmcM2V8+Rw85LfzYuLmfrbwuZr+K3xqm5sLBnjxFfTr3gl21WJxwQ/rgUhWKyKHojNS9joG7/JzdC+UdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=YZjUYwhq; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=kKKEsPKt; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfsz9S9e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78FF01F00A3A;
-	Wed,  9 Sep 2026 10:58:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788951485;
-	bh=LZMz4NgLdZkzAN05hF6jIWp6y0ebT0w6T9WIRbFYJHc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cfsz9S9eYt50PcqDw01unIXgIivixip+nXw/NrMYuKTppXIiAwGj/6zydRsvyEkra
-	 AxBXtESsK6q/htK9j0xvSYu5SCz8uNTzRkREz7zc3sSiqW/+qLnxo3ewCSt+OBH5hC
-	 RaCGIR0nPQDE0BbECmeHLgwpm9qak7/BCDEuf0C1D3D84FHWFX6ASf/rnupJ8aF6Nf
-	 jWGZVcFOXgRI3Gnpz6yH8C3+ZWzK8AdGgTlng3q0+eiUwCPLOBqtNn9PK84rluwZgf
-	 MofkHZ2lc2DYHLbM1Fq6WlIakY4gnJ18HT3fVUDTkrh0xGKNByNt8UoVKAYyJOWMYv
-	 KgQP2yiF+mcCw==
-Date: Wed, 9 Sep 2026 12:58:01 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Roland Waltersson <roland.waltersson@netinsight.net>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2] ata: libahci: clear PxCLBU and PxFBU for
- AHCI_HFLAG_32BIT_ONLY
-Message-ID: <aqE7uftz1jdjT_w5@ryzen>
-References: <20260904134310.1465051-2-cassel@kernel.org>
- <ap5vFBMRkoe0NF73@ryzen>
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="YZjUYwhq";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="kKKEsPKt"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 31F5E22D22;
+	Wed,  9 Sep 2026 11:24:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1788953078; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=ukY/eBZNitlz+9xvy6BCK56ic+JqZbo3ZdDSa7vQi4E=;
+	b=YZjUYwhqMHsi24hTAgQA8gv9St19e/jegQeDleXEoUbLoymJBI2Gnhxm8Xr1/nAjizSYEp
+	pdZ9TevjD44XIJpZ1AP1lzc+7OMV7JW0oYzJMC2pJSixI4sBNjYwjSxPp8bF/VAYuf2pfe
+	iYKm2Rm80QxXU6ToqT4KgPfWc2vj1Jw=
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.com header.s=susede1 header.b=kKKEsPKt
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1788953074; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=ukY/eBZNitlz+9xvy6BCK56ic+JqZbo3ZdDSa7vQi4E=;
+	b=kKKEsPKtubtfHfMC32FvwucXaIOqQqLQ8l3Re6Tnsf4PCGBb0MdEoOvg1Y/c4JJOP0/4h/
+	/n31gFlJUVJb0/RdVREIT0ipM4iKfDkouMpMpUpNeq16fFh/kG4OCIU4Nr0igTCkiGq0Jb
+	hO9wxOEMMd9ey0MYTxYvIsUm3KgjHug=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9EE561352C;
+	Wed,  9 Sep 2026 11:24:33 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id e/VPJPFBoWpeagAAD6G6ig
+	(envelope-from <nik.borisov@suse.com>); Wed, 09 Sep 2026 11:24:33 +0000
+From: Nikolay Borisov <nik.borisov@suse.com>
+To: linux-ide@vger.kernel.org
+Cc: dlemoal@kernel.org,
+	cassel@kernel.org,
+	rosenp@gmail.com,
+	Nikolay Borisov <nik.borisov@suse.com>
+Subject: [PATCH v2] ata: sata_dwc_460ex: Don't enable interrupt if libATA core registration fails
+Date: Wed,  9 Sep 2026 14:24:26 +0300
+Message-ID: <20260909112426.811456-1-nik.borisov@suse.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ap5vFBMRkoe0NF73@ryzen>
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -3.01
+X-Rspamd-Queue-Id: 31F5E22D22
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FREEMAIL_CC(0.00)[kernel.org,gmail.com,suse.com];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:dkim,suse.com:email,suse.com:mid];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	RCPT_COUNT_FIVE(0.00)[5];
+	DKIM_TRACE(0.00)[suse.com:+]
+X-Spam-Flag: NO
 
-On Mon, Sep 07, 2026 at 10:00:20AM +0200, Niklas Cassel wrote:
-> On Fri, Sep 04, 2026 at 03:43:11PM +0200, Niklas Cassel wrote:
-> > A user reported that commit 105c42566a55 ("ata: ahci: force 32-bit DMA for
-> > JMicron JMB582/JMB585") made the JMicron JMB585 unusable on his board.
-> > 
-> > The failure is seen as soon as the ahci driver is probed, and booting with
-> > iommu=off does not solve the problem.
-> > 
-> > Looking at the AHCI specification, PxCLBU and PxFBU are both read only '0'
-> > for HBAs that do not support 64-bit addressing.
-> > 
-> > For HBAs that do support 64-bit addressing, the registers are read write,
-> > with a reset value that is Implementation Specific.
-> > 
-> > When using the AHCI_HFLAG_32BIT_ONLY flag, the HBA does support 64-bit
-> > addressing, and a 32-bit DMA mask is set by simply clearing HOST_CAP_64.
-> > Thus, in this case, we need to explicitly clear the registers to 0.
-> > 
-> > Fixes: 105c42566a55 ("ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585")
-> > Fixes: c7a42156d99b ("ahci: disable 64bit dma on sb600")
-> > Cc: stable@vger.kernel.org
-> > Reported-by: Roland Waltersson <roland.waltersson@netinsight.net>
-> > Closes: https://lore.kernel.org/linux-ide/IA0PR17MB668730A4ECCD65F7A1DC3EDC9EB62@IA0PR17MB6687.namprd17.prod.outlook.com/
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> 
-> Hello Roland,
-> 
-> Any chance to get a Tested-by from you?
+Recent 4bbc16a353a9 commit changed the timing when interrupts are
+enabled. However it didn't account for the libATA registration step. So
+it's possible that interrupts are enabled when the device is not
+registered with libATA core.
 
-If we get a Tested-by, we could send it for v7.3-rc3 which will
-release on Sunday.
+Resolve the issue by failing the entire registration process in case of
+failure to register with libATA.
 
-If you are busy, I don't see any problem of sending it sometime
-next week to target v7.3-rc4.
+Fixes: 4bbc16a353a9 ("ata: sata_dwc_460ex: enable SATA interrupts only after IRQ handler is registered")
+Signed-off-by: Nikolay Borisov <nik.borisov@suse.com>
+---
 
+Changes since v1:
+	* Added proper goto label
 
-Kind regards,
-Niklas
+ drivers/ata/sata_dwc_460ex.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 8e3fc713891a..db39843c5f0f 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1185,8 +1185,10 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	 * error_handler() to execute a dummy Softreset EH session
+ 	 */
+ 	err = ata_host_activate(host, irq, sata_dwc_isr, 0, &sata_dwc_sht);
+-	if (err)
++	if (err) {
+ 		dev_err(dev, "failed to activate host");
++		goto error_out;
++	}
+ 
+ 	/* Enable SATA Interrupts */
+ 	sata_dwc_enable_interrupts(hsdev);
+--
+2.55.0
+
