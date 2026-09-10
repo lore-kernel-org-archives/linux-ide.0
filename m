@@ -1,221 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85F073CF21D
-	for <linux-ide@vger.kernel.org>; Wed,  9 Sep 2026 21:07:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECC3485922
+	for <linux-ide@vger.kernel.org>; Thu, 10 Sep 2026 12:19:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788988058; cv=none; b=jsFsfKrNdVvu2nlTOEc+fSFOblGnjtF4KIhmW4j+uqjuAsql7Ri0V4VWYQSCJ30KxSD1nwvgFaPDgxsc+wsvzwoi0t94BYiZqkNtsY+nORCWy+BJaEXdTvsiYXF2ICQNjMBQT+fHfaPhFKPlS9xkHuCFBVUcS+GVQsJ+oiqtMZg=
+	t=1789042753; cv=none; b=pjqEiPo3R+8Fw310kgI2yvvvbIiHA4abCAw4urm349M+xCaxVCxqdBKPiHMQyBvgtZt16T00qu0xi7xgHbH+wIn5x0qUeA9bJ1vxpSPR1fWWI//MlzWoRhVgbQLGUmjMOP47VaLIHYDagiM0+c5LGMNrs7tzB0aLPShgvyzdg7Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788988058; c=relaxed/simple;
-	bh=/NH0673f9Xx2IQ4Dg5liTNxvB945oDFoOhCgHDeFRtU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=t3rGP/K2k0ptxKeGABE8ebW1CAeWw4nnTDb6cK+oUZ3q6cgVLTK5wrO2w7K9Xnjip9UY2KB3XhN1h5GokcFdyvuwCikYT0KyGDTn1jmwio42YQxwElsxHJFAciCEnO5f/lJdABSNOwQ1xO/4b1JmNy+/8iREvlzODW95tSbEah4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fTlftd1h; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789042753; c=relaxed/simple;
+	bh=7HlLsDy2wvAzXZ1vWfxwhV/7o0hNOcZ4+2e4m3lLhMM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mmP9bI1yikdkVH1pHwwA5iyRrWF01LpThLecVQTjbxPr4TRnDQFOO2ifhhl555/USt2ret297g95ItyyOZMi0xZNsRLClaOEhplj/Qc1ixHEITuXa7CKZi+UgevRG31srjJcREyXv5nVxSjoqqvhPBNrHVOFAuhYDOCAlvwcF2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dku4+BoU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fTlftd1h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9ECE1F00893;
-	Wed,  9 Sep 2026 21:07:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dku4+BoU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5684E1F000FF;
+	Thu, 10 Sep 2026 12:19:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788988057;
-	bh=qhr+FdRhM8iC/qXGINTb2jsMKRCRWCEDmh7jnzHMXoo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fTlftd1hjfrHa6erUj5RcFFBxu3JTNs+Mn6VSL3g/cyzeKGAbn1NGJfobDXypUjml
-	 qEmrSmkJ5Wlwx0KmPvwbu1+iyX6wnl92i6MzskuEDGeQOfwgrewnAowxQv6HIhH6fQ
-	 AEoQxr+172UP63QrwPEJpgVjTZLqwjryf4MfkfTn5OoZMeINfqKP3GxpjtT5lIZGx6
-	 C9rnPe1OKsp3kZBYnSr0ruZDjBBMzIvV+PzpFM/QzIgpyBpYApQdH3MIwNYxUkfgn9
-	 uhzFZUSkdJn9Fq4d03tuQ0C7TZaDqmzP3nPrQOeDLZQ2ai3HfGewv30544Rt7iX8aY
-	 58RZxfKGhYmPQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] ata: libata: Do not leave ata_host_stop() registered
- when activation fails
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Niklas Cassel" <cassel@kernel.org>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, cassel@kernel.org
-In-Reply-To: <20260909204317.5750-2-cassel@kernel.org>
-References: <20260909204317.5750-2-cassel@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 09 Sep 2026 21:07:35 +0000
-Message-Id: <20260909210736.B9ECE1F00893@smtp.kernel.org>
+	s=k20260515; t=1789042751;
+	bh=2NPk8Bc6uV6uQrplbJC0j2BRezCpHA2sFhDQmYVuZLE=;
+	h=From:To:Cc:Subject:Date;
+	b=dku4+BoUW+/hDlMBRsgoAHQrgHSV/tvtuZkREpIwVwSdhpiYNmehGjQRrYx92Egop
+	 SjqYsrTc/TjqUTjDQ+p3hukaRLka0sgk7R40W21VyT22QoXO0B7BlzW56Ky42bVhQd
+	 Fpaoo81Oyz/A2c7/Z5WK5LqImTNu11+/eo6H9u82+49f2wuMHiVwKeT34+GH90GKpJ
+	 OB8qb30PmvBWsqNURe7tcFkMROpsm7kzfXq9YJpUd9Ix6PTIPToAiDa/LHbiZhwXbS
+	 BkK2fPA4DLTnHAmZuIaWYLmVlVtG/YPBSZqosN3FNZnUKk/xtja86TWtnQWNCzil6d
+	 SYBm61f9ROIkg==
+From: Niklas Cassel <cassel@kernel.org>
+To: Patrice Chotard <patrice.chotard@foss.st.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Hans de Goede <hansg@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Tejun Heo <tj@kernel.org>,
+	Alexandre Torgue <alexandre.torgue@st.com>,
+	Lee Jones <lee@kernel.org>,
+	Brian Norris <computersforpeace@gmail.com>,
+	Jeff Garzik <jgarzik@redhat.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	linux-ide@vger.kernel.org
+Subject: [PATCH v3 0/3] ata: Do not release the host resources twice on probe() failure
+Date: Thu, 10 Sep 2026 14:19:00 +0200
+Message-ID: <20260910121900.97676-5-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-
-New issues:
-- [Medium] The generic helper ata_pci_init_one() skips .host_stop cleanup o=
-n activation failure because ata_host_undo_start() destroys the devres acti=
-on.
-- [Medium] Missing ata_host_undo_start() on devres_open_group() failure in =
-ata_pci_sff_activate_host() leaves the devres action registered, causing do=
-uble host_stop() execution.
-
-Pre-existing issues:
-- [High] Pre-existing double-unmap and double-free in sata_fsl.c on device_=
-create_file() failure.
---
-
-commit 19ca4d6912533c209fda6772c9bbd7b4176f4fb0
-Author: Niklas Cassel <cassel@kernel.org>
-
-ata: libata: Do not leave ata_host_stop() registered when activation fails
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3571; i=cassel@kernel.org; h=from:subject; bh=7HlLsDy2wvAzXZ1vWfxwhV/7o0hNOcZ4+2e4m3lLhMM=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLIWLTCR+X4ytOJURVPMEyEbO0bTitCswyufmKaE1Xulv n0ew1LVUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIk0T2f4Z/K8VqNt6bRb6qI+ H3bbSFpP3hGktdeV3aDsysz12hc+pDIynFYKXvHK5uObmiVHl66pFC7+4zupr+Mjm8xLdZvsfUt YWQA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
 ata_host_start() registers ata_host_stop() as a devres action as soon as
-it has succeeded, which hands the release of the host resources over to
-devres: ->port_stop() and ->host_stop() are then called by the driver
-core when probe() fails.
-   =20
-ata_host_activate(), ahci_host_activate_multi_irqs() and
-ata_pci_sff_activate_host() can all fail after ata_host_start() has
-succeeded. A driver which releases the host resources in its probe() error
-path therefore releases them twice: once itself and once through ->host_sto=
-p().
+it has succeeded:
 
-Fixes: 1896b15eddb4 ("ahci_platform: perform platform exit in host_stop() h=
-ook")
-Cc: stable@vger.kernel.org
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
+	if (have_stop) {
+		start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
+	...
+	if (start_dr)
+		devres_add(host->dev, start_dr);
+	host->flags |= ATA_HOST_STARTED;
 
-[ ... ]
+From that point on, releasing the host resources is owned by devres: when
+probe() fails, the driver core calls devres_release_all(), which calls
+ata_host_stop(), which calls ->port_stop() and ->host_stop().
 
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 734e7c88439a7..faa20d817c850 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -2338,10 +2338,12 @@ int ata_pci_sff_activate_host(struct ata_host *ho=
-st,
-> =20
->  	rc =3D ata_host_register(host, sht);
->  out:
-> -	if (rc =3D=3D 0)
-> +	if (rc =3D=3D 0) {
->  		devres_remove_group(dev, NULL);
-> -	else
-> +	} else {
->  		devres_release_group(dev, NULL);
-> +		ata_host_undo_start(host);
-> +	}
-> =20
->  	return rc;
->  }
+ata_host_activate() and ahci_host_activate_multi_irqs() can however fail
+after ata_host_start() has succeeded - devm_kasprintf(),
+devm_request_irq() (a shared IRQ conflict) and ata_host_register()
+(scsi_add_host(), ata_tport_add()) can all fail - and they return the
+error with the devres action still registered. Since the caller cannot
+tell whether ata_host_start() succeeded, and since it has to release the
+resources for the failures happening before that, all the ahci-platform
+drivers release the host resources in their probe() error path, e.g.
+ahci_probe() calls ahci_platform_disable_resources() while
+ahci_host_stop() does the same through devres.
 
-[Severity: Medium]
-When ata_host_undo_start() drops the devres action, does this cause
-driver-specific teardown logic to be permanently skipped for generic caller=
-s?
+The clocks, regulators, resets and PHYs of the host are therefore
+released twice, which gives refcount underflow warnings from the clk,
+regulator and phy cores and, for shared resources, can disable resources
+which are still in use by other devices.
 
-For example, when pata_amd.c uses ata_pci_bmdma_init_one(), which in turn
-calls ata_pci_init_one():
+Patch 2 adds ata_host_undo_start(), which stops the ports and drops the
+devres action without calling ->host_stop(), and calls it from both
+activation helpers when they fail, so that "on failure, the caller
+releases what it acquired" holds for all of them. sata_qstor and sata_fsl
+are the only drivers which implement ->host_stop() while having no error
+handling at all for the activate host call, so they get some.
 
-drivers/ata/libata-sff.c:ata_pci_init_one() {
-    ...
-    rc =3D ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
-out:
-    if (rc =3D=3D 0)
-        devres_remove_group(&pdev->dev, NULL);
-    else
-        devres_release_group(&pdev->dev, NULL);
+Patch 1 has to come first: ahci_st is the only ahci-platform driver whose
+->host_stop() does more than its probe() error path, as it also asserts
+the "pwr-dwn" reset. Without patch 1, patch 2 would silently stop that
+reset from being asserted when activating the host fails.
 
-    return rc;
-}
+Patch 3 is an unrelated kdoc fix that I noticed while documenting the
+above.
 
-Because ata_pci_init_one() relies on devres cleanup and does not manually c=
-all
-host->ops->host_stop(), it appears this teardown logic will now be skipped =
-on
-activation failure.
+Changes since v2:
+- Do not take the host teardown back in ata_pci_sff_activate_host(), and
+  drop the sata_nv change which went with it. None of its callers
+  releases the host resources itself: ata_piix, pata_rdc and
+  ata_pci_init_one() all rely on ->host_stop() being called through
+  devres, ata_pci_init_one() by releasing the devres group of the host.
+- Document who releases the host resources on failure in the kdoc of
+  ata_host_activate(), ata_host_register(), ata_pci_sff_activate_host(),
+  ahci_host_activate() and ahci_platform_init_host().
+- New patch 1, so that patch 2 does not stop ahci_st from asserting its
+  "pwr-dwn" reset on probe() failure.
+- New patch 3.
 
-[Severity: Medium]
-Can a failure earlier in ata_pci_sff_activate_host() leak the devres action?
+Niklas Cassel (3):
+  ata: ahci_st: Assert the power down reset in the probe() error path
+  ata: libata: Do not leave ata_host_stop() registered when activation
+    fails
+  ata: libata-core: Fix the ata_host_register() kdoc
 
-If devres_open_group() fails due to memory pressure, it returns directly:
+ drivers/ata/ahci_st.c          | 51 ++++++++++++---------
+ drivers/ata/libahci.c          | 17 ++++++-
+ drivers/ata/libahci_platform.c |  4 ++
+ drivers/ata/libata-core.c      | 81 ++++++++++++++++++++++++++++++----
+ drivers/ata/libata-sff.c       |  5 +++
+ drivers/ata/sata_fsl.c         |  8 +++-
+ drivers/ata/sata_qstor.c       |  8 +++-
+ include/linux/libata.h         |  1 +
+ 8 files changed, 139 insertions(+), 36 deletions(-)
 
-drivers/ata/libata-sff.c:ata_pci_sff_activate_host() {
-    ...
-    rc =3D ata_host_start(host);
-    if (rc)
-        return rc;
+-- 
+2.55.0
 
-    if (!devres_open_group(dev, NULL, GFP_KERNEL))
-        return -ENOMEM;
-    ...
-}
-
-This bypasses the out: label and skips ata_host_undo_start(). Since callers
-like nv_init_one() have been updated by this patch to manually call
-host_stop() on error:
-
-drivers/ata/sata_nv.c:nv_init_one() {
-    ...
-    rc =3D ata_pci_sff_activate_host(host, ipriv->irq_handler, ipriv->sht);
-    if (rc && host->ops->host_stop)
-        host->ops->host_stop(host);
-    ...
-}
-
-Will this result in a double execution of the hardware teardown logic during
-driver core devres cleanup?
-
-[ ... ]
-
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index 70b210afd2911..299b2c886cbed 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -1490,8 +1490,12 @@ static int sata_fsl_probe(struct platform_device *=
-ofdev)
->  	 * device discovery process, invoking our port_start() handler &
->  	 * error_handler() to execute a dummy Softreset EH session
->  	 */
-> -	ata_host_activate(host, irq, sata_fsl_interrupt, SATA_FSL_IRQ_FLAG,
-> -			  &sata_fsl_sht);
-> +	retval =3D ata_host_activate(host, irq, sata_fsl_interrupt,
-> +				   SATA_FSL_IRQ_FLAG, &sata_fsl_sht);
-> +	if (retval) {
-> +		sata_fsl_host_stop(host);
-> +		return retval;
-> +	}
-> =20
->  	host_priv->intr_coalescing.show =3D fsl_sata_intr_coalescing_show;
-
-[Severity: High]
-This is a pre-existing issue and was not introduced by the patch under
-review, but does sata_fsl_probe() suffer from a double free and double
-unmap on later error paths?
-
-If ata_host_activate() succeeds, the devres action for ata_host_stop is
-successfully registered. If a later step fails (like device_create_file()),
-the code jumps to error_exit_with_cleanup:
-
-drivers/ata/sata_fsl.c:sata_fsl_probe() {
-    ...
-error_exit_with_cleanup:
-    if (host)
-        ata_host_detach(host);
-
-    if (hcr_base)
-        iounmap(hcr_base);
-    kfree(host_priv);
-
-    return retval;
-}
-
-When the driver probe fails, devres cleanup will automatically execute
-sata_fsl_host_stop(), which attempts to free and unmap the exact same
-resources again:
-
-drivers/ata/sata_fsl.c:sata_fsl_host_stop() {
-    struct sata_fsl_host_priv *host_priv =3D host->private_data;
-
-    iounmap(host_priv->hcr_base);
-    kfree(host_priv);
-}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909204317.5750=
--2-cassel@kernel.org?part=3D1
