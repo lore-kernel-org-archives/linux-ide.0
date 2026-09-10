@@ -1,63 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0AC6563FAA;
-	Thu, 10 Sep 2026 17:33:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFA7563FCB;
+	Thu, 10 Sep 2026 17:40:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789061616; cv=none; b=nJhP1bAloi6+cd00eznT7B4pmgX4y3r5fx8c9q7odox65J/DpVobRyHW+j2qz88NPSes4Li7L5RN57YC3wCda1GjV0iAcKm43npn823WPdD5mm70K9gXisdLPj7V4JrqP6Eu9ash1YiSpYwNCf8JdIhl7W0xKktLqAk7pNjAKXY=
+	t=1789062009; cv=none; b=cRvY68QqCqsrctRfk9rQlrAm9rkQtCOnPoyL9mYVcHVXLt4f3unErVpkEexT+wYizeKM4NqBWOME7dJSkhEOqMI9F90CXMO4JG8l24b/tN6FQ0oN7siI2Y4ig7dRBaY5/pDGte+xDecEigwViLQYp9RrxElnHXXBoKUApmHyFSk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789061616; c=relaxed/simple;
-	bh=MCNOi9xIw5iRiR3EyFN0mMplUBmpBIeLYzXFr8Rll8k=;
+	s=arc-20240116; t=1789062009; c=relaxed/simple;
+	bh=Re1nNjc88tMIq7kazi9QqOCRYyikuB7Slre5d7DUpYE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Wp19RC0UGBn3WyZzOJtQyUfY155vCa/jx+HxcC33Bhxu4uOCknYEhnQCG7oX4OgQGTi1CrwyJ1HCU9b2VE6fgmsp5t2HWUBkLpxT1wUzFx2FezzHU7jlZLUjW9/ajeGPNFb8OVuzTrw5vBSKjCmK8mI/twH+Oj3uX79egV+Uq6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zr9Rrxkg; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=HB1lXxZk7f/gyHBxfyQxgvKdPsH0qfvZthIvNZQeloShGwehXCiCb6ghOMcNUmvLLt78t6Qh+LEpFRjBHiK5iGo04mg8wv9lF81QLfDLPz5Bl2oGr+tqqeirZzSMkV+wi26t/lC/RsNkmQI2zCzFouivA5So1rkSpyWVswiIVtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MANb+xxt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zr9Rrxkg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58A5A1F000FF;
-	Thu, 10 Sep 2026 17:33:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MANb+xxt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19D5F1F000FF;
+	Thu, 10 Sep 2026 17:39:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789061611;
-	bh=mc61jQ2p6vMPm9Sn/vjm/9Psk2xpnTlGysS95tscm7Q=;
+	s=k20260515; t=1789061999;
+	bh=T8CoS2l+O0z0tAlSAm+Zvv1ub23ICl3ib0aFRyAwxsQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Zr9RrxkgLuPZ7amTj6iAzMB56dHM0XLgFYwJmbnZPBjEbC0mWN3C+hPkJMCekYy0w
-	 Fhe66bjAyi9wUJ1ryaP8OrJykX1XrnmuZFzPZB6YS7pWZRDw5jvSvnO72YjmRGYROH
-	 z4Tm19zswYDqKxRW7mPSyzYnvVDtHi31P0rtyk7bOg4j79nYpu/6i5lJr+v7qPzOvj
-	 A3NE9iZpFHlo2ONmbI1iz6sgHB5b94cRQ2nbAOjOMeecQzhwvn77Raj2xaf8vTh8H1
-	 8rHrjkWj1dDEVB8CybNDdtDUta6Z0wvbXgS7xrbJ02/j1svRIcFXRpNL7Rm+ypvtuO
-	 XHn2kXvUOeFNg==
-Date: Thu, 10 Sep 2026 19:33:22 +0200
+	b=MANb+xxt56K5ryM97uUDpad5A0EkZdBRuKRjmiPUGaO2NxE7F/Ik6FglUTp1lvDyt
+	 VnoxqJ1VOtZk6jzaMbI903ZztLG/IHU52TjnPATCtHCEFcg+pZ9rwzcthFbiyt5wxk
+	 KcUZhB9F1H6sBvGuoIuouTmiLmJ21i5UqkNOGOw8Dgu2Yt+IGtbwPjLXaM1ZJVZl/e
+	 rz6aPwGf4k5DJ5BwVgZwOmhwpkL6J6bXgCz0qOhUTdoIShJLrk/bLaoKWurO8u4faS
+	 xHFv9K21QrFvgAxwFYdUYREaFR7/cTHyWAkom5drSJPC051ybzNMWLabeBq1TF60f4
+	 +eP7yzFHvnhpA==
+Date: Thu, 10 Sep 2026 19:39:55 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Karl Mehltretter <kmehltretter@gmail.com>
-Cc: Jonathan Corbet <corbet@lwn.net>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-m68k@lists.linux-m68k.org,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	linux-input@vger.kernel.org, linux-doc@vger.kernel.org,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	Steve Wahl <steve.wahl@hpe.com>,
-	Dimitri Sivanich <dimitri.sivanich@hpe.com>,
-	Mike Travis <mike.travis@hpe.com>, Tony Luck <tony.luck@intel.com>,
-	linux-edac@vger.kernel.org, Krzysztof Kozlowski <krzk@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>, linux-samsung-soc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Tony Lindgren <tony@atomide.com>,
-	Kevin Hilman <khilman@baylibre.com>, linux-omap@vger.kernel.org,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	Ethan Nelson-Moore <enelsonmoore@gmail.com>,
-	Michael Schmitz <schmitzmic@gmail.com>,
-	Andreas Kemnade <andreas@kemnade.info>
-Subject: Re: [PATCH v2 9/9] docs: kernel-parameters: Drop the pata_legacy.qdi
- and pata_legacy.winbond entries
-Message-ID: <aqLp4p-CCi9sVDlb@ryzen>
-References: <20260905094649.41996-1-kmehltretter@gmail.com>
- <20260905094649.41996-10-kmehltretter@gmail.com>
- <apwKitEmOv3ZwLkd@gmail.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
+	Patrice Chotard <patrice.chotard@foss.st.com>,
+	Alexandre Torgue <alexandre.torgue@st.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>, Lee Jones <lee@kernel.org>
+Subject: Re: [PATCH v4 1/5] ata: ahci_st: Assert the power down reset in the
+ probe() error path
+Message-ID: <aqLra9zRifL_26LJ@ryzen>
+References: <20260910171406.131211-7-cassel@kernel.org>
+ <20260910171406.131211-8-cassel@kernel.org>
+ <20260910172904.397C41F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -66,42 +47,17 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <apwKitEmOv3ZwLkd@gmail.com>
+In-Reply-To: <20260910172904.397C41F000FF@smtp.kernel.org>
 
-On Sat, Sep 05, 2026 at 02:29:46PM +0200, Karl Mehltretter wrote:
-> On Sat, Sep 05, 2026 at 11:46:49AM +0100, Karl Mehltretter wrote:
-> > pata_legacy no longer has the qdi and winbond module parameters:
-> > commit 3c4d783f6922 ("ata: pata_legacy: remove VLB support") removed
-> > both together with the VLB controller support. The entries also refer
-> > to CONFIG_PATA_QDI_MODULE and CONFIG_PATA_WINBOND_VLB_MODULE, which do
-> > not exist either.
-> > 
-> > Drop both entries.
-> > 
-> > Fixes: 3c4d783f6922 ("ata: pata_legacy: remove VLB support")
-> > Assisted-by: LLM
-> > Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
-> > Acked-by: Damien Le Moal <dlemoal@kernel.org>
+On Thu, Sep 10, 2026 at 05:29:03PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
 > 
-> This one is actually a duplicate, I just found out. Ethan posted a more
-> complete patch in June that removes all six pata_legacy entries which
-> commit 3c4d783f6922 ("ata: pata_legacy: remove VLB support") left
-> behind, this patch covers only two of them:
-> 
->   https://lore.kernel.org/r/20260607064053.195166-1-enelsonmoore@gmail.com/
-> 
-> It has a Reviewed-by tag from Randy, but does not seem to
-> have been picked up yet. 
-> 
-> So I suggest: drop 9/9 and take Ethan's patch instead.
-> The other patches of this series are not affected.
+> Pre-existing issues:
+> - [High] st_ahci_probe_resets() blindly masks all errors from devm_reset_control_get(), breaking probe deferral and leading to kernel panics.
 
-I have picked up the patch that you linked to above:
+I do not intend to fix this pre-existing issue.
 
-ata: pata_legacy: remove documentation for removed module parameters
-https://git.kernel.org/libata/linux/c/a19d4f9b
-
-Thank you for the ping!
+Would be happy to pick up a patch for it though.
 
 
 Kind regards,
