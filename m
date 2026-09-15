@@ -1,71 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 038C2285CB9
-	for <linux-ide@vger.kernel.org>; Tue, 15 Sep 2026 04:08:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8149235B64C;
+	Tue, 15 Sep 2026 06:52:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789445323; cv=none; b=fKKDdAaqElWtTDx4VjEVFG1naP2eBQgf4geTKpiQSaXyW1YBxuRWNAv0PJeDK2qzlGR2AgUCleSQOsIGQVxwYWORyK48EFd/eMUWk5EE72mxJobIsE/wFalldRCcBEbG1IgHzz/jHXxouIK+hmxeRlOT8qxfmRFy1MDeb6bU14I=
+	t=1789455131; cv=none; b=LZ4nxQAYSbPgel/P9zcplOkZ5hIzCGxECeu4NwvHdetVRrETsfJ49QVgvwr+HkejJRMZisc2CI2QoH/Enzx+KrjkDNDa+zVU4VnMMfDZe2qdr88JUwIv63qtiP5+cxv/s9AL4zlJbW4CoOJ8QWrKtyytkPSi7FT0QSD+V23Ow3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789445323; c=relaxed/simple;
-	bh=qPINpfBsXKEfZP0CNQcmTEMeCUw9rcYG2Z8YdVK15PA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fOI4gsU8Kkx7lkiGk3W5kSXd37bwldN/qxdyZU9RqMEUefeS6Sz0ZXorm0B6Zz5nlXeHmkxyJtGFehS1KqMRFeSSz0olehm9WfAyLb0up7ipYbZBs/kynwx8igLjpuc0p0PpwORAAXhzwGXhW3QiIL+bhJymD7bPzXgVrNvCOJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DxXRLgLB; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789455131; c=relaxed/simple;
+	bh=/TQy3qiMw8iEsxT8Jzfxk+BL0t9vtrxnE8kU3OWgP10=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=RcRWUcsf5pzi1Pzp9sKK5x6qUOl8tOz3sBSaMR9nE/Ona0lKeNbOcRYN4E9v0xbIoJI6+OzmzdRb7wQhiSnJXe4LleEC2+2Bt/KeBl+hYWbm+0Iiu2j1hkpWyqVfN9TS6sVYPkML3SskQ8rprIfOg4r6tWbc8FwXyWyGBY20EaY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=je8mUhFG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DxXRLgLB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A030D1F000FF;
-	Tue, 15 Sep 2026 04:08:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="je8mUhFG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C992B1F000FF;
+	Tue, 15 Sep 2026 06:52:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789445321;
-	bh=lRmIKyxS5lP9foMEbglPEKa/Ew7Yk3y3DtU+0PMWePg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=DxXRLgLBC4oyw277asGaDyxfSPLxA958IUtrCOd65B/LFiWCqdriiFnnWVuGS/X1z
-	 mH29Mvk3so6D0v9Wo5XLZdbM1cfZM5m3WlfaXRNPwaXbnUUK45hsVrMuEG/vuAIezP
-	 qQKShSCvPfmnV7z3G9dSj4147qJvTBjKPmmOHtTsbAnX5sWyG4+kafRntwef5fPdFA
-	 fa55CZuNxXhxwQDyzfQmGdg/cZPEACeDLRCsLGB4XoufGjR+qETOwcFCPvgF3nF8RV
-	 cZNcisgc8Ub0k1mhJr1oyAgX012D6mLBa9rGHle31plzszycNywlSRxJpZyPpr1QqI
-	 hxBAXiQznEkHg==
-Message-ID: <1897c1cc-7732-4aca-910a-b5bea41272e3@kernel.org>
-Date: Tue, 15 Sep 2026 11:08:38 +0700
+	s=k20260515; t=1789455130;
+	bh=AspbTrJVCUnV7I4/gkTbQUtC1LqlvAsH2L1l4E3fwnc=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=je8mUhFG76eq6HMev1zucBla6iYQwjUG/MREUlqngwyvDoTu25wgXpXylhQo11dnl
+	 T44OkJBkPbVz7jmai7IpUA+Viva8vIE5WwiyM7fEBLBWISQb30HLBn/KzIxT/yIjSx
+	 D0YuVGs72+JZzqtBssifHKcQmGL3hcda6VdmnlPJk2XNx98IIc/zBzVZMvIDnP2mho
+	 FscBn+3AlcZj/uowI0BimP98o5SlRC/X1Lch2pgtOygeBvzdOxk5YZq1Qdth9fqPrY
+	 pjEz/XPM2EoCr8H2adRSPWdQvhWLj5E/CSuYjLihn8adWAgbjfqOyt1FL5K/tOKU8m
+	 SaSWRRPXnVOKw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, 
+ linux-ide@vger.kernel.org, Ethan Nelson-Moore <enelsonmoore@gmail.com>
+Cc: stable@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+In-Reply-To: <20260915014714.41274-1-enelsonmoore@gmail.com>
+References: <20260915014714.41274-1-enelsonmoore@gmail.com>
+Subject: Re: [PATCH] ata: sata_inic162x: remove dangerous broken driver
+Message-Id: <178945512853.665610.9001972576938691195.b4-ty@kernel.org>
+Date: Tue, 15 Sep 2026 08:52:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 5/5] ata: libata-core: Fix the ata_host_register() kdoc
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Brian Norris <computersforpeace@gmail.com>, linux-ide@vger.kernel.org
-References: <20260910171406.131211-7-cassel@kernel.org>
- <20260910171406.131211-12-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20260910171406.131211-12-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On 2026/09/11 0:14, Niklas Cassel wrote:
-> ata_host_register() does not start the ports of the host, it requires
-> them to have been started already:
+On Mon, 14 Sep 2026 18:47:09 -0700, Ethan Nelson-Moore wrote:
+> The sata_inic162x driver was labeled as "very experimental" in
+> commit bb9696192826 ("libata: make it clear that sata_inic162x is
+> experimental") due to data corruption issues, but not marked as broken.
+> Since then, no changes have been made to it that could fix these
+> issues. Since the driver was not marked as broken, and the message
+> about potential data corruption is only visible in the code and dmesg,
+> it is possible that someone could enable the driver without realizing
+> its potential for data corruption. Remove the driver to protect users'
+> data.
 > 
-> 	/* host must have been started */
-> 	if (!(host->flags & ATA_HOST_STARTED)) {
-> 		dev_err(host->dev, "BUG: trying to register unstarted host\n");
-> 		WARN_ON(1);
-> 		return -EINVAL;
-> 	}
-> 
-> Fix the kdoc accordingly, and fix the grammar of the last sentence while
-> at it.
-> 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> [...]
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Applied to libata/linux.git (for-7.4), thanks!
 
+[1/1] ata: sata_inic162x: remove dangerous broken driver
+      https://git.kernel.org/libata/linux/c/96fdeb7e
 
--- 
-Damien Le Moal
-Western Digital Research
+Kind regards,
+Niklas
+
