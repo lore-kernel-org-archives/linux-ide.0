@@ -1,86 +1,111 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70F9443E38;
-	Tue, 15 Sep 2026 07:06:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89DD0471CE6;
+	Tue, 15 Sep 2026 08:40:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789456004; cv=none; b=FtjjJPH5ebRE011fadTy1NLH5eT5U0cE36OgyxjVp8Pj+A3VLNuJZf2n++T4XuNYWuv8+mDnUM3+rD5euAIN8/fgfXbOEPwE2MBjCeoqozeZ7x3nIY9S38KGzpLNE7BfVMs1rQlRHsU9sWzU6GsesTiXo5qpkbALfRtejroJlHA=
+	t=1789461640; cv=none; b=NfFyyL1hIngsqg8g6fgsSZ0wUPdEYALywIj/0Zg0K0yb4CzE9c5CgYRPrruTGqHlzV1ZCtKmbTRw0T4pNfVzp85ui+fTWgwUUOjShmTR9Ho09gTjjgs28V/BemZQzrYuD8cHBC696W3ZJ+tZZvRO09Z6O1m0vcK7ksiR5UIZ4/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789456004; c=relaxed/simple;
-	bh=tibmV02uBmiJaqgHnPDf2fQUr4pDdn7jYtOSHPQtWPs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FUBJ7XvBgDdakwmbWvIBf637jS2KbPgdQZrt/jmPHJhded+8wqvsx7cQVT8PMnMLqNogVXu76Cb4NKfD8UPxeAnheyqjRemuEaSrxFHU0USHxlbKf9YDKkxzmhktPFUFGE5BdK74LwXCv0cbq1h66EhQOALEN4GHuLU/cK0cmt8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-03 (Coremail) with SMTP id rQCowAD3+Tfx7Khqrp7IBw--.45169S2;
-	Tue, 15 Sep 2026 15:00:01 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: cassel@kernel.org
-Cc: dlemoal@kernel.org,
-	gregory.clement@bootlin.com,
-	hansg@kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	tj@kernel.org,
-	Wentao Liang <vulab@iscas.ac.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] ata: libahci_platform: Fix device reference leak in ahci_platform_get_resources()
-Date: Tue, 15 Sep 2026 06:59:33 +0000
-Message-Id: <20260915065933.1733061-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1789461640; c=relaxed/simple;
+	bh=YB9tTvdfttgm0y/e9cm1iy+NQWJZUfXLYD1+LT7ku0c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BGYxHDXYlb3VyxtosyCGuR1UdhvET67O2B98s4tfy2l1SJdCV4c4omaSoyKdgPQqw26JCIXW/WXzcGZnn7vl/pcjRzOrb3zNXx9bwB2JIUQqVEdvzaB4r7ZJ3Zez8QUNikp0TERBmnTXFqd/B34/HrjKyXax31t5+HnuzS2D+GU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TJXTrrle; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TJXTrrle"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A0811F000FF;
+	Tue, 15 Sep 2026 08:40:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789461638;
+	bh=YaJz3oRtYSDLsjYI2XaySS2VvpeIb7deKH/pIqBlhAs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=TJXTrrle5k/IEQm87c9zl8sFgiNk7wV8bmut+1uHg//Uki2ksLFAIm3wK3fCZMGI9
+	 R0wrO26KOjXa3b8vVagB9Smf543viDvHKbbdhTTyCeYi98l5XV5raBJdsLPJzR1bbd
+	 nQgYPyPJbxtYuoN5ijcRzG2GU2LAJrjS/1dvYeYZ5O6P8OgJ99nza87bUO12vS7LKX
+	 jSA74liDXXnB5f6VZG4h71SMwSubPXZHNFxUqWuCePqcPmyLy5eCZbN+piuRMhpYk6
+	 Wpvrh80qIdAgsLc+7Rt5UY+iK4W0GcYdZCWuBOQ3pkxfInKqEWGJ0tWSclR9YUBWEY
+	 X6nSwhFLEor/w==
+Date: Tue, 15 Sep 2026 10:40:33 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Baokun Li <libaokun1@huawei.com>,
+	Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+	Brian Norris <computersforpeace@gmail.com>, stable@vger.kernel.org,
+	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v4 2/5] ata: sata_fsl: Fix use-after-free of host_priv on
+ probe() failure
+Message-ID: <aqkEgcs6NBiZjjgR@ryzen>
+References: <20260910171406.131211-7-cassel@kernel.org>
+ <20260910171406.131211-9-cassel@kernel.org>
+ <34709b8b-71e9-46d2-8732-a802e544701e@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowAD3+Tfx7Khqrp7IBw--.45169S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7Gw45JFWUAr4DuryxAFyUAwb_yoWDZFc_C3
-	W09ayUXw4rCF4qyw18tFnxuFWSkr9Igr97Xr4UKF9ag3y5Xry5uasxZrnxGa1UXa10v3s8
-	Z3ZrGw43Cw1SgjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb4kFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s
-	1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
-	cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r4UJVWxJr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
-	tVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4U
-	MIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUwFApDU
-	UUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwILA2qowpCgFQAAso
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <34709b8b-71e9-46d2-8732-a802e544701e@kernel.org>
 
-of_find_device_by_node() takes a reference on the port platform device,
-which is only used to look up its port regulator and is never released,
-neither on success nor on the error paths. Drop the reference with
-put_device() once the regulator has been obtained, which covers both the
-success and error paths.
+On Tue, Sep 15, 2026 at 11:06:55AM +0700, Damien Le Moal wrote:
+> On 2026/09/11 0:14, Niklas Cassel wrote:
+> > sata_fsl_host_stop() releases hcr_base and host_priv:
+> > 
+> > 	static void sata_fsl_host_stop(struct ata_host *host)
+> > 	{
+> > 		struct sata_fsl_host_priv *host_priv = host->private_data;
+> > 
+> > 		iounmap(host_priv->hcr_base);
+> > 		kfree(host_priv);
+> > 	}
+> > 
+> > ->host_stop() is called by the driver core through the ata_host_stop()
+> > devres action which ata_host_start() registers, so it is called both
+> > when the device is unbound and when probe() fails after
+> > ata_host_activate() has started the host.
+> > 
+> > The error_exit_with_cleanup label in sata_fsl_probe() releases hcr_base
+> > and host_priv as well, and it is reachable from the two
+> > device_create_file() calls done after ata_host_activate(). In that case
+> > sata_fsl_host_stop() runs on an already freed host_priv, resulting in a
+> > use-after-free and a double iounmap()/kfree().
+> > 
+> > sata_fsl_probe() also ignores the return value of ata_host_activate(),
+> > so probe() returns success even if activating the host failed.
+> > 
+> > Check the return value of ata_host_activate() and, once the host has
+> > been activated, leave hcr_base and host_priv to sata_fsl_host_stop().
+> > 
+> > Note that if ata_host_activate() fails inside ata_host_start(), e.g. if
+> > sata_fsl_port_start() fails, ->host_stop() is not registered and
+> > hcr_base and host_priv are leaked. Leaking them is preferable to freeing
+> > them twice, and this is addressed by a later patch in this series.
+> 
+> I would prefer seeing the leak fixed here too so that we have a self contained
+> fix in a single commit.
+> 
+> Or, move the leak fix patch before this one.
 
-Fixes: c7d7ddee7e24 ("ata: libahci: Allow using multiple regulators")
-Cc: stable@vger.kernel.org
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
----
- drivers/ata/libahci_platform.c | 1 +
- 1 file changed, 1 insertion(+)
+I took a third option:
 
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 6e072d681341..14a47e0bddd4 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -624,6 +624,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 			if (port_dev) {
- 				rc = ahci_platform_get_regulator(hpriv, port,
- 								&port_dev->dev);
-+				put_device(&port_dev->dev);
- 				if (rc == -EPROBE_DEFER)
- 					goto err_out;
- 			}
--- 
-2.34.1
+This (temporary) leak was only added by this patch, and was later fixed
+by "ata: libata: Do not leave ata_host_stop() registered when activation
+fails".
 
+The UAF happened only when the activation succeeded and device_create_file()
+failed. Thus, this fix does not rely on ata_host_activate() error handling.
+
+Thus, let this patch only fix the UAF, without adding any error handling to
+ata_host_activate(). That way this patch is self contained.
+
+Patch "ata: libata: Do not leave ata_host_stop() registered when activation
+fails" will add ata_host_activate() error handling to this driver, and at
+this point, ata_host_activate() internals has been fixed. Thus, we there
+will never exist any intermediate step where we might leak resources.
+
+
+Kind regards,
+Niklas
