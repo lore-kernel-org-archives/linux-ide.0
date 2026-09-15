@@ -1,111 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F48142BEAA;
-	Tue, 15 Sep 2026 09:49:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 212A13A4F51
+	for <linux-ide@vger.kernel.org>; Tue, 15 Sep 2026 09:59:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789465794; cv=none; b=ifADOsTJcufM2iAX5dNGApUF3pa9McO8XoNCbrRgETPPvMmKPZTXUR7AmVMZne7e8IWfVFgtRmtRPtLNefFug1MqbdnXpoESpmfBBVdfo3RcZmUHYwb7wDbZZMubqcwdjuf+vXXVx46DsYoOOZHfIqz6HWumFACaiI0AwdYMdAw=
+	t=1789466355; cv=none; b=W1EzaF3yYVaFfvpQbBgWk5mWYYbU/olgz99brsFpeQvnpkxqhkx2htrOJ/4A66OG+4xqrrPcTvRNAXTH0UpIyS1k7sYVv4cjexFeYJ1CU/Loifwu7aLEbCr6Omu9T/ViRQ5p85YKKVB+DEY9Apwc6J65cI3RNNViq9witfO940g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789465794; c=relaxed/simple;
-	bh=Tvidg9IblJT1e2OPxJ2x1ggZYLbakwMurf67tnZl6fM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A95TnE3FCZ5svlowQQvLAqk7m9NNvxUJx06ARz0pJh8gOzhzCrSxInyecYWkkPB/xQxRXFbuT+7XlhCAGnsX0Py7BEIih8NuWUQ9st/JpEoiDP+WvwlfdRSJ5/1iz3/mgPqX+umAfEYR2DYIFqvuCYenqXOXakQnCBM+n+XfEfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jQui7bFz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789466355; c=relaxed/simple;
+	bh=od9GhuX9XDh70gNd4qvbWE+jAaCyAXlo03Vtr9G9B84=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pH2RAdxlJ7tn3CcnSYFkD9pYpRqVj++0K/RPGiNXn6cuno5FUHwxsFFy+t3Bpl4Q1aAchi4RALYSv+3taJiuP3oaVqEoI+lQmht1ZK23epZbxIRqvgD1z4hwYKNPyZ7HrR0lT7lySsqbDRe9PhT8lXw2t80EcIxS9ilBdZ0DNDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gOPu7nAv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jQui7bFz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6116B1F000FF;
-	Tue, 15 Sep 2026 09:49:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gOPu7nAv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 915CD1F000FF;
+	Tue, 15 Sep 2026 09:59:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789465793;
-	bh=J70Hs3GYYGmVmRppJ1Bo++8Zy/dlo2/65YMV7fl8Unk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jQui7bFzO9WyxpW0B5ZuFu7e6HEoxr7pQByWuoIvT+GacXzFH9hkYBE0i9gInRTn8
-	 hJhX1G323zFdE4m8mY5s9CBnHLKbgFXMWgt5H6cq78+Sq7WtA8goXp91rDOz88sYTD
-	 x/Txx7bklnUnVSn10kPLCNZfEHbJG8gKYOrjZbdxK3G/SjNoJwpXFInDlqNHIyUJ5u
-	 6YDQkHNDgeW5RAHXSsFuhCSgtYGh79Yq2tjnNMZ5n81PA3jbapRiwBlHV1UE9ZPgNK
-	 9dhAbmGeBbY5eO4q8WJVVmvqY4z0K6eVYSDQcwS/qmvBr4cj/OpHqVe33+UMX+tQo4
-	 OdxGpoLrTnNvg==
-Date: Tue, 15 Sep 2026 11:49:48 +0200
+	s=k20260515; t=1789466353;
+	bh=j92jfO4LoHBrBVcgVWjyDzmS4B6ISUjTP4JNI211h4k=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=gOPu7nAvhsCyIbszi5xZpf7QmIji7ToUQRY3z9kPbY4F3w9R405IyXG//Hw1FEdDt
+	 QAUrKF4dte0ZbhlTaiURlll04j3CsAvRTWZ8F8xOYWpDcjPYjAnUSUiETJ6270CBdx
+	 rP1770tauIGZkrv2oNKLfQX+UmP4nrQMw4FWnLQ93HgKY2x7W3I+XGQPnuSKPn2khP
+	 sh61GUuZF3hqyaWYTaatJnVGnKxSoErr+yFO9wOEZdeH0cuSN7GUENrCBDlvxPjycW
+	 xP3+zuWMU49+9pe/l9PzqmfSHzOxTnRbm2I0uDsWkK5HoaYtAk5ar3DEpjuD9WOQTw
+	 C621nKFrUAPQw==
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Baokun Li <libaokun1@huawei.com>,
+To: Patrice Chotard <patrice.chotard@foss.st.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Hans de Goede <hansg@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Alexandre Torgue <alexandre.torgue@st.com>,
+	Lee Jones <lee@kernel.org>,
+	Tejun Heo <tj@kernel.org>,
 	Sergei Shtylyov <sergei.shtylyov@gmail.com>,
-	Brian Norris <computersforpeace@gmail.com>, stable@vger.kernel.org,
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+	Baokun Li <libaokun1@huawei.com>,
+	Dan Williams <djbw@kernel.org>,
+	Brian Norris <computersforpeace@gmail.com>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+	linux-arm-kernel@lists.infradead.org,
 	linux-ide@vger.kernel.org
-Subject: Re: [PATCH v5 3/6] ata: sata_fsl: Fix use-after-free of host_priv on
- probe() failure
-Message-ID: <aqkUvKT_WswSVVzP@ryzen>
+Subject: Re: [PATCH v5 0/6] ata: Do not release the host resources twice on probe() failure
+Date: Tue, 15 Sep 2026 11:58:57 +0200
+Message-ID: <178946628793.756083.10484116126177085687.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260915084127.692494-8-cassel@kernel.org>
 References: <20260915084127.692494-8-cassel@kernel.org>
- <20260915084127.692494-11-cassel@kernel.org>
- <e5245a11-d6a0-42d8-a6ef-1b5ca9622413@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e5245a11-d6a0-42d8-a6ef-1b5ca9622413@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1191; i=cassel@kernel.org; h=from:subject:message-id; bh=od9GhuX9XDh70gNd4qvbWE+jAaCyAXlo03Vtr9G9B84=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWij2ytuLrtd182pCj4Hl0ILd5EHfN/nRZIYYPjydOv HpM+MCpjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAExk7R9Ghg2rznPudVqUvTPr etCaX0d2cr3kLmbaPdlU3nLmoZyP6yIZGTb5HgrclVeorlk6f87rf1vO/F2vc8PgdvWRDEOrTT7 zCtkA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 15, 2026 at 03:50:50PM +0700, Damien Le Moal wrote:
-> On 2026/09/15 15:41, Niklas Cassel wrote:
-> > sata_fsl_host_stop() releases hcr_base and host_priv:
-> > 
-> > 	static void sata_fsl_host_stop(struct ata_host *host)
-> > 	{
-> > 		struct sata_fsl_host_priv *host_priv = host->private_data;
-> > 
-> > 		iounmap(host_priv->hcr_base);
-> > 		kfree(host_priv);
-> > 	}
-> > 
-> > ->host_stop() is called by the driver core through the ata_host_stop()
-> > devres action which ata_host_start() registers, so it is called both when
-> > the device is unbound and when probe() fails after the host has been
-> > started.
-> > 
-> > The error_exit_with_cleanup label of sata_fsl_probe() releases hcr_base
-> > and host_priv as well, and it is reachable from the two
-> > device_create_file() calls which are done after the host has been
-> > activated. In that case sata_fsl_host_stop() runs on an already freed
-> > host_priv, resulting in a use-after-free and a double iounmap()/kfree().
-> > 
-> > Add a separate error label for the failures happening after the host has
-> > been activated, which only detaches the host and leaves hcr_base and
-> > host_priv to sata_fsl_host_stop().
-> > 
-> > Note that ata_host_detach() is dropped from error_exit_with_cleanup, as
-> > that label is now only reachable while host is still NULL.
-> > 
-> > Fixes: 6c8ad7e8cf29 ("sata_fsl: fix UAF in sata_fsl_port_stop when rmmod sata_fsl")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+On Tue, 15 Sep 2026 10:41:26 +0200, Niklas Cassel wrote:
+> ata_host_start() registers ata_host_stop() as a devres action as soon as
+> it has succeeded:
 > 
-> Looks good.
+> 	if (have_stop) {
+> 		start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
+> 	...
+> 	if (start_dr)
+> 		devres_add(host->dev, start_dr);
+> 	host->flags |= ATA_HOST_STARTED;
 > 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> 
-> One nit below that is worth fixing I think.
-> 
-> > +	/*
-> > +	 * Once the host has been activated, hcr_base and host_priv are
-> > +	 * released by sata_fsl_host_stop(), which is called by the driver core
-> > +	 * through the ata_host_stop() devres action registered by
-> > +	 * ata_host_start(). Releasing them here as well would result in a
-> > +	 * double iounmap() and a use-after-free.
-> > +	 */
-> > +error_exit_detach:
-> 
-> The label should really go above the comment block to clearly show this is the
-> explanation for what is done in this label block.
+> [...]
 
-You are right, that seems to be the convention.
+Applied to libata/linux.git (for-7.4), thanks!
 
-Will fixup when applying.
-
+[1/6] ata: ahci_st: Do not ignore errors when getting the reset controls
+      https://git.kernel.org/libata/linux/c/c74ee923
+[2/6] ata: ahci_st: Assert the power down reset in the probe() error path
+      https://git.kernel.org/libata/linux/c/91e0a745
+[3/6] ata: sata_fsl: Fix use-after-free of host_priv on probe() failure
+      https://git.kernel.org/libata/linux/c/70b11967
+[4/6] ata: libahci: Free the IRQs when activating a multi-IRQ host fails
+      https://git.kernel.org/libata/linux/c/34a4a344
+[5/6] ata: libata: Do not leave ata_host_stop() registered when activation fails
+      https://git.kernel.org/libata/linux/c/d2f97700
+[6/6] ata: libata-core: Fix the ata_host_register() kdoc
+      https://git.kernel.org/libata/linux/c/52d19459
 
 Kind regards,
 Niklas
