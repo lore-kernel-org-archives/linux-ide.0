@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FA4D35B137
-	for <linux-ide@vger.kernel.org>; Tue, 15 Sep 2026 03:57:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA1093D6CDE;
+	Tue, 15 Sep 2026 04:00:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789444627; cv=none; b=EZeqmpo/07uhzuJS0K7cpj0zqJ91jYbK43GERt4fGXnttThZG/wPX5xyZMR205TX0Hcik1Y18bvlhGVWqKR1+I2Lg3dC2dK3GKVQDt9lSA38y6mGBRLwB7fGfJoz+ezGNIl4i7RbUAradJcanQepHeigJwWzjPsYUhh/S/8QVKI=
+	t=1789444820; cv=none; b=GAtSJuuGmu/kSBv8B+hkYsiE5ugvpUc5kstCJmAbb2wosz3r2hPiwIH50X1zrwPU3WorFrodvjwKjDpoqjCADAr4GRlhybrqR4j54h+gDLLDOAUbYkB5LvRkQPQliPbjHkxWm3giZDcJXXDWe4YL/NlOuf/qqNKISLOiM4FsGh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789444627; c=relaxed/simple;
-	bh=K/ac7gwAcFIZ5qN2jXMncwlgvFhAAO8JmgIUEze8YjE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Fx70STIdTSi85sxY89CxoVPqFtAJnPa+AMlQlcDT74IpAALKVnHjmJmbX4xWo+rFg5dwjUi6fJ9PLpLFQoZwRfCYzMTU6/uryA6jsoOqwFjNDiwQgo5AUAeYj/ymkDK9KY98bf5JSvYATv+CP+PnIU6XX3O9OlJ9J5P168AQGns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ALKXEs9d; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789444820; c=relaxed/simple;
+	bh=fH8KNsTlhwxJVcCjqxppQyJG1OIc0ZghqeI32d3fg2A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hMgPaNXm8rWQjapWshJwLv7cCgz4ctX4RHZRM3e911HszAUicp1duSYK5BF0c7b09GiFXwOdV1tdMw8slqyth1Me8J4ddbztRFcgyBzYPg1M3NIqqwuAA+EHAiK5V6hJTeH89LoamhxGUybNDE2mOv4/zc8pqjsRIHDF7QzUyqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VTz0/iKu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ALKXEs9d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFB8E1F000FF;
-	Tue, 15 Sep 2026 03:57:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VTz0/iKu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C3DD1F000FF;
+	Tue, 15 Sep 2026 04:00:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789444624;
-	bh=quo6a5khn+SQn9lAN+JI4udXCYbLH5cGSCyBweeii/g=;
-	h=Date:Subject:To:References:From:In-Reply-To;
-	b=ALKXEs9dgsqdnQmXfJi+g3ny9UYzPAyBnntRHd5rWEzuDbnftpsHbr1VRltRC990M
-	 ba8iSDldbT4EbioC3dJ2+ZWp4aeEuFOcJDNR2+Ml9m25lRA+XDecklrT540c1LOlq0
-	 8zmgp7dHKN9LjtxbMrfxJwViumHgeeOjxRcybDGSokE6H/Jz5DZQa2e2MjE3B7SMaC
-	 RgKVTG/OdwJ3X4nYO0peftE53dv1Nw9LkRXbrJG3zXOlNhSuTRJuPT1snGJH6TPDiS
-	 KO80USqE/1Sr7bjKdZjDhJ7KL3dK4bdfP/g5LJKIvPv1jyVCcjUIvAt1vl9gGTWdQJ
-	 ynyP5XmnWLbhw==
-Message-ID: <40630ece-de85-48a5-8683-93be32e5d644@kernel.org>
-Date: Tue, 15 Sep 2026 10:57:01 +0700
+	s=k20260515; t=1789444817;
+	bh=bOGviD23LIx9itgkTZT1I56y223hTDE9oauoFAaTHLY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=VTz0/iKuOlxNIORnSR8CuhF+WTbfOZ9IQ6sNACa+BhbsvUi5Yjs3aXS1d2jc6z/eL
+	 NyxLWxxKcByY9bs5VR74ChBQYe63zeaSbxZF6mZvAAGXP/PAL0zj2yYsJBA3hNbru9
+	 u1S4c8nDC9un1+OYBLtAUkKDX6UxIbV09M5F8USMVdFcsi/jZ0kSUVa481hwsGkRCe
+	 V5dernqc5o0A1SevCkPBWxECHJ4B1UJJJS4g9U33b/r7Tnj2hHBVJLcVjEzzkIPv/B
+	 orGYptUx7f0KJTDg6MkHyp/JM+cWcrACFYHe5JstDNuix8qaU3APNSdtmziRqHcZ2K
+	 xBMiaqXYvSY1w==
+Message-ID: <4f4941e6-1e51-4fc7-b452-e7f77cfca4bf@kernel.org>
+Date: Tue, 15 Sep 2026 11:00:11 +0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,57 +35,51 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] libata: Fix HPA horkage to target whole model series not
- just a few devices
-To: Ioannis Barkas <jnyb.de@gmail.com>, linux-ide@vger.kernel.org
-References: <20260913135650.14244-1-jnyb.de@gmail.com>
+Subject: Re: [PATCH v4 1/5] ata: ahci_st: Assert the power down reset in the
+ probe() error path
+To: Niklas Cassel <cassel@kernel.org>,
+ Patrice Chotard <patrice.chotard@foss.st.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>, Tejun Heo <tj@kernel.org>,
+ Alexandre Torgue <alexandre.torgue@st.com>, Lee Jones <lee@kernel.org>
+Cc: Brian Norris <computersforpeace@gmail.com>, stable@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
+References: <20260910171406.131211-7-cassel@kernel.org>
+ <20260910171406.131211-8-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20260913135650.14244-1-jnyb.de@gmail.com>
+In-Reply-To: <20260910171406.131211-8-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026/09/13 20:56, Ioannis Barkas wrote:
-> Fixes: 16c55b038033 (\libata: implement BROKEN_HPA horkage and apply it to affected drives")
-
-As indicated by Sashiko, this is not formatted correctly.
-
+On 2026/09/11 0:14, Niklas Cassel wrote:
+> st_ahci_probe_resets() deasserts the "pwr-dwn" reset, but the probe()
+> error path of st_ahci_probe() only releases the host resources, so the
+> SATA IP is left powered up when probe() fails after
+> st_ahci_probe_resets() has succeeded, e.g. when
+> ahci_platform_enable_resources() fails.
 > 
-
-Drop this blank line too please.
-
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=8888
+> The reset is asserted by st_ahci_host_stop(), however ->host_stop() is
+> only called through the ata_host_stop() devres action registered by
+> ata_host_start(), so it does not cover any failure happening before the
+> host has been started.
 > 
+> Factor the assert out into st_ahci_assert_pwrdwn() and call it from both
+> probe() error paths. The "pwr-dwn" reset control is an exclusive one, so
 
-And this one as well.
+from both probe() error path *and* ... ?
 
-Also please write a proper commit message that explains what you are changing.
-Because saying "target whole model series" in the commit title but changing the
-quirk entries to still have a FW revision does not do that at all.
-
-> Signed-off-by: Nick Barkas nickbgrk@gmail.com
-> Signed-off-by: Ioannis Barkas <jnyb.de@gmail.com>
-> ---
->  drivers/ata/libata-core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> asserting it once more from st_ahci_host_stop() is harmless.
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 59e87b987d..b23e1c3e4c 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4248,8 +4248,8 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
->  
->  	/* devices which puke on READ_NATIVE_MAX */
->  	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_QUIRK_BROKEN_HPA },
-> -	{ "WDC WD3200JD-00KLB0", "WD-WCAMR1130137", ATA_QUIRK_BROKEN_HPA },
-> -	{ "WDC WD2500JD-00HBB0", "WD-WMAL71490727", ATA_QUIRK_BROKEN_HPA },
-> +	{ "WDC WD3200JD-00KLB0", "08.05J08", ATA_QUIRK_BROKEN_HPA },
-> +	{ "WDC WD2500JD-00HBB0", "08.02D08", ATA_QUIRK_BROKEN_HPA },
->  	{ "MAXTOR 6L080L4",	"A93.0500",	ATA_QUIRK_BROKEN_HPA },
->  
->  	/* this one allows HPA unlocking but fails IOs on the area */
+> No functional change intended for ->host_stop() and st_ahci_suspend().
+> 
+> Fixes: 76884cb2f7da ("ahci: st: Add support for ST's SATA IP")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
+Other that the nit above, looks good.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
