@@ -1,297 +1,1042 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010059.outbound.protection.outlook.com [40.93.198.59])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f11.google.com (mail-pj2-f11.google.com [74.125.227.139])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC66848A2C7;
-	Mon, 14 Sep 2026 16:57:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.59
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789405070; cv=fail; b=bocPX0z2wv0bqV/y3RFXzvMRjK1WlhDvykpWAOr2WxSET2IkRQ4uqYuEZbomi/38rgd8KlT6x4YI+lrZpAcHLvcMk/pY2RXrt5zCexniv2H+Entagyjt6OD4yVKM8CvWe2Lu12xHfnVZLvVSpQmaCfMLcIm/Qb73jG+wI4wHM9M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789405070; c=relaxed/simple;
-	bh=JrqSHO0xUKexVXbQ4S09M4hgBYT4EatfndZu9/crdTg=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=njwhQz0WW3OKtZlwGBWzSr06kKxjXZuc5k8v3A43JsahaBgKesKuebuAEZ1WIHWgs+ALthHiuXv3JT7yHTfrKuNGVORVjxXkRhhQvPNdnyZraUKlzxGvhFG0pcOJa1KMqgEZGamV6fuKXuPmIDNK1Zj8p/x7P94MPyUplElB86k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=b9NKWwv5; arc=fail smtp.client-ip=40.93.198.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E73C390CAE
+	for <linux-ide@vger.kernel.org>; Tue, 15 Sep 2026 01:47:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.139
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789436842; cv=none; b=Qyz+Xrc4/n12eJnNcVVovyXTQEmLw0bWAW1AN93b5zOwsSzroY6BXIi4DrMDYuy7ap4VGh0q/Kj5DM14CWUyC8yQ3vYPoiQWn6d07eunqqRBconHl6FZaHk7i5U64n0PPvo3aCHHnUIkTy6Yhl6AIjn6TA9QjJ2RxocMYlO+osE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789436842; c=relaxed/simple;
+	bh=46n+G996V4nNKIEhYLU/a2bnLrVMRnWiIJILdp49XfA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WyqWgo0sMF+V8kYTHsqtJ6KdW74r1CAO+ohKQPAthgXFprzTcaB/0PNM1l8ls9g7XkTsnmoXf0XoGtNm8syfTkPfacdIKcghQK4TOJD5gj1CoI5Q5p0A13yVyWJmYHDfIJrMCw78hxpJe95hzsFCEYjUbTkdJqMv9UV2K2Kuoa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dZH4NSXu; arc=none smtp.client-ip=74.125.227.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="b9NKWwv5"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Mr2Jg+oXPt67rxYfbuFgxvAPXt7nCBVchLmxUSg60RXvf7uxH75NKBmcwebkw1hxJpGt44qzOW2eSMXEAMsj5yWtxBQI+qA+pcmLS55nQplxySrax2tpKWLR23uXDxe9pmHYFrxJBLm2vFuyMRehOVlhPrU5kF2CIDW/U2W0Sw8Tz1FOM+UQgAxIIAcjfcd5P4xnRrbUuihcpP18c1qdHcCjjiznGjB59aVpTwjEc6RErySZlW/u6QptHm7ZB5B5HMcEco7v9OHiJQ0PPDs5KNbhexr09g2pg2yo/24zdqRTLm/7KGPz0bfT2oTAjk5I62c3+aDcvCd/r96lLTQMLA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iIHa/wngUCF4SRdH6ItVECTpIqfHjMUknvAvNhsUmRg=;
- b=qsAYtpu5QxjZAp1a1OwmP7jfLBGA6tnuXXpH/67wlfyW3bwnA58T/9SNNr+uTrxFfC1OHXwEr8zx+f0Tyk2LlFDK/kD5fKF1HO3eOovUCd1i+XLa7KwQGIgffhrcJcrprOmagBI6yj1MxqQRtBbP7CT6iS/Iw0ASg+C+zBzCEUC9siCfekaKCNVT7rF6VKvHFgH/qkdF1rzeLHhAHx7n0FlVAq4L75Nd6e3ZGigQZWebRfMOPvc5BqkF15V7bl0fWpgrb5UnxD2KikpjXGBONG/oGuFaz3F+CCMAVnq57tQqmilYlIYbRUXjd1N9yA7wtqaSWCqZEv4X4bEc0gCvxA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iIHa/wngUCF4SRdH6ItVECTpIqfHjMUknvAvNhsUmRg=;
- b=b9NKWwv5yJqv2zQoRDrVX1QQd4E/sJBUPhe/Oz/LlmIETNLrpUSC3PShn074tggMshO2FW8M2BfI+0sEFcxFosHowNa6lD3VN9KgN72eDbfRR3JT42XTTYDboCs63DkP9I0elsooin683tzNwZjF++gMhrE+fvB2yPs0zR20uyM=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by SN7PR12MB7980.namprd12.prod.outlook.com (2603:10b6:806:341::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.12; Mon, 14 Sep
- 2026 16:57:43 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0406.007; Mon, 14 Sep 2026
- 16:57:43 +0000
-Message-ID: <ed334568-d741-4374-b953-29a97a82963c@amd.com>
-Date: Mon, 14 Sep 2026 11:57:40 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] x86/PCI: Disable enhanced atomics on some AMD PCIe
- ports
-Content-Language: en-US
-To: Bjorn Helgaas <bhelgaas@google.com>, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>
-Cc: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
- Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
- "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
- "H . Peter Anvin" <hpa@zytor.com>,
- "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
- "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)"
- <linux-kernel@vger.kernel.org>,
- "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
- <linux-ide@vger.kernel.org>, david.laight.linux@gmail.com,
- John Smith <imjohnsmith4000@gmail.com>,
- Lennert Buytenhek <kernel@wantstofly.org>,
- Roland Waltersson <roland.waltersson@netinsight.net>,
- Mikael Etienne <mikael1022bzh@gmail.com>, Arthur Husband
- <artmoty@gmail.com>, Alvin Lim <alvinwylim@gmail.com>
-References: <20260908190600.226485-1-mario.limonciello@amd.com>
- <20260908190600.226485-2-mario.limonciello@amd.com>
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20260908190600.226485-2-mario.limonciello@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SA9PR13CA0129.namprd13.prod.outlook.com
- (2603:10b6:806:27::14) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dZH4NSXu"
+Received: by mail-pj2-f11.google.com with SMTP id 98e67ed59e1d1-398a384b5f7so2445841a91.0
+        for <linux-ide@vger.kernel.org>; Mon, 14 Sep 2026 18:47:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789436840; x=1790041640; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=d6EZmzsaur9vfphZZ5AaArmty23H9hgw/Htu7b+dwU0=;
+        b=dZH4NSXuWejsroI2X96jPIRAPelS9GSsNbwUc4+KyZZ27hNUogSeyzgrOVo+hAyyJq
+         6vjnVsRlA3hE1CZnIyF3cKDjOgR9xgzi4ib7XkpfROwbub1QDkv/1Ibdl+CUmxEH4+x/
+         yyhRDACuWnYAi6/cv9odjVdxd2+MsmJE2wx1kR2g7V9A+WGtD0HviEEg88wgoWN9bL1Z
+         FRkfnXBiO+oioZUsTsAiNpZE3lBG6LOWmzaae04x9DDuIr2d/6yTlEXzmA3NsO2d3ES1
+         W4WINp5P8bh74DVLejHszsdYbAlqdOoIoltiCLiDnbB8OpI/DhPiRNV0d3RCdihxUYCA
+         lFpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789436840; x=1790041640;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=d6EZmzsaur9vfphZZ5AaArmty23H9hgw/Htu7b+dwU0=;
+        b=kR7gYx9CBf2kGilxC20oiCoxltIQYLilZW2plPViQoTVEebPDFNGf56GHa2TRS2sOP
+         qcfgH7q8/lsYkAb5/bTH312rx9Cvz9ROEzkaTToGgms9nEkKtvkXqwOJKJAqA+GIHru+
+         eyt44HjEsWHpLW85OEJbYY0i5eY6rUT6W8EnbC+H83F3a4j++kDi7f2ASIliTx4egof1
+         Zyvh89wAABPcZb2Jj+umr7dFMfHVeO5XC3G5A9X3NC7aNoaCn9c/cc+WzzmNoJpLTkH/
+         J5LIZ0XXEOKerVNt1tdGEi+78sc2Cb3soPoInTkcbVc6jiqLeiAE4PHc3DybtxARZ1zj
+         OsTg==
+X-Forwarded-Encrypted: i=1; AKwUvBwi90bsu1c2QZA4l7qG48QJCo3zsUgvmGSHE7V3XWMDBibe6TzCx3xF8jyyWgi+77WYuT9oYvqDTCs=@vger.kernel.org
+X-Gm-Message-State: AFuF++kHYNQX/migRsSbRM0+q9YOD2mKIKjuBwyMgS3IB220JOcClqKw
+	xUczkU/CYqnN8mQH5cXev3cTQHM6GCljOM0gBwssKJHEKsCSr3FyxvvE
+X-Gm-Gg: AYBFou0iVSvwbgprTthfumHygWHrArZuOvr1t2GSRXffJVDiX5JHBIYEkD3leN9B3Iu
+	Zn6cpCLEXmshWLRgrWpFs6rTdD1jXiEXXv/S9+GUSe1WfZ5XGsTD03OvXXfhWaj/lchhzHSEmE8
+	cBwW6qDRuU8S11ILfw4u96LnFum2jFchm5UklW+ysFVRk3XNnKrD6W75AU+31Ojtbf8d6J8eds4
+	4dDxmeYZ8qUMWxkD719Oi+Da5ynM/o0Y5z5tDmqJFPC1v4F1v1yOVNBcG4ufXTkO/uKpSo1Kw2Q
+	cQZH88TuBrutuPVOme63Dys1oMlohB9Q3309wrzluOEkeknH9kiaiW7a27E7m2LvFJwipwYWSv3
+	0lRCrJGnAQu9+3AlNiMezSo/cVEmWdkPWSqhAQ45IPLLkCBKXB3QE0sfDJoMrtu1k3mYHt2xH0+
+	uVzE8AwyyP1b2FskyzfVJGTAP46PEf6cDO592xvCxdRm+G8gMGf0HhQOfltY/2sQ4ifxSRoVX/f
+	xFIyPMdvHZ+iwETFjOfv9fJjvE9ofv1XzX9vVkkwTYV16R0cWRWEfyXwlgBlHkhOjvpGMtZ0ohZ
+	3a+5sCaIv/QqhrUB4umOhNg7VRAdhcfPXPYIG33F66moAmp/Y3pXOMrXyDqD9eCpFQ==
+X-Received: by 2002:a17:90b:50c8:b0:39d:f773:37b5 with SMTP id 98e67ed59e1d1-39df7733906mr7681975a91.0.1789436839378;
+        Mon, 14 Sep 2026 18:47:19 -0700 (PDT)
+Received: from ethan-latitude5420.. (host-127-24.cafrjco.fresno.ca.us.clients.pavlovmedia.net. [68.180.127.24])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33ba4cf72dbsm31826558eec.3.2026.09.14.18.47.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Sep 2026 18:47:18 -0700 (PDT)
+From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>,
+	Tejun Heo <htejun@gmail.com>,
+	linux-ide@vger.kernel.org
+Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+	stable@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH] ata: sata_inic162x: remove dangerous broken driver
+Date: Mon, 14 Sep 2026 18:47:09 -0700
+Message-ID: <20260915014714.41274-1-enelsonmoore@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|SN7PR12MB7980:EE_
-X-MS-Office365-Filtering-Correlation-Id: 16de88f4-a87b-46e6-dc45-08df12814b3a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|23010399003|366016|1800799024|4143699003|10067099003|11063799006|56012099006|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	go3YHhRLz0OmkdbJJpzeJtPe3dVD6qErRBm3/8pT4C/wsKwZUABlVqmoEQdhGV2ePBtaNqxc78YKLKkfEw7DGNdS/2e7x98Hwurd9BE4PlkGEaqBBwdz90zDT2uXvYCGfICS66t4YaMwV0dDWps5DBSo/jueiOJkk7iiyAO9IVmKe7JjfrozAddI4VUfdC1V20tVsqrx774TS3pOKoz2suQjV4On0UpBrLEZDz9uzYvdK3cwMwsOKkxUo87bM3mfLmdP3JcbNe2Fr6Ha6DgUnWX2GgTlpJer0XoJcOeaXq4NypO9NE7cFkVaK6maLp+8VC1rmClpvWwKLxot0U4Bb1x2AIxd4xdtuttKppuLUyU0lBwtSPkl9V3di+6fz7LRmekgOST8BCaVlzayWPS3rb8eh+anFKwWEZFYHFCfqNCXVDo6+eYR2dCyuFgRKc+epsYNCI8tjc70PwDbCuKoVDZW8djElgiNofjVHMSpfxhhLmhUJYQDVeZ+rAw/qBJdQNdFtsu0soOdJWwNRrYmDCeY/uwQyP9WsynEtOzjaEaeN93+Fy9Pl4aluMecE0cxAuy9SPyYSLDzYnZAfym97sNidUNC7zFKz/aJXxUaOAVO7WsTjLx2Fst7wncScAizY5vG/H0oQBvP+dbdbQ0HgbEY8qSuQOXy9GhNVYgbJIg=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(366016)(1800799024)(4143699003)(10067099003)(11063799006)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?VjZqM1JZaE1ldjRQVXc3QWFXUUpLb3hVa0ROMWpHYTQyd1pEWXRsTk5Edy9t?=
- =?utf-8?B?KzgzU01CclhJQnQ1U1pBSnBKSlV1elh2M1U5bFZJVnZaSnNTZzRTdE9Wd0Nm?=
- =?utf-8?B?ZXdWYkIyYVNjcXdnTFJybllvWWFTN2JqVjIvRGhPSVVSR3JOT3dESTU3UXFi?=
- =?utf-8?B?eWVyMno3QXg1SXk5OEEyZkFQR0VOc05yU09GSnVRd0RhQ3VuYm5rbFdhRWNE?=
- =?utf-8?B?YXRXWjlUOHpuQzZGM3JrMUhiVjRoZkV3cXBYQmVSbFB3Z1ZUbnNROWNnQVRB?=
- =?utf-8?B?TmVSV1RnenlCN3hSSzFGUUM3THJLQUkvbytwaDlTdTBlRFEzSVhIa0t2VUJr?=
- =?utf-8?B?Zjh6K0VGKys4OVlwMzR5QkN3VWxUNkR0SEhCTlVTbjg5WFl1SFZmekVJMFNK?=
- =?utf-8?B?TFJiSnk3MmJBS1pVM1V5NS9meElURlc3cEpGY0NDVU1TNW9FYW1jQWFqMHMy?=
- =?utf-8?B?VGQ5NWZsdWlKajFKOERSNC9jaHphM2x0M0l3d1lFMjJ6V0RmcGppdTZ3cFYy?=
- =?utf-8?B?OFA2VkF2THBQUXlNVWdTOUJHaFI0TUd5T3ZGYjRlMkpiaWNFV2tVSW1YWXYr?=
- =?utf-8?B?bVQ2SkRKMG1ySkVYTUJWOVVoUlhZL1lRSjBSVzRLTXRsY2F0a3lPR1ZXZFBn?=
- =?utf-8?B?T085bDVhRGZkYk5DZ0RjY1BDZmM5WHZ1a2JRSUNFQTM4cElGR040RVk2b0dH?=
- =?utf-8?B?bUpYOWtLNjMyWi9LMC9XOVRWREV2TFpCQVc1dDVyS3NwdzUrNmYvemtiY1Ar?=
- =?utf-8?B?aHBNSytwcUdiWWNMaEJjYXl2Z1hPU0tBWXpFUTFORG9peEdaYkFuL0V6YUlq?=
- =?utf-8?B?K2FMaGhBM1lMZEFhaVRiVmxlcHM1RU1NNGczb00xL09ESXg1OFZ6QjVPV1g1?=
- =?utf-8?B?bFpiRUhPRFpVYjdWbHorVUJqaXRSUGZSR3NJOWRMcm5OZ2JwS2play80WE00?=
- =?utf-8?B?YXVST2xORm5uQ1pWTFZ4T2drb1hEemZKTk5zYU9VNFFkTXNXQW5tQkhEWHdN?=
- =?utf-8?B?bWVDM1c5VjhDL0tlNm4wU2FVRUxaMWNDbmErbkRqZnlNdGdhRHVPQ1NtNnln?=
- =?utf-8?B?c05IWXF4V2kwRlBsQ0VmWUMrNkszd2djYmZBdCtNVnpDNGM0bUc3NnpQQzRT?=
- =?utf-8?B?dXFKcGtWVkllU3lwMVdkNTlqbHZxNXdkR05vMmR3UEIxUXdmdTR2UWU3OHI2?=
- =?utf-8?B?MXo3ZnFSZW5objZ0UVhVRGc5dUVtU2taUGhiN2c4SDkrQ3NrTVRIVzJsUG9u?=
- =?utf-8?B?aklMSjM5cGVUNGlYejhEZ3hBdytNa0pjUExCZlhmbEFHc216bzZwR0NCSnJT?=
- =?utf-8?B?ODJxUHhwVlNnaC9reWpyM3JQV0RLSERtb0dWc0NmN1lPbStKZVlmckhCeDQy?=
- =?utf-8?B?WElnOFJKZVRJYmhrYzN4Y1BhSmhvbUdmYmZSemlrZHJ4UmFkY0RQakFib1Mw?=
- =?utf-8?B?ZUEzRzhWRU56OEVZS3Jhb2RkMXRIUXFrRkJOdnhHYXJ4UUhJaVprU1NZYi8z?=
- =?utf-8?B?RTE3eTh0OWs3TGJIWENGdUpLNVVwN1dYTVBlWnZnaXhneVFuS3dsbk14cnps?=
- =?utf-8?B?WEZ0NzFKTlE0ckVUelhqQlRiakhjdnFqV0FmZFVPei9NWjl1eFh2YnpVZkJ3?=
- =?utf-8?B?azFsWENRRzFmWEVYditsSzFZZlE4czFkRUx1SnhjT2NodHVFUlhEcXEwNnZz?=
- =?utf-8?B?QVNMNVRQWEhuWFo1N3FYOFliSXRHU3NidnJnckpGVEw0K1hocktMbnZpRTV2?=
- =?utf-8?B?clBLeE9aL000Yy9Ha2I5am9zb3hmZHo1djZneGd0TTNFa2doUlp2bm0rdjJ2?=
- =?utf-8?B?V1lRMGV2b0VHdTlmdU1DQlYwNDd1K3dyci9hZXFkYkRFemczNk9EWGp0YnJD?=
- =?utf-8?B?R1ZvOVdjK1NQTkh4cDB5WmRid25uc2pERHdYcnk2TnVDRUFjUWVZb2h1U3Yr?=
- =?utf-8?B?YkJJYmFCQzBsSXpFS3NnSmd6Z21CWG02eUVzMldOQjlHVkhRUGtJdkcwM2Yr?=
- =?utf-8?B?SGhnRXpZQ0VkZEFGQm1ib0s3MytqUkxkNnUxUDNxZStOK2xiZTdObW5IamFN?=
- =?utf-8?B?YkQrRDdURk9rcGhHM2ZURlRYYU5YUVQ3WEh3UkZFbGdFNEgwRERTVEQ3dkVK?=
- =?utf-8?B?OGk2eUphOHBMd0ZFZjdsVHQ2VmtZT1pHeGcxd1ZCOWl6c1gxVisrOGcvdE9J?=
- =?utf-8?B?bnNieTIyRzhmanBsTE5qVjd4ZEEzbEZzRWs0YWNqN0w4M0Vjb3BSbXp5dE9z?=
- =?utf-8?B?aVpqZ2pzSkZ6L1ZrT21vSUtWcFFYVjAxMFVZelVPa0xyMVRwOGdmSk55QmtU?=
- =?utf-8?B?Z2xvM1RSVnk4MTlMRlhQOVNCZVcvUTl1ZHk4RU9CSXFpcU9mUzNIUT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 16de88f4-a87b-46e6-dc45-08df12814b3a
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Sep 2026 16:57:43.3517
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: l0iQtYxZpVnEzG2g6WicGpIOEgMQ3LRZ2eKqlX8hgI7e/lkeX0CLJKF8+H/q9MA3oe4O0cEtLSLHxD8kXRDRvg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB7980
+Content-Transfer-Encoding: 8bit
 
+The sata_inic162x driver was labeled as "very experimental" in
+commit bb9696192826 ("libata: make it clear that sata_inic162x is
+experimental") due to data corruption issues, but not marked as broken.
+Since then, no changes have been made to it that could fix these
+issues. Since the driver was not marked as broken, and the message
+about potential data corruption is only visible in the code and dmesg,
+it is possible that someone could enable the driver without realizing
+its potential for data corruption. Remove the driver to protect users'
+data.
 
+Fixes: 1fd7a697a37b ("sata_inic162x: finally, driver for initio 162x SATA controllers, take #2")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+---
+ drivers/ata/Kconfig         |   7 -
+ drivers/ata/Makefile        |   1 -
+ drivers/ata/sata_inic162x.c | 903 ------------------------------------
+ 3 files changed, 911 deletions(-)
+ delete mode 100644 drivers/ata/sata_inic162x.c
 
-On 9/8/26 14:05, Mario Limonciello wrote:
-> There have been multiple reports of data corruption that can occur
-> with 64-bit DMA when the IOMMU is enabled. This occurs due to some
-> BIOSes enabling enhanced atomic operations on PCIe ports.
-> 
-> When enhanced atomic operations are enabled on PCIe ports for some
-> models, data corruption occurs when the 32-bit IOVA space is exhausted.
-> The problem is reported on storage devices, but can affect any device
-> that uses 64 bit DMA.
-> 
-> Disable enhanced atomics using SMN for NBIO 7.7 and 7.11 based models.
-> 
-> Cc: david.laight.linux@gmail.com
-> Cc: John Smith <imjohnsmith4000@gmail.com>
-> Cc: Lennert Buytenhek <kernel@wantstofly.org>
-> Cc: Niklas Cassel <cassel@kernel.org>
-> Cc: Roland Waltersson <roland.waltersson@netinsight.net>
-> Reported-by: Mikael Etienne <mikael1022bzh@gmail.com>
-> Closes: https://lore.kernel.org/all/178789300872.392066.15963676631650361573@gmail.com/
-> Reported-by: Arthur Husband <artmoty@gmail.com>
-> Closes: https://lore.kernel.org/linux-ide/20260406222335.379935-1-artmoty@gmail.com/
-> Reported-by: Alvin Lim <alvinwylim@gmail.com>
-> Closes: https://lore.kernel.org/linux-ide/20260621100844.1224301-1-alvinwylim@gmail.com/
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
-
-There was a contingent of eager responders on the original issue added 
-to CC.
-
-Those of you on CC - any progress with testing this?  Does it help you?
-
-Internal AMD team did come up with a reproducer workload that we have 
-confirmed it helps.
-
-> v2:
->   * Apply to suspend/resume as well.
-> ---
->   arch/x86/pci/fixup.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 99 insertions(+)
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index b301c6c8df753..79e4338e4b876 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -886,6 +886,105 @@ static void quirk_clear_strap_no_soft_reset_dev2_f0(struct pci_dev *dev)
->   	}
->   }
->   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15b8, quirk_clear_strap_no_soft_reset_dev2_f0);
-> +
-> +/*
-> + * Enhanced atomic operations can cause corruption with 64-bit IOVA
-> + * on these devices.
-> + */
-> +#define RX_ENH_ATOMIC_EN		BIT(8)
-> +
-> +static const u32 nbio_7_7_pcie_smn_addrs[] = {
-> +	0x111401d0,
-> +	0x111411d0,
-> +	0x111421d0,
-> +	0x111431d0,
-> +	0x111441d0,
-> +	0x112401d0,
-> +	0x112411d0,
-> +	0x112421d0,
-> +	0x112431d0,
-> +	0x112441d0,
-> +	0x112451d0,
-> +	0x113401d0,
-> +	0x114401d0,
-> +};
-> +
-> +static const u32 nbio_7_11_pcie_smn_addrs[] = {
-> +	0x112401d0,
-> +	0x112411d0,
-> +	0x112421d0,
-> +	0x112431d0,
-> +	0x112441d0,
-> +	0x112451d0,
-> +	0x113401d0,
-> +	0x113411d0,
-> +	0x113421d0,
-> +	0x113431d0,
-> +	0x113441d0,
-> +	0x113451d0,
-> +};
-> +
-> +static void quirk_amd_nbio_enhanced_atomic(struct pci_dev *host_bridge,
-> +					   const u32 *smn_addrs,
-> +					   size_t nr_smn_addrs)
-> +{
-> +	bool changed = false;
-> +	size_t i;
-> +	u32 data;
-> +	int ret;
-> +
-> +	for (i = 0; i < nr_smn_addrs; i++) {
-> +		ret = amd_smn_read(0, smn_addrs[i], &data);
-> +		if (ret)
-> +			continue;
-> +		if (!(data & RX_ENH_ATOMIC_EN))
-> +			continue;
-> +		data = data & ~RX_ENH_ATOMIC_EN;
-> +		ret = amd_smn_write(0, smn_addrs[i], data);
-> +		if (ret)
-> +			continue;
-> +		if (changed)
-> +			continue;
-> +		ret = amd_smn_read(0, smn_addrs[i], &data);
-> +		if (ret)
-> +			continue;
-> +		if (data & RX_ENH_ATOMIC_EN)
-> +			continue;
-> +		changed = true;
-> +	}
-> +
-> +	if (changed)
-> +		pci_info(host_bridge, "enhanced atomics disabled\n");
-> +}
-> +
-> +static void quirk_amd_nbio_7_7_disable_enhanced_atomic(struct pci_dev *dev)
-> +{
-> +	quirk_amd_nbio_enhanced_atomic(dev, nbio_7_7_pcie_smn_addrs,
-> +				       ARRAY_SIZE(nbio_7_7_pcie_smn_addrs));
-> +}
-> +
-> +static void quirk_amd_nbio_7_11_disable_enhanced_atomic(struct pci_dev *dev)
-> +{
-> +	quirk_amd_nbio_enhanced_atomic(dev, nbio_7_11_pcie_smn_addrs,
-> +				       ARRAY_SIZE(nbio_7_11_pcie_smn_addrs));
-> +}
-> +
-> +/* Phoenix, Hawk Point (NBIO 7.7) */
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x14E8,
-> +			quirk_amd_nbio_7_7_disable_enhanced_atomic);
-> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x14E8,
-> +			quirk_amd_nbio_7_7_disable_enhanced_atomic);
-> +
-> +/* Strix, Krackan, Strix Halo (NBIO 7.11) */
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1507,
-> +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
-> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1507,
-> +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1122,
-> +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
-> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1122,
-> +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
-> +
->   #endif
->   
->   /*
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 28ca856ecc75..8ef9398b704f 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -328,13 +328,6 @@ config SATA_AHCI_SEATTLE
+ 
+ 	 If unsure, say N
+ 
+-config SATA_INIC162X
+-	tristate "Initio 162x SATA support (Very Experimental)"
+-	depends on PCI
+-	select SATA_HOST
+-	help
+-	  This option enables support for Initio 162x Serial ATA.
+-
+ config SATA_ACARD_AHCI
+ 	tristate "ACard AHCI variant (ATP 8620)"
+ 	depends on PCI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index b96025abd45e..55b89c09dd74 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -11,7 +11,6 @@ obj-$(CONFIG_SATA_AHCI_SEATTLE)	+= ahci_seattle.o libahci.o libahci_platform.o
+ obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o libahci_platform.o
+ obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
+ obj-$(CONFIG_SATA_GEMINI)	+= sata_gemini.o
+-obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+deleted file mode 100644
+index 065408975f5b..000000000000
+--- a/drivers/ata/sata_inic162x.c
++++ /dev/null
+@@ -1,903 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-only
+-/*
+- * sata_inic162x.c - Driver for Initio 162x SATA controllers
+- *
+- * Copyright 2006  SUSE Linux Products GmbH
+- * Copyright 2006  Tejun Heo <teheo@novell.com>
+- *
+- * **** WARNING ****
+- *
+- * This driver never worked properly and unfortunately data corruption is
+- * relatively common.  There isn't anyone working on the driver and there's
+- * no support from the vendor.  Do not use this driver in any production
+- * environment.
+- *
+- * http://thread.gmane.org/gmane.linux.debian.devel.bugs.rc/378525/focus=54491
+- * https://bugzilla.kernel.org/show_bug.cgi?id=60565
+- *
+- * *****************
+- *
+- * This controller is eccentric and easily locks up if something isn't
+- * right.  Documentation is available at initio's website but it only
+- * documents registers (not programming model).
+- *
+- * This driver has interesting history.  The first version was written
+- * from the documentation and a 2.4 IDE driver posted on a Taiwan
+- * company, which didn't use any IDMA features and couldn't handle
+- * LBA48.  The resulting driver couldn't handle LBA48 devices either
+- * making it pretty useless.
+- *
+- * After a while, initio picked the driver up, renamed it to
+- * sata_initio162x, updated it to use IDMA for ATA DMA commands and
+- * posted it on their website.  It only used ATA_PROT_DMA for IDMA and
+- * attaching both devices and issuing IDMA and !IDMA commands
+- * simultaneously broke it due to PIRQ masking interaction but it did
+- * show how to use the IDMA (ADMA + some initio specific twists)
+- * engine.
+- *
+- * Then, I picked up their changes again and here's the usable driver
+- * which uses IDMA for everything.  Everything works now including
+- * LBA48, CD/DVD burning, suspend/resume and hotplug.  There are some
+- * issues tho.  Result Tf is not resported properly, NCQ isn't
+- * supported yet and CD/DVD writing works with DMA assisted PIO
+- * protocol (which, for native SATA devices, shouldn't cause any
+- * noticeable difference).
+- *
+- * Anyways, so, here's finally a working driver for inic162x.  Enjoy!
+- *
+- * initio: If you guys wanna improve the driver regarding result TF
+- * access and other stuff, please feel free to contact me.  I'll be
+- * happy to assist.
+- */
+-
+-#include <linux/gfp.h>
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-#include <linux/pci.h>
+-#include <scsi/scsi_host.h>
+-#include <linux/libata.h>
+-#include <linux/blkdev.h>
+-#include <scsi/scsi_device.h>
+-
+-#define DRV_NAME	"sata_inic162x"
+-#define DRV_VERSION	"0.4"
+-
+-enum {
+-	MMIO_BAR_PCI		= 5,
+-	MMIO_BAR_CARDBUS	= 1,
+-
+-	NR_PORTS		= 2,
+-
+-	IDMA_CPB_TBL_SIZE	= 4 * 32,
+-
+-	INIC_DMA_BOUNDARY	= 0xffffff,
+-
+-	HOST_ACTRL		= 0x08,
+-	HOST_CTL		= 0x7c,
+-	HOST_STAT		= 0x7e,
+-	HOST_IRQ_STAT		= 0xbc,
+-	HOST_IRQ_MASK		= 0xbe,
+-
+-	PORT_SIZE		= 0x40,
+-
+-	/* registers for ATA TF operation */
+-	PORT_TF_DATA		= 0x00,
+-	PORT_TF_FEATURE		= 0x01,
+-	PORT_TF_NSECT		= 0x02,
+-	PORT_TF_LBAL		= 0x03,
+-	PORT_TF_LBAM		= 0x04,
+-	PORT_TF_LBAH		= 0x05,
+-	PORT_TF_DEVICE		= 0x06,
+-	PORT_TF_COMMAND		= 0x07,
+-	PORT_TF_ALT_STAT	= 0x08,
+-	PORT_IRQ_STAT		= 0x09,
+-	PORT_IRQ_MASK		= 0x0a,
+-	PORT_PRD_CTL		= 0x0b,
+-	PORT_PRD_ADDR		= 0x0c,
+-	PORT_PRD_XFERLEN	= 0x10,
+-	PORT_CPB_CPBLAR		= 0x18,
+-	PORT_CPB_PTQFIFO	= 0x1c,
+-
+-	/* IDMA register */
+-	PORT_IDMA_CTL		= 0x14,
+-	PORT_IDMA_STAT		= 0x16,
+-
+-	PORT_RPQ_FIFO		= 0x1e,
+-	PORT_RPQ_CNT		= 0x1f,
+-
+-	PORT_SCR		= 0x20,
+-
+-	/* HOST_CTL bits */
+-	HCTL_LEDEN		= (1 << 3),  /* enable LED operation */
+-	HCTL_IRQOFF		= (1 << 8),  /* global IRQ off */
+-	HCTL_FTHD0		= (1 << 10), /* fifo threshold 0 */
+-	HCTL_FTHD1		= (1 << 11), /* fifo threshold 1*/
+-	HCTL_PWRDWN		= (1 << 12), /* power down PHYs */
+-	HCTL_SOFTRST		= (1 << 13), /* global reset (no phy reset) */
+-	HCTL_RPGSEL		= (1 << 15), /* register page select */
+-
+-	HCTL_KNOWN_BITS		= HCTL_IRQOFF | HCTL_PWRDWN | HCTL_SOFTRST |
+-				  HCTL_RPGSEL,
+-
+-	/* HOST_IRQ_(STAT|MASK) bits */
+-	HIRQ_PORT0		= (1 << 0),
+-	HIRQ_PORT1		= (1 << 1),
+-	HIRQ_SOFT		= (1 << 14),
+-	HIRQ_GLOBAL		= (1 << 15), /* STAT only */
+-
+-	/* PORT_IRQ_(STAT|MASK) bits */
+-	PIRQ_OFFLINE		= (1 << 0),  /* device unplugged */
+-	PIRQ_ONLINE		= (1 << 1),  /* device plugged */
+-	PIRQ_COMPLETE		= (1 << 2),  /* completion interrupt */
+-	PIRQ_FATAL		= (1 << 3),  /* fatal error */
+-	PIRQ_ATA		= (1 << 4),  /* ATA interrupt */
+-	PIRQ_REPLY		= (1 << 5),  /* reply FIFO not empty */
+-	PIRQ_PENDING		= (1 << 7),  /* port IRQ pending (STAT only) */
+-
+-	PIRQ_ERR		= PIRQ_OFFLINE | PIRQ_ONLINE | PIRQ_FATAL,
+-	PIRQ_MASK_DEFAULT	= PIRQ_REPLY | PIRQ_ATA,
+-	PIRQ_MASK_FREEZE	= 0xff,
+-
+-	/* PORT_PRD_CTL bits */
+-	PRD_CTL_START		= (1 << 0),
+-	PRD_CTL_WR		= (1 << 3),
+-	PRD_CTL_DMAEN		= (1 << 7),  /* DMA enable */
+-
+-	/* PORT_IDMA_CTL bits */
+-	IDMA_CTL_RST_ATA	= (1 << 2),  /* hardreset ATA bus */
+-	IDMA_CTL_RST_IDMA	= (1 << 5),  /* reset IDMA machinery */
+-	IDMA_CTL_GO		= (1 << 7),  /* IDMA mode go */
+-	IDMA_CTL_ATA_NIEN	= (1 << 8),  /* ATA IRQ disable */
+-
+-	/* PORT_IDMA_STAT bits */
+-	IDMA_STAT_PERR		= (1 << 0),  /* PCI ERROR MODE */
+-	IDMA_STAT_CPBERR	= (1 << 1),  /* ADMA CPB error */
+-	IDMA_STAT_LGCY		= (1 << 3),  /* ADMA legacy */
+-	IDMA_STAT_UIRQ		= (1 << 4),  /* ADMA unsolicited irq */
+-	IDMA_STAT_STPD		= (1 << 5),  /* ADMA stopped */
+-	IDMA_STAT_PSD		= (1 << 6),  /* ADMA pause */
+-	IDMA_STAT_DONE		= (1 << 7),  /* ADMA done */
+-
+-	IDMA_STAT_ERR		= IDMA_STAT_PERR | IDMA_STAT_CPBERR,
+-
+-	/* CPB Control Flags*/
+-	CPB_CTL_VALID		= (1 << 0),  /* CPB valid */
+-	CPB_CTL_QUEUED		= (1 << 1),  /* queued command */
+-	CPB_CTL_DATA		= (1 << 2),  /* data, rsvd in datasheet */
+-	CPB_CTL_IEN		= (1 << 3),  /* PCI interrupt enable */
+-	CPB_CTL_DEVDIR		= (1 << 4),  /* device direction control */
+-
+-	/* CPB Response Flags */
+-	CPB_RESP_DONE		= (1 << 0),  /* ATA command complete */
+-	CPB_RESP_REL		= (1 << 1),  /* ATA release */
+-	CPB_RESP_IGNORED	= (1 << 2),  /* CPB ignored */
+-	CPB_RESP_ATA_ERR	= (1 << 3),  /* ATA command error */
+-	CPB_RESP_SPURIOUS	= (1 << 4),  /* ATA spurious interrupt error */
+-	CPB_RESP_UNDERFLOW	= (1 << 5),  /* APRD deficiency length error */
+-	CPB_RESP_OVERFLOW	= (1 << 6),  /* APRD exccess length error */
+-	CPB_RESP_CPB_ERR	= (1 << 7),  /* CPB error flag */
+-
+-	/* PRD Control Flags */
+-	PRD_DRAIN		= (1 << 1),  /* ignore data excess */
+-	PRD_CDB			= (1 << 2),  /* atapi packet command pointer */
+-	PRD_DIRECT_INTR		= (1 << 3),  /* direct interrupt */
+-	PRD_DMA			= (1 << 4),  /* data transfer method */
+-	PRD_WRITE		= (1 << 5),  /* data dir, rsvd in datasheet */
+-	PRD_IOM			= (1 << 6),  /* io/memory transfer */
+-	PRD_END			= (1 << 7),  /* APRD chain end */
+-};
+-
+-/* Comman Parameter Block */
+-struct inic_cpb {
+-	u8		resp_flags;	/* Response Flags */
+-	u8		error;		/* ATA Error */
+-	u8		status;		/* ATA Status */
+-	u8		ctl_flags;	/* Control Flags */
+-	__le32		len;		/* Total Transfer Length */
+-	__le32		prd;		/* First PRD pointer */
+-	u8		rsvd[4];
+-	/* 16 bytes */
+-	u8		feature;	/* ATA Feature */
+-	u8		hob_feature;	/* ATA Ex. Feature */
+-	u8		device;		/* ATA Device/Head */
+-	u8		mirctl;		/* Mirror Control */
+-	u8		nsect;		/* ATA Sector Count */
+-	u8		hob_nsect;	/* ATA Ex. Sector Count */
+-	u8		lbal;		/* ATA Sector Number */
+-	u8		hob_lbal;	/* ATA Ex. Sector Number */
+-	u8		lbam;		/* ATA Cylinder Low */
+-	u8		hob_lbam;	/* ATA Ex. Cylinder Low */
+-	u8		lbah;		/* ATA Cylinder High */
+-	u8		hob_lbah;	/* ATA Ex. Cylinder High */
+-	u8		command;	/* ATA Command */
+-	u8		ctl;		/* ATA Control */
+-	u8		slave_error;	/* Slave ATA Error */
+-	u8		slave_status;	/* Slave ATA Status */
+-	/* 32 bytes */
+-} __packed;
+-
+-/* Physical Region Descriptor */
+-struct inic_prd {
+-	__le32		mad;		/* Physical Memory Address */
+-	__le16		len;		/* Transfer Length */
+-	u8		rsvd;
+-	u8		flags;		/* Control Flags */
+-} __packed;
+-
+-struct inic_pkt {
+-	struct inic_cpb	cpb;
+-	struct inic_prd	prd[LIBATA_MAX_PRD + 1];	/* + 1 for cdb */
+-	u8		cdb[ATAPI_CDB_LEN];
+-} __packed;
+-
+-struct inic_host_priv {
+-	void __iomem	*mmio_base;
+-	u16		cached_hctl;
+-};
+-
+-struct inic_port_priv {
+-	struct inic_pkt	*pkt;
+-	dma_addr_t	pkt_dma;
+-	u32		*cpb_tbl;
+-	dma_addr_t	cpb_tbl_dma;
+-};
+-
+-static const struct scsi_host_template inic_sht = {
+-	ATA_BASE_SHT(DRV_NAME),
+-	.sg_tablesize		= LIBATA_MAX_PRD, /* maybe it can be larger? */
+-
+-	/*
+-	 * This controller is braindamaged.  dma_boundary is 0xffff like others
+-	 * but it will lock up the whole machine HARD if 65536 byte PRD entry
+-	 * is fed.  Reduce maximum segment size.
+-	 */
+-	.dma_boundary		= INIC_DMA_BOUNDARY,
+-	.max_segment_size	= 65536 - 512,
+-};
+-
+-static const int scr_map[] = {
+-	[SCR_STATUS]	= 0,
+-	[SCR_ERROR]	= 1,
+-	[SCR_CONTROL]	= 2,
+-};
+-
+-static void __iomem *inic_port_base(struct ata_port *ap)
+-{
+-	struct inic_host_priv *hpriv = ap->host->private_data;
+-
+-	return hpriv->mmio_base + ap->port_no * PORT_SIZE;
+-}
+-
+-static void inic_reset_port(void __iomem *port_base)
+-{
+-	void __iomem *idma_ctl = port_base + PORT_IDMA_CTL;
+-
+-	/* stop IDMA engine */
+-	readw(idma_ctl); /* flush */
+-	msleep(1);
+-
+-	/* mask IRQ and assert reset */
+-	writew(IDMA_CTL_RST_IDMA, idma_ctl);
+-	readw(idma_ctl); /* flush */
+-	msleep(1);
+-
+-	/* release reset */
+-	writew(0, idma_ctl);
+-
+-	/* clear irq */
+-	writeb(0xff, port_base + PORT_IRQ_STAT);
+-}
+-
+-static int inic_scr_read(struct ata_link *link, unsigned sc_reg, u32 *val)
+-{
+-	void __iomem *scr_addr = inic_port_base(link->ap) + PORT_SCR;
+-
+-	if (unlikely(sc_reg >= ARRAY_SIZE(scr_map)))
+-		return -EINVAL;
+-
+-	*val = readl(scr_addr + scr_map[sc_reg] * 4);
+-
+-	/* this controller has stuck DIAG.N, ignore it */
+-	if (sc_reg == SCR_ERROR)
+-		*val &= ~SERR_PHYRDY_CHG;
+-	return 0;
+-}
+-
+-static int inic_scr_write(struct ata_link *link, unsigned sc_reg, u32 val)
+-{
+-	void __iomem *scr_addr = inic_port_base(link->ap) + PORT_SCR;
+-
+-	if (unlikely(sc_reg >= ARRAY_SIZE(scr_map)))
+-		return -EINVAL;
+-
+-	writel(val, scr_addr + scr_map[sc_reg] * 4);
+-	return 0;
+-}
+-
+-static void inic_stop_idma(struct ata_port *ap)
+-{
+-	void __iomem *port_base = inic_port_base(ap);
+-
+-	readb(port_base + PORT_RPQ_FIFO);
+-	readb(port_base + PORT_RPQ_CNT);
+-	writew(0, port_base + PORT_IDMA_CTL);
+-}
+-
+-static void inic_host_err_intr(struct ata_port *ap, u8 irq_stat, u16 idma_stat)
+-{
+-	struct ata_eh_info *ehi = &ap->link.eh_info;
+-	struct inic_port_priv *pp = ap->private_data;
+-	struct inic_cpb *cpb = &pp->pkt->cpb;
+-	bool freeze = false;
+-
+-	ata_ehi_clear_desc(ehi);
+-	ata_ehi_push_desc(ehi, "irq_stat=0x%x idma_stat=0x%x",
+-			  irq_stat, idma_stat);
+-
+-	inic_stop_idma(ap);
+-
+-	if (irq_stat & (PIRQ_OFFLINE | PIRQ_ONLINE)) {
+-		ata_ehi_push_desc(ehi, "hotplug");
+-		ata_ehi_hotplugged(ehi);
+-		freeze = true;
+-	}
+-
+-	if (idma_stat & IDMA_STAT_PERR) {
+-		ata_ehi_push_desc(ehi, "PCI error");
+-		freeze = true;
+-	}
+-
+-	if (idma_stat & IDMA_STAT_CPBERR) {
+-		ata_ehi_push_desc(ehi, "CPB error");
+-
+-		if (cpb->resp_flags & CPB_RESP_IGNORED) {
+-			__ata_ehi_push_desc(ehi, " ignored");
+-			ehi->err_mask |= AC_ERR_INVALID;
+-			freeze = true;
+-		}
+-
+-		if (cpb->resp_flags & CPB_RESP_ATA_ERR)
+-			ehi->err_mask |= AC_ERR_DEV;
+-
+-		if (cpb->resp_flags & CPB_RESP_SPURIOUS) {
+-			__ata_ehi_push_desc(ehi, " spurious-intr");
+-			ehi->err_mask |= AC_ERR_HSM;
+-			freeze = true;
+-		}
+-
+-		if (cpb->resp_flags &
+-		    (CPB_RESP_UNDERFLOW | CPB_RESP_OVERFLOW)) {
+-			__ata_ehi_push_desc(ehi, " data-over/underflow");
+-			ehi->err_mask |= AC_ERR_HSM;
+-			freeze = true;
+-		}
+-	}
+-
+-	if (freeze)
+-		ata_port_freeze(ap);
+-	else
+-		ata_port_abort(ap);
+-}
+-
+-static void inic_host_intr(struct ata_port *ap)
+-{
+-	void __iomem *port_base = inic_port_base(ap);
+-	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-	u8 irq_stat;
+-	u16 idma_stat;
+-
+-	/* read and clear IRQ status */
+-	irq_stat = readb(port_base + PORT_IRQ_STAT);
+-	writeb(irq_stat, port_base + PORT_IRQ_STAT);
+-	idma_stat = readw(port_base + PORT_IDMA_STAT);
+-
+-	if (unlikely((irq_stat & PIRQ_ERR) || (idma_stat & IDMA_STAT_ERR)))
+-		inic_host_err_intr(ap, irq_stat, idma_stat);
+-
+-	if (unlikely(!qc))
+-		goto spurious;
+-
+-	if (likely(idma_stat & IDMA_STAT_DONE)) {
+-		inic_stop_idma(ap);
+-
+-		/* Depending on circumstances, device error
+-		 * isn't reported by IDMA, check it explicitly.
+-		 */
+-		if (unlikely(readb(port_base + PORT_TF_COMMAND) &
+-			     (ATA_DF | ATA_ERR)))
+-			qc->err_mask |= AC_ERR_DEV;
+-
+-		ata_qc_complete(qc);
+-		return;
+-	}
+-
+- spurious:
+-	ata_port_warn(ap, "unhandled interrupt: cmd=0x%x irq_stat=0x%x idma_stat=0x%x\n",
+-		      qc ? qc->tf.command : 0xff, irq_stat, idma_stat);
+-}
+-
+-static irqreturn_t inic_interrupt(int irq, void *dev_instance)
+-{
+-	struct ata_host *host = dev_instance;
+-	struct inic_host_priv *hpriv = host->private_data;
+-	u16 host_irq_stat;
+-	int i, handled = 0;
+-
+-	host_irq_stat = readw(hpriv->mmio_base + HOST_IRQ_STAT);
+-
+-	if (unlikely(!(host_irq_stat & HIRQ_GLOBAL)))
+-		goto out;
+-
+-	spin_lock(&host->lock);
+-
+-	for (i = 0; i < NR_PORTS; i++)
+-		if (host_irq_stat & (HIRQ_PORT0 << i)) {
+-			inic_host_intr(host->ports[i]);
+-			handled++;
+-		}
+-
+-	spin_unlock(&host->lock);
+-
+- out:
+-	return IRQ_RETVAL(handled);
+-}
+-
+-static int inic_check_atapi_dma(struct ata_queued_cmd *qc)
+-{
+-	/* For some reason ATAPI_PROT_DMA doesn't work for some
+-	 * commands including writes and other misc ops.  Use PIO
+-	 * protocol instead, which BTW is driven by the DMA engine
+-	 * anyway, so it shouldn't make much difference for native
+-	 * SATA devices.
+-	 */
+-	if (atapi_cmd_type(qc->cdb[0]) == READ)
+-		return 0;
+-	return 1;
+-}
+-
+-static void inic_fill_sg(struct inic_prd *prd, struct ata_queued_cmd *qc)
+-{
+-	struct scatterlist *sg;
+-	unsigned int si;
+-	u8 flags = 0;
+-
+-	if (qc->tf.flags & ATA_TFLAG_WRITE)
+-		flags |= PRD_WRITE;
+-
+-	if (ata_is_dma(qc->tf.protocol))
+-		flags |= PRD_DMA;
+-
+-	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+-		prd->mad = cpu_to_le32(sg_dma_address(sg));
+-		prd->len = cpu_to_le16(sg_dma_len(sg));
+-		prd->flags = flags;
+-		prd++;
+-	}
+-
+-	WARN_ON(!si);
+-	prd[-1].flags |= PRD_END;
+-}
+-
+-static enum ata_completion_errors inic_qc_prep(struct ata_queued_cmd *qc)
+-{
+-	struct inic_port_priv *pp = qc->ap->private_data;
+-	struct inic_pkt *pkt = pp->pkt;
+-	struct inic_cpb *cpb = &pkt->cpb;
+-	struct inic_prd *prd = pkt->prd;
+-	bool is_atapi = ata_is_atapi(qc->tf.protocol);
+-	bool is_data = ata_is_data(qc->tf.protocol);
+-	unsigned int cdb_len = 0;
+-
+-	if (is_atapi)
+-		cdb_len = qc->dev->cdb_len;
+-
+-	/* prepare packet, based on initio driver */
+-	memset(pkt, 0, sizeof(struct inic_pkt));
+-
+-	cpb->ctl_flags = CPB_CTL_VALID | CPB_CTL_IEN;
+-	if (is_atapi || is_data)
+-		cpb->ctl_flags |= CPB_CTL_DATA;
+-
+-	cpb->len = cpu_to_le32(qc->nbytes + cdb_len);
+-	cpb->prd = cpu_to_le32(pp->pkt_dma + offsetof(struct inic_pkt, prd));
+-
+-	cpb->device = qc->tf.device;
+-	cpb->feature = qc->tf.feature;
+-	cpb->nsect = qc->tf.nsect;
+-	cpb->lbal = qc->tf.lbal;
+-	cpb->lbam = qc->tf.lbam;
+-	cpb->lbah = qc->tf.lbah;
+-
+-	if (qc->tf.flags & ATA_TFLAG_LBA48) {
+-		cpb->hob_feature = qc->tf.hob_feature;
+-		cpb->hob_nsect = qc->tf.hob_nsect;
+-		cpb->hob_lbal = qc->tf.hob_lbal;
+-		cpb->hob_lbam = qc->tf.hob_lbam;
+-		cpb->hob_lbah = qc->tf.hob_lbah;
+-	}
+-
+-	cpb->command = qc->tf.command;
+-	/* don't load ctl - dunno why.  it's like that in the initio driver */
+-
+-	/* setup PRD for CDB */
+-	if (is_atapi) {
+-		memcpy(pkt->cdb, qc->cdb, ATAPI_CDB_LEN);
+-		prd->mad = cpu_to_le32(pp->pkt_dma +
+-				       offsetof(struct inic_pkt, cdb));
+-		prd->len = cpu_to_le16(cdb_len);
+-		prd->flags = PRD_CDB | PRD_WRITE;
+-		if (!is_data)
+-			prd->flags |= PRD_END;
+-		prd++;
+-	}
+-
+-	/* setup sg table */
+-	if (is_data)
+-		inic_fill_sg(prd, qc);
+-
+-	pp->cpb_tbl[0] = pp->pkt_dma;
+-
+-	return AC_ERR_OK;
+-}
+-
+-static unsigned int inic_qc_issue(struct ata_queued_cmd *qc)
+-{
+-	struct ata_port *ap = qc->ap;
+-	void __iomem *port_base = inic_port_base(ap);
+-
+-	/* fire up the ADMA engine */
+-	writew(HCTL_FTHD0 | HCTL_LEDEN, port_base + HOST_CTL);
+-	writew(IDMA_CTL_GO, port_base + PORT_IDMA_CTL);
+-	writeb(0, port_base + PORT_CPB_PTQFIFO);
+-
+-	return 0;
+-}
+-
+-static void inic_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+-{
+-	void __iomem *port_base = inic_port_base(ap);
+-
+-	tf->error	= readb(port_base + PORT_TF_FEATURE);
+-	tf->nsect	= readb(port_base + PORT_TF_NSECT);
+-	tf->lbal	= readb(port_base + PORT_TF_LBAL);
+-	tf->lbam	= readb(port_base + PORT_TF_LBAM);
+-	tf->lbah	= readb(port_base + PORT_TF_LBAH);
+-	tf->device	= readb(port_base + PORT_TF_DEVICE);
+-	tf->status	= readb(port_base + PORT_TF_COMMAND);
+-}
+-
+-static void inic_qc_fill_rtf(struct ata_queued_cmd *qc)
+-{
+-	struct ata_taskfile *rtf = &qc->result_tf;
+-	struct ata_taskfile tf;
+-
+-	/* FIXME: Except for status and error, result TF access
+-	 * doesn't work.  I tried reading from BAR0/2, CPB and BAR5.
+-	 * None works regardless of which command interface is used.
+-	 * For now return true iff status indicates device error.
+-	 * This means that we're reporting bogus sector for RW
+-	 * failures.  Eeekk....
+-	 */
+-	inic_tf_read(qc->ap, &tf);
+-
+-	if (tf.status & ATA_ERR) {
+-		rtf->status = tf.status;
+-		rtf->error = tf.error;
+-	}
+-}
+-
+-static void inic_freeze(struct ata_port *ap)
+-{
+-	void __iomem *port_base = inic_port_base(ap);
+-
+-	writeb(PIRQ_MASK_FREEZE, port_base + PORT_IRQ_MASK);
+-	writeb(0xff, port_base + PORT_IRQ_STAT);
+-}
+-
+-static void inic_thaw(struct ata_port *ap)
+-{
+-	void __iomem *port_base = inic_port_base(ap);
+-
+-	writeb(0xff, port_base + PORT_IRQ_STAT);
+-	writeb(PIRQ_MASK_DEFAULT, port_base + PORT_IRQ_MASK);
+-}
+-
+-static int inic_check_ready(struct ata_link *link)
+-{
+-	void __iomem *port_base = inic_port_base(link->ap);
+-
+-	return ata_check_ready(readb(port_base + PORT_TF_COMMAND));
+-}
+-
+-/*
+- * SRST and SControl hardreset don't give valid signature on this
+- * controller.  Only controller specific hardreset mechanism works.
+- */
+-static int inic_hardreset(struct ata_link *link, unsigned int *class,
+-			  unsigned long deadline)
+-{
+-	struct ata_port *ap = link->ap;
+-	void __iomem *port_base = inic_port_base(ap);
+-	void __iomem *idma_ctl = port_base + PORT_IDMA_CTL;
+-	const unsigned int *timing = sata_ehc_deb_timing(&link->eh_context);
+-	int rc;
+-
+-	/* hammer it into sane state */
+-	inic_reset_port(port_base);
+-
+-	writew(IDMA_CTL_RST_ATA, idma_ctl);
+-	readw(idma_ctl);	/* flush */
+-	ata_msleep(ap, 1);
+-	writew(0, idma_ctl);
+-
+-	rc = sata_link_resume(link, timing, deadline);
+-	if (rc) {
+-		ata_link_warn(link,
+-			      "failed to resume link after reset (errno=%d)\n",
+-			      rc);
+-		return rc;
+-	}
+-
+-	*class = ATA_DEV_NONE;
+-	if (ata_link_online(link)) {
+-		struct ata_taskfile tf;
+-
+-		/* wait for link to become ready */
+-		rc = ata_wait_after_reset(link, deadline, inic_check_ready);
+-		/* link occupied, -ENODEV too is an error */
+-		if (rc) {
+-			ata_link_warn(link,
+-				      "device not ready after hardreset (errno=%d)\n",
+-				      rc);
+-			return rc;
+-		}
+-
+-		inic_tf_read(ap, &tf);
+-		*class = ata_port_classify(ap, &tf);
+-	}
+-
+-	return 0;
+-}
+-
+-static void inic_error_handler(struct ata_port *ap)
+-	__must_hold(&ap->host->eh_mutex)
+-{
+-	void __iomem *port_base = inic_port_base(ap);
+-
+-	inic_reset_port(port_base);
+-	ata_std_error_handler(ap);
+-}
+-
+-static void inic_post_internal_cmd(struct ata_queued_cmd *qc)
+-{
+-	/* make DMA engine forget about the failed command */
+-	if (qc->flags & ATA_QCFLAG_EH)
+-		inic_reset_port(inic_port_base(qc->ap));
+-}
+-
+-static void init_port(struct ata_port *ap)
+-{
+-	void __iomem *port_base = inic_port_base(ap);
+-	struct inic_port_priv *pp = ap->private_data;
+-
+-	/* clear packet and CPB table */
+-	memset(pp->pkt, 0, sizeof(struct inic_pkt));
+-	memset(pp->cpb_tbl, 0, IDMA_CPB_TBL_SIZE);
+-
+-	/* setup CPB lookup table addresses */
+-	writel(pp->cpb_tbl_dma, port_base + PORT_CPB_CPBLAR);
+-}
+-
+-static int inic_port_resume(struct ata_port *ap)
+-{
+-	init_port(ap);
+-	return 0;
+-}
+-
+-static int inic_port_start(struct ata_port *ap)
+-{
+-	struct device *dev = ap->host->dev;
+-	struct inic_port_priv *pp;
+-
+-	/* alloc and initialize private data */
+-	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
+-	if (!pp)
+-		return -ENOMEM;
+-	ap->private_data = pp;
+-
+-	/* Alloc resources */
+-	pp->pkt = dmam_alloc_coherent(dev, sizeof(struct inic_pkt),
+-				      &pp->pkt_dma, GFP_KERNEL);
+-	if (!pp->pkt)
+-		return -ENOMEM;
+-
+-	pp->cpb_tbl = dmam_alloc_coherent(dev, IDMA_CPB_TBL_SIZE,
+-					  &pp->cpb_tbl_dma, GFP_KERNEL);
+-	if (!pp->cpb_tbl)
+-		return -ENOMEM;
+-
+-	init_port(ap);
+-
+-	return 0;
+-}
+-
+-static struct ata_port_operations inic_port_ops = {
+-	.inherits		= &sata_port_ops,
+-
+-	.check_atapi_dma	= inic_check_atapi_dma,
+-	.qc_prep		= inic_qc_prep,
+-	.qc_issue		= inic_qc_issue,
+-	.qc_fill_rtf		= inic_qc_fill_rtf,
+-
+-	.freeze			= inic_freeze,
+-	.thaw			= inic_thaw,
+-	.reset.hardreset	= inic_hardreset,
+-	.error_handler		= inic_error_handler,
+-	.post_internal_cmd	= inic_post_internal_cmd,
+-
+-	.scr_read		= inic_scr_read,
+-	.scr_write		= inic_scr_write,
+-
+-	.port_resume		= inic_port_resume,
+-	.port_start		= inic_port_start,
+-};
+-
+-static const struct ata_port_info inic_port_info = {
+-	.flags			= ATA_FLAG_SATA | ATA_FLAG_PIO_DMA,
+-	.pio_mask		= ATA_PIO4,
+-	.mwdma_mask		= ATA_MWDMA2,
+-	.udma_mask		= ATA_UDMA6,
+-	.port_ops		= &inic_port_ops
+-};
+-
+-static int init_controller(void __iomem *mmio_base, u16 hctl)
+-{
+-	int i;
+-	u16 val;
+-
+-	hctl &= ~HCTL_KNOWN_BITS;
+-
+-	/* Soft reset whole controller.  Spec says reset duration is 3
+-	 * PCI clocks, be generous and give it 10ms.
+-	 */
+-	writew(hctl | HCTL_SOFTRST, mmio_base + HOST_CTL);
+-	readw(mmio_base + HOST_CTL); /* flush */
+-
+-	for (i = 0; i < 10; i++) {
+-		msleep(1);
+-		val = readw(mmio_base + HOST_CTL);
+-		if (!(val & HCTL_SOFTRST))
+-			break;
+-	}
+-
+-	if (val & HCTL_SOFTRST)
+-		return -EIO;
+-
+-	/* mask all interrupts and reset ports */
+-	for (i = 0; i < NR_PORTS; i++) {
+-		void __iomem *port_base = mmio_base + i * PORT_SIZE;
+-
+-		writeb(0xff, port_base + PORT_IRQ_MASK);
+-		inic_reset_port(port_base);
+-	}
+-
+-	/* port IRQ is masked now, unmask global IRQ */
+-	writew(hctl & ~HCTL_IRQOFF, mmio_base + HOST_CTL);
+-	val = readw(mmio_base + HOST_IRQ_MASK);
+-	val &= ~(HIRQ_PORT0 | HIRQ_PORT1);
+-	writew(val, mmio_base + HOST_IRQ_MASK);
+-
+-	return 0;
+-}
+-
+-#ifdef CONFIG_PM_SLEEP
+-static int inic_pci_device_resume(struct pci_dev *pdev)
+-{
+-	struct ata_host *host = pci_get_drvdata(pdev);
+-	struct inic_host_priv *hpriv = host->private_data;
+-	int rc;
+-
+-	rc = ata_pci_device_do_resume(pdev);
+-	if (rc)
+-		return rc;
+-
+-	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
+-		rc = init_controller(hpriv->mmio_base, hpriv->cached_hctl);
+-		if (rc)
+-			return rc;
+-	}
+-
+-	ata_host_resume(host);
+-
+-	return 0;
+-}
+-#endif
+-
+-static int inic_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+-{
+-	const struct ata_port_info *ppi[] = { &inic_port_info, NULL };
+-	struct ata_host *host;
+-	struct inic_host_priv *hpriv;
+-	void __iomem * const *iomap;
+-	int mmio_bar;
+-	int i, rc;
+-
+-	ata_print_version_once(&pdev->dev, DRV_VERSION);
+-
+-	dev_alert(&pdev->dev, "inic162x support is broken with common data corruption issues and will be disabled by default, contact linux-ide@vger.kernel.org if in production use\n");
+-
+-	/* alloc host */
+-	host = ata_host_alloc_pinfo(&pdev->dev, ppi, NR_PORTS);
+-	hpriv = devm_kzalloc(&pdev->dev, sizeof(*hpriv), GFP_KERNEL);
+-	if (!host || !hpriv)
+-		return -ENOMEM;
+-
+-	host->private_data = hpriv;
+-
+-	/* Acquire resources and fill host.  Note that PCI and cardbus
+-	 * use different BARs.
+-	 */
+-	rc = pcim_enable_device(pdev);
+-	if (rc)
+-		return rc;
+-
+-	if (pci_resource_flags(pdev, MMIO_BAR_PCI) & IORESOURCE_MEM)
+-		mmio_bar = MMIO_BAR_PCI;
+-	else
+-		mmio_bar = MMIO_BAR_CARDBUS;
+-
+-	rc = pcim_iomap_regions(pdev, 1 << mmio_bar, DRV_NAME);
+-	if (rc)
+-		return rc;
+-	host->iomap = iomap = pcim_iomap_table(pdev);
+-	hpriv->mmio_base = iomap[mmio_bar];
+-	hpriv->cached_hctl = readw(hpriv->mmio_base + HOST_CTL);
+-
+-	for (i = 0; i < NR_PORTS; i++) {
+-		struct ata_port *ap = host->ports[i];
+-
+-		ata_port_pbar_desc(ap, mmio_bar, -1, "mmio");
+-		ata_port_pbar_desc(ap, mmio_bar, i * PORT_SIZE, "port");
+-	}
+-
+-	/* Set dma_mask.  This devices doesn't support 64bit addressing. */
+-	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+-	if (rc) {
+-		dev_err(&pdev->dev, "32-bit DMA enable failed\n");
+-		return rc;
+-	}
+-
+-	rc = init_controller(hpriv->mmio_base, hpriv->cached_hctl);
+-	if (rc) {
+-		dev_err(&pdev->dev, "failed to initialize controller\n");
+-		return rc;
+-	}
+-
+-	pci_set_master(pdev);
+-	return ata_host_activate(host, pdev->irq, inic_interrupt, IRQF_SHARED,
+-				 &inic_sht);
+-}
+-
+-static const struct pci_device_id inic_pci_tbl[] = {
+-	{ PCI_VDEVICE(INIT, 0x1622), },
+-	{ },
+-};
+-
+-static struct pci_driver inic_pci_driver = {
+-	.name 		= DRV_NAME,
+-	.id_table	= inic_pci_tbl,
+-#ifdef CONFIG_PM_SLEEP
+-	.suspend	= ata_pci_device_suspend,
+-	.resume		= inic_pci_device_resume,
+-#endif
+-	.probe 		= inic_init_one,
+-	.remove		= ata_pci_remove_one,
+-};
+-
+-module_pci_driver(inic_pci_driver);
+-
+-MODULE_AUTHOR("Tejun Heo");
+-MODULE_DESCRIPTION("low-level driver for Initio 162x SATA");
+-MODULE_LICENSE("GPL v2");
+-MODULE_DEVICE_TABLE(pci, inic_pci_tbl);
+-MODULE_VERSION(DRV_VERSION);
+-- 
+2.43.0
 
