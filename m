@@ -1,127 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92B693093C1;
-	Thu, 17 Sep 2026 03:14:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C19938F638
+	for <linux-ide@vger.kernel.org>; Thu, 17 Sep 2026 11:35:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789614869; cv=none; b=ouBUwHP/ogSHII4qFAwF8TXXrvjAmPJCMePP2GvN3wgjkWMi5Za7YpOyYwIwo+QSc3LMDejAqr1ewFCdBBJSiJa+ylEtqUPa4k8neMD8b1Hh/ucwUqMmOUpoh5SbF7alWt8Kyg39HjGOVEZGauWdyMOK2wvvl7Q6dmOFjsHlenY=
+	t=1789644939; cv=none; b=HJ29Z2jljUtgLp+H0mdeasqMRZW3UrRsab3c7uyxMC2wlCoGEhqIs9yH5/BTUwcGxMiJW5/22cxARkqG0/LFe/EEcs+3vYFUw8tSyR1dRcbzdhdJ6koAYthJBm5okXOOnpJfzQiE7INm6S9omqP+nuTOvvnfnGzhflZVO3JSdK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789614869; c=relaxed/simple;
-	bh=VEdmEHU4HRcFLiSrkc2qsVN8mU3sz6fIJalnefhVTs8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aJgOqa4TpOYYHQz4+/CxinFmuYNGqv1lsOKHQYaqdmIjL+PXKuwvCXLd/K7RJJR9CdZQ0tCbzQHyxbRx+fGkqgVXZPHdbxXMF4cHpM1JKclFh+HO7M/SfTbHZcW96ReViqmM/CR2OgDTBOS8Fjf7gIjSAmku4aD1nrkThpgOLWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dd7KyGlP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789644939; c=relaxed/simple;
+	bh=If+gaTte8A/0kJZ8AkZaydvfCXtO2qnc76xFjZjtJNs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MzTojXXTD6QuYbcnBSmjrqjpDH+iMpcjV4nICXKniMbITIt++RPVtU8KL8/CMCHs3xpldJbCdtqL5aN4pYMJkLcLOp0+Gjc3adkhz8VZamQN5uoMVIivvI7kcA49DjHG9MdbJJU/UEF2nfUw7cM4bG2P0B/r51fZwUoUVREVQHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Nszp8uLe; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=HzKCARHb; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dd7KyGlP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E36041F000FF;
-	Thu, 17 Sep 2026 03:14:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789614868;
-	bh=cIZz2g8Pz+PxuDxpdtRY73qiC4kxknpNb+WL0xDIPYU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Dd7KyGlPaqCchTDzmDg4Fv2fL8zWmddUEFrPpesp5b3684t0Oox1e7rZ4iT9K/c31
-	 zAy7sx94VHWO1a3XTYo7xGRVLIWb2mwHN4lTHCwWN94nz8V2/m0Vn7PlsodrHnPYgx
-	 M13jk+udCl9YWbLL5Jt/5l6OdX+ddNtlHp+NJEuOl+6NvWKqIhYqb7LkWP12um39g7
-	 gjWdZl+LxlUTwD1jQHEONoTO95OulZKSffNqtd5dBmmJkmchzx9LYSZuf2XY1f55vI
-	 /rFsvFX0L4NW3j75R2eDu51SXcEUoNo1jhQUQfpdSawwrXXGac4hVEkUY2ZivU4rSc
-	 pJxVqqjCusEKg==
-Message-ID: <f3ab4b89-627d-4711-84b0-85b887256ccf@kernel.org>
-Date: Thu, 17 Sep 2026 10:14:24 +0700
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Nszp8uLe";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="HzKCARHb"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 0B3C21FFDF;
+	Thu, 17 Sep 2026 11:35:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1789644932; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=eRkvHvV5phGAIvz4l7bC3fxZnJ3nlOXsofSkoxIe95g=;
+	b=Nszp8uLetXG8msU/IypdCE1prmjwDLSA8EcmcYPbJj9yrd5V+Z59QzW+cWDsp1ZvqCklGy
+	QTmqtQW2eJEwmgTMX1A5tyElvmjM3fZ4fdbmPEFOVnhpmGVT45n+fdtAjo0oyZ5+YBGzYd
+	47dFSu5hDPj8NLqKODOxLKf0cUIJZ6Q=
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1789644928; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=eRkvHvV5phGAIvz4l7bC3fxZnJ3nlOXsofSkoxIe95g=;
+	b=HzKCARHbLv3SUkeszucQVY0mT6Yh3vKf2X2iVBg3pd8GhXjLc6jFK62jc818dFrHiPF7j3
+	ftgI+1j6M+kSlhkFfteBqdPYyIsFGjdLjtNljyB7IztzMqOs5OiGyGzdmt3VDhtL+ACGrJ
+	gC6+rxEBqxgVqQiUjxHuNJzkxyjtN3Y=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 963F01374A;
+	Thu, 17 Sep 2026 11:35:27 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id fCiJF3/Qq2reOAAAD6G6ig
+	(envelope-from <nik.borisov@suse.com>); Thu, 17 Sep 2026 11:35:27 +0000
+From: Nikolay Borisov <nik.borisov@suse.com>
+To: linux-ide@vger.kernel.org
+Cc: dlemoal@kernel.org,
+	cassel@kernel.org,
+	rosenp@gmail.com,
+	Nikolay Borisov <nik.borisov@suse.com>
+Subject: [PATCH v3] ata: sata_dwc_460ex: Don't enable interrupt if libATA core registration fails
+Date: Thu, 17 Sep 2026 14:35:26 +0300
+Message-ID: <20260917113526.1589813-1-nik.borisov@suse.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/37] scsi: st: use 16-bits defined sense codes
-To: Laurence Oberman <loberman@redhat.com>, sashiko-reviews@lists.linux.dev
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org
-References: <20260831020451.585944-1-dlemoal@kernel.org>
- <20260831020451.585944-13-dlemoal@kernel.org>
- <20260831021927.90FD21F00A3D@smtp.kernel.org>
- <2ff511fa29b801ab74ce9ee60e1257c47918c1db.camel@redhat.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <2ff511fa29b801ab74ce9ee60e1257c47918c1db.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Spam-Score: -2.80
+X-Spam-Level: 
+X-Spamd-Result: default: False [-2.80 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_TLS_ALL(0.00)[];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[kernel.org,gmail.com,suse.com];
+	RCPT_COUNT_FIVE(0.00)[5];
+	FROM_EQ_ENVFROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:mid,suse.com:email];
+	RCVD_COUNT_TWO(0.00)[2];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com]
+X-Spam-Flag: NO
 
-On 2026/09/16 22:29, Laurence Oberman wrote:
-> On Mon, 2026-08-31 at 02:19 +0000, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 1 potential
->> issue(s) to consider:
->> - [Medium] Incorrectly assigning ASC value to ASCQ in SCSI
->> tracepoint.
->> --
->>
->> commit c1f7c0aa9501c3562bd45de8a85431d940fa338b
->> Author: Damien Le Moal <dlemoal@kernel.org>
->> Subject: scsi: st: use 16-bits defined sense codes
->>
->> This commit refactors the SCSI tape driver to use the 16-bit
->> sense_code
->> field of struct scsi_sense_hdr. It replaces hard-coded additional
->> sense
->> codes and qualifiers with enum values defined in
->> include/scsi/scsi_sense.h
->> to improve code clarity.
->>
->> While reviewing this patch series, I noticed an issue introduced in
->> the
->> related change to include/trace/events/scsi.h:
->>
->>> diff --git a/include/trace/events/scsi.h
->>> b/include/trace/events/scsi.h
->>> --- a/include/trace/events/scsi.h
->>> +++ b/include/trace/events/scsi.h
->>> @@ -303,8 +303,8 @@
->>> DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->>>  		if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
->>>  		    scsi_command_normalize_sense(cmd, &sshdr)) {
->>>  			__entry->sense_key = sshdr.sense_key;
->>> -			__entry->asc = sshdr.asc;
->>> -			__entry->ascq = sshdr.ascq;
->>> +			__entry->asc = scsi_sense_asc(&sshdr);
->>> +			__entry->ascq = scsi_sense_asc(&sshdr); <-
->>> --- here
->>                                         ^^^^^^^^^^^^^^
->>
->> [Severity: Medium]
->> Is there a typo in this assignment?
->>
->> In the scsi_cmd_done_timeout_template tracepoint, __entry->ascq is
->> being
->> assigned scsi_sense_asc(&sshdr) instead of the ASCQ value. This
->> appears to
->> log the Additional Sense Code for both the asc and ascq fields, which
->> will
->> result in lost diagnostic data when userspace tools analyze SCSI
->> errors via
->> tracepoints.
->>
->> Should this use scsi_sense_ascq(&sshdr) for the ascq field instead?
-> 
-> Hello Damien
-> This seems to be real issue here that sashiko found
-> 
-> We assign the same for __entry->ascq  as we do for __entry->asc i.e.
-> scsi_sense_asc(&sshdr)
-> 
-> We need to have it as
-> 
-> +			__entry->asc = scsi_sense_asc(&sshdr);
-> +			__entry->ascq = scsi_sense_ascq(&sshdr); <--
-> 
-> Otherwise we will miss the ASCQ
+Recent 4bbc16a353a9 commit changed the timing when interrupts are
+enabled. However it didn't account for the libATA registration step. So
+it's possible that interrupts are enabled when the device is not
+registered with libATA core.
 
-Yes. That was fixed in later versions. The series that Martin queued up has this
-fix :)
+Resolve the issue by ensuring that interrupts are enabled only if the rest of the
+initialization is successful.
+
+Fixes: 4bbc16a353a9 ("ata: sata_dwc_460ex: enable SATA interrupts only after IRQ handler is registered")
+Signed-off-by: Nikolay Borisov <nik.borisov@suse.com>
+---
 
 
+Changes since v1:
+	* Added proper goto label
+Changes since v2:
+    * Rework logic so that interrupts are enabled if everything is successful
+	and don't call phy_exit otherwise, as the driver is quite broken w.r.t to it.
 
--- 
-Damien Le Moal
-Western Digital Research
+ drivers/ata/sata_dwc_460ex.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 8e3fc713891a..e74335dec42a 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1185,11 +1185,13 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	 * error_handler() to execute a dummy Softreset EH session
+ 	 */
+ 	err = ata_host_activate(host, irq, sata_dwc_isr, 0, &sata_dwc_sht);
+-	if (err)
++	if (err) {
+ 		dev_err(dev, "failed to activate host");
++	} else {
++		/* Enable SATA Interrupts */
++		sata_dwc_enable_interrupts(hsdev);
++	}
+ 
+-	/* Enable SATA Interrupts */
+-	sata_dwc_enable_interrupts(hsdev);
+ 	return 0;
+ 
+ error_out:
+--
+2.55.0
+
