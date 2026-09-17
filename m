@@ -1,63 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B7FC37F01A;
-	Thu, 17 Sep 2026 01:55:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92B693093C1;
+	Thu, 17 Sep 2026 03:14:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789610153; cv=none; b=o3/frggJ9u/J1QHj/cbzeUwUdsdChMW3qyQrEMf2IBCjWPW3arO3WJW/UaathL+O1NGxP2BW5WGRPHgFef1R37wHHrIh96jEj5Sbfdx+/dTkKqBOCrBWOK2QZzqiUS8gPFZUhTaAUIjDXkNvMhn8+r1999B/f9uz+15qAR6NDeo=
+	t=1789614869; cv=none; b=ouBUwHP/ogSHII4qFAwF8TXXrvjAmPJCMePP2GvN3wgjkWMi5Za7YpOyYwIwo+QSc3LMDejAqr1ewFCdBBJSiJa+ylEtqUPa4k8neMD8b1Hh/ucwUqMmOUpoh5SbF7alWt8Kyg39HjGOVEZGauWdyMOK2wvvl7Q6dmOFjsHlenY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789610153; c=relaxed/simple;
-	bh=leY8wMGkTfutZn5wiWzZQCJuYU1YPT6drrc823ch9VI=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 MIME-Version:Content-Type; b=TIRH4LVvHuFP9LHgHR0TnTAEusqcUUzEMRW7l2r+cknyuVIOFZLsdIAQ1gv6AL5Kq9A99akAjJDbluhniPZLwg7gsKceYCe58fpRqoJEZdjuqoYQ8ef9Uwnyq8AxwRQiU5IOvClgebDjkkVobFG1gCyODu6R9DThYPrBfbDzcR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGSeA4hB; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789614869; c=relaxed/simple;
+	bh=VEdmEHU4HRcFLiSrkc2qsVN8mU3sz6fIJalnefhVTs8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aJgOqa4TpOYYHQz4+/CxinFmuYNGqv1lsOKHQYaqdmIjL+PXKuwvCXLd/K7RJJR9CdZQ0tCbzQHyxbRx+fGkqgVXZPHdbxXMF4cHpM1JKclFh+HO7M/SfTbHZcW96ReViqmM/CR2OgDTBOS8Fjf7gIjSAmku4aD1nrkThpgOLWY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dd7KyGlP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGSeA4hB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E30EB1F000FF;
-	Thu, 17 Sep 2026 01:55:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dd7KyGlP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E36041F000FF;
+	Thu, 17 Sep 2026 03:14:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789610152;
-	bh=GEzggXJFz3MfgaB6UJ3OZqGbLL+FDfTZb4lg+3S2JQs=;
-	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=HGSeA4hBoHcTLyjeeZF8hNj0aUtpiu8QavqzySY4L8zYaWbwscqlnHnH/nnyh5E37
-	 6PoLhkU+NUpmyAMeR351E787HggYt8Z6D/TnN49erg8CHyDVAao+qVqnj6a6VhBMgt
-	 dxwquxGuGr/gRHMpnuWnB5tAPZyV76x4PvqoQpkf1IV151QtGEb//vL3f9aJ1uKmRV
-	 z3VfpDQl+8HzzWeTmCtArOdNHWbyFflYre4NniENEPRLiE2si2hnHMUvOEz61XoHzI
-	 /cnkcYqcjbIQKRF35Ex7G3NfmF+7rE+7JH9sT6Bdu6EM4IdUQ6/9Y9xZ5qpUG40JRx
-	 +rosBaM0zKtlA==
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-  linux-scsi@vger.kernel.org,  linux-ide@vger.kernel.org,  Niklas Cassel
- <cassel@kernel.org>,  linux-usb@vger.kernel.org,  Alan Stern
- <stern@rowland.harvard.edu>,  Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>,  linux-s390@vger.kernel.org,  Heiko Carstens
- <hca@linux.ibm.com>
-Subject: Re: [PATCH v6 00/40] Use defined 16-bits ASC/ASCQ combinations
-From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-In-Reply-To: <20260908090308.1085097-1-dlemoal@kernel.org>
-Message-ID: <yq14ifovdyw.fsf@mail.kernel.org>
-References: <20260908090308.1085097-1-dlemoal@kernel.org>
-Date: Wed, 16 Sep 2026 21:55:50 -0400
+	s=k20260515; t=1789614868;
+	bh=cIZz2g8Pz+PxuDxpdtRY73qiC4kxknpNb+WL0xDIPYU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Dd7KyGlPaqCchTDzmDg4Fv2fL8zWmddUEFrPpesp5b3684t0Oox1e7rZ4iT9K/c31
+	 zAy7sx94VHWO1a3XTYo7xGRVLIWb2mwHN4lTHCwWN94nz8V2/m0Vn7PlsodrHnPYgx
+	 M13jk+udCl9YWbLL5Jt/5l6OdX+ddNtlHp+NJEuOl+6NvWKqIhYqb7LkWP12um39g7
+	 gjWdZl+LxlUTwD1jQHEONoTO95OulZKSffNqtd5dBmmJkmchzx9LYSZuf2XY1f55vI
+	 /rFsvFX0L4NW3j75R2eDu51SXcEUoNo1jhQUQfpdSawwrXXGac4hVEkUY2ZivU4rSc
+	 pJxVqqjCusEKg==
+Message-ID: <f3ab4b89-627d-4711-84b0-85b887256ccf@kernel.org>
+Date: Thu, 17 Sep 2026 10:14:24 +0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 12/37] scsi: st: use 16-bits defined sense codes
+To: Laurence Oberman <loberman@redhat.com>, sashiko-reviews@lists.linux.dev
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org
+References: <20260831020451.585944-1-dlemoal@kernel.org>
+ <20260831020451.585944-13-dlemoal@kernel.org>
+ <20260831021927.90FD21F00A3D@smtp.kernel.org>
+ <2ff511fa29b801ab74ce9ee60e1257c47918c1db.camel@redhat.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <2ff511fa29b801ab74ce9ee60e1257c47918c1db.camel@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+On 2026/09/16 22:29, Laurence Oberman wrote:
+> On Mon, 2026-08-31 at 02:19 +0000, sashiko-bot@kernel.org wrote:
+>> Thank you for your contribution! Sashiko AI review found 1 potential
+>> issue(s) to consider:
+>> - [Medium] Incorrectly assigning ASC value to ASCQ in SCSI
+>> tracepoint.
+>> --
+>>
+>> commit c1f7c0aa9501c3562bd45de8a85431d940fa338b
+>> Author: Damien Le Moal <dlemoal@kernel.org>
+>> Subject: scsi: st: use 16-bits defined sense codes
+>>
+>> This commit refactors the SCSI tape driver to use the 16-bit
+>> sense_code
+>> field of struct scsi_sense_hdr. It replaces hard-coded additional
+>> sense
+>> codes and qualifiers with enum values defined in
+>> include/scsi/scsi_sense.h
+>> to improve code clarity.
+>>
+>> While reviewing this patch series, I noticed an issue introduced in
+>> the
+>> related change to include/trace/events/scsi.h:
+>>
+>>> diff --git a/include/trace/events/scsi.h
+>>> b/include/trace/events/scsi.h
+>>> --- a/include/trace/events/scsi.h
+>>> +++ b/include/trace/events/scsi.h
+>>> @@ -303,8 +303,8 @@
+>>> DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
+>>>  		if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
+>>>  		    scsi_command_normalize_sense(cmd, &sshdr)) {
+>>>  			__entry->sense_key = sshdr.sense_key;
+>>> -			__entry->asc = sshdr.asc;
+>>> -			__entry->ascq = sshdr.ascq;
+>>> +			__entry->asc = scsi_sense_asc(&sshdr);
+>>> +			__entry->ascq = scsi_sense_asc(&sshdr); <-
+>>> --- here
+>>                                         ^^^^^^^^^^^^^^
+>>
+>> [Severity: Medium]
+>> Is there a typo in this assignment?
+>>
+>> In the scsi_cmd_done_timeout_template tracepoint, __entry->ascq is
+>> being
+>> assigned scsi_sense_asc(&sshdr) instead of the ASCQ value. This
+>> appears to
+>> log the Additional Sense Code for both the asc and ascq fields, which
+>> will
+>> result in lost diagnostic data when userspace tools analyze SCSI
+>> errors via
+>> tracepoints.
+>>
+>> Should this use scsi_sense_ascq(&sshdr) for the ascq field instead?
+> 
+> Hello Damien
+> This seems to be real issue here that sashiko found
+> 
+> We assign the same for __entry->ascq  as we do for __entry->asc i.e.
+> scsi_sense_asc(&sshdr)
+> 
+> We need to have it as
+> 
+> +			__entry->asc = scsi_sense_asc(&sshdr);
+> +			__entry->ascq = scsi_sense_ascq(&sshdr); <--
+> 
+> Otherwise we will miss the ASCQ
+
+Yes. That was fixed in later versions. The series that Martin queued up has this
+fix :)
 
 
-Damien,
-
-> This patch series defines as macros all ASC/ASCQ combinations present
-> in https://www.t10.org/lists/asc-num.txt and converts the SCSI core
-> code and SCSI low level drivers to use these macros instead of
-> hard-coded ASC/ASCQs. To do this, struct scsi_sense_hdr and struct
-> scsi_failure are modified to replace the asc and ascq 8-bits fields
-> with a 16-bits sense_code field.
-
-Applied to 7.4/scsi-staging, thanks!
 
 -- 
-Martin K. Petersen
+Damien Le Moal
+Western Digital Research
