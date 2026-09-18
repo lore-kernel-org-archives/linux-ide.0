@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17E03A838A
-	for <linux-ide@vger.kernel.org>; Fri, 18 Sep 2026 12:40:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27EBA42E40C
+	for <linux-ide@vger.kernel.org>; Fri, 18 Sep 2026 12:40:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789735244; cv=none; b=Ys+PzuiyE7f4cLI8Fy0mXxiv53zQnm+It7tJ7RH8voGCRS5G5Js20rgj0iH216VN/vgb2YgRG54tWEWW3QqO1PmwcW5T1D9Li7bC9Fkvs/Mg+b+lfhmPtjZuD2BIx98MDMyDsY8Hbe9Nm6bNgugGQiJJUgoI7QPK1LaKF/07qL8=
+	t=1789735247; cv=none; b=paGQmGpElqR9ELjvYuqoEUJ6eiRwCA0Rpvnt+Jgxvnawk14F2d4kRvQszQMY5UlUuTYIzhC4EsKe9BXbxNxT+lPkblYUrPwuPHh57DwdatJmU7FukKvf41fI06B4oIgKjFPPKOkzRYc8S3Y1tfh8TL8lgxEZlhIeL+M2hTuIE9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789735244; c=relaxed/simple;
-	bh=2KCUklYn2NdsZFe4jcfKkVeFApxgif3UphIQSkmc4W0=;
+	s=arc-20240116; t=1789735247; c=relaxed/simple;
+	bh=DgSHhlBiaR5+cNGdeQtl3IHXRFmHQaxu+3k9kBQ+M1M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VuHy01qasnPQ2NwxLreoUtAW88VnAYqg9iOOZveA4BEoi7/YT61AzfVtsXr4Iob8gUvJAcV0cv7uULwoeRMj/NTokOKsmYge3kmB/V10TV8QVm0jTU9Ok3taFI4Aih3yZL3OFbPEjeKkW735BG9RKWjeFR1N3x/APP+iTcLj+oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UlhdMI/E; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=TXXVvN7kmSbZ0n9ZkVBwb6latXElY8GqkDAv3HAXkSAXbSUF508ijqUx2sdf1ngurfTuqOK6F7ZFJK8zgGche0kEKJ7t1Hz7/fROZl4jVDB6rV35h9qLWW0SEjv44GRwp6jE9+lO4C0lX9ax8Mij7YmN3ZGauZ2wW3DRxBVVOC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AqoQpZGz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UlhdMI/E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F9CB1F00893;
-	Fri, 18 Sep 2026 12:40:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AqoQpZGz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADC241F000FF;
+	Fri, 18 Sep 2026 12:40:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789735242;
-	bh=TLCyi8SxVY7DyiTdE9rAc67pFiYblsT6UZ0IZazPlP0=;
+	s=k20260515; t=1789735244;
+	bh=Lf4Q7XgiignLL80fpQHdnOIw+MyFh5LaMKArvAbS0Pk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=UlhdMI/E+7giI2XjR+i5jc/B9WM+t7ZL/GKC924eHjGoIhrOj9z+I2vUnKCfA1IOX
-	 CYfpQteCg+C8eEcvVqbKkRQyunOtfDtlyzvK0o2vcjajRXxKWINpfjwYWgQH9fjam5
-	 MtM+95cLRJLwZDn1PfL9yg1e1CTwKFQ/ITJ5ixsPrlWSCh2eS417Qa2uxSSXRxFLig
-	 Q+ZtuWIgkXT8psfKB9yeisElzKplbzXsUleDN+3o7zp3QAk5bU1+1+tpUAQlksqhoV
-	 cdTRDov5HiKqNkwSsiQAKCJS5HZCovRykaWayeqMeqREjh3W/Fc7w8zYUcKuuH+3rV
-	 3UqEVFKP4ZgHw==
+	b=AqoQpZGzFitr0bq2uotB5FzUVlXvj7UDQfF4VxYw4CLx57QqAqj8qqtvtzVmjsRkw
+	 /0+/f0txJbAe2jGrCiId/suC0sRfi95gymyEO5QlDEAHs/3e/AYl2wh/NUFlx3RuwQ
+	 2nDf2wRRdcN8Oyz5XyJKoxYBOgGl/hYHs15H7gqfWmsL0JiOXj/KjtBcb6DKglzcRT
+	 zK8EqX1boIu3Wk881AFrC/vqJX9bwFKqM8vtVieXzhmMldSTTe4NLJwlJICcC9CDUi
+	 legh3moTKtGJcTBX5XR5Wd4Wb8HRSadvcixZ7bIwrh2cFIDUsLGGHcR+mvAFfqxVg+
+	 DrLkbNPkRyriw==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org,
@@ -34,9 +34,9 @@ Cc: linux-ide@vger.kernel.org,
 	"Natikar, Basavaraj" <basavaraj.natikar@amd.com>,
 	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH 1/2] ata: libata-core: Extend Samsung LPM quirk to AMD controllers
-Date: Fri, 18 Sep 2026 14:40:32 +0200
-Message-ID: <20260918124030.1962773-5-cassel@kernel.org>
+Subject: [PATCH 2/2] ata: libata: Correct libata.force parameter documentation
+Date: Fri, 18 Sep 2026 14:40:33 +0200
+Message-ID: <20260918124030.1962773-6-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260918124030.1962773-4-cassel@kernel.org>
 References: <20260918124030.1962773-4-cassel@kernel.org>
@@ -46,99 +46,58 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4120; i=cassel@kernel.org; h=from:subject; bh=2KCUklYn2NdsZFe4jcfKkVeFApxgif3UphIQSkmc4W0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLLWGtpddVfhrpr52X3djKSXn/4b/OM4afTshPGU11M17 WtvRTGndZSyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAiqbsZGW6XKtpPZ2OYVPY0 Mir3j97TzxtKVM2eb9nl5Hb7Z8ChRZmMDFOVZSbsyLcIevPHVpKv26VHTvvmXRez+J0HBKPVbrZ sYAMA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1810; i=cassel@kernel.org; h=from:subject; bh=DgSHhlBiaR5+cNGdeQtl3IHXRFmHQaxu+3k9kBQ+M1M=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLLWGto/erZb1mueuHXJm/D+cLXErOAFW9vbjP/lx4g1c jl5v/7fUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIlE+DD80whV38d6pIr1onXO 7DR93k6D7VpfPxpxnZQwf+ie0Zf6keGfsa72bZbqy0e/eRUqL6rYxF6gdOW5p5f2YvMPu89bP7v BBAA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-A Samsung SSD 870 QVO 8TB connected to an AMD 600 Series chipset SATA
-controller is reported to time out on STANDBY IMMEDIATE during system
-suspend with med_power_with_dipm enabled. The command completes when
-using max_performance instead.
+Align the documented libata.force options with their implementation.
+The force table accepts PIO modes 0 through 6, not mode 7, and ncqati
+controls NCQ generally rather than only queued TRIM.
 
-The existing Samsung LPM quirk only matches ATI controllers, leaving
-AMD controllers unaffected. Rename it to
-ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD and extend the vendor check to AMD for
-the same Samsung SSD model patterns. Keep LPM behavior unchanged for
-other controller vendors, including Intel.
+The max_sec_1024 and max_sec_lba48 options only set transfer size
+limits. Remove the misleading claim that they can also clear them.
 
-Leave ATA_QUIRK_NO_NCQ_ON_ATI restricted to ATI, since the reported AMD
-issue concerns LPM rather than NCQ.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=221986
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/ata/libata-core.c | 15 ++++++++-------
- include/linux/libata.h    |  4 ++--
- 2 files changed, 10 insertions(+), 9 deletions(-)
+ Documentation/admin-guide/kernel-parameters.txt | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f482c0a6d7e9..92233fb25051 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2972,9 +2972,10 @@ static void ata_dev_config_lpm(struct ata_device *dev)
- 		    (dev->id[ATA_ID_SATA_CAPABILITY] & 0xe) == 0x2)
- 			dev->quirks |= ATA_QUIRK_NOLPM;
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 33cd30996e47..24459f7ff810 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3491,7 +3491,7 @@ Kernel parameters
  
--		/* ATI specific quirk */
--		if ((dev->quirks & ATA_QUIRK_NO_LPM_ON_ATI) &&
--		    ata_dev_check_adapter(dev, PCI_VENDOR_ID_ATI))
-+		/* ATI and AMD specific quirk */
-+		if ((dev->quirks & ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD) &&
-+		    (ata_dev_check_adapter(dev, PCI_VENDOR_ID_ATI) ||
-+		     ata_dev_check_adapter(dev, PCI_VENDOR_ID_AMD)))
- 			dev->quirks |= ATA_QUIRK_NOLPM;
- 	}
+ 			* SATA link speed limit: 1.5Gbps or 3.0Gbps.
  
-@@ -4136,7 +4137,7 @@ static const char * const ata_quirk_names[] = {
- 	[__ATA_QUIRK_MAX_SEC]		= "maxsec",
- 	[__ATA_QUIRK_MAX_TRIM_128M]	= "maxtrim128m",
- 	[__ATA_QUIRK_NO_NCQ_ON_ATI]	= "noncqonati",
--	[__ATA_QUIRK_NO_LPM_ON_ATI]	= "nolpmonati",
-+	[__ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD] = "nolpmonatiandamd",
- 	[__ATA_QUIRK_NO_ID_DEV_LOG]	= "noiddevlog",
- 	[__ATA_QUIRK_NO_LOG_DIR]	= "nologdir",
- 	[__ATA_QUIRK_NO_FUA]		= "nofua",
-@@ -4420,15 +4421,15 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
- 	{ "Samsung SSD 860*",		NULL,	ATA_QUIRK_NO_NCQ_TRIM |
- 						ATA_QUIRK_ZERO_AFTER_TRIM |
- 						ATA_QUIRK_NO_NCQ_ON_ATI |
--						ATA_QUIRK_NO_LPM_ON_ATI },
-+						ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD },
- 	{ "Samsung SSD 870*",		NULL,	ATA_QUIRK_NO_NCQ_TRIM |
- 						ATA_QUIRK_ZERO_AFTER_TRIM |
- 						ATA_QUIRK_NO_NCQ_ON_ATI |
--						ATA_QUIRK_NO_LPM_ON_ATI },
-+						ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD },
- 	{ "SAMSUNG*MZ7LH*",		NULL,	ATA_QUIRK_NO_NCQ_TRIM |
- 						ATA_QUIRK_ZERO_AFTER_TRIM |
- 						ATA_QUIRK_NO_NCQ_ON_ATI |
--						ATA_QUIRK_NO_LPM_ON_ATI },
-+						ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD },
- 	{ "FCCT*M500*",			NULL,	ATA_QUIRK_NO_NCQ_TRIM |
- 						ATA_QUIRK_ZERO_AFTER_TRIM },
+-			* Transfer mode: pio[0-7], mwdma[0-4] and udma[0-7].
++			* Transfer mode: pio[0-6], mwdma[0-4] and udma[0-7].
+ 			  udma[/][16,25,33,44,66,100,133] notation is also
+ 			  allowed.
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 313e96173b19..48bde275968d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -76,7 +76,7 @@ enum ata_quirks {
- 	__ATA_QUIRK_MAX_SEC,		/* Limit max sectors */
- 	__ATA_QUIRK_MAX_TRIM_128M,	/* Limit max trim size to 128M */
- 	__ATA_QUIRK_NO_NCQ_ON_ATI,	/* Disable NCQ on ATI chipset */
--	__ATA_QUIRK_NO_LPM_ON_ATI,	/* Disable LPM on ATI chipset */
-+	__ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD, /* Disable LPM on ATI and AMD chipsets */
- 	__ATA_QUIRK_NO_ID_DEV_LOG,	/* Identify device log missing */
- 	__ATA_QUIRK_NO_LOG_DIR,		/* Do not read log directory */
- 	__ATA_QUIRK_NO_FUA,		/* Do not use FUA */
-@@ -115,7 +115,7 @@ enum {
- 	ATA_QUIRK_MAX_SEC		= BIT_ULL(__ATA_QUIRK_MAX_SEC),
- 	ATA_QUIRK_MAX_TRIM_128M		= BIT_ULL(__ATA_QUIRK_MAX_TRIM_128M),
- 	ATA_QUIRK_NO_NCQ_ON_ATI		= BIT_ULL(__ATA_QUIRK_NO_NCQ_ON_ATI),
--	ATA_QUIRK_NO_LPM_ON_ATI		= BIT_ULL(__ATA_QUIRK_NO_LPM_ON_ATI),
-+	ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD	= BIT_ULL(__ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD),
- 	ATA_QUIRK_NO_ID_DEV_LOG		= BIT_ULL(__ATA_QUIRK_NO_ID_DEV_LOG),
- 	ATA_QUIRK_NO_LOG_DIR		= BIT_ULL(__ATA_QUIRK_NO_LOG_DIR),
- 	ATA_QUIRK_NO_FUA		= BIT_ULL(__ATA_QUIRK_NO_FUA),
+@@ -3509,7 +3509,7 @@ Kernel parameters
+ 
+ 			* [no]ncqtrim: Enable or disable queued DSM TRIM.
+ 
+-			* [no]ncqati: Enable or disable NCQ trim on ATI chipset.
++			* [no]ncqati: Enable or disable NCQ on ATI chipsets.
+ 
+ 			* [no]trim: Enable or disable (unqueued) TRIM.
+ 
+@@ -3540,11 +3540,9 @@ Kernel parameters
+ 
+ 			* max_sec_128: Set transfer size limit to 128 sectors.
+ 
+-			* max_sec_1024: Set or clear transfer size limit to
+-			  1024 sectors.
++			* max_sec_1024: Set transfer size limit to 1024 sectors.
+ 
+-			* max_sec_lba48: Set or clear transfer size limit to
+-			  65535 sectors.
++			* max_sec_lba48: Set transfer size limit to 65535 sectors.
+ 
+ 			* external: Mark port as external (hotplug-capable).
+ 
 -- 
 2.55.0
 
