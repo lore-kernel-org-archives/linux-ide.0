@@ -1,103 +1,97 @@
-Received: from mail-pj2-f43.google.com (mail-pj2-f43.google.com [74.125.227.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5F19395D8B
-	for <linux-ide@vger.kernel.org>; Sat, 19 Sep 2026 22:26:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19C0377023
+	for <linux-ide@vger.kernel.org>; Sat, 19 Sep 2026 22:46:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789856788; cv=none; b=XZKje4rR2Y6PLV2QLarxFSQkYNKw6UGVAO4ZskcB++HaBBQ0FJLwiyK+VEpcqAshOicF94y2NDcq7PEZp0H33eJJfF0/53xRreiVZFLqWXtJ/n1OPOT/rBvM2eAixBO919GeHvA3xOSmtRPF3HP5SM+Lx/7Kca/w7xoxxZigRPs=
+	t=1789858010; cv=none; b=r80Lf7hsaKmAIdjvcQGQp4MHE7s64WlCFPly/nQzZGegnicTbV9b8xRHud7Hb0IGnlcb5yw5lMW6irBpWDyo3+Npx986jOGvPoGpXI01jkjfr+Nw547wYqKMJ1Wa1OBQ4Q5nf6h5eMWwzNH7WtZkLxW6zgEfT6m7SgcA07yHPvU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789856788; c=relaxed/simple;
-	bh=EhdLnzzAc5TdUIMAqbDDPh8BUtueMtNVdBdFvcaW01Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aJo9jdHHdZUBwDedTM06k2l4W39zM/38EDyVPYEHL+BGVmUe1Bys5GWaxQ2sR5qjDTGJx6lVWAoWF2Kl9v/HCM8mvm7yBz9cA6ZV1O6XF1y3a5+T4l/ACrbnNWe3JM3qYgTWzEHhZ6bBxBg6dxlyJ1CoUIH2xfWFNkRm11czZjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qlUXIYWl; arc=none smtp.client-ip=74.125.227.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789858010; c=relaxed/simple;
+	bh=KddJ2xqtJjLmjHGBi+U1D2o56XJBCsaOMwue1cF+3fQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=pImx2Ggj493F/440iQxSic/WIpD3kjzaiMfK+AGA6IEwKGYG8w9vfyw997demHyHEghHGhfc2OaGHwiBwwVDhwX0dtBg6+DlSfRtAuREozvCAaUm2tTMZYKDvTAsV0Ur80b4wkm6C99li0tr+Jw1pVAi4PhoWlU+0aQHgCm3rhg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BK6OWGeX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qlUXIYWl"
-Received: by mail-pj2-f43.google.com with SMTP id 98e67ed59e1d1-396ccd4f99dso2024976a91.2
-        for <linux-ide@vger.kernel.org>; Sat, 19 Sep 2026 15:26:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789856786; x=1790461586; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=UROJ2rA2pOTAq0U11/K+a+sFTni9M+0S8RdMLsEoDQ0=;
-        b=qlUXIYWlFm8eZNYW3MZ9sT4OpbJBe8Emc75urx6VDQLq7fRMnuyOIcrjkUQhlu24xG
-         XJLCyYCw2MJJL1Og066jkhbiokDL5dLU5vqErvqrJeWfe2Oz2azdiYEtzV21w92q4sLZ
-         BUo6iJYblQ2qljR3nVeub07Aib92L1z5+trlj/21wZHYv2PCAuI9Y1w1HfvF21IfBn02
-         dez6ddKhkpoyE2N284lOLwVz17EeVDQsl+LfbZD+DxyyTQ09vZjSns1rABSkTusWOM5A
-         9WIcuD7uGp2n2kcRzbiZ6WPM8MW5kr0CPiGWrW2GIpmYVOKQbRgPkjvpZrI3U7oFroZh
-         sKmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789856786; x=1790461586;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=UROJ2rA2pOTAq0U11/K+a+sFTni9M+0S8RdMLsEoDQ0=;
-        b=BweA3LixrhtI8q8edNLCdgdaFSoLeX80meChBToTCLfcfUC2NnhebbZ51zJ9JXZBAc
-         Qr+r6tr9dhsWUZvB9H61y9bUE2atAgHHCe197x8D1hsDyXBi9tEwRtlK4ubrIIuhbhZ3
-         SnTdxHwBx178KBRH+igTxNBz/j0LG7SyplM0NDs84sRoruCrmUMn8fzunWVSOHE+Tdt8
-         hUOHICJkz14EmPn9A88DreHeSgAd25WOMFq2e67TsUDzqcRwxVe0aDHUfexRXeVrainS
-         dpv9Nk0LjorZqZUvxCvg+krYjVdOqiGDXsyIv91bDOAxviD4KEtYKPneSrpZbmHqeL04
-         FKEg==
-X-Gm-Message-State: AFuF++n3yA8Oi04CiYbRwlyVsZbzgWiGDOgoMiX9tF0M6R/njNh4FzHM
-	XnJuAPADimrpQ3BcdBFSHgHlYPrKQUHrBZnqWogqQ6ElttAec3hT0Rlxg4UpJcGF
-X-Gm-Gg: AYBFou3O/q6WBsiYqgYSiM06Bfb5Dygky2SI5z99uCVZ9T5Ba/TvAAK1Td7EggLJJwf
-	MdUzKdaCsNmilZYvJk8s1lB7eErJQzdF3bjRUMdXMb5/MS4f1auQA3dOwbgWPAQSFc704HhOKpB
-	T48kuUVKhi1J5P5D0kxUHAColNmST5S3evVmPt/H5eoZ9ynYLhWVKBsu8OCZnTKXLIlymgNh8Ly
-	FAdC7S1QsSVHqOj53VmO8XxifI7dbgN71/ho0rkMOSClMCGVVzlz5KA7gt7JgYHSuMqya5gsp8d
-	OZ3977pKevus0VOwjxT9IKAL9FTo+j1ymO3mBiaXASXzji5DwUCXN38OpL/BeSem4ijBz5E2Z3R
-	4tN6Q6QEti+l1xXr5H2/ZxWV38Eawl5EL3oCX8EIVMdpCWee3y5EMH0b4Ma/PrIp/jC0FVDECai
-	gpC0kelp5SdnqUed1LSS4I1SqgvHdGMOL9k4GctK31GRkiVBLNxdNrlT8D9vJyKmYd/KfXWpjSD
-	mdxDE76SpXrM3VsGEKqQtnztTnTomzbIM/CJizEE6Yrca5116F8me4eC4aoip+9eaZZdw5GoBNT
-	C5zkPtZZxw==
-X-Received: by 2002:a17:90b:2709:b0:39e:6c69:9b8e with SMTP id 98e67ed59e1d1-39e6c69b257mr4682971a91.51.1789856786307;
-        Sat, 19 Sep 2026 15:26:26 -0700 (PDT)
-Received: from phui-2.c.googlers.com.com (78.123.83.34.bc.googleusercontent.com. [34.83.123.78])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e6cb0190bsm6166605a91.13.2026.09.19.15.26.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Sep 2026 15:26:26 -0700 (PDT)
-From: Hui Peng <benquike@gmail.com>
-To: dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] ata: libata-scsi: reject multi-sector taskfile commands when dev->multi_count is 0
-Date: Sat, 19 Sep 2026 22:26:25 +0000
-Message-ID: <20260919222625.3797581-1-benquike@gmail.com>
-X-Mailer: git-send-email 2.55.0.1082.g2b9226bbc0-goog
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BK6OWGeX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E37DF1F000FF;
+	Sat, 19 Sep 2026 22:46:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789858007;
+	bh=8vdpaoz6lbir+kbmaaLazvFR035YQcv/RVg0OeCAyGI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BK6OWGeX++1ESVh/sGrvCZRkCqT8Z4bwtlXhWboY2xfVTrppJhFkQaTe+D6v64+p5
+	 WM6kqVI2fABvP/QVM1m2d4DFL3PiObzINypsOzR55Eovh3a9+Q8OtAc2yIQtzj4wgb
+	 DR5v5crCoM+uIxirSN+TwBojm2gx1htbo+YnZKbIrtUJqahbkhJDxgevn9nPBdSYHf
+	 JRLH/DSROO8TqO0YJH/Ffk/+XEbXOiDp83o2Vd+3nHlaTNIrhs0dUnIvenxwo/GPUo
+	 w6NIsIpLCCNwpPJPK27SflMgESTitnnAN4rdzQEtoQbPyNb6p+oydtkt8Np0u5oNy/
+	 isRvXVM+Urxkw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ata: libata-scsi: reject multi-sector taskfile commands
+ when dev->multi_count is 0
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hui Peng" <benquike@gmail.com>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260919222625.3797581-1-benquike@gmail.com>
+References: <20260919222625.3797581-1-benquike@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 19 Sep 2026 22:46:46 +0000
+Message-Id: <20260919224646.E37DF1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-In ata_scsi_pass_thru() (drivers/ata/libata-scsi.c), issuing
-ATA_CMD_READ_MULTI / ATA_CMD_WRITE_MULTI / ATA_CMD_READ_MULTI_EXT /
-ATA_CMD_WRITE_MULTI_EXT / ATA_CMD_WRITE_MULTI_FUA_EXT via SG_IO when
-dev->multi_count == 0 sets qc->sect_size = 0 and triggers a divide-by-
-zero or WARN_ON in the ATA PIO/taskfile path. Reject ATA_PROT_PIO multi-
-sector commands with -EINVAL when dev->multi_count == 0.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] scsi: incorrect error field pointer for ATA_32 variable length CDBs
+--
 
-Fixes: c6fd280766a0 ("Move libata to drivers/ata.")
-Assisted-by: LLM
-Signed-off-by: Hui Peng <benquike@gmail.com>
----
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b3666519b648..c99f2845d09b 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3507,6 +3507,11 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	if (is_multi_taskfile(tf)) {
- 		unsigned int multi_count = 1 << (cdb[1] >> 5);
- 
-+		if (!dev->multi_count) {
-+			fp = (cdb[0] == ATA_16) ? 14 : 9;
-+			goto invalid_fld;
-+		}
-+
- 		/* compare the passed through multi_count
- 		 * with the cached multi_count of libata
- 		 */
+commit 19f1f1458eecf6dc97d38273c4c750d2aff47ab1
+Author: Hui Peng <benquike@gmail.com>
+
+ata: libata-scsi: reject multi-sector taskfile commands when dev->multi_cou=
+nt is 0
+
+This patch rejects ATA_PROT_PIO multi-sector commands with -EINVAL when=20
+dev->multi_count is 0. It does this by catching the condition early and=20
+triggering an error path to avoid divide-by-zero or warnings in the=20
+taskfile path.
+
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index d2160ee7ca7d4..3fc4f0377e991 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3473,6 +3473,11 @@ static unsigned int ata_scsi_pass_thru(struct ata_=
+queued_cmd *qc)
+>  	if (is_multi_taskfile(tf)) {
+>  		unsigned int multi_count =3D 1 << (cdb[1] >> 5);
+> =20
+> +		if (!dev->multi_count) {
+> +			fp =3D (cdb[0] =3D=3D ATA_16) ? 14 : 9;
+
+[Severity: Low]
+Does this fallback to 9 incorrectly handle ATA_32 variable length CDBs?
+
+When an ATA_32 pass-through command specifies a multi-sector command in
+ata_scsi_pass_thru() but the device does not support it, this code rejects
+the command and sets the invalid field pointer (fp) to 9. For an ATA_12
+command, byte 9 is the command field, but for an ATA_32 variable length CDB
+(opcode 0x7F), byte 9 is the Service Action lower byte, and the command
+field is at byte 25.
+
+Could this result in the SCSI sense data incorrectly pointing to byte 9
+instead of byte 25 on the error path for ATA_32 commands?
+
+> +			goto invalid_fld;
+> +		}
+> +
+>  		/* compare the passed through multi_count
+>  		 * with the cached multi_count of libata
+>  		 */
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260919222625.3797=
+581-1-benquike@gmail.com?part=3D1
