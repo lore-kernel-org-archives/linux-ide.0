@@ -1,40 +1,33 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 728A021ABC9;
-	Wed, 23 Sep 2026 01:22:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF9B9439F80;
+	Wed, 23 Sep 2026 05:53:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790126575; cv=none; b=gOhig31Vi/ul7PiKhJh5s+gHZptOTwT3RaHQKjh5mFqU/yDk9rQD+l0VbTNRaQaW524nmWQKR122GsagcOj7b+YXnAZ0cb7ApsdCv4sLT9GejrCbI6TwrgeTkF4yPKYP9sPOxrhTx9c/56Zo02ZmOUBctf/kWN6dg6zmDMYnf5c=
+	t=1790142827; cv=none; b=ADmQ2AfJMSftK5XaanLks2Bs3eusmMOopH/vTSO8GarsLB4J8TUtdES/j7eHzuPyuIChIEpRsiUwOrhapqoOKzv3/J9/NMHIaIzUIwjeKrXKO+jnnnuk1JJAsIogVhfEg0yVWQznBMhC6z+eImc1tZskfRuNKwpNfzkhpLuEQsk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790126575; c=relaxed/simple;
-	bh=A+3vYfrTUr9mwE1ZcCgBnFC9WxVY09IUFMKr26VLjwg=;
+	s=arc-20240116; t=1790142827; c=relaxed/simple;
+	bh=hRhZeDTazcOK82PbncOpjnCk8Dr96KRYQ/HLjGK6LoQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IxKRmEaoAu1kXEWVNNDHsE5lxcIoMCElvG8NYv8H+qoNU6Q4zi/0EGe21JBh2/5h5Yk9wRkthOaSzn8HPz9mA7f2T6iaTL8e/rYhUDUSJkHxpX4xOnz6CDfUx92wUbchQt+9gBiKtwnFJovHCPm+KlPSRyu5gS3aYckReyJMdBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 9478f0cab6ec11f19a56ed5b684f684d-20260923
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:d80b21c5-c1e1-4552-9cf1-5d341d35dd68,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:7db8b62,CLOUDID:60354df2836bd219256cc746932e7531,BulkI
-	D:nil,BulkQuantity:0,SF:80|81|82|83|102|865|898,TC:nil,Content:0|15|52|99,
-	EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
-	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 9478f0cab6ec11f19a56ed5b684f684d-20260923
-X-User: xiaopei01@kylinos.cn
-Received: from [10.42.12.251] [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <xiaopei01@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_128_GCM_SHA256 128/128)
-	with ESMTP id 982311563; Wed, 23 Sep 2026 09:17:44 +0800
-Message-ID: <63bf9e57-1edf-4e1d-8195-99be056f075a@kylinos.cn>
-Date: Wed, 23 Sep 2026 09:17:41 +0800
+	 In-Reply-To:Content-Type; b=O92tmpzonHfse7NVJuosG5L6iEBa8535pFLHpr4OUi0KIYssgUBrbVbJYRxp1+t9hLjgWHIuWUCB2RCYSx5sJ8z9oBvrOD5Ex+pPdA0r8fmi70JhIa/Hk3mC9zDswSersJhSN4LNPoNngBjPkWZlE5PQ/WIxi6YKQbGXGMGcPrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OH+0cT6f; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OH+0cT6f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A40B31F00898;
+	Wed, 23 Sep 2026 05:53:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790142825;
+	bh=Zgd9qOH7KO1+lE+JbjJc9wdRQruoNPx1tM5AUV5eDso=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=OH+0cT6fcjM2VVyi8zulCUpyZ5zLXkP0IVKApIz1dEFoxAS4N2+4q26QcIYYt3lfD
+	 WvOjpComfGXVa30HSDf2D6U4T+kF7AUzULA9dFpozP1sSpsr2quStv8WaHD5n63dtM
+	 aYeASZn3n/UAHZpJ/VK9G03/7b3S0XJNSxbbV9g8iJfwfkh4si2NsIgcjydPFbkaJ8
+	 P4DOXJJkSfS75ZL6Wh2/540emcPTUUuO3OVAu+/BdKeZNpnANTIlN0C9gh03CtIkb3
+	 09qXGLl7SaqCOYf2YvbToPei7q6nkcy1pTdjGTAT5R+A9j1ymV92cc9ZJclK8xS6QS
+	 G+Wle1QJIwW6g==
+Message-ID: <345ac5c3-2071-4c52-9793-61173cbc72d4@kernel.org>
+Date: Wed, 23 Sep 2026 14:53:42 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -42,65 +35,51 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/2] ata: pata_parport: pin the protocol module before
- device_register()
-To: Niklas Cassel <cassel@kernel.org>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <cover.1790047457.git.xiaopei01@kylinos.cn>
- <952bac5f61dc69079c3ffe62d6392bcc89f6aac0.1790047457.git.xiaopei01@kylinos.cn>
- <arKWUwJeXUdGHpp0@ryzen>
-From: Pei Xiao <xiaopei01@kylinos.cn>
-In-Reply-To: <arKWUwJeXUdGHpp0@ryzen>
+Subject: Re: [PATCH] ata: libata-scsi: bound the ATA passthru sense descriptor
+ writes
+To: Matthias Goergens <matthias.goergens@gmail.com>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20260922182655.2423663-1-matthias.goergens@gmail.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260922182655.2423663-1-matthias.goergens@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
+On 9/23/26 03:26, Matthias Goergens wrote:
+> When an ATA PASS-THROUGH command to an ATAPI device fails, the sense
+> buffer holds the device's REQUEST SENSE reply, and
+> ata_scsi_set_passthru_sense_fields() trusts its additional length
+> byte, sb[7], when adding the ATA Status Return descriptor.  A faulty
+> or malicious device can use that to make the kernel read and write
+> past the 96-byte buffer in three ways:
+> 
+> - scsi_sense_desc_find() is passed sb[7] + 8 as the buffer length, so
+>   its clamp against sb[7] does nothing and the walk runs off the end.
+> - A type-9 descriptor found near the end is filled in unchecked.
+> - A new descriptor at sb[8 + len] needs len + 22 bytes, not len + 14,
+>   so len 75..82 writes up to 8 bytes past the end.
+> 
+> Reproduced with KASAN under qemu, with the emulated ATAPI REQUEST SENSE
+> reply patched:
+> 
+>   BUG: KASAN: slab-out-of-bounds in scsi_sense_desc_find+0x1a5/0x210
+>   BUG: KASAN: slab-out-of-bounds in ata_scsi_qc_complete+0x1a15/0x1a50
+> 
+> Both are gone with this patch, and a valid descriptor is still filled
+> in.
+> 
+> Fixes: 97981926224a ("ata: libata-scsi: Do not overwrite valid sense data when CK_COND=1")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Matthias Goergens <matthias.goergens@gmail.com>
 
+Looks good.
 
-在 2026/9/22 22:53, Niklas Cassel 写道:
-> Hello Pei,
-> 
-> On Tue, Sep 22, 2026 at 11:38:00AM +0800, Pei Xiao wrote:
->> pi_init_one() calls device_register() before try_module_get(). Between
->> these two calls the device is already visible but the module is not
->> pinned yet, so an unload in this window leaves pi->proto dangling:
->>
->>     pi_init_one()                       rmmod -f <proto>
->>     --------------------------------------------------------
->>     device_register(&pi->dev)
->>          device visible on the bus
->>                                            module memory freed
->>          pi->proto = pr        <- writes into freed memory / dangles
->>          try_module_get(...)   <- too late, module already gone
->>
->> Take the module reference before registering the device, and drop it
->> on the device_register() failure path.
->>
->> Fixes: 246a1c4c6b7f ("ata: pata_parport: add driver (PARIDE replacement)")
->> Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
-> 
-> Looking at the code, this race cannot happen.
-> 
-> All three callers hold pi_mutex throughout pi_init_one().
-> 
-> pata_parport_unregister_driver() also acquires the mutex
-> before unregistering.
-> 
-> Thus, unload cannot complete at the same time as pi_init_one().
-> So the motivation looks wrong.
-> 
-> Additionally, rmmod -f bypasses a non-zero module reference count,
-> so I don't see how taking a refcount earlier would solve a rmmod -f.
-Yes, you're right — force unload doesn't really solve this issue. Thanks
-for pointing it out.
-  Thanks for your reply, and sorry for the noise.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-Pei.
-Thanks.
-> 
-> Are you building your kernel with CONFIG_MODULE_FORCE_UNLOAD ?
-> 
-> 
-> Kind regards,
-> Niklas
-
+-- 
+Damien Le Moal
+Western Digital Research
