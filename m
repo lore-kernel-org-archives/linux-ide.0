@@ -1,143 +1,242 @@
-Received: from mail-pj2-f43.google.com (mail-pj2-f43.google.com [74.125.227.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07CF442122E
-	for <linux-ide@vger.kernel.org>; Wed, 23 Sep 2026 17:52:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E08441F346;
+	Wed, 23 Sep 2026 18:05:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790185932; cv=none; b=NaKMfHXjr0305e3wQyK7tpndjc5NclWrYBYC/GFf5SPxhx/hF7ImhOsraeP91rGH3YAcnb/R6RAliceex5SeOcYjVva+OWGRK/wP3yp5TH3Qlhj2iqvtxoxA9eEoh3pb/FeOx6fPKen+TA60dLti6bXdvZK/vlodtbDVDKHPD7Y=
+	t=1790186746; cv=none; b=KYBfrM/nKZNEiSFCXYlXruUw9k9uKUIHiYck/LFy0LXQnLbI1BP5pR3kF802m1kWneVXN21IHSZbARTZELGeE5PBD1kM4V4SypHfGbjomtfwJhp47C1qWB0i93MftuKuNfWUMgTl4n32HUP/wlille5WFBYzQ2M1Y7pfMLx3HuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790185932; c=relaxed/simple;
-	bh=QFb8iVySwyLfgXL7jDS8KaEsZGAjMl/5sUCUCwPAoxs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OMroelOM7n3o/sNGdRmhETf4XT8MOq97hIC1/UJMKC8Iic7FgSmkSTgg/qqJZHkHjUcKd+kd4v7mQdJeyDZs3VnS7BloXi9kQFAWLixsE5dmJJeFVqBa0ONOoubRvljj6vcTFcw/hjrGdVhwAC/bUY37rbSnOYUvqJiVpvIRRg8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KF5ZBuj9; arc=none smtp.client-ip=74.125.227.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790186746; c=relaxed/simple;
+	bh=8WXsQJSj+q5ed5fpNXNcq7r7vWPOOud5m2cwjZhsFG4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=KdkO3+4Ffr6PoPxDSeHKHTrrOOYWyU4Q5pWdiq4oVQwVoZ9kQNREr5Ic9nIUGfYK7bpka0uzhzHsqNeH2w1CL99zvRPWeR78PnYpswpPJDFSwlTDR3sB5HVHbacuYncVj8fc9JmzL3vGmuCCKnDpO1KO3qTyvlNO0HzrLKYieBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DmtLM1Xu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KF5ZBuj9"
-Received: by mail-pj2-f43.google.com with SMTP id 98e67ed59e1d1-396ccb1a98fso921130a91.1
-        for <linux-ide@vger.kernel.org>; Wed, 23 Sep 2026 10:52:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790185928; x=1790790728; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Clx5xb7m9CpojaBgnGTvFUUi96mrh39iGvs9B9m14SA=;
-        b=KF5ZBuj9T11cCy2zNNN7Wt4wYfK8che2xWx0gjrDmkcpBWsDgDCVcE2P+9fC+FOUDT
-         Y0BYAmWLvjatoxkM2nQR5qptC56N8hxbnzMrbMHzN3aFDN96yy7s2OYfJVNRk0cSnX/H
-         sx3TVSrHFsDD9dKziaRyuuC9pOMhrUYyedLpcngUcBD6DZ4eoN9jERuiMthRjDTeDn8m
-         +dGet01OM80724rpSKeGkOepXmPNSv8ameyq660bKOw+0+WuRGG2ptEI/yk5+YoHlX4F
-         SsQ8wZ0AX9sLDfUMg44dAcaiCcsSgG6tSfpO7UQ9hvoQwbNyCSB4qM+6woboRZndKd5R
-         EbZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790185928; x=1790790728;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Clx5xb7m9CpojaBgnGTvFUUi96mrh39iGvs9B9m14SA=;
-        b=QohDUD2LaiPUHL6FLfotW5HBLEvU4y927FMID4llL8PGgzOj0typJfRrYUkZMfLFsD
-         Kjkjv/v1HiHOpw76EeO7mETZ5KXIwaRaVlwEb0z6CcpU5Kr2zjilwlvytduuGUVmjVdB
-         IeNMDm3HdqIzTc956Cm+YYKHOs89hWNr+wOtqstlLarl93V5U8Vq6L+6fWkz+OgoLwTa
-         z4beOGHBTci8FAHEoH7LONJOL2R4ua3lQHL0yANzMPS6FfTphVgDq0c43ohuBCBtTzml
-         M0vb72CfPa81esvwJnbaGdXm3hvdekcGeJkVzTiBGsZAWJ5vG2CmUnwBpB8D7VtU0juw
-         fYqQ==
-X-Gm-Message-State: AFuF++miM2NUDr67604Hdsyag1ggOrU6PQhlczwxkyicSZ/nFGj5A7bu
-	O+g9a48JkkZNXud7EzSZ1jQekPryaHusOf4fvczEs2/8WIcBY1T7uqLW
-X-Gm-Gg: AYBFou0e3v9OBck77nQw5IYFjvPYy1TTf2ZiQfpYuUNU9it4v4kL2dZ4DmzkMNk4HT/
-	rhKg8wUW2LPcxnKagfMkUfJSgD5mCJldxelpKSVvihr0FifjEM02HEKUruEYRa7FtnnQljJn9eO
-	qAIw6I58IbosoeZhhruiEbEhpkQkyfBf9tnBOssiooNMqhCJkQq8y8WVkjAhKW9IXxRvBfPCBrK
-	MB9BEOViJI/Q8oJeuB3YdOiX3+qZOjHNwVLEgkTYs7AJ78GqVQpecOSXRBvi2gVJnCdIiOJTriW
-	e9MgTplW+4hdvoulYXhVARTAYUTZ4M7Q+fxwN+LKWqodkj90ZpZM31GrCzMZtw/q7xPE91/ae1U
-	YMtupUK8VeW87d7YlgfLVDYRlQFBDN//S5vd/dqWpJ3iXDxUIg0OaXd25RJRpaW0+B+KePDp/77
-	PGllx7LlTP+GLAiNiOiFVb2crxtwd/aySpYNWkN+G3+fbddOvzQSw1rddZbdgOKHvJvo5B/DPkG
-	77j5abBcnJLuhszSXpoPX0/P6WtnZXFnHwY2mivW+9ukyt53t1VdPLP2mdILm68gl679YmkIPoP
-	DHf/xlbl1Fj6I2qeBtrChq41gWMoYj/uFG1trrmXL+iony/REPl6zhPvD0V46w==
-X-Received: by 2002:a17:90b:578f:b0:39e:4c80:44b7 with SMTP id 98e67ed59e1d1-3a07e513903mr3003339a91.26.1790185927616;
-        Wed, 23 Sep 2026 10:52:07 -0700 (PDT)
-Received: from spider.bream-herring.ts.net ([103.252.203.158])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a09738f98asm208110a91.15.2026.09.23.10.52.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Sep 2026 10:52:07 -0700 (PDT)
-From: Matthias Goergens <matthias.goergens@gmail.com>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH v2] ata: libata-scsi: bound the ATA passthru sense descriptor writes
-Date: Thu, 24 Sep 2026 01:52:03 +0800
-Message-ID: <20260923175203.1576825-1-matthias.goergens@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DmtLM1Xu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E88CB1F000FF;
+	Wed, 23 Sep 2026 18:05:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790186745;
+	bh=MrsQprWvZDwjFr3y2ZcgkvbrEea4jAcmzV26nF6XxKM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=DmtLM1Xu4dsHuCSbO7Krc7Lzu9BiBsFGudKMRXtLe9CFENFaZDV9Mc7uS88RJQyRK
+	 n1PwQBHi7rT6ACQtwQPjgYRRV7t5ULwDLGCkiWkMP9sgTEZdO/ZZaqUjHUwXdL9TC5
+	 GDa8BMg3zqe3VgL5GiTyNZEX+/OM12PbZ/o+jakg38IVnU4+98NarxCW7cqun0n9bq
+	 e2UKslRXjuzTB+VBSNgOMeeVswhUGoJwNA2jbhREdH9Q5htG1WKpCAb5LIwVnaHV04
+	 1nLTOlfJz83c28eAtCx+xjFt9PvClQJCLbOPeMCDQCy/tmiE23d9mjG7f1c0s/Nr8N
+	 ythvuLckLp9OQ==
+Date: Wed, 23 Sep 2026 13:05:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+	"H . Peter Anvin" <hpa@zytor.com>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	"open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <linux-kernel@vger.kernel.org>,
+	"open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>,
+	david.laight.linux@gmail.com,
+	John Smith <imjohnsmith4000@gmail.com>,
+	Lennert Buytenhek <kernel@wantstofly.org>,
+	Roland Waltersson <roland.waltersson@netinsight.net>,
+	Mikael Etienne <mikael1022bzh@gmail.com>,
+	Arthur Husband <artmoty@gmail.com>,
+	Alvin Lim <alvinwylim@gmail.com>
+Subject: Re: [PATCH v2 1/2] x86/PCI: Disable enhanced atomics on some AMD
+ PCIe ports
+Message-ID: <20260923180543.GA1874684@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <04147d52-58d3-49c6-9d93-ce9e63beed35@amd.com>
 
-When an ATA PASS-THROUGH command to an ATAPI device fails, the sense
-buffer holds the device's REQUEST SENSE reply, and
-ata_scsi_set_passthru_sense_fields() trusts its additional length
-byte, sb[7], when adding the ATA Status Return descriptor.  A faulty
-or malicious device can use that to make the kernel read and write
-past the 96-byte buffer in three ways:
+On Wed, Sep 23, 2026 at 12:30:59PM -0500, Mario Limonciello wrote:
+> On 9/23/26 12:12, Bjorn Helgaas wrote:
+> > On Tue, Sep 08, 2026 at 02:05:59PM -0500, Mario Limonciello wrote:
+> > > There have been multiple reports of data corruption that can occur
+> > > with 64-bit DMA when the IOMMU is enabled. This occurs due to some
+> > > BIOSes enabling enhanced atomic operations on PCIe ports.
+> > > 
+> > > When enhanced atomic operations are enabled on PCIe ports for some
+> > > models, data corruption occurs when the 32-bit IOVA space is exhausted.
+> > > The problem is reported on storage devices, but can affect any device
+> > > that uses 64 bit DMA.
+> > > 
+> > > Disable enhanced atomics using SMN for NBIO 7.7 and 7.11 based models.
+> > 
+> > Can this issue happen without IOMMU?  Devices can do 64-bit DMA even
+> > without an IOMMU being enabled.
+> 
+> Yes; it can technically happen without IOMMU enabled as well.
+> 
+> The issue happens in NBIO /before/ IOMMU decodes it.
+> 
+> > When I asked Gemini to explain this, it suggested that "enhanced
+> > atomics" is an AMD NBIO feature that translates PCIe AtomicOps into
+> > native Infinity Fabric atomic transactions.  But I guess the issue
+> > affects any DMA above 4GB, not just AtomicOps, right?
+> 
+> That explanation isn't 100% correct.  Yes; it is an NBIO feature, but the
+> issue is related with how some devices interact with the upper bits of MWr64
+> TLPs.
+> 
+> This feature should not be enabled on any ports on these SoCs being quirked.
 
-- scsi_sense_desc_find() is passed sb[7] + 8 as the buffer length, so
-  its clamp against sb[7] does nothing and the walk runs off the end.
-- A type-9 descriptor found near the end is filled in unchecked.
-- A new descriptor at sb[8 + len] needs len + 22 bytes, not len + 14,
-  so len 75..82 writes up to 8 bytes past the end.
+What do you think of the log below?  Since it can happen without
+IOMMU, I think it's better to omit it so people don't think disabling
+the IOMMU is a workaround.
 
-Reproduced with KASAN under qemu, with the emulated ATAPI REQUEST SENSE
-reply patched:
+  x86/PCI: Disable enhanced atomics on AMD NBIO 7.7 and 7.11
 
-  BUG: KASAN: slab-out-of-bounds in scsi_sense_desc_find+0x1a5/0x210
-  BUG: KASAN: slab-out-of-bounds in ata_scsi_qc_complete+0x1a15/0x1a50
+  Multiple users report data corruption during 64-bit DMA transfers on
+  systems with AMD NBIO 7.7 and 7.11 controllers.
 
-Both are gone with this patch, and a valid descriptor is still filled
-in.
+  This occurs when BIOS enables AMD "enhanced atomic operations" on PCIe Root
+  Ports. When enhanced atomics are enabled, any 64-bit DMA access may be
+  corrupted.
 
-Fixes: 97981926224a ("ata: libata-scsi: Do not overwrite valid sense data when CK_COND=1")
-Cc: stable@vger.kernel.org
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Matthias Goergens <matthias.goergens@gmail.com>
----
-v2: check the found descriptor's offset instead of forming desc + 14,
-which could point past the end of the buffer, as Niklas suggested.  The
-two conditions are equivalent, so I kept Damien's Reviewed-by.
+  Disable enhanced atomics using SMN for NBIO 7.7 and 7.11 based models.
 
-v1: https://lore.kernel.org/all/20260922182655.2423663-1-matthias.goergens@gmail.com/
 
- drivers/ata/libata-scsi.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 7e22bbc382384..8f9aa97a519d1 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -261,12 +261,18 @@ static void ata_scsi_set_passthru_sense_fields(struct ata_queued_cmd *qc)
- 
- 		/* descriptor format */
- 		len = sb[7];
--		desc = (char *)scsi_sense_desc_find(sb, len + 8, 9);
-+		desc = (char *)scsi_sense_desc_find(sb, SCSI_SENSE_BUFFERSIZE, 9);
- 		if (!desc) {
--			if (SCSI_SENSE_BUFFERSIZE < len + 14)
-+			/*
-+			 * The descriptor is written at sb[8 + len] and is 14
-+			 * bytes long, so it needs len + 22 bytes of buffer.
-+			 */
-+			if (len + 22 > SCSI_SENSE_BUFFERSIZE)
- 				return;
- 			sb[7] = len + 14;
- 			desc = sb + 8 + len;
-+		} else if (desc - sb > SCSI_SENSE_BUFFERSIZE - 14) {
-+			return;
- 		}
- 		desc[0] = 9;
- 		desc[1] = 12;
-
-base-commit: 40288c9206c17eb66a603262e06a58d300d0f279
--- 
-2.55.0
-
+> > > Cc: david.laight.linux@gmail.com
+> > > Cc: John Smith <imjohnsmith4000@gmail.com>
+> > > Cc: Lennert Buytenhek <kernel@wantstofly.org>
+> > > Cc: Niklas Cassel <cassel@kernel.org>
+> > > Cc: Roland Waltersson <roland.waltersson@netinsight.net>
+> > > Reported-by: Mikael Etienne <mikael1022bzh@gmail.com>
+> > > Closes: https://lore.kernel.org/all/178789300872.392066.15963676631650361573@gmail.com/
+> > > Reported-by: Arthur Husband <artmoty@gmail.com>
+> > > Closes: https://lore.kernel.org/linux-ide/20260406222335.379935-1-artmoty@gmail.com/
+> > > Reported-by: Alvin Lim <alvinwylim@gmail.com>
+> > > Closes: https://lore.kernel.org/linux-ide/20260621100844.1224301-1-alvinwylim@gmail.com/
+> > > Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> > > ---
+> > > v2:
+> > >   * Apply to suspend/resume as well.
+> > > ---
+> > >   arch/x86/pci/fixup.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
+> > >   1 file changed, 99 insertions(+)
+> > > 
+> > > diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> > > index b301c6c8df753..79e4338e4b876 100644
+> > > --- a/arch/x86/pci/fixup.c
+> > > +++ b/arch/x86/pci/fixup.c
+> > > @@ -886,6 +886,105 @@ static void quirk_clear_strap_no_soft_reset_dev2_f0(struct pci_dev *dev)
+> > >   	}
+> > >   }
+> > >   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15b8, quirk_clear_strap_no_soft_reset_dev2_f0);
+> > > +
+> > > +/*
+> > > + * Enhanced atomic operations can cause corruption with 64-bit IOVA
+> > > + * on these devices.
+> > > + */
+> > > +#define RX_ENH_ATOMIC_EN		BIT(8)
+> > > +
+> > > +static const u32 nbio_7_7_pcie_smn_addrs[] = {
+> > > +	0x111401d0,
+> > > +	0x111411d0,
+> > > +	0x111421d0,
+> > > +	0x111431d0,
+> > > +	0x111441d0,
+> > > +	0x112401d0,
+> > > +	0x112411d0,
+> > > +	0x112421d0,
+> > > +	0x112431d0,
+> > > +	0x112441d0,
+> > > +	0x112451d0,
+> > > +	0x113401d0,
+> > > +	0x114401d0,
+> > > +};
+> > > +
+> > > +static const u32 nbio_7_11_pcie_smn_addrs[] = {
+> > > +	0x112401d0,
+> > > +	0x112411d0,
+> > > +	0x112421d0,
+> > > +	0x112431d0,
+> > > +	0x112441d0,
+> > > +	0x112451d0,
+> > > +	0x113401d0,
+> > > +	0x113411d0,
+> > > +	0x113421d0,
+> > > +	0x113431d0,
+> > > +	0x113441d0,
+> > > +	0x113451d0,
+> > > +};
+> > > +
+> > > +static void quirk_amd_nbio_enhanced_atomic(struct pci_dev *host_bridge,
+> > > +					   const u32 *smn_addrs,
+> > > +					   size_t nr_smn_addrs)
+> > > +{
+> > > +	bool changed = false;
+> > > +	size_t i;
+> > > +	u32 data;
+> > > +	int ret;
+> > > +
+> > > +	for (i = 0; i < nr_smn_addrs; i++) {
+> > > +		ret = amd_smn_read(0, smn_addrs[i], &data);
+> > > +		if (ret)
+> > > +			continue;
+> > > +		if (!(data & RX_ENH_ATOMIC_EN))
+> > > +			continue;
+> > > +		data = data & ~RX_ENH_ATOMIC_EN;
+> > > +		ret = amd_smn_write(0, smn_addrs[i], data);
+> > > +		if (ret)
+> > > +			continue;
+> > > +		if (changed)
+> > > +			continue;
+> > > +		ret = amd_smn_read(0, smn_addrs[i], &data);
+> > > +		if (ret)
+> > > +			continue;
+> > > +		if (data & RX_ENH_ATOMIC_EN)
+> > > +			continue;
+> > > +		changed = true;
+> > > +	}
+> > > +
+> > > +	if (changed)
+> > > +		pci_info(host_bridge, "enhanced atomics disabled\n");
+> > > +}
+> > > +
+> > > +static void quirk_amd_nbio_7_7_disable_enhanced_atomic(struct pci_dev *dev)
+> > > +{
+> > > +	quirk_amd_nbio_enhanced_atomic(dev, nbio_7_7_pcie_smn_addrs,
+> > > +				       ARRAY_SIZE(nbio_7_7_pcie_smn_addrs));
+> > > +}
+> > > +
+> > > +static void quirk_amd_nbio_7_11_disable_enhanced_atomic(struct pci_dev *dev)
+> > > +{
+> > > +	quirk_amd_nbio_enhanced_atomic(dev, nbio_7_11_pcie_smn_addrs,
+> > > +				       ARRAY_SIZE(nbio_7_11_pcie_smn_addrs));
+> > > +}
+> > > +
+> > > +/* Phoenix, Hawk Point (NBIO 7.7) */
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x14E8,
+> > > +			quirk_amd_nbio_7_7_disable_enhanced_atomic);
+> > > +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x14E8,
+> > > +			quirk_amd_nbio_7_7_disable_enhanced_atomic);
+> > > +
+> > > +/* Strix, Krackan, Strix Halo (NBIO 7.11) */
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1507,
+> > > +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
+> > > +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1507,
+> > > +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1122,
+> > > +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
+> > > +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1122,
+> > > +			quirk_amd_nbio_7_11_disable_enhanced_atomic);
+> > > +
+> > >   #endif
+> > >   /*
+> > > -- 
+> > > 2.43.0
+> > > 
+> 
