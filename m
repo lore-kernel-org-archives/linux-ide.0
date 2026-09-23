@@ -1,97 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1465640DB4C;
-	Wed, 23 Sep 2026 18:46:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A81653A8A3;
+	Wed, 23 Sep 2026 19:09:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790189180; cv=none; b=bYhjvdsEOEUFqnbh/qLYXFqLlQBY0nwBoZ1v5OU0456XLrJTdHJVcbOA659ff3JvMfyAJYWiAHmDr7M4NVw8PPxILJDs3d7TUbx5jp9D8EILOzHD87a4vqcGo2DS4XTGXJ6DDteFUOpnvz6yySRskek8RLi8vv4Rp9TpgvA7x5Q=
+	t=1790190593; cv=none; b=WNxTGyWGkExLxkWsjVGyAY5Qk9sAdiHHd5LMvDgQwLFLdH4d1Fkal+lKlrKZk+BygstLO8QgVNP8nnU1FPzIDsay6WPAiR7/0XZo9Wf5DOly9VUrJx1HwNsUkT9qExGe4R+LzuM1VSSIcO6rKawgXBZ5abZYOqm3EeRSD692IJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790189180; c=relaxed/simple;
-	bh=DowexvyP0YfpvTFm7h2/IfJBq3gtaAKsPxlji8S+eu0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Tb12WxDESf7fKZaGZQ0EPzrpNxP6zQJ9mKb+/yDBHdhNd5nyRu/RbWMefSpgvvoyVp9V+8pVB9P5OHu82D3WYm1tf0E+eIb//9nPoESaQiVRSADWvw5YOtKIQOR5CNAV3dFOHFj+2oGcChpQwyTBxEzvokRfSGVPXCTodP8Xms8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K2/o0TPr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790190593; c=relaxed/simple;
+	bh=vE9jHy51IVlmQeI96WNmi52fnodpOckuGpFY7hmCvxo=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=TzMpGcg+9k614ApzMw6AxDv/4PGTYFseAzsZ5aderiNIVrM9Jsg9ekI9DxzeR1tFGXwcEBnrdl7Ak0HPdUcl7UVcnNV/Cab2RJt+MpImh1LC9+JYv4Ggqr1dd/4KL1QONUvyPp6m7eRwpRSNg0Bvl1hUvWcFJuiRkj7K5bDaKMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=edv255MZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K2/o0TPr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0035A1F000FF;
-	Wed, 23 Sep 2026 18:46:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="edv255MZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C55971F000FF;
+	Wed, 23 Sep 2026 19:09:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790189171;
-	bh=TEOLXTXSoVwAXu15O4+IO+TBS5mtYVlDWzz8+W1qRQQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=K2/o0TPrLywf41wD67dGRl0zZXx7NNo9HOagwKQ7fu+FwNCBor+B9MS9U1ayBMBc9
-	 my/6HpKLC0a50+VaMGm12JsDiBXDnZZsuSQKeDIRB9lD1eLrjCwFqNEo5sb7I3vqKz
-	 rF6eopwISC/eB5OcS+AwDkuu10nJx2JqmBresZvywGtQGm+Z4NGctLYu+WQvCxrFUP
-	 Hd4/wYsrhYgcoAazH/9sZC8qkSa+iStdFx8Jmu2E3s87RsNfUlUlBXcYG7DFdrVN3c
-	 Bjcj82uXacPQ76j8qcK52joCrJHuYRi+EqPDTUReJrcK2DiYm5DHsZzH5C3dNXPLff
-	 jrAIItdon6ycA==
-Date: Wed, 23 Sep 2026 13:46:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario Limonciello <mario.limonciello@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-	"H . Peter Anvin" <hpa@zytor.com>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	"open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <linux-kernel@vger.kernel.org>,
-	"open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>
-Subject: Re: [PATCH v2 0/2] Fix for storage corruption w/ AMD IOMMU on 64-bit
- addressing
-Message-ID: <20260923184609.GA1906456@bhelgaas>
+	s=k20260515; t=1790190591;
+	bh=Ejd1kebqLQU946zKMGHG4mDBRf6wkCc0yxC2fMVobLM=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=edv255MZyI4Xagu2dn/DOdom0RqpZAqwkCT3C5wdP8lL7MIAaP4Rp8BkfLhPZeJA5
+	 1j2NpedwE3QCcavrMW2p//wyCA3P4eB6wdsQJFHoVWu61ComaMRN31R34zcpDNyAkB
+	 zGp3F8U9R6Xo0V03Z21g9cyULTKtWnll/7bD7nMns2Ub1KlRUWgYuUJp3NJ2ZCu2Xw
+	 Jgw49Kmnl5CaTKtcSlnRnt3EztoFASrMMljnnxslMBmHPO4EB7aCQnb12tfzcEwQhh
+	 NhHYjQQps36TfZVEVgrJjepfZb7WSu6CRyU5azFjmm1yPks/S5fisRrgeRMk9vmlq5
+	 EPqGqTnmek0MQ==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>, 
+ Matthias Goergens <matthias.goergens@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+In-Reply-To: <20260923175203.1576825-1-matthias.goergens@gmail.com>
+References: <20260923175203.1576825-1-matthias.goergens@gmail.com>
+Subject: Re: [PATCH v2] ata: libata-scsi: bound the ATA passthru sense
+ descriptor writes
+Message-Id: <179019059052.3560943.13648184219606999768.b4-ty@kernel.org>
+Date: Wed, 23 Sep 2026 21:09:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <52e6bb87-1a64-405b-a11a-3b9f9bf95410@amd.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On Wed, Sep 23, 2026 at 01:39:46PM -0500, Mario Limonciello wrote:
-> On 9/23/26 13:36, Bjorn Helgaas wrote:
-> > On Tue, Sep 08, 2026 at 02:05:58PM -0500, Mario Limonciello wrote:
-> > > An issue has been reported by a number of people that corruption
-> > > was occurring on storage for desktop systems.  It's notably reported
-> > > on SATA, but the same issue also appears on NVME.
-> > > 
-> > > At a glance it looks like an IOMMU issue as turning off the IOMMU helps
-> > > the issue, but it's actually a problem that occurs specifically with any
-> > > IOVA addressed >58 bits.
-> > > 
-> > > This is because the BIOS on these systems is enabling a feature of the
-> > > root port called 'enhanced atomics' which repurposes those upper 5 bits
-> > > of address space.  That feature should only be enabled by the BIOS when
-> > > the partner device supports it, but it's instead needlessly enabled on a
-> > > number of root ports.
-> > > 
-> > > As some of these systems probably won't receive BIOS updates and there is
-> > > active reports of data corruption root caused to this add a quirk to
-> > > disable it on affected models, and also remove the quirk that was
-> > > introduced to work around this issue in drivers/ata.
-> > > 
-> > > v2:
-> > >   *  Added resume fixups for the affected AMD PCIe ports
-> > > 
-> > > Mario Limonciello (2):
-> > >    x86/PCI: Disable enhanced atomics on some AMD PCIe ports
-> > >    Revert "ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585"
-> > > 
-> > >   arch/x86/pci/fixup.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
-> > >   drivers/ata/ahci.c   | 18 --------
-> > >   2 files changed, 99 insertions(+), 18 deletions(-)
-> > 
-> > Applied to pci/for-linus for v7.3, thanks!
+On Thu, 24 Sep 2026 01:52:03 +0800, Matthias Goergens wrote:
+> When an ATA PASS-THROUGH command to an ATAPI device fails, the sense
+> buffer holds the device's REQUEST SENSE reply, and
+> ata_scsi_set_passthru_sense_fields() trusts its additional length
+> byte, sb[7], when adding the ATA Status Return descriptor.  A faulty
+> or malicious device can use that to make the kernel read and write
+> past the 96-byte buffer in three ways:
 > 
-> Thanks!  Could you add to the commits:
-> 
-> Cc: stable@vger.kernel.org
-> 
-> We should take this back to any non EoL kernel as well.
+> [...]
 
-Done :)
+Applied to libata/linux.git (for-7.3-fixes), thanks!
+
+[1/1] ata: libata-scsi: bound the ATA passthru sense descriptor writes
+      https://git.kernel.org/libata/linux/c/80320b27
+
+Kind regards,
+Niklas
+
