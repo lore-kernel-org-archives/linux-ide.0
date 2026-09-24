@@ -1,99 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B19547A898
-	for <linux-ide@vger.kernel.org>; Thu, 24 Sep 2026 13:33:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 903D13F1ABD
+	for <linux-ide@vger.kernel.org>; Thu, 24 Sep 2026 18:04:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790256820; cv=none; b=RyRq9EZjtrO0EeIGLP+gay8sXdMk0oOV45UQ7QgaqW3PnBBwaFS94+eI9hCIvKn3tJEPMlBPfhdTPNpVSFDtSkh2ggL2tZ3zEWP9d3iS7axE2YefQzNe07FWrGOah4Bjpzuns6XevWLzzZTs+0OGQ9cB6gM3lsC/pFPZ6PJ8h6Q=
+	t=1790273095; cv=none; b=TSwS2nozXN1ZcM99QPOYTjNlFfWdVv4Ft5XyEN6/adO6CJr4AAeEuhLfgbSNtB7ELBXqDkOK0KDX7K6JuZp0TAn9oTB3YhJfgZkbTT97ma8Rr6AEV9nwmfxvl4jTtc9UO2b6lQHQWc4/JnPQPuYdKpvK0Q2l/htoXNCrPrAIuVY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790256820; c=relaxed/simple;
-	bh=Ee7CbnjCu39tk3yOcsHMIbvq9DDrri7SMYdljXiWAMI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=myLpmCVHn+ey2zLliOFvrEnVLpr/b8KdTiNoAX61UMiXEZGxHT2kCfcJ6ZOybVccfUB3WUzGovfYo1jm7hFflagEbrgxfqFPpadv993t196N7vXizdq/f4M88rJKg5j30S0JCkpNuV2ZT0ooloWTvtum8hyZORK+bg4yGvPMFms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V2QNeJ7N; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790273095; c=relaxed/simple;
+	bh=V77RPtZFtgYhI1UfNQzZAvMqjtvS4w+LcC8CrLIR0sE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kR4GT8VCO0lyqLT4KTJUDZv5YDXlQJVs7/sZ+syyVqnHjD+8aG8YVuPhJtMjFf1FjLOHfQvpQQ2hFRsXtzpJ420np9rjt14s3Ib0j0t0828N0o4dYofaupcjsNbMgIY2wMH/IAM4mdurNjtTOOrDKQNecL9D0qt4C1q+0Jcgbfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cs.unc.edu; spf=pass smtp.mailfrom=cs.unc.edu; dkim=pass (2048-bit key) header.d=cs.unc.edu header.i=@cs.unc.edu header.b=d22wpN6E; arc=none smtp.client-ip=74.125.230.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cs.unc.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cs.unc.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V2QNeJ7N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D948B1F000FF;
-	Thu, 24 Sep 2026 13:33:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790256815;
-	bh=gyTMGh36BfgBazd/zeM6HMZ6QPU6UnoWxOzTEItVST0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=V2QNeJ7NRpwHPWk8DWTZH/wxVxWBjqGCyyysMWE+7Gg98l1/KGpybGw9TDW2xou91
-	 cjy7WWxx/Mw8Q0NBYduJENHR04XvdFAjRuenA1dW/1em7y/ICQhu2dmHnwvcGcqA2F
-	 X5eMZqPhjqS573ekRyqtmxyGxFSWHDI1QizOhCND0n9PGYxuEx+bWMIFfhgi/wfSN+
-	 9ktHIe5IK5Fm6qlSTcYPdvTktD9Nr3oDIW/ESCoyv5CdoTVvRTSwCQsJ429JrtCnSw
-	 /u8mRPEZLRJKrwHHJOkFbrVBHYEqT2VVC753nWxLvEoiJC8RY1m73n6ZFDaPvuKdpl
-	 KDFcBZUYoIxBg==
-Date: Thu, 24 Sep 2026 15:33:32 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Matthias Goergens <matthias.goergens@gmail.com>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: name the libata/linux for-next branch
-Message-ID: <arUmrIiHwevxjjqK@ryzen>
-References: <20260924033545.3624716-1-matthias.goergens@gmail.com>
- <arTuIxpEsaYIQXU4@ryzen>
- <20260924101844.2403008-1-matthias.goergens@gmail.com>
+	dkim=pass (2048-bit key) header.d=cs.unc.edu header.i=@cs.unc.edu header.b="d22wpN6E"
+Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-90cdfc9b6ebso1412436d6.2
+        for <linux-ide@vger.kernel.org>; Thu, 24 Sep 2026 11:04:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cs.unc.edu; s=google; t=1790273092; x=1790877892; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=42VHkp5dpCRPRsMvdyzUDhaTo8Fj21buvKgDZpbIrEs=;
+        b=d22wpN6EHDG7oCSnkViOqYMyZuLtdXiK3epnNt6y+zqf0sT/YyBxgOMwzeqS8twmRF
+         d5/9T+tPckNtriAEAGNi1O21i3KswSttRJGtIyoS/ypD5Pbu5JaXp/ehux5qJ9cW0AbT
+         IhloNxFZexzN/xzfoVXaP8uCNvZtLFFrkqgDndHZaXIGzvvoLWbr57uHuwgJyJRx10if
+         YHfGyNTiECvvs6VpT2mScjkDTF8uvhhW13J9LaR2rKECtsi9W3FCf1YA7f0MMqwA+/oo
+         6MWV1tQmW2EmUbvWyidwBaON1+EiWKIhgHwoCkBtP3DdrstkgpEiVREwecpDo1rpV7VR
+         jKRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790273092; x=1790877892;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=42VHkp5dpCRPRsMvdyzUDhaTo8Fj21buvKgDZpbIrEs=;
+        b=nTY36R+ncLwy7e+57iOg4IwsLF+F4qpa3EG3GKSMtR2VX3O6fJli2PDpj4AhJ4F3nh
+         z/RdiZTePNrriKqPpHWBu3floXdPCBKDeO8jfY/DBOSIHP8BzZujl/3TuqPpST3LvHUA
+         B4srEi9KS5gO5itNYQnWheCjPzxCkFVRol+5CilzL7bJEC7qfr25/G7jRd7g8X3sFLnX
+         zssolnMJAkI2GTyQC4wW4Zn0Wg+mBgrFhAn4w0C3QAhS23zgNnEi/CzJ/DgnHS0mFrkp
+         1uUVH+3XSbDBRGNiCYJzILgQAdyAsbmm259xwDJxoXQV1beJbEQOKg2CpjvkyTmoA2Aw
+         w28A==
+X-Forwarded-Encrypted: i=1; AKwUvBzDQ8HooynypGU0uKfEe4eMNBz8r8X3HRsdDBjd0T/xXb0Cyt35JyqMcShQexNSpDz9UYrTAabRI94=@vger.kernel.org
+X-Gm-Message-State: AFuF++nD6UBMH9s3bbpKyOwFaFy9uIQXHAT/cSQxp+E4OHEk2teVoUMf
+	FMiIMzJFpI/ORnShtdr1WZo+BOQW5KHXKU/MFiN5yzdHWf/3e1DdvFbUCPLydi/fROt7EtuVBuj
+	TxJgpGu7D
+X-Gm-Gg: AYBFou2QjAIXRwcHPVJEAenhYrRTcGef3vn5Fhvba9P35oSjgMMFjpB584eSepSZ7Po
+	WDpIKe0X6JRrTAJGKk56F2FQ150gVJZVpn1THAsONNqbNONT/Vd3abntcXv6OLqlSO43Fo19+Qw
+	HxTO34tdslEGAs+JW5UObAnKdqboOcTGEYqq/hSW/FZGwtwi61EZlyBjG+EvTm2yS1H637fwi2/
+	UhIJUOFoqIndiuVF/5wMBBGeIqh87i0oCktCiCSxOpY8FL0t2l0kncP49wW3ixDKUS125XxKDvj
+	FBLzUixLDx2nQYRLJ7yGEf/08sGDtrF9anZ5vO4eEx1T5ylDgYGi98D+Q8qr+gJTa95aaW6PxvD
+	WlmVgJrgYe7JNQhyz7qou46jz6hphAedstyORseKqzhQMhqXx9Uumsw4iL/lo8f0v7o2sALdkOY
+	4VRXqivJC1FlL4OxT09jDZXCrsUin7aNU8WJ/uGtOWp6Nr6XWYZVjpGM+2LBmJffBXkoDm07bJI
+	tFkaQSxywVwkTBkZAn6juDv5tU29iXkkw==
+X-Received: by 2002:a05:6214:4a05:b0:914:2e80:fa99 with SMTP id 6a1803df08f44-9142f9001a8mr128566d6.33.1790273092391;
+        Thu, 24 Sep 2026 11:04:52 -0700 (PDT)
+Received: from cobra01.cs.unc.edu (cobra01.cs.unc.edu. [152.2.130.143])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9141e21967fsm21744616d6.13.2026.09.24.11.04.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Sep 2026 11:04:52 -0700 (PDT)
+From: hengyul@cs.unc.edu
+To: dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: mkp@kernel.org,
+	ipylypiv@google.com,
+	linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hengyu Liang <hengyul@cs.unc.edu>,
+	stable@vger.kernel.org
+Subject: [PATCH] ata: libata-scsi: do not lose CHECK CONDITION for failed ATAPI commands
+Date: Thu, 24 Sep 2026 14:04:14 -0400
+Message-ID: <20260924180414.2102946-1-hengyul@cs.unc.edu>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260924101844.2403008-1-matthias.goergens@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-Hello Matthias,
+From: Hengyu Liang <hengyul@cs.unc.edu>
 
-On Thu, Sep 24, 2026 at 06:18:44PM +0800, Matthias Goergens wrote:
-> On Thu, Sep 24, 2026 at 11:32:19AM +0200, Niklas Cassel wrote:
-> > I think this could have been written simpler, without references to dates.
-> 
-> Agreed, your wording is better.  I'll use it, together with the
-> s/tree/branch/ fix, in a v2.
-> 
-> > But in reality, if you want to clean things up, why limit it to these three?
-> >
-> > Write a script that clones all trees, compares HEAD against what is
-> > is Linux Next (Next/Trees file). If it diverges, add the branch name to
-> > the tree entry in MAINTAINERS.
-> 
-> That script is how I found these: about 160 T: lines diverge.  libata
-> isn't a one-off; it's in the first small batch of the plan I described
-> in the ext4 thread [1].
-> 
-> I'm sending them in small batches rather than all at once because I'd
-> invariably get something wrong, or miss a subsystem's conventions, and
-> I'd rather learn that from a handful of maintainers than from 160.
-> Exhibit A is the KVM/arm64 reply [2]: that for-next is purely an
-> integration branch and patches there must be based on a tag from
-> Linus's tree, so naming it would have sent people to the wrong place.
-> Comparing HEAD with Next/Trees can't tell that apart from a branch like
-> yours.  So I now also look at how each branch is built, and I'm holding
-> back the ones that look like integration branches, block included,
-> until I know how to word them.
-> 
-> As for the other two: SCSI went out in the same first batch [3], and
-> nvme.git isn't in Next/Trees at all, so the script never flagged it.
-> Thanks for the offered Acked-by; I'll Cc you when block comes up.
+Since commit 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands
+on time out"), atapi_qc_complete() sets SAM_STAT_CHECK_CONDITION for a
+failed command only if cmd->result is zero, so that the DID_TIME_OUT or
+DID_REQUEUE host byte of a terminated command is preserved.
 
-Okay, nice to see that you are actually putting in the effort to fix all
-entries and not just one.
+However, cmd->result can also be non-zero for a regular failed ATAPI
+command completed through libata EH: ata_eh_analyze_tf() calls
+ata_eh_decide_disposition(), that is, scsi_check_sense(), on the sense
+data obtained with REQUEST SENSE, and scsi_check_sense() sets the SCSI
+midlayer internal byte of the result for some sense codes, e.g.
+SCSIML_STAT_TGT_FAILURE for ILLEGAL REQUEST with ASC 0x20 (INVALID
+COMMAND OPERATION CODE) or 0x24 (INVALID FIELD IN CDB), or
+SCSIML_STAT_MED_ERROR for MEDIUM ERROR with ASC 0x11 (UNRECOVERED READ
+ERROR). For such commands, atapi_qc_complete() keeps the result as is and
+the command completes with a GOOD status byte, even though it failed and
+valid sense data is available.
 
-I guess I would have know if you sent it as a series, but that would
-probably have been worse than sending a single patch per subsystem,
-as I am sure many people will have comments.
+As a result, passthrough users see these failed ATAPI commands as
+successful. For example, with the emulated IDE CD-ROM drive of QEMU and
+no medium loaded, a PLAY AUDIO MSF command issued with SG_IO completes
+with status 0x00 (and no DRIVER_SENSE) instead of 0x02 (CHECK CONDITION)
+with sense key ILLEGAL REQUEST, ASC/ASCQ 0x20/0x00, and the CDROM ioctls
+CDROMPLAYTRKIND, CDROMSUBCHNL, CDROMPAUSE, CDROMRESUME, CDROMPLAYMSF and
+CDROM_GET_MCN return 0 instead of -ENOMEDIUM or -EOPNOTSUPP.
 
-Perhaps mention that you are doing a cleanup of all entries after the:
+Fix this by preserving the result only if its host byte is set, and by
+otherwise completing the command with SAM_STAT_CHECK_CONDITION, as was
+done before that commit.
 
+Fixes: 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands on time out")
+Cc: stable@vger.kernel.org
+Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
 ---
+ drivers/ata/libata-scsi.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-line after the commit message, with the links that you shared just now.
-That way maintainers will know that you are actually doing a longer
-work and not just a one-off.
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 8f9aa97a519d..dc5978019eae 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3059,7 +3059,14 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
+ 		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
+ 			qc->dev->sdev->locked = 0;
+ 
+-		if (cmd->result)
++		/*
++		 * Only preserve the result of a command that was terminated
++		 * with a host byte set, e.g. DID_TIME_OUT. A failed command
++		 * may also have the SCSI midlayer internal byte set by
++		 * scsi_check_sense(), which must not prevent reporting the
++		 * CHECK CONDITION status.
++		 */
++		if (get_host_byte(cmd) != DID_OK)
+ 			ata_scsi_qc_done(qc, false, 0);
+ 		else
+ 			ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
+-- 
+2.53.0
 
-
-Kind regards,
-Niklas
