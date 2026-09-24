@@ -1,119 +1,99 @@
-Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7923C3FCB33
-	for <linux-ide@vger.kernel.org>; Thu, 24 Sep 2026 10:18:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B19547A898
+	for <linux-ide@vger.kernel.org>; Thu, 24 Sep 2026 13:33:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790245138; cv=none; b=dJECUVYMmxFqNZYLQHl4CUNWNLebn6PEU2aoLoHdL5mf+h9TrCQ8NPXVQeIz3RfG8bVzJ7E8Et73vh2DpwD/zJ3maadkaWxLoh4B/0vmLSU9KQUgVGRtuBrgxW5bkTPhGd1uK6oUwfpaUmCiWLHW+PTN0xvv5G5ApS0C+8ovrGM=
+	t=1790256820; cv=none; b=RyRq9EZjtrO0EeIGLP+gay8sXdMk0oOV45UQ7QgaqW3PnBBwaFS94+eI9hCIvKn3tJEPMlBPfhdTPNpVSFDtSkh2ggL2tZ3zEWP9d3iS7axE2YefQzNe07FWrGOah4Bjpzuns6XevWLzzZTs+0OGQ9cB6gM3lsC/pFPZ6PJ8h6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790245138; c=relaxed/simple;
-	bh=lwalC0D92Ro85gQzDARgrb917GJU2FxTGiKOWrUgAI4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kyrBiUX/wj0cF6RG8vToohgN5HDPBWtQnZ8CRvxrJK7Gi1/GuTP/iz0+utuGbJPY8VvkaHkegJldcHo+xTu4OlfIHthB5hfWl97+aJp2t3lWz8k6OPc9zVzkeWWIAc8c48VldYtJLYHRvf4ZDwanesbsvVB9nSpnMYa7ocBIx1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kX1EUyEB; arc=none smtp.client-ip=74.125.228.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790256820; c=relaxed/simple;
+	bh=Ee7CbnjCu39tk3yOcsHMIbvq9DDrri7SMYdljXiWAMI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=myLpmCVHn+ey2zLliOFvrEnVLpr/b8KdTiNoAX61UMiXEZGxHT2kCfcJ6ZOybVccfUB3WUzGovfYo1jm7hFflagEbrgxfqFPpadv993t196N7vXizdq/f4M88rJKg5j30S0JCkpNuV2ZT0ooloWTvtum8hyZORK+bg4yGvPMFms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V2QNeJ7N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kX1EUyEB"
-Received: by mail-pz2-f12.google.com with SMTP id 41be03b00d2f7-cc4d04d740cso903066a12.0
-        for <linux-ide@vger.kernel.org>; Thu, 24 Sep 2026 03:18:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790245133; x=1790849933; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=fl1Q6AJ6kNtXyHlg9LbEO1jNeJ2HRzLOuubRkhu5Y0w=;
-        b=kX1EUyEBVYRbnZZH/yGx1h2E691LNSIcHnOk0jVddubV8v4bcWip3Z4tpSAU5u1idy
-         XSlQ4ZlrakBPB5j7iIet7JiS+DVKdV6AGBRImHViD+qTYk8dH2FM8xuUnYQZLCoDtDhp
-         L1xynEZB84zVc6bIShmmh1ZpmFrBQadT8esnef6Mz83VJz97Ng6E8itGvNzS+At+q259
-         XABaKlLv/9gsDV7BENFvegC1Pz5fttrRV+0kCC8eb3eBzB3k5BwtKAoABiEyBYz63iB1
-         3NIfZyKDy05azW6va+oWtKcRCJEm6uclyiWTcmwDwKnjMYU5vdJpnZ4RTIfX8HZLXqFS
-         DT4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790245133; x=1790849933;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=fl1Q6AJ6kNtXyHlg9LbEO1jNeJ2HRzLOuubRkhu5Y0w=;
-        b=ECFf3Jblus3RzIAeR1Fu2f1lyEURS4Gz/0sUk3rxKj3VUvr5hGkrwHjZdX99zjyGio
-         /l+e7DCMMZTCauDgjjLlBOiN8WZjcUxxrDJPHUPV3CNKKpZnf4uXz7+UDQX57+wUMiGF
-         sg2ckzykuwarI6AE7P+ITDMf+jS243leYQ15iBV/vAN7pz8hKte8z2INUWMGz+PqSQND
-         AxdnNryzOb5JVdvbVGmowTGHOrtyEEm3EIuXpdQrpXhTJE+W2JpMZSj+Ph/t35M4eYe0
-         rEaECxrJqTMaQbXqCqUWhHFP9v8ANdDRaWZ0XTf/rOCCTrgsJJpNzxiE4CfAwq2D6TD8
-         svBw==
-X-Forwarded-Encrypted: i=1; AKwUvBw69l5x6iQiUV1F2xr8Q5DyhE/6O9IATTDxVqc/iAp7ZOUmWJQy76yx0VX9d7dJS0RW7uP5y+7zG6I=@vger.kernel.org
-X-Gm-Message-State: AFuF++ngV5lNUgRggojaw8lNvTfAuou9lUlUKOdTfouu7EaBhMdf0ggr
-	oqQ77K7MYfPfwWijncsveSAyEdUsRJRZpJyd7+mOw6A7SrhD2yMV/CJd
-X-Gm-Gg: AYBFou1vU0ugNIiEouqaZ3vAcU7H+u7xCgv52HOIA8CCP7yFmJCW43dy/DW6HpuSK7D
-	rIEaI2fDlq7ituaf0lCNfL2+GElSVGD0ZLuWlGRwDoT33lI2ZRhWcgAAPm4hnhdpPPngYaefGFw
-	GxTgwaLjYr7PQUXMnfs+5mA96mzWWJmZ4V+SSKevtYUBQ48dhGrSLl9w/tdfKSJQfcPNkuj6qBc
-	vfV94Nnnw4WRBDOlKp+5Nh247fTIoSih2ir8yNMQmvhoWIz7qKN+wNymKVTWwGPjn9HyT58wI0i
-	IfK2K4/e23W00P4J6CbgYItbUmvp4pPmuQThiL9HHxOu4f1tQGqEdT/lYwTJiFP4vLayk7F85Ps
-	/zpMfB4uLI58XrjNHU1zLqLZRXZmsKVZtniVRthLPngQr2IuEM/NGd3hESjGfKG6F96U4avKzuU
-	xb4qkVUhxIH1Exi6mUUuaQPBUPoRWNj2jbzGHJhqJVQevHy4tX+C2RThooV83nHAweo0pYQfOFY
-	jorGDn7OaofbWdxQPY/NemUA5T4YvqvM65p1bmGuURRAGstYQh0Pf64TfIvD041utIqitGt771T
-	IYkyPP8MuhP/1LEqeAYmVurMoDFNHWXc5QGa1Ywd7pLgdA3TowRF7Syo0Ow=
-X-Received: by 2002:a17:90b:4c03:b0:39e:6a81:f34b with SMTP id 98e67ed59e1d1-3a098bb66c6mr1656806a91.37.1790245127858;
-        Thu, 24 Sep 2026 03:18:47 -0700 (PDT)
-Received: from spider.bream-herring.ts.net ([103.6.151.236])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a0972f2cddsm4315921a91.1.2026.09.24.03.18.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Sep 2026 03:18:47 -0700 (PDT)
-From: Matthias Goergens <matthias.goergens@gmail.com>
-To: cassel@kernel.org
-Cc: dlemoal@kernel.org,
-	linux-ide@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V2QNeJ7N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D948B1F000FF;
+	Thu, 24 Sep 2026 13:33:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790256815;
+	bh=gyTMGh36BfgBazd/zeM6HMZ6QPU6UnoWxOzTEItVST0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=V2QNeJ7NRpwHPWk8DWTZH/wxVxWBjqGCyyysMWE+7Gg98l1/KGpybGw9TDW2xou91
+	 cjy7WWxx/Mw8Q0NBYduJENHR04XvdFAjRuenA1dW/1em7y/ICQhu2dmHnwvcGcqA2F
+	 X5eMZqPhjqS573ekRyqtmxyGxFSWHDI1QizOhCND0n9PGYxuEx+bWMIFfhgi/wfSN+
+	 9ktHIe5IK5Fm6qlSTcYPdvTktD9Nr3oDIW/ESCoyv5CdoTVvRTSwCQsJ429JrtCnSw
+	 /u8mRPEZLRJKrwHHJOkFbrVBHYEqT2VVC753nWxLvEoiJC8RY1m73n6ZFDaPvuKdpl
+	 KDFcBZUYoIxBg==
+Date: Thu, 24 Sep 2026 15:33:32 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Matthias Goergens <matthias.goergens@gmail.com>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
 Subject: Re: [PATCH] MAINTAINERS: name the libata/linux for-next branch
-Date: Thu, 24 Sep 2026 18:18:44 +0800
-Message-ID: <20260924101844.2403008-1-matthias.goergens@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <arTuIxpEsaYIQXU4@ryzen>
-References: <20260924033545.3624716-1-matthias.goergens@gmail.com> <arTuIxpEsaYIQXU4@ryzen>
+Message-ID: <arUmrIiHwevxjjqK@ryzen>
+References: <20260924033545.3624716-1-matthias.goergens@gmail.com>
+ <arTuIxpEsaYIQXU4@ryzen>
+ <20260924101844.2403008-1-matthias.goergens@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260924101844.2403008-1-matthias.goergens@gmail.com>
 
-Hi Niklas,
+Hello Matthias,
 
-On Thu, Sep 24, 2026 at 11:32:19AM +0200, Niklas Cassel wrote:
-> I think this could have been written simpler, without references to dates.
+On Thu, Sep 24, 2026 at 06:18:44PM +0800, Matthias Goergens wrote:
+> On Thu, Sep 24, 2026 at 11:32:19AM +0200, Niklas Cassel wrote:
+> > I think this could have been written simpler, without references to dates.
+> 
+> Agreed, your wording is better.  I'll use it, together with the
+> s/tree/branch/ fix, in a v2.
+> 
+> > But in reality, if you want to clean things up, why limit it to these three?
+> >
+> > Write a script that clones all trees, compares HEAD against what is
+> > is Linux Next (Next/Trees file). If it diverges, add the branch name to
+> > the tree entry in MAINTAINERS.
+> 
+> That script is how I found these: about 160 T: lines diverge.  libata
+> isn't a one-off; it's in the first small batch of the plan I described
+> in the ext4 thread [1].
+> 
+> I'm sending them in small batches rather than all at once because I'd
+> invariably get something wrong, or miss a subsystem's conventions, and
+> I'd rather learn that from a handful of maintainers than from 160.
+> Exhibit A is the KVM/arm64 reply [2]: that for-next is purely an
+> integration branch and patches there must be based on a tag from
+> Linus's tree, so naming it would have sent people to the wrong place.
+> Comparing HEAD with Next/Trees can't tell that apart from a branch like
+> yours.  So I now also look at how each branch is built, and I'm holding
+> back the ones that look like integration branches, block included,
+> until I know how to word them.
+> 
+> As for the other two: SCSI went out in the same first batch [3], and
+> nvme.git isn't in Next/Trees at all, so the script never flagged it.
+> Thanks for the offered Acked-by; I'll Cc you when block comes up.
 
-Agreed, your wording is better.  I'll use it, together with the
-s/tree/branch/ fix, in a v2.
+Okay, nice to see that you are actually putting in the effort to fix all
+entries and not just one.
 
-> But in reality, if you want to clean things up, why limit it to these three?
->
-> Write a script that clones all trees, compares HEAD against what is
-> is Linux Next (Next/Trees file). If it diverges, add the branch name to
-> the tree entry in MAINTAINERS.
+I guess I would have know if you sent it as a series, but that would
+probably have been worse than sending a single patch per subsystem,
+as I am sure many people will have comments.
 
-That script is how I found these: about 160 T: lines diverge.  libata
-isn't a one-off; it's in the first small batch of the plan I described
-in the ext4 thread [1].
+Perhaps mention that you are doing a cleanup of all entries after the:
 
-I'm sending them in small batches rather than all at once because I'd
-invariably get something wrong, or miss a subsystem's conventions, and
-I'd rather learn that from a handful of maintainers than from 160.
-Exhibit A is the KVM/arm64 reply [2]: that for-next is purely an
-integration branch and patches there must be based on a tag from
-Linus's tree, so naming it would have sent people to the wrong place.
-Comparing HEAD with Next/Trees can't tell that apart from a branch like
-yours.  So I now also look at how each branch is built, and I'm holding
-back the ones that look like integration branches, block included,
-until I know how to word them.
+---
 
-As for the other two: SCSI went out in the same first batch [3], and
-nvme.git isn't in Next/Trees at all, so the script never flagged it.
-Thanks for the offered Acked-by; I'll Cc you when block comes up.
+line after the commit message, with the links that you shared just now.
+That way maintainers will know that you are actually doing a longer
+work and not just a one-off.
 
-Thanks,
-Matthias
 
-[1] https://lore.kernel.org/all/20260924033200.3615554-1-matthias.goergens@gmail.com/
-[2] https://lore.kernel.org/all/877bkb3zjq.wl-maz@kernel.org/
-[3] https://lore.kernel.org/all/20260924033541.3624532-1-matthias.goergens@gmail.com/
+Kind regards,
+Niklas
