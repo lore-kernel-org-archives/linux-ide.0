@@ -1,239 +1,135 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012049.outbound.protection.outlook.com [52.101.48.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs2-f39.google.com (mail-vs2-f39.google.com [74.125.227.39])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D61430B529;
-	Fri, 25 Sep 2026 20:01:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790366509; cv=fail; b=kpk2xFL227EntIxlVElZk+uYn5JftfbvCnxuSh/3H3qWbY0paiiZW9++BiAWlj9SQXFgSEZF401EWLoTjkK5juH0heAybN4c2ETUkTnjM4gbx7thT2ZgO8aGO++CPM2bSiVGv6QkwsOXCLtwicZmsFvE78HXi0kXc23JPTQu4Tk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790366509; c=relaxed/simple;
-	bh=y8cLVRqYDOUmpy87HjPtZzI5fu7dptposrUiHWNw574=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=qU9Fq5gTAdii5++hGwC286/yMac7UwvM5K6Xj7w2/9uQb9DJHIWZxmASmj4oEadJj9X7LTo0+a+xPjTohU1iDlfAqry5rY9FT/OErzgN0As5zGGy+qy4H4dyexNYJbybRrzGirntCxWqF5hch9mYJlrcTbbiWAf/k8rm8zJW9XM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=kmxH3X8J; arc=fail smtp.client-ip=52.101.48.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407234E2F15
+	for <linux-ide@vger.kernel.org>; Fri, 25 Sep 2026 21:28:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.39
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790371736; cv=none; b=aNh1M4FlMrJH+fBrHwcsvX3BCQqlgoKuNjXrazhK6OKyxycDDYjIBJ4/Z5HxtKX9QkFEx35cMhinmPRVcgU7+Gqu0kD1Va0U/DiE2TeO21rW1jRLf1dqedmTQFHenoCOap3kwItM9ur/uC1b4HCdm/8JAe1MLk30JTsUg5c4ZeA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790371736; c=relaxed/simple;
+	bh=DsHX2LZCKnEVLh0jcJ3cHqzEi/P8RRApIj3SMsCChm8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=TwTqO2yvETzJv636LkmukXEY0WTnMlJZDy36kzXdMspjwyZIv8anb+LhNdi6bbmRZhSkaKP+cBdaneRPb3++y8RX2LouxxmVj9N2zrBLdaKFdS1Nps2fhhBVPapUXSf4ElACPegDq3J/leUGZ/WZ3yOY2cADmX2VdPkRcdjCO9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZIKCIy3g; arc=none smtp.client-ip=74.125.227.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="kmxH3X8J"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ueBNd0TYEPJtN/sjqGng8dBSopelXdxECOfrqRW0ZACNpvwFjsX0unukIja1AE7LBH6JFadrwYhzZGDnVjXmkSk/rvD5TspGCQKiNSVr9H6lT8fPFwoV7++ZDcbPd6NdLgNhTmMyO5IN8gw6E2AOcN77aD4xh57RFQPkgjXe9uQhHh+BDUUf6S/zlbShFUB1oMITOC127jmQN30uGD7bi9pZcPRSYKPPc2QO8bIzpWuo4OarvcLRXSzVzPCm0aZ2So+wkNtT7lWEin+N0vFfVcX5o6U20AfDN+BPs1P/QITNAvCRUbCSOLL9qZXXrG/RlelcJgbLF4g/LS+f0Urn5A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WtDDuqzTcLaREbTlarVToWHkUb1Hd4FXh4CHBQ6p/ls=;
- b=lBA8xhuW1HASh8TFhzzU4zx3/8f+1gqrmllq2/f6ZzJpyZRmpS30qbwB7aqDNFSc+BBlfMJD7PFuzLUg0JqXxvHCMrNufjkoEdfKecbcSeC1ufIKzHY4eFJPZcTc3eFjN5SJS1KLXV3Ur3X7aQaPkDiPo4Qi6O+j9ygQofOLHiJ8SVmoKLSbZpsVxI1+6Gdxp0GYn5vl7Sl/lZ7BK3oKbwe7h3+NrEy4d6MllP73BHch47FMmOueJz9AL/znqH5de82ciMWVhZKD0aIi50wgcNx2WVFMcsuL+2Fival4G4BkU/miLDy6xNEN28VszWHFpOU4ztc+3Sf9seeKp3ELvg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WtDDuqzTcLaREbTlarVToWHkUb1Hd4FXh4CHBQ6p/ls=;
- b=kmxH3X8JpPr4Jz6Xo6TynAIP5AU7+Q7YL68tuDHj2JhNWR6U4y7ez8Bc+AarBrlLqILaKNs/f1iL4n1NYN24xVqFNQPTlhWBxCeOHfzmvIad8hl6ZMIEW7mlC5NRHEhK6b/dMTaqxTXbD+EFsNbA+t6410Euz7yHwjd6wTvWugU=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com (2603:10b6:510:1cb::21)
- by PH0PR12MB999088.namprd12.prod.outlook.com (2603:10b6:510:38d::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.18; Fri, 25 Sep
- 2026 20:01:44 +0000
-Received: from PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000]) by PH8PR12MB6914.namprd12.prod.outlook.com
- ([fe80::2893:177a:72b0:6000%7]) with mapi id 15.21.0451.014; Fri, 25 Sep 2026
- 20:01:44 +0000
-Message-ID: <3cbc91d7-3833-48e4-b21a-ed0f2b1370a7@amd.com>
-Date: Fri, 25 Sep 2026 15:01:39 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] Revert "ata: ahci: force 32-bit DMA for JMicron
- JMB582/JMB585"
-To: Bjorn Helgaas <helgaas@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Damien Le Moal <dlemoal@kernel.org>,
- Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
- Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
- "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
- "H . Peter Anvin" <hpa@zytor.com>,
- "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
- "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)"
- <linux-kernel@vger.kernel.org>,
- "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
- <linux-ide@vger.kernel.org>, Arthur Husband <artmoty@gmail.com>,
- Roland Waltersson <roland.waltersson@netinsight.net>, snoep <snoepke@live.nl>
-References: <20260925194208.GA2072993@bhelgaas>
-Content-Language: en-US
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20260925194208.GA2072993@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DSSP220CA0007.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:8:3d3::10) To PH8PR12MB6914.namprd12.prod.outlook.com
- (2603:10b6:510:1cb::21)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZIKCIy3g"
+Received: by mail-vs2-f39.google.com with SMTP id ada2fe7eead31-7b23989f7baso59439137.2
+        for <linux-ide@vger.kernel.org>; Fri, 25 Sep 2026 14:28:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790371733; x=1790976533; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=T5DE0JGxeDqZIZp7U5YbtubrIM9R70QWPvzhrKHb2cI=;
+        b=ZIKCIy3g9Zoh+Hio57nA4huRPLFnMTUrGsTQVaFi9qnrgPCXXbowyuuX4IyysJEzy5
+         4mMfW1cVvkXLOyHjrScSNre2qRCMkTBEyFO9F9c8AbMHryjSHCOiKRr8IpDqz3w+Zatf
+         2oiWdUWd4/PRw39OoWV9lKgRxCShVL0pLZ221VEBy15jpzig4p2Z6UqTPHwlC7PQi5oF
+         tkI/Z0/fVBM16iwYgcCjN204PFMYvpl/M37kg9ECUtmBkTdWlPYjSLwutv/p20fshppd
+         N3h9hb2geM3vyoHpGTFSTkwBX2ytUEmKCvQZPBHCcdo5noMVo+qJhCxJT33n7NADBPSh
+         jwow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790371733; x=1790976533;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=T5DE0JGxeDqZIZp7U5YbtubrIM9R70QWPvzhrKHb2cI=;
+        b=dMnD+xDEcwATVYdepdTO7TQbKb5rGI+fSsjulp+1oXLUJIh16bHbNb7twFC2i4d+Pq
+         Y8emKD+DjyrLCIc5Cn3CsukpKezhd5UUzSjWPerJubq4rULiZJtKe9hYPZtIRCDh9iMP
+         RenF62ifQxLBpMZUN39Osc0QELlExHWkrdrlT2wrnRcTcsbzWDKFz3Eksz0nqlOq6UVf
+         C4LHYz97Fph4o1TkX/bcpPvqy+MDzvZ1IN5wnlwhJmOcwwDCSGlpsD5KQT5plqMq2vSu
+         mFNSFU58/3D6mbOUkrhy1q2/BWwrGI2auGBvKAiwjr44RqoOAV+5GxTTpO8sOfMepSbo
+         eGqg==
+X-Forwarded-Encrypted: i=1; AKwUvBxmDC6djdDJhHxfRtPrWkn36i/uVyeW07yzzaZrX+vJKhHq0MOEloGb5AD0SNegK8O181BDT+xj9wc=@vger.kernel.org
+X-Gm-Message-State: AFuF++m0enUAbJdzeYgA4YI1qgsu4ApPYOZapdjOWPX8F+DFqV6vJfG7
+	E10RSKJYCwsANQgdflSz0e00hnZPxR977dusGi596RZre1iSDrhLzVi2
+X-Gm-Gg: AYBFou2cSI5RJIfTuhSrWA3MC0fUDXhqP/UlIOGge7yNcghpqsd0pqaihy9/b75yJzz
+	wzK1PSL+pc2/pC+aixgIbVX78J11JeLwAHtMAf3xwArBuxtkFROwT72vSGGANMbrZi2evcK7ctc
+	MsdwUdD2XzgioNp+3n3IIlyAJadcJCPe8QB2qZeqTqTwB+OGn8z1Fx5NEPVjcpXoUsI8ctABO2L
+	xbd5kXyHba7HUgWUs17NfzFASFe6ER4N9hsU7Qkw5Fgv1GaLxhyPrkq9ebuHm1JosAvnVt4CRLX
+	UwqvZpo+pqr+tsZq2jMk/2bCc9UyuIuHvX87+GOWcT6W5ZVp4G2mWMSn2QeNQBK3IrhKrmdMqIB
+	0WeBEF9qnYiV9qIBZPA1w9E0hDkO64QfEg8yh7HuIaLqxRXnzyK8cM7e296DAVKt/oggyKTyDya
+	1QmbvNgLelzFNXoV19ehlcXLjHD2KHnYEqE2mj4RjCeuEb12m3Q1HfidLma3Mg4mpG3aM1c4LZ6
+	UOENlVz+E13OAYIFl3/VtgNUzA8mA==
+X-Received: by 2002:a05:6102:54a1:b0:7ae:544d:b36c with SMTP id ada2fe7eead31-7b08e842851mr1125366137.3.1790371732886;
+        Fri, 25 Sep 2026 14:28:52 -0700 (PDT)
+Received: from Tifa.lan ([2804:1124:fd10:e01:ca0a:a9ba:b012:aee1])
+        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-7b39b9af306sm382132137.9.2026.09.25.14.28.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Sep 2026 14:28:52 -0700 (PDT)
+From: Carlos Junior <cjuniorfox@gmail.com>
+To: dlemoal@kernel.org
+Cc: cassel@kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Carlos Junior <cjuniorfox@gmail.com>
+Subject: [PATCH v2] ata: sata_mv: enable SoC SATA LED presence indication
+Date: Fri, 25 Sep 2026 18:28:23 -0300
+Message-ID: <20260925212823.121415-1-cjuniorfox@gmail.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260925193134.114566-1-cjuniorfox@gmail.com>
+References: <20260925193134.114566-1-cjuniorfox@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR12MB6914:EE_|PH0PR12MB999088:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9bad0217-a350-4802-b343-08df1b3fd2be
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|366016|1800799024|6133799003|10067099003|56012099006|11063799006|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	DOFYfbLRXb534gwjsAe8yvVbl8SHCfcW86xFa5MCWqz0vIoFP9RoLpQzAMA12SY+T4Xxz0gnCAglZiIuiSvZOouiJFr1koTRYdOoZjksvIuVJipgmdmwHkEmb9kovMl4wy+QZ8PuSOwRFSg/iyh/RL8ibEgdSdrlXY8ckG+PsAKWQeCApvgmk1PFutGPGJeTaQ4rbX5QFk47qbdAZuKj21SSM8as9cEou1urK3t2IapPHctPthGJgp50Z1GutjbmrAVApWsA9DF4ojp5asgdrBfXO7XIxipkOFNzY+OEIpvjXxHjH7U7+JG9OupKM+3Xb+BITJKSrjNo6hyebdO0mDSMO/IOyDuqvdMKjF+HrxaVhhvA28vkXn4/WkwAe9i0uEu+LffpmsxTVBbB2XgR+fnck20wZA/WTGIGaOHaLuXVIOkm1dpBn3hDQ2g4uwW3FVvV+GSVt0LIOGxT3vgYDiFMZVMLSmn24QR+RIg2YuM5fC+9NFtL0I46MHYgjrNv0dAlvUepfKt30P+sFbxDeh19+lVl6v2zScjmWVCnaYPe9a608Zny+CUNuq5HQvYNzcDgsIQFdi6NtYbFzx7VbqphydNtIUHMAppAjMuaGyU0UcI0LZ4saXeaLFP6xMsx
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR12MB6914.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(366016)(1800799024)(6133799003)(10067099003)(56012099006)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dllIU0RFMHg1T1VSOTZYZzlpSVFZUURDUGtkcGJzRDludFcycmlSZGZ2Ujhk?=
- =?utf-8?B?dkk1QVNRd2djaWUyZVlGYkMxYS8rRnMwejFWZ0Nkc1FPQTNqWU9DVVFxdTFz?=
- =?utf-8?B?SHFDa2hESVo3UmFMQ3krQ1pMKzV2Z3JaUVpRcnRrUUk0SGVRdU1lNGxBRzdG?=
- =?utf-8?B?N2hZMVArOWZPQTNuU3h6RDcvY1gvRFRsQzl2RnRiVklqUkRyamFCRk1zSHEr?=
- =?utf-8?B?dHNrZWVrY2JaTDN0WlZQWTNNRlRLRnYwbTBFVFpZbzZOdmcxcHVhWEg4aXU3?=
- =?utf-8?B?NVAyMHQwc242NEN5NUdFRTlvUldCTGZzaTJWYWZRVGJXQjNUVjFEUEl2eTJU?=
- =?utf-8?B?RlBaUkdaNzBTYi9Uc2dKc3N0N2lTZXp3K3M3YlNMZFRSeFFFY2FnM1l5NS9k?=
- =?utf-8?B?eU9rTjFvQUhEZ2VkMmliZkEweXRNcUZ1aTM5VlJoQUVJTjZpMit0RGRkaWN6?=
- =?utf-8?B?TStCUCtFWXhlMzFxMkZML1lNR1V0dG1Gc0UxV0l6MXVVWWpUcFNXSjJpL1p1?=
- =?utf-8?B?Qk1XOVNLRmlRdXl3c3libXBwazF6UEx6WWUxeC8vaGVkdlorQ0h3N2lWRkhC?=
- =?utf-8?B?VnZPSEVyVzM0enphblpBRFFBU1ZZVmZTR2NTYXM1L2ZrOXdyY3U2NFNid29I?=
- =?utf-8?B?bEF3dVZITlRlL1BjTjE0dHpINGRHYlFwRFN1b0IxMnpBUnVYMm9hbWJ1eDU5?=
- =?utf-8?B?cldualdzL2g4VU13a1A0WFdDVFJRa1JxUjBBNmFEQzFyNW5oc1Bobk9ycG0v?=
- =?utf-8?B?YkhaUUhLWHZaRFFJZW5SK0NQeWRBQUJ2OWZ4dXhMc0kva1VWVXBSaThmdXBO?=
- =?utf-8?B?VTBrRDQ5aElnVE96VGpmZXd4YXd6TFhHMHVjcXA5anlxb3ZHdG42UnhSQURy?=
- =?utf-8?B?WWgyNUt3Umx2MlUxL0EveXlQVVdSbytKRDNpWVRWWEoxWnZscld1RW1nc0tx?=
- =?utf-8?B?MnJwNm5nYk9Ua0Y2ckFyZ05mTjNtS2pNV3lSNVprRUhNOUhqZithVFRKOUhs?=
- =?utf-8?B?Vk5wSmJHaVp6ZXRCMEpLVktrZ1ZLS0U3V080MnkyNGozclBucHV4OTBKa1VM?=
- =?utf-8?B?SkJYNmI2YUFKKzZrc3B3SjQ1cHQ2OWloR2R4L3h5R3c1NE1ZM1FNT2QwQW14?=
- =?utf-8?B?TGhZaEVBTXNadHFOT0k3MGZGUGhsc092YUc5WDNoS1c5SjVmczJFT3dXa1g0?=
- =?utf-8?B?Q1QvamVFajlkQ0pIdzRpOEwzSTEybjhPU0tvTWlvcGRGR2FzeGpZditUMmNE?=
- =?utf-8?B?aU5GekdTeUh4TUg4V1BZMTV3NDBkcENQVjA1S1dHMFRENEFieTlQbUducUw2?=
- =?utf-8?B?M245Y05URnVzS1N2cmJ1ME9rMFI1amI4WWNvc2VIc3V2TzRDTzRhaVMrcGtz?=
- =?utf-8?B?RW9XN2dpL01zZE8vUElvRG85dFhyc1MvTlo5elRGekJkOW5BVU1aaklsU1l4?=
- =?utf-8?B?dTR6dm1ZY2tSeGg0VENoZ2NvYzhWQjRST3Fhc2JSVk9jU0FKTGhBTmpPMldF?=
- =?utf-8?B?amU3WkQveXd2WGtTY3A0UnMyaGszYkx5WjVuMmJXNDZhWmNnSE5VSzNLTDdG?=
- =?utf-8?B?WUgvUUhRL3Z5eWtuaDEzZ1RKaUdqbzFHMWY5UG9Od0xXWjg4Y2l3TnlESkpa?=
- =?utf-8?B?Mm1XWGtvMWFPbE1zMHc0ZnF4QlpaaFRUVmhma2xlb05KWmFHTEZPTElJS1FH?=
- =?utf-8?B?ZDlqd3orRVBWN3dUN1RkM3htSUVaQXAreWxNbnlGSTdPZCtwOXI5SlJUUmc2?=
- =?utf-8?B?S3JMQjRxZnpwWngxVEVpLzNkK0pCd25yL2x0WUZySGhmaDEyV1FZekV1ODk2?=
- =?utf-8?B?Ym9NMlRQU1lHaFB3c3BteDQ0RHVNV1lrSGorZndUaFJjQmM5dkNydkgzZEsw?=
- =?utf-8?B?WkkxK05qODF6MXVnTWJlN3QzMHhsWERUdUsySFJPYm13QUJFL3hYWERQU29l?=
- =?utf-8?B?Z0pjd1lpc3QxM1N0eXZ2R0VXUFhOQWRlUkZsSHFOUjRyVmhTNVJyYk1DbUVj?=
- =?utf-8?B?MkwyYXBuNFVPRDJwcFYrZm13TGQrRklGQ1NOQU9UTkJORHpxSGxTaWEzSkxW?=
- =?utf-8?B?YjhVdXpQVjM3ZjhhcUNrU2JudmlyTWhNeDBTdG94VHVobm1NZW9XLzE1MTNC?=
- =?utf-8?B?VGFNdW5DekdhdktCSFBRQ29zWFVtK3VXeDdnNlM0Tm9rOGV3QzRPS2Y4R0w4?=
- =?utf-8?B?bHQyc3B6cC93WHZNUVY3a05wYW5kQ1J6MVBMajZoUm5rN01YdmJFMm5TYytw?=
- =?utf-8?B?alFTUlFKcW04MTIwZk12TjNld1pWTndGbUJ5aTBDQ3RIMkx3d3FqaWpvZ2xy?=
- =?utf-8?Q?dh1kemZviNGF8nSm/a?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9bad0217-a350-4802-b343-08df1b3fd2be
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR12MB6914.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Sep 2026 20:01:44.4263
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uwsyDkjjaHPkAhCBUobVJRIgnvz13gwjs8mvAlDZ7Wd1pyZrrujdExvgGm9MYm5nwbYiPb6jXsPMbPSApHCBOA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB999088
+Content-Transfer-Encoding: 8bit
 
+Enable the SoC SATA LED controller in mv_soc_enable_leds().
 
+Set the LED controller enable and device presence multiplexing bits
+in the SoC SATA host-controller register. This enables SATA device
+presence indication on boards using the SoC SATA controller.
 
-On 9/25/26 14:42, Bjorn Helgaas wrote:
-> [+cc Roland, snoep]
-> 
-> On Tue, Sep 08, 2026 at 02:06:00PM -0500, Mario Limonciello wrote:
->> This reverts commit 105c42566a550e2d05fc14f763216a8765ee5d0e.
->>
->> The issue is actually a problem with BIOS configuaration of PCIe
->> root ports, enabling a feature that causes problems with 64-bit
->> DMA.  It is fixed by adjusting the kernel adjusting the
->> configuration of those root ports.
-> 
-> I'm a little concerned about doing this revert for v7.3:
-> 
->    - The AMD issue should affect any SATA controller, but 105c42566a55
->      ("ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585") is very
->      specific about JMicron JMB582/JMB585.
-> 
->    - The BIOS configuration change only affects AMD NBIO 7.7 and 7.11
->      but the original posting [1] of 105c42566a55 ("ata: ahci: force
->      32-bit DMA for JMicron JMB582/JMB585") mentions Raspberry Pi,
->      which isn't AMD (the Raspberry Pi mention was removed before
->      105c42566a55 was merged).
-> 
->    - There are reports of problems on Raspberry Pi 5 JMB585 [2], [3]
->      that don't seem completely resolved.
-> 
->    - The revert doesn't seem like it fixes a problem, so I don't know
->      that I can justify it as post-rc1 material for v7.3; maybe the ATA
->      folks should take it for v7.4?
-> 
-> What if I just merge patch [1/2] ("x86/PCI: Disable enhanced atomics
-> on AMD NBIO 7.7 and 7.11") for v7.3?  Would that leave anything
-> broken?
-> 
-> [1] https://lore.kernel.org/all/20260403050225.50186-1-artmoty@gmail.com/t/#u)
-> [2] https://forum.radxa.com/t/repeated-ext4-metadata-corruption-on-raspberry-pi-5-with-penta-sata-hat-jmb585-despite-healthy-ssds-and-raid1/31393/10
-> [3] https://forums.raspberrypi.com/viewtopic.php?p=2386959#p2386959
-> 
->> Cc: Arthur Husband <artmoty@gmail.com>
->> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+Signed-off-by: Carlos Junior <cjuniorfox@gmail.com>
+---
+Changes in v2:
+- Do not initialize the SoC SATA LED blink bit; leave it to the
+  existing NCQ LED blink handling.
 
-I think we should let Niklas speak up here because there was 
-confirmation on this thread it's an AMD only issue.
+ drivers/ata/sata_mv.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-https://lore.kernel.org/all/ap6RyP28fxXNjRWS@ryzen/
-
-
->> ---
->>   drivers/ata/ahci.c | 18 ------------------
->>   1 file changed, 18 deletions(-)
->>
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index 9b8c0935001cb..bffe50a109b88 100644
->> --- a/drivers/ata/ahci.c
->> +++ b/drivers/ata/ahci.c
->> @@ -68,7 +68,6 @@ enum board_ids {
->>   	/* board IDs for specific chipsets in alphabetical order */
->>   	board_ahci_al,
->>   	board_ahci_avn,
->> -	board_ahci_jmb585,
->>   	board_ahci_mcp65,
->>   	board_ahci_mcp77,
->>   	board_ahci_mcp89,
->> @@ -213,15 +212,6 @@ static const struct ata_port_info ahci_port_info[] = {
->>   		.udma_mask	= ATA_UDMA6,
->>   		.port_ops	= &ahci_avn_ops,
->>   	},
->> -	/* JMicron JMB582/585: 64-bit DMA is broken, force 32-bit */
->> -	[board_ahci_jmb585] = {
->> -		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR |
->> -				 AHCI_HFLAG_32BIT_ONLY),
->> -		.flags		= AHCI_FLAG_COMMON,
->> -		.pio_mask	= ATA_PIO4,
->> -		.udma_mask	= ATA_UDMA6,
->> -		.port_ops	= &ahci_ops,
->> -	},
->>   	[board_ahci_mcp65] = {
->>   		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
->>   				 AHCI_HFLAG_YES_NCQ),
->> @@ -954,14 +944,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->>   		/* Elkhart Lake AHCI */
->>   		PCI_VDEVICE(INTEL, 0x4b63),
->>   		.driver_data = board_ahci_pcs_quirk,
->> -	}, {
->> -		/* JMicron JMB582/585: force 32-bit DMA (broken 64-bit implementation) */
->> -		PCI_VDEVICE(JMICRON, 0x0582),
->> -		.driver_data = board_ahci_jmb585,
->> -
->> -	}, {
->> -		PCI_VDEVICE(JMICRON, 0x0585),
->> -		.driver_data = board_ahci_jmb585,
->>   	}, {
->>   		/* JMicron 360/1/3/5/6, match class to avoid IDE function */
->>   		PCI_DEVICE(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID),
->> -- 
->> 2.43.0
->>
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index d260f04e6..52e33485b 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -252,6 +252,7 @@ enum {
+ 	SOC_LED_CTRL_BLINK	= (1 << 0),	/* Active LED blink */
+ 	SOC_LED_CTRL_ACT_PRESENCE = (1 << 2),	/* Multiplex dev presence */
+ 						/*  with dev activity LED */
++	SOC_LED_CTRL_ENABLE	= (1 << 3),	/* Enable SATA LED control */
+ 
+ 	/* Shadow block registers */
+ 	SHD_BLK			= 0x100,
+@@ -3382,12 +3383,20 @@ static void mv6_phy_errata(struct mv_host_priv *hpriv, void __iomem *mmio,
+ 	writel(m2, port_mmio + PHY_MODE2);
+ }
+ 
+-/* TODO: use the generic LED interface to configure the SATA Presence */
+-/* & Acitivy LEDs on the board */
++/*
++ * Enable the SoC SATA LED controller and device presence
++ * indication on the board's SATA LEDs.
++ */
+ static void mv_soc_enable_leds(struct mv_host_priv *hpriv,
+ 				      void __iomem *mmio)
+ {
+-	return;
++	void __iomem *hc_mmio;
++
++	hc_mmio = mv_hc_base(mmio, 0);
++
++	writel(SOC_LED_CTRL_ENABLE |
++		SOC_LED_CTRL_ACT_PRESENCE,
++		hc_mmio + SOC_LED_CTRL);
+ }
+ 
+ static void mv_soc_read_preamp(struct mv_host_priv *hpriv, int idx,
+-- 
+2.54.0
 
