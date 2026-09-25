@@ -1,128 +1,126 @@
-Received: from mail-vs2-f40.google.com (mail-vs2-f40.google.com [74.125.227.40])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ADC3445AFB
-	for <linux-ide@vger.kernel.org>; Fri, 25 Sep 2026 19:31:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D85F38DC57
+	for <linux-ide@vger.kernel.org>; Fri, 25 Sep 2026 19:40:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790364716; cv=none; b=cHwowPeKS8ulodH4aQ55dqwPspxfl22bNfU01Wy4JMhylWeQofBKzFMF7EOtPOZK+NB3uqEa3rODsTBB85EkYloUTwbzpFKQNu8ejnW7WZxJktpiaLV9C3mAMgPY5+/jDiTTdZ1G+l23zTTt71qy1HSmhZPL/KpsNMrzhf1aYfw=
+	t=1790365236; cv=none; b=qOsJ8pNRlLF1fNU8pvXAuqXeiwpjlJQgw1XB66BW3FufPdtkjCcO/39gHZBU174m0qyoVDYIOP12kEatmSRcBHWnHWlm4NPWmA2sED6yDtyNYqLQrwjqiFCW4PDy1eU1xDMGnI7nHU9+lTmTJGUzAtE79cUKnlfBgGO6hILdu5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790364716; c=relaxed/simple;
-	bh=cYiVeZguetQ2DZ7DdyUR8Q0IdUlxNmguR0zDq8TQ450=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OXnGNUQ/k+nQ1oF2jYQQMd3XTBAUra9gvRzq6+CCd+Hz/FU0BKQsPSULT/Nfo9u6829R7n5qcvA/bPwJedLUeO3+Lz4TbDa29MbJ/HRqTiYHMtb7iylNXAq2VhDId/kEgSOjV/AZ8Qxi4+1duU2rBHQUSkHoL9FoSvdFe3kXFgY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cXeEC0Yb; arc=none smtp.client-ip=74.125.227.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790365236; c=relaxed/simple;
+	bh=512p4i89hfbNNLzUkKTVeWeHuY1+SF96J80awVgU234=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Xzpaj2UAvJWvk9QyRcRUPnN3kSKAT7LM3IyjO7zWCcZbarOMFM8imgYyr7i7PAqvual7l0Caa89CBSVWjEZXOJiZWITmOFJN87qjcMaQSYEB3CNpkkNsM2A9zryy1TAEFZ+tGkxbrZQp2wJMdiwwmAlYZLSrcV6Wfc3eX0O74hw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=msvg0SPG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cXeEC0Yb"
-Received: by mail-vs2-f40.google.com with SMTP id 71dfb90a1353d-5c9ec793b6aso42711e0c.0
-        for <linux-ide@vger.kernel.org>; Fri, 25 Sep 2026 12:31:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790364714; x=1790969514; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=BHhX4lWU7b61qXvFhT2xwAHTxPoZGFp0LuRIrYtjK68=;
-        b=cXeEC0YbpkQNFZXbh3Oy6ws7BSOT5yU2I06BgJCIIJOfkFkkFyZVdNPc05uOicqz8i
-         OcwJNTiOFD+SxWc1QhbujKZq9iZ5VsqWbrI1lcneBSpxN+lK2lOAvRNyRLdfgtud/fFf
-         esbM7mm1VYZSO+ApJH+zeBjXojB8/5mSvk9McIwd2egHC4wRT14CktBIpi0Gh6UIHSTR
-         MDrJkWQ7JeePez2SOyHhHJqqBV0it7jLLzxT73jKnylAtesKVeHElWYDNfPxXsSaknZf
-         bYO/Wj8gi157S+1dA1+RxftjUpvEi9pcOnB36dm2bFJOCZqmI+fqppYBklmXzhl48shJ
-         0jLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790364714; x=1790969514;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=BHhX4lWU7b61qXvFhT2xwAHTxPoZGFp0LuRIrYtjK68=;
-        b=N1e2N+ws3Z++hM98EN20ydLcmMumR88tBb6mLzvmkqEXe/xwTRLGTadPnu6Hctl5E5
-         AzZ1LL7VCPG5WNW8gsLjmGsceF1Cs2F3o8rpqg+5TKTrEffuUtBeslMNL1YDlE8e4Ojp
-         BvWxan5CARs2t0mKMPYIgEANiQGDqe9LGBsEcdivmL9napiZ/fObea6M9/0pTxrBHA5R
-         kgG1GKwtO3w8ivorId34XDz9+SLJvpYe0GEk0bgCRnyO1AEKc+vDvHvKqGKeHYkOObRM
-         7xj1Xzxv9Ju6ZQe0k4VKbHJEPACxmYbZ/WqjccqtgqreFlLMGswLsjHKrcltkv3MwYf9
-         ZimA==
-X-Gm-Message-State: AFuF++nMIWvX1JZW/VubmsZzxnasxZ7iP2iBOh57w71Apx6oLFhvIAz+
-	vkD+fbR5OSUs8JLrJHKKHBrlYXOIvQBRXI400QLlW1ByzDnW+ZcdzNVI
-X-Gm-Gg: AYBFou2OhmBugghLwZre7tJGcGCeyhyhbCemc9LnegKBs/LEF0x+IPsqvon0P4zRg7Y
-	1W7Ug9+J/HCh1TvqBNvbrcuH7T1QbNYaSDwyoazF3qZAFPHW3hUwaYtCOwtshVGLjMgjEBqGaxA
-	9EkV+Ah0+1b5xWZ3j2RjvQBIb0zczfvP6or97wPQXW0NCmtgKQc5m6m0am3FgtEBkJxwVISP2pI
-	dl49Ecr1zul5+59fHGcl9ogFyEZrKVRIfR7sFLsA/Rn8b0XUeNnjplC8xajk+aufoHyjYYzB7GO
-	y/xtlmzDmED7F1M5GQduVNOzWsRuXkDqbelsR5/Y6n2M112rJK0KpZC7duD7jszwwp0tMuDzwXI
-	OeToT1j/jUsHJJg/l02q8mu4yj8OKaujC1jdzLmEhpLZSJTY80gDzIMaJD6LHPsmmQss+tr8Fa+
-	/BbLMnaitv8Du4DoIKDvTHzHG+X6qMH1hqtjFJzWN/FQAWvKVI+kkhZh4hviJlo93LrOBUiKLAo
-	dC0/QmtixeBpuO75y7vl+UJdtsTiA==
-X-Received: by 2002:ac5:c7d3:0:b0:5c8:39c7:ba55 with SMTP id 71dfb90a1353d-5cb061001fdmr2264470e0c.0.1790364714250;
-        Fri, 25 Sep 2026 12:31:54 -0700 (PDT)
-Received: from Tifa.lan ([2804:1124:fd10:e01:5236:1a05:963b:44ce])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5cd23e654e8sm2043280e0c.16.2026.09.25.12.31.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Sep 2026 12:31:53 -0700 (PDT)
-From: Carlos Junior <cjuniorfox@gmail.com>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Carlos Junior <cjuniorfox@gmail.com>
-Subject: [PATCH] ata: sata_mv: enable SoC SATA LED presence indication
-Date: Fri, 25 Sep 2026 16:31:34 -0300
-Message-ID: <20260925193134.114566-1-cjuniorfox@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="msvg0SPG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A05C31F000FF;
+	Fri, 25 Sep 2026 19:40:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790365234;
+	bh=GTqFYDgqVYoKIQ8wnkRp4psOA5362lbnrB+zkkTxLzI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=msvg0SPGUHzG0lRP5nq+8u+9RSuXCUycAaJNbCpX/znXNAnxJGsvY43aKO2ODrbo6
+	 pKIYEwUMPs/s0CNUFHoiKZCm51aBOcgeiB7B1LEIsnB+u2z2hdypKOeD/yWd5PC/Oo
+	 mwI/dSQvA6nXUISRjw6wDavvyIW2S51xJ2pcXLl+cRvMPmvZnfXhnbbsWllGBOem5S
+	 wcar3nHALjd0tSGTzuLDSLJeFgd65aNAXghV66C9Njw1QLK/Dno875h/icFGEyDupN
+	 spORGLPP4jIHyuTpFPc0ZJO+A7ymRdmhf9YdbCwWdd7N/a3lHapZjS1IphyNW8zjCt
+	 jDlKSG08OYznQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ata: sata_mv: enable SoC SATA LED presence indication
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Carlos Junior" <cjuniorfox@gmail.com>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, cassel@kernel.org
+In-Reply-To: <20260925193134.114566-1-cjuniorfox@gmail.com>
+References: <20260925193134.114566-1-cjuniorfox@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 25 Sep 2026 19:40:34 +0000
+Message-Id: <20260925194034.A05C31F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Enable the SoC SATA LED controller in mv_soc_enable_leds().
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] ata: sata_mv: LED blink mode state desynchronization and register =
+clobbering
+- [Medium] ata: sata_mv: hardcoded LED multiplexing risks board-specific pi=
+n conflicts
+--
 
-Set the LED controller enable, device presence multiplexing, and
-activity blink bits in the SoC SATA host-controller register. This
-enables SATA device presence indication on boards using the SoC SATA
-controller.
+commit 30e313ac1545b898b81aab6027f1bf3c7b86b831
+Author: Carlos Junior <cjuniorfox@gmail.com>
 
-Signed-off-by: Carlos Junior <cjuniorfox@gmail.com>
----
- drivers/ata/sata_mv.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ata: sata_mv: enable SoC SATA LED presence indication
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index d260f04e6..4a6a6dc7b 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -251,6 +251,7 @@ enum {
- 	SOC_LED_CTRL		= 0x2c,
- 	SOC_LED_CTRL_BLINK	= (1 << 0),	/* Active LED blink */
- 	SOC_LED_CTRL_ACT_PRESENCE = (1 << 2),	/* Multiplex dev presence */
-+	SOC_LED_CTRL_ENABLE	= (1 << 3),	/* Enable SATA LED control */
- 						/*  with dev activity LED */
- 
- 	/* Shadow block registers */
-@@ -3382,12 +3383,21 @@ static void mv6_phy_errata(struct mv_host_priv *hpriv, void __iomem *mmio,
- 	writel(m2, port_mmio + PHY_MODE2);
- }
- 
--/* TODO: use the generic LED interface to configure the SATA Presence */
--/* & Acitivy LEDs on the board */
-+/*
-+ * Enable the SoC SATA LED controller and device presence
-+ * indication on the board's SATA LEDs.
-+ */
- static void mv_soc_enable_leds(struct mv_host_priv *hpriv,
- 				      void __iomem *mmio)
- {
--	return;
-+	void __iomem *hc_mmio;
-+
-+	hc_mmio = mv_hc_base(mmio, 0);
-+
-+	writel(SOC_LED_CTRL_ENABLE |
-+		SOC_LED_CTRL_ACT_PRESENCE |
-+		SOC_LED_CTRL_BLINK,
-+		hc_mmio + SOC_LED_CTRL);
- }
- 
- static void mv_soc_read_preamp(struct mv_host_priv *hpriv, int idx,
--- 
-2.54.0
+This commit enables the SoC SATA LED controller in mv_soc_enable_leds().
+It sets the enable, device presence multiplexing, and activity blink bits
+in the host-controller register.
 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 365454390d7e0..90a4ca5b5c407 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+[ ... ]
+> @@ -3382,12 +3383,21 @@ static void mv6_phy_errata(struct mv_host_priv *h=
+priv, void __iomem *mmio,
+>  	writel(m2, port_mmio + PHY_MODE2);
+>  }
+> =20
+> -/* TODO: use the generic LED interface to configure the SATA Presence */
+> -/* & Acitivy LEDs on the board */
+> +/*
+> + * Enable the SoC SATA LED controller and device presence
+> + * indication on the board's SATA LEDs.
+> + */
+>  static void mv_soc_enable_leds(struct mv_host_priv *hpriv,
+>  				      void __iomem *mmio)
+>  {
+> -	return;
+> +	void __iomem *hc_mmio;
+> +
+> +	hc_mmio =3D mv_hc_base(mmio, 0);
+> +
+> +	writel(SOC_LED_CTRL_ENABLE |
+> +		SOC_LED_CTRL_ACT_PRESENCE |
+> +		SOC_LED_CTRL_BLINK,
+> +		hc_mmio + SOC_LED_CTRL);
+
+[Severity: High]
+Does this blind writel clobber existing register configurations? Without a
+read-modify-write pattern, any settings previously configured by the
+bootloader will be overwritten.
+
+Additionally, this enables blink mode in hardware without updating the
+software state tracker. When mv_edma_cfg() later attempts to disable
+blinking for non-NCQ devices, it relies on mv_soc_led_blink_disable():
+
+    if (!(hpriv->hp_flags & MV_HP_QUIRK_LED_BLINK_EN))
+        return;
+
+Because hpriv->hp_flags was never updated to include
+MV_HP_QUIRK_LED_BLINK_EN during initialization, this check will falsely
+indicate that blinking is already disabled and return early. Will this
+leave non-NCQ devices permanently stuck in blink mode?
+
+[Severity: Medium]
+Does forcing SOC_LED_CTRL_ACT_PRESENCE globally for all SoC devices risk
+board-specific pin conflicts?
+
+Unconditionally enabling LED multiplexing here overrides platform-specific
+pinmux routing. On boards where these physical pins are utilized for other
+GPIO functions like UART or I2C, forcing the controller to drive them
+could result in hardware conflicts or erratic behavior. The previous
+comment indicated this should be handled through the generic LED interface
+to respect dynamic Device Tree routing.
+
+>  }
+> =20
+>  static void mv_soc_read_preamp(struct mv_host_priv *hpriv, int idx,
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260925193134.1145=
+66-1-cjuniorfox@gmail.com?part=3D1
