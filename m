@@ -1,98 +1,128 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs2-f40.google.com (mail-vs2-f40.google.com [74.125.227.40])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE2C141440D;
-	Fri, 25 Sep 2026 18:06:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ADC3445AFB
+	for <linux-ide@vger.kernel.org>; Fri, 25 Sep 2026 19:31:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790359570; cv=none; b=TJijU+sjwyTg3QiB31VLIv4CSuKY3p40HP1wDHS49GuEL+9IMIrXzWalwCkBALGsqu41GnXqU1OlPsb3iwQDrWufhvjngJsTdXKxD1bmcLr5Y2z0L35zjWpp+KyahAtfJCbFOrMqF9wLFvznCZK9tg7kwlz8Gb5bUuopyAaugZY=
+	t=1790364716; cv=none; b=cHwowPeKS8ulodH4aQ55dqwPspxfl22bNfU01Wy4JMhylWeQofBKzFMF7EOtPOZK+NB3uqEa3rODsTBB85EkYloUTwbzpFKQNu8ejnW7WZxJktpiaLV9C3mAMgPY5+/jDiTTdZ1G+l23zTTt71qy1HSmhZPL/KpsNMrzhf1aYfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790359570; c=relaxed/simple;
-	bh=mhzJR8Y9vUY5+zagJG7EjENZW57LjxxqFlW62sFDtQY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jWPpqDQD29+ECfcxf7Fd4lgS6AcQR0nr/QtEuT09Y802jZVToxHmykydfhusy2VLikferCYVEPQ35hdbZWRFya3U/ryzwLLjPm/BS7cyMttEuF/Wa+SmMSACPIoGNO3hmbX2+fBMhu3vCaQApi+vD4nKUn+BUXSqHc1WqcgMu30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gQPZrn1Y; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1790364716; c=relaxed/simple;
+	bh=cYiVeZguetQ2DZ7DdyUR8Q0IdUlxNmguR0zDq8TQ450=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OXnGNUQ/k+nQ1oF2jYQQMd3XTBAUra9gvRzq6+CCd+Hz/FU0BKQsPSULT/Nfo9u6829R7n5qcvA/bPwJedLUeO3+Lz4TbDa29MbJ/HRqTiYHMtb7iylNXAq2VhDId/kEgSOjV/AZ8Qxi4+1duU2rBHQUSkHoL9FoSvdFe3kXFgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cXeEC0Yb; arc=none smtp.client-ip=74.125.227.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gQPZrn1Y"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hrzCZ5wJkz1XM4Tl;
-	Fri, 25 Sep 2026 18:06:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1790359555; x=1792951556; bh=mhzJR8Y9vUY5+zagJG7EjENZW57LjxxqFlW
-	62sFDtQY=; b=gQPZrn1Yw26fInwZH3XNeQwpt0UY+0ct5jIiXSOtL1HY8OjP35G
-	CQa5lizz4nav86tVgXISiIu4r7/bFTyGVH77+5YI/Dzz9inmQSJZ6kpnW5O853WH
-	9KMpoMdFGLmfCorf8GTdoCWeJ2Ycs7fxLW7U+gGgMd0KdnlDU5OHq3lnb/eMBsoC
-	+dbuMutvjpPHUQn62q5o71nk4WDWngKyUCJpIphU+uQ6dylxAKH0VpI1Pe3orDzZ
-	MbPGbCzS56vN92ZF+VPmQZ7YsGxXps0S6AGFnc6TRnu2Db+CPQbMES3bqUMVPc1Y
-	pfxBqOpK9fiVxHi4OuYWDBRGCyno3ord19w==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 0_h46b6VuaNS; Fri, 25 Sep 2026 18:05:55 +0000 (UTC)
-Received: from bvanassche.c.googlers.com.com (148.60.168.34.bc.googleusercontent.com [34.168.60.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hrzCN2FFcz1XM4Sx;
-	Fri, 25 Sep 2026 18:05:51 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org,
-	Randy Dunlap <rdunlap@infradead.org>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cXeEC0Yb"
+Received: by mail-vs2-f40.google.com with SMTP id 71dfb90a1353d-5c9ec793b6aso42711e0c.0
+        for <linux-ide@vger.kernel.org>; Fri, 25 Sep 2026 12:31:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790364714; x=1790969514; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=BHhX4lWU7b61qXvFhT2xwAHTxPoZGFp0LuRIrYtjK68=;
+        b=cXeEC0YbpkQNFZXbh3Oy6ws7BSOT5yU2I06BgJCIIJOfkFkkFyZVdNPc05uOicqz8i
+         OcwJNTiOFD+SxWc1QhbujKZq9iZ5VsqWbrI1lcneBSpxN+lK2lOAvRNyRLdfgtud/fFf
+         esbM7mm1VYZSO+ApJH+zeBjXojB8/5mSvk9McIwd2egHC4wRT14CktBIpi0Gh6UIHSTR
+         MDrJkWQ7JeePez2SOyHhHJqqBV0it7jLLzxT73jKnylAtesKVeHElWYDNfPxXsSaknZf
+         bYO/Wj8gi157S+1dA1+RxftjUpvEi9pcOnB36dm2bFJOCZqmI+fqppYBklmXzhl48shJ
+         0jLQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790364714; x=1790969514;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=BHhX4lWU7b61qXvFhT2xwAHTxPoZGFp0LuRIrYtjK68=;
+        b=N1e2N+ws3Z++hM98EN20ydLcmMumR88tBb6mLzvmkqEXe/xwTRLGTadPnu6Hctl5E5
+         AzZ1LL7VCPG5WNW8gsLjmGsceF1Cs2F3o8rpqg+5TKTrEffuUtBeslMNL1YDlE8e4Ojp
+         BvWxan5CARs2t0mKMPYIgEANiQGDqe9LGBsEcdivmL9napiZ/fObea6M9/0pTxrBHA5R
+         kgG1GKwtO3w8ivorId34XDz9+SLJvpYe0GEk0bgCRnyO1AEKc+vDvHvKqGKeHYkOObRM
+         7xj1Xzxv9Ju6ZQe0k4VKbHJEPACxmYbZ/WqjccqtgqreFlLMGswLsjHKrcltkv3MwYf9
+         ZimA==
+X-Gm-Message-State: AFuF++nMIWvX1JZW/VubmsZzxnasxZ7iP2iBOh57w71Apx6oLFhvIAz+
+	vkD+fbR5OSUs8JLrJHKKHBrlYXOIvQBRXI400QLlW1ByzDnW+ZcdzNVI
+X-Gm-Gg: AYBFou2OhmBugghLwZre7tJGcGCeyhyhbCemc9LnegKBs/LEF0x+IPsqvon0P4zRg7Y
+	1W7Ug9+J/HCh1TvqBNvbrcuH7T1QbNYaSDwyoazF3qZAFPHW3hUwaYtCOwtshVGLjMgjEBqGaxA
+	9EkV+Ah0+1b5xWZ3j2RjvQBIb0zczfvP6or97wPQXW0NCmtgKQc5m6m0am3FgtEBkJxwVISP2pI
+	dl49Ecr1zul5+59fHGcl9ogFyEZrKVRIfR7sFLsA/Rn8b0XUeNnjplC8xajk+aufoHyjYYzB7GO
+	y/xtlmzDmED7F1M5GQduVNOzWsRuXkDqbelsR5/Y6n2M112rJK0KpZC7duD7jszwwp0tMuDzwXI
+	OeToT1j/jUsHJJg/l02q8mu4yj8OKaujC1jdzLmEhpLZSJTY80gDzIMaJD6LHPsmmQss+tr8Fa+
+	/BbLMnaitv8Du4DoIKDvTHzHG+X6qMH1hqtjFJzWN/FQAWvKVI+kkhZh4hviJlo93LrOBUiKLAo
+	dC0/QmtixeBpuO75y7vl+UJdtsTiA==
+X-Received: by 2002:ac5:c7d3:0:b0:5c8:39c7:ba55 with SMTP id 71dfb90a1353d-5cb061001fdmr2264470e0c.0.1790364714250;
+        Fri, 25 Sep 2026 12:31:54 -0700 (PDT)
+Received: from Tifa.lan ([2804:1124:fd10:e01:5236:1a05:963b:44ce])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5cd23e654e8sm2043280e0c.16.2026.09.25.12.31.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Sep 2026 12:31:53 -0700 (PDT)
+From: Carlos Junior <cjuniorfox@gmail.com>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: libata: Fix scsi_done() documentation
-Date: Fri, 25 Sep 2026 11:05:43 -0700
-Message-ID: <291519238580d795929d44437f3c863403d14e1f.1790359497.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
+	Carlos Junior <cjuniorfox@gmail.com>
+Subject: [PATCH] ata: sata_mv: enable SoC SATA LED presence indication
+Date: Fri, 25 Sep 2026 16:31:34 -0300
+Message-ID: <20260925193134.114566-1-cjuniorfox@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-In 2008 the SCSI core was converted to use the block layer timeout
-infrastructure instead of its own infrastructure (see also patch
-"block: unify request timeout handling"). Since then, calling
-scsi_done() while SCSI host recovery is in progress has no effect.
-Originally the REQ_ATOM_COMPLETE flag was used to prevent double
-completions. Today the SCMD_STATE_COMPLETE flag is used to prevent
-double completions.
+Enable the SoC SATA LED controller in mv_soc_enable_leds().
 
-Instead of mentioning that calling scsi_done() is not allowed while
-host recovery is in progress, mention that it has no effect.
+Set the LED controller enable, device presence multiplexing, and
+activity blink bits in the SoC SATA host-controller register. This
+enables SATA device presence indication on boards using the SoC SATA
+controller.
 
-Cc: Damien Le Moal <dlemoal@kernel.org>
-Cc: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Carlos Junior <cjuniorfox@gmail.com>
 ---
- Documentation/driver-api/libata.rst | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/sata_mv.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/driver-api/libata.rst b/Documentation/driver-a=
-pi/libata.rst
-index 28b8437f6e4f..c130b480180f 100644
---- a/Documentation/driver-api/libata.rst
-+++ b/Documentation/driver-api/libata.rst
-@@ -524,8 +524,8 @@ EH will know to handle it later. Then it calls low le=
-vel libata driver's
- :c:func:`error_handler` callback.
-=20
- When the :c:func:`error_handler` callback is invoked it stops BMDMA and
--completes the qc. Note that as we're currently in EH, we cannot call
--scsi_done. As described in SCSI EH doc, a recovered scmd should be
-+completes the qc. Note that as we're currently in EH, scsi_done() has
-+no effect. As described in SCSI EH doc, a recovered scmd should be
- either retried with :c:func:`scsi_queue_insert` or finished with
- :c:func:`scsi_finish_command`. Here, we override ``qc->scsidone`` with
- :c:func:`scsi_finish_command` and calls :c:func:`ata_qc_complete`.
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index d260f04e6..4a6a6dc7b 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -251,6 +251,7 @@ enum {
+ 	SOC_LED_CTRL		= 0x2c,
+ 	SOC_LED_CTRL_BLINK	= (1 << 0),	/* Active LED blink */
+ 	SOC_LED_CTRL_ACT_PRESENCE = (1 << 2),	/* Multiplex dev presence */
++	SOC_LED_CTRL_ENABLE	= (1 << 3),	/* Enable SATA LED control */
+ 						/*  with dev activity LED */
+ 
+ 	/* Shadow block registers */
+@@ -3382,12 +3383,21 @@ static void mv6_phy_errata(struct mv_host_priv *hpriv, void __iomem *mmio,
+ 	writel(m2, port_mmio + PHY_MODE2);
+ }
+ 
+-/* TODO: use the generic LED interface to configure the SATA Presence */
+-/* & Acitivy LEDs on the board */
++/*
++ * Enable the SoC SATA LED controller and device presence
++ * indication on the board's SATA LEDs.
++ */
+ static void mv_soc_enable_leds(struct mv_host_priv *hpriv,
+ 				      void __iomem *mmio)
+ {
+-	return;
++	void __iomem *hc_mmio;
++
++	hc_mmio = mv_hc_base(mmio, 0);
++
++	writel(SOC_LED_CTRL_ENABLE |
++		SOC_LED_CTRL_ACT_PRESENCE |
++		SOC_LED_CTRL_BLINK,
++		hc_mmio + SOC_LED_CTRL);
+ }
+ 
+ static void mv_soc_read_preamp(struct mv_host_priv *hpriv, int idx,
+-- 
+2.54.0
+
