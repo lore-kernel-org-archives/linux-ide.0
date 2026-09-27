@@ -1,92 +1,81 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4206A382F1A
-	for <linux-ide@vger.kernel.org>; Sat, 26 Sep 2026 17:48:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 406743B95E3;
+	Sun, 27 Sep 2026 07:16:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790444936; cv=none; b=LeSllXUf1tYEaDyizx7QwISvWxJQkdRU3NUQDcZ+mDPsrtkeaqcFi8Yww3MMF/+trc5D01dcbhXbRJKk2n3trlUX/FrNhjimMXo+W7ZQDVINrCv4s6HKyCZXCELe/To63CLoiRs6YQvBpyR+Ki+RwQX5hOZH+PEKFSw2CwBrkEo=
+	t=1790493371; cv=none; b=JPrsxhlar9GjPjd7x63C8bI7YaKkJiLOFRQ/Tz1ZwRMWtXDKQ0uJWCUCkP1+IYPzdNU0q6qFVv3LSscb7xeB+hN1F6BJRie3C8VkvwDE3kX1z1fRBzcVNXkAx/1a6NZT1ShQ1hQe9/ORDadjEvcqRzv3cZoT3/IRCVR2SV7ebKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790444936; c=relaxed/simple;
-	bh=fLDiMmSuEXs4wFlpnp1j9z5ztXujkmvKqPAJVQli+Cc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FttOznbQQWUKnOOhAMN7ZRHzw/nFfw3hJLAUWr7YSh77cG5w9KnSRLFHarHf8jofkpRqZtrNgOr+keqPVsBloph/yTwaZjJfZ6BVZMmmTAjt56rrioKDDswd2weBgSFgqqCHkpJdBcccH9znniL+PzCxEsXd3o6qc+aZ7zdALhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=enJKWBYX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790493371; c=relaxed/simple;
+	bh=ICC8nySJqb9ldI86ZOjH95n99gb+KIwD1LDNKiVRGsY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=D6eJbu2FzIDB0a8lTg9wuIcJUMclanm/ijCCT3KZCQQb9F3W5nilNz0J1LnTqzvBVU/I0UEWE9W+Yb/7yBcw7rLN5hQeQ9UV32zfGTAwLHN4hBZHK/owid0dL1qKr4rKxX+scIQ3tUgufpEeFpdc/V4RK7CMMojRGuzrH07+4Kc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i6vgHxjS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="enJKWBYX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A263B1F000FF;
-	Sat, 26 Sep 2026 17:48:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i6vgHxjS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 205CA1F000FF;
+	Sun, 27 Sep 2026 07:16:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790444934;
-	bh=d5aYKitjSUrbVpf3InFMolKkxTvNle6goa/+H2VvXrA=;
-	h=From:To:Cc:Subject:Date;
-	b=enJKWBYXnimctMVRq2gbx/t0/FN7zN3/aKQ+MTi5IztoKquNUG/fv/AsOlsvqCY/y
-	 trlve7UdiXC6qsY0Ujb2WrOXun52nzY5U2+KTtF1SHd/T69uxnn5P33iyY5XrixP6+
-	 5EgF9RqTTZDzhB0H+emRLNBbUDX7Hw5s3HHi/Zf/KL3NndZqswxjIVgNQxSspJYeAC
-	 vMjI/W1hAsmQjOAj6F2H7tO/wUvH0VnIPSP5y6CLFHuoQUyQnXWgS7uRYWw8gpoZ7t
-	 OoYukB6tgOB+DItqw+N7n4qG36opTiGhvGZpuKgZt4vI1PesUTRsLh8u9yhYzosGHY
-	 OLAhfUB9fV55A==
+	s=k20260515; t=1790493369;
+	bh=G6wN4MC6B/I0HCuFhV6PkwNXoUfGqcUvMhsE4frzh5E=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=i6vgHxjSD3uap5KhbRyIP+LGno1A58RjI64ksdqqjNl7xump37HtL8FIxwEeWrTk9
+	 uwoCFAfmHxc7R7WjIraaACO885tZv6Zh1TnPgNu/bjJObFR7YnUwtBjjdHQy9qXI+9
+	 uTOk+ZAjI2QDb/FFvQO6pqToTDiFjMiqfB/VOvF1UUMqtORqLlCaT/fMsdbOnQaX2U
+	 +dcf5ZETLiO3z9aRQYpQ1+HeeZsPBzkvf7YReh2+5/hHcOU58NMWyJotC+fB1EzeYQ
+	 /+Tdivc68I81ymxjGkviBuoCrXZUt5Q0flnsboEkFRuaapo94JVS3l4NGbEdcScllx
+	 QVVhTnUGT4w5A==
 From: Niklas Cassel <cassel@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata fixes for 7.3-rc5
-Date: Sat, 26 Sep 2026 19:48:49 +0200
-Message-ID: <20260926174849.501378-1-cassel@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Mario Limonciello <mario.limonciello@amd.com>
+Cc: Niklas Cassel <cassel@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+	"H . Peter Anvin" <hpa@zytor.com>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	"open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <linux-kernel@vger.kernel.org>,
+	"open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>
+Subject: Re: (subset) [PATCH v2 0/2] Fix for storage corruption w/ AMD IOMMU on 64-bit addressing
+Date: Sun, 27 Sep 2026 09:15:48 +0200
+Message-ID: <179049319618.587386.17801056230411978179.b4-ty@kernel.org>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260908190600.226485-1-mario.limonciello@amd.com>
+References: <20260908190600.226485-1-mario.limonciello@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=777; i=cassel@kernel.org; h=from:subject:message-id; bh=ICC8nySJqb9ldI86ZOjH95n99gb+KIwD1LDNKiVRGsY=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2HFq+y3fvq/Ubk2y1GS82XYk37+ddcd7o9jQtu3sds R0Lf75r7ShlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBEduYwMpyROH032C/5burP 2wqP/jjmt565nqtX7z49L6R3RtwRlXOMDLMOVSTkPFTpk9T9r68e6SG1JfF14Frv5KDnVuEXT1a /YwUA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-Linus,
+On Tue, 08 Sep 2026 14:05:58 -0500, Mario Limonciello wrote:
+> An issue has been reported by a number of people that corruption
+> was occurring on storage for desktop systems.  It's notably reported
+> on SATA, but the same issue also appears on NVME.
+> 
+> At a glance it looks like an IOMMU issue as turning off the IOMMU helps
+> the issue, but it's actually a problem that occurs specifically with any
+> IOVA addressed >58 bits.
+> 
+> [...]
 
-The following changes since commit 8d836581f9b1f57ceaa2b47654754ef1260b410b:
 
-  ata: libata-scsi: fix ata_dsm_trim_pages() kernel-doc (2026-09-16 16:18:00 +0200)
+I modified the commit message to reference the PCI quirk which has
+now landed in mainline, and thus has a proper SHA1.
 
-are available in the Git repository at:
+Applied to libata/linux.git (for-7.4), thanks!
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.3-rc5
+[2/2] Revert "ata: ahci: force 32-bit DMA for JMicron JMB582/JMB585"
+      https://git.kernel.org/libata/linux/c/6b28e0e7
 
-for you to fetch changes up to 113dcdfadf30ea11fbbdfcd4f6ea87687655cc5b:
-
-  MAINTAINERS: name the libata/linux for-next branch (2026-09-25 11:08:37 +0200)
-
-----------------------------------------------------------------
-ata fixes for 7.3-rc5
-
- - Extend the quirk "no LPM on ATI" quirk, that is currently only
-   applied for Samsung drives, to include AMD controllers as well.
-   The AMD AHCI controllers are newer versions of the ATI AHCI
-   controllers, and these controllers still have LPM issues with
-   Samsung drives - LPM works with drives from other vendors (me)
-
- - Fix errors in the libata.force parameter documentation (me)
-
- - Verify the sense data descriptor lengths for ATA PASS-THROUGH
-   command, so that a malicious device cannot write past the buffer
-   length (Matthias)
-
- - Mention the libata for-next branch in MAINTAINERS such that the
-   git ls-remote command done by get_maintainer.pl --self-test=scm
-   can verify it (Matthias)
-
-----------------------------------------------------------------
-Matthias Goergens (2):
-      ata: libata-scsi: bound the ATA passthru sense descriptor writes
-      MAINTAINERS: name the libata/linux for-next branch
-
-Niklas Cassel (2):
-      ata: libata-core: Extend Samsung LPM quirk to AMD controllers
-      ata: libata: Correct libata.force parameter documentation
-
- Documentation/admin-guide/kernel-parameters.txt | 10 ++++------
- MAINTAINERS                                     |  2 +-
- drivers/ata/libata-core.c                       | 15 ++++++++-------
- drivers/ata/libata-scsi.c                       | 10 ++++++++--
- include/linux/libata.h                          |  4 ++--
- 5 files changed, 23 insertions(+), 18 deletions(-)
+Kind regards,
+Niklas
