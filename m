@@ -1,98 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk2-f42.google.com (mail-qk2-f42.google.com [74.125.230.234])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18D5452B1F4;
-	Tue, 29 Sep 2026 13:30:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43BDF36B934
+	for <linux-ide@vger.kernel.org>; Tue, 29 Sep 2026 16:42:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.234
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790688626; cv=none; b=uGmd6Goc96R2CwNDYq6INnledxEeNwzVt3ocgy2wVs9bS93xhdhWiiNbzRSxH5SrvPcd0IteXI4OxBrA4iF8R8TryrVQduQ7ER3/0E3SF0g6TfmXYrRYxUTnwwlRWWdtC4GjDy5U++kqjuNQrJ4wDv/Cf1S6PIdm33Wn7K7jsmA=
+	t=1790700138; cv=none; b=Rtc1Lf4TzqeaV9Rxai6T/RPzPTxNfmnA+qyqvhRBAmHP9K4qna1dU4FmlU0bDssvZhXvy6Yz5w6RXKiGUxtZwch9aPZDK4PzfcJOh/qXu8vPpmNTiA5wRoRUzPbDNHQCryGe3fevEfRWSVdIsLFgeRKZzwzyu5fbbUGBZQ/fJCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790688626; c=relaxed/simple;
-	bh=jDaZ9QN1PfNQN7ekeOwptKaWTdUXlHDdlPTWkH0ZRkc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BHeyJvSguEZxSGcSvu4It7RVMlPTnNdGvKXdaW3sLOZik14YUh6UYhW2XDhgM7dmdhJsfuO+P097UF6XCSS9xsE2RV2K3QX1rSpGJMX6w3oNunYOlI6LEyTpGJ1TjGEY62MgchEfDOOQXTSmW2uW/8UUHEqFF2xiXo8RmlCN6zg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RIuUtXQ7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790700138; c=relaxed/simple;
+	bh=4oNNBVrx7iWlKCs0k9aLCLQO+dCsFhb60Z7Vs+mKWdk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XDVw1uS1dkN4lQDslCtNxDjj72gP6RFv9ubGjc4EorWFURA2nPVMgLKkYkNHMSdJBeHywI+zlavCtNsJePfqdsFAVWJOmYG0/7njyn3tdPSt81D4lx1XIMP/novVEQsBm8sYYTN9MtvT6Py3bznAb/fBagpfwUiRJ607wUrjdQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cs.unc.edu; spf=pass smtp.mailfrom=cs.unc.edu; dkim=pass (2048-bit key) header.d=cs.unc.edu header.i=@cs.unc.edu header.b=TIAigef5; arc=none smtp.client-ip=74.125.230.234
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cs.unc.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cs.unc.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RIuUtXQ7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67FB61F00893;
-	Tue, 29 Sep 2026 13:30:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790688624;
-	bh=YddyNBlBeMGDVbqSqWAWeupeImPN1+vt/HIPaYWlt0Y=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=RIuUtXQ7pN1ntHH5E9SHtFiVxk4VlC3Lx05nbDdqWgnrCoGrr5Kaw9EB3EurZOqnd
-	 ver7PIljjQDwRadvVv/c0J+hSkjXNlJWDffpZQLU4o93+0nCvAAl0Ux4SYrhGz087x
-	 /Em+ZWodHWV8OvgVNkTQErGD8adcsGYl1RKaedB7Hpt6DTY+b0QeVKsaMmFWtR0wIy
-	 1brTzz3b1fmLHV899/10+jQutIesNgOTsfOa5laHgSWmjnUC6CSWuXFwsRIMHGnLYv
-	 HGMSS19MSaUoKNmt7xqQq6t+vM1Gswc7Xht5EjiEDmf4hpi5r6Q6EcIVHkhsOwMVNz
-	 JNZ4Kdafpc/Lw==
-Message-ID: <45963e29-f896-4e67-87ee-ac90131773e2@kernel.org>
-Date: Tue, 29 Sep 2026 15:30:16 +0200
+	dkim=pass (2048-bit key) header.d=cs.unc.edu header.i=@cs.unc.edu header.b="TIAigef5"
+Received: by mail-qk2-f42.google.com with SMTP id d75a77b69052e-53320dc09f3so33617731cf.1
+        for <linux-ide@vger.kernel.org>; Tue, 29 Sep 2026 09:42:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cs.unc.edu; s=google; t=1790700135; x=1791304935; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Qkmc9HSMYXuGuOTX21xyysxiwNQV626wcdXoxNjH/r4=;
+        b=TIAigef5/fRo3DQh1ApmGh8ZNqLC/2sdOW/k1yVBYRMU8FzToEKFWJBY7+Xk8DU8r0
+         6ke/fHBgWWjPDPMyzGymFLnEKdVbzwSQKGbfpHf8r1mJKYDGCj60TZBOSwg7/qg7bxRW
+         ZN4/h785w6evL1B6sqc4K1A7MdkZ6aEdQirN0J3QnU8EnWriS1DDWxKoUjApAL7Zmwxk
+         JDD98ViSGpLHdC2z16UbA8jTdtFBQBl1RFTnWVdiaaqyPHbr2P2wFr2lU8jCBzCZw9hs
+         FdqPDrHyqX3RQqSHIJYGajaFFzgsGS6rTNwsfh7r7D4a9u55d9Gdh7ng6u6SBpJUCiCg
+         aQ8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790700135; x=1791304935;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Qkmc9HSMYXuGuOTX21xyysxiwNQV626wcdXoxNjH/r4=;
+        b=hDYPRREqPWPW2rfYm2XtURynOLeCt2ew4y8O06RiT4juyxvw4hqBJnzsiRtQf23xts
+         7dtz/0QgxnQe1aoOUVE2mMo8c6rKluQT1+9b459RsKTaJ10uEMqYP4xQyZMGMQH+7doQ
+         nOYK4T5ZL2u0FfZLjqFu+iYXpJJIdIAjg5mnTG4cBTNg1xKPK7bOrZ8xIL+5ASEEdYwj
+         FFbZsHQocctdCkTEho6FjPeaCUQaVqWITFxP60U4qf92UXPlNgznxZY8vQBc/RacxHLV
+         qvbWoIilLD/A+yuNjJRfzi/UrNS2Q8djoTLj++GPP5DQnVv6kMTin2VGcflZwUKqjWKb
+         a+tA==
+X-Forwarded-Encrypted: i=1; AKwUvBzCfNPJ9VxjdvdUlz13rWZMrXQMTXV/GIKzJbltTP+ZLvAWnBGjzfu19bJHRcqt8v34KnFe/OIItyY=@vger.kernel.org
+X-Gm-Message-State: AFuF++n2te7ynlE0szIJrhSqFCZQktPLIHntSjUQsyu4xvynSYTd5z5r
+	E08Iw92X0XQeKUas1mVe42/Ti3wfpKd6CYFKW1aevBdoAdkI1VwxO5FMNgQ0ezDq8Su8qQVxw51
+	Ttt9ghDvt
+X-Gm-Gg: AYBFou3YVVGOaDVrT69rJH988dJldSSYHuJwn7xhm+Mhf2AIKd0F9s2/y9a+S1ZZ/5s
+	ds6Ae8QJIeQ3cmJfeNtzRY10PeZScpv1uBVDnEWWLPFiyxjpUyXwb7dyC1bEtLr06Q+RR7FHgT9
+	QGmXCb4/oaRUCx0SLn0LGrGrAa/+uc5yxVWWADIP7xAMe0udCxgFQTf4NKJEfoO7BNEjab5c1kO
+	gG6l0PJcHHQT/p79yx1WtYDJFriyNVbO9lPitmbQW+viLYiBJ6+wzaTkHs7RNzyD6L2TaaG/x3E
+	7nH8dW95eSVfDzCsygo29iG6/TgHhVrcCgya9a7dYUulAnLzKEdzb6USkFzCLq9uqO7pGAjYTgQ
+	DFx/x0gmYKh9/5C5Z/ZaR3ixwnHRjuHudwdtbX4Cox1unPOazPTomuIiOLbHSJ1w9nJL5VqDtNA
+	P1nFmGFg8l7eqXedZ7M3JTULx/EQfNl2clhfU9Wgm1GEBDRq58tr77MyH8YcAVsxKxWKTp422js
+	vEmr/T5h1WRPdZuHXYyVA==
+X-Received: by 2002:a05:622a:2d6:b0:533:360f:e753 with SMTP id d75a77b69052e-533360ff66cmr172909001cf.35.1790700134841;
+        Tue, 29 Sep 2026 09:42:14 -0700 (PDT)
+Received: from cobra01.cs.unc.edu (cobra01.cs.unc.edu. [152.2.130.143])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-533223efcc4sm90377781cf.25.2026.09.29.09.42.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Sep 2026 09:42:14 -0700 (PDT)
+From: hengyul@cs.unc.edu
+To: dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: mkp@kernel.org,
+	ipylypiv@google.com,
+	linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hengyu Liang <hengyul@cs.unc.edu>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] ata: libata-scsi: do not lose CHECK CONDITION for failed ATAPI commands
+Date: Tue, 29 Sep 2026 12:41:35 -0400
+Message-ID: <20260929164135.266708-1-hengyul@cs.unc.edu>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] phy: core: Use EOPNOTSUPP for disabled blob return value
-To: Inochi Amaoto <inochiama@gmail.com>, Hans de Goede <hansg@kernel.org>,
- Niklas Cassel <cassel@kernel.org>, Andrzej Hajda <andrzej.hajda@intel.com>,
- Neil Armstrong <neil.armstrong@linaro.org>, Robert Foss <rfoss@kernel.org>,
- Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
- Jonas Karlman <jonas@kwiboo.se>, Jernej Skrabec <jernej.skrabec@gmail.com>,
- Luca Ceresoli <luca.ceresoli@bootlin.com>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- Minas Harutyunyan <hminas@synopsys.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Thinh Nguyen <Thinh.Nguyen@synopsys.com>, Vinod Koul <vkoul@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Damon Ding <damon.ding@rock-chips.com>,
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
- Heiko Stuebner <heiko@sntech.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-usb@vger.kernel.org,
- linux-phy@lists.infradead.org, Yixun Lan <dlan@gentoo.org>,
- Longbin Li <looong.bin@gmail.com>
-References: <20260929084739.467082-1-inochiama@gmail.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20260929084739.467082-1-inochiama@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2026/09/29 10:47, Inochi Amaoto wrote:
-> Currently, the phy subsystem uses ENOSYS for dummy blob functions,
-> it does not reflect the function state correctly. As kernel already
+From: Hengyu Liang <hengyul@cs.unc.edu>
 
-s/function state/hardware capability ?
+Since commit 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands
+on time out"), atapi_qc_complete() sets SAM_STAT_CHECK_CONDITION for a
+failed command only if cmd->result is zero, so that the DID_TIME_OUT or
+DID_REQUEUE host byte of a terminated command is preserved.
 
-s/As kernel/As the kernel
+However, cmd->result can also be non-zero for a regular failed ATAPI
+command completed through libata EH: ata_eh_analyze_tf() calls
+ata_eh_decide_disposition(), that is, scsi_check_sense(), on the sense
+data obtained with REQUEST SENSE, and scsi_check_sense() sets the SCSI
+midlayer internal byte of the result for some sense codes, e.g.
+SCSIML_STAT_TGT_FAILURE for ILLEGAL REQUEST with ASC 0x20 (INVALID
+COMMAND OPERATION CODE) or 0x24 (INVALID FIELD IN CDB), or
+SCSIML_STAT_MED_ERROR for MEDIUM ERROR with ASC 0x11 (UNRECOVERED READ
+ERROR). For such commands, atapi_qc_complete() keeps the result as is and
+the command completes with a GOOD status byte, even though it failed and
+valid sense data is available.
 
-> has EOPNOTSUPP for disabled blob function, replace ENOSYS with
+As a result, passthrough users see these failed ATAPI commands as
+successful. For example, with the emulated IDE CD-ROM drive of QEMU and
+no medium loaded, a PLAY AUDIO MSF command issued with SG_IO completes
+with status 0x00 (and no DRIVER_SENSE) instead of 0x02 (CHECK CONDITION)
+with sense key ILLEGAL REQUEST, ASC/ASCQ 0x20/0x00, and the CDROM ioctls
+CDROMPLAYTRKIND, CDROMSUBCHNL, CDROMPAUSE, CDROMRESUME, CDROMPLAYMSF and
+CDROM_GET_MCN return 0 instead of -ENOMEDIUM or -EOPNOTSUPP.
 
-What is "blob function" ? Are you talking about all the phy_xxx() functions?
+Fix this by setting the status byte to SAM_STAT_CHECK_CONDITION whenever
+the host byte is not set. Use set_status_byte() rather than overwriting
+the whole result, so that the SCSI midlayer internal byte set by
+scsi_check_sense() is preserved, as ata_scsi_qc_complete() already does
+for ATA commands.
 
-> EOPNOTSUPP for a clear return value. Also adapt the return value
-> changed in the following affect file:
+Fixes: 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands on time out")
+Cc: stable@vger.kernel.org
+Suggested-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
+---
+Changes in v2:
+- Only set the status byte with set_status_byte() instead of overwriting
+  cmd->result, so that the SCSI midlayer internal byte set by
+  scsi_check_sense() is preserved (suggested by Niklas).
+- Link to v1: https://lore.kernel.org/r/20260924180414.2102946-1-hengyul@cs.unc.edu
 
-s/affect/affected
+ drivers/ata/libata-scsi.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-> - ata/libahci_platform.c
-> - drm/bridge/analogix/analogix_dp_core.c
-> - usb/dwc2/platform.c
-> - usb/dwc3/core.c
-> 
-> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
-
-The ata bits looks OK, but this still feels like a lot of churn for no
-functional change since the error is an internal one that is not exposed to the
-user, as far as I can tell. The code in many places also uses -ENODEV, so the
-error returned does not seem to be consistent anyway.
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 8f9aa97a519d..fb5517d51095 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3059,10 +3059,15 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
+ 		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
+ 			qc->dev->sdev->locked = 0;
+ 
+-		if (cmd->result)
+-			ata_scsi_qc_done(qc, false, 0);
+-		else
+-			ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
++		/*
++		 * Report CHECK CONDITION unless the command was terminated
++		 * with a host byte set. Only set the status byte, so that the
++		 * SCSI midlayer internal byte, which scsi_check_sense() may
++		 * have set from the sense data, is preserved.
++		 */
++		if (get_host_byte(cmd) == DID_OK)
++			set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
++		ata_scsi_qc_done(qc, false, 0);
+ 		goto schedule_deferred;
+ 	}
+ 
 -- 
-Damien Le Moal
-Western Digital Research
+2.53.0
+
