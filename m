@@ -1,103 +1,105 @@
 Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C59B4A1DE4;
-	Tue,  6 Oct 2026 16:32:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 749D94E3229;
+	Tue,  6 Oct 2026 23:42:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791304331; cv=none; b=st0PAowaqlaZghI/7/mNSqOXbdskE8XxOVyH3U9Nj7ncMvmUAOTxlkdPgbyu0RjTDSA0QB7qivgAWQRLYdeEh41pfeD2VXCzylQtXIrfJxEJx74sz0VuDb0t2336OE8+SPkEY8r9g+74zZrvq6y1Xp+valiNZVRy6YjNM9oIru0=
+	t=1791330129; cv=none; b=Q/ThnGJuwTbF/ZWNe8C0XfKhzWCNhBTBFgUjLixRlzKxcF3Oi2Wwvt/rRHvVGTwe37trwUyo/CYyaByUHmd615oPb0VSMTCFWhEFoNQXycm4n5WPRM5Nhyz1ReYBcPi8lGVWzMF8nt9Lo43Q/yOb/Qnv82MgV9wC1eCNzWh3tII=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791304331; c=relaxed/simple;
-	bh=pjCc01+8pIFjZj+7YZaCRosgmuQ8UUGJvr/un9aHyMI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nCv9KPxNwHN4336BBm67nUoqtfO/DOw1n+7FbZl3sMjlLy56ztds2TyRCx9yecicQPLs+dgRG06P0Z3jl3fCC05aEsrHq8sVhjAPi5qAY1bnICz1tpckbwZ1Isc4D+DEW6v6MiIjEOxOyUj8dHfo4oWXRh86OTHS4oqjPHvTCfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=C7A8sobV; arc=none smtp.client-ip=178.62.38.78
+	s=arc-20240116; t=1791330129; c=relaxed/simple;
+	bh=9r+TMbKLM84NykY/tQPO43ydHWQ+ptnWPsGpcr5D7b0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=BdQie+umCHvecchX2yLB/wv3L9S5XIKyeaLZBFWewi8LrzqFtHmC1fW/oRquTIyJghQj+R5Lb45B29OjuZHxuXah5igErzhJItRtfvwViT8lv+jVBmcPugEis5VCkZuSAnST2xgjFg2tGMrdO0zf4cm/kpQmC5BVvgg0eBAu5aU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=C4qU0hGl; arc=none smtp.client-ip=178.62.38.78
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="C7A8sobV"
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="C4qU0hGl"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1791303159;
-	bh=pjCc01+8pIFjZj+7YZaCRosgmuQ8UUGJvr/un9aHyMI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=C7A8sobVI71uEloi6+/JxxFjzCKO3FQYOq1YsMxvjsRRXcg0LjO/6S2PblqIVo+e1
-	 v3H5Lm+xLFS4/1gDjgui/rhUo73bQOb58qY21gJKxxF777VL/k67bwLxJIHIgPEMN8
-	 SZ0ILzZetkYXK/pDDD9JSZRaU65v1ARiS1XtnRys=
+	s=mail; t=1791330125;
+	bh=9r+TMbKLM84NykY/tQPO43ydHWQ+ptnWPsGpcr5D7b0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=C4qU0hGlKm8Aqe8Z46+e36yrVczHxhVr2MGNDKfI+uaKXBnQfwH72Gub7ZI5AcVPH
+	 vFpoddWZMwbZ+e49q25zzhQREfmZ7CpokTmoJ2HiQpCiezR4fOzRNXKndc21a54VSQ
+	 tMCuuuTWnX+VY6oVMrmHcmidQupQ6+qjCmo8bxcU=
 Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
 	(No client certificate requested)
 	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 4A588BD334;
-	Tue,  6 Oct 2026 16:12:39 +0000 (UTC)
-Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 0105E5FBAF;
-	Tue,  6 Oct 2026 17:12:39 +0100 (BST)
-Message-ID: <0a7bba64-c0fb-43c7-bcaa-d806f2377afd@philpem.me.uk>
-Date: Tue, 6 Oct 2026 17:12:38 +0100
+	by nick.sneptech.io (Postfix) with ESMTPSA id 89429BD748;
+	Tue,  6 Oct 2026 23:42:05 +0000 (UTC)
+Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 2AA605FC4F;
+	Wed,  7 Oct 2026 00:42:05 +0100 (BST)
+From: Phil Pemberton <philpem@philpem.me.uk>
+To: linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	Hannes Reinecke <hare@kernel.org>,
+	Phil Pemberton <philpem@philpem.me.uk>,
+	stable@vger.kernel.org
+Subject: [PATCH v9 03/11] scsi: scsi_devinfo: preserve full-width quirk identifiers
+Date: Wed,  7 Oct 2026 00:41:53 +0100
+Message-ID: <20261006234202.1139018-4-philpem@philpem.me.uk>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261006234202.1139018-1-philpem@philpem.me.uk>
+References: <20261006234202.1139018-1-philpem@philpem.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 0/6] libata-scsi: multi-LUN ATAPI device support
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Hannes Reinecke <hare@suse.de>
-References: <20260731213503.2379771-1-philpem@philpem.me.uk>
- <apVF22SjDzqkzEkm@ryzen>
-Content-Language: en-GB
-From: Phil Pemberton <philpem@philpem.me.uk>
-In-Reply-To: <apVF22SjDzqkzEkm@ryzen>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 31/08/2026 10:14, Niklas Cassel wrote:
-> On Fri, Jul 31, 2026 at 10:34:57PM +0100, Phil Pemberton wrote:
-> 
-> (snip)
-> 
-> Hello Phil,
-> 
-> 
-> There are quite a few comments from Sashiko both on v7 and v8
-> (which is just v7 rebased).
-> 
-> Note that Sashiko's output is probabilistic: it might find or not find bugs
-> (or find other bugs) with the same input.
-> 
-> So please look at both the comments on v7 and on v8.
-> You don't need to fix all pre-existing issues, but we would prefer to not
-> introduce new issues that have been flagged by Sashiko (unless they are
-> false positives).
-> 
-> 
-> Kind regards,
-> Niklas
+strscpy_pad() reserves a byte for NUL termination, truncating quirk
+identifiers that fill their fields. An eight-character vendor such as
+MATSHITA loses its final character and fails to match. A sixteen-character
+model loses its final character too; prefix matching then allows the
+quirk to match other models with the same first fifteen characters.
 
-Hi Niklas,
+Copy the full vendor and model fields. Pad shorter strings with NUL for
+compatible entries and spaces for dynamic entries. Lookup uses bounded
+strnlen() and memcmp(), so full-width identifiers need no terminator.
+Shorter model names continue to match prefixes.
 
-Thanks for the comments - sorry for the delay on my part. I saw the 
-automated Sashiko reviews but was pulled away onto something else.
+Fixes: 1b60c86dd992 ("scsi: devinfo: Replace strncpy() and manual pad")
+Link: https://lore.kernel.org/linux-ide/20260611025249.D23191F00893@smtp.kernel.org/
+Cc: stable@vger.kernel.org
+Assisted-by: LLM
+Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+---
+ drivers/scsi/scsi_devinfo.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-Would it help if I responded to the Sashiko emails individually, or is 
-responding on the next patch covering note enough?
-
-I've also reviewed the guidance on use of coding assistants 
-(<https://docs.kernel.org/process/coding-assistants.html#attribution>) 
-and added "Assisted-By: LLM" to the patches.
-
-For full disclosure this round involved GPT-6.1-Sol, GLM and DeepSeek4 
-for review. V9 will be on its way once I've finished testing locally, 
-and should address all of Sashiko's comments.
-
-Thanks,
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 88a911b35c94..5e37461e61e8 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -289,14 +289,9 @@ static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
+ 
+ 	from_length = strlen(from);
+ 
+-	/*
+-	 * null pad and null terminate if compatible
+-	 * otherwise space pad
+-	 */
+-	if (compatible)
+-		strscpy_pad(to, from, to_length);
+-	else
+-		memcpy_and_pad(to, to_length, from, from_length, ' ');
++	/* Full-width identifiers need all bytes; shorter ones are padded. */
++	memcpy_and_pad(to, to_length, from, from_length,
++		       compatible ? '\0' : ' ');
+ 
+ 	if (from_length > to_length)
+ 		 printk(KERN_WARNING "%s: %s string '%s' is too long\n",
 -- 
-Phil.
-philpem@philpem.me.uk
-https://www.philpem.me.uk/
+2.43.0
+
