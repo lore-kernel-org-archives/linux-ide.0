@@ -1,63 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC16846A5E8
-	for <linux-ide@vger.kernel.org>; Tue,  6 Oct 2026 14:14:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C59B4A1DE4;
+	Tue,  6 Oct 2026 16:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791296082; cv=none; b=Qc3DNTw2tvfNW9pnQZd4gRAxNtlvSG1gBK4enbBehNdJv+wKoQfCcNLlMerPGMDHlLfPt9cuN1nTqAEmk8fJCA/Blb6h9xO+fzjty4cWiu1gaki0beuu5M+V0XojO/MfJ9ciaQwsqRpnIQSriWsxlBk1kqY9r4UzV8DUf39vZjI=
+	t=1791304331; cv=none; b=st0PAowaqlaZghI/7/mNSqOXbdskE8XxOVyH3U9Nj7ncMvmUAOTxlkdPgbyu0RjTDSA0QB7qivgAWQRLYdeEh41pfeD2VXCzylQtXIrfJxEJx74sz0VuDb0t2336OE8+SPkEY8r9g+74zZrvq6y1Xp+valiNZVRy6YjNM9oIru0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791296082; c=relaxed/simple;
-	bh=vBec7vNGgF7Bkz8FmX1cnzwbb/tDtn1zgrOdEPBbXUc=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=aE3eMdIps+FDrHJB3MP6iFmJSNnaFDQ2scEosyGdd61gcHXRdbTCB2ZR6WNlseyRXwuJwEo8uMi4pi4eHUlISYuxRv6rEpt7GEqbepCidB2oGAbvnMAAdUwSduKiacZoIzwRDAN7Z0PKhlOhQNMb4DLafciLp2n/vVajK7rnpcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EBd7RDMc; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791304331; c=relaxed/simple;
+	bh=pjCc01+8pIFjZj+7YZaCRosgmuQ8UUGJvr/un9aHyMI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nCv9KPxNwHN4336BBm67nUoqtfO/DOw1n+7FbZl3sMjlLy56ztds2TyRCx9yecicQPLs+dgRG06P0Z3jl3fCC05aEsrHq8sVhjAPi5qAY1bnICz1tpckbwZ1Isc4D+DEW6v6MiIjEOxOyUj8dHfo4oWXRh86OTHS4oqjPHvTCfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=C7A8sobV; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EBd7RDMc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 819601F000FF;
-	Tue,  6 Oct 2026 14:14:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791296081;
-	bh=r3B5/JrJuhZOolOAAq6731E0mdnN5IbaMOo/DpXGi3o=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc;
-	b=EBd7RDMcr/OPD2u5+D2cOanU4vn0xsJGVKh+8jA/5XqjGxZDio6WDe64kelGvHQXU
-	 8hDk4a0w7AIwtQeek2OZEKa7XWSrz9Mivb9iAUh5SkeRMw7pTWPQZfrYUYMxfA0u1d
-	 4BjM1C7j/x+BwcSELBuf8lihjKQWNzLFu30tuSFtb4PSt+P8kmr9yGzdQWd1ho6qiw
-	 d08VOHIwbuXAMcyi1DZ/0KPCR7RWdbnyUbr3VvIhcXK4tZreHfhQRrincA5Lji6dPC
-	 CjL6c7Yuq00jjboULIC3gYXVJY14a3QkIGOpGSpnDMlqsUJ6E8M01ZcZc0OFIiYBb7
-	 0Gn5+rmwSuOrw==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 7759D39D5FF3;
-	Tue,  6 Oct 2026 14:14:41 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 7.3-rc7
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20261006104516.2347588-1-cassel@kernel.org>
-References: <20261006104516.2347588-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20261006104516.2347588-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.3-rc7
-X-PR-Tracked-Commit-Id: bc8ce2cea5f77c4bd1a5184705e300e83546c0c4
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 69f80fef3153299d9c72c53d1d71eef6354b6926
-Message-Id: <179129607999.2650572.16898592006368053426.pr-tracker-bot@kernel.org>
-Date: Tue, 06 Oct 2026 14:14:39 +0000
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="C7A8sobV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1791303159;
+	bh=pjCc01+8pIFjZj+7YZaCRosgmuQ8UUGJvr/un9aHyMI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=C7A8sobVI71uEloi6+/JxxFjzCKO3FQYOq1YsMxvjsRRXcg0LjO/6S2PblqIVo+e1
+	 v3H5Lm+xLFS4/1gDjgui/rhUo73bQOb58qY21gJKxxF777VL/k67bwLxJIHIgPEMN8
+	 SZ0ILzZetkYXK/pDDD9JSZRaU65v1ARiS1XtnRys=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id 4A588BD334;
+	Tue,  6 Oct 2026 16:12:39 +0000 (UTC)
+Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 0105E5FBAF;
+	Tue,  6 Oct 2026 17:12:39 +0100 (BST)
+Message-ID: <0a7bba64-c0fb-43c7-bcaa-d806f2377afd@philpem.me.uk>
+Date: Tue, 6 Oct 2026 17:12:38 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 0/6] libata-scsi: multi-LUN ATAPI device support
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Hannes Reinecke <hare@suse.de>
+References: <20260731213503.2379771-1-philpem@philpem.me.uk>
+ <apVF22SjDzqkzEkm@ryzen>
+Content-Language: en-GB
+From: Phil Pemberton <philpem@philpem.me.uk>
+In-Reply-To: <apVF22SjDzqkzEkm@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The pull request you sent on Tue,  6 Oct 2026 12:45:16 +0200:
+On 31/08/2026 10:14, Niklas Cassel wrote:
+> On Fri, Jul 31, 2026 at 10:34:57PM +0100, Phil Pemberton wrote:
+> 
+> (snip)
+> 
+> Hello Phil,
+> 
+> 
+> There are quite a few comments from Sashiko both on v7 and v8
+> (which is just v7 rebased).
+> 
+> Note that Sashiko's output is probabilistic: it might find or not find bugs
+> (or find other bugs) with the same input.
+> 
+> So please look at both the comments on v7 and on v8.
+> You don't need to fix all pre-existing issues, but we would prefer to not
+> introduce new issues that have been flagged by Sashiko (unless they are
+> false positives).
+> 
+> 
+> Kind regards,
+> Niklas
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-7.3-rc7
+Hi Niklas,
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/69f80fef3153299d9c72c53d1d71eef6354b6926
+Thanks for the comments - sorry for the delay on my part. I saw the 
+automated Sashiko reviews but was pulled away onto something else.
 
-Thank you!
+Would it help if I responded to the Sashiko emails individually, or is 
+responding on the next patch covering note enough?
 
+I've also reviewed the guidance on use of coding assistants 
+(<https://docs.kernel.org/process/coding-assistants.html#attribution>) 
+and added "Assisted-By: LLM" to the patches.
+
+For full disclosure this round involved GPT-6.1-Sol, GLM and DeepSeek4 
+for review. V9 will be on its way once I've finished testing locally, 
+and should address all of Sashiko's comments.
+
+Thanks,
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Phil.
+philpem@philpem.me.uk
+https://www.philpem.me.uk/
