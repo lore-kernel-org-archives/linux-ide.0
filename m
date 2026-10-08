@@ -1,382 +1,391 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9C384A7C80
-	for <linux-ide@vger.kernel.org>; Wed,  7 Oct 2026 12:40:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B663D5C1D;
+	Thu,  8 Oct 2026 07:18:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791376840; cv=none; b=FJCZ6ZZKVidLB3WZsvIiL8HoW8n/EfnF1sd6IZQlold+F2dwrBL8qStr+C7WTCW3OQ0Sb5mGoWpv3qHFkdYrGEtlUtrWr3sgWy+d0W9yTk4F1f9p0AEFebSeMrxprO8BYWGe4Kn8TfTnbS1s9Jjfa1qJMDHnC8daSm6jqavS/yE=
+	t=1791443929; cv=none; b=u9KjA7GfDJka/KiD8sObh4feEdCyHNekRK+9nGn9lLP2eTNXnbgNQCVrxjC6w27FEViHcdnzKWt+CzTfmdoGWSgLowcCNFRI3J0rVQxC9/S35Yw2psBA92aTF0Tv561lPPTgGNedyDZwxJmqk7HCLU2gkQhQVQTGpeexRERRfko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791376840; c=relaxed/simple;
-	bh=Jc90DrgkmkCJP1d2Pn4L/y2dewlgSz0NqzIH+8ytKFA=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=Ama1F4LQyZrxUK/d4hpYEJ01af0J4H6JoYQdbPxne7ugGfWBvlWYUaxTKLYXoSy4AxBCCe8rPY7CcM3y5pZmtcVjxsKnnP6uFuBa3cuGBqOYh/RidhdmSarGRK4ycHwoz4Sz9nY/pvUJEsQA43tgWaW0UlGzTjHz+wE6YayFQN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=RseLTobI; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1791443929; c=relaxed/simple;
+	bh=0K96chCi66yWDlAmw3rsXphYf34A8m+2iMmZ2Quj/eU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dHn1CBev37rVRFD6k3aL/n4xCNghYF8JufGqXBgbJRpBzldXpKujAONJJMcauhzTcxJAwgC5c5kHBqXfJg1h7n+3bN5rX4vgQXSjd5mYJyFgtvsN9rnRNo1/KN4Q7foesTHBUgIRyLgg4CJRMPeozNYVMD4m1XkOhkJsD4a8xNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Ijw0v335; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Ijw0v335; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="RseLTobI"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 6D049240103
-	for <linux-ide@vger.kernel.org>; Wed,  7 Oct 2026 14:40:27 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1791376827;
-	bh=fczfhEFWLc2TCU+JCu6EcM1jW34Ct6CugUZBv9ftY2Q=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type:
-	 Content-Transfer-Encoding:From;
-	b=RseLTobIeutNV5gw+sgRmciE9VWCcKPtzCK5MSGTYHmx+0NtJjDyoOcv22XhLbdO8
-	 gTfWSpCU+gRxTTVfZpIONQYL3NE5QpJ8YvmM+RKd5hME8Q/ggcQuRUPGnFm2EQR3++
-	 N5JfzOC9hliT+ZeGFD2TDnFYe4UQARCq/k1qF50luBpHX3QyJX+BPBVveM3fy6pF6e
-	 uLut4VjLLPj2EZChfZ+z3qaXPCjJGosLXF6K94KII55pZXl+fB3ZUWCODQcretNEL3
-	 q5SS58Gy+1D+S1s7WAs4B3Qzlbo8CNBzI01qpXhqZK7bxTQmd1eHyYoijH2ewB9eLl
-	 P/NoNAimK6RIg==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4j0CQK6WCFz9rxB;
-	Wed,  7 Oct 2026 14:40:25 +0200 (CEST)
-Message-ID: <c096264c-640f-4491-b242-399bba9cbbac@posteo.de>
-Date: Wed, 07 Oct 2026 12:40:27 +0000
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Ijw0v335";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Ijw0v335"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 6612A21B5A;
+	Thu,  8 Oct 2026 07:18:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1791443925; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=+Zu9EkyDeEf3sTMIssXK8yB1SpG14s7M8zu+mZwF9dw=;
+	b=Ijw0v335ATWAH8BGZYbce0h0Z5ZjdSozluRBn2LNhl55YQ3SFuIcMthD7UbZ7h/QX79BMk
+	dwYPMvKKXhyNQp442zOMtMhWpXbIMUD1twHawcJ9T6ZwRyAdhcN8png7n1M47vXecuxMgG
+	sBks/5FLgUfVw0FsIR7VOP5kSvrS5Qk=
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1791443925; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=+Zu9EkyDeEf3sTMIssXK8yB1SpG14s7M8zu+mZwF9dw=;
+	b=Ijw0v335ATWAH8BGZYbce0h0Z5ZjdSozluRBn2LNhl55YQ3SFuIcMthD7UbZ7h/QX79BMk
+	dwYPMvKKXhyNQp442zOMtMhWpXbIMUD1twHawcJ9T6ZwRyAdhcN8png7n1M47vXecuxMgG
+	sBks/5FLgUfVw0FsIR7VOP5kSvrS5Qk=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EA98213354;
+	Thu,  8 Oct 2026 07:18:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id gwkoMNJDx2otcQAAD6G6ig
+	(envelope-from <jgross@suse.com>); Thu, 08 Oct 2026 07:18:42 +0000
+From: Juergen Gross <jgross@suse.com>
+To: linux-kernel@vger.kernel.org,
+	x86@kernel.org,
+	virtualization@lists.linux.dev,
+	linux-ide@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-fbdev@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	linux-perf-users@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	kvm@vger.kernel.org,
+	linux-edac@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	linux-coco@lists.linux.dev,
+	linux-acpi@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mtd@lists.infradead.org,
+	platform-driver-x86@vger.kernel.org
+Cc: Juergen Gross <jgross@suse.com>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Ajay Kaher <ajay.kaher@broadcom.com>,
+	Alexey Makhalov <alexey.makhalov@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	David Airlie <airlied@redhat.com>,
+	Helge Deller <deller@gmx.de>,
+	linux-geode@lists.infradead.org,
+	Olivia Mackall <olivia@selenic.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Linus Walleij <linusw@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Namhyung Kim <namhyung@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Ian Rogers <irogers@google.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	James Clark <james.clark@linaro.org>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	Long Li <longli@microsoft.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Josh Poimboeuf <jpoimboe@kernel.org>,
+	Pawan Gupta <pawan.kumar.gupta@linux.intel.com>,
+	Pu Wen <puwen@hygon.cn>,
+	Tony Luck <tony.luck@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Dave Martin <Dave.Martin@arm.com>,
+	James Morse <james.morse@arm.com>,
+	Babu Moger <babu.moger@amd.com>,
+	Tony W Wang-oc <TonyWWang-oc@zhaoxin.com>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Pavel Machek <pavel@kernel.org>,
+	Kiryl Shutsemau <kas@kernel.org>,
+	Rick Edgecombe <rick.p.edgecombe@intel.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	Len Brown <lenb@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Huang Rui <ray.huang@amd.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Perry Yuan <perry.yuan@amd.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Yazen Ghannam <yazen.ghannam@amd.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Artem Bityutskiy <artem.bityutskiy@linux.intel.com>,
+	Artem Bityutskiy <dedekind1@gmail.com>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Ashok Raj <ashok.raj.linux@gmail.com>,
+	Hans de Goede <hansg@kernel.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>,
+	Xi Pardee <xi.pardee@linux.intel.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Lukasz Luba <lukasz.luba@arm.com>,
+	xen-devel@lists.xenproject.org
+Subject: [PATCH v4 00/13] x86/msr: Drop 32-bit MSR interfaces
+Date: Thu,  8 Oct 2026 09:18:26 +0200
+Message-ID: <20261008071839.2247074-1-jgross@suse.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Hans-Joachim Lange <lange-achim@posteo.de>
-Subject: =?UTF-8?Q?PROBLEM=3A_Kernel_6=2E8=2Ex=3A_VFS=3A_Unable_to_mount_roo?=
- =?UTF-8?Q?t_fs_on_unknown-block=280=2C0=29_=E2=80=93_SATA_=28Intel_AHCI=29_?=
- =?UTF-8?Q?not_detected?=
-To: linux-ide@vger.kernel.org
-Cc: dlemoal@kernel.org, cassel@kernel.org, regressions@lists.linux.dev
-Content-Language: en-US, de-DE
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spam-Score: -1.80
+X-Spam-Level: 
+X-Spamd-Result: default: False [-1.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TAGGED_RCPT(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[suse.com,kernel.org,redhat.com,alien8.de,linux.intel.com,zytor.com,broadcom.com,gmx.de,lists.infradead.org,selenic.com,gondor.apana.org.au,arndb.de,linuxfoundation.org,infradead.org,arm.com,google.com,intel.com,linaro.org,microsoft.com,hygon.cn,amd.com,zhaoxin.com,oracle.com,roeck-us.net,gmail.com,bootlin.com,nod.at,ti.com,lists.xenproject.org];
+	R_RATELIMIT(0.00)[to_ip_from(RLbixyxwsf3a5i7e4ez64ejni4)];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	RCPT_COUNT_GT_50(0.00)[95];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
 
-Hello,
+For accessing the MSR registers on the local CPU, there are 2 types of
+interfaces: the "modern" 64-bit ones (rdmsrq() etc.) and the 32-bit
+ones (rdmsr() etc.) which are using the upper and lower 32-bit halves
+of the 64-bit wide MSR register values.
 
-I am experiencing a regression: kernel 5.15.x boots fine, but 6.8.x
-fails with "Kernel panic - not syncing: VFS: Unable to mount root fs
-on unknown-block(0,0)". The SATA controller (Intel, rev 06) is not
-detected; /dev/sda never appears. The ahci module is present in the
-initramfs but does not load.
+The 32-bit interfaces are not optimal for 3 reasons:
 
-[1.] One line summary:
-     Kernel 6.8.x fails to detect Intel SATA AHCI controller; /dev/sda 
-not created.
+- They are based on primitives using 64-bit sized values anyway.
 
-[2.] Full description:
-     On a [Laptop-Modell], Linux Mint 21.x, kernel 5.15.x boots normally.
-     Kernel 6.8.x panics during initramfs: "VFS: Unable to mount root fs
-     on unknown-block(0,0)". The initramfs contains ahci.ko, sd_mod.ko,
-     libahci.ko, libata.ko (verified with lsinitramfs). No shell is
-     reachable (break=bottom, rdinit=/usr/bin/sh both fail). Secure Boot
-     was disabled during testing.
+- Modern x86 CPUs have added support for MSR access instructions using
+  an immediate value instead of a register for addressing the MSR,
+  while the value is in a 64-bit register.
 
-[3.] Keywords:
-     ahci, sata, ata, initramfs, boot, regression
+- rdmsr() is a macro storing the upper and lower 32-bit halves in
+  variables specified as macro parameters. This is obscuring variable
+  assignment through a macro. Additionally rdmsrq() is mimicking this
+  pattern by being a macro, too, with the target variable specified as
+  a parameter as well.
 
-[4.] Kernel version:
-     Working:  5.15.0-xx-generic
-     Broken:   6.8.0-xx-generic
+For those reasons drop the 32-bit interfaces for accessing the x86 MSR
+registers completely and only use the 64-bit variants.
 
-[5.] Oops/Panic message:
-     Kernel panic - not syncing: VFS: Unable to mount root fs on 
-unknown-block(0,0)
+This allows to switch all "high-level" MSR access macros to inline
+functions in the end.
 
-[7.] Environment:
-     Distro: Linux Mint 21.x (Ubuntu 22.04 based)
-     Arch: x86_64
-     Controller: Intel Corporation [SATA controller] (rev 06)
-     Kernel driver in use (on 5.15): ahci
+This series will be used as the base for further reorganisation of the
+MSR access functions, especially for completely inlining the MSR
+access instructions even with paravirtualization being active.
 
-     lspci -k output:
-    00:00.0 Host bridge: Intel Corporation Gemini Lake Host Bridge (rev 06)
-     DeviceName: Onboard - Other
-00:00.1 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor Dynamic Platform and Thermal Framework Processor 
-Participant (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Dynamic Platform and Thermal Framework Processor Participant
-     Kernel driver in use: proc_thermal
-     Kernel modules: processor_thermal_device_pci_legacy
-00:02.0 VGA compatible controller: Intel Corporation GeminiLake [UHD 
-Graphics 600] (rev 06)
-     DeviceName: Onboard - Video
-     Kernel driver in use: i915
-     Kernel modules: i915
-00:0e.0 Multimedia audio controller: Intel Corporation Celeron/Pentium 
-Silver Processor High Definition Audio (rev 06)
-     DeviceName: Onboard - Sound
-     Subsystem: Realtek Semiconductor Co., Ltd. Celeron/Pentium Silver 
-Processor High Definition Audio
-     Kernel driver in use: sof-audio-pci-intel-apl
-     Kernel modules: snd_hda_intel, snd_soc_skl, snd_sof_pci_intel_apl
-00:0f.0 Communication controller: Intel Corporation Celeron/Pentium 
-Silver Processor Trusted Execution Engine Interface (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Trusted Execution Engine Interface
-     Kernel driver in use: mei_me
-     Kernel modules: mei_me
-00:12.0 SATA controller: Intel Corporation Celeron/Pentium Silver 
-Processor SATA Controller (rev 06)
-     DeviceName: Onboard - SATA
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor SATA 
-Controller
-     Kernel driver in use: ahci
-     Kernel modules: ahci
-00:13.0 PCI bridge: Intel Corporation Gemini Lake PCI Express Root Port 
-(rev f6)
-     Subsystem: Intel Corporation Gemini Lake PCI Express Root Port
-     Kernel driver in use: pcieport
-00:14.0 PCI bridge: Intel Corporation Gemini Lake PCI Express Root Port 
-(rev f6)
-     Subsystem: Intel Corporation Gemini Lake PCI Express Root Port
-     Kernel driver in use: pcieport
-00:15.0 USB controller: Intel Corporation Celeron/Pentium Silver 
-Processor USB 3.0 xHCI Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor USB 
-3.0 xHCI Controller
-     Kernel driver in use: xhci_hcd
-     Kernel modules: xhci_pci
-00:16.0 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor I2C 0 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor I2C 0
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:16.1 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor I2C 1 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor I2C 1
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:16.2 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor I2C 2 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor I2C 2
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:16.3 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor I2C 3 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor I2C 3
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:17.0 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor I2C 4 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor I2C 4
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:17.1 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor I2C 5 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor I2C 5
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:17.2 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor I2C 6 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor I2C 6
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:17.3 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor I2C 7 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor I2C 7
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:18.0 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor Serial IO UART Host Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Serial IO UART Host Controller
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:18.1 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor Serial IO UART Host Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Serial IO UART Host Controller
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:18.2 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor Serial IO UART Host Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Serial IO UART Host Controller
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:18.3 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor Serial IO UART Host Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Serial IO UART Host Controller
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:19.0 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor Serial IO SPI Host Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Serial IO SPI Host Controller
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:19.1 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor Serial IO SPI Host Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Serial IO SPI Host Controller
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:19.2 Signal processing controller: Intel Corporation Celeron/Pentium 
-Silver Processor Serial IO SPI Host Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Serial IO SPI Host Controller
-     Kernel driver in use: intel-lpss
-     Kernel modules: intel_lpss_pci
-00:1c.0 SD Host controller: Intel Corporation Celeron/Pentium Silver 
-Processor SDA Standard Compliant SD Host Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor SDA 
-Standard Compliant SD Host Controller
-     Kernel driver in use: sdhci-pci
-     Kernel modules: sdhci_pci
-00:1e.0 SD Host controller: Intel Corporation Device 31d0 (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Device 7270
-     Kernel driver in use: sdhci-pci
-     Kernel modules: sdhci_pci
-00:1f.0 ISA bridge: Intel Corporation Celeron/Pentium Silver Processor 
-LPC Controller (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor LPC 
-Controller
-     Kernel driver in use: lpc_ich
-     Kernel modules: lpc_ich
-00:1f.1 SMBus: Intel Corporation Celeron/Pentium Silver Processor 
-Gaussian Mixture Model (rev 06)
-     DeviceName: Onboard - Other
-     Subsystem: Intel Corporation Celeron/Pentium Silver Processor 
-Gaussian Mixture Model
-     Kernel driver in use: i801_smbus
-     Kernel modules: i2c_i801
-01:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821CE 
-802.11ac PCIe Wireless Network Adapter
-     Subsystem: Realtek Semiconductor Co., Ltd. RTL8821CE 802.11ac PCIe 
-Wireless Network Adapter
-     Kernel modules: rtw88_8821ce, rtw_8821ce, 8821ce
+Based on kernel 7.3 as of 2026-10-07.
 
-     dmesg | grep -iE "ata|sata|ahci" (on 5.15.x):
-    [    0.000000] BIOS-e820: [mem 
-0x000000006dd70000-0x000000006dd80fff] ACPI data
-[    0.000000] reserve setup_data: [mem 
-0x0000000000000000-0x000000000003efff] usable
-[    0.000000] reserve setup_data: [mem 
-0x000000000003f000-0x000000000003ffff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x0000000000040000-0x000000000009dfff] usable
-[    0.000000] reserve setup_data: [mem 
-0x000000000009e000-0x00000000000fffff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x0000000000100000-0x000000000fffffff] usable
-[    0.000000] reserve setup_data: [mem 
-0x0000000010000000-0x0000000012150fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x0000000012151000-0x00000000607a9017] usable
-[    0.000000] reserve setup_data: [mem 
-0x00000000607a9018-0x00000000607b9057] usable
-[    0.000000] reserve setup_data: [mem 
-0x00000000607b9058-0x000000006b4bbfff] usable
-[    0.000000] reserve setup_data: [mem 
-0x000000006b4bc000-0x000000006dd6ffff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x000000006dd70000-0x000000006dd80fff] ACPI data
-[    0.000000] reserve setup_data: [mem 
-0x000000006dd81000-0x000000006dde0fff] ACPI NVS
-[    0.000000] reserve setup_data: [mem 
-0x000000006dde1000-0x000000006e1e6fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x000000006e1e7000-0x000000006ea3cfff] usable
-[    0.000000] reserve setup_data: [mem 
-0x000000006ea3d000-0x000000006ea3dfff] ACPI NVS
-[    0.000000] reserve setup_data: [mem 
-0x000000006ea3e000-0x000000006ea3ffff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x000000006ea40000-0x000000006eb14fff] usable
-[    0.000000] reserve setup_data: [mem 
-0x000000006eb15000-0x000000006ebc4fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x000000006ebc5000-0x000000006effffff] usable
-[    0.000000] reserve setup_data: [mem 
-0x000000006f000000-0x000000007fffffff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000d0000000-0x00000000d0ffffff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000d3709000-0x00000000d3709fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000e0000000-0x00000000efffffff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000fe042000-0x00000000fe044fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000fe900000-0x00000000fe902fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000fec00000-0x00000000fec00fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000fed01000-0x00000000fed01fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000fee00000-0x00000000fee00fff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x00000000ff800000-0x00000000ffffffff] reserved
-[    0.000000] reserve setup_data: [mem 
-0x0000000100000000-0x00000001ffffffff] usable
-[    0.024880] NODE_DATA(0) allocated [mem 0x1fffd6000-0x1ffffffff]
-[    0.203122] Memory: 5547680K/5931444K available (16393K kernel code, 
-4402K rwdata, 11004K rodata, 3296K init, 18764K bss, 383508K reserved, 
-0K cma-reserved)
-[    0.370364] Register File Data Sampling: Mitigation: Clear Register File
-[    0.718375] ACPI: EC: EC_CMD/EC_SC=0x66, EC_DATA=0x62
-[    0.932015] ACPI: EC: EC_CMD/EC_SC=0x66, EC_DATA=0x62
-[    0.932228] libata version 3.00 loaded.
-[    1.936203] Write protecting the kernel read-only data: 30720k
-[    1.936858] Freeing unused kernel image (text/rodata gap) memory: 2036K
-[    1.937125] Freeing unused kernel image (rodata/data gap) memory: 1284K
-[    2.238334] ahci 0000:00:12.0: version 3.0
-[    2.249922] ahci 0000:00:12.0: AHCI 0001.0301 32 slots 2 ports 6 Gbps 
-0x3 impl SATA mode
-[    2.249929] ahci 0000:00:12.0: flags: 64bit ncq sntf pm clo only pmp 
-pio slum part deso sadm sds apst
-[    2.256735] scsi host0: ahci
-[    2.260141] scsi host1: ahci
-[    2.260198] ata1: SATA max UDMA/133 abar m2048@0x80040000 port 
-0x80040100 irq 124
-[    2.260204] ata2: SATA max UDMA/133 abar m2048@0x80040000 port 
-0x80040180 irq 124
-[    2.575597] ata2: SATA link down (SStatus 4 SControl 300)
-[    2.737540] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-[    2.739515] ata1.00: ATA-9: SSD 1TB, X0606B0, max UDMA/133
-[    2.740480] ata1.00: 1953525168 sectors, multi 1: LBA48 NCQ (depth 
-32), AA
-[    2.744572] ata1.00: configured for UDMA/133
-[    2.745087] scsi 0:0:0:0: Direct-Access     ATA      SSD 1TB          
-6B0  PQ: 0 ANSI: 5
-[    6.125323] EXT4-fs (sda4): mounted filesystem with ordered data 
-mode. Opts: (null). Quota mode: none.
-[    7.231564] cfg80211: Loading compiled-in X.509 certificates for 
-regulatory database
-[    7.253660] systemd[1]: systemd-hwdb-update.service - Rebuild 
-Hardware Database was skipped because of an unmet condition check 
-(ConditionNeedsUpdate=/etc).
-[    9.645970] EXT4-fs (sda5): mounted filesystem with ordered data 
-mode. Opts: (null). Quota mode: none.
+IMHO at least patches 2 and 3 should be applied rather sooner than later
+in order to avoid new instances of the 32-bit variants of the *_safe()
+functions creeping in again.
 
-[X.] Notes:
-     - ahci.ko is present in initramfs but not loaded
-     - No initramfs shell reachable (break=bottom, rdinit both fail)
-     - Secure Boot disabled during testing
-     - First broken kernel: 6.x.x (if known)
-     - Last working kernel: 5.15.x
+Changes in V2:
+- dropped already applied patches
+- added patch 1
+- rebased
 
-Thank you
+Changes in V3:
+- small fixes in patches 4 and 13
+- rebased
+
+Changes in V4:
+- rebased
+
+Juergen Gross (13):
+  x86/cpu: Fix coding style violation
+  x86/msr: Remove wrmsr_safe()
+  x86/msr: Remove rdmsr_safe()
+  drivers/ata: Stop using 32-bit MSR interfaces
+  agp/nvidia: Stop using 32-bit MSR interfaces
+  fbdev/geode: Stop using 32-bit MSR interfaces
+  hw_random/via-rng: Stop using 32-bit MSR interfaces
+  drivers/gpio: Stop using 32-bit MSR interfaces
+  drivers/misc: Stop using 32-bit MSR interfaces
+  x86/msr: Remove wrmsr()
+  x86/msr: Remove rdmsr()
+  treewide: convert rdmsrq() from a macro to an inline function
+  x86/msr: Simplify some rdmsrq() use cases
+
+ arch/x86/coco/sev/core.c                      |  2 +-
+ arch/x86/events/amd/brs.c                     |  4 +-
+ arch/x86/events/amd/core.c                    |  8 +--
+ arch/x86/events/amd/ibs.c                     | 18 +++----
+ arch/x86/events/amd/lbr.c                     | 16 ++----
+ arch/x86/events/amd/power.c                   |  8 +--
+ arch/x86/events/amd/uncore.c                  |  4 +-
+ arch/x86/events/core.c                        | 20 ++++----
+ arch/x86/events/intel/core.c                  | 15 ++----
+ arch/x86/events/intel/cstate.c                |  5 +-
+ arch/x86/events/intel/ds.c                    |  2 +-
+ arch/x86/events/intel/knc.c                   | 10 ++--
+ arch/x86/events/intel/lbr.c                   | 25 +++-------
+ arch/x86/events/intel/p4.c                    |  6 +--
+ arch/x86/events/intel/p6.c                    |  4 +-
+ arch/x86/events/intel/pt.c                    | 12 ++---
+ arch/x86/events/intel/uncore.c                |  6 +--
+ arch/x86/events/intel/uncore_nhmex.c          |  4 +-
+ arch/x86/events/intel/uncore_snb.c            |  2 +-
+ arch/x86/events/intel/uncore_snbep.c          |  6 +--
+ arch/x86/events/msr.c                         |  2 +-
+ arch/x86/events/perf_event.h                  |  6 +--
+ arch/x86/events/rapl.c                        |  6 +--
+ arch/x86/events/zhaoxin/core.c                | 10 ++--
+ arch/x86/hyperv/hv_apic.c                     |  9 ++--
+ arch/x86/hyperv/hv_init.c                     | 26 +++++-----
+ arch/x86/hyperv/hv_spinlock.c                 |  2 +-
+ arch/x86/include/asm/apic.h                   |  7 +--
+ arch/x86/include/asm/debugreg.h               |  6 +--
+ arch/x86/include/asm/fsgsbase.h               |  2 +-
+ arch/x86/include/asm/kvm_host.h               | 10 ----
+ arch/x86/include/asm/msr.h                    | 39 ++-------------
+ arch/x86/include/asm/paravirt.h               | 26 +---------
+ arch/x86/kernel/apic/apic.c                   | 14 +++---
+ arch/x86/kernel/apic/apic_numachip.c          |  6 +--
+ arch/x86/kernel/cet.c                         |  2 +-
+ arch/x86/kernel/cpu/amd.c                     | 14 +++---
+ arch/x86/kernel/cpu/aperfmperf.c              |  8 +--
+ arch/x86/kernel/cpu/bugs.c                    | 12 ++---
+ arch/x86/kernel/cpu/bus_lock.c                |  8 +--
+ arch/x86/kernel/cpu/centaur.c                 |  8 +--
+ arch/x86/kernel/cpu/common.c                  | 12 ++---
+ arch/x86/kernel/cpu/feat_ctl.c                |  4 +-
+ arch/x86/kernel/cpu/hygon.c                   |  4 +-
+ arch/x86/kernel/cpu/intel.c                   |  6 +--
+ arch/x86/kernel/cpu/intel_epb.c               |  4 +-
+ arch/x86/kernel/cpu/mce/amd.c                 |  4 +-
+ arch/x86/kernel/cpu/mce/core.c                |  8 +--
+ arch/x86/kernel/cpu/mce/inject.c              |  2 +-
+ arch/x86/kernel/cpu/mce/intel.c               | 18 +++----
+ arch/x86/kernel/cpu/mce/p5.c                  |  8 +--
+ arch/x86/kernel/cpu/mce/winchip.c             |  2 +-
+ arch/x86/kernel/cpu/microcode/intel.c         |  2 +-
+ arch/x86/kernel/cpu/mshyperv.c                |  6 +--
+ arch/x86/kernel/cpu/mtrr/amd.c                |  4 +-
+ arch/x86/kernel/cpu/mtrr/cleanup.c            |  4 +-
+ arch/x86/kernel/cpu/mtrr/generic.c            | 32 ++++++------
+ arch/x86/kernel/cpu/mtrr/mtrr.c               |  2 +-
+ arch/x86/kernel/cpu/resctrl/core.c            |  2 +-
+ arch/x86/kernel/cpu/resctrl/monitor.c         |  4 +-
+ arch/x86/kernel/cpu/resctrl/pseudo_lock.c     |  4 +-
+ arch/x86/kernel/cpu/resctrl/rdtgroup.c        |  2 +-
+ arch/x86/kernel/cpu/topology.c                |  2 +-
+ arch/x86/kernel/cpu/topology_amd.c            |  4 +-
+ arch/x86/kernel/cpu/transmeta.c               |  8 +--
+ arch/x86/kernel/cpu/tsx.c                     | 10 ++--
+ arch/x86/kernel/cpu/umwait.c                  |  2 +-
+ arch/x86/kernel/cpu/zhaoxin.c                 |  4 +-
+ arch/x86/kernel/fpu/core.c                    |  2 +-
+ arch/x86/kernel/hpet.c                        |  2 +-
+ arch/x86/kernel/kvm.c                         |  2 +-
+ arch/x86/kernel/mmconf-fam10h_64.c            |  6 +--
+ arch/x86/kernel/process.c                     |  4 +-
+ arch/x86/kernel/process_64.c                  | 14 +++---
+ arch/x86/kernel/shstk.c                       |  8 +--
+ arch/x86/kernel/traps.c                       |  4 +-
+ arch/x86/kernel/tsc.c                         |  2 +-
+ arch/x86/kernel/tsc_msr.c                     |  6 +--
+ arch/x86/kernel/tsc_sync.c                    |  6 +--
+ arch/x86/kvm/msrs.c                           |  2 +-
+ arch/x86/kvm/svm/pmu.c                        |  4 +-
+ arch/x86/kvm/svm/svm.c                        |  6 +--
+ arch/x86/kvm/vmx/nested.c                     |  4 +-
+ arch/x86/kvm/vmx/pmu_intel.c                  |  8 +--
+ arch/x86/kvm/vmx/sgx.c                        |  6 +--
+ arch/x86/kvm/vmx/tdx.c                        |  2 +-
+ arch/x86/kvm/vmx/vmx.c                        | 42 ++++++++--------
+ arch/x86/kvm/x86.c                            |  6 +--
+ arch/x86/lib/insn-eval.c                      |  6 +--
+ arch/x86/lib/msr-smp.c                        |  2 +-
+ arch/x86/mm/pat/memtype.c                     |  2 +-
+ arch/x86/pci/amd_bus.c                        |  8 +--
+ arch/x86/platform/olpc/olpc-xo1-rtc.c         |  6 +--
+ arch/x86/platform/olpc/olpc-xo1-sci.c         |  2 +-
+ arch/x86/power/cpu.c                          | 10 ++--
+ arch/x86/realmode/init.c                      |  2 +-
+ arch/x86/virt/hw.c                            |  8 +--
+ arch/x86/virt/svm/sev.c                       | 18 +++----
+ arch/x86/virt/vmx/tdx/tdx.c                   |  2 +-
+ arch/x86/xen/suspend.c                        |  2 +-
+ drivers/acpi/processor_perflib.c              |  2 +-
+ drivers/ata/pata_cs5535.c                     | 24 ++++-----
+ drivers/ata/pata_cs5536.c                     | 17 +++----
+ drivers/char/agp/nvidia-agp.c                 | 32 ++++++------
+ drivers/char/hw_random/via-rng.c              | 29 +++++------
+ drivers/cpufreq/acpi-cpufreq.c                |  8 +--
+ drivers/cpufreq/amd-pstate.c                  |  4 +-
+ drivers/cpufreq/e_powersaver.c                | 20 ++++----
+ drivers/cpufreq/intel_pstate.c                | 28 +++++------
+ drivers/cpufreq/longhaul.c                    | 12 ++---
+ drivers/cpufreq/longrun.c                     | 16 +++---
+ drivers/cpufreq/powernow-k7.c                 | 10 ++--
+ drivers/cpufreq/powernow-k8.c                 |  8 +--
+ drivers/cpufreq/speedstep-centrino.c          |  4 +-
+ drivers/cpufreq/speedstep-lib.c               | 14 +++---
+ drivers/edac/amd64_edac.c                     |  6 +--
+ drivers/gpio/gpio-cs5535.c                    | 10 ++--
+ drivers/hv/mshv_vtl_main.c                    |  2 +-
+ drivers/hwmon/hwmon-vid.c                     |  4 +-
+ drivers/idle/intel_idle.c                     | 26 +++++-----
+ drivers/misc/cs5535-mfgpt.c                   | 33 ++++++------
+ drivers/mtd/nand/raw/cs553x_nand.c            |  6 +--
+ drivers/platform/x86/intel/ifs/load.c         | 10 ++--
+ drivers/platform/x86/intel/ifs/runtest.c      |  8 +--
+ drivers/platform/x86/intel/pmc/cnp.c          |  2 +-
+ .../intel/speed_select_if/isst_if_mbox_msr.c  |  6 +--
+ .../intel/speed_select_if/isst_tpmi_core.c    |  2 +-
+ drivers/platform/x86/intel_ips.c              | 20 ++++----
+ drivers/powercap/intel_rapl_msr.c             |  2 +-
+ drivers/thermal/intel/intel_hfi.c             |  8 +--
+ drivers/thermal/intel/therm_throt.c           | 22 ++++----
+ drivers/thermal/intel/x86_pkg_temp_thermal.c  |  6 +--
+ drivers/video/fbdev/geode/display_gx.c        |  8 +--
+ drivers/video/fbdev/geode/gxfb_core.c         |  2 +-
+ drivers/video/fbdev/geode/lxfb_ops.c          | 50 +++++++++----------
+ drivers/video/fbdev/geode/suspend_gx.c        | 24 +++++----
+ drivers/video/fbdev/geode/video_gx.c          |  8 +--
+ include/linux/cs5535.h                        | 10 ++--
+ 138 files changed, 576 insertions(+), 695 deletions(-)
+
+-- 
+2.55.0
 
