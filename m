@@ -1,73 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9742481ACD;
-	Fri,  9 Oct 2026 14:54:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7BFD389458;
+	Fri,  9 Oct 2026 15:40:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791557656; cv=none; b=pkMeNc7zZZS9EzkLrNZ0RIK8Y8ULOkV6qkeilQV5VIbMEKNCsvvewVnR52tHk4vb+xHu/rhRL9IAZO9Lo0VX9utlHnbKl4Wdms7LacDn0PY0+fjAxexZRD6gXdsnrf+mRDORP9WdhKvtmjds1SgHMflZmoW3PyrLwlwrDESJuFk=
+	t=1791560432; cv=none; b=fBS5H/OpDyhdW+zkwsrdSkvSHJMXSrLCwcls+MiZ40iokhDxAGGVuurrmN6UXTzuuSL6aeFpPhoNNIAeunRkd2SU1lsetBZoT/fRhi5DmY+rJD2Kjd7YfRRYlVNl7A4KR1Tc1reev5FRg6hhcKtrpGHXGWzc2cFRSmsGCHTvNQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791557656; c=relaxed/simple;
-	bh=pKnr66K5LkeHYaqIKoZ5+IB0TdHqx8L3nfB3f83cFqA=;
+	s=arc-20240116; t=1791560432; c=relaxed/simple;
+	bh=ZfREm2ISmWYaR7bcpqTTUmxVi1WaVSmYCk0DF9W7ttM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DtUp95H6ZQmTdRX3pbUqeuHEtbTwA8CIWr+WPUTr8pIJAj8be79NU3XaKY/rU+B3/kKKpUfbB5hI5lMxnhOqgm4gIB8ZlOjHMoy6yrCWGZ+lWDC7rvxEy4hPNnRyNkM+Hfb2lbUozRO1xFv+877D6JphZBlwUEZoDF/bWVk+QB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RZbZizl7; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=o635xroKvJn81X/eFUe1i/QZtcCl/EmJ9HROqL8TXza9+LIRhdheEJyeJCa6kKoY/kn8TT5ofBpsq8VOnLeyqwW86F2Bsl+lKPjJwgyjyN5Ly1DVRaVe7SQKfOuQNb++78BBvnZr+3wMAwgD7pCvK9NfgVoYVXT6WEyhMR4i4zQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N9fmHlmJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RZbZizl7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B653E1F000FF;
-	Fri,  9 Oct 2026 14:54:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N9fmHlmJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 772331F000FF;
+	Fri,  9 Oct 2026 15:40:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791557655;
-	bh=K8fYdYBN96GvkG2/zkMD0kHG+t7VNzh9golPxEFheh8=;
+	s=k20260515; t=1791560431;
+	bh=CoNSFUQzT9k/JCGCjNqp9pOy/DOt1JJtLGvf6kZ44WI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RZbZizl7zY+GxNqpQQLALtHGPwzlG7soJlwQVGcVXxevvTgEFLKR774AJ1BFEDoQ+
-	 fyrSQohcMHqkQjKISaB4esbX6HXIX5bPgQ4/gA2gUCzoGkCeK3tuLJKZNn4XORqHvS
-	 yr5qUa+52bFKMutHIC5sbRww1HTiREUEVUiSfjqJxEad5egbodoJb24lWbYUgKH3O2
-	 XFprSy9dP9Jj1uPIzkL5o2gEz38W1JPX5ecGTlUNGiOYHB2ALuvAlbX1p/TDVB6aYp
-	 3fiuNRcwylnt8c13Co5onvCMi56lvE2GQBGhfDP9j6QRniRmRcXleSrskOuuFKD89j
-	 lTCzfVAWvdchA==
-Date: Fri, 9 Oct 2026 16:54:11 +0200
+	b=N9fmHlmJBIaBe2QSSLIc8bd3YL3eJi8UlmPfe0mUGKz/wbxLwvktMsFN8k89jkbYw
+	 Eeb91wzeeLUOsw92HZLsLT8CThjmEu7xaqIQOelYcqx7Hq7tLEaMv7Oz54ZAQbh9yl
+	 woxkSOm23XS5MRZIdeAwCd1s+gTqxxWDvo+cqS/7Ea8JZ3315L3fL6tqCLs3pbuL1A
+	 ckwlRxGfvFjNkfi6dybUoCVpNmtUOIiJERsd6PGEBn/deucp1zUlIBBVkvLisSwqXg
+	 Y3GnLnkjWG/tGyDfL2woN0BMuH3ozasS9mQ6ula4xXTJLvsrNIYstfuMOEzOQrstgq
+	 7y8CpLdV9iFAw==
+Date: Fri, 9 Oct 2026 17:40:28 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Phil Pemberton <philpem@philpem.me.uk>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v8 0/6] libata-scsi: multi-LUN ATAPI device support
-Message-ID: <askAE1FcZJ3jFiWl@ryzen>
-References: <20260731213503.2379771-1-philpem@philpem.me.uk>
- <apVF22SjDzqkzEkm@ryzen>
- <0a7bba64-c0fb-43c7-bcaa-d806f2377afd@philpem.me.uk>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Hans-Joachim Lange <lange-achim@posteo.de>, linux-ide@vger.kernel.org,
+	regressions@lists.linux.dev
+Subject: Re: PROBLEM: Kernel 6.8.x: =?utf-8?Q?VFS?=
+ =?utf-8?Q?=3A_Unable_to_mount_root_fs_on_unknown-block=280=2C0=29_?=
+ =?utf-8?B?4oCT?= SATA (Intel AHCI) not detected
+Message-ID: <askK7KVJlMcfyYWp@ryzen>
+References: <c096264c-640f-4491-b242-399bba9cbbac@posteo.de>
+ <1b9f33d6-f887-432a-83ec-292ff43eccdd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <0a7bba64-c0fb-43c7-bcaa-d806f2377afd@philpem.me.uk>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1b9f33d6-f887-432a-83ec-292ff43eccdd@kernel.org>
 
-Hello Phil,
-
-On Tue, Oct 06, 2026 at 05:12:38PM +0100, Phil Pemberton wrote:
-> On 31/08/2026 10:14, Niklas Cassel wrote:
+On Fri, Oct 09, 2026 at 09:33:42AM +0200, Damien Le Moal wrote:
+> On 2026/10/07 14:40, Hans-Joachim Lange wrote:
+> > Hello,
+> > 
+> > I am experiencing a regression: kernel 5.15.x boots fine, but 6.8.x
+> > fails with "Kernel panic - not syncing: VFS: Unable to mount root fs
+> > on unknown-block(0,0)". The SATA controller (Intel, rev 06) is not
+> > detected; /dev/sda never appears. The ahci module is present in the
+> > initramfs but does not load.
+> > 
+> > [1.] One line summary:
+> >      Kernel 6.8.x fails to detect Intel SATA AHCI controller; /dev/sda 
+> > not created.
 > 
-> Thanks for the comments - sorry for the delay on my part. I saw the
-> automated Sashiko reviews but was pulled away onto something else.
-> 
-> Would it help if I responded to the Sashiko emails individually, or is
-> responding on the next patch covering note enough?
+> Please try again with at least the latest stable kernel, or ideally the latest
+> mainline kernel (7.3-rc6 as of this week). And also please try to capture the
+> boot messages with the bad kernel. Hard to say what's happening without that.
+> You can use network console or simply a video/pictures of the screen where we
+> can see the ata messages.
 
-Simply sending a new series is fine, like you already did.
+You can also add rdinit=/bin/sh to the kernel command line
+to get a shell.
 
-It will unfortunately most likely miss 7.4, since we will need acks
-from the SCSI maintainers on the SCSI parts, and I saw that you got
-some additional (non-preexisting issue) from Sashiko.
+Then you can do:
+$ lspci
 
-But my recommendation is still to respin sooner rather than later,
-such that we can get it merged any not miss (another) release cycle.
+to see if the AHCI controller is there.
+
+to see which modules are loaded.
+
+You can then try to modprobe ahci to see
+if your drives are detected.
+
+
+In most of these cases, you are simply missing the required
+filesystem (or similar) modules in your initramfs.
 
 
 Kind regards,
