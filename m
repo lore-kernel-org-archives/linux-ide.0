@@ -1,130 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8016E4EF151;
-	Fri,  9 Oct 2026 16:44:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from cmccmta8.chinamobile.com (cmccmta8.chinamobile.com [111.22.67.151])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 784A839281D;
+	Sat, 10 Oct 2026 07:59:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=111.22.67.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791564248; cv=none; b=UavXi46hbhTdGKyytJc/rv21HrrKyI6DBgAEXUVr7bF0Wzb0e1yFSUH4ZSSjPhDBXAyz1t1HPJmzX3OKcB7ue9KQfJAJqOMxB+LmhHTWgk6tfWzkiWslk8iumbtaXXX4AqW4IbIwU2TVrdX1Jv8Gzuw5tasdy17BhEgKHgGjylU=
+	t=1791619152; cv=none; b=XjcA5lDO8Lb85OSwbQROYRISDpJeKylhEfqH/oAlo/DNs3/c2oTYjZxNi85Xbvvi8fRDHAhrPyr674QwvPuAxwIz510J9Jp5zVs11i/PxBm4/T8QG+J6MnoLyXJwg76h4ap6a+Rarrtv8Gjl/XFey4vHrBqWuix12cSJP/FVm1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791564248; c=relaxed/simple;
-	bh=q+Y9Tf6oxZrkVnvATG12uwCD4DDMZUbjEUzwpOu9x94=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=XC8Bdhijdezc3FqHFZ5g32dQ08oksnlCfCqE760fGwLPhuQpBcGaFDLBTdbWbOOYeLYMNeRJDWg8Bkt19x5GdyHIpEDuy3o2OkCc91wcjcXwzeUQVMjED/29gO+6/+6VWTftgH5nIWAvXya08UUJDOtbo57U05T1JhewUAvZDuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nDeSepMp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791619152; c=relaxed/simple;
+	bh=PSSaeWVCQQXj8aMblYpi4nx2Sj61cCXqOT4FifyBVzo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Zgy2iYruMdtpk47uBA9fwGAqH1AC//eVB9QL5TKE2P9MkvLOmp+icCfXZd0xygPAfGF3MMt/C6UszhF4O/4mS7XrJiN1pd9gLXSwBclbc7CYgwcfvWfAVsriU2BhYKUODYbI6fxUBOUjLeEb6jyrx7dIwjXph2Izprt4P1Eo1Kc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com; spf=pass smtp.mailfrom=cmss.chinamobile.com; dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.b=X6aexB5T; arc=none smtp.client-ip=111.22.67.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nDeSepMp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A15FF1F000FF;
-	Fri,  9 Oct 2026 16:44:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791564243;
-	bh=fcDVZiC6ZyYVP5xLSgurkSuH2ZvsSoVZ5pKPRoyYqcs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=nDeSepMpu5M9TvRq5R5oxrq9jXfBMjJG/MRbIpsAacGjiF4Ps2Lc4LS8ch+mUstN9
-	 rv9KHIuJDSCMNetJecf/6ozCOiak98hU5xomUPa7kZTWHIi5WHKnu0HbSvTzY25JU2
-	 z+zCYCghxpOqKEdg7y/dfjfmiTPTqy+NhXOiMshSxVCIBFwTOArN7tAu7wms88Sh04
-	 IxaVQUhhjM+Qncze70820yOSihP8B/TYsDZqtFg2gbTUtWAetc63rVwcw067yqhtEg
-	 S79mzL6Vnu2vvjCu08H2E3vXxlETPRbZjLoX3C8G+O9jxHTXUTUlez4pyHy9PFrjZg
-	 KgwAvIwMJOt7A==
-Message-ID: <sashiko-outbox-165843@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 14/15] ata: libata-scsi: probe additional LUNs for
- multi-LUN ATAPI devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Phil Pemberton" <philpem@philpem.me.uk>
-Cc: linux-scsi@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20261009155522.593045-15-philpem@philpem.me.uk>
-References: <20261009155522.593045-1-philpem@philpem.me.uk>
- <20261009155522.593045-15-philpem@philpem.me.uk>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 09 Oct 2026 16:44:03 +0000
+	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.b="X6aexB5T"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=cmss.chinamobile.com; s=default; l=0;
+	h=from:subject:message-id:to:cc:mime-version;
+	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+	b=X6aexB5T7k20bFgjb0AN9FOD3iCay+WRKR+7khomMqEvw+EIxqFzOwuLz2U65AKB6LSwf0UGrRtgs
+	 00Go9F+1wAGoZv7J9KcPGw4ScSMCn2s5O7+zBlpPf8c3sHN5YQ2td4wAhQGPeEzyu20XS5qonBsksX
+	 Lb7yzmAWDTqclz7o=
+X-RM-TagInfo: emlType=0                                       
+X-RM-SPAM-FLAG:00000000
+Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
+	by rmmx-syy-dmz-app06-12006 (RichMail) with SMTP id 2ee66ac9f0487b0-94b57;
+	Sat, 10 Oct 2026 15:59:05 +0800 (CST)
+X-RM-TRANSID:2ee66ac9f0487b0-94b57
+X-RM-TagInfo: emlType=0                                       
+X-RM-SPAM-FLAG:00000000
+Received:from localhost.localdomain (unknown[10.55.1.72])
+	by rmsmtp-syy-appsvr05-12005 (RichMail) with SMTP id 2ee56ac9f047631-6b3c0;
+	Sat, 10 Oct 2026 15:59:04 +0800 (CST)
+X-RM-TRANSID:2ee56ac9f047631-6b3c0
+From: tongzhiwei <tongzhiwei@cmss.chinamobile.com>
+To: dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: tongzhiwei <tongzhiwei@cmss.chinamobile.com>,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] ata: libata: preserve sata_spd link cache across ata_dev_init
+Date: Sat, 10 Oct 2026 15:54:54 +0800
+Message-ID: <20261010075457.882-1-tongzhiwei@cmss.chinamobile.com>
+X-Mailer: git-send-email 2.45.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] ata: libata-scsi: manual scan of ATAPI targets bypasses OF node as=
-signment
---
+a hot-unplug goes through
+ata_eh_schedule_probe() -> ata_dev_init() -> sata_spd = 0.
+After commit 69f2c9346313 ("ata: libata: Fix sata_down_spd_limit() when no
+link speed is reported"), when
+the device is unplugged, every probe lowers sata_spd_limit, which breaks
+commit 2dc0b46b5ea3 ("libata: sata_down_spd_limit should return if
+driver has not recorded sstatus speed"). The harm is, when the device
+is plugged back, it is limited to low speed which will never be recovered.
 
-commit 8bad316476ffbbf5d3a2fdb9796c051181202764
-Author: Phil Pemberton <philpem@philpem.me.uk>
+This patch stops zeroing sata_spd in ata_dev_init (sata_spd was
+introduced in commit 008a78961ec7 ("libata: improve SATA PHY speed down
+logic")).  sata_spd is then written only on a successful reset.  At
+struct ata_port's init time the sata_spd field is zeroed by kzalloc.
 
-ata: libata-scsi: probe additional LUNs for multi-LUN ATAPI devices
-   =20
-After adding LUN 0 of an ATAPI device marked BLIST_FORCELUN, scan the
-target's remaining LUNs using scsi_scan_target(). The scan is bounded by
-shost->max_lun, set through atapi_max_lun.
+Fixes: 69f2c9346313 ("ata: libata: Fix sata_down_spd_limit() when no link speed is reported")
+Assisted-by: LLM
+Signed-off-by: tongzhiwei <tongzhiwei@cmss.chinamobile.com>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index faf408acf65ec..bba2db2f84284 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index f482c0a6d7e9..2ddad2e6ebd2 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5659,7 +5659,7 @@ void ata_dev_init(struct ata_device *dev)
+ 
+ 	/* SATA spd limit is bound to the attached device, reset together */
+ 	link->sata_spd_limit = link->hw_sata_spd_limit;
+-	link->sata_spd = 0;
++	/* link->sata_spd caches last negotiated link speed; not zeroed here */
+ 
+ 	/* High bits of dev->flags are used to record warm plug
+ 	 * requests which occur asynchronously.  Synchronize using
+-- 
+2.43.0
 
-[ ... ]
 
-> @@ -5647,6 +5662,37 @@ int ata_scsi_user_scan(struct Scsi_Host *shost, un=
-signed int channel,
->  	} else
->  		spin_unlock_irqrestore(ap->lock, flags);
-> =20
-> +	if (!rc) {
-> +		struct ata_link *link;
-> +		struct ata_device *dev;
-> +
-> +		/* EH does not scan missing LUNs on an already attached target. */
-> +		mutex_lock(&ap->scsi_scan_mutex);
-> +		ata_for_each_link(link, ap, EDGE) {
-> +			ata_for_each_dev(dev, link, ENABLED) {
 
-[ ... ]
-
-> +				scsi_scan_target(&shost->shost_gendev,
-> +						 scan_channel, scan_id, lun,
-> +						 SCSI_SCAN_MANUAL);
-> +				ata_scsi_publish_sdevs(dev);
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-[Severity: High]
-Does this manual scan bypass OF node assignment and multi-LUN scanning for
-newly attached ATAPI targets?
-
-If a user initiates a manual scan via sysfs (for example, using
-echo "- - -" > /sys/class/scsi_host/hostX/scan), ata_scsi_user_scan()
-schedules and waits for EH. EH configures the device and queues
-hotplug_task (a delayed work).
-
-Because ata_scsi_user_scan() continues immediately, it usually beats the
-deferred hotplug_task and populates dev->sdev[0] here via
-ata_scsi_publish_sdevs().
-
-When hotplug_task subsequently runs ata_scsi_scan_host(), it skips the
-remaining initialization due to the guard check in ata_scsi_scan_host():
-
-drivers/ata/libata-scsi.c:ata_scsi_scan_host() {
-    ...
-			if (dev->sdev[0])
-				continue;
-    ...
-}
-
-Will this entirely bypass ata_scsi_assign_ofnode() and the new BLIST_FORCEL=
-UN
-multi-LUN scan logic for the target, potentially affecting device tree
-bindings and leaving secondary LUNs inaccessible?
-
-> +			}
-> +		}
-> +		mutex_unlock(&ap->scsi_scan_mutex);
-> +	}
-> +
->  	return rc;
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261009155522.5930=
-45-1-philpem@philpem.me.uk?part=3D14
