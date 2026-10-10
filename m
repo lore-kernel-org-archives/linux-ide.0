@@ -1,132 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8137B2D838E
-	for <linux-ide@vger.kernel.org>; Sat, 10 Oct 2026 08:16:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564B1408018
+	for <linux-ide@vger.kernel.org>; Sat, 10 Oct 2026 11:57:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791620213; cv=none; b=pPV0Ct95tE6EKYCGKctUDB+XfVkuygMr0G4QNpZ5Gdty39CnLB865/bef/NbVzKSIfYEXBr/exzrqPuSzZ/C0M6E+kkZifSNP7afidXJ+IZzIumFJPoXhciVB++8wbyKhjNnp+Oy7AFqsW8CXVCW4k8OWGkn5rHVPbZ4XktdPb4=
+	t=1791633452; cv=none; b=A+UMUZF+0B2CP/pmMWSgWzeZ0AGz9RwF8Q/b8SSHtytJM5Oryj5bjVBTYAK9uxiUHwBOH4PbJBLxcqvfP1Q3XRSRxSCvvJNKk3FmmzRRzm0RWT90TaZzJTF90KdWHT7KxUyDMDNoiRSAIi9OCS/g4/iCMGG1nfKvnHD3bKQ5h5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791620213; c=relaxed/simple;
-	bh=SlZF8Id3gVIo+LgEKcGHFLWlD/WRNahZSFuXFalYff8=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=Ng9blSHEVSKv08UB4svis7Zx/YFtj6JTgg/I3miFBGawyy4ZCv7nMwc11sYzOLda4PHka4LbrVZoZDLHEXizdVr6K620yJEhv3ukykArs9gpYqGvcxT4Z0z2UVIJ6PBN8Gl30DLwFFnL0fnVSyNw1qcuzTYlDoAkjTU1bDeVC4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E07HMkv/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791633452; c=relaxed/simple;
+	bh=IPHKDzjbFgM3zlhg6leD9uSe5AtAZXl5V+tpFvZLAvU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VG3OqGLfkQ2jfnsI6JubVoYTVgCKZDYK7BH6rfjbEAGn1KZkDNnANf8o8O2WDMv2or0mlGidilJIoQpzx45wpJgGOM/Z5w3grZMX35wEnMu25B8+9KRAg1SMxG6oQksZDL2FTgRJZjJWw7bffOlpKm4sU8hs6782J+l28F9eBlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=crqiOGaU; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E07HMkv/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDAD31F000FF;
-	Sat, 10 Oct 2026 08:16:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791620212;
-	bh=lO6C7nmCKrD0jdAyJFBjeg2clUyKjSUjB6ZKrhp2GaU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=E07HMkv/Njdtdl2F6rgGZQsGcfp5EOPmYFhYsQ16IbFnaiYZrXsQS+ATbxUUtxpVU
-	 cUs9Hi2XYpAWPhLsVw8gYaGnxsT0W3EmdoJKgF4hZTrVuiUeCSz15VBa+oW6ioz1Qr
-	 2Z4XLRXRQ4VRlFKRQWsCqvT8TKK0PtH1GJ2govRhePwcfdMDyc7CgDVaWIDEuUpYro
-	 jQBwtf3RLR1COMBbZXKOEjeS5A9eJHv6rx/8dt8nvG9CvgaderatPY+gcs242T2r8I
-	 zrhhLZRSnDiTvPQIMdgqeJLV4rG9PuFANdiJJ3djw9eA8weDmJ4KgIeltvTtYQNvfH
-	 NGChAZAZMeuWQ==
-Message-ID: <sashiko-outbox-166329@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: libata: preserve sata_spd link cache across
- ata_dev_init
-Reply-To: sashiko-reviews@lists.linux.dev
-To: tongzhiwei <tongzhiwei@cmss.chinamobile.com>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, cassel@kernel.org
-In-Reply-To: <20261010075457.882-1-tongzhiwei@cmss.chinamobile.com>
-References: <20261010075457.882-1-tongzhiwei@cmss.chinamobile.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 10 Oct 2026 08:16:51 +0000
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="crqiOGaU"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-6b13fb95060so864789a12.0
+        for <linux-ide@vger.kernel.org>; Sat, 10 Oct 2026 04:57:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791633449; x=1792238249; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=imQ1BTY49pJIiAbK6CLYEgMI91fldvadbFKmtskRHBI=;
+        b=crqiOGaUpKoyFGRI/7IiEBWgcx6zToUD4CM/l5VShsPgIkZAnk7OJz2UID3tql4YhW
+         KmpYHA4I96gS0lE0nz2Mq4oZooirN72YAor/cNMUQTTk93t77qctYXofMI9udpUOq0X9
+         8njlUCFS2QLI5HXKvEof5GEqezFAGKKy7UK4mQWtPTYv/RELqyAqJe5VQsyfUaKKgAUT
+         QMIgrwoA5zg6sO496NDllbfzPgDpqOGRViuhO8EyLPRlw/MuVLEG2CNVKb+57NfjPIJy
+         9p9GCC0eA9K1j826PGkhey2alSODfNTV573TK+UTy2Zx+f6kSlIqMy+x+2RfRY4fEMnY
+         bALw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791633449; x=1792238249;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=imQ1BTY49pJIiAbK6CLYEgMI91fldvadbFKmtskRHBI=;
+        b=nVF/lzJkW7q9KmhoS43rOkCp4dWjNCMBSNw01T7LukcxJPu0k8dLu4WBDHtF+9Itkq
+         H63LJeozA92UwiK7EfrM7w+oIswfnVajDDicc6fmdS96S5aLbt4qJ7XuAp8n2bj7sa2Y
+         JoQag/lVBfauGjq9ovXDIbjWRgzcar3YXsrvyOQYe7qwEbZK4Sbx3Mz4ITfd/5B5LiQQ
+         C+vNd8cWNBqC2Rg1y33Cfub/YJ6qySFaex6H9ZJWldl+cT9XpPsXHLuw8UvuQaCYa5ma
+         e2thsP8wrQ4uqwntrdJY3C5n6nOry8LIxltspX24PTntkPCSZqN8FpoF9SO56DNnWyNd
+         QUag==
+X-Gm-Message-State: AFq9FYJBg0Qu1SgxTsdFlUus59dKCqjvoqLr0+1BOnVb18bDAghtVRnS
+	8zuNiJkZywtrgn5nFwMnhTZzhDLibG3g9u/aZvgDXNnh1Th6yZBS3fCvAeLhg7h6Zh9eLrXHUgU
+	=
+X-Gm-Gg: AYBFou1kDPG8j/PlUJ7BkvxKS190wMtn7E5my7hnFvgXvydp4ifJW+0Wb9EYnn/7BNn
+	KitJ9rFJWdjko3tQYB8nOGS9K9XwWDDVsmBU/lFIZL5RwIeXj0fhV6wWodhx2n3dcdtCkqjxJzD
+	kjGDg44jwJFvHPbmE1QffkQIoOGrBaVP2/0TSmpgsdRPrgu8yaNMtZXSi9JqysqvRWKw5T2iPUA
+	ejrkGQaQzGZJcYJs7tO1+35l2FJVHk4y/qEHQH5O3PpozmJPzXyseByatB2KI3/Mb0TLOQJeW/D
+	bqrRb/S7YjRDIkcDSmxvPYtp3yTuVWlsnqo6VENppJWxwwqo0R3lHzyr7yzuemlvoVJ//+ecS05
+	w4ypg9hE3fLyTcOIGK5hyTVMIegKhT4Nqp1N6HtnM9JJd/6a7WDcTnOd2Mk8Ulo5Q+P5aun5VRq
+	nnbp587DPCX2Xoynw0te2gYskGkXRr2liVMwMWjn+LOGOY90XQU2BiYEVnm2ASTfUAIknBB9ILT
+	fgGFjUEca910swPhQtcKk3uC/ttKxy1+kPkOKYv5S/CtFXC6MNkJX7NW+3vb7cyH0ebm/H8cfbJ
+	I2r6nQ==
+X-Received: by 2002:a17:907:c60e:20b0:c31:e958:408c with SMTP id a640c23a62f3a-c31e9584622mr235493266b.38.1791633449130;
+        Sat, 10 Oct 2026 04:57:29 -0700 (PDT)
+Received: from localhost.localdomain (host-188-122-3-146.finemedia.com.pl. [188.122.3.146])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c31a9a3bbeesm236359966b.18.2026.10.10.04.57.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 10 Oct 2026 04:57:28 -0700 (PDT)
+From: illofspeed <volvo.mail@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: dlemoal@kernel.org,
+	cassel@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] ata: libahci: re-enable FBS after error handling on a port multiplier
+Date: Sat, 10 Oct 2026 13:57:27 +0200
+Message-ID: <20261010115727.401-1-volvo.mail@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] ata: state leakage of sata_spd across hotplugs breaks link speed d=
-owngrade
-- [Medium] ata: libata: sata_spd patch fails to prevent 1.5 Gbps speed drop=
- on replug
---
+ahci_do_softreset() disables FBS before resetting a device behind a port
+multiplier, as required by AHCI 1.2 section 9.3.9, and re-enables it only
+when that softreset succeeds. If it fails, for example because a
+hot-plugged drive is still spinning up ("softreset failed (device not
+ready)"), EH escalates to a hardreset of the PMP link, and nothing turns
+FBS back on: only ahci_pmp_attach() does, which runs at the next boot.
+The port keeps working with command-based switching until then.
 
-commit 2309da39e62c734fad9901e897e29150a0def7eb
-Author: tongzhiwei <tongzhiwei@cmss.chinamobile.com>
+Seen on a Marvell 88SE9235 (1b4b:9235) with Marvell 88SM9705 port
+multipliers (1b4b:9705, in a Synology DX1222 expansion unit): after
+hot-plugging a drive, the kernel logged "FBS is disabled" followed by
+"softreset failed (device not ready)" and a PMP hardreset, and never
+"FBS is enabled" again (twice, on two different ports).
 
-ata: libata: preserve sata_spd link cache across ata_dev_init
+At the end of ahci_error_handler(), re-enable FBS if a PMP is still
+attached and FBS is supported but disabled.
 
-This patch modifies ata_dev_init() to preserve the link->sata_spd cache
-across device resets. The intent is to prevent the link speed limit from
-being permanently lowered by failed probes when a device is unplugged and
-later replugged.
+Tested on 7.2.6 with the patch built as an out-of-tree libahci (the stock
+ahci module binds to it, symbol CRCs are unchanged). Hot-plugging a drive
+into a free port of the multiplier then logged "FBS is disabled",
+"softreset failed (device not ready)" and a PMP hardreset, followed by
+"re-enabling FBS after error handling" and "FBS is enabled". Afterwards
+two other drives behind the same multiplier read 259 + 259 MB/s in
+parallel (O_DIRECT, 4 MiB blocks), against 268 MB/s for one drive alone,
+so their commands overlap again.
 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 682c588897159..27217673fbb13 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5659,7 +5659,7 @@ void ata_dev_init(struct ata_device *dev)
-> =20
->  	/* SATA spd limit is bound to the attached device, reset together */
->  	link->sata_spd_limit =3D link->hw_sata_spd_limit;
-> -	link->sata_spd =3D 0;
-> +	/* link->sata_spd caches last negotiated link speed; not zeroed here */
+Fixes: 89dafa20f3da ("ahci: disabled FBS prior to issuing software reset")
+Assisted-by: LLM
+Signed-off-by: illofspeed <volvo.mail@gmail.com>
+---
 
-[Severity: High]
-Does preserving link->sata_spd here leak the old device's speed state to a
-newly hotplugged device?
+Notes:
+    The controller is passed through (VFIO) to a KVM guest; the tested kernel is the
+    guest's. The two earlier occurrences without the patch were on ata8 and ata10 of the
+    same controller; this test was on ata7.
 
-If a Gen1 SATA device is unplugged, link->sata_spd remains 1. If a Gen3
-device is then plugged in, its link->sata_spd_limit is reset to Gen3 here.
-If the new device fails to come online at Gen3, error handling calls
-sata_down_spd_limit() which consumes this leaked state:
+ drivers/ata/libahci.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-drivers/ata/libata-sata.c:sata_down_spd_limit() {
-	...
-	if (rc =3D=3D 0 && ata_sstatus_online(sstatus))
-		spd =3D (sstatus >> 4) & 0xf;
-	else
-		spd =3D link->sata_spd;
-	...
-	if (spd > 1)
-		mask &=3D (1 << (spd - 1)) - 1;
-	else if (link->sata_spd)
-		return -EINVAL;
-	...
-}
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 08ab56e9556..6f374fd79f5 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -2233,6 +2233,23 @@ void ahci_error_handler(struct ata_port *ap)
+ 
+ 	sata_pmp_error_handler(ap);
+ 
++	/*
++	 * ahci_do_softreset() turns FBS off before resetting a fan-out link
++	 * and turns it back on only if that reset succeeds. When it fails
++	 * (e.g. a hot-plugged drive is still spinning up), EH escalates to a
++	 * PMP hardreset, which never re-enables FBS, so the port would keep
++	 * command-based switching until the PMP is attached again (reboot).
++	 * Restore FBS once recovery is done and the PMP is still attached.
++	 */
++	if (sata_pmp_attached(ap) && ata_dev_enabled(ap->link.device)) {
++		struct ahci_port_priv *pp = ap->private_data;
++
++		if (pp->fbs_supported && !pp->fbs_enabled) {
++			ata_port_info(ap, "re-enabling FBS after error handling\n");
++			ahci_enable_fbs(ap);
++		}
++	}
++
+ 	if (!ata_dev_enabled(ap->link.device))
+ 		hpriv->stop_engine(ap);
+ }
+-- 
+2.43.0
 
-Could this return -EINVAL when spd is 1, and permanently prevent the limit
-from being lowered to Gen2 for the new device, resulting in an infinite
-loop of failed probes?
-
-[Severity: Medium]
-This problem wasn't introduced by this patch, but does this change actually
-prevent the 1.5 Gbps speed drop on replug as intended?
-
-The speed drop appears to be caused by dev->ering persisting across
-ata_dev_init() because it is located after ATA_DEVICE_CLEAR_END in
-struct ata_device. Probe failures during the unplug phase accumulate in
-this uncleared ering.
-
-When replugged, the accumulated errors cause ata_eh_schedule_probe() to
-force the limit to 1.5 Gbps:
-
-drivers/ata/libata-eh.c:ata_eh_schedule_probe() {
-	...
-	ata_dev_init(dev);
-	...
-	ata_ering_record(&dev->ering, 0, AC_ERR_OTHER);
-	ata_ering_map(&dev->ering, ata_count_probe_trials_cb, &trials);
-
-	if (trials > ATA_EH_PROBE_TRIALS)
-		sata_down_spd_limit(link, 1);
-	...
-}
-
-Does sata_down_spd_limit(link, 1) unconditionally force the limit to 1.5
-Gbps regardless of whether link->sata_spd was preserved?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261010075457.882-=
-1-tongzhiwei@cmss.chinamobile.com?part=3D1
