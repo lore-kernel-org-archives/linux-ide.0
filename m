@@ -1,123 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86AE3392823
-	for <linux-ide@vger.kernel.org>; Tue, 13 Oct 2026 07:40:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6CD0253340
+	for <linux-ide@vger.kernel.org>; Tue, 13 Oct 2026 09:25:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791877224; cv=none; b=LloxRmLCvMTUadf/QD001NI815WF2LGje/BiUGQqGDmA9qPL0CIXTpGIsL229DO+MBhqQLnXxQF81VnKZlu/VOqoSg8jmPWE7sTM4LuoIPkGh68/FocebtOomP8WIDo6hcHognmJkEqAEM2NMRnRVLUEsC7rn/qOQJwExUxauuM=
+	t=1791883506; cv=none; b=Wb1Nmhl74fYcik+vCLgShOSo3jDqbgbRn+y9dHKVbkldq/pQ2rBCQxCEavQTamcVyt2j/luz/tMCJWo7R5PlrnyrRcU+0y1SdhQwuhLI5lLO94cxlhu9pAyvtKJSEVoNjao2i/9b4C+675mZ5tmbgK3IiK4VgRpuG3xl04a/a+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791877224; c=relaxed/simple;
-	bh=DmbdB2wqOVRDSbSz6TDiPtjXIlTTjEGgYsHL3lXAZpg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ejv/99PZZiVpqFfuwYHvkH3+l1zaOlbs13swjvotWlAXPlYZW0NRdZsfF4+Pr4I9MdMV5/D+9wH80fK8ESKSK1bm0nNFXB8eyTzDSbYzxfDBu7DxqHjuhCPaDxP2MG8xVbCKYygabwksloNGWHfu5k6MTGiwrj6WoO2AIIbH2gk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I2DDqCXC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791883506; c=relaxed/simple;
+	bh=xJxLysjXDkSmfuDrEMKZmgAGvfK4XDYV22ZzOKIEFuA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sMXC8MfHicgk8qxLl0wzk7gFaN2xrDuN3rf06GPrEiaIPxzYOEHbuizX0vexUANRD6b6uoQL94GmwzJwn1nQw+S7p6dh8RjjQpvcjX2SeSnEQ2LohAcPo6csyAX9wKlrZ9FLHpRkI6MwYCTXYsiTGjgJjIulSakxoNcVN6L+RYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RKuR6gA6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I2DDqCXC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AFCF1F000FF;
-	Tue, 13 Oct 2026 07:40:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RKuR6gA6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 856FF1F000FF;
+	Tue, 13 Oct 2026 09:25:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791877223;
-	bh=X3hKcq1ejXqXQqMPHR8Sj/wBTexkJzuBgWxbgdT7VB0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=I2DDqCXC9pNf7ApzVf38F7SUyQyqh0vZnaZPMUkGRi8tuF82fhVHQ8wyAP6KvfXV0
-	 5tVvzbOH59qQ7yaXUsCX+F45q3EyEOUEvHaKYJ3n3eCcwwqoZ8DyJ9SpEG8UaPQ/ui
-	 kWjpvaY4JqMs21gzoSAS/UUTZM5FnVmOVs4ITovuadXNwaZC1vy6+yeWLnndIa+RVK
-	 XSaYnF7kT7ZCzCDQWsSly1Kynf6aUnP4kGPRf09/kXiOJpJr7b+6XdQ1OefoP1CFyf
-	 hN4P87DdHhePlq99J3qJSniyMJlf5tzw+a0vkIAGV7BLkx603jyDk4YCC0KWWeSMaT
-	 uZe3x6UKusWtQ==
-Date: Tue, 13 Oct 2026 09:40:19 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Ioannis Barkas <jnyb.de@gmail.com>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org
-Subject: Re: [PATCH] ata: pata_atiixp allow maximum UDMA speed
-Message-ID: <as3gY1yzelLuTB6K@ryzen>
-References: <20261013043016.77075-1-jnyb.de@gmail.com>
+	s=k20260515; t=1791883505;
+	bh=BPdPc8y1uTTq2ndk4mQochBuVJ6SP4Up5ImdaYg3Fso=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=RKuR6gA6qG3J32VGax8TwOaT+szd6iWgJdWhglUC49+D2nRcoY5sA62MlSdqrte3n
+	 CNCspWyoTYTNKpdEE/GBDTi1uByz2fPNau4pIoUC7+FYgc7ydKw7rkVmQUCigTPL8m
+	 77eTlv82owX6TlCBxflj02k+CXDxOybH5xid/fvQZZdLT7KQEw7YfG6eqSJbj40Xf2
+	 rh4lDq+sUdSXEbQ7+slsw+85IfCOd65Ro99T8tzuTSnvV3Q6ifmzADhTVFomShfOYV
+	 LyCe6eA1crkNPVhHn72SP0EtTodMpkBzEI7g1fr6/7n3HfDP0TfG2xxn0ntdaYr8ez
+	 xWo8CREuTBiwg==
+Message-ID: <e02a0823-87ef-48dc-9ef7-447213159824@kernel.org>
+Date: Tue, 13 Oct 2026 11:25:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261013043016.77075-1-jnyb.de@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] libata: Fix wrong HPA horkage
+To: Niklas Cassel <cassel@kernel.org>, Ioannis Barkas <jnyb.de@gmail.com>
+Cc: linux-ide@vger.kernel.org
+References: <20261013042146.76467-1-jnyb.de@gmail.com>
+ <as3dvdomgdOl5bBI@ryzen>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <as3dvdomgdOl5bBI@ryzen>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Oct 13, 2026 at 07:30:16AM +0300, Ioannis Barkas wrote:
-> Enable UDMA 6 for compatible IDE hosts, tested on SB600 & SB700
-> using ATA133 HDDs & SSDs. SSDs can exceed now 100MB/s
-
-This commit log is a bit short. Please provide some more information.
-
-You commit log mentions SB600 & SB700, but the code comment mentions
-SB300.
-
-
+On 2026/10/13 9:29, Niklas Cassel wrote:
+> On Tue, Oct 13, 2026 at 07:21:46AM +0300, Ioannis Barkas wrote:
+>>  Code wrongly filters disks by their serial numbers
+>>
+>> Fixes: 16c55b038033 (\libata: implement BROKEN_HPA horkage and apply it to affected drives")
 > 
-> Signed-off-by: Ioannis Barkas jnyb.de@gmail.com
-> Signed-off-by: Nick Barkas nickbgrk@gmail.com
-
-The email addresses in this patch, and in all your other patches,
-are missing corrupt. The format is:
-
-Signed-off-by: Firstname Lastname <email@address.com>
-
-i.e. you are missing <> around the email address.
-
-
-> ---
->  drivers/ata/pata_atiixp.c | 20 +++++++++++++++++++-
->  1 file changed, 19 insertions(+), 1 deletion(-)
+> This should have been V2, as you have already send a patch for this.
 > 
-> diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-> index 4c612f9543..74ef9195bd 100644
-> --- a/drivers/ata/pata_atiixp.c
-> +++ b/drivers/ata/pata_atiixp.c
-> @@ -279,8 +279,26 @@ static int atiixp_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  		.udma_mask = ATA_UDMA5,
->  		.port_ops = &atiixp_port_ops
->  	};
-> +	static const struct ata_port_info info_ata133 = {
-> +		.flags = ATA_FLAG_SLAVE_POSS,
-> +		.pio_mask = ATA_PIO4,
-> +		.mwdma_mask = ATA_MWDMA12_ONLY,
-> +		.udma_mask = ATA_UDMA6,
-> +		.port_ops = &atiixp_port_ops
-> +	};
->  	const struct ata_port_info *ppi[] = { &info, &info };
->  
-> +	/* SB300 and newer: UDMA6 */
-> +	switch (pdev->device) {
-> +	case PCI_DEVICE_ID_ATI_IXP300_IDE:
-> +	case PCI_DEVICE_ID_ATI_IXP400_IDE:
-> +	case PCI_DEVICE_ID_ATI_IXP600_IDE:
-> +	case PCI_DEVICE_ID_ATI_IXP700_IDE:
-> +	case PCI_DEVICE_ID_AMD_HUDSON2_IDE:
-> +		ppi[0] = ppi[1] = &info_ata133;
-> +		break;
-> +	}
-> +
->  	/* SB600 doesn't have secondary port wired */
->  	if (pdev->device == PCI_DEVICE_ID_ATI_IXP600_IDE)
->  		ppi[1] = &ata_dummy_port_info;
-> @@ -314,7 +332,7 @@ static struct pci_driver atiixp_pci_driver = {
->  module_pci_driver(atiixp_pci_driver);
->  
->  MODULE_AUTHOR("Alan Cox");
-> -MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400");
-> +MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400, AMD SB600/700 series and Hudson-2");
+> Like we commented on your V1:
+> https://lore.kernel.org/linux-ide/40630ece-de85-48a5-8683-93be32e5d644@kernel.org/
+> 
+> The Fixes tag is corrupted, there should be no backslash.
 
-This is a separate logical change, please drop it.
+Also please fix the patch title prefix. It should be:
 
-As we can see from the context above:
+ata: libata-core: Fix wrong HPA horkage
 
-/* SB600 doesn't have secondary port wired */
-
-The driver already supports SB600 in PATA mode, even though it was not
-explicitly mentioned in the module description.
-
-I don't see why we would need to change it now.
+And the title could be more explicit as to what is "wrong".
 
 
-Kind regards,
-Niklas
+-- 
+Damien Le Moal
+Western Digital Research
