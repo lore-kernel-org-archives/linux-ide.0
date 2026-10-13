@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71797384CE5
-	for <linux-ide@vger.kernel.org>; Tue, 13 Oct 2026 07:29:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86AE3392823
+	for <linux-ide@vger.kernel.org>; Tue, 13 Oct 2026 07:40:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791876546; cv=none; b=mVfNfDG616s/ptQPXLVrsUKW5dRWpaE2ebWWI87JJrKFH51SwdzhYQCZCYayU063094jFVIxmGJoFpy9Tj7r5jPwTLREE3ByrbruHooYk0hL5a5vVwO0wRNYemkPiTjPsUb/7lWXsS5pnmvZVtE7rL4d4Qq3gcuHIo3+nBqJeDw=
+	t=1791877224; cv=none; b=LloxRmLCvMTUadf/QD001NI815WF2LGje/BiUGQqGDmA9qPL0CIXTpGIsL229DO+MBhqQLnXxQF81VnKZlu/VOqoSg8jmPWE7sTM4LuoIPkGh68/FocebtOomP8WIDo6hcHognmJkEqAEM2NMRnRVLUEsC7rn/qOQJwExUxauuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791876546; c=relaxed/simple;
-	bh=j1Df3XDx91fCpO/y1I5uH9jxjhfHjIH1HfR6IdMiwUw=;
+	s=arc-20240116; t=1791877224; c=relaxed/simple;
+	bh=DmbdB2wqOVRDSbSz6TDiPtjXIlTTjEGgYsHL3lXAZpg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sU9pkL0lg1WHHYffX/1bti/TzZNhEarFhTgsZOD+mQKCAiXI0BH214bW6iJPukzD3jQt7XwWunjMkuurjNBKBcdrv0ed0SwmQaaDwtT7NLnlcslZ/e/vmdhWf9+fBthM9ccuHuJxwepWRp0sN8tAGQfRboB2sQj4VwRc4nVUU8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d3SyC39t; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ejv/99PZZiVpqFfuwYHvkH3+l1zaOlbs13swjvotWlAXPlYZW0NRdZsfF4+Pr4I9MdMV5/D+9wH80fK8ESKSK1bm0nNFXB8eyTzDSbYzxfDBu7DxqHjuhCPaDxP2MG8xVbCKYygabwksloNGWHfu5k6MTGiwrj6WoO2AIIbH2gk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I2DDqCXC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d3SyC39t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 522821F00898;
-	Tue, 13 Oct 2026 07:29:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I2DDqCXC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AFCF1F000FF;
+	Tue, 13 Oct 2026 07:40:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791876545;
-	bh=KgaPVajOSymMp1aHonnpqpoB9MirGvhBeWw6VTMyCWo=;
+	s=k20260515; t=1791877223;
+	bh=X3hKcq1ejXqXQqMPHR8Sj/wBTexkJzuBgWxbgdT7VB0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=d3SyC39tcUYe97o9/Derk2nf2rooBLvVtt+Zb4+x0Yd/sZYdmc0IOqHO6s3S6ElV5
-	 35+Vks+hk66gauiOiilkuSOvpCSnSylSiyIlgiTpdlDhyaOv3fmKUToSAqa8rUqES7
-	 U9V1gCULeSSluXAXnVzN9U4Po+/nQzpvZSc2BH6bQCrr+oMTO3vR4hJ0Y3S12+exCU
-	 L4H9ZvUKcmQRaUuAS5aBSeqoTah3bopcLFAqk81/E/auyk3rS485j8GbdCN2eWqjb4
-	 tGFby8ZcBBKQHA6Cmi9L/9+LPS0QP96fJkDRHcNr9p/P2LajebYS2GRfB+X8J80Dg3
-	 cy94YWwvK0fcA==
-Date: Tue, 13 Oct 2026 09:29:01 +0200
+	b=I2DDqCXC9pNf7ApzVf38F7SUyQyqh0vZnaZPMUkGRi8tuF82fhVHQ8wyAP6KvfXV0
+	 5tVvzbOH59qQ7yaXUsCX+F45q3EyEOUEvHaKYJ3n3eCcwwqoZ8DyJ9SpEG8UaPQ/ui
+	 kWjpvaY4JqMs21gzoSAS/UUTZM5FnVmOVs4ITovuadXNwaZC1vy6+yeWLnndIa+RVK
+	 XSaYnF7kT7ZCzCDQWsSly1Kynf6aUnP4kGPRf09/kXiOJpJr7b+6XdQ1OefoP1CFyf
+	 hN4P87DdHhePlq99J3qJSniyMJlf5tzw+a0vkIAGV7BLkx603jyDk4YCC0KWWeSMaT
+	 uZe3x6UKusWtQ==
+Date: Tue, 13 Oct 2026 09:40:19 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Ioannis Barkas <jnyb.de@gmail.com>
 Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org
-Subject: Re: [PATCH] libata: Fix wrong HPA horkage
-Message-ID: <as3dvdomgdOl5bBI@ryzen>
-References: <20261013042146.76467-1-jnyb.de@gmail.com>
+Subject: Re: [PATCH] ata: pata_atiixp allow maximum UDMA speed
+Message-ID: <as3gY1yzelLuTB6K@ryzen>
+References: <20261013043016.77075-1-jnyb.de@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -41,55 +41,82 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261013042146.76467-1-jnyb.de@gmail.com>
+In-Reply-To: <20261013043016.77075-1-jnyb.de@gmail.com>
 
-On Tue, Oct 13, 2026 at 07:21:46AM +0300, Ioannis Barkas wrote:
->  Code wrongly filters disks by their serial numbers
+On Tue, Oct 13, 2026 at 07:30:16AM +0300, Ioannis Barkas wrote:
+> Enable UDMA 6 for compatible IDE hosts, tested on SB600 & SB700
+> using ATA133 HDDs & SSDs. SSDs can exceed now 100MB/s
+
+This commit log is a bit short. Please provide some more information.
+
+You commit log mentions SB600 & SB700, but the code comment mentions
+SB300.
+
+
 > 
-> Fixes: 16c55b038033 (\libata: implement BROKEN_HPA horkage and apply it to affected drives")
-
-This should have been V2, as you have already send a patch for this.
-
-Like we commented on your V1:
-https://lore.kernel.org/linux-ide/40630ece-de85-48a5-8683-93be32e5d644@kernel.org/
-
-The Fixes tag is corrupted, there should be no backslash.
-
-
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=8888
 > Signed-off-by: Ioannis Barkas jnyb.de@gmail.com
 > Signed-off-by: Nick Barkas nickbgrk@gmail.com
+
+The email addresses in this patch, and in all your other patches,
+are missing corrupt. The format is:
+
+Signed-off-by: Firstname Lastname <email@address.com>
+
+i.e. you are missing <> around the email address.
+
+
 > ---
->  drivers/ata/libata-core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/ata/pata_atiixp.c | 20 +++++++++++++++++++-
+>  1 file changed, 19 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 59e87b987d..b23e1c3e4c 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4248,8 +4248,8 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+> diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+> index 4c612f9543..74ef9195bd 100644
+> --- a/drivers/ata/pata_atiixp.c
+> +++ b/drivers/ata/pata_atiixp.c
+> @@ -279,8 +279,26 @@ static int atiixp_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  		.udma_mask = ATA_UDMA5,
+>  		.port_ops = &atiixp_port_ops
+>  	};
+> +	static const struct ata_port_info info_ata133 = {
+> +		.flags = ATA_FLAG_SLAVE_POSS,
+> +		.pio_mask = ATA_PIO4,
+> +		.mwdma_mask = ATA_MWDMA12_ONLY,
+> +		.udma_mask = ATA_UDMA6,
+> +		.port_ops = &atiixp_port_ops
+> +	};
+>  	const struct ata_port_info *ppi[] = { &info, &info };
 >  
->  	/* devices which puke on READ_NATIVE_MAX */
->  	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_QUIRK_BROKEN_HPA },
-> -	{ "WDC WD3200JD-00KLB0", "WD-WCAMR1130137", ATA_QUIRK_BROKEN_HPA },
-> -	{ "WDC WD2500JD-00HBB0", "WD-WMAL71490727", ATA_QUIRK_BROKEN_HPA },
-> +	{ "WDC WD3200JD-00KLB0", "08.05J08", ATA_QUIRK_BROKEN_HPA },
-> +	{ "WDC WD2500JD-00HBB0", "08.02D08", ATA_QUIRK_BROKEN_HPA },
+> +	/* SB300 and newer: UDMA6 */
+> +	switch (pdev->device) {
+> +	case PCI_DEVICE_ID_ATI_IXP300_IDE:
+> +	case PCI_DEVICE_ID_ATI_IXP400_IDE:
+> +	case PCI_DEVICE_ID_ATI_IXP600_IDE:
+> +	case PCI_DEVICE_ID_ATI_IXP700_IDE:
+> +	case PCI_DEVICE_ID_AMD_HUDSON2_IDE:
+> +		ppi[0] = ppi[1] = &info_ata133;
+> +		break;
+> +	}
+> +
+>  	/* SB600 doesn't have secondary port wired */
+>  	if (pdev->device == PCI_DEVICE_ID_ATI_IXP600_IDE)
+>  		ppi[1] = &ata_dummy_port_info;
+> @@ -314,7 +332,7 @@ static struct pci_driver atiixp_pci_driver = {
+>  module_pci_driver(atiixp_pci_driver);
+>  
+>  MODULE_AUTHOR("Alan Cox");
+> -MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400");
+> +MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400, AMD SB600/700 series and Hudson-2");
 
-You need to explain why the previous FW revision in not correct.
+This is a separate logical change, please drop it.
 
-I think the simplest thing here is to simply omit the FW version field,
-i.e. change it to NULL.
+As we can see from the context above:
 
-However, as pointed out by Sashiko on V1:
-https://lore.kernel.org/linux-ide/20260913140806.546C91F000FF@smtp.kernel.org/
+/* SB600 doesn't have secondary port wired */
 
-There is already a wildcarded entry:
-    { "WDC WD3200JD-*",     NULL,   ATA_QUIRK_WD_BROKEN_LPM },
+The driver already supports SB600 in PATA mode, even though it was not
+explicitly mentioned in the module description.
 
-So you should probably drop the "WDC WD3200JD-00KLB0" entry,
-and modify the "WDC WD3200JD-*" entry to have quirks:
-ATA_QUIRK_BROKEN_HPA | ATA_QUIRK_WD_BROKEN_LPM
+I don't see why we would need to change it now.
 
 
 Kind regards,
