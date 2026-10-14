@@ -1,105 +1,163 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD496501F4E
-	for <linux-ide@vger.kernel.org>; Wed, 14 Oct 2026 13:12:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4C5953ED04
+	for <linux-ide@vger.kernel.org>; Wed, 14 Oct 2026 14:34:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791983552; cv=none; b=XS/bjDzADzRR+a+kQu9zw+4gOMVUZEr12C0xtYwxehCgoQnIX8DWMkxveLdPk5Am1B8fxMLf6Faq4s7ecwcWgGhzzOA/jBS53GSqBFuFeLJxc5Lan1nB3od+CgR/o6PC9t0ZhBZ4VYLjHQqCVoWOQHxqqkw7oOqoHQ0FbR2z42w=
+	t=1791988498; cv=none; b=cH26htAOI5gGxj2hvx1qW7IjBv61uMkTZ/JgaPSWV7sbHtK6h3C2Be1ztAS1BFUxWfnBMVuup5bdKGOc4DVOv4MkM3xZrXi2phAENXdOMDmxuVoe6USgEdgS5cQnlVeRDvub2ETN0pvmAL/jsbaMFa2/xFDhBN9o9C3PcItclG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791983552; c=relaxed/simple;
-	bh=S7OzfuqePZCvxr9NLqubz4IlfE7riL/GnJNSXEn/gJk=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=nYr2Eb1RzkWwmlmwl9huYhlP6CUFH6IZXQ3h0oCELt4Trh0MHYB4c1v45x7OL77Cv4CUi47govZ79t8VxjsCg4erWDQXCEvwXHHszaniYuf6eV5Btb8KSrl33Th76JjJ42XTt7PPZ7R+tBQtOp0bXZEYplSw7GALGdyw+lDYxmg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SqUzljrt; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791988498; c=relaxed/simple;
+	bh=8WEBQBEBaDTJkhAX6V6rkmsv++1UKcl8jFRUWn96oXQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ahSIHBbppiPSIaTSOQrUI7c4C9HfpST4ujT3M1MC3R3yA82Z5ixw0f+NKlhyuXLLCHzq+j1pe2jcj60a25yu+LWIPb0SOob7cUfFKc+GUlPcFXnVMffKRkj7SG2enA4ouTbXQx4eQDgGapew2bqwrwoZIwFOb5n0L+zq4lUufoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UoxJLRK9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SqUzljrt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D752F1F000FF;
-	Wed, 14 Oct 2026 13:12:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UoxJLRK9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E536D1F000C4;
+	Wed, 14 Oct 2026 14:34:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791983546;
-	bh=xyVrhHCMl29UrW4mRCdPTEv9Nf/8lxy4BxUZWOBf63M=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SqUzljrtHNhU4v9Sr/hEzhxC4N/Xf7USzpmDyV08tKTESXJDJuYOoineu4J/shv8Z
-	 jRK5qMjrrZFvS3zQjbqhfrmhmpRb/H6C1uMZ5Br+y4jXepumkVpXjO+hngX9kIu9i3
-	 OkuFL7HbdDXY1LduMeawg8iTJyJE4X6ReP+P0D6XYc5uX/AHwEAijr3e+GBP6B+JRO
-	 V89k3dMUijSz8bM5gYQyuMLG342UzRNdczl9fKTjqOr1feS1C8/l8ame7kX6leVUfd
-	 nx2mQNPyIwGAnCSHEW6TDD9u/FpA1iuPR/am0ojAhsRmpdi13CVJpckoOLN2R9gv/r
-	 ma6QWwgIZv+xQ==
-Message-ID: <sashiko-outbox-171321@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: libata-core: Ignore forced transfer modes the host
- does not support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Rand Deeb" <rand.sec96@gmail.com>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20261014125916.1975-1-rand.sec96@gmail.com>
-References: <20261014125916.1975-1-rand.sec96@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 14 Oct 2026 13:12:25 +0000
+	s=k20260515; t=1791988497;
+	bh=yJrB+5JSqEqRwar8VDYTTfTYFhFOgB3hyj9MEof5Ge8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=UoxJLRK9IbnO04QltXY3nEe92e18ZEu61dNQcYmzhyVhthvhq3BVRdr3XItlqE+n5
+	 PqKoPg/NP8R2uqMBSzC7NwEbgqYALnOM8Z7P3xJ/vQKFAAyvBWG5IL2MxNTKDolNdq
+	 NsQXOQ7Yxgs2SB5GNzuwdUrUhdQz8GY6Czc9KLDGFP8pXjJb/TGjoEoKnBv4b6FSHF
+	 yNkTeRmlxo6Qokn8ueXVj2V5kl6UYHGZjqyTcU+PlgeyuYajZ+FHIx4y7Fs27v0hiZ
+	 G+gtf8Jz7z55a0gUep66kLCIq78cc0UUSQ+eWIPq8a93fGSCb7iLvrwlG+P0lVnH3p
+	 SbZTtXndILywA==
+Message-ID: <9136433e-297d-47b1-b341-7ebc008f3e43@kernel.org>
+Date: Wed, 14 Oct 2026 16:34:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata-core: Fix NO_FUA quirks shadowed by earlier
+ quirk entries
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+References: <20261013193915.174460-2-cassel@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20261013193915.174460-2-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] ata: libata-core: early return bypasses valid fallback force con=
-figs
---
+On 2026/10/13 21:39, Niklas Cassel wrote:
+> ata_dev_quirks() uses the first entry in __ata_dev_quirks[] that
+> matches the device and ignores all later entries. Commit 38d431229bfb
+> ("ata: libata: exclude FUA support for known buggy drives") appended
+> three ATA_QUIRK_NO_FUA entries to the end of the table, with model
+> patterns meant to cover whole product lines. Earlier entries already
+> match some or all of these drives, so NO_FUA is not always applied:
+> 
+> - "INTEL*SSDSC2CT*" never takes effect. Every model it matches also
+>   matches the earlier "INTEL*SSD*" entry, so these drives only get
+>   ATA_QUIRK_ZERO_AFTER_TRIM.
+> 
+> - "WDC*WD2500J*" does not take effect for "WDC WD2500JD-*" drives,
+>   which match the earlier ATA_QUIRK_WD_BROKEN_LPM entry.
+> 
+> - "OCZ-VERTEX*" does not take effect for "OCZ-VERTEX" drives with
+>   firmware "1.30", which match the earlier ATA_QUIRK_BROKEN_HPA entry.
+> 
+> Move the Intel entry in front of "INTEL*SSD*" and keep
+> ATA_QUIRK_ZERO_AFTER_TRIM in it, so these drives stay on the
+> ZERO_AFTER_TRIM whitelist. Add ATA_QUIRK_NO_FUA to the WD2500JD and
+> OCZ Vertex 1.30 entries. The quirks of all other drives are unchanged.
+> 
+> libata only uses FUA when it is enabled with libata.fua=1, so systems
+> using the default setting are not affected.
+> 
+> Fixes: 38d431229bfb ("ata: libata: exclude FUA support for known buggy drives")
+> Assisted-by: LLM
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-commit b2b8699db9f1c2c52ee37c5d556e07a3dde1ab2e
-Author: Rand Deeb <rand.sec96@gmail.com>
+Your solution works, but I think it is very fragile. We will most likely again
+make the same mistake with the oredering. So what about something like this:
 
-ata: libata-core: Ignore forced transfer modes the host does not support
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 92233fb25051..980a6a6256b1 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4515,6 +4515,7 @@ static u64 ata_dev_quirks(const struct ata_device *dev)
+        unsigned char model_num[ATA_ID_PROD_LEN + 1];
+        unsigned char model_rev[ATA_ID_FW_REV_LEN + 1];
+        const struct ata_dev_quirks_entry *ad = __ata_dev_quirks;
++       u64 quirks = 0;
 
-This commit adds a check to ignore forced transfer modes that the host
-controller does not support. This prevents out-of-bounds reads in driver
-timing tables when an unsupported mode is forced.
+        /* dev->quirks is an u64. */
+        BUILD_BUG_ON(__ATA_QUIRK_MAX > 64);
+@@ -4527,11 +4528,11 @@ static u64 ata_dev_quirks(const struct ata_device *dev)
+                    (!ad->model_rev || glob_match(ad->model_rev, model_rev))) {
+                        ata_dev_print_quirks(dev, model_num, model_rev,
+                                             ad->quirks);
+-                       return ad->quirks;
++                       quirks |= ad->quirks;
+                }
+                ad++;
+        }
+-       return 0;
++       return quirks;
+ }
 
+ static u64 ata_dev_get_max_sec_quirk_value(struct ata_device *dev)
+
+With this, all quirks that apply to a device will apply, even if there are
+multiple matching entries. That will solve the issue and make things a lot more
+solid.
+
+> ---
+>  drivers/ata/libata-core.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
 > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 92233fb25051a..324aaa81c8a30 100644
+> index 92233fb25051..cff4ededafad 100644
 > --- a/drivers/ata/libata-core.c
 > +++ b/drivers/ata/libata-core.c
-> @@ -458,6 +459,17 @@ static void ata_force_xfermask(struct ata_device *de=
-v)
-> =20
->  		ata_unpack_xfermask(fe->param.xfer_mask,
->  				    &pio_mask, &mwdma_mask, &udma_mask);
-> +
-> +		/* Never force a transfer mode the host does not support */
-> +		if ((pio_mask & ~ap->pio_mask) ||
-> +		    (mwdma_mask & ~ap->mwdma_mask) ||
-> +		    (udma_mask & ~ap->udma_mask)) {
-> +			ata_dev_warn(dev,
-> +				     "FORCE: %s not supported by the host, ignored\n",
-> +				     fe->param.name);
-> +			return;
+> @@ -4323,7 +4323,8 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+>  	{ "MAXTOR 6L080L4",	"A93.0500",	ATA_QUIRK_BROKEN_HPA },
+>  
+>  	/* this one allows HPA unlocking but fails IOs on the area */
+> -	{ "OCZ-VERTEX",		    "1.30",	ATA_QUIRK_BROKEN_HPA },
+> +	{ "OCZ-VERTEX",		    "1.30",	ATA_QUIRK_BROKEN_HPA |
+> +						ATA_QUIRK_NO_FUA },
+>  
+>  	/* Devices which report 1 sector over size HPA */
+>  	{ "ST340823A",		NULL,		ATA_QUIRK_HPA_SIZE },
+> @@ -4459,6 +4460,8 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+>  	{ "Crucial*",			NULL,	ATA_QUIRK_ZERO_AFTER_TRIM },
+>  	{ "INTEL SSDSC2KG480G8", "XCV10120",	ATA_QUIRK_ZERO_AFTER_TRIM |
+>  						ATA_QUIRK_MAX_SEC },
+> +	{ "INTEL*SSDSC2CT*",		NULL,	ATA_QUIRK_ZERO_AFTER_TRIM |
+> +						ATA_QUIRK_NO_FUA },
+>  	{ "INTEL*SSD*",			NULL,	ATA_QUIRK_ZERO_AFTER_TRIM },
+>  	{ "SSD*INTEL*",			NULL,	ATA_QUIRK_ZERO_AFTER_TRIM },
+>  	{ "Samsung*SSD*",		NULL,	ATA_QUIRK_ZERO_AFTER_TRIM },
+> @@ -4479,7 +4482,8 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+>  	{ "WDC WD1200JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+>  	{ "WDC WD1600JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+>  	{ "WDC WD2000JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+> -	{ "WDC WD2500JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+> +	{ "WDC WD2500JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM |
+> +						ATA_QUIRK_NO_FUA },
+>  	{ "WDC WD3000JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+>  	{ "WDC WD3200JD-*",		NULL,	ATA_QUIRK_WD_BROKEN_LPM },
+>  
+> @@ -4504,7 +4508,6 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+>  	{ "Maxtor",		"BANC1G10",	ATA_QUIRK_NO_FUA },
+>  	{ "WDC*WD2500J*",	NULL,		ATA_QUIRK_NO_FUA },
+>  	{ "OCZ-VERTEX*",	NULL,		ATA_QUIRK_NO_FUA },
+> -	{ "INTEL*SSDSC2CT*",	NULL,		ATA_QUIRK_NO_FUA },
+>  
+>  	/* End Marker */
+>  	{ }
 
-[Severity: Medium]
-When a specific override is rejected by this new host capability check in
-ata_force_xfermask(), does using return prematurely abort the loop?
 
-The libata.force parameter allows stacking multiple hierarchical overrides
-(e.g., libata.force=3Dpio4,1.0:pio5), which are evaluated backwards so the
-most specific match wins.
-
-By returning instead of using continue, the code appears to silently bypass
-earlier valid fallback overrides like the port-wide pio4 in the example abo=
-ve.
-
-This would cause the device to fall back to its auto-negotiated mask instead
-of the valid user-specified fallback, which might cause issues if the user
-was relying on the fallback constraint to disable broken DMA.
-
-> +		}
-> +
->  		if (udma_mask)
->  			dev->udma_mask =3D udma_mask;
->  		else if (mwdma_mask) {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261014125916.1975=
--1-rand.sec96@gmail.com?part=3D1
+-- 
+Damien Le Moal
+Western Digital Research
