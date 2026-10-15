@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A237C2D12EC;
-	Thu, 15 Oct 2026 05:30:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A80691A2C0B;
+	Thu, 15 Oct 2026 05:37:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792042256; cv=none; b=H3b7B+rIWGDAGIs2nv60TfTqD/IejOzK+a5o4gx8cKpPaELigOma4zg6wSxn8q9VnBpLXRaYPXGqZMP2fsT+OvUr2FikGD4cltNKA3f485gc8jA5d9aYqI7WzfgO2OvfvWyjlcEbrfNBXNgay0ZXBUda37qa9H0IxfqWaAsI57I=
+	t=1792042669; cv=none; b=acqyWRD+8RamYmRdb1KkLgBtNUAVhLJsSCmoI/BKC9Jua9PfG21q2aHb2yS87zYhQrxmNcT1Sm+3UrxHoq4sSSSu9Z0TymT5krkSJmoDzX7F6w6cRDxDpCmVbocHghG+fS/ceGGsQyLfAtEfcToyWNm87An+/55ULO9inySM3zA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792042256; c=relaxed/simple;
-	bh=beHxk/FWmRgnqu/Pqh1VhxbTw79NLkQRA7aMrCGbNKY=;
+	s=arc-20240116; t=1792042669; c=relaxed/simple;
+	bh=eRPofMYnBCfCl542RM3WrRFosCu/RBhbPhw4M22mzUE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pSsLMYTFOXRTHHej1sgY9PLPUk5fEDathqW4ZrD/skmMRYEcHtigUisrN11lC+aX3KQT7f/pVgj2cprHrpYv+lHScsXi6F1mo+mruyKDb7XA9gLyouD8/SwbUgrAnSfuIWNozjryFEgHFExNxdvk3NDBhofyTJ0rsKcjpMiMj7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iyPCQFkz; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=qweq7lxCwdX6iyTzIunEKPcXtnffD1BRezw+b/y3nM4AOKApuc03OS8QpqfkmpGmxioiY4C56CNzfeOyRhUShAPIb/6W22mrbiDsKuzjUEoCunKnqaQ+dN65DbZUIdZdtQaYGT1N7B1C5dvWUCNlHxgc+aT0q57pei/133qRej8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QiRcjtXI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iyPCQFkz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B03C1F000C4;
-	Thu, 15 Oct 2026 05:30:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QiRcjtXI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CF5A1F000C4;
+	Thu, 15 Oct 2026 05:37:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792042255;
-	bh=m7VD029D4EwtxoXtCvvRC3LZVAN7OgQ2+TFLmwGl2aE=;
+	s=k20260515; t=1792042668;
+	bh=zYg5CWGxSdeKDaRo/A92SDbKDroOZH6PvO8iZ+HbgnE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=iyPCQFkzFK3NfzQpkhGnyQesvlyPf8OsIFVxxpDykTAqxqPMttnZ35zgFC1hDtBqd
-	 3zukp4PO/hzr2J1WO6gmAQuMirV54aTz2kvUJJWTqZVHXLDhn8aPexrZ/sH0g5WvfI
-	 mKwIVKFuW6UGaJFqRMgx0dMIDWQQgnn2FSx4nA6ObLc7s0yxyVyrdeiZv0WZbjapF9
-	 tfwsD2T0etHBYLHrRp97MLl3b/nTsCRuJdRRwyyMz/fjmdZwiU1rW6136Kqd2x+rgA
-	 wMoaV49Lohzy52HtSnkBeR8AVD4jY+556iYTx8nKL/lxHN4Q9bb66gRplrEYa9mMvx
-	 hiKx1FDM3hK/A==
-Message-ID: <9c6bafea-7eef-42c8-b514-bdb0777b9372@kernel.org>
-Date: Thu, 15 Oct 2026 07:30:52 +0200
+	b=QiRcjtXIJJ5isGPGSe4B+BDrnpUv4N5ymd1+fa/t3BDzibiUB2MR9tcsG+VEDcIFC
+	 MOC+z80peHijYscreZj2JsazByj17f8+XTq8thETxT20inFsHjdvD60RQjVejyyTio
+	 ENyr2fNhspoIlnCeVSk4DDuDE5Epuu1oK7UY4tuBmWpWNCzvde6uBiB/h2N/oyL4gA
+	 n81iACpYmocayG4zGkp1Ujd54qd8MsMhR1Y/Nxy4yKAG3AhU4hLKBoJPLKS6bmJcys
+	 0jAoSU+Y2oe8QUueeFmIgxFkrQ/H0i44RHsR8u86FrUc6MiIN5v1LxnUKSbW1SJwQT
+	 epTSizKeF34Jg==
+Message-ID: <eb21b333-3047-4f8c-a1d7-9d390d935abb@kernel.org>
+Date: Thu, 15 Oct 2026 07:37:45 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,65 +35,43 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata: preserve sata_spd link cache across
- ata_dev_init
-To: tongzhiwei <tongzhiwei@cmss.chinamobile.com>, cassel@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20261010075457.882-1-tongzhiwei@cmss.chinamobile.com>
+Subject: Re: [PATCH v4] ata: libahci: re-enable FBS after error handling on a
+ port multiplier
+To: Kyrylo Biryuk <illofspeed@gmail.com>, linux-ide@vger.kernel.org
+Cc: cassel@kernel.org, linux-kernel@vger.kernel.org
+References: <20261012103917.389-1-illofspeed@gmail.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20261010075457.882-1-tongzhiwei@cmss.chinamobile.com>
+In-Reply-To: <20261012103917.389-1-illofspeed@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026/10/10 9:54, tongzhiwei wrote:
-> a hot-unplug goes through
-> ata_eh_schedule_probe() -> ata_dev_init() -> sata_spd = 0.
-> After commit 69f2c9346313 ("ata: libata: Fix sata_down_spd_limit() when no
-> link speed is reported"), when
-> the device is unplugged, every probe lowers sata_spd_limit, which breaks
-> commit 2dc0b46b5ea3 ("libata: sata_down_spd_limit should return if
-> driver has not recorded sstatus speed"). The harm is, when the device
-> is plugged back, it is limited to low speed which will never be recovered.
+On 2026/10/12 12:39, Kyrylo Biryuk wrote:
+> ahci_do_softreset() disables FBS before resetting a device behind a port
+> multiplier, as required by AHCI 1.2 section 9.3.9, and re-enables it only
+> when that softreset succeeds. If it fails, for example because a
+> hot-plugged drive is still spinning up ("softreset failed (device not
+> ready)"), EH escalates to a hardreset of the PMP link, and nothing turns
+> FBS back on: only ahci_pmp_attach() does, which runs at the next boot.
+> The port keeps working with command-based switching until then.
 > 
-> This patch stops zeroing sata_spd in ata_dev_init (sata_spd was
-> introduced in commit 008a78961ec7 ("libata: improve SATA PHY speed down
-> logic")).  sata_spd is then written only on a successful reset.  At
-> struct ata_port's init time the sata_spd field is zeroed by kzalloc.
+> Seen on a Marvell 88SE9235 (1b4b:9235) with Marvell 88SM9705 port
+> multipliers (1b4b:9705, in a Synology DX1222 expansion unit): after
+> hot-plugging a drive, the kernel logged "FBS is disabled" followed by
+> "softreset failed (device not ready)" and a PMP hardreset, and never
+> "FBS is enabled" again (twice, on two different ports).
 > 
-> Fixes: 69f2c9346313 ("ata: libata: Fix sata_down_spd_limit() when no link speed is reported")
+> At the end of ahci_error_handler(), re-enable FBS if a PMP is still
+> attached and FBS is supported but disabled.
+> 
+> Fixes: 89dafa20f3da ("ahci: disabled FBS prior to issuing software reset")
 > Assisted-by: LLM
-> Signed-off-by: tongzhiwei <tongzhiwei@cmss.chinamobile.com>
-> ---
->  drivers/ata/libata-core.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index f482c0a6d7e9..2ddad2e6ebd2 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5659,7 +5659,7 @@ void ata_dev_init(struct ata_device *dev)
->  
->  	/* SATA spd limit is bound to the attached device, reset together */
->  	link->sata_spd_limit = link->hw_sata_spd_limit;
-> -	link->sata_spd = 0;
-> +	/* link->sata_spd caches last negotiated link speed; not zeroed here */
+> Signed-off-by: Kyrylo Biryuk <illofspeed@gmail.com>
 
-This contradicts the previous comment, so let's make this consistent. E.g.
-something like:
+Looks good.
 
-	/*
-	 * The SATA speed limit is bound to the attached device, so reset it
-	 * but keep the last negotiated speed indicated by link->sata_spd.
-	 */
-
-to replace the previous comment.
-
->  
->  	/* High bits of dev->flags are used to record warm plug
->  	 * requests which occur asynchronously.  Synchronize using
-
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
