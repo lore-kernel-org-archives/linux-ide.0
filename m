@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A80691A2C0B;
-	Thu, 15 Oct 2026 05:37:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00BCF1A2C0B;
+	Thu, 15 Oct 2026 05:44:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792042669; cv=none; b=acqyWRD+8RamYmRdb1KkLgBtNUAVhLJsSCmoI/BKC9Jua9PfG21q2aHb2yS87zYhQrxmNcT1Sm+3UrxHoq4sSSSu9Z0TymT5krkSJmoDzX7F6w6cRDxDpCmVbocHghG+fS/ceGGsQyLfAtEfcToyWNm87An+/55ULO9inySM3zA=
+	t=1792043075; cv=none; b=UiEVuj/lCi+mbECLFxPzAPFPTrt/eiPu8oXlmRjuFeGChZo4Pc/BMOpeKgw4GbJyvR91rEZsQ7f/u8jyP8GHl0QRQF02UxKjGm/PmiFt5upzU+WF9Q877A/zQnZiBcvUnc4hph7K8wtgtUmCXMtFK/PvmkP2PRRwQ7Cx3v5N6zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792042669; c=relaxed/simple;
-	bh=eRPofMYnBCfCl542RM3WrRFosCu/RBhbPhw4M22mzUE=;
+	s=arc-20240116; t=1792043075; c=relaxed/simple;
+	bh=pBeT3LEgRNmfd9zROFBVhschewtlY/BCOwof21X2Pb8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qweq7lxCwdX6iyTzIunEKPcXtnffD1BRezw+b/y3nM4AOKApuc03OS8QpqfkmpGmxioiY4C56CNzfeOyRhUShAPIb/6W22mrbiDsKuzjUEoCunKnqaQ+dN65DbZUIdZdtQaYGT1N7B1C5dvWUCNlHxgc+aT0q57pei/133qRej8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QiRcjtXI; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=CcCNcmSZc+isBJC8bOo8wydhx9ZKrC4F1mgFOb0eQMbr/L0ZZITsKgopyhQZLmburYfLrpNYyjQp0B9AR9P9wdpjVaazOhnNZIetx5uTp0I6Rtkj88AH5BO9a+G0pak3shHIa2muuU4NYMrEkWahlN78snjYlBpivMN6q8IAtiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NDyuB2f5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QiRcjtXI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CF5A1F000C4;
-	Thu, 15 Oct 2026 05:37:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NDyuB2f5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3B861F000C4;
+	Thu, 15 Oct 2026 05:44:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792042668;
-	bh=zYg5CWGxSdeKDaRo/A92SDbKDroOZH6PvO8iZ+HbgnE=;
+	s=k20260515; t=1792043074;
+	bh=o9NrBccd/oeQhP75cgqi1LalTU0++UhD5KpRWtwhOtI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=QiRcjtXIJJ5isGPGSe4B+BDrnpUv4N5ymd1+fa/t3BDzibiUB2MR9tcsG+VEDcIFC
-	 MOC+z80peHijYscreZj2JsazByj17f8+XTq8thETxT20inFsHjdvD60RQjVejyyTio
-	 ENyr2fNhspoIlnCeVSk4DDuDE5Epuu1oK7UY4tuBmWpWNCzvde6uBiB/h2N/oyL4gA
-	 n81iACpYmocayG4zGkp1Ujd54qd8MsMhR1Y/Nxy4yKAG3AhU4hLKBoJPLKS6bmJcys
-	 0jAoSU+Y2oe8QUueeFmIgxFkrQ/H0i44RHsR8u86FrUc6MiIN5v1LxnUKSbW1SJwQT
-	 epTSizKeF34Jg==
-Message-ID: <eb21b333-3047-4f8c-a1d7-9d390d935abb@kernel.org>
-Date: Thu, 15 Oct 2026 07:37:45 +0200
+	b=NDyuB2f5BML1vo1T8r2detAXX7lQf0LnxFFoNpLDkl9wrseKWJeK6p09BeR+vX6hR
+	 ZhiUP02jIXUDGHZFy0D2Qiv7QKL70VZ3f1hNFc/jslhXbft1wa/Oxq56lUkzXnQkdd
+	 b/ZCIsLvq31bmya1WzVPSKnHpdC3OzlEqLQDHlL3QkSYu+wmujchRS7IOjMWaSsZjJ
+	 2QXIKeedWdzw5VnbdYMZjUaiCGvPxIOdKTsMHKAJnTsMULEs1to54GRn/SST2oO2g1
+	 MxmB0XJVK996YygAjyFh4KirqoCaZu1XXHRTetLN014YMo9Z6exRhMRE+7iEkZ/teA
+	 aAkIwXBVTpjhA==
+Message-ID: <9fcb4b3d-150f-4ab0-9191-423bda696549@kernel.org>
+Date: Thu, 15 Oct 2026 07:44:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,41 +35,28 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] ata: libahci: re-enable FBS after error handling on a
- port multiplier
-To: Kyrylo Biryuk <illofspeed@gmail.com>, linux-ide@vger.kernel.org
-Cc: cassel@kernel.org, linux-kernel@vger.kernel.org
-References: <20261012103917.389-1-illofspeed@gmail.com>
+Subject: Re: [PATCH] ata: ahci: preserve preset port masks
+To: zhoumin <teczm@foxmail.com>, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <tencent_E0E7052529B6851284963EB90DF4D28CBB06@qq.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20261012103917.389-1-illofspeed@gmail.com>
+In-Reply-To: <tencent_E0E7052529B6851284963EB90DF4D28CBB06@qq.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026/10/12 12:39, Kyrylo Biryuk wrote:
-> ahci_do_softreset() disables FBS before resetting a device behind a port
-> multiplier, as required by AHCI 1.2 section 9.3.9, and re-enables it only
-> when that softreset succeeds. If it fails, for example because a
-> hot-plugged drive is still spinning up ("softreset failed (device not
-> ready)"), EH escalates to a hardreset of the PMP link, and nothing turns
-> FBS back on: only ahci_pmp_attach() does, which runs at the next boot.
-> The port keeps working with command-based switching until then.
+On 2026/10/15 5:06, zhoumin wrote:
+> ahci_get_port_mask() returns zero for absent or unmatched parameters,
+> overwriting the mask set by the Marvell PATA quirk.
 > 
-> Seen on a Marvell 88SE9235 (1b4b:9235) with Marvell 88SM9705 port
-> multipliers (1b4b:9705, in a Synology DX1222 expansion unit): after
-> hot-plugging a drive, the kernel logged "FBS is disabled" followed by
-> "softreset failed (device not ready)" and a PMP hardreset, and never
-> "FBS is enabled" again (twice, on two different ports).
+> Update the mask in place only when parsing a global value or a matching
+> device entry. Preserve existing numeric parsing and override behavior.
 > 
-> At the end of ahci_error_handler(), re-enable FBS if a PMP is still
-> attached and FBS is supported but disabled.
-> 
-> Fixes: 89dafa20f3da ("ahci: disabled FBS prior to issuing software reset")
-> Assisted-by: LLM
-> Signed-off-by: Kyrylo Biryuk <illofspeed@gmail.com>
+> Fixes: 70c1595c181c ("ata: ahci: Allow ignoring the external/hotplug capability of ports")
+> Signed-off-by: zhoumin <teczm@foxmail.com>
 
-Looks good.
+Looks OK.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
