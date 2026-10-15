@@ -1,140 +1,100 @@
-Received: from out162-62-57-64.mail.qq.com (out162-62-57-64.mail.qq.com [162.62.57.64])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C83248880;
-	Thu, 15 Oct 2026 03:07:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A237C2D12EC;
+	Thu, 15 Oct 2026 05:30:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792033629; cv=none; b=Nc1HyzcDMMf+h8e4KmaP4FCrBJlfZNhbK+DHQaJjkVVHwYLzowuI9Eh/b9p5Vs+ZTeO+p4NXTTXJUA02w0U6Zjh9XILBonaroAArKJApOUIwIUj1fSbDKj/OjenvzCmzvUiT44h4Eljj9JbmPEniDqBAgx993+3neAsGkeRwrX8=
+	t=1792042256; cv=none; b=H3b7B+rIWGDAGIs2nv60TfTqD/IejOzK+a5o4gx8cKpPaELigOma4zg6wSxn8q9VnBpLXRaYPXGqZMP2fsT+OvUr2FikGD4cltNKA3f485gc8jA5d9aYqI7WzfgO2OvfvWyjlcEbrfNBXNgay0ZXBUda37qa9H0IxfqWaAsI57I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792033629; c=relaxed/simple;
-	bh=+gYw+3sUsg14DlcbLrjueFcj9EC/ttbsvn7/7gIUaiM=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=jwaU+LdeHkrHw1WktfY18fE8r+w3HYfOprWzomw6o7M1mKoYQnba1DIJq2597eOrO9QUGm2fACLgmeEp53YjuQAFRkPZA+AUTWTtC+JLOTCRxBXwRkMjNsFJ+LfQRmEnu8/cExC7ehSPafV48Wmqf9JYhjX0h1HdqwkHJUoWeh0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com; spf=pass smtp.mailfrom=foxmail.com; dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b=w0ycVgh2; arc=none smtp.client-ip=162.62.57.64
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
+	s=arc-20240116; t=1792042256; c=relaxed/simple;
+	bh=beHxk/FWmRgnqu/Pqh1VhxbTw79NLkQRA7aMrCGbNKY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pSsLMYTFOXRTHHej1sgY9PLPUk5fEDathqW4ZrD/skmMRYEcHtigUisrN11lC+aX3KQT7f/pVgj2cprHrpYv+lHScsXi6F1mo+mruyKDb7XA9gLyouD8/SwbUgrAnSfuIWNozjryFEgHFExNxdvk3NDBhofyTJ0rsKcjpMiMj7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iyPCQFkz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b="w0ycVgh2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-	s=s201512; t=1792033620;
-	bh=yUDt//PJXit0FvcW0Ffq9mi2xIbedhJD3D6xAfTiaOs=;
-	h=From:To:Cc:Subject:Date;
-	b=w0ycVgh2ou52g+UEfxlJ1Z88qxeTD4rikjJgLrYjDr3WZBQekDxGumtY8Z/uCu6pP
-	 +T6BSPAlsYr+4p6+a5HvP3g//r8bG1MIlvMdBTuHRPsYM3i/WRSgAhkJbUFJlETX4d
-	 z+a1ZL4Gp1VOS57K0CThqZ4RU9DfOkD9PFuTL1iU=
-Received: from RE0700.barrietech.com ([115.196.186.15])
-	by newxmesmtplogicsvrszb51-0.qq.com (NewEsmtp) with SMTP
-	id 1B9B66C4; Thu, 15 Oct 2026 11:06:57 +0800
-X-QQ-mid: xmsmtpt1792033617t1vug9ypo
-Message-ID: <tencent_E0E7052529B6851284963EB90DF4D28CBB06@qq.com>
-X-QQ-XMAILINFO: NnYhxYSyuBnL0o1PdiPUuyqKyv4jKqvl7xvb0gtkWzDzWoEct0TCHD2rHkDX1C
-	 wQNamOpr4B+XWNuBuxOOd0jfEKpzZZB+GnGoym1au15zS+pxxr02f9XIJgJWFAA5Osz/HT+E5Usl
-	 AX4ZQKzvpNJj3SWnAGEdSQdFdGx9t+PEs50qJaKa6ok9MK22OhBZ+8ES+MjY6aDRlzOadDYDSVcL
-	 tETN0GpEoex6G0JGjSv7588aR0gKqkih7pwajTpOZGPKdZronWZCmclr8AEfcCpQml/iOKP2w64L
-	 QBG561F06l8S1M0qkQ+xYIlYDbj2pq/On4NWpNCiexNPLEEqb2/m+2MgIFmbvXRlbI/h5+1AbR1S
-	 0HYzldj3acVGQTHam9XHX7bLnft8YX28d+FGhcNn2HaC1TjSUIVz8hwxFBWZi5vVoFD8Ng6Hf8Lw
-	 p0ajy+m0/4P0G2XbxpSPh3bFkmqgDre66IbjIwNRcAcdv0ah5vkQIcURo+rBCRWoZH5YgIUGOhmY
-	 3NcICgohU/NmbD/GYdZ5IxVIjeOtlABduBa/06C+GttvJhvDsZEJOryws89JdqEbMgyyFjq8m4rR
-	 OzWGeOl6j8Tst+UXtCjwq4yuRZEgm2q/QCfQr1X25alIXZHTh867fJJUnVGbfhbp5sbItBMwrJyr
-	 /kZ4XJpg3Yw0m92QXRLKi9eRPCHRsEPU03SanEX4X9Fl2LsKXuvNX13cXzZtjhTHZmWxn/oY6s3w
-	 TThQzg7GOw8z+UsWt/wk9xaDlc/T3uNvUhyQTAzz4D5js6SbLnAsUAqLUldL0jN4VuIU6Iv+i35y
-	 2OFzZOOrZhGZt1u6U1FvpCq8RNGJy7EOM8WC9d1Do8CN9k8uNtZwRriWCZG7Jx+nr/0ic6rXs4xl
-	 C64RUjKCGuPYm1FMr7kD+PFZiboHaU+OIjXgYexEfGQFDI7Y8uO2LzBJ/bk3ZTwbhhsNP+QZuyEJ
-	 6pxT+tIK0iy1nVvAtQ6BvKGD75wfgfaBZ6hxdBVH2+81V+IvG2PBO3p6CkNeBxb/laEDyySTm/44
-	 ZdO/gTj30BMEdZPjoaMNy7WIgcsY6OcvFldNq8U4nZsoXZycYBPY78/WexqP97NXMx9llx5mOqyC
-	 eyhkrxH6w0+TsZS6I=
-X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
-From: zhoumin <teczm@foxmail.com>
-To: dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	teczm@foxmail.com
-Subject: [PATCH] ata: ahci: preserve preset port masks
-Date: Thu, 15 Oct 2026 11:06:55 +0800
-X-OQ-MSGID: <20261015030655.6682-1-teczm@foxmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iyPCQFkz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B03C1F000C4;
+	Thu, 15 Oct 2026 05:30:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792042255;
+	bh=m7VD029D4EwtxoXtCvvRC3LZVAN7OgQ2+TFLmwGl2aE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=iyPCQFkzFK3NfzQpkhGnyQesvlyPf8OsIFVxxpDykTAqxqPMttnZ35zgFC1hDtBqd
+	 3zukp4PO/hzr2J1WO6gmAQuMirV54aTz2kvUJJWTqZVHXLDhn8aPexrZ/sH0g5WvfI
+	 mKwIVKFuW6UGaJFqRMgx0dMIDWQQgnn2FSx4nA6ObLc7s0yxyVyrdeiZv0WZbjapF9
+	 tfwsD2T0etHBYLHrRp97MLl3b/nTsCRuJdRRwyyMz/fjmdZwiU1rW6136Kqd2x+rgA
+	 wMoaV49Lohzy52HtSnkBeR8AVD4jY+556iYTx8nKL/lxHN4Q9bb66gRplrEYa9mMvx
+	 hiKx1FDM3hK/A==
+Message-ID: <9c6bafea-7eef-42c8-b514-bdb0777b9372@kernel.org>
+Date: Thu, 15 Oct 2026 07:30:52 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata: preserve sata_spd link cache across
+ ata_dev_init
+To: tongzhiwei <tongzhiwei@cmss.chinamobile.com>, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261010075457.882-1-tongzhiwei@cmss.chinamobile.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20261010075457.882-1-tongzhiwei@cmss.chinamobile.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-ahci_get_port_mask() returns zero for absent or unmatched parameters,
-overwriting the mask set by the Marvell PATA quirk.
+On 2026/10/10 9:54, tongzhiwei wrote:
+> a hot-unplug goes through
+> ata_eh_schedule_probe() -> ata_dev_init() -> sata_spd = 0.
+> After commit 69f2c9346313 ("ata: libata: Fix sata_down_spd_limit() when no
+> link speed is reported"), when
+> the device is unplugged, every probe lowers sata_spd_limit, which breaks
+> commit 2dc0b46b5ea3 ("libata: sata_down_spd_limit should return if
+> driver has not recorded sstatus speed"). The harm is, when the device
+> is plugged back, it is limited to low speed which will never be recovered.
+> 
+> This patch stops zeroing sata_spd in ata_dev_init (sata_spd was
+> introduced in commit 008a78961ec7 ("libata: improve SATA PHY speed down
+> logic")).  sata_spd is then written only on a successful reset.  At
+> struct ata_port's init time the sata_spd field is zeroed by kzalloc.
+> 
+> Fixes: 69f2c9346313 ("ata: libata: Fix sata_down_spd_limit() when no link speed is reported")
+> Assisted-by: LLM
+> Signed-off-by: tongzhiwei <tongzhiwei@cmss.chinamobile.com>
+> ---
+>  drivers/ata/libata-core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index f482c0a6d7e9..2ddad2e6ebd2 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5659,7 +5659,7 @@ void ata_dev_init(struct ata_device *dev)
+>  
+>  	/* SATA spd limit is bound to the attached device, reset together */
+>  	link->sata_spd_limit = link->hw_sata_spd_limit;
+> -	link->sata_spd = 0;
+> +	/* link->sata_spd caches last negotiated link speed; not zeroed here */
 
-Update the mask in place only when parsing a global value or a matching
-device entry. Preserve existing numeric parsing and override behavior.
+This contradicts the previous comment, so let's make this consistent. E.g.
+something like:
 
-Fixes: 70c1595c181c ("ata: ahci: Allow ignoring the external/hotplug capability of ports")
-Signed-off-by: zhoumin <teczm@foxmail.com>
----
- drivers/ata/ahci.c | 21 +++++++++------------
- 1 file changed, 9 insertions(+), 12 deletions(-)
+	/*
+	 * The SATA speed limit is bound to the attached device, so reset it
+	 * but keep the last negotiated speed indicated by link->sata_spd.
+	 */
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 9b8c0935001c..324e4918a055 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1654,22 +1654,21 @@ static u32 ahci_port_mask(struct device *dev, char *mask_s)
- 	return mask;
- }
- 
--static u32 ahci_get_port_mask(struct device *dev, char *mask_p)
-+static void ahci_get_port_mask(struct device *dev, char *mask_p, u32 *mask)
- {
- 	char *param, *end, *str, *mask_s;
- 	char *name;
--	u32 mask = 0;
- 
- 	if (!mask_p || !strlen(mask_p))
--		return 0;
-+		return;
- 
- 	str = kstrdup(mask_p, GFP_KERNEL);
- 	if (!str)
--		return 0;
-+		return;
- 
- 	/* Handle single mask case */
- 	if (!strchr(str, '=')) {
--		mask = ahci_port_mask(dev, str);
-+		*mask = ahci_port_mask(dev, str);
- 		goto free;
- 	}
- 
-@@ -1704,13 +1703,11 @@ static u32 ahci_get_port_mask(struct device *dev, char *mask_p)
- 			param++;
- 		}
- 
--		mask = ahci_port_mask(dev, mask_s);
-+		*mask = ahci_port_mask(dev, mask_s);
- 	}
- 
- free:
- 	kfree(str);
--
--	return mask;
- }
- 
- static void ahci_pci_save_initial_config(struct pci_dev *pdev,
-@@ -1736,10 +1733,10 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 	}
- 
- 	/* Handle port map masks passed as module parameter. */
--	hpriv->mask_port_map =
--		ahci_get_port_mask(&pdev->dev, ahci_mask_port_map);
--	hpriv->mask_port_ext =
--		ahci_get_port_mask(&pdev->dev, ahci_mask_port_ext);
-+	ahci_get_port_mask(&pdev->dev, ahci_mask_port_map,
-+			   &hpriv->mask_port_map);
-+	ahci_get_port_mask(&pdev->dev, ahci_mask_port_ext,
-+			   &hpriv->mask_port_ext);
- 
- 	ahci_save_initial_config(&pdev->dev, hpriv);
- }
+to replace the previous comment.
+
+>  
+>  	/* High bits of dev->flags are used to record warm plug
+>  	 * requests which occur asynchronously.  Synchronize using
+
+
 -- 
-2.53.0
-
+Damien Le Moal
+Western Digital Research
