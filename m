@@ -1,147 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B49413789
-	for <linux-ide@vger.kernel.org>; Fri, 16 Oct 2026 09:07:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19CE512D21B
+	for <linux-ide@vger.kernel.org>; Sat, 17 Oct 2026 04:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792141630; cv=none; b=YPO65iuoVjFtv21RHUe5VJe5RbSaa1Jxbg5jBNOZIcyKt3JmVpxwYSrLsb7p2GjzvG6nKdpGtrJw3o+ZPiVg6kPok/B8hEm/8iJfRCw3ym/6d5kTHkBHPmZslTh2eGEc1cuSBn7wKXtpwMNHzJGl4mLVb0fr7ccK3UEdLJ+spE8=
+	t=1792210479; cv=none; b=nx0zrrgBnKeOZ6YtscgdY7Mx4Cqdd4UHmx2Ho03IXM5Bpxc9EVHcMNSJWaT0kAn/xhQOwRZzJRACrCmsQW30tEZgRv2tzuxBqBCKq+om9QSSWE2vLmoe+4n9rGqu4g/h2cj5PHskMZI2SxmscLwixXq1XiGfhKmQUneGft84Aug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792141630; c=relaxed/simple;
-	bh=G32wv8ECojbFLh9JUbyuS8+GlGt9HiBsK+NNE4I821I=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=U9dtZmNtsAeeuWHVcih8pMhS33LxU20Zx9+bD86iyikxoYQMEzfAU+7ldjSsVALv6R39buN+ygYSWFmGV2RqceoxFYBLLlERTipVfQGYE8+wa6b9bIQAfAv8Bbt2U2UJIFzV71wcW0VEhS/it6d5E6LIJH+JwRx76TEFcmpKb9k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XvfwygI1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792210479; c=relaxed/simple;
+	bh=BriZC6DxZrhy5N7Op3EpDAZGaSlOcuqXDcaA1Y4+xCE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dq0aZ0LqMyu4U5/v/nXun8IJoXiAk7ZhLCzT8kSEMP6NqNuKsunDXpxqnxavbf1Pt8W4lZZIh7OHgjHxTvDrYnxs0Zgf7ds6Rk2RoUvTe9/+l5xTOyLivPDY4DDa87DF44U4D/JP418lP5mT3+mKEE7lMnN/MM+t7PhwP6FD26I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0x0f.com; spf=pass smtp.mailfrom=0x0f.com; dkim=pass (1024-bit key) header.d=0x0f.com header.i=@0x0f.com header.b=PGcCkczt; arc=none smtp.client-ip=209.85.215.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0x0f.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0x0f.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XvfwygI1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0B131F000C5;
-	Fri, 16 Oct 2026 09:07:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792141629;
-	bh=wFqn5Np7nGe9/64Jhf3KVXpTI5cqUJQKLZmSWuk5bRY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XvfwygI1hFR+460K4FTGSgZJUScWaNA4NYx094K0f8konqTS2a98BjmudOKvPWwdY
-	 r/qaq39eJYX9TS+YgqkHENBuX/5Jg8gjC3J44XSz0q5I4aoIbUa0nJmIkUw8kOBySz
-	 29k0bxh52Q5crqIis8sylYGHqrPkN+geLygnNNtETIK3/zUEdxB2COV1R3Ep3gvokO
-	 d8WNPDZAYVpDnVGqldoYYJMgbCIx7Zf9PZRQgnZohR9JLhWUTUeJxYYVG+Ek6qGU2k
-	 Yt/JBn/cMjPyJtiOkYmMgx+JBVnYDUKNqhXo+06wQUJc89uSxX2v3IcwFzbJAKlTv3
-	 B66qur4u1DEGQ==
-Message-ID: <sashiko-outbox-174054@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ata: libata: Add debug dump around error handling and
- link resets
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Junxian Huang" <huangjunxian6@hisilicon.com>, linux-ide@vger.kernel.org
-Cc: dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20261016085657.3703353-1-huangjunxian6@hisilicon.com>
-References: <20261016085657.3703353-1-huangjunxian6@hisilicon.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 16 Oct 2026 09:07:08 +0000
+	dkim=pass (1024-bit key) header.d=0x0f.com header.i=@0x0f.com header.b="PGcCkczt"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-cd3310348d2so815758a12.1
+        for <linux-ide@vger.kernel.org>; Fri, 16 Oct 2026 21:14:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=0x0f.com; s=google; t=1792210476; x=1792815276; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OgDC/ta2AGryucvreeu/Kd0cvPv9S+G98Vpr8co/uPw=;
+        b=PGcCkcztfa5r4uN7V6QPvbDFLghssh2OuFlAn4J05CUR91MWPaKo1q6rwRTERkeaLg
+         MeCJ9cAF51qR71En2k5PJ7qm40c5ZkLEBtnfRY65lm4EWR9ndAYdzQdf1US/8knN9H7h
+         qiGrG0ouUaEy6kKPNdT5Ye+KfM7BJNvyMXyfo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792210476; x=1792815276;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=OgDC/ta2AGryucvreeu/Kd0cvPv9S+G98Vpr8co/uPw=;
+        b=mr9vLJlJuHYpMu2Xyc+kPU3hG4QHpDlSw0hjjK3tHxJD3LtOl+wRtFG4j7O2zwJEcL
+         EWF8udH+8gEi+mY2rFBt3B/YXZJgdB6KSicQveSMI8SQ1/RsTUO1X5+KHazEW04eYrVk
+         3r/TB+w/JEUgjip8tMKHuyb/NNPvATZJxOx0djc/Q4WnDnjSxEHCkhi7QbrG73nx7jti
+         +FBTi0whofFKLD9G+q/YEkJFVFqVZQyZQbb0L7vC15+PWHvtVJw/V0L/pfNwN4YRF6fn
+         QG/Q6MiucU6pICV60hgi4abqKwdZU4L8rnvG1vPxzr8a1lVf9xNGbfLgEcCpH4G/02dc
+         Zdnw==
+X-Forwarded-Encrypted: i=1; AKwUvBzAj9sX8+fft4eaoQn6opYGsyxDpfPkygIhNlO2ZjYniSz2Ms2mt16Ur5jjB/IiVLxtC3eatJxAtVo=@vger.kernel.org
+X-Gm-Message-State: AFq9FYJybKszWtFgvh0Rcr0rRat6AMyDH7abKsh9Obz+4SKSr/aI5izK
+	XxV9j0LWC83n2MXueOB5rCouE9bW0QDDJCc6kLuKsdQ8J0ybEo+lcuu1uoNHpTrPznk=
+X-Gm-Gg: AYBFou1aB6WRqnWEfOG4hbdN3krJgO+9melucEI01hHEvALhGy0ypEB5eukIT2+hFys
+	A9/IyWtJdl2RoQem726Do6N9Igyj6c+2GTZdFVg0e0aLjmQuSyeMx6T94Qo6nw9Fx8sYyEE3UCh
+	uD7efGTw+9dLOFFoBthl0IvHGiIIJAbSi9rvJtiG8oIm2LgACT2CykEWlA2TXgxVqaf6pUwQGfs
+	Gu/76mAs5C7xzpIgFwheu5YjGNO5l/aFWAHjNNi8vLYQ/A5Auboi4J7HWCEEUbD1MsB9LTj8irs
+	PULHzs6eGlZBGdk1q2bk/pksHD4P2tANnrIACOVwNEbRVbi2UGCukI1SXl869UuGZBOVsg0Vl57
+	ZADMc2iFWFs8K9Alr/4LYKqSlL8VTbKxpOfkHZBKCJCtGgTyImq/7H1b4ICNN5bwXPDL+KOgYUA
+	mzMp6O3JJ957bu+Mx/TLfn2tRqrBxoQZEN8euRwnEljzz8FzH2PMN+6a7Fx+VZdf9i+kOb61vtx
+	coBZf7iFgmyXzVJHh9faI6rSEBESVhUkZPJyaNo
+X-Received: by 2002:a17:90b:4c92:b0:3a6:f6b0:30ce with SMTP id 98e67ed59e1d1-3acef55d641mr1125765a91.36.1792210476334;
+        Fri, 16 Oct 2026 21:14:36 -0700 (PDT)
+Received: from shiro (p1722188-ipxg00e01sizuokaden.shizuoka.ocn.ne.jp. [153.166.142.188])
+        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-3ac945e72c6sm11609714a91.5.2026.10.16.21.14.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Oct 2026 21:14:35 -0700 (PDT)
+From: Daniel Palmer <daniel@0x0f.com>
+To: ysato@users.sourceforge.jp,
+	dalias@libc.org,
+	glaubitz@physik.fu-berlin.de,
+	dlemoal@kernel.org,
+	cassel@kernel.org,
+	linux-sh@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Cc: geert@linux-m68k.org,
+	linux-kernel@vger.kernel.org,
+	Daniel Palmer <daniel@0x0f.com>
+Subject: [PATCH 0/2] sh: Fix IDE on landisk
+Date: Sat, 17 Oct 2026 13:14:17 +0900
+Message-ID: <20261017041419.311921-1-daniel@0x0f.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] libahci: unmapped MMIO reads cause Data Abort on ARM platforms
-- [Low] ata: missing ahci_dump_softreset_done() on softreset error path
---
+I dug out my landisk to look at kexec for Geert. Since I'm lazy and
+LLMs are good at fixing bitrot I let my LLM work out how to get
+it to boot again.
 
-commit 6261261e408a96bdca27f7aab27ae104e6a98735
-Author: Junxian Huang <huangjunxian6@hisilicon.com>
+There are some other issues (perf is apparently borken, there are
+some issues with the decompresor and big kernels..) but this
+seems to be the only thing stopping it booting with the defconfig.
 
-ata: libata: Add debug dump around error handling and link resets
+Disclaimer since we don't need to give LLM tags anymore:
+- LLM debugged the issue.
+- It has been checked on real hardware.
+- I have checked the IDE driver patch, cleaned it up and
+  cleaned out massive walls of text that LLMs seem to like
+  to add but I have left its summary of the issue in the commit
+  message.
 
-Add a generic debug_dump() operation to struct ata_port_operations so LLDDs
-can dump their own controller debug state around error handling. For the
-standard AHCI driver, implement this hook to dump the AHCI controller
-registers through tracepoints.
+Daniel Palmer (2):
+  ata: pata_artop: read the ATP865 mode register through pci_iomap
+  sh: landisk_defconfig: enable PATA_ARTOP for the ATP865
 
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index 08ab56e955662..4e1a327d8e680 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
+ arch/sh/configs/landisk_defconfig |  2 +-
+ drivers/ata/pata_artop.c          | 12 ++++++++++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-[ ... ]
+-- 
+2.55.0
 
-> @@ -1457,6 +1463,49 @@ static int ahci_exec_polled_cmd(struct ata_port *a=
-p, int pmp,
->  	return 0;
->  }
-> =20
-> +#define AHCI_DUMP_FN(site)					\
-> +static void ahci_dump_##site(struct ata_link *link)		\
-> +{								\
-> +	struct ahci_host_priv *hpriv =3D link->ap->host->private_data; \
-> +	void __iomem *port_mmio =3D ahci_port_base(link->ap);	\
-> +	int i;							\
-> +								\
-> +	if (trace_ahci_global_##site##_enabled()) {		\
-> +		u32 global_regs[AHCI_TRACE_GLOBAL_REGS];	\
-> +								\
-> +		for (i =3D 0; i < AHCI_TRACE_GLOBAL_REGS; i++)	\
-> +			global_regs[i] =3D readl(hpriv->mmio + i * 4); \
-
-[Severity: High]
-Does blindly reading global registers beyond implemented standard offsets
-trigger bus errors on many ARM platforms?
-
-On embedded ARM platforms using libahci, the AHCI IP is mapped on an AXI/AHB
-bus which will commonly respond with a DECERR or SLVERR when accessing
-unmapped, reserved, or unimplemented vendor-specific offsets.
-
-This translates to an asynchronous SError or synchronous Data Abort excepti=
-on,
-causing a kernel panic when the tracepoint is enabled. Additionally, reading
-vendor-specific registers without knowing their semantics can trigger
-read-to-clear or state-altering side effects.
-
-> +								\
-> +		trace_ahci_global_##site(link, global_regs);	\
-> +	}							\
-> +								\
-> +	if (trace_ahci_port_##site##_enabled()) {		\
-> +		u32 port_regs[AHCI_TRACE_PORT_REGS];		\
-> +								\
-> +		for (i =3D 0; i < AHCI_TRACE_PORT_REGS; i++)	\
-> +			port_regs[i] =3D readl(port_mmio + i * 4); \
-
-[Severity: High]
-Similarly, can blindly reading port registers up to offset 0x7C risk
-accessing unimplemented offsets, causing SError or Data Abort on ARM?
-
-> +								\
-> +		trace_ahci_port_##site(link, port_regs);	\
-> +	}							\
-> +}
-
-[ ... ]
-
-> @@ -1530,6 +1581,8 @@ int ahci_do_softreset(struct ata_link *link, unsign=
-ed int *class,
->  	if (fbs_disabled)
->  		ahci_enable_fbs(ap);
-> =20
-> +	ahci_dump_softreset_done(link);
-> +
->  	return 0;
-> =20
->   fail:
->  	ata_link_err(link, "softreset failed (%s)\n", reason);
->  	return rc;
->  }
-
-[Severity: Low]
-Is the tracepoint ahci_dump_softreset_done() missing in the error path?
-
-If ahci_do_softreset() encounters an error and jumps to the fail label,
-ahci_dump_softreset_done() is not emitted. This results in unbalanced trace
-events and loses valuable hardware debug state right when it is most needed
-to debug the failure.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261016085657.3703=
-353-1-huangjunxian6@hisilicon.com?part=3D1
