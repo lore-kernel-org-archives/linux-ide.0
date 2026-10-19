@@ -1,104 +1,140 @@
-Received: from mta-sndfb-w02.mail.nifty.com (mta-sndfb-w02.mail.nifty.com [106.153.227.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18F4355CE8B;
-	Mon, 19 Oct 2026 14:15:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=106.153.227.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 372A14C8466
+	for <linux-ide@vger.kernel.org>; Mon, 19 Oct 2026 14:42:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792419359; cv=none; b=Bqas8tGPwoTGnpmZ1JL9aOvDC81TwQoKxMCEjNzOajL0tCUqd3Ju/XyMegNMV6BKayx2T8Ttze0TD6mj2nLDR01Q2QBNoJuYj2YPfOv1WTACKu9ljzx5ZvK66f23FtkLhkzCzHJm3AXPaCgu+d1cv9UdbuiJEpVl62s7uD3cSDg=
+	t=1792420968; cv=none; b=MvC/ORvMWfQHH1m6RToUKRjS5xYkiDegSHOZGSkqGso4IpE7WnWezycYVWHfQrCa4OSpQJHez2Rw+eeC6uOzZZg9CPWLyA/UbFnY4Uj9L8ILPzwOMgERmPgK5srDhAgytBLqEyrULvVOlOEpVK4kh4RrF/KdRfYmbuLoBUdIaC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792419359; c=relaxed/simple;
-	bh=hMmZNe8RzyTfEzTCQsPcmhGBU5InORCEXO0uFVWInZ0=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=upzy9Qunvl7dyO+H2gaRBrzVuRH0Xm781hKnS24I6SMgxgLqxIum/3Ya7BkMGdgEOM/H1b+lbtIWI837Tn6FF7FlgKrFSGvvicgFnBBiNqNIeY5kncoYaZBnAJWOg4JP8hDMoHdCWEm5ysJ2B169FyBpZKD5XK23LG/2UroivmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nifty.com; spf=pass smtp.mailfrom=nifty.com; dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b=gKEMjdwI; arc=none smtp.client-ip=106.153.227.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nifty.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nifty.com
+	s=arc-20240116; t=1792420968; c=relaxed/simple;
+	bh=mZ7643x/Z4PI4ESeigEe1MHez8qCrT/HOVPKxLMKkr4=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=hhPBeWlvaTZ/V30NCt30jXeRBOfiRFE8wLvhYkSDCK86EmAuKOiVS/QJCTUpWSVxqC4IV8ZS3n8p6r7jcxcXGDraGRjzzPL8FloXqBHyvo9UAz170JgqAMrj8yEyREZgfSqS9otpp3cgLV+27jBRJXkyFmzboSjGZVrLAgNo0Z0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O2oeuo42; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="gKEMjdwI"
-Received: from sakura.ysato.name by mta-snd-w07.mail.nifty.com with ESMTP
-          id <20261019140751810.DRGH.18412.sakura.ysato.name@nifty.com>;
-          Mon, 19 Oct 2026 23:07:51 +0900
-Received: from SIOS1075.ysato.ml (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 2EDD11C0162;
-	Mon, 19 Oct 2026 23:07:51 +0900 (JST)
-Date: Mon, 19 Oct 2026 23:07:50 +0900
-Message-ID: <87qzhlss09.wl-yoshinori.sato@nifty.com>
-From: yoshinori.sato@nifty.com
-To: Daniel Palmer <daniel@0x0f.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-	dalias@libc.org,
-	dlemoal@kernel.org,
-	cassel@kernel.org,
-	linux-sh@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	fuchsfl@gmail.com
-Subject: Re: [PATCH 0/2] sh: Fix IDE on landisk
-In-Reply-To: <CAFr9PXn4henL=rQ3n73H7Mjwd7v6XX6Jt63h=Sywu-boOPggKw@mail.gmail.com>
-References: <20261017041419.311921-1-daniel@0x0f.com>
-	<4cdb2939264e0b7d767f44289fddffd40fddf504.camel@physik.fu-berlin.de>
-	<CAMuHMdXmZash+8PmfSVrT=Wwob-mkq0x4umyRgX2-yikV9kaVA@mail.gmail.com>
-	<CAFr9PXn4henL=rQ3n73H7Mjwd7v6XX6Jt63h=Sywu-boOPggKw@mail.gmail.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?ISO-8859-4?Q?Goj=F2?=) APEL-LB/10.8 EasyPG/1.0.0
- Emacs/30.1 (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O2oeuo42"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F26ED1F000C4;
+	Mon, 19 Oct 2026 14:42:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792420967;
+	bh=eByBzMu2ecb99t4vJpINwU41NVCzvfw/b/0GO+fnzZA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=O2oeuo420HdHPL11D0YAlfeWdVpcajSm8QIo4LUAH1m2Uyz5Abxf6Dg+m/+ikHcHd
+	 v1kTdGmtIpIlEX0qgNNF8Pb04hOIAT2HemFiE3t5NXNS2orduyY1o0YShlK6cqyW9c
+	 +YSjFWsLOBlpR+/ivMJBki4iDniDe/gmbazo6QobL6rBeK1bG1t4jxbHaclLSEOhfw
+	 NHncvbF3pkImlCEh5yQ9xktqrFinXFeRx1zU3zT6Nznd4GBOu9ilBoH+N07k6Ua8DY
+	 woBiwRz9TpiqTcC6P/xJGCPRl38f/VdyullyOdM8bVcx1H7v4AbVYFUctRuRbObMcQ
+	 qLo8WB265PCiw==
+Message-ID: <sashiko-outbox-177477@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH AUTOSEL 6.18-5.10] ata: libata-sff: don't busy-wait for
+ PIO data-in command completion
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sasha Levin" <sashal@kernel.org>
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
+In-Reply-To: <20261019135441.1420968-182-sashal@kernel.org>
+References: <20261019135441.1420968-1-sashal@kernel.org>
+ <20261019135441.1420968-182-sashal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 19 Oct 2026 14:42:45 +0000
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com; s=default-1th84yt82rvi; t=1792418871;
- bh=ZWP0POxKL7WL6Fwv13eX+VxN5lFxqWs+Vq0GdC6vMtI=;
- h=Date:From:To:Cc:Subject:In-Reply-To;
- b=gKEMjdwItn26U6iUKBgRzEbfsE6Y87nLj+LVlP75McMlAn9s6dy98hftazfUEsmNAoM1MiAU
- KSZGEgeBO6baUtXxlbBZB/LP1AqvXPxSipmlQt2meCsq2UURf/yy814YSmTJ/46Zb8iodub2tp
- 6vhlZt+6RrjH6GpgccjMVGj0jmqe4sPysSTO1nRjnklrT5sRsxunM2ILB2B0CFqaZLSaaWlsB9
- mSznJmSH73zoGQMjIGni/iv9aX0gOnxu7Dw/KZV4DOdxiX1BQ4ZCR1uCcm2rUva5Lj/Lb9DQ6p
- sksRZV8iOr1lEakb4hWsQbG+74ayKe1j2ukDG5liAuRS6hrA==
 
-On Mon, 19 Oct 2026 08:04:46 +0900,
-Daniel Palmer wrote:
-> 
-> Hi Geert,
-> 
-> On Sun, 18 Oct 2026 at 23:48, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-> > > I hope Geert can test and review your patches and I'll pick them up
-> > > with his Reviewed-by and Tested-by signatures.
-> >
-> > Sorry, I must have different hardware, as mine doesn't have an
-> > ATP865 PCI device:
-> >
-> >     # lspci
-> >     00:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
-> > RTL-8139/8139C/8139C+ (rev 20)
-> >     00:02.0 USB Controller: NEC Corporation USB (rev 43)
-> >     00:02.1 USB Controller: NEC Corporation USB (rev 43)
-> >     00:02.2 USB Controller: NEC Corporation USB 2.0 (rev 04)
-> >
-> > My CF rootfs uses pata_platform, which is enabled in my working .config.
-> > landisk_defconfig lacks CONFIG_PATA_PLATFORM=y, so it hangs during
-> > boot. After enabling that, the boot gets further, but it still hangs:
-> 
-> I guess you have something like the USL-5P that uses the SH's onboard
-> CF interface.
-> Since Florian has confirmed their hardware has the PCI IDE controller
-> like mine and reviewed the change I think we're good.
-> 
-> Daniel
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] ata: libata-sff: race between ata_sff_hsm_move() and ata_sff_flush=
+_pio_task()
+--
 
-Yes.
-LANDISK and USL-5P have almost the same hardware configuration,
-but the only difference is the IDE part.
-This issue needs to be confirmed with LANDISK hardware.
+commit ffe3d0726a492588a046ac4c8f5eafd55e0c371b
+Author: Richard Weinberger <richard@nod.at>
 
-The LANDISK that I have cannot be used immediately, but here is qemu
-that can emulate LANDISK hardware.
-https://gitlab.com/yoshinori.sato/qemu/-/tree/landisk?ref_type=heads
-This will allow you to check if it is not broken.
+ata: libata-sff: don't busy-wait for PIO data-in command completion
 
--- 
-Yosinori Sato
+This commit bounds the inline busy-wait for PIO data-in completion in
+ata_sff_hsm_move() to ~100us. If the device remains busy after draining the
+final data block, it sets ATA_TFLAG_POLLING and queues ata_sff_pio_task() to
+poll for completion in process context.
+
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 1e2a2c33cdc80..416e1239ed56d 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -1114,8 +1114,14 @@ int ata_sff_hsm_move(struct ata_port *ap, struct a=
+ta_queued_cmd *qc,
+> =20
+>  			if (ap->hsm_task_state =3D=3D HSM_ST_LAST &&
+>  			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
+> -				/* all data read */
+> -				status =3D ata_wait_idle(ap);
+> +				status =3D ata_sff_busy_wait(ap,
+> +						ATA_BUSY | ATA_DRQ, 10);
+> +				if (status !=3D 0xff &&
+> +				    (status & (ATA_BUSY | ATA_DRQ))) {
+> +					qc->tf.flags |=3D ATA_TFLAG_POLLING;
+> +					ata_sff_queue_pio_task(link, 0);
+> +					return 0;
+> +				}
+>  				goto fsm_start;
+>  			}
+>  		}
+
+[Severity: High]
+Can queuing ap->sff_pio_task from the interrupt handler here race with
+ata_sff_flush_pio_task() during timeout recovery and trigger a BUG_ON()?
+
+Previously, ap->sff_pio_task was only initially queued at command issue time
+and re-queued by ata_sff_pio_task() itself, so cancel_delayed_work_sync() in
+ata_sff_flush_pio_task() guaranteed the work item would not be re-armed
+before ap->hsm_task_state was reset to HSM_ST_IDLE:
+
+drivers/ata/libata-sff.c:ata_sff_flush_pio_task() {
+	...
+	cancel_delayed_work_sync(&ap->sff_pio_task);
+
+	spin_lock_irq(ap->lock);
+	ap->hsm_task_state =3D HSM_ST_IDLE;
+	spin_unlock_irq(ap->lock);
+
+	ap->sff_pio_task_link =3D NULL;
+}
+
+When an interrupt-driven PIO data-in command times out (via
+ata_scsi_cmd_error_handler() -> ata_sff_flush_pio_task() or
+ata_exec_internal_sg() -> ata_sff_flush_pio_task()), ap->sff_pio_task is not
+yet pending, so cancel_delayed_work_sync() returns immediately.
+
+If the final data block interrupt arrives on another CPU before
+ata_sff_flush_pio_task() acquires ap->lock:
+
+CPU0                                  CPU1 (IRQ)
+ata_sff_flush_pio_task()
+  cancel_delayed_work_sync()
+                                      __ata_sff_port_intr()
+                                        ata_sff_hsm_move()
+                                          ata_pio_sectors(qc)
+                                          qc->tf.flags |=3D ATA_TFLAG_POLLI=
+NG;
+                                          ata_sff_queue_pio_task(link, 0);
+  spin_lock_irq(ap->lock);
+  ap->hsm_task_state =3D HSM_ST_IDLE;
+  spin_unlock_irq(ap->lock);
+  ap->sff_pio_task_link =3D NULL;
+
+When ata_sff_pio_task() then executes on ata_sff_wq, wouldn't it hit
+BUG_ON(ap->sff_pio_task_link =3D=3D NULL), or enter fsm_start with
+ap->hsm_task_state =3D=3D HSM_ST_IDLE while error handling is active?
+
+[ ... ]
+
+>
+endasi
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019135441.1420=
+968-182-sashal@kernel.org?part=3D1
