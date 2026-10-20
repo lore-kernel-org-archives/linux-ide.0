@@ -1,75 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792529008;
-	b=PnnbUFmVkmIAw2y5FMq09FxgiHIrvowGQZZDBxXEongMXVZsncv4Y0Z5qg0lhw/yiiH4
-	 k2b2UgptgJjG0eUxQWEBJD/3jCCkVveZrouSPx3mtuKooREmAm+DD0/td7lW77zs1aU0t
-	 Bhh+OAJ705SA/ABiXJ1zLR3DECpanMPeba+enMHJxOZpY2n2nWUGsg+5/dZ7vcQtRTbBo
-	 29k5EbmLb1goCSpG9nWquctWVkWlPg0ZyRocXMzdrvsiU0oBb6Y9yuGhnf1qCuUUuSMIH
-	 7EAW87a7BMz3xI4U368Nv1+9ElJswcUHMq6Za2i4MrC8spEjvNoB/mM0mPp3Mlt3HTw==
+	t=1792530566;
+	b=e7Hh/JpkwChIObCRlzbOF696bjTwZyX+oCG7RJu0DUjicywQgUa4gJuXWfqniXPL1uN/
+	 ///HHBSbhD3SiWvEI1W47/x/0+KNiUX5hnUccAUcBBK9roJMZaA0lAvBf+OY7uuAEjNvS
+	 /qFED39l25z/HYQwicfGH3uBs6aMRqKlUPO7ZzEWjKAU7tlvjFLpN5vFYHj6OIRRl/Luv
+	 F4BJPTZaH6RZ8RmEYgnmLMpbYiZLJRChbOWvRjeuy/1nB2NuqGnHSb3Kkt+KnOLz4wg7b
+	 nrNtVpIwGIsSTHiSi9EiY68XzLBWgEIS/645YHA3gjH0Cygpw77uK4qHoiS4VcgJNzQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792529008;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792530566;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=T7BOKY6cJYNPNM9NANNC0B2ipfLfWlNxZfKW696+N+s=;
-	b=SHwCZ0JhwRUVlXXDbVJB50UQ5ub8JUYeemej3Yrc8HZc9wjqpUni2S8ahYgLDymY4DKi
-	 kZQGNLBHRPQgJTOUqa+bd38nNuxoIYWMr89idzptRMs0Y9ylOroL2eon3d3N4vCjhief7
-	 EQE50Oh6JiPOmc9sSvyqbtF/4zdMBNwnw7LMPNwU9kbeA+9tXlSFk30Vsyxi2r5SscpyL
-	 5OHfWVlmKBQsUTX1I8cWWkp2AwhnObYUJhdsSp3IGp6PzBI+VaaLZEZ/+rlbtObji0Ohe
-	 qBs5z/Tg1CWRuicJlH9wdTMYJKW+lPUg0vsiQU8l8u8wx6nfb5HT1crtvRHMv3Mna0g==
+	bh=PxxCaJIqknia6ac+c48SkpD1XjTsEIo4lgcRMWH37Yk=;
+	b=Qf6S4sIH/QEmf7ijJGdz0noZdJhGLJEsTyiB28KWY4e4sPNGc6mkD+FYDFi8RjRQhTOn
+	 vWGidtyb34ip3FFGc7x5+tKzATk9oA0dhR8DoazOVu9cbOS3WSJXESXmhtWxvjT2SmCwn
+	 m3iZt3Cuzif07jlPCMavTdHrKj6/uVJ9zR+KclATCQJDxFfMRO95fgqdqjhipN/Q/7+up
+	 PCghJ2ETRqxaf1B1XPluUvKeCyAcoxgud3kc9fKw4igpitTBigMp/mA3SYpb5lOcCUK3C
+	 PX3KxOj+h+/My3KljA3vEAFpzqVeRCIuXe3nRMJfGXusbDbz63mF6VgmxfHA1Sjtyxw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AiVewjZA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AgObrhSV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0B16606A31D;
-	Tue, 20 Oct 2026 20:43:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BFAF606A319;
+	Tue, 20 Oct 2026 21:09:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AiVewjZA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D68371F000C9;
-	Tue, 20 Oct 2026 20:43:21 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AgObrhSV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A5531F000C9;
+	Tue, 20 Oct 2026 21:09:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792529007;
-	bh=T7BOKY6cJYNPNM9NANNC0B2ipfLfWlNxZfKW696+N+s=;
+	s=k20260515; t=1792530566;
+	bh=PxxCaJIqknia6ac+c48SkpD1XjTsEIo4lgcRMWH37Yk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=AiVewjZAtL5zaicHA/GJW/2iGx6TcPYqWw5PFYTndJROPdl0xJD1Hp8SiuZsGvWfq
-	 7PfcOihd0FTtzrwD1hBbrv3ICm5vt0vOTHDVBUqKDu2K7FKnlhcdaeMKsweqP0WZwv
-	 cNql9vNSWLQFdxYOIW2v/RAqlXHhh0VAmclYzY0wB1YlCPv8dXk3JFOnlgENXRviYV
-	 qsXXyZ+YsHrSURnzeM2PBtf03K+Jd/NaOQunDvG6PCIxoiJQKSUgbt0qi2b4QW+k1I
-	 B0mMus6bh6qHdxqW5I3wA2ce6aKEAc5nZK1ikQScQpG5LHbjI5cYjVsAElqVrpEbBx
-	 MCUV1ClhHCEvw==
+	b=AgObrhSVaJxNZ80VKxl2eRuQF9ugO8W4sZOnTK7scklsSWN/U+M/sTZu2gEZoKO2X
+	 rVXXtEie5oznqTMl9DK17yFTRYCXBO1YxXVYQkiafLVoHs0QHFpFouppgky8hXqKh4
+	 DgiNSt3W2zWMlkj22DrzMzjfxHuOB0qPjJxlEnKoZcDOYIGAi9nMTN5LHQa3FViIfp
+	 GV8dTcgQA4+ONmfh9EvHgobPHWmow/2dWwTo5fQOlexfCU0td0NlBTQxu5wmiGrYSt
+	 TFJkgfHlmULKfx1L+GU6tYjHWO+OHxxkoqzlZ6zGfQFYLEKdjwMmOLy/lWh1EfN4j7
+	 Df76/YZ0nYLmA==
 From: Imre Kaloz <kaloz@kernel.org>
-To: Jakub Kicinski <kuba@kernel.org>
+To: Lee Jones <lee@kernel.org>
 Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
 	linux-mips@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Lee Jones <lee@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jirislaby@kernel.org>,
 	mfd@lists.linux.dev,
-	linux-serial@vger.kernel.org,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	linux-rtc@vger.kernel.org,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	netdev@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-ide@vger.kernel.org,
-	Pavel Machek <pavel@kernel.org>,
-	linux-leds@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 00/53] MIPS: SGI-IP27: add support for the IP35 (Bedrock hub) machines
-Date: Tue, 20 Oct 2026 22:42:13 +0200
-Message-ID: <20261020204214.28625-1-kaloz@kernel.org>
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 46/53] mfd: ioc3: Add IOC4 ATA/ATAPI cell
+Date: Tue, 20 Oct 2026 23:08:17 +0200
+Message-ID: <20261020210818.27215-1-kaloz@kernel.org>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261020110619.12774a1c@kernel.org>
-References: <cover.1791890466.git.kaloz@kernel.org> <20261020110619.12774a1c@kernel.org>
+In-Reply-To: <179198336665.839288.12369537253671309518@kernel.org>
+References: <cover.1791890466.git.kaloz@kernel.org> <754bae380c938b63eeaa87e3dccf9755314675ed.1791890466.git.kaloz@kernel.org> <179198336665.839288.12369537253671309518@kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -81,27 +63,23 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Tue, 20 Oct 2026 11:06:19 -0700 Jakub Kicinski wrote:
-> Why do we need support for machines discontinued 20+ years ago?
 
-For netdev the question is smaller than the series: patches 25 and 38,
-44 lines in ioc3-eth, a driver that is already in tree for the same
-part on IP27 and IP30. Patch 25 is a no-op on both of those (the bit it
-tests is always set behind a classic Bridge); patch 38 is a MAC-address
-fallback. I should have said in the cover that the series is meant to go
-through the MIPS tree and that I'm only after an Ack for those two --
-sorry for the noise on your queue.
+On Tue, 20 Oct 2026, Lee Jones wrote:
 
-As for why at all: same reason IP27, IP30 and IP32 are in tree. The
-hardware is in use, Thomas maintains the platform, and people run and
-test it; "discontinued" has never been the removal criterion, lack of
-maintainers has. IP35 is IP27's direct successor on the same
-Hub/XTalk/Bridge architecture with the same IOC3, plus its successor
-IOC4, so most of the series is teaching existing code about one more
-hub generation. And these boxes still earn their keep as a stress case
-for arch and core code -- e.g. the kmem_cache_destroy() race that just
-turned up on my Ultra 45:
-https://lore.kernel.org/all/atDCYwNfKW3m6YXh@thinkstation/
+> > +	{
+> > +		.name = "pata_sgiioc4",
+> > +		.resources = ioc4_ata_resources,
+> > +		.num_resources = ARRAY_SIZE(ioc4_ata_resources),
+> > +	},
+>
+> Shouldn't this have been added in Patch 31?
 
+It should have, yes. In v3 the ATA cell, its resources and the
+level-triggered other_ir bit move into the patch that adds the IOC4
+cells (part of the split of 31 I described in my other reply) and
+this one goes away.
+
+
+Thanks for catching it,
 
 Imre
