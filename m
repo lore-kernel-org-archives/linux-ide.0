@@ -1,55 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.19.144.207
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792601765;
-	b=i5vB3pkJ6xPWuwq2ccWoktgu4f2LNOJIba/qZGnY8/4uelaygQpRE9DQNCpbWzjO7PWF
-	 DANCE8Q19WBFT1GFRNik3aauS7mBV8zsu03EZ5hZ/ti3y0kdIRt9yUotoKHb37pr8ZjGr
-	 FRuZHwTj2AZ/LlVO/X+Z2mkKkNXCcaIF/8ySo1OYAbmGCYbAiUbSYsjX90rYjkSOYaT2O
-	 /KxwuGj/5upbjHJdcbr9HqLWZkqbD9+x/G+dbRH9IUNo5QpUCN6OkvcqFcsp3+ihgj8j2
-	 jKdDDscKDGsWeFm2VjB4GZxpP99daCH45SyTW+wIdkLMrcF0QS0gMeRuJBof0e5HULA==
+	t=1792601766;
+	b=qWdPA0DIO9Pb2rbvir4q9qUacU7nOXQLgibCsAq1oad5a55qkrR6qRnKdHaieQgnGOwv
+	 3hZlyOP5NlHvzgwQ3LTEjhsGqmFcv0clag2K7XDkBi5V4E4+4PVOWQazuNxO1o69tnWnx
+	 F4gfX3DXGPoCdQSRtItrtQKSq5NL8DgazFjlExjuMfTqXmyFjzjuQEaGqjlIb3ieIdukL
+	 r9oFnp5eDr4ge0fEi9a4PVYJfMFpOe0PRtzmrG0oSFs2kNm42FYwOT0x0Y6oyyH4c4IBJ
+	 U5SG47pShLUXkp3AAEGXPGI6aBDtxA6W+1haFXYk/fX9+IpDKC1jv2S65SXjJ2VEIIg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792601765;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792601766;
 	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:From:To:Cc:
 	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=1MIbl2zx8FaPW7oX7ST7fbgJ9gFOgJZeuRxXV0E1qzg=;
-	b=4Xx7Zpj49sxPRvI4N4TYmoX1SvbVQCl9v7Qun5Ega80aXGkQbEXV2WaMlUy12V75rl4Y
-	 mQClB5pJkzUHkKj8rUwtz2eirsjNmv6tNJTyEMUTAhsXqZt4Zgvc52MHQx8xqkw9pnUY/
-	 3CHR1SkJ3cAaxhLLIwXUWkESjbtHQRkmuud6+HSFKTxttaYTtLbI155MZFMFgoiBpv2Mv
-	 tkMt4nul/Khen/7c7hi8zXavAyl7sxqB11EcGgEfdEIWpgP6es4TnRdM1bJsreLWj2Wl2
-	 2AKYpjYe8+G8Z+XYAJehwlgbDu9+DLPBrumRpVoefB4DEy/MBmQQmyD5A4x8nbSQdTg==
+	bh=aNnXVvaXvyleKG3InyKA6aUQiFIeS59wNHeFdWZvb9Q=;
+	b=W+E8W5fXWGFgnku0Kbj7KdBvIwO2GhUk54C/K3hsRGLnNuYHWrcNtca3S4mDg77doV8B
+	 gyNrSF52tZG2SXFiPguF6EcpH2s8Ad15BciHafJNyaRD4BPR44JlFxeXl0Vwk5KL82Cbx
+	 QQUvj+MIafuwBjSVUI9KXseAe6UNZxWdDMsSPXYHm9xF9khbi0of5repC3QOSuEGx3dPz
+	 rPP/SozyuSdIXGWw6kFXILEHYR96Dfa3v+Vkrkl6Ur4ED2yEBjPMqvrLLlMn6oAbU0mCc
+	 nX6PlQKh/bDIW0POsMw38dOskkdOxfohZkuNaSeB1e2F54DZawbomb+bBRe7mU2WjyQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=SDsQZim6;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=At57Jxgb;
 	arc=none smtp.remote-ip=192.19.144.207
-Received: from relay.smtp-ext.broadcom.com (lpdvsmtp12.broadcom.com [192.19.144.207])
+Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.207])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D22FF606A32F;
-	Wed, 21 Oct 2026 16:56:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D22FF606A32F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA39A60A2619;
+	Wed, 21 Oct 2026 16:56:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AA39A60A2619
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=SDsQZim6
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=At57Jxgb
 Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 35BFBC0003DC;
-	Wed, 21 Oct 2026 09:55:58 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 35BFBC0003DC
+	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 9033AC0003E1;
+	Wed, 21 Oct 2026 09:55:59 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 9033AC0003E1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-	s=dkimrelay; t=1792601758;
-	bh=WWjkyOBFN7FqfrdBo4o+V7vfSvlHTr92CFwc0m91VV0=;
+	s=dkimrelay; t=1792601759;
+	bh=zhQqLH9arwOmH4pppSryU99pgXQmSkM3a2f7ulKCCWQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=SDsQZim6+MnsfJZKgk7w7tCJrUAFEupaHPcxB6KbO1bpUap51qwCGp2EitwS4pB4W
-	 jXAbBk05odGBZYsjP0Ta5W4azRxD8EIQUi4wIoyGcIJoFsomZMsO0nIs8uqiwAN2yi
-	 oIe7iRM3SmWgXCjH2d9PKOU+t5zHQYYgO07vOTwE=
+	b=At57JxgbZr194xW3uu4EA44toz1uKhthTscAzvL5yhkmzVkymHdDjB7a7lF3vlEYb
+	 XX4Xex9+e4zbdmoWikoA+uLyS1TnxiIXEVB6Xl4MMTbCwQrieWesh5yne0nTs1oSm0
+	 Owmfc7I+xG0ZE2jougL3hoT7CRj1BIUvTnKmPcSE=
 Received: from fainelli-desktop.igp.broadcom.net (fainelli-desktop.dhcp.broadcom.net [10.67.48.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id E2202A88;
-	Wed, 21 Oct 2026 09:55:57 -0700 (PDT)
+	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 28AC4A83;
+	Wed, 21 Oct 2026 09:55:59 -0700 (PDT)
 From: Florian Fainelli <florian.fainelli@broadcom.com>
 To: linux-arm-kernel@lists.infradead.org
 Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
@@ -71,9 +71,9 @@ Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
 	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
 	linux-kernel@vger.kernel.org (open list),
 	linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK)
-Subject: [PATCH 4/6] ARM: dts: broadcom: Add the NSP SATA IDM registers
-Date: Wed, 21 Oct 2026 09:55:51 -0700
-Message-ID: <20261021165555.652102-5-florian.fainelli@broadcom.com>
+Subject: [PATCH 6/6] ARM: dts: broadcom: Use noncoherent SATA DMA on BCM958625HR
+Date: Wed, 21 Oct 2026 09:55:55 -0700
+Message-ID: <20261021165555.652102-9-florian.fainelli@broadcom.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261021165555.652102-1-florian.fainelli@broadcom.com>
 References: <20261021165555.652102-1-florian.fainelli@broadcom.com>
@@ -88,44 +88,36 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The NSP SATA description omits the IDM block at 0x1811e000, leaving the
-interface clock and core reset dependent on firmware initialization.
+The AHCI controller on BCM958625HR fails with the dma-coherent property
+inherited from bcm-nsp.dtsi. Soft reset times out waiting for the first
+FIS command, subsequent engine resets fail, and the disk is not detected.
 
-Supply the IDM as the third controller register region so ahci_brcm can
-perform the downstream clock/reset sequence. Extend the AXI bus range to
-cover the complete IDM aperture.
+AHCI allocates its command tables and received-FIS buffers with the DMA
+API. Declaring the controller coherent bypasses the cache handling that
+these buffers require on this board. Removing the property restores
+hard disk detection and operation, as confirmed with a diagnostic DTB
+that changed only this property.
 
-Fixes: 8dbcad020f2e ("ARM: dts: nsp: Add sata device tree entry")
+Use noncoherent DMA for SATA on BCM958625HR, matching the downstream SDK.
+
+Fixes: 56e2ff0346a3 ("ARM: dts: NSP: Add dma-coherent to relevant DT entries")
 Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
 ---
- arch/arm/boot/dts/broadcom/bcm-nsp.dtsi | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ arch/arm/boot/dts/broadcom/bcm958625hr.dts | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi b/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
-index 6a4482c93167..9dbcd810e27b 100644
---- a/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
-+++ b/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
-@@ -168,7 +168,7 @@ periph_clk: periph_clk {
+diff --git a/arch/arm/boot/dts/broadcom/bcm958625hr.dts b/arch/arm/boot/dts/broadcom/bcm958625hr.dts
+index 3e86f3c2593a..f6717ca76aef 100644
+--- a/arch/arm/boot/dts/broadcom/bcm958625hr.dts
++++ b/arch/arm/boot/dts/broadcom/bcm958625hr.dts
+@@ -183,6 +183,7 @@ partition@700000 {
+ };
  
- 	axi: axi@18000000 {
- 		compatible = "simple-bus";
--		ranges = <0x00000000 0x18000000 0x0011c40c>;
-+		ranges = <0x00000000 0x18000000 0x0011f000>;
- 		#address-cells = <1>;
- 		#size-cells = <1>;
+ &sata {
++	/delete-property/ dma-coherent;
+ 	status = "okay";
+ };
  
-@@ -538,8 +538,9 @@ sata_phy1: sata-phy@1 {
- 
- 		sata: sata@41000 {
- 			compatible = "brcm,bcm-nsp-ahci";
--			reg-names = "ahci", "top-ctrl";
--			reg = <0x41000 0x1000>, <0x40020 0x1c>;
-+			reg-names = "ahci", "top-ctrl", "idm";
-+			reg = <0x41000 0x1000>, <0x40020 0x1c>,
-+			      <0x11e000 0x1000>;
- 			interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
- 			#address-cells = <1>;
- 			#size-cells = <0>;
 -- 
 2.53.0
 
