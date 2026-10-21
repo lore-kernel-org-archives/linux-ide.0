@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.19.144.205
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.19.144.207
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792601759;
-	b=WC/dpreCwIkPZID8OA+xq/2UrKiu04B3YltK+KRKmflQFEwOQKmmb5ZCGQiiFuAZ9UZw
-	 o61biGWVc/YBZ90f5lvAuxCXCSVKOH1Bs8oT1SC3S86WErk0UsLsumqZF1QEhkk7tLtc0
-	 /KjLJNPUzgoF7IDY7/1tcS5t3Exi87aGVkkeLt1MJsq03Z0oovC9ZEjcLJHyRCnZZoVd+
-	 D+P2Dli2Zdpab91nFjxWDVuiKJ5GpXQwxgbxKASxKEPHOw1UT6UGagxzIVE3Ijp6TnKPf
-	 S20HjE+o1gAx1nPEADG1fqL8JaeKIbQJGGPXtnDjimiQ0EUY99aLBlzJKqs/UK0V7vA==
+	t=1792601765;
+	b=i5vB3pkJ6xPWuwq2ccWoktgu4f2LNOJIba/qZGnY8/4uelaygQpRE9DQNCpbWzjO7PWF
+	 DANCE8Q19WBFT1GFRNik3aauS7mBV8zsu03EZ5hZ/ti3y0kdIRt9yUotoKHb37pr8ZjGr
+	 FRuZHwTj2AZ/LlVO/X+Z2mkKkNXCcaIF/8ySo1OYAbmGCYbAiUbSYsjX90rYjkSOYaT2O
+	 /KxwuGj/5upbjHJdcbr9HqLWZkqbD9+x/G+dbRH9IUNo5QpUCN6OkvcqFcsp3+ihgj8j2
+	 jKdDDscKDGsWeFm2VjB4GZxpP99daCH45SyTW+wIdkLMrcF0QS0gMeRuJBof0e5HULA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792601759;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792601765;
 	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:From:To:Cc:
 	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=mvtMFeEgqCOciHeQyrJ9AYtTF4EED76l0h+Ctv+GHTw=;
-	b=kDyRv2hst9ao6Hd2+MI8LNvIwcNOZytErrqQZG4Hj9QNzcweos83LXTHHvUTSD50G5TS
-	 4guAyA5M2qhVHfkVWTe0ffn8YQU6ENgpVMy2G3SJefZyBbvuJfzuNkRL6UyyXZwKCiRcL
-	 Oy65/d2HfeDjBT/u+FcZrzeW4xm/Ibt5JeeLmiiMyYF5aW3POuF4hVv29BACp5Q/d/eSO
-	 DgldbtIWHKppsooYdoVDFL/lG5PQhxpmJHMURA8TQ/mFtirhyD4HLCJHfw4Z4Oky4bCuZ
-	 LPaNiK0xMCztUjsiBxt6+ZxNbEyYHcfOyLz6poVL+cBygnMquyg6U3RTiVfz5RtgT+A==
+	bh=1MIbl2zx8FaPW7oX7ST7fbgJ9gFOgJZeuRxXV0E1qzg=;
+	b=4Xx7Zpj49sxPRvI4N4TYmoX1SvbVQCl9v7Qun5Ega80aXGkQbEXV2WaMlUy12V75rl4Y
+	 mQClB5pJkzUHkKj8rUwtz2eirsjNmv6tNJTyEMUTAhsXqZt4Zgvc52MHQx8xqkw9pnUY/
+	 3CHR1SkJ3cAaxhLLIwXUWkESjbtHQRkmuud6+HSFKTxttaYTtLbI155MZFMFgoiBpv2Mv
+	 tkMt4nul/Khen/7c7hi8zXavAyl7sxqB11EcGgEfdEIWpgP6es4TnRdM1bJsreLWj2Wl2
+	 2AKYpjYe8+G8Z+XYAJehwlgbDu9+DLPBrumRpVoefB4DEy/MBmQQmyD5A4x8nbSQdTg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=Actv1RdJ;
-	arc=none smtp.remote-ip=192.19.144.205
-Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.205])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=SDsQZim6;
+	arc=none smtp.remote-ip=192.19.144.207
+Received: from relay.smtp-ext.broadcom.com (lpdvsmtp12.broadcom.com [192.19.144.207])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA3E3606A323;
-	Wed, 21 Oct 2026 16:55:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DA3E3606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D22FF606A32F;
+	Wed, 21 Oct 2026 16:56:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D22FF606A32F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=Actv1RdJ
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=SDsQZim6
 Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 1652FC0003DD;
+	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 35BFBC0003DC;
 	Wed, 21 Oct 2026 09:55:58 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 1652FC0003DD
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 35BFBC0003DC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
 	s=dkimrelay; t=1792601758;
-	bh=EM7n+tDGenpZu2JqhvLLbNFJk9ot1h+4BcfzddABqHw=;
+	bh=WWjkyOBFN7FqfrdBo4o+V7vfSvlHTr92CFwc0m91VV0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Actv1RdJpjRCNiiBBaasas7Mhx36iY4X4bsr5dGbH5AV3xIthtxhFcp4KASp1WZHC
-	 llrjuGI+cSBnMDoo7pXfj0cjVP9rfSpd2rdwBZMf1NET5tg903IcG/OK8IBtETVbGR
-	 +I1KJD4/1kWmUTctfVEPYWftJf65N1cy/H4BQsA4=
+	b=SDsQZim6+MnsfJZKgk7w7tCJrUAFEupaHPcxB6KbO1bpUap51qwCGp2EitwS4pB4W
+	 jXAbBk05odGBZYsjP0Ta5W4azRxD8EIQUi4wIoyGcIJoFsomZMsO0nIs8uqiwAN2yi
+	 oIe7iRM3SmWgXCjH2d9PKOU+t5zHQYYgO07vOTwE=
 Received: from fainelli-desktop.igp.broadcom.net (fainelli-desktop.dhcp.broadcom.net [10.67.48.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id A1EE4A83;
+	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id E2202A88;
 	Wed, 21 Oct 2026 09:55:57 -0700 (PDT)
 From: Florian Fainelli <florian.fainelli@broadcom.com>
 To: linux-arm-kernel@lists.infradead.org
@@ -71,9 +71,9 @@ Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
 	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
 	linux-kernel@vger.kernel.org (open list),
 	linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK)
-Subject: [PATCH 3/6] ata: ahci_brcm: Initialize the NSP interface clock and reset
-Date: Wed, 21 Oct 2026 09:55:50 -0700
-Message-ID: <20261021165555.652102-4-florian.fainelli@broadcom.com>
+Subject: [PATCH 4/6] ARM: dts: broadcom: Add the NSP SATA IDM registers
+Date: Wed, 21 Oct 2026 09:55:51 -0700
+Message-ID: <20261021165555.652102-5-florian.fainelli@broadcom.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261021165555.652102-1-florian.fainelli@broadcom.com>
 References: <20261021165555.652102-1-florian.fainelli@broadcom.com>
@@ -88,105 +88,44 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The NSP probe path assumes firmware has enabled the SATA IDM interface
-clock and released the core reset. The downstream iProc config_AHCI()
-sequence explicitly performs both operations before accessing AHCI.
-Without that setup, a cold boot can access an inactive controller.
+The NSP SATA description omits the IDM block at 0x1811e000, leaving the
+interface clock and core reset dependent on firmware initialization.
 
-Map the optional NSP IDM register region and enable the interface clock
-before releasing reset, retaining the downstream settling intervals.
-Perform the sequence at probe and resume before reconfiguring SATA.
+Supply the IDM as the third controller register region so ahci_brcm can
+perform the downstream clock/reset sequence. Extend the AXI bus range to
+cover the complete IDM aperture.
 
-Keep the resource optional so older device trees continue to rely on
-firmware initialization.
-
-Fixes: 3ee2e6dcaa35 ("ata: ahci_brcm: Add support for Broadcom NSP SoC")
+Fixes: 8dbcad020f2e ("ARM: dts: nsp: Add sata device tree entry")
 Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
 ---
- drivers/ata/ahci_brcm.c | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ arch/arm/boot/dts/broadcom/bcm-nsp.dtsi | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 29be74fedcf0..2ed60806b671 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -6,7 +6,9 @@
-  */
+diff --git a/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi b/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
+index 6a4482c93167..9dbcd810e27b 100644
+--- a/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
++++ b/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
+@@ -168,7 +168,7 @@ periph_clk: periph_clk {
  
- #include <linux/ahci_platform.h>
-+#include <linux/bcma/bcma_regs.h>
- #include <linux/compiler.h>
-+#include <linux/delay.h>
- #include <linux/device.h>
- #include <linux/init.h>
- #include <linux/interrupt.h>
-@@ -83,6 +85,7 @@ enum brcm_ahci_quirks {
- struct brcm_ahci_priv {
- 	struct device *dev;
- 	void __iomem *top_ctrl;
-+	void __iomem *idm;
- 	u32 port_mask;
- 	u32 quirks;
- 	enum brcm_ahci_version version;
-@@ -230,6 +233,25 @@ static u32 brcm_ahci_get_portmask(struct ahci_host_priv *hpriv,
- 	return impl;
- }
+ 	axi: axi@18000000 {
+ 		compatible = "simple-bus";
+-		ranges = <0x00000000 0x18000000 0x0011c40c>;
++		ranges = <0x00000000 0x18000000 0x0011f000>;
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
  
-+static void brcm_sata_init_idm(struct brcm_ahci_priv *priv)
-+{
-+	u32 data;
-+
-+	if (!priv->idm)
-+		return;
-+
-+	/* Enable the interface clock before taking the SATA core out of reset. */
-+	data = readl(priv->idm + BCMA_IOCTL);
-+	writel(data | BCMA_IOCTL_CLK, priv->idm + BCMA_IOCTL);
-+	readl(priv->idm + BCMA_IOCTL);
-+	usleep_range(1000, 2000);
-+
-+	data = readl(priv->idm + BCMA_RESET_CTL);
-+	writel(data & ~BCMA_RESET_CTL_RESET, priv->idm + BCMA_RESET_CTL);
-+	readl(priv->idm + BCMA_RESET_CTL);
-+	usleep_range(1000, 2000);
-+}
-+
- static void brcm_sata_init(struct brcm_ahci_priv *priv)
- {
- 	void __iomem *ctrl = priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL;
-@@ -369,6 +391,8 @@ static int __maybe_unused brcm_ahci_resume(struct device *dev)
- 	struct brcm_ahci_priv *priv = hpriv->plat_data;
- 	int ret = 0;
+@@ -538,8 +538,9 @@ sata_phy1: sata-phy@1 {
  
-+	brcm_sata_init_idm(priv);
-+
- 	ret = reset_control_deassert(priv->rcdev_ahci);
- 	if (ret)
- 		return ret;
-@@ -453,6 +477,14 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	priv->version = (unsigned long)of_id->data;
- 	priv->dev = dev;
- 
-+	/* Older NSP device trees rely on firmware to initialize the IDM. */
-+	if (priv->version == BRCM_SATA_NSP &&
-+	    platform_get_resource_byname(pdev, IORESOURCE_MEM, "idm")) {
-+		priv->idm = devm_platform_ioremap_resource_byname(pdev, "idm");
-+		if (IS_ERR(priv->idm))
-+			return PTR_ERR(priv->idm);
-+	}
-+
- 	priv->top_ctrl = devm_platform_ioremap_resource_byname(pdev, "top-ctrl");
- 	if (IS_ERR(priv->top_ctrl))
- 		return PTR_ERR(priv->top_ctrl);
-@@ -493,6 +525,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	brcm_sata_init_idm(priv);
-+
- 	ret = ahci_platform_enable_clks(hpriv);
- 	if (ret)
- 		goto out_reset;
+ 		sata: sata@41000 {
+ 			compatible = "brcm,bcm-nsp-ahci";
+-			reg-names = "ahci", "top-ctrl";
+-			reg = <0x41000 0x1000>, <0x40020 0x1c>;
++			reg-names = "ahci", "top-ctrl", "idm";
++			reg = <0x41000 0x1000>, <0x40020 0x1c>,
++			      <0x11e000 0x1000>;
+ 			interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
 -- 
 2.53.0
 
