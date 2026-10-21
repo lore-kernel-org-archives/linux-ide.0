@@ -1,96 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.180
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792580159;
-	b=RfzUUbx6Z8etA/d9eaLn2RpCwCIjy2RrznjqqF3Ptj6huCQwk83bVmvQtoPmrDE/uRZT
-	 ISUUZzfYTfXZwkAWSUVbB23kV8D7u6mty2WsbjZjnKZlJJMc+0mK0PS6/n0LRzGKR5gzy
-	 1WVCzif6G52sBMVwH/DXplSy16dQojlGdoGFnZxFR1e7OpOYsDmRtxBQTzN43ut6aAPbm
-	 I5grQQATh4+6CY4KUkWPZaHYdQqkp7eCi4njxoPwnFXVqaAiI3JM+kL0xSp36V0XdeueO
-	 h2sTKCWsyAwh+Y1qAJaYs90Qe41rF+jXofEwewFtQMNesOCk2kq7Vgak5M0QUmBwVpg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792580159;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=4dkFwPF8mYUAaBh9IOGYKB+nWS60kkd0r3c1QMBo9hw=;
-	b=j/KMWALgxlMWLdMezkkD/hAr9dn+N4lw1aaNX55D+5vSPguv5igbyJ2/SEYPDE2I67Ub
-	 vGtEJ232ELEtGvlmigVVh2YpRMJwshOjNDp4xxEorl1iOf4JpR2X8spLfx3AsYuE7LM10
-	 7BriqnFwzOOb9MHauo+RQ3Awgzu7rjOL3h0SF373xlYN+AY0/Rot2J2SB0hTuwSH6Yo9N
-	 5BhBbvidcTmc62T/4qJlxq6JfKWjL/favdGMDHlG1YwWcuStFSuL/YINB9NZ9S1F2EmNj
-	 H/HyrEwNzoyckvXsUY6sJsEL31UIUKCXjM4AZZtCrAA7IOSxyAodpPlCauAu1+gmjzQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=none header.from=0x0f.com;
-	spf=pass smtp.mailfrom=0x0f.com;
-	dkim=pass header.d=0x0f.com header.i=@0x0f.com header.a=rsa-sha256 header.s=google header.b=LStKsrBA;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.180
-Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792593563;
+	b=hpnHewK0kxbMtbFAtQJcC/uYKxSfNY5kIvfuo1NJUOUXSB9msRUKv9vb9gH3AxbKAmoB
+	 UVZB00dRmGqHz5HesMTUhqQ3f1+hC4ldiNkk8K9QWfkbAWDfWzmM3jOaLML/W7lUgpThZ
+	 HhMJnYVl98AsMM2qyVuP6w4VMMspDfGtsmf2pRnR9eK9KelSh27cQiSa6EIyW1zvUnU3n
+	 dFMWiAyzI0d1FOb7vWfXdqdYvHgSCWi1wtctAohQB+hlK2mPCoe9KcT5vwnXS6nqrYsfC
+	 e+rf47JsbpmvixXDiPK38nqVIjEemmCx72HIVIMhNlQdA563PgBVyH5OSZXXUoUW1ag==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792593563;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=2FZ6WSldowIQ5CGzRVSQzX5RHQEHuI8rIa0QlGDiTMI=;
+	b=BlRimoVfquKEJg7yi+2AOC+Dsye2ghoCTNp115uXOvGJVJbwp6E23KbxHRqMl9YGUYWK
+	 sGL4ok10X6xotDKSJAobktE27QJwF9JuuDLsO6s+ysICRUbt7cIS4Y0lIXMUuJA8iNjrs
+	 vAQOY/5mWlHLZXCxoi2tzNEn0zJT4QgjDexfY07gG+j3iRgh87dubnVCQFrRtuLNV27uo
+	 ryNHmpuseii7Gbn/sLjMN1TzYhbsz0xyfwjZAM5ixMdNX2v2AUAwJLo3coFCKZK61rIuz
+	 LB2HlMF6IHoL2FbBb3frruC17nohPhu4QwnboKvIJu/mWnWlZMYqrVAw0fybODj+0KQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UJ4Tfzsb;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DBCD606A31B
-	for <linux-ide@vger.kernel.org>; Wed, 21 Oct 2026 10:55:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9DBCD606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0x0f.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0x0f.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03041606A31F;
+	Wed, 21 Oct 2026 14:39:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=0x0f.com header.i=@0x0f.com header.a=rsa-sha256 header.s=google header.b=LStKsrBA
-Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-8b0dba37a7fso4957397b3.0
-        for <linux-ide@vger.kernel.org>; Wed, 21 Oct 2026 03:55:58 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792580157; cv=none;
-        d=google.com; s=arc-20260327;
-        b=BQUrQSweJcy6837Ll6BXFVKUtZPZvUWpIwynbbXj4AXZPISFsZSX96AyhSBbXKiTNr
-         4rh0Fs0y/Ja0eQC0QAK+O8rSgCvcNfBee4Nmzqfb7PFGF3AnHF+vyCoKsSyItiNadUqe
-         jdNP9Zyvr/QFAOWuWhQKAUv1Vw0PnhQUsykPnU4A86TQLqXvmPPgqqxKYEZLb/JrhZvB
-         eNK6T58mOS5HwkmQX2POEzsCT8ssl2FSszy/7ZvFWJXhMQkFf/Rr7C1Q6LLU0ZsXevzP
-         X/ENfSxQNjrzAKaMGgPbvFNqrx1ltaTK1yCL5cMDrOgjvKtyIe7heV75Z1w4h6oNQqZ6
-         macw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=4dkFwPF8mYUAaBh9IOGYKB+nWS60kkd0r3c1QMBo9hw=;
-        fh=BEktfKrBlED9kuemBuq+VUcHI1J/NUyVVBWoOdXkyBg=;
-        b=NnJHPnm2XICB4F0VsbPl+qDuZw/B/uStdIbuWDXDkSm83A2/bPxAVv+Fc0uUBTzKmr
-         9ji8HwqqQYBlkdqL8wiTUzdS/v/Wb1xs/7BoWCReSAS/lO7SpAapjMpguwZGoUeqrhzf
-         Bbvpmdl64KqN5MX+gdSCgYsG/QSy0WIu9lXnY5wnrWSf7AhSCbM7yBYyBjJkbEXEPEGV
-         5prakpaOGO5u0HfAv6grn751YrbgtGN9cBzwTZRG+KUxRHZodPLRgeghd9MMCLDJwWca
-         UbOu3b7CzQE0plXJsrpnjP8qRkHwHCdvnrwMG/yZqI0jn3CUm2ZqlpLbFnsCT/nknuUG
-         sqIw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=0x0f.com; s=google; t=1792580157; x=1793184957; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=4dkFwPF8mYUAaBh9IOGYKB+nWS60kkd0r3c1QMBo9hw=;
-        b=LStKsrBAmkLyaIDo7eVvgJ/m9vUfRWLRIyJ6OihLsx6GHpMB7F8VmhEb9hY54nkHT+
-         XAsvZTrvDT3kC7e7pHIkkp1p0svg27WFaKT5upHJaufLe0yv7syM14crajjJrwyX9cB9
-         RXQCO8tRKSb7PW0WqE9heGNj6QsK/hQ7AT/K8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792580157; x=1793184957;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=4dkFwPF8mYUAaBh9IOGYKB+nWS60kkd0r3c1QMBo9hw=;
-        b=wD895c4W6y6rxP8Qoz8VsQurP3xGr+vbk7PJPkxyjBBcoHoglloN9YDlkmzNJnE3P8
-         0M44t+WsGhVseSvmbJxP0qevREIlZmiou2jG/yGiyX5KDF615nP0Vai6vgWtsaNYyEMR
-         MjoVu2B3r9HRA0IVx6vLev49FQ3V5JF094WVlzCN67SZGAIP6UM+fptGzvRKIIorFQpJ
-         j0yiEVuk1n9+qFciCvnmBvIvTWWJyb2lFm3t6igEiZ3xIMCnBMsVFYN5t9x/adMBpq9P
-         5yNmDO0Oh/wH7/ls392K2YWO/1TPKkcd7R/jJacyZ88vlXF0KDOUQv+hyoHTce2MLKuB
-         bwcA==
-X-Forwarded-Encrypted: i=1; AKwUvBy8ejruNs0bgbPSH+qAw9Iew8yuV/5+72HHRvaKI+b+n4X//I1sEI0qTVpv70Uq4XtTuCfaXeU2hMo=@vger.kernel.org
-X-Gm-Message-State: AFq9FYL07hjfPVda+eNRThJaHyKC/LaImu7SjpwrgFtXeU0TEM8FhOY9
-	qvePkrFX3LTcne8GuUKZfahNcE6RxiCX1fXUZy1rUZdAJX+wgBpAWmd5qlJ9wgn2mr6Waw9n3WE
-	Qf7rumel63A+yZXVqjwzkBcBen1U7lzVrE/9QsFRu5A==
-X-Gm-Gg: AYBFou0YDgVLuq93OHpKzZZz3G7mYdjU8Vr8X2m2Fl6gm4/auv/t+v/sZxFhN1DhkaU
-	4bScZILgc6dP3nMM5Q0Ok1bwbuslOwkpGW0VjawLmBheCbLmFNQLmHZbW59k4Ntpw3y82+/I/1D
-	sQ9BuEq49Jx+w0Z+KNleV4sUk2hZ26A4uhOaGoGucjbkePMVR2PPORfzq+Db3OvLVo2PwGZoK59
-	MPVOy77S+sRSgpa2+T+HIt78U/0uur3iQEGt7sxd7UYipoU8A5RHZEMoQFVoSvRnhUG+/tbMrkP
-	5GbAVS+8oxHBQQjbM5O6Wf7V9LICV+AEFc43BrOXOQYSfpEYaFFrk96NNM47R4lSw/u5Tk10p0c
-	XQwrQP/YLTXc6xaIejUhwoqu+0jU3qyJC2/SbrNQ=
-X-Received: by 2002:a05:690c:e1d1:20b0:8b0:ad90:98c6 with SMTP id
- 00721157ae682-8b134013d3cmr5679527b3.35.1792580157475; Wed, 21 Oct 2026
- 03:55:57 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UJ4Tfzsb
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D53DA1F000C1;
+	Wed, 21 Oct 2026 14:39:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792593562;
+	bh=2FZ6WSldowIQ5CGzRVSQzX5RHQEHuI8rIa0QlGDiTMI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=UJ4TfzsbvdADPiJX+OB0+tvGgRkc1n8Cd4A+lMCi1apFYuz/IexXW/1dOy9xSi3YI
+	 liX/1X1GNN+m22ia5nzltzu2Nq3VYIvZ7PKI6yRMzjKf0Dgx+uB5mIaPutT+y1aATw
+	 Ra1CMqwgw0npxTCHYHSkxA2wVYL5qBEm0vpxYtgHJn59mWnvDQCHHKpIui2HdK/iuD
+	 /B/fKZ7Jbsk1Aswcs1InTrdFePxLaci3TAIzju2T7oQGYoTbaV9R8lXTKDnMZywoRb
+	 pS+hyP5bc0htYA29ZogtUZzcMj8GNwzQGneUNpKkRVYne4YM6dw99sUXkE7haOIyl3
+	 8LvkUzy5nzrBg==
+Date: Wed, 21 Oct 2026 07:39:21 -0700
+From: Jakub Kicinski <kuba@kernel.org>
+To: Imre Kaloz <kaloz@kernel.org>
+Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+ linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org, Lee Jones
+ <lee@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri
+ Slaby <jirislaby@kernel.org>, mfd@lists.linux.dev,
+ linux-serial@vger.kernel.org, Alexandre Belloni
+ <alexandre.belloni@bootlin.com>, linux-rtc@vger.kernel.org, Andrew Lunn
+ <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ netdev@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel
+ <cassel@kernel.org>, linux-ide@vger.kernel.org, Pavel Machek
+ <pavel@kernel.org>, linux-leds@vger.kernel.org, Bjorn Helgaas
+ <bhelgaas@google.com>, linux-pci@vger.kernel.org, Christoph Hellwig
+ <hch@lst.de>
+Subject: Re: [PATCH v2 00/53] MIPS: SGI-IP27: add support for the IP35
+ (Bedrock hub) machines
+Message-ID: <20261021073921.07632a37@kernel.org>
+In-Reply-To: <20261021090556.21168-1-kaloz@kernel.org>
+References: <cover.1791890466.git.kaloz@kernel.org>
+	<20261020110619.12774a1c@kernel.org>
+	<20261020204214.28625-1-kaloz@kernel.org>
+	<20261020145611.4e277615@kernel.org>
+	<20261021090556.21168-1-kaloz@kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -100,37 +74,36 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261017041419.311921-1-daniel@0x0f.com> <CAJpaz4abKAkDznoi3gczYHNQMF-j5cSajtG07Jws8LkFY9DZFg@mail.gmail.com>
-In-Reply-To: <CAJpaz4abKAkDznoi3gczYHNQMF-j5cSajtG07Jws8LkFY9DZFg@mail.gmail.com>
-From: Daniel Palmer <daniel@0x0f.com>
-Date: Wed, 21 Oct 2026 19:55:39 +0900
-X-Gm-Features: AclHuK-tt_OVDrOG_j7NK25609Kp5bxH3a2aysFucE6vALWwnla60mO_ZldS66Y
-Message-ID: <CAFr9PXmntwx06iMc200d9HPoOeCE7XURpS9jiWhB3ud_+QQggA@mail.gmail.com>
-Subject: Re: [PATCH 0/2] sh: Fix IDE on landisk
-To: Colton Pawielski <colton.pawielski@gmail.com>
-Cc: ysato@users.sourceforge.jp, dalias@libc.org, glaubitz@physik.fu-berlin.de, 
-	dlemoal@kernel.org, cassel@kernel.org, linux-sh@vger.kernel.org, 
-	linux-ide@vger.kernel.org, geert@linux-m68k.org, linux-kernel@vger.kernel.org, 
-	fuchsfl@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi Colton,
+On Wed, 21 Oct 2026 11:05:55 +0200 Imre Kaloz wrote:
+> On Tue, 20 Oct 2026 14:56:11 -0700 Jakub Kicinski wrote:
+> > I don't think you answered my question, or at least I'm too daft 
+> > to catch what you mean. IP35 was not supported so nobody is using
+> > it with Linux today. You're adding the support, and since it's 
+> > a platform discontinued 20 years ago there's 0 chance of real users 
+> > of any of this code.
+> > 
+> > What am I missing?  
+> 
+> The users are the people running these machines, the same population
+> as for IP27 and IP30, and the ioc3-eth driver in net/ exists for them
+> today. The series was developed and tested on a Fuel and a Tezro in
+> regular use, so "nobody is using it with Linux" is true only in the
+> sense that the support isn't merged yet; that was equally true of IP30
+> when it went in for 5.5, and of every port before it.
 
-On Wed, 21 Oct 2026 at 10:05, Colton Pawielski
-<colton.pawielski@gmail.com> wrote:
-> In testing I could often lock up the board when transferring data over
-> SSH. I don't believe it's related to this series and am fairly sure it's
-> in the 8139cp driver. I have a candidate fix that I plan to send in
-> a couple of days once I've tested it further and there's no more
-> lockups on my hardware.
+Not sure if you followed the discussions at the recent maintainer
+summit but we are now allowed to be more opinionated about code
+we merge. Merging code just to test that code seems like entertainment
+for the authors, not useful development.
 
-There seems to be two issues: One it interrupts for every packet when
-the 8139cp can hold off and not storm the processor, and there is some
-issue with the chip refusing to send small skbs so the network layer
-starts locking up/timing out. I was planning to send fixes this
-weekend but if your fix is one of those, send your version, cc me and
-I'll test it out.
+> The kernel's test for a platform isn't commercial relevance, it's a
+> maintainer, which Thomas is, and testers, which this series has. If
+> netdev doesn't want to spend time on it, say so and I'll ask Thomas to
+> take the two ioc3-eth patches through the MIPS tree.
 
-Thanks,
-
-Daniel
+Not how subsystem boundaries work. You have to repost the two
+networking patches to get them merged via net-next. Our CIs
+will not trigger for partial posting to netdev.
