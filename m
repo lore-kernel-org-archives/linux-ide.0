@@ -1,68 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792533373;
-	b=CDhK9dOLHAOAqUzeUOtSfOwE6joSiBofnE8gxrjCBbteeeJq/Giddszio4YQgJrvevsI
-	 CuE0X+Ff/5AuzNZQYOWifJ4Pzl1go/tDJAqy9hEfI3GhatfnZnBZ3Hss/mU9m1A5Rrngo
-	 4XbIwt+cHyXV64gaUPvDq4ZbwVtoH1CVRik+JgIuTrff3TR2jNF7ZbFWn28WlsXXVn6l9
-	 YfDeUd4/yR3ocfhPB14RYwuy3OARYJtb/2tIsi4ArwGfjId+p0Q12Hz7BFYfte22qdbps
-	 u4BrdjSgbCob3/tzsiQ9vH8lViFS6P6GWLb4XoJvMVlw6PrYLpSJnCtX/mmeZzlwJ9w==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792533373;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=RC3iU6EQa1/dBaJxMKqA5Cnd4YmN92OAMtq0Pq+n7O8=;
-	b=jSKaiObb3NAmzBEa2MOm6ZpAuK5qMy8pxLOqGoXkXavSAO5wgOTVEs/PvX9y2m+tCEsW
-	 5OT7DIknQaE7xqH7ZC0yaKH03dPBYOfMhYwehVnBj9H8nwAg0gcM3yP1hj0tWn/lkwmYl
-	 +Qh8B0onsvg8ZBJT34oqT8lrn2M8ZoKPPAoLI0zjIMlxgztnT0GzhhgO2UWq5CMopv0HN
-	 F+3kQs5PZD+tzR4cWDHG3fP3JMIUwf6kbYfQarCU4r2+8pX9CNXfL79M/8fuiy1kLUrFJ
-	 JNqND/QiQeEkz9WhlCFPLzsXNleO62jGBrWRUYmzPUdWWxzas5YWZ66fRsPvivP8lig==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DuUrn674;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.167.175
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792544716;
+	b=TCaAmRJ1CwgFcQIckW7ODIOpt+wYxHHRCHhEICorwvHMKY4XOXCKOhDjsB7yWBbg9zId
+	 FrC3RPVxzwypXgfH/Q9xnUjis6ptb48I3SPW6b7m/iy7NH6ffmmrD+gY954nLj63riWcF
+	 rSRLcz6uLg6i12VmSt+cdwcI/KJ7k51Ff7gmWSn8yyJpuPhXPk4W7nQDWzvzu4Cimis6A
+	 46uUbZM9TQFbmLx8LuEaAXRzdc35NVfcSexX+BNSEuxJThxaMAp1T61gx5MvTq/bKf5bK
+	 3nTqhfNlK6l1NQx5939tI6Bo3PejUTC1I9hE2GQsoPcKM6ZMdVGbGKk2/a0cmURfJgg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792544716;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=z0hLEERCsjy4axc50ookcdk/sfqny83SF+wLsC++daU=;
+	b=MdVMFvkIt5DT/OfAKcab1ze89853p5GDwSegKH3iPj+57KLiH9v4ghtht2IMKf4sd3+I
+	 89QovsJqX7QwHhpn7yVQGL/JOIavZT3v3oXcS3d9nv/S/g6htXJyDl3+JWH2RhM8LSnOe
+	 yZeqElSyVOk2S4wEqMqR57pclwoUn2UWTX/Oj07ZyRt4vVzoP+6iIpRYY3nOnGCN8wDJz
+	 nSXgMjrOq28Gqf1l1Yuku6AMhvAyfxkxFmv6VQE+DCBbPF89YgRLyBnhYPLcOb6CvSEVl
+	 Vjh/n8QpG42ZAghTE2lVTCRU614P+gkT/oyjdsZT1LugNp899AyGJnD2oAZYFgnU28g==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=XpITqnsF;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.167.175
+Received: from mail-oi1-f175.google.com (mail-oi1-f175.google.com [209.85.167.175])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01B4B606A319;
-	Tue, 20 Oct 2026 21:56:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93066606A31A
+	for <linux-ide@vger.kernel.org>; Wed, 21 Oct 2026 01:05:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 93066606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DuUrn674
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D229A1F000C9;
-	Tue, 20 Oct 2026 21:56:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792533372;
-	bh=RC3iU6EQa1/dBaJxMKqA5Cnd4YmN92OAMtq0Pq+n7O8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=DuUrn674JMfXslg2ZVIwkEZJtPfpC7JU+qX2L2K8Oh2/xjnofe6PrmmX8ZxFxsTVl
-	 CJOnJDtdnjIXlGFq9CBRrcq2ueUjWplnyH5AncNdRDpLNGHRWpzIGomydnzupqLOlw
-	 FbTBqEUAveMFam6YnOpQTQ2/COE0/VT3wzF286C/7ye0i4M/CdCChU9ZLOk2i9EXSv
-	 Q+lY65xyMmC5+k2HSifJ14S7zMp6VcSauQcNjY3AHqv32NC+zsFhfpkmQnPH+Ey97p
-	 I/wIrP0EUbChYnjCb7+tAIweHRJRGK6ruc5DheKNK5rKsZGenGsEL9OuNluLdwEQoQ
-	 W3xcV/fHxt1jA==
-Date: Tue, 20 Oct 2026 14:56:11 -0700
-From: Jakub Kicinski <kuba@kernel.org>
-To: Imre Kaloz <kaloz@kernel.org>
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
- linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org, Lee Jones
- <lee@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri
- Slaby <jirislaby@kernel.org>, mfd@lists.linux.dev,
- linux-serial@vger.kernel.org, Alexandre Belloni
- <alexandre.belloni@bootlin.com>, linux-rtc@vger.kernel.org, Andrew Lunn
- <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, Eric
- Dumazet <edumazet@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- netdev@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel
- <cassel@kernel.org>, linux-ide@vger.kernel.org, Pavel Machek
- <pavel@kernel.org>, linux-leds@vger.kernel.org, Bjorn Helgaas
- <bhelgaas@google.com>, linux-pci@vger.kernel.org, Christoph Hellwig
- <hch@lst.de>
-Subject: Re: [PATCH v2 00/53] MIPS: SGI-IP27: add support for the IP35
- (Bedrock hub) machines
-Message-ID: <20261020145611.4e277615@kernel.org>
-In-Reply-To: <20261020204214.28625-1-kaloz@kernel.org>
-References: <cover.1791890466.git.kaloz@kernel.org>
-	<20261020110619.12774a1c@kernel.org>
-	<20261020204214.28625-1-kaloz@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=XpITqnsF
+Received: by mail-oi1-f175.google.com with SMTP id 5614622812f47-4b28d7c729fso117674b6e.0
+        for <linux-ide@vger.kernel.org>; Tue, 20 Oct 2026 18:05:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792544714; cv=none;
+        d=google.com; s=arc-20260327;
+        b=F6Sdjjxj3n9/wC3ci555ZZ6l7n/HIpgwaYWtT5IUkIjh7aVmDKSo6jzRrELQad52ED
+         TZh8/VBCW4n/YCLJJcKmOg9XmUX/aS67NiqIRfhfeWWlk9zKj2T18pDRKwF/HAxy3l7f
+         la3ZSF3dC/fG4d2zb4xw1MKwn27OJqtyCPqmJh9oFFdSRftAkYyxq6RK/+h2fAnoQwLa
+         nrpEYO+2myKKbAC//ZDKWefW6PUlaxN4TU/Rk324OnL5BEz4+rj7MuWynX0Qnk/QJW2+
+         EyjOBQID159jbspenACijeiqM8X138u4J1ZDVek7CRYaOoQSKrBr6TytEfzkeu6CNPNe
+         vZXA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=z0hLEERCsjy4axc50ookcdk/sfqny83SF+wLsC++daU=;
+        fh=yCwG4Sxq0nXLGXsU19N28PWgn48EuMNrrgd/Ab/KKhA=;
+        b=HRoXnUcmv3k+zLdoNjt+Wr9dRUPBct8NWbwiqlZH62DFr8f3/Pfjo6JeZN8KMERczx
+         LW4eJrolg0RenfZQY9OtG/NAq5eVMNesuh2fp6Zs7kDjBS3/McdOGjcZrj9NjLAr6vEA
+         JAHeAjOTy5GWhWB8ByV7WaWP/6lZrwxLhIJhY+0qladvAndivJMCT3Sm/cX5GzGXGBvu
+         48taqqaLD0JhrDQ+DT7roTG5YqzeNE+RKyFD4N4In3RgH17BCM/uyST47hQxx9KUh8bD
+         0r9KHw0FYwt5HJlLlyYezEE0af4mdwoCfuNrMClWdFCya8ETaofGeem9TLql1MiMwXnA
+         jqfA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792544714; x=1793149514; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=z0hLEERCsjy4axc50ookcdk/sfqny83SF+wLsC++daU=;
+        b=XpITqnsFVbmsA65tYcRzfHxyxSBcJK65LXclrQMybNFaokMcv/OBBeyqo0kpkyI1Oz
+         UIwPty9tmb3wXk1P3KAZiHvh/Xf8iZOvIWLgxX7ooqdP2YzZOpqRHht9VGAwaKDkipFP
+         QKaRzRXaULK+cDuLvOlEAAZ2+hDTdtRyNZMk9+/ln2FT1v6kDPKEsszkJrTCW+zQbp1l
+         HlR3EsL8jhTsxuuY38fVH+N16er2bjK6ZsuV2Ik/3Tw3EqsaFHIbQtWgvuCH40rwgS4h
+         vgRacjtbDhOpfw07WskUG3JwQBdRTbkI4rRyEj6tkHY3ia90cF7+rhFPiZd2E7idWXUv
+         Z3xw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792544714; x=1793149514;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=z0hLEERCsjy4axc50ookcdk/sfqny83SF+wLsC++daU=;
+        b=DRQ0VVptR6i53p860fyk+qrS0pL0HD7GhbC0/vDIo/eMJw+NPesahkXrb4fifbiikF
+         U+3oqHuOHQOOEvCgyyUaZSjNaxFIu0odClPab+J3yxGVmaZPHFhP89hRUJcyzb5rW2Gy
+         kaYx43bVxWQT0tzqHaS4K3HLhQ2A4CgX3Nzn3vvy4eDKmK8GhB5RRvolwCiCNp85irMS
+         /iz6SBrpzUXN3h2smnmCfaR/vqnOXHUgAk2+x2a0IUI8635fWcYcwvIOla4/z5raMbj2
+         P/TuHVz19uMc2m1JffTH5zz2zGPH3e9lBYdC6KDBG7F4CKYdj8l+A4dRWY1wBHTGkVT4
+         VZPw==
+X-Forwarded-Encrypted: i=1; AKwUvBydgfNoqvtoJas+2oo5vLwLZELynIUsnFL/U/7jzX/FCuCgCPk4Uu9jPzqlBhNpd0tAf2AGwLr+14A=@vger.kernel.org
+X-Gm-Message-State: AFq9FYI9ltUwx5OpmBKoccFhAQTHsG003DHsg81AYIvAXaSvx6JTub4/
+	ws9e5uJMnEzbHR9g2u2lUb/L7C7uN7vR6Xo2PpfswNDCl/tqPZg/V6iWDjbXV6NSQojrR5Rl2rL
+	Q2mi/TLeDYk8rdI7C79g/w162rblbqsk=
+X-Gm-Gg: AYBFou0P+jFVh3HagzDFnBMqwKDh3ju982zI1zBL8E4cnV8+bR1Fom+6t07qMleRQT9
+	aLzhH/hTUX5Ptnc2nY9kxhJPGvK60Cl6YuoD5BbU7ok38gwDZb9QtWbr9ktlNgVdKkaduFj6nIg
+	1m7C/EhYIF1V5HVp2j3GKevHtDDXAbnxw2HCITAd48WE+PtrxS8Vpy0Ub3MjjErTzi0wF8yOWcg
+	9hTLU+jvoy2PC/ZMBoFNxAPmVNaAyATfK0Q/ZM9OrImsBGIbTVa+4lJ7HA7g6yJRvEvGV8aEC2Z
+	1pJ+aB9LREQlw5IglhIgR/PbN8tn5QWK7kz75Lg4/cG2lwAepI+AP60wN4tuaaMxJ6MqHp5e2z/
+	fwXBe+d34DA3SrDnG6BFtaKw0xmtDQpDwiE9LIx1cEuY5qHUUjfo8eqI0Da9d6ad5DZRU3iEH
+X-Received: by 2002:a05:6808:5147:b0:4d6:9153:295c with SMTP id
+ 5614622812f47-553596fe6afmr356471b6e.45.1792544714494; Tue, 20 Oct 2026
+ 18:05:14 -0700 (PDT)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -72,36 +103,57 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20261017041419.311921-1-daniel@0x0f.com>
+In-Reply-To: <20261017041419.311921-1-daniel@0x0f.com>
+From: Colton Pawielski <colton.pawielski@gmail.com>
+Date: Tue, 20 Oct 2026 20:05:03 -0500
+X-Gm-Features: AclHuK_WbBRvyFNBUBGOV4aGPihFuEs2qYf6-xkzjASYHC6uPBnvRp4v0utSWw4
+Message-ID: <CAJpaz4abKAkDznoi3gczYHNQMF-j5cSajtG07Jws8LkFY9DZFg@mail.gmail.com>
+Subject: Re: [PATCH 0/2] sh: Fix IDE on landisk
+To: Daniel Palmer <daniel@0x0f.com>
+Cc: ysato@users.sourceforge.jp, dalias@libc.org, glaubitz@physik.fu-berlin.de, 
+	dlemoal@kernel.org, cassel@kernel.org, linux-sh@vger.kernel.org, 
+	linux-ide@vger.kernel.org, geert@linux-m68k.org, linux-kernel@vger.kernel.org, 
+	fuchsfl@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 20 Oct 2026 22:42:13 +0200 Imre Kaloz wrote:
-> On Tue, 20 Oct 2026 11:06:19 -0700 Jakub Kicinski wrote:
-> > Why do we need support for machines discontinued 20+ years ago?  
-> 
-> For netdev the question is smaller than the series: patches 25 and 38,
-> 44 lines in ioc3-eth, a driver that is already in tree for the same
-> part on IP27 and IP30. Patch 25 is a no-op on both of those (the bit it
-> tests is always set behind a classic Bridge); patch 38 is a MAC-address
-> fallback. I should have said in the cover that the series is meant to go
-> through the MIPS tree and that I'm only after an Ack for those two --
-> sorry for the noise on your queue.
-> 
-> As for why at all: same reason IP27, IP30 and IP32 are in tree. The
-> hardware is in use, Thomas maintains the platform, and people run and
-> test it; "discontinued" has never been the removal criterion, lack of
-> maintainers has. IP35 is IP27's direct successor on the same
-> Hub/XTalk/Bridge architecture with the same IOC3, plus its successor
-> IOC4, so most of the series is teaching existing code about one more
-> hub generation. And these boxes still earn their keep as a stress case
-> for arch and core code -- e.g. the kmem_cache_destroy() race that just
-> turned up on my Ultra 45:
-> https://lore.kernel.org/all/atDCYwNfKW3m6YXh@thinkstation/
+Hi Daniel,
 
-I don't think you answered my question, or at least I'm too daft 
-to catch what you mean. IP35 was not supported so nobody is using
-it with Linux today. You're adding the support, and since it's 
-a platform discontinued 20 years ago there's 0 chance of real users 
-of any of this code.
+This is my first message to the mailing list so please correct me if I've
+done anything improper or non-standard.
 
-What am I missing?
+I tested this series on three I-O DATA LANDISK HDL-U boards (v7.3 +
+this series, landisk_defconfig + DEVTMPFS as mentioned by Geert).
+All three boot from disk, and the ATP865 is detected as
+"PATA max UDMA/100".
+
+I have different drives in each of my LANDISK devices:
+- Maxtor 7Y250P0 (native PATA): UDMA/100
+- SATA SSD behind a PATA-SATA adapter: UDMA/66 (my adapter
+  gives ICRC errors at UDMA/100)
+- CF card in a CF-IDE adapter: UDMA/33
+
+lspci from two of them:
+
+00:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+RTL-8100/8101L/8139 PCI Fast Ethernet Adapter (rev 20)
+00:01.0 Mass storage controller: Artop Electronic Corp ATP865 (rev 07)
+00:02.0 USB controller: NEC Corporation OHCI USB Controller (rev 43)
+00:02.1 USB controller: NEC Corporation OHCI USB Controller (rev 43)
+00:02.2 USB controller: NEC Corporation uPD72010x USB 2.0 Controller (rev 04)
+
+The third is identical except for the ATP865 revision:
+
+00:01.0 Mass storage controller: Artop Electronic Corp ATP865 (rev 06)
+
+In testing I could often lock up the board when transferring data over
+SSH. I don't believe it's related to this series and am fairly sure it's
+in the 8139cp driver. I have a candidate fix that I plan to send in
+a couple of days once I've tested it further and there's no more
+lockups on my hardware.
+
+Tested-by: Colton Pawielski <colton.pawielski@gmail.com> # 3x LANDISK
+HDL-U, ATP865 rev 06/07
+
+Thanks,
+Colton
