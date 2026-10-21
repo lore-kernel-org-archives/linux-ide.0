@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.19.166.228
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.19.166.231
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1792601765;
-	b=iroBANMkUjqV9T0Xg0rtoZdNFpdbtUrPV2Y/vZ1OPOFrwpgFE0J+YIdopYgMuWtq6C/V
-	 7s1wt/7TM6rmDDPj0KvRfMi26+ltzG1q/NpPjCpcQn9/Z0OcAHcz56EMy9lzXiAbeYFwM
-	 wYj+7TOvYcll9drAcTmiHHln/VsIVf4+WlSc9jqKtls6WTmjPb17gilCTIP5o8JGqXW8Z
-	 3JX4a+9PmHdWNVG8hxXng98m3rXMazfDzt6Vi7Wpa68SX3XrK6bUGdVwYN47zlCxoFEVj
-	 kf83kjcHLiUg7InTUkRSyHxBo06+TSRiwqXSGtvANvRWsNtIOQAY/a0s8Z/ZuNe34wA==
+	b=V94idvLFxQPmCt/PVof5RwPMK3buJfRgmunU6X99KAcle3Eh9Au/t3mOVOmkOAoEHPbG
+	 g1KZtrws1jQqf2ZjBYv4+RTxT6S5gnejiVJV+1KYdTfl9/HrkfkRoUbVUNW5A6y5HjiJk
+	 k3CVHBE3fz0FYCu/uc01U092xinAxoTYrLWdVzY+oKmkeg3l022zopva79AnkUTJowvtO
+	 VJlH+ZWfK4l1b5NyNW9ThpKEXQzHwQdOg3PclwNy6tw9jjkmgdPxmB8qzDqOkZT/81GkD
+	 TXFvCuFgmrhyv+KojM19AEHgTa5wbRGreHv/RAmVW0NB1nKPOac2lP40GlxVwU9tczw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1792601765;
 	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:From:To:Cc:
 	 Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=vCYl/cG9mX38DVQ9PrBsJRE3D7JHxtZQpczintLIVfc=;
-	b=GqEs9nSXpqTQGhyEcXcsVK5eJO08fhBNkLbrsL9fAv8kFih64GZBEb9iA+gDOxzvoDZU
-	 iIPx+CV26NOmCL5YyXCU+6b6wZCrNQIhKyXoEL0G4Q+c49TNwcPe0/uFwdW4K9NFmK8os
-	 L0Z/F569KyT7DrTcuSbLvahmmvilBU7b07HJ69gkryoaXtk6M0Dt9BwSRct3iyWSM5NZi
-	 hmQSLBrkai+4o4NJFpFk0t2QK2yyEgs5M+5CcjACJxokg9gU0gEkbcqt9aeMqfMwrZo20
-	 IBQ+V80qxH1qh0BJI2oOoQ0EbNZajLFzjc8ThDwT4o64ZHU2X3C8BUqba2DzxMelssA==
+	bh=LpNaT8q0SGvIEMd/N1soAJa02WC3uqlIifzAi5jpoGQ=;
+	b=mY80kkiLsmd1KiGrE37CpksKIwQalKO00Sb5RKLz6yFB0U45TR70aT1FO2Q2ZpAGL+/B
+	 uZ6Nsxm0B4r2cixBBMTW3cACBuSdHyMbjPmbjJUDivateR4d4wQMmp9slN8Ygxb4XjJYp
+	 I4lAqdY0Ml5OyVqNCsCz4A6CXN61tTi2Ul3RIgI0PvkvE8drLUMseCEYg75XmHfGefBZ4
+	 OfBhWbpfNvvI8WhMkRfbz9uWK1W5ZzsJvY3wU4jc7XnYI4cCvc/C3Ky9HgbxrFqTLGq9V
+	 rkC7NkIMWm+4lprQ78j4R+i26FGv0JAcaXSnsU4MBOvJk7aqoJ2y1PRh60XrbDWhrig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=UJMM4Kzc;
-	arc=none smtp.remote-ip=192.19.166.228
-Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.166.228])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=mQNYpKnm;
+	arc=none smtp.remote-ip=192.19.166.231
+Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.166.231])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8BDE606A31A;
-	Wed, 21 Oct 2026 16:56:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A8BDE606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8204C606A33A;
+	Wed, 21 Oct 2026 16:56:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8204C606A33A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=UJMM4Kzc
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=dkimrelay header.b=mQNYpKnm
 Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 5EDCCC0000E4;
+	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id CEADDC0000EC;
 	Wed, 21 Oct 2026 09:55:58 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 5EDCCC0000E4
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com CEADDC0000EC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
 	s=dkimrelay; t=1792601758;
-	bh=AjIbc+URFeF2b/ujubFUnYivbl6fayG3tnEmJ0uSfys=;
+	bh=8PvXMAPnHZBo9OfRhqyepdZP9PSU6DTIqmxQXyhYrUA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=UJMM4KzcKDBfnLZzk6Kii5ri3Pfnz4lE2ofyzcP4XPweStUUapd76sDXDhgzpflJZ
-	 q+/tJPCD+tLF/afHDtl1ExCi86DUgn/odnIi+0tVCOj5R5T8tCoqjrO6wFDJlxiXC+
-	 uWq/SJOFmtqdK5jsRkSReempvrlOIdlAGVn9q8Ek=
+	b=mQNYpKnmg5+IACQuRTd7T0hzVsDZi6RXnQYPNGZ2r8i27la6on31zs5xKmYYAfJ3z
+	 DicOaMT1QC7BOgfXcaAFaSoYk2IR0lqDKQQxC8QCpcwpiDpDpL8HSrAWCm2lF9poSF
+	 5bEqqGh3au4IR9go0cMHsHbAVumkm6O6Om6QP1hM=
 Received: from fainelli-desktop.igp.broadcom.net (fainelli-desktop.dhcp.broadcom.net [10.67.48.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 2DCE4A8A;
+	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 9DA1FA83;
 	Wed, 21 Oct 2026 09:55:58 -0700 (PDT)
 From: Florian Fainelli <florian.fainelli@broadcom.com>
 To: linux-arm-kernel@lists.infradead.org
@@ -71,9 +71,9 @@ Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
 	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
 	linux-kernel@vger.kernel.org (open list),
 	linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK)
-Subject: [PATCH 5/6] ARM: dts: broadcom: Enable SATA on BCM958625HR
-Date: Wed, 21 Oct 2026 09:55:52 -0700
-Message-ID: <20261021165555.652102-6-florian.fainelli@broadcom.com>
+Subject: [PATCH 5/6] ARM: dts: broadcom: Use noncoherent SATA DMA on BCM958625HR
+Date: Wed, 21 Oct 2026 09:55:53 -0700
+Message-ID: <20261021165555.652102-7-florian.fainelli@broadcom.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261021165555.652102-1-florian.fainelli@broadcom.com>
 References: <20261021165555.652102-1-florian.fainelli@broadcom.com>
@@ -88,25 +88,26 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit 77416ab35f57 ("ARM: dts: NSP: Disable AHCI controller for HR NSP
-boards") disabled AHCI after reports of boot hangs. Both SATA PHYs
-remain enabled, but the disabled controller leaves the eSATA ports
-unavailable.
+The AHCI controller on BCM958625HR fails with the dma-coherent property
+inherited from bcm-nsp.dtsi. Soft reset times out waiting for the first
+FIS command, subsequent engine resets fail, and the disk is not detected.
 
-With explicit IDM clock/reset setup and the corrected shared PHY
-register aperture in place, enable the controller on BCM958625HR.
+AHCI allocates its command tables and received-FIS buffers with the DMA
+API. Declaring the controller coherent bypasses the cache handling that
+these buffers require on this board. Removing the property restores
+hard disk detection and operation, as confirmed with a diagnostic DTB
+that changed only this property.
 
-This enablement has been build and schema checked. Cold-boot and eSATA
-I/O validation on HR hardware are still required to establish whether
-the original hang is resolved.
+Use noncoherent DMA for SATA on BCM958625HR, matching the downstream SDK.
 
+Fixes: 56e2ff0346a3 ("ARM: dts: NSP: Add dma-coherent to relevant DT entries")
 Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
 ---
  arch/arm/boot/dts/broadcom/bcm958625hr.dts | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/arch/arm/boot/dts/broadcom/bcm958625hr.dts b/arch/arm/boot/dts/broadcom/bcm958625hr.dts
-index a9b6aa04d573..3e86f3c2593a 100644
+index a9b6aa04d573..53acae385822 100644
 --- a/arch/arm/boot/dts/broadcom/bcm958625hr.dts
 +++ b/arch/arm/boot/dts/broadcom/bcm958625hr.dts
 @@ -182,6 +182,10 @@ partition@700000 {
@@ -114,7 +115,7 @@ index a9b6aa04d573..3e86f3c2593a 100644
  };
  
 +&sata {
-+	status = "okay";
++	/delete-property/ dma-coherent;
 +};
 +
  &sata_phy0 {
