@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792652469;
-	b=PciYXN9TvQPEBpyXDddBwh0Bq1UDX1qDxS+6O9Elm+a76T80LdM1u/fSTrwmg8EpklcB
-	 ijje9F1iL8CC2rFsBlKV7y330nCjw5nQbvIcIw61uiGvNfYSjKPQkpFhnUNC33BXVBHhK
-	 3l8XCde/M47dT9Ju2OtZBH+SGrpDZ52AbmFfmgx+/dCtLe0J6sUBGfy14SncUKLRQvUJN
-	 WDwVbx7+M7WqzMFvGggFPM0aH4odJJnWvFgrREE1l1Wqiy0n3aORd15VIx2ojvQDM47Vp
-	 H+b1KLdDwnHVr+3BjMyo/AjWCqIg3ht8Gsr3mJblvXGZZHVMiSwgy0/lQ1bc+gVZ/Pw==
+	t=1792655320;
+	b=gC/Z8AjLI8gboQwrhR4DlbAg2gMrHBxEHbDk7prx3Lf2cD8rjOtfT9JN1poIkmJtpyPQ
+	 A+qPEGxL89yY4YZj1FBneINvTflmyRKPjLnkndVNis3oBmfwBHi9vWyVRgDEgkcxxjx4J
+	 E8deK38zXVro4WXgpyGiLAl/uKCH7eYqrWJFsSed4aSAwfAm6JWNN1Br/n8+wk+BYU43v
+	 W4sA+V4hL0whBCnSFTEnvTY+Mj2J7+jG0ZD24DmyAPT6nvBeawvH2HtKWjZg1G0WK7dhA
+	 7VJ5IrmKwu4DRI+xjDkn7aycR/CkIEmRAXs5sbE6sRuBZXocgrU6RAsYKMu95be9ZSg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792652469;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792655320;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:From:Content-Language:Organization:
 	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=EXjmarcs8jPMRVcm820ceFNk9nolMb8Iitf1PYFVGXY=;
-	b=tFWFw+gBqyHa4wp4moS+POGl+qHA7f/WW4I1ZFxH5sOC+xKZ4GCIQO/z4tdGVeTffYjz
-	 JY9NC8T+vIpYEZaO0XqgdYKApq+hJjQ59ci6XT2sDt2m619M69i4UanRftJZtmASfXN+Z
-	 M8jq9VHzabJbykDSPG3dbWWDCn8XCpYnNDHZZHV+0LQLuznoWkSKhMbWLwSQizWQfDwuD
-	 Y+FL2Lqmxqkswu1QSrXlsJW9690sspuJJmwou+k20YyeP9C5RtjRuP5tPbVVGBJdSkKX7
-	 qyX/0rhR8pnM2kMDW0oOOGjNtr49sWF4SKQQjADJIaBvPpT1lOdyD5l3m3v61ZXZw7g==
+	bh=4Ju039Z2MeKtZH/iwUVos3bdxPP/Y2nZbG4AaFuOPmo=;
+	b=oGY9QVC6wkiTFlJvbUpW/IyJkoVJalPqC2N4JCUYcHqqlsw85P1Amf0GGjpcK7wJoa06
+	 9NRyuq+f+ubgi4Z/WqXMIy+0/bk6q7CqOu0qyU1Z3bvUbJTeabq7RCV0dXKU+HwzXw0J8
+	 gh+NT5lDsyloS/lFCw4aMxCfSrmrTPjoXOyNPTTFoY3JfXXPuC/WXlHd6XprA+ByDfQJx
+	 1qw66kBNDugYx8XG54TGb4vxu7FoJakDlSj1OYEm18gmcipPuMuCq3BCwhrMnto77+mUC
+	 Ao8ZwYtWqdyxrbhh8+gPdQeFR7/qsiBEFfNC1CwxNAaF3QdLNRkjxMhafOkkUI5Y7nQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WOpcw62D;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j7i0IZPT;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E42C606A319;
-	Thu, 22 Oct 2026 07:01:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62FEB606A31A;
+	Thu, 22 Oct 2026 07:48:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WOpcw62D
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84B6B1F000C1;
-	Thu, 22 Oct 2026 07:01:07 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j7i0IZPT
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FB2D1F000C1;
+	Thu, 22 Oct 2026 07:48:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792652469;
-	bh=EXjmarcs8jPMRVcm820ceFNk9nolMb8Iitf1PYFVGXY=;
+	s=k20260515; t=1792655320;
+	bh=4Ju039Z2MeKtZH/iwUVos3bdxPP/Y2nZbG4AaFuOPmo=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=WOpcw62DU8gibkhW2vEgsyGAsBB19FUq95K2E9GjjhBhLudBjKFLRWiR6sKZCqFiS
-	 6KsnGELeDLc+J9alftd8tfiYUUlyEcre1sxQWoSGJSNacb4WRGUQNutS5En9/+Oi7q
-	 78ZVVbFzTWEePVavInekIeQ60500OAZq4m8nxVdL4WIDb7lsq9gcG5ZOLn4HPm0eAo
-	 9+k3Uy/RjnlSDtkGneF8USxti5DoxjKo8Hu+qI2UdEu/rlCwgHkG+txWDuaF/MoPz0
-	 2JoIuJ12lRbW5aX0c6HjNt1ur3ieXKfsIW0MxE0Ni1m5Y9+69MXqGJ1pTdghqDc6b3
-	 A7elOM6Ayc2sg==
-Message-ID: <3f657b75-64c9-442b-a609-987cc16f5501@kernel.org>
-Date: Thu, 22 Oct 2026 09:01:05 +0200
+	b=j7i0IZPTqu/H+ishh8ftP0bl8FDaQ0/noRkz8zNxxNEHNTWiZ6B3bai/vF1AlKbM9
+	 A+Dujla0LNMWCqokewsm0XNP3h5ty/oS7/HsOcDqeALspyrt7swVOBJboKnmZf06iU
+	 QIhx3eobRwRblXVFnQg0pHKC+teUR731EFLXhHZZp777au2NNmrHKQFJ7fYU8UR1yJ
+	 tfX/J7TNNoPe5TE4OQlHrSZBbdCHwC1idTl1ZXxEkhhX2D66EaS8t1ibZDV5+yoogu
+	 nY9MnxT0L71VUSmw60+Y3MXr2HuIzV+IhZ0c/8AsRgzZvRqyAnalyTq8sCz+BCKwUD
+	 DT7GZ7c6fH2yg==
+Message-ID: <2099889b-6483-4f4b-bc9c-723159528cd3@kernel.org>
+Date: Thu, 22 Oct 2026 09:48:37 +0200
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -52,89 +52,62 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] ata: pata_artop: read the ATP865 mode register
- through pci_iomap
-To: Daniel Palmer <daniel@0x0f.com>, ysato@users.sourceforge.jp,
- dalias@libc.org, glaubitz@physik.fu-berlin.de, cassel@kernel.org,
- linux-sh@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: geert@linux-m68k.org, linux-kernel@vger.kernel.org
-References: <20261017041419.311921-1-daniel@0x0f.com>
- <20261017041419.311921-2-daniel@0x0f.com>
+Subject: Re: [PATCH] ata: libata-sff: fix race between IRQ deferral and
+ ata_sff_flush_pio_task()
+To: Niklas Cassel <cassel@kernel.org>, Richard Weinberger <richard@nod.at>
+Cc: sashiko-bot <sashiko-bot@kernel.org>, stable@vger.kernel.org,
+ linux-ide@vger.kernel.org
+References: <20261020101107.1449635-2-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20261017041419.311921-2-daniel@0x0f.com>
+In-Reply-To: <20261020101107.1449635-2-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026/10/17 6:14, Daniel Palmer wrote:
-> artop_init_one() probes the 6280's "fast" bit with inb() on the raw
-> start address of BAR 4.  That address is a PCI I/O address, which is
-> only a usable port number on platforms whose I/O port base maps PCI I/O
-> space one to one.  On an SH7751 LANDISK (identity io_port_base, PCI I/O
-> window at 0xfe240000) the resource starts at 0x1400 and inb(0x1400)
-> dereferences that address:
+On 2026/10/20 12:11, Niklas Cassel wrote:
+> Commit 4a2e5409472e ("ata: libata-sff: don't busy-wait for PIO data-in
+> command completion") allowed the interrupt handler to queue
+> ap->sff_pio_task from ata_sff_hsm_move() when a PIO data-in command is
+> still busy after its final data block.
 > 
->   BUG: unable to handle kernel paging request at 00001400
->   PC is at artop_init_one+0x10e/0x170
+> ata_sff_flush_pio_task(), however, was written under the assumption that
+> cancel_delayed_work_sync() is enough to prevent sff_pio_task from being
+> queued again before the HSM state is reset to HSM_ST_IDLE and
+> sff_pio_task_link is cleared.
 > 
-> Map the BAR with pci_iomap() and use ioread8(), as libata-sff does for
-> the BMDMA registers later on.
+> The flush runs early during error handling, at a point where the timed
+> out command is still active, the port is not frozen yet, and interrupts
+> are still being serviced.  If the final data-block interrupt of a PIO
+> data-in command is serviced in the window between
+> cancel_delayed_work_sync() and the reset of hsm_task_state, the
+> interrupt handler queues sff_pio_task after the cancel has completed.
+> When that work item then executes on ata_sff_wq after the flush cleared
+> ap->sff_pio_task_link, ata_sff_pio_task() hits
+> BUG_ON(ap->sff_pio_task_link == NULL) while holding the host lock with
+> interrupts disabled; alternatively it proceeds on a stale link while
+> error handling owns the port.
 > 
-> Signed-off-by: Daniel Palmer <daniel@0x0f.com>
-> ---
->  drivers/ata/pata_artop.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
+> Fix this by resetting hsm_task_state to HSM_ST_IDLE before cancelling
+> the work item.  Once the state is IDLE, __ata_sff_port_intr() can no
+> longer enter ata_sff_hsm_move(), so the interrupt handler can no longer
+> queue the pio task, and cancel_delayed_work_sync() drains whatever was
+> queued before the reset.
 > 
-> diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-> index 9f8d41639a62..351ff4c8e48e 100644
-> --- a/drivers/ata/pata_artop.c
-> +++ b/drivers/ata/pata_artop.c
-> @@ -405,13 +405,21 @@ static int artop_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
->  	case 1:		/* 6260 */
->  		ppi[0] = &info_626x;
->  		break;
-> -	case 2:		/* 6280 or 6280 + fast */
-> -		if (inb(pci_resource_start(pdev, 4)) & 0x10)
-> +	case 2: {	/* 6280 or 6280 + fast */
-> +		void __iomem *bmdma = pci_iomap(pdev, 4, 1);
-> +		u8 cfg;
-> +
-> +		if (!bmdma)
-> +			return -ENOMEM;
-> +		cfg = ioread8(bmdma);
-> +		pci_iounmap(pdev, bmdma);
-> +		if (cfg & 0x10)
->  			ppi[0] = &info_628x_fast;
->  		else
->  			ppi[0] = &info_628x;
->  		break;
->  	}
-> +	}
+> Also make ata_sff_pio_task() bail out quietly when the HSM state was
+> marked idle by the flush, both at entry and after re-acquiring the port
+> lock following ata_msleep(), since a work item can already be running
+> when the flush resets the state.
+> 
+> Reported-by: sashiko-bot <sashiko-bot@kernel.org>
+> Link: https://lore.kernel.org/linux-ide/sashiko-outbox-177477@kernel.org/
+> Fixes: 4a2e5409472e ("ata: libata-sff: don't busy-wait for PIO data-in command completion")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-This is really ugly... Please move the "case 2" variable declarations to the top
-of the function so that you do not have to do something like this.
+Looks good.
 
-Of note also is that this switch does not have a "default" case, which is really
-bad practice, even though in this case, we should never hit unknown values.
-But I would still prefer seeing something like:
-
-	default:
-		pr_warn("Invalid driver data\n");
-		pci_disable_device(pdev);
-		return -ENODEV;
-	}
-
-or a big hammer:
-
-	default:
-		BUG();
-	}
-
->  
->  	BUG_ON(ppi[0] == NULL);
->  
-
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
