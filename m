@@ -1,55 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792656678;
-	b=zF5a/VyWqjQebQwfTnugpGFizUFJKY08FRSWDN31zF10a4dBUvP0ca58UHx3RLOEcJ8a
-	 uD/5IS/TyjIaIeU18jHuoynxuBrI/327PBCaOt4tEQhmF+YodfMOoxd4//AftUrVIo1aX
-	 T3AWXZS+MIQ64cacsVi+2bRD9zH2/UT5j4BEq1EAuvUGnHc6/AYxEngMsLq4jfRiSP5el
-	 ahF2ZRKpx+DV/qpWOL6L4Ph/XhwPPkjmSyHXmYQom5RRte75L2r1DSDlguB97BjO02pfd
-	 At5AEXdgotI2UPBKE1BijNyn0F3z0WG+m9sw339cb46cMCbPx0OuvDC6TlDA27kaogw==
+	t=1792656914;
+	b=nfymshcfjup7/JpqOPySJM0li7druz1YoFEBR4edkeW//d6pFXt/6hLkIFjG2lMIGbwo
+	 b2M+Q5ABJdcIYKOfmxMsH/QF1RmkryiL7+HNI2gvtaaT8HJZ72dOApu4cgbmbSJKL0hY7
+	 WUUxpJEF4x7DbRXTEBymfjW90yDhVOfE53sk+8SeIH4NxacjheFlQhVZoteCn/EwiUkDE
+	 hJ1smlhuTuCUb1VisXbqhgWmPJY85eQSRQ+VaSw6HTWphmw0aHDjCSstgLDDLubAFCsMh
+	 Ziru5ujJGJO9AUXKvRiJB2HujkecUCS0/TZIlIETRGoVduiI0eZDkPN8bCskTPlmN+w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792656678;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=YQNH48iJWVOkBuc+qEw4fymPxSNZ+X48xg8gU4VZE/c=;
-	b=Bzq9GivgAU3u4rhfgVIRjwmvCG21HzbJ/kU4THvye94ovb5cepMzjoU+LzZ0orlkdxy1
-	 rDEjh30emc48z1RYssbPnqIKnPdenYBwd+zoXtVgEyTFTK+09eWYs+DCnFi5VeyGQao2i
-	 yHRrMjQY5F/vYGeAxIX1gLPQ+myfPpqYZd7mSziplTub/Vxt/TBGn7ovceSTQBir3c/V8
-	 igm0QEWt14DPKeSU+D+j70PKuGQ7QQsUJtKeicQxc6DQYvulOhZqw/UCrIfM+Ckh8p55X
-	 mnPlKGKeGSyi4bcKX9Vl6vxjtwTU8a9gqzoTcND1uTQaWxri+XrAK5T9Lk0mN066IYA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792656914;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
+	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Mailer;
+	bh=wv0Ff/VPdRNNNF3G95aZ3coboS6ciDDZitBRH5mmPys=;
+	b=Tp5KTjmniT/cSV7mclfshTwjcYsRK0xnkJXGg/mscoqewfjZUPIsWP1pEJgyXsajt/Js
+	 XoOvD6jW5/bnQxfXx3NRNuMUKdan84ITakg8xOM5ISltj/IIKx4O6hq8rwjqCRn3k3gge
+	 12ntkTd5Gq2lCdmC2bFrsy8BcR3jGPIBxkxNtZVgYgq8MnKA+J1WRT12gnC0Qg6om+DF5
+	 LFITU6DWqkYMylkReHgzLdfizoe6EOG4Q1W3WFKIhmo9xFtAGdJ8j2Vc9QnRjwtPooWT9
+	 L5Mv8MScrYitaya89XtE/+tB+OUYTnMDqhjr+XJ8ggRtS5Rqv95sqwTvitzjtIQtdhw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jwqw5q3C;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y79VFA6z;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8454E606A319;
-	Thu, 22 Oct 2026 08:11:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB44606A31B;
+	Thu, 22 Oct 2026 08:15:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jwqw5q3C
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E7251F000C1;
-	Thu, 22 Oct 2026 08:11:16 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y79VFA6z
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9888D1F000C1;
+	Thu, 22 Oct 2026 08:15:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792656678;
-	bh=YQNH48iJWVOkBuc+qEw4fymPxSNZ+X48xg8gU4VZE/c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jwqw5q3CdcwsKrc37HglkZFLjp537xeoufvVqj9USCkiAug2AIdRPQQDpt3hLwA1W
-	 KoNdANu1V9L/c2v4vTuLA7xoDjiyjztDfbnAu4e10xieJV64Z5kfgOjygQAuP/KH/P
-	 lRpjIqaQcGK+1Np2Mkf4peXV1cglM9M5XI3hd9SbI+FM8SNiHOv8Vn724lAZM8WzjI
-	 gcs/nc2SerTr3BgKlxd2XXOrXbwNa/r5lknmWIDhVrDaDMbtGxMHGSMlwRY89h9ohr
-	 wryS3xjl3NN0dAsKMNrE/lON4gM4r7FVmChb0Bv8NhGep+/BBMd0c9RwieP1AIt6bj
-	 GbS+RM/lEPPqg==
-Date: Thu, 22 Oct 2026 10:11:13 +0200
+	s=k20260515; t=1792656913;
+	bh=wv0Ff/VPdRNNNF3G95aZ3coboS6ciDDZitBRH5mmPys=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=Y79VFA6zA85Aqf5QQhxEMq21HEKLxtuZmPxqfkUZsAwJDoNXsi9gLnLGfMFZ4Wbwk
+	 aM8A9Au1jkoqMWCtMwUx2zvDBvX6l5BxARG39Kt5wEGC3jotA4Mg5p2xg2yFtchf4t
+	 MbDpg2LOCr2bFCvKr2Csp/BNr2wAdwsdju4YSO1kyuTr9AqDy1LyI3VPLjV5FMwv0Q
+	 2rS7eAFyZvVFbDNV6aKE1xTYASlv9+wzoj4X1RZtuFd4qwJBj1gbCefyqtha8op9In
+	 j4Nje4lvtqHpo6xu32lNQpZxwUMV6ECj3G+5FXY2pJldJ6CcMGhIXliH27U0ahO9+i
+	 9xfbo2yQJoRQg==
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Rand Deeb <rand.sec96@gmail.com>, deeb.rand@confident.ru,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org, shda@confident.ru
-Subject: Re: [PATCH v2] ata: libata-core: Ignore forced transfer modes the
- host does not support
-Message-ID: <atnFIf_bZA28HRwk@ryzen>
-References: <20261015194935.1497-1-rand.sec96@gmail.com>
- <fb677bdb-355d-4a46-9e4b-db989a7690d9@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>, 
+ Richard Weinberger <richard@nod.at>, Niklas Cassel <cassel@kernel.org>
+Cc: sashiko-bot <sashiko-bot@kernel.org>, stable@vger.kernel.org, 
+ linux-ide@vger.kernel.org
+In-Reply-To: <20261020101107.1449635-2-cassel@kernel.org>
+References: <20261020101107.1449635-2-cassel@kernel.org>
+Subject: Re: [PATCH] ata: libata-sff: fix race between IRQ deferral and
+ ata_sff_flush_pio_task()
+Message-Id: <179265691236.2226585.17128547417966363667.b4-ty@kernel.org>
+Date: Thu, 22 Oct 2026 10:15:12 +0200
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -59,50 +60,28 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fb677bdb-355d-4a46-9e4b-db989a7690d9@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On Thu, Oct 22, 2026 at 09:55:35AM +0200, Damien Le Moal wrote:
-> On 2026/10/15 21:49, Rand Deeb wrote:
-> > The libata.force parameter can force a transfer mode (pio0-6, mwdma0-4,
-> > udma0-7) for a port or device. ata_force_xfermask() applies it in
-> > ata_do_set_mode() right after ata_dev_xfermask() has limited the device
-> > masks to what the host supports. It replaces those masks with the forced
-> > mode without checking the host masks, so a mode the controller does not
-> > support is passed to the driver's ->set_piomode() or ->set_dmamode().
-> > 
-> > Several PATA drivers rely on the host masks to keep the mode number in
-> > range when indexing their timing tables. ata_piix, pata_efar,
-> > pata_it8213, pata_oldpiix, pata_radisys and pata_rdc declare ATA_PIO4
-> > and ATA_MWDMA12_ONLY, index a five-entry PIO timing table with
-> > pio_mode - XFER_PIO_0, and index a three-entry needed_pio[] table with
-> > dma_mode - XFER_MW_DMA_0. Booting with libata.force=pio5, pio6, mwdma3
-> > or mwdma4 makes them read past those tables, use the values read as
-> > further indices into the timing table, and write the result to the
-> > controller's timing registers.
-> > 
-> > Make ata_force_xfermask() skip, with a warning, a forced transfer mode
-> > that is not in the port's PIO, MWDMA or UDMA mask, and keep looking for
-> > an earlier matching libata.force entry, as it already does for entries
-> > that do not apply to the device. With libata.force=pio4,1.0:pio5 on a
-> > PIO4 host, device 1.0 now gets pio4 instead of pio5. Forcing a mode the
-> > host supports still works as before, including a mode that
-> > ata_dev_xfermask() removed for the device or cable.
-> > 
-> > Found by Linux Verification Center (linuxtesting.org) with SVACE.
-> > 
-> > Fixes: 332673257056 ("libata: implement libata.force module parameter")
-> > Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
+On Tue, 20 Oct 2026 12:11:08 +0200, Niklas Cassel wrote:
+> Commit 4a2e5409472e ("ata: libata-sff: don't busy-wait for PIO data-in
+> command completion") allowed the interrupt handler to queue
+> ap->sff_pio_task from ata_sff_hsm_move() when a PIO data-in command is
+> still busy after its final data block.
 > 
-> Looks good.
+> ata_sff_flush_pio_task(), however, was written under the assumption that
+> cancel_delayed_work_sync() is enough to prevent sff_pio_task from being
+> queued again before the HSM state is reset to HSM_ST_IDLE and
+> sff_pio_task_link is cleared.
 > 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> [...]
 
-Repushed commit to pick up Damien's tag.
+Applied to libata/linux.git (for-7.4), thanks!
 
-Code unchanged.
-
+[1/1] ata: libata-sff: fix race between IRQ deferral and ata_sff_flush_pio_task()
+      https://git.kernel.org/libata/linux/c/69be7709
 
 Kind regards,
 Niklas
+
