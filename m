@@ -1,99 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.210.51
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792624985;
-	b=av+7bPt5yYnDcGtuZkdroMlHxBjMCBAQeiZjqLF14rdDZIo4mAWrV4mscas4rr0quoYA
-	 /6un6cQmrX7WMFBRrLL/We62GohFjFvnJ8k+0/CSdnbUdIJaCcNuw3yX8qGtPhCa9fLqj
-	 TTpstHeNJGf/427ijlwXRlSoKhK3GHUPRB8rCYybhsu0WOM6Ft4m52doZ3yHrPlhtHCKG
-	 OxE/mt7OQ7VtFkY8EiLqu3T6/zuirwWQmeB5dFcaxY1IT6hhJ63n/T6XzzYlqjtdkXSsR
-	 Qb4Pqz6r0Ck5V0tw2/eavvuC8NitX4NY2gNXRgJrsCg+rpFfhvDkyokhtpGMaQqtfzA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792624985;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=UWTtYfkUlWyv+2UbtfIcf2fvliDHTQ0Yu20KCZoeOOA=;
-	b=xhHhH5B17pcqmorccYsXOm6HCDatm8jbhJuLZyTNntu9JoKc317GSCmGR8nSbEs+e3Fg
-	 BOuGieNENOTR2aETbMtpm2PFmL2tothYuAjruloYTxb4tfwzxxJ2GozJJOT4BQoSnyWDp
-	 RgEXDPxyOtF2ZY5CN/65JJHarvPpZPtxKOrbDW4YKyGcr9OYkwuD9ObtcbU9xdv+NsVL8
-	 +uMcy992GnZgp1NOkikUiFoFc/bv2YOtLh9Wl9j64VYjnLUEzamUXfuAfWkDdky4jyu8d
-	 vRQH0+gY1JklJ5aM5GfhgizATfElhKIVEueTfMGjFQgn7Mg+hD/uFxk4xuv1ilO85cA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=bswUs7Ka;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.210.51
-Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792651839;
+	b=cFUxH26OHgSF57QFbZHQ3mUFFOPX18YSQ6S/wPWq7l2Pvv4LI3YlDE5zlkE1n1pg4hwm
+	 TSRSD7p+dfryQsaJ8zLNBfNI1k6p2GWhExFVocxnUxnwZYrkp2CAGtbfIbOnRyrKWrK24
+	 HUUoLgl6ILhKZ6Ks7i0Cla54h++K0muYwdSEsI53+geA/lPXQD8M8PRzgKwzA2rIyEVRb
+	 PWDC+/cN/2wF5UENWqSyhAV37I0KuzzDHcOqLf73mgZHBm31omi3kBWSld6hHnmtvItW/
+	 DvdxG7iP89/jZV5MfnDWfbshQIg4vg86w0dsLADrISJcLKrY7zqEHsvTrUkXco4XV3g==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792651839;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:Content-Language:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=VMJJtOaPJzI81KalVBBOZcnAoFG/9Ue++7vqjKuxbS4=;
+	b=IEv1FtT7IcKHbmzYiWwVlhYy23MJFzAk1M9hUEOHpsTuYeqHTu9DwnakdqvXb1UCP4c3
+	 fJ1+j69idSyjIe/a9CaLG6EkvBGabyWWv1rgmp8sl8fM6j7hkLlx9JXYwXBQm5pw7fXYC
+	 UTf5sJHQsxl3OTAYncxb2CJGi6JMJmcI/vZtk57wO81hxvPyZMRpUIbG22Nev1hJnORQC
+	 /hLbnXd0e0yS8WwS43Ss3zGDJmuX2Xg8rb/fCrTwI3sJBdi+gZ8W6SX9iPUxa5Yx7R102
+	 H5PqBIbvpoDBR7NBcq9Ec/g7Ys1Dy5DeBNK0EwGJ+i5UUG3ak6gT1/CGd0+mi4Sq1fQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nLn7iabQ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C676606A31A
-	for <linux-ide@vger.kernel.org>; Wed, 21 Oct 2026 23:23:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C676606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5369606A31B;
+	Thu, 22 Oct 2026 06:50:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=bswUs7Ka
-Received: by mail-ot1-f51.google.com with SMTP id 46e09a7af769-843b6f8e2c7so987676a34.1
-        for <linux-ide@vger.kernel.org>; Wed, 21 Oct 2026 16:23:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792624984; cv=none;
-        d=google.com; s=arc-20260327;
-        b=qN7G8JF93MJLKhez29TPdMyTcPnXjivob7Kd64ZPw2TAkR2D2ZOSc9+w/rc5IwwXF7
-         EshRPRP12E2l+BiV2j44tPbhCNza3+sbZsPVERnds6Bb2t1hSZpxh4fHQUkyeCBqbUmW
-         bkLquRfT+paWWKqRgrt3EBjjJIlPWonfeU9x6TSt2KFSeYXPHjg9jIo0Aq91iAAox+/A
-         V7icFLBNyAVGD2y54RPf28E6MzQ2uP94xu97SpyPSC6CkYEp+TItvqn6mB59JWnoZHjW
-         LZk2VC7OvFvurjbUvT9DSLusFcUZ76b0urJlAFQxmh9oeIqe1lg2bZf2Qvc/DRAJGNxd
-         kb8A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=UWTtYfkUlWyv+2UbtfIcf2fvliDHTQ0Yu20KCZoeOOA=;
-        fh=/2shEDTZk7Ylwf/KRExmgjEU0YyRAxz2q06LgV7LAkQ=;
-        b=axD40Y67rcyFy5EbA7IUVTSIyRT+tJMM2pAKtK6jld5OEXtCN05xscq91pILicZiJi
-         P0ei/FYlPiQXHRqOKLNnLYP6Js682KQTGMuQU3p3Asr51FHWagjuNfQC+dS2uVaeEaf9
-         qnIWLLKR55MN0uCSg900Pc3LkbvVad59e/SSkHVSGoBvdpX9ZkJxWmyxDaOd53ZlObWw
-         dD86x7kXQ0Xe/JBwyNy5gyPUgLauzUw/fxZA+xQ68yjk6fMIaZyYvUbD5g09Sl8tAmKO
-         tGElJvfEOuqvF6ycqBJ9+gEI5uHdusszeZwzKhD+FsvKM5B6qkxMPmQjn9Ma8kom6fif
-         7SIw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792624984; x=1793229784; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=UWTtYfkUlWyv+2UbtfIcf2fvliDHTQ0Yu20KCZoeOOA=;
-        b=bswUs7KaQtVDzZeWu+MWiyJboN7ZZsa0rJoQF+iOWuESEO3rl3FcBVgfPYnaN5YGfF
-         EjV/Wtawl0coq/Pg0/i3QcsLxYidjtA1LO/2PqcSVzx53rhAN2x/zpMefR+C6/XCMG4G
-         N4DQB9V1zjgirP6GQA4xpSSF7D323JQnLliMu4oWg538jz8kCe4Q0j97wkFF0VGG3IZE
-         3lJIg4tcXBe1AepcbuLJY+nmSgyZS2Nue5zWy1LFWsKTNrMjhI/4aumhI9ks1qH7swUy
-         ZgbY23Nf4w5fpAPVIe1SutVFZyWYhVHgCFu95eR1kXAvAukvnC/ekv1jGMGoZSsbkbbp
-         JNUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792624984; x=1793229784;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=UWTtYfkUlWyv+2UbtfIcf2fvliDHTQ0Yu20KCZoeOOA=;
-        b=wtIiUwPSfOhn4zaoPv5vswRNp0JAe7F/IpAqWgwoAWQXS6rt07GU1TCySbO7REpBX8
-         0MWLJjhlRG2shO5JDHZNLuE8zfWTJFgghLKPGuXcYGs1Ka8+CAtNdw1gAihBmazfMrDY
-         I5qz2672WVEfrdDKvOBjA2VL74hr3E1smvW9H533rb5hU8jjfq6VMcEcIakoG+HoTmxD
-         KmV9Jn7dbQnmFU2O7GxmqXsGR0KzmOcULr6ogo5oBtn0jNVgbZ33OxqgUGr/6h5ViLUJ
-         jHyv/dYSVlViLw7cFbCwZZqWpthGJlhcdiFh1GhQyxOn6LBcZo26sd8R8BHLUqcQ1df3
-         lzcA==
-X-Forwarded-Encrypted: i=1; AKwUvBzFtiYhsyPNV0PXbzombpaBaCAccjEoOhzRQ3ztT886s6apuQgwQODTTHwjzI8b5TlIii09qVFr7HY=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJVg4rC3Qa3NAxR46vW4zqkFyQ9z70ufV1OY4OW4b+0R0e1oEgm
-	gK2b19IYb4y88inWfKHAtuoXsg7LoIBxDevqzJ0wSU/JDkFKt+Fk30jB5CNYgfBPGlqYH+/e5xe
-	mew2VXxtLNwtGcWB2X6pa52tgN3is8xs=
-X-Gm-Gg: AYBFou1KqjY7mdkm3xR08NaUaogeJqSoEB06zU9r1YxOWbPMO6tmrCHTuhTHw9fWRRT
-	nlt8kxBaIHSkUQHp74Uy86xdPdPIeL6zGE+gTn+oGqfxv5jDSN0iRitD72esuWNgv2+42isx0O2
-	EBHvuSNuR/S4tjcMQKXIWmdf3QxtcsmD3PRj4XOi8V4dFf56O+ErvHJ+NZ5mvVx6pe7yFUYDDIW
-	9uUeFVomp08ldVEO8Plmyjh5YbRa/lSUMfnrEhyLewCBTjVnWAqdSz458AlbIDLaMMOulQ06MRm
-	TbVLRIbkvdkK6nCvXFSD8f3aMdees/DTbSAIQPoR/V3FLJox9dOitOeuSsuTYun5VIDd+GlYZmk
-	N9+85WbH2t1Q+A55NCEanlDkokoI/c3C5mSheC0tvnq+pivNDYYY=
-X-Received: by 2002:a05:6808:1686:b0:4f3:e98f:fa27 with SMTP id
- 5614622812f47-55359701a33mr2377377b6e.16.1792624984257; Wed, 21 Oct 2026
- 16:23:04 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nLn7iabQ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A7021F000C4;
+	Thu, 22 Oct 2026 06:50:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792651838;
+	bh=VMJJtOaPJzI81KalVBBOZcnAoFG/9Ue++7vqjKuxbS4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=nLn7iabQcVBxR41nchJsSeKLe50j7FRih7F73CPOfFsH8JkLpmXAv5Z5YmvrWPT2O
+	 X8gmEYBo+etLwTgfB/gX4hWPCJISLVJ1o08ddVC5t1dDmwOpNiUeQjA8M9tN2dCz1c
+	 7xTjNmNztG9zlLhst/cUbacFaJ/WgoF/U+0HwNNxQ00oaOs9NnV12BVTH89Z/67C1O
+	 CBaCtXQz6zVcw0acBIpgXxFlw4WyaYWy+C3WU/cQ+vzM+pu4F17F5lVpyPxgCZcX4q
+	 Jj21bl6bVa6YiQpB4Uv8A++R6RfTXJq41IMP5TC9ti4VKQLNs+XaArlPLmCPPTx4la
+	 Nb+iPMIZDN2xA==
+Message-ID: <79a81f1d-2964-4b2a-80d1-64e01c202468@kernel.org>
+Date: Thu, 22 Oct 2026 08:50:33 +0200
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -103,41 +51,145 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261017041419.311921-1-daniel@0x0f.com> <CAJpaz4abKAkDznoi3gczYHNQMF-j5cSajtG07Jws8LkFY9DZFg@mail.gmail.com>
- <CAFr9PXmntwx06iMc200d9HPoOeCE7XURpS9jiWhB3ud_+QQggA@mail.gmail.com>
-In-Reply-To: <CAFr9PXmntwx06iMc200d9HPoOeCE7XURpS9jiWhB3ud_+QQggA@mail.gmail.com>
-From: Colton Pawielski <colton.pawielski@gmail.com>
-Date: Wed, 21 Oct 2026 18:22:52 -0500
-X-Gm-Features: AclHuK-WfMKMCFvlwQ93fHdyuPOEefr5IORMgFLa-KSGZEsFjPpcPlLkY8bAXbc
-Message-ID: <CAJpaz4ZJ-zgcudHS705HSdcM-wiB5hmX=gg00wqzS18NF6fm1g@mail.gmail.com>
-Subject: Re: [PATCH 0/2] sh: Fix IDE on landisk
-To: Daniel Palmer <daniel@0x0f.com>
-Cc: ysato@users.sourceforge.jp, dalias@libc.org, glaubitz@physik.fu-berlin.de, 
-	dlemoal@kernel.org, cassel@kernel.org, linux-sh@vger.kernel.org, 
-	linux-ide@vger.kernel.org, geert@linux-m68k.org, linux-kernel@vger.kernel.org, 
-	fuchsfl@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/6] ata: ahci_brcm: Initialize the NSP interface clock
+ and reset
+To: Florian Fainelli <florian.fainelli@broadcom.com>,
+ linux-arm-kernel@lists.infradead.org
+Cc: Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Ray Jui <rjui@broadcom.com>,
+ Scott Branden <sbranden@broadcom.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>, Vinod Koul <vkoul@kernel.org>,
+ Neil Armstrong <neil.armstrong@linaro.org>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>, Tejun Heo <tj@kernel.org>,
+ Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>,
+ "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
+ <linux-ide@vger.kernel.org>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
+ "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>
+References: <20261021165555.652102-1-florian.fainelli@broadcom.com>
+ <20261021165555.652102-4-florian.fainelli@broadcom.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20261021165555.652102-4-florian.fainelli@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Daniel,
+On 2026/10/21 18:55, Florian Fainelli wrote:
+> The NSP probe path assumes firmware has enabled the SATA IDM interface
+> clock and released the core reset. The downstream iProc config_AHCI()
+> sequence explicitly performs both operations before accessing AHCI.
+> Without that setup, a cold boot can access an inactive controller.
+> 
+> Map the optional NSP IDM register region and enable the interface clock
+> before releasing reset, retaining the downstream settling intervals.
+> Perform the sequence at probe and resume before reconfiguring SATA.
+> 
+> Keep the resource optional so older device trees continue to rely on
+> firmware initialization.
+> 
+> Fixes: 3ee2e6dcaa35 ("ata: ahci_brcm: Add support for Broadcom NSP SoC")
+> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+> ---
+>  drivers/ata/ahci_brcm.c | 34 ++++++++++++++++++++++++++++++++++
+>  1 file changed, 34 insertions(+)
+> 
+> diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+> index 29be74fedcf0..2ed60806b671 100644
+> --- a/drivers/ata/ahci_brcm.c
+> +++ b/drivers/ata/ahci_brcm.c
+> @@ -6,7 +6,9 @@
+>   */
+>  
+>  #include <linux/ahci_platform.h>
+> +#include <linux/bcma/bcma_regs.h>
+>  #include <linux/compiler.h>
+> +#include <linux/delay.h>
+>  #include <linux/device.h>
+>  #include <linux/init.h>
+>  #include <linux/interrupt.h>
+> @@ -83,6 +85,7 @@ enum brcm_ahci_quirks {
+>  struct brcm_ahci_priv {
+>  	struct device *dev;
+>  	void __iomem *top_ctrl;
+> +	void __iomem *idm;
+>  	u32 port_mask;
+>  	u32 quirks;
+>  	enum brcm_ahci_version version;
+> @@ -230,6 +233,25 @@ static u32 brcm_ahci_get_portmask(struct ahci_host_priv *hpriv,
+>  	return impl;
+>  }
+>  
+> +static void brcm_sata_init_idm(struct brcm_ahci_priv *priv)
+> +{
+> +	u32 data;
+> +
+> +	if (!priv->idm)
+> +		return;
+> +
+> +	/* Enable the interface clock before taking the SATA core out of reset. */
 
-On Wed, 21 Oct 2026 at 05:55, Daniel Palmer <daniel@0x0f.com> wrote:
-> There seems to be two issues: One it interrupts for every packet when
-> the 8139cp can hold off and not storm the processor, and there is some
-> issue with the chip refusing to send small skbs so the network layer
-> starts locking up/timing out. I was planning to send fixes this
-> weekend but if your fix is one of those, send your version, cc me and
-> I'll test it out.
+Long line. Please split before 80 chars.
 
-My fix turned out to be neither of those, so please go ahead and send
-yours. It's a race in cp_rx_poll(): napi_complete_done() runs before
-cp->lock is taken, so an interrupt in between can leave Rx unmasked
-while NAPI is still scheduled, and the level-triggered IRQ then storms
-until the board hard-hangs. I've sent it to netdev with you on cc:
+> +	data = readl(priv->idm + BCMA_IOCTL);
+> +	writel(data | BCMA_IOCTL_CLK, priv->idm + BCMA_IOCTL);
+> +	readl(priv->idm + BCMA_IOCTL);
+> +	usleep_range(1000, 2000);
+> +
+> +	data = readl(priv->idm + BCMA_RESET_CTL);
+> +	writel(data & ~BCMA_RESET_CTL_RESET, priv->idm + BCMA_RESET_CTL);
+> +	readl(priv->idm + BCMA_RESET_CTL);
+> +	usleep_range(1000, 2000);
+> +}
+> +
+>  static void brcm_sata_init(struct brcm_ahci_priv *priv)
+>  {
+>  	void __iomem *ctrl = priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL;
+> @@ -369,6 +391,8 @@ static int __maybe_unused brcm_ahci_resume(struct device *dev)
+>  	struct brcm_ahci_priv *priv = hpriv->plat_data;
+>  	int ret = 0;
+>  
+> +	brcm_sata_init_idm(priv);
+> +
+>  	ret = reset_control_deassert(priv->rcdev_ahci);
+>  	if (ret)
+>  		return ret;
+> @@ -453,6 +477,14 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+>  	priv->version = (unsigned long)of_id->data;
+>  	priv->dev = dev;
+>  
+> +	/* Older NSP device trees rely on firmware to initialize the IDM. */
+> +	if (priv->version == BRCM_SATA_NSP &&
+> +	    platform_get_resource_byname(pdev, IORESOURCE_MEM, "idm")) {
+> +		priv->idm = devm_platform_ioremap_resource_byname(pdev, "idm");
+> +		if (IS_ERR(priv->idm))
+> +			return PTR_ERR(priv->idm);
+> +	}
+> +
+>  	priv->top_ctrl = devm_platform_ioremap_resource_byname(pdev, "top-ctrl");
+>  	if (IS_ERR(priv->top_ctrl))
+>  		return PTR_ERR(priv->top_ctrl);
+> @@ -493,6 +525,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>  
+> +	brcm_sata_init_idm(priv);
 
-https://lore.kernel.org/all/20261021-b4-8139cp-napi-v1-1-c9b683d9564b@gmail.com/
+Here, this is called *before* the clocks are enabled, but in brcm_ahci_resume(),
+brcm_sata_init() -> brcm_sata_init_idm(() is called *after* the clocks are
+enabled. Does this matter?
 
-It should be independent of your two fixes. Please cc me when you
-send yours and I'll test them on my boards.
+> +
+>  	ret = ahci_platform_enable_clks(hpriv);
+>  	if (ret)
+>  		goto out_reset;
 
-Thanks,
-Colton
+
+-- 
+Damien Le Moal
+Western Digital Research
