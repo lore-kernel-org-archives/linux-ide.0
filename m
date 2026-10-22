@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792651839;
-	b=cFUxH26OHgSF57QFbZHQ3mUFFOPX18YSQ6S/wPWq7l2Pvv4LI3YlDE5zlkE1n1pg4hwm
-	 TSRSD7p+dfryQsaJ8zLNBfNI1k6p2GWhExFVocxnUxnwZYrkp2CAGtbfIbOnRyrKWrK24
-	 HUUoLgl6ILhKZ6Ks7i0Cla54h++K0muYwdSEsI53+geA/lPXQD8M8PRzgKwzA2rIyEVRb
-	 PWDC+/cN/2wF5UENWqSyhAV37I0KuzzDHcOqLf73mgZHBm31omi3kBWSld6hHnmtvItW/
-	 DvdxG7iP89/jZV5MfnDWfbshQIg4vg86w0dsLADrISJcLKrY7zqEHsvTrUkXco4XV3g==
+	t=1792652469;
+	b=PciYXN9TvQPEBpyXDddBwh0Bq1UDX1qDxS+6O9Elm+a76T80LdM1u/fSTrwmg8EpklcB
+	 ijje9F1iL8CC2rFsBlKV7y330nCjw5nQbvIcIw61uiGvNfYSjKPQkpFhnUNC33BXVBHhK
+	 3l8XCde/M47dT9Ju2OtZBH+SGrpDZ52AbmFfmgx+/dCtLe0J6sUBGfy14SncUKLRQvUJN
+	 WDwVbx7+M7WqzMFvGggFPM0aH4odJJnWvFgrREE1l1Wqiy0n3aORd15VIx2ojvQDM47Vp
+	 H+b1KLdDwnHVr+3BjMyo/AjWCqIg3ht8Gsr3mJblvXGZZHVMiSwgy0/lQ1bc+gVZ/Pw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792651839;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792652469;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:From:Content-Language:Organization:
 	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=VMJJtOaPJzI81KalVBBOZcnAoFG/9Ue++7vqjKuxbS4=;
-	b=IEv1FtT7IcKHbmzYiWwVlhYy23MJFzAk1M9hUEOHpsTuYeqHTu9DwnakdqvXb1UCP4c3
-	 fJ1+j69idSyjIe/a9CaLG6EkvBGabyWWv1rgmp8sl8fM6j7hkLlx9JXYwXBQm5pw7fXYC
-	 UTf5sJHQsxl3OTAYncxb2CJGi6JMJmcI/vZtk57wO81hxvPyZMRpUIbG22Nev1hJnORQC
-	 /hLbnXd0e0yS8WwS43Ss3zGDJmuX2Xg8rb/fCrTwI3sJBdi+gZ8W6SX9iPUxa5Yx7R102
-	 H5PqBIbvpoDBR7NBcq9Ec/g7Ys1Dy5DeBNK0EwGJ+i5UUG3ak6gT1/CGd0+mi4Sq1fQ==
+	bh=EXjmarcs8jPMRVcm820ceFNk9nolMb8Iitf1PYFVGXY=;
+	b=tFWFw+gBqyHa4wp4moS+POGl+qHA7f/WW4I1ZFxH5sOC+xKZ4GCIQO/z4tdGVeTffYjz
+	 JY9NC8T+vIpYEZaO0XqgdYKApq+hJjQ59ci6XT2sDt2m619M69i4UanRftJZtmASfXN+Z
+	 M8jq9VHzabJbykDSPG3dbWWDCn8XCpYnNDHZZHV+0LQLuznoWkSKhMbWLwSQizWQfDwuD
+	 Y+FL2Lqmxqkswu1QSrXlsJW9690sspuJJmwou+k20YyeP9C5RtjRuP5tPbVVGBJdSkKX7
+	 qyX/0rhR8pnM2kMDW0oOOGjNtr49sWF4SKQQjADJIaBvPpT1lOdyD5l3m3v61ZXZw7g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nLn7iabQ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WOpcw62D;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5369606A31B;
-	Thu, 22 Oct 2026 06:50:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E42C606A319;
+	Thu, 22 Oct 2026 07:01:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nLn7iabQ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A7021F000C4;
-	Thu, 22 Oct 2026 06:50:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WOpcw62D
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84B6B1F000C1;
+	Thu, 22 Oct 2026 07:01:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792651838;
-	bh=VMJJtOaPJzI81KalVBBOZcnAoFG/9Ue++7vqjKuxbS4=;
+	s=k20260515; t=1792652469;
+	bh=EXjmarcs8jPMRVcm820ceFNk9nolMb8Iitf1PYFVGXY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=nLn7iabQcVBxR41nchJsSeKLe50j7FRih7F73CPOfFsH8JkLpmXAv5Z5YmvrWPT2O
-	 X8gmEYBo+etLwTgfB/gX4hWPCJISLVJ1o08ddVC5t1dDmwOpNiUeQjA8M9tN2dCz1c
-	 7xTjNmNztG9zlLhst/cUbacFaJ/WgoF/U+0HwNNxQ00oaOs9NnV12BVTH89Z/67C1O
-	 CBaCtXQz6zVcw0acBIpgXxFlw4WyaYWy+C3WU/cQ+vzM+pu4F17F5lVpyPxgCZcX4q
-	 Jj21bl6bVa6YiQpB4Uv8A++R6RfTXJq41IMP5TC9ti4VKQLNs+XaArlPLmCPPTx4la
-	 Nb+iPMIZDN2xA==
-Message-ID: <79a81f1d-2964-4b2a-80d1-64e01c202468@kernel.org>
-Date: Thu, 22 Oct 2026 08:50:33 +0200
+	b=WOpcw62DU8gibkhW2vEgsyGAsBB19FUq95K2E9GjjhBhLudBjKFLRWiR6sKZCqFiS
+	 6KsnGELeDLc+J9alftd8tfiYUUlyEcre1sxQWoSGJSNacb4WRGUQNutS5En9/+Oi7q
+	 78ZVVbFzTWEePVavInekIeQ60500OAZq4m8nxVdL4WIDb7lsq9gcG5ZOLn4HPm0eAo
+	 9+k3Uy/RjnlSDtkGneF8USxti5DoxjKo8Hu+qI2UdEu/rlCwgHkG+txWDuaF/MoPz0
+	 2JoIuJ12lRbW5aX0c6HjNt1ur3ieXKfsIW0MxE0Ni1m5Y9+69MXqGJ1pTdghqDc6b3
+	 A7elOM6Ayc2sg==
+Message-ID: <3f657b75-64c9-442b-a609-987cc16f5501@kernel.org>
+Date: Thu, 22 Oct 2026 09:01:05 +0200
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -52,142 +52,88 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/6] ata: ahci_brcm: Initialize the NSP interface clock
- and reset
-To: Florian Fainelli <florian.fainelli@broadcom.com>,
- linux-arm-kernel@lists.infradead.org
-Cc: Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, Vinod Koul <vkoul@kernel.org>,
- Neil Armstrong <neil.armstrong@linaro.org>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>, Tejun Heo <tj@kernel.org>,
- Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>,
- "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
- <linux-ide@vger.kernel.org>,
- "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
- "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>
-References: <20261021165555.652102-1-florian.fainelli@broadcom.com>
- <20261021165555.652102-4-florian.fainelli@broadcom.com>
+Subject: Re: [PATCH 1/2] ata: pata_artop: read the ATP865 mode register
+ through pci_iomap
+To: Daniel Palmer <daniel@0x0f.com>, ysato@users.sourceforge.jp,
+ dalias@libc.org, glaubitz@physik.fu-berlin.de, cassel@kernel.org,
+ linux-sh@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: geert@linux-m68k.org, linux-kernel@vger.kernel.org
+References: <20261017041419.311921-1-daniel@0x0f.com>
+ <20261017041419.311921-2-daniel@0x0f.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20261021165555.652102-4-florian.fainelli@broadcom.com>
+In-Reply-To: <20261017041419.311921-2-daniel@0x0f.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026/10/21 18:55, Florian Fainelli wrote:
-> The NSP probe path assumes firmware has enabled the SATA IDM interface
-> clock and released the core reset. The downstream iProc config_AHCI()
-> sequence explicitly performs both operations before accessing AHCI.
-> Without that setup, a cold boot can access an inactive controller.
+On 2026/10/17 6:14, Daniel Palmer wrote:
+> artop_init_one() probes the 6280's "fast" bit with inb() on the raw
+> start address of BAR 4.  That address is a PCI I/O address, which is
+> only a usable port number on platforms whose I/O port base maps PCI I/O
+> space one to one.  On an SH7751 LANDISK (identity io_port_base, PCI I/O
+> window at 0xfe240000) the resource starts at 0x1400 and inb(0x1400)
+> dereferences that address:
 > 
-> Map the optional NSP IDM register region and enable the interface clock
-> before releasing reset, retaining the downstream settling intervals.
-> Perform the sequence at probe and resume before reconfiguring SATA.
+>   BUG: unable to handle kernel paging request at 00001400
+>   PC is at artop_init_one+0x10e/0x170
 > 
-> Keep the resource optional so older device trees continue to rely on
-> firmware initialization.
+> Map the BAR with pci_iomap() and use ioread8(), as libata-sff does for
+> the BMDMA registers later on.
 > 
-> Fixes: 3ee2e6dcaa35 ("ata: ahci_brcm: Add support for Broadcom NSP SoC")
-> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+> Signed-off-by: Daniel Palmer <daniel@0x0f.com>
 > ---
->  drivers/ata/ahci_brcm.c | 34 ++++++++++++++++++++++++++++++++++
->  1 file changed, 34 insertions(+)
+>  drivers/ata/pata_artop.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-> index 29be74fedcf0..2ed60806b671 100644
-> --- a/drivers/ata/ahci_brcm.c
-> +++ b/drivers/ata/ahci_brcm.c
-> @@ -6,7 +6,9 @@
->   */
->  
->  #include <linux/ahci_platform.h>
-> +#include <linux/bcma/bcma_regs.h>
->  #include <linux/compiler.h>
-> +#include <linux/delay.h>
->  #include <linux/device.h>
->  #include <linux/init.h>
->  #include <linux/interrupt.h>
-> @@ -83,6 +85,7 @@ enum brcm_ahci_quirks {
->  struct brcm_ahci_priv {
->  	struct device *dev;
->  	void __iomem *top_ctrl;
-> +	void __iomem *idm;
->  	u32 port_mask;
->  	u32 quirks;
->  	enum brcm_ahci_version version;
-> @@ -230,6 +233,25 @@ static u32 brcm_ahci_get_portmask(struct ahci_host_priv *hpriv,
->  	return impl;
->  }
->  
-> +static void brcm_sata_init_idm(struct brcm_ahci_priv *priv)
-> +{
-> +	u32 data;
+> diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
+> index 9f8d41639a62..351ff4c8e48e 100644
+> --- a/drivers/ata/pata_artop.c
+> +++ b/drivers/ata/pata_artop.c
+> @@ -405,13 +405,21 @@ static int artop_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
+>  	case 1:		/* 6260 */
+>  		ppi[0] = &info_626x;
+>  		break;
+> -	case 2:		/* 6280 or 6280 + fast */
+> -		if (inb(pci_resource_start(pdev, 4)) & 0x10)
+> +	case 2: {	/* 6280 or 6280 + fast */
+> +		void __iomem *bmdma = pci_iomap(pdev, 4, 1);
+> +		u8 cfg;
 > +
-> +	if (!priv->idm)
-> +		return;
-> +
-> +	/* Enable the interface clock before taking the SATA core out of reset. */
-
-Long line. Please split before 80 chars.
-
-> +	data = readl(priv->idm + BCMA_IOCTL);
-> +	writel(data | BCMA_IOCTL_CLK, priv->idm + BCMA_IOCTL);
-> +	readl(priv->idm + BCMA_IOCTL);
-> +	usleep_range(1000, 2000);
-> +
-> +	data = readl(priv->idm + BCMA_RESET_CTL);
-> +	writel(data & ~BCMA_RESET_CTL_RESET, priv->idm + BCMA_RESET_CTL);
-> +	readl(priv->idm + BCMA_RESET_CTL);
-> +	usleep_range(1000, 2000);
-> +}
-> +
->  static void brcm_sata_init(struct brcm_ahci_priv *priv)
->  {
->  	void __iomem *ctrl = priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL;
-> @@ -369,6 +391,8 @@ static int __maybe_unused brcm_ahci_resume(struct device *dev)
->  	struct brcm_ahci_priv *priv = hpriv->plat_data;
->  	int ret = 0;
->  
-> +	brcm_sata_init_idm(priv);
-> +
->  	ret = reset_control_deassert(priv->rcdev_ahci);
->  	if (ret)
->  		return ret;
-> @@ -453,6 +477,14 @@ static int brcm_ahci_probe(struct platform_device *pdev)
->  	priv->version = (unsigned long)of_id->data;
->  	priv->dev = dev;
->  
-> +	/* Older NSP device trees rely on firmware to initialize the IDM. */
-> +	if (priv->version == BRCM_SATA_NSP &&
-> +	    platform_get_resource_byname(pdev, IORESOURCE_MEM, "idm")) {
-> +		priv->idm = devm_platform_ioremap_resource_byname(pdev, "idm");
-> +		if (IS_ERR(priv->idm))
-> +			return PTR_ERR(priv->idm);
+> +		if (!bmdma)
+> +			return -ENOMEM;
+> +		cfg = ioread8(bmdma);
+> +		pci_iounmap(pdev, bmdma);
+> +		if (cfg & 0x10)
+>  			ppi[0] = &info_628x_fast;
+>  		else
+>  			ppi[0] = &info_628x;
+>  		break;
+>  	}
 > +	}
-> +
->  	priv->top_ctrl = devm_platform_ioremap_resource_byname(pdev, "top-ctrl");
->  	if (IS_ERR(priv->top_ctrl))
->  		return PTR_ERR(priv->top_ctrl);
-> @@ -493,6 +525,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
->  	if (ret)
->  		return ret;
+
+This is really ugly... Please move the "case 2" variable declarations to the top
+of the function so that you do not have to do something like this.
+
+Of note also is that this switch does not have a "default" case, which is really
+bad practice, even though in this case, we should never hit unknown values.
+But I would still prefer seeing something like:
+
+	default:
+		pr_warn("Invalid driver data\n");
+		pci_disable_device(pdev);
+		return -ENODEV;
+	}
+
+or a big hammer:
+
+	default:
+		BUG();
+	}
+
 >  
-> +	brcm_sata_init_idm(priv);
-
-Here, this is called *before* the clocks are enabled, but in brcm_ahci_resume(),
-brcm_sata_init() -> brcm_sata_init_idm(() is called *after* the clocks are
-enabled. Does this matter?
-
-> +
->  	ret = ahci_platform_enable_clks(hpriv);
->  	if (ret)
->  		goto out_reset;
+>  	BUG_ON(ppi[0] == NULL);
+>  
 
 
 -- 
