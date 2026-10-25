@@ -1,79 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.176
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792899868;
-	b=p3Dh6KrrFtE03rwSYQrE8ZxSRumZMyda4Y8Cbj/AIxitljWImirgJhBXyJyTJWWsaQFM
-	 uFdSrVSuWT0THScSyJDjVGHqWsjs179wmIKpI3/5dQ6S0JmJ57TINosgc8Ctr+kLTh76S
-	 DHLD/jNLIKCLgUw8j5+K3I7aURAuWSIy6V2Vb5MeLTGZu48MWnB1iTsodcyp73oEBECWB
-	 upqIK6PfXT/vS5RKX5KlY7FLYAUsur2e9NRJc5DhYT+JC+VN8zrL0WQZVsgopQ98mYq6g
-	 b1tT/rSx/UNVdzPeRyrJPRb3ABCtcCRZ7Mt4vMP08i1m1R3hFfyK3YSUzpj9IFVTkNA==
+	t=1792899879;
+	b=ee+n8rBkZqiJMvrkJ2AC1zeCplA2PMmniERa+SB4V+xI0ZWtYW8/2nLlHhCXpdP+R3OE
+	 w5pTLOYZ1xl68Bf1DKNmmxdMkPPpfpLE3Ilapr6011m8QZmBaE3wLOw2gldtWiAzztTpL
+	 M5SmIsHc7zWGLEnQGnoue//QRmoHkh3jH9Qx3FXEhOiVew0JltLltp91Q8lHw5HjDuthU
+	 A9XjXBaFqA+a7yl/EWTIhKvkDa7njp6mp0crwU+1blDBcNsD0CGBdh8iyznpBp6sflYi6
+	 0KgRFPebWl7xdTV1TnGJD6WDjvMkBRr8GfxY+G6n6WeP3PmxXrTXT2cGxIFXSlf7IZA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792899868;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792899879;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=mzxcYUCwTt0YqgjKp0GiJp4QFX6CqOyEppZJrIxJY7A=;
-	b=HHxhpEhs6nD+4z+BMe6kSw+UR0atOcJY77Upv/wb1/kwZrXAFcmr34bhxfMBZQE6HIPJ
-	 qcY7OxzUdJ6mVLwu7kFj6465YVgeifPMPpjevr1Lc9XCNyUvoQ7w5gqoA0FwWIQTogj0b
-	 lV74kOhLQFjAy0ltt7K3hsxr8xBZDtrnWdS86x3mtLKdXPgVlbgLupSFG8wjvpj8EJeG9
-	 ArGBtorYMwL905p6vHf8H0L2Gz1xJyv5Nvp44X/ODuulffeg8tUKokgYZ/XWTQ0Kyf9o6
-	 +i/zt3uc7vYYcvxHU5T98jgehNJc0L6sefOb45sCShvwV3/pJV5SuxJVI1JbCqzkzlg==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=LFDK+1ulkRfFlkLwBfdTjH+FHi2P6fwT2yU7wsIpXvs=;
+	b=qV9m1l5n80Ltl5hcfFwP818zGBFaIrYBz5jCIRBRgX8nXv1W3al4FoPN6crjDCupM8/u
+	 S1e9QZqo5EJnvnlfiLl2D1bQePM+V5LYpQsd3cyan0YEwv7NJCc6U5DVnveT0R6fPOUUh
+	 X/BAkis+B05ghSLs3MVkb0dKDA49aQMlE9klbeWMwyeckOQ1FpH4vkFkj73Y1nA8PzEj6
+	 Wjhbn/aMOBWZXEY75bi7itMJxSBxuGJSjSyaF2DZUfUuKoEEDaLCEH0tVwySslbMMwMRH
+	 CfBx/IbcEJJuYn7too+DhSLFfVFQGduyJMTxlgpniJJdBcSuTTmAUFVsb64qWBSkhOw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=0x0f.com;
 	spf=pass smtp.mailfrom=0x0f.com;
-	dkim=pass header.d=0x0f.com header.i=@0x0f.com header.a=rsa-sha256 header.s=google header.b=inpmsh23;
-	arc=none smtp.remote-ip=209.85.216.41
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	dkim=pass header.d=0x0f.com header.i=@0x0f.com header.a=rsa-sha256 header.s=google header.b=Vw2qb8eu;
+	arc=none smtp.remote-ip=209.85.214.176
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E93A6606A31D
-	for <linux-ide@vger.kernel.org>; Sun, 25 Oct 2026 03:44:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E93A6606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3A48606A324
+	for <linux-ide@vger.kernel.org>; Sun, 25 Oct 2026 03:44:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F3A48606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0x0f.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0x0f.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=0x0f.com header.i=@0x0f.com header.a=rsa-sha256 header.s=google header.b=inpmsh23
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3ab41538192so1527257a91.0
-        for <linux-ide@vger.kernel.org>; Sat, 24 Oct 2026 20:44:27 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=0x0f.com header.i=@0x0f.com header.a=rsa-sha256 header.s=google header.b=Vw2qb8eu
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2ea7190aea1so9001975ad.1
+        for <linux-ide@vger.kernel.org>; Sat, 24 Oct 2026 20:44:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=0x0f.com; s=google; t=1792899867; x=1793504667; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=mzxcYUCwTt0YqgjKp0GiJp4QFX6CqOyEppZJrIxJY7A=;
-        b=inpmsh23JZihZWIdxCXdcljqgx0ZfDMt/YGILuWXDgk8+0JzAgMh0ettSpv+Tv+NSY
-         mQw7yi3bz6cK+qKRZrcd7gvHgnrcWDWdhG6JnkS0V0/Qo5LGOgTw7Qt4yqCuTrEO1lrS
-         RIHQDLJdnMNWv5RGy6z3OJ7kBzFvi37Eb6vLo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792899867; x=1793504667;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=0x0f.com; s=google; t=1792899873; x=1793504673; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=mzxcYUCwTt0YqgjKp0GiJp4QFX6CqOyEppZJrIxJY7A=;
-        b=OhOtt2w3nKmx+bRLqcO9FTAdKTd0XMh6B/dTQL0wArT63TMekm3Q3tbreuBMEuFEIT
-         CHTPG3sb1fLhNRyBb/r99pprxWAok7gheQZAwgzU6myk6Y7PwvS7A84RQwiJDeNdEUp/
-         GJQPjjyRSABVJHpIYFWPDNXxYwYdgzmWhSmfh54jb7Q/n8DD88Wwbx26gdBx11YEt9Tk
-         yMtlFjufPtpEfrrZ7xLxD/I4MGcxt7j/tCyLZ18xG0+cwBM5NykUSfZV0d2mIFu9ApCp
-         yoUtUrZAvSPNQACPmUp4DV+6sB1UI5W2YqYrM1aHsiFexep9c87cijEwatf9EF+QcYn4
-         N/jQ==
-X-Forwarded-Encrypted: i=1; AKwUvByt9xtU53UFfwCSFYRgGGQLiOfcqrSvvb14RsDALoIG9k/JyWvnO2oc2rdeKHeMrdp4kJfHf+/bxF4=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLt5ld1TVVDg7r78kTsO4Szao0FiL1Spaut9lAlXBD0W8pu4W2V
-	bKdgYLUvwPvcFd+sX4FWIEX3pnZ0mrdnbDm4P6E3eebBag+IhxrBzoJvi/KRwUeofM0=
-X-Gm-Gg: AYBFou3qWQR4yHllynzHqqoz3cNp9tja8YD60w3kgEwtiRfur8PxXeQ01fNsmEfm57u
-	WrBnBQkmkOAKVbMsc/gCvYApZVOypz6DvwNTKZY+WenX4y/VuyDlVaIAT0Tz7aE3XwSOWGxzt8w
-	Eh+iqinyET5SOLKSqON5YrnmU2TBGJOpLI4z0+BA1pddFCRtGVKdxK4fs623syZyAV31DRBmpCF
-	iKAL90f4xOUK8P6vjix34D0urLSoWN1LQ0xn4GW/FRsWww1vBDiUV3Nv49nN8GeBMQjRTuzmP+U
-	9gjZYKAUmm9OaI9Jmy7/HPlii+eoTv7TQwZlU15vkQvaaWqnc7c39OeRGGllUSuLYv3qTo23K2A
-	j1jDzC6436vs4sHfpo+N/iKAtXKK0bpadTRmzQkac3vVt97HQCmx05e8GNqcth+XbgcZmE4tlXq
-	iSO/8yTsyQTauSdoSxc4YYqyhYbPhZH89m4J/v47BdkwtbK2f14osi57NmwSN30WJNCA8wkLfML
-	NBfH9hwZ10XIr4sp4uMh5Ktm5P+EzPJLrVXBmtB81JvDuZ7bsO/btF3qPoNPevhtpQmkx43TzYJ
-	XEpTyOL7To/98IcQjydI
-X-Received: by 2002:a17:90b:4c8b:b0:3a4:f8da:2478 with SMTP id 98e67ed59e1d1-3adeae9c560mr3198326a91.29.1792899867044;
-        Sat, 24 Oct 2026 20:44:27 -0700 (PDT)
+        bh=LFDK+1ulkRfFlkLwBfdTjH+FHi2P6fwT2yU7wsIpXvs=;
+        b=Vw2qb8euRlJUMv45mYZE9Io8oRd7Avf9nw74WzUdB1H/4vBSaXMrLJjfphc9q+wfya
+         sFdmWtZ/ZANGnObXe/kZiRxWie0Cl/PvMqqXrmKT5CJTBND1p83Pn/55Zi35T1UF+BO5
+         5qPNXgM7l/OmB84SlIpdL5CnFJL+Sf8LtUmF8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792899873; x=1793504673;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=LFDK+1ulkRfFlkLwBfdTjH+FHi2P6fwT2yU7wsIpXvs=;
+        b=SiNqIRIh8sAOCEWwETxj12E+d7AcqTi1BTBIc1dohLziSidpeSNVgWr5x1hdH9fbpe
+         pc2r7ERg6MPdOI9txmP673eUh6RaBfGMY8TSu1k8uufcyNNmWg/WzPtg6V/GJfr5nmEP
+         m8wiwL5y0/wUBfZR9pPAqlCNXgWPMLoYELHJKzt4ORHE34CK03KrUsK9g11XoJXo6DbS
+         rkSVSlRiUuB55qKxNWcc7sUddY7zcluCIcunxG43TEB3N7kOqO4kxMURYTjqP1WKKUb0
+         Pv6NPJcyZj+TS6tTcgow+VdnZMqWO5eP51LPbtPbHW9J0oyOmhRp98nVJo32jW07ugts
+         XMXQ==
+X-Forwarded-Encrypted: i=1; AKwUvBx10USGMeg/hpbnxxHo1p3QFpkDYpqNSzw+2ZsInRpBRgGdb9mQEozr6VmEdwQmJeGUSKIcJ0RTABg=@vger.kernel.org
+X-Gm-Message-State: AFq9FYLwet71PAc0CrOsv+bht0aF7ZFYS8W+h4g83uZSp9K9wQ7LWAaI
+	8d/6SZkk4k7fGD9U+InzWXLrNxgtnj4UIK23k1jMrPAKlQgmQUJF+UcQV85HtHV72KA=
+X-Gm-Gg: AYBFou125B45zotuNQ834kUVchlusGrX85mSn5IkKOQGfwdE1aLSTGCh6JdVLG56bEV
+	tVDyegmn9M6DfdS+ozx3VdGYcqX2C4UVyau3RiQqWR/8LfnRKd/CAU29UkvrY6W3ST69JmOJUks
+	nJgAqHx4hZIhfCvUuQF5krz18on96Kmeoqzde7pLlgK42GZYimR8j2YkXTtwRBpQ7qpXciVlh/I
+	dwuwGxRu30Vu3dsmmuyw42+aOZy67DUTIox9as77hl0QFBzP+DI6on1GMtOw05BYfuXLuQO8Gv7
+	P2D2fT4/+NZBqOKeMIxyZ3/fV45tIfm7gDOsNRVR801cAE7EMYsH0cq+g8zlAW6ZjvjuAOSbNpr
+	KbcLS3oLhfy8T5yr/0j9NA6gmynJGvyvRMiSr6EhxGwe1Jh+Zjn9ns88rF1UyMaQ3TKxM2ysI5i
+	qAHu95/jlYTrqrtZWdYyGypLIPb+el1M+ncNsGMbKxM+cxgc/bGPsfzAKvGt95T12islRokPfK9
+	aFitkEUIMpVWi2n+32YD5+SO807pG44Mu/7C4MuQKL9KKBI9kx/BGSJDRJViPFeix9As9PbeJp7
+	5bPyaODQifJRGoNPeAY=
+X-Received: by 2002:a17:90b:4b05:b0:3ac:86a0:5764 with SMTP id 98e67ed59e1d1-3adeb197eafmr2837181a91.64.1792899873454;
+        Sat, 24 Oct 2026 20:44:33 -0700 (PDT)
 Received: from shiro (p1469046-ipxg00b01sizuokaden.shizuoka.ocn.ne.jp. [153.223.97.46])
-        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-3adebe8f0b2sm4181927a91.8.2026.10.24.20.44.23
+        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-3adebe8f0b2sm4181927a91.8.2026.10.24.20.44.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Oct 2026 20:44:25 -0700 (PDT)
+        Sat, 24 Oct 2026 20:44:32 -0700 (PDT)
 From: Daniel Palmer <daniel@0x0f.com>
 To: ysato@users.sourceforge.jp,
 	dalias@libc.org,
@@ -84,13 +85,14 @@ To: ysato@users.sourceforge.jp,
 	linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org,
 	Daniel Palmer <daniel@0x0f.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
 	Florian Fuchs <fuchsfl@gmail.com>,
 	Colton Pawielski <colton.pawielski@gmail.com>
-Subject: [PATCH v2 0/2] sh: Fix IDE on landisk (HDD models)
-Date: Sun, 25 Oct 2026 12:44:08 +0900
-Message-ID: <20261025034410.808796-1-daniel@0x0f.com>
+Subject: [PATCH v2 2/2] sh: landisk_defconfig: enable PATA_ARTOP for the ATP865
+Date: Sun, 25 Oct 2026 12:44:10 +0900
+Message-ID: <20261025034410.808796-3-daniel@0x0f.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261025034410.808796-1-daniel@0x0f.com>
+References: <20261025034410.808796-1-daniel@0x0f.com>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -102,52 +104,33 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-I dug out my landisk to look at kexec for Geert. Since I'm lazy and
-LLMs are good at fixing bitrot I let my LLM work out how to get
-it to boot again.
+The landisk defconfig currently has a similar but incorrect IDE
+driver selected so IDE doesn't work out of the box on the models
+that use a PCI IDE controller.
 
-There are some other issues (perf is apparently borken, there are
-some issues with the decompresor and big kernels..) but this
-seems to be the only thing stopping it booting with the defconfig.
+Select the right one.
 
-Disclaimer since we don't need to give LLM tags anymore:
-- LLM debugged the issue.
-- It has been checked on real hardware.
-- I have checked the IDE driver patch, cleaned it up and
-  cleaned out massive walls of text that LLMs seem to like
-  to add but I have left its summary of the issue in the commit
-  message.
+Fixes: b7aaf16d10bd ("sh: remove CONFIG_IDE from most defconfig")
+Reviewed-by: Florian Fuchs <fuchsfl@gmail.com>
+Tested-by: Colton Pawielski <colton.pawielski@gmail.com> # 3x LANDISK
+Signed-off-by: Daniel Palmer <daniel@0x0f.com>
+---
+ arch/sh/configs/landisk_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changelog:
-
-v2:
-- Fixed up the patch to pata_artop.c so it looks a bit nicer.
-- Updated the text in places to reflect that this covers the
-  models of landisk that use a PCI IDE controller.
-- Florian said that the pata_artop.c patch might change the behaviour
-  if the pci_iomap() fails. I think this is ok, if pci_iomap() fails
-  there is no point continuing into the core driver where it'll just
-  fail again.
-- I'll address the remaining style issues in pata_artop.c later.
-- Somehow I have now ended up with the CF based model (USL-5P) too
-  and I have tested these changes don't break it. As Geert mentioned
-  the CF models need their own patch to fix IDE in the defconfig.
-  I have a few other fixes for the USL-5P that I'll put together into
-  a series and send later.
-
-
-cc: Geert Uytterhoeven <geert@linux-m68k.org>
-cc: Florian Fuchs <fuchsfl@gmail.com>
-cc: Colton Pawielski <colton.pawielski@gmail.com>
-
-Daniel Palmer (2):
-  ata: pata_artop: read the ATP865 mode register through pci_iomap
-  sh: landisk_defconfig: enable PATA_ARTOP for the ATP865
-
- arch/sh/configs/landisk_defconfig |  2 +-
- drivers/ata/pata_artop.c          | 11 ++++++++++-
- 2 files changed, 11 insertions(+), 2 deletions(-)
-
+diff --git a/arch/sh/configs/landisk_defconfig b/arch/sh/configs/landisk_defconfig
+index 2b7e10c9acee..6b5ec1f3ad71 100644
+--- a/arch/sh/configs/landisk_defconfig
++++ b/arch/sh/configs/landisk_defconfig
+@@ -28,7 +28,7 @@ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BLK_DEV_RAM=y
+ CONFIG_ATA=y
+ CONFIG_ATA_GENERIC=y
+-CONFIG_PATA_ATP867X=y
++CONFIG_PATA_ARTOP=y
+ CONFIG_SCSI=y
+ CONFIG_BLK_DEV_SD=y
+ CONFIG_BLK_DEV_SR=y
 -- 
 2.55.0
 
