@@ -1,125 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.98
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793042304;
-	b=TsYbIP2gl8yN4ac6owePKcWQKKcU+iHst5aP1Jj5Y6cKU6aBRiMM0Dl1FnWMTIK93YdP
-	 J2a0y8rISyEGgoNvb2V6FlMjoHMwh7KZzruSFgWmlKfL/Uo2vm+2S95OTb7vqIcclFr+K
-	 nAHdAl2eoDgxPcD+9nddjPT9FwRkzuouxK1gmCY6Q+8Jx0fGLtEBs1uKrvr5b11UOSOXI
-	 GX7QtOIu0EgXo7eGnKqe56kmyZq2YK85/atAI8yI7tws6GMkzXWBn6IjlFnyj5KNT9BI8
-	 NpGxd+YLamZuumNXD30pa3tENP0jo6xU3Er+AtWWnt2XL04LSofhJquxN/cIckiOcTw==
+	t=1793046327;
+	b=LEWrnM5/jcvYMPZhZgvgOu2DvzBqkGbfb15PoXWWoKWbXH57ZSfzk1SuRVLaPJ1GXcdj
+	 Xvs5ffi+n8Uw2r77YRBwhqbNM4f/EVjj8Z7cmr2eWItPUfl5Yvjam/fK0l4dkzpoKOGRw
+	 r2u1SusdLgnH907C64NszD2OrtFtX4kUPrrJ6tDS9NsCoGC5whF4JpYpsPi1fx9B2DmK2
+	 t7B5UJnOnL/+UpcIyiHIZu1u1wiI6/QRFqpP+U4+aiMTNqwLpibC66KqSLWl+KpZSz83m
+	 ovqBeAVdjlwlDY2DoR0IfbUJfiu3HZf+/HKj3pACz4ycrx5FKyeaQodLlF+E0xi1veg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793042304;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:X-Relaying-Domain:
-	 X-CFilter-Loop:Received:DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Received:X-Received:Received:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-DetectorID-Processed;
-	bh=p/JejeyXs+a2BV9S3GP+DdWRq7anNloDPZ8ebf8LoQg=;
-	b=AUveIePiCvR4FKEJ4ylpbGYH77RqMeqdEtdj/FAnvSiDgRClA19DRRMa5GzNCgmtlAla
-	 Wae1d43XWkakbCNAiLnIxIsbCLmAvowVjnllYHMfAxNwosECxYUrOWUePaNyASFSjpq+X
-	 b97azP4uazC99NK8nGANk7DqELVJAPdoeYViFm/B3eU0EcGcuoraN0wkoyc4MvScYPYUv
-	 mGh+1LtF/lkpeJhql/4VTl8AaQWwqd51nQo7PkwXo2ZCf6VOWnBjCC1ei2mdQ44uLZqpQ
-	 Y8bbvOMrm+0jBqM5MDI4kY7DtFlriFwM7sVp4WLCBmBW+tmBZtdbQLZ/PwbLAoPPaxA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793046327;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=aed4Rgnz6EIvDA20M5W9ZTUqmqT/8I65PlxJXFCzwH4=;
+	b=gOyS22ezJosO9tDcRVLJAO9e5kXTv/5aaOezjfzvEtU8IpKC2u8sMsEU9Tjj7mpCF3yf
+	 35e9LmuZR2phGHnBYmLRPPkxAe8kYwFvuRVOpKi+9CD8YlO/G5kef9NuiPho+RTFpJco0
+	 Z4MDQpuwNV8xfpxcVtzg3XSFpPS4cZSpYGKVeeE1YzkAhm+TvwVx03yk6eG1NxIdL1sj4
+	 0a38zXyUktMKG51bkwYZxir/GCl/V29ia2tBqK66kg4GKQCYbsEEYYcBBVWEATfMpeAit
+	 m9FJEHZTijYZ2C/Ipys297+ktLBIm9+0DLsG7HxZ2lnvblGZLIeNHs94j1INarXVcGw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=broadcom.com;
-	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=XcvYzirK;
-	arc=none smtp.remote-ip=209.85.210.98
-Received: from mail-ot1-f98.google.com (mail-ot1-f98.google.com [209.85.210.98])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=DUDTcG4m;
+	arc=none smtp.remote-ip=209.85.221.43
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ED27606A332
-	for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 19:18:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7ED27606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB5F9606A321
+	for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 20:25:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AB5F9606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=XcvYzirK
-Received: by mail-ot1-f98.google.com with SMTP id 46e09a7af769-84d5e56f876so2251014a34.3
-        for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 12:18:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793042303; x=1793647103;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=p/JejeyXs+a2BV9S3GP+DdWRq7anNloDPZ8ebf8LoQg=;
-        b=LW45JVqrPykejPogN1fAa6UjbChe4FyraDOQtJo44X+LafcMu3SdEN4FRyJtZDGSxI
-         m1HsHX9+TNiu0jbN76M0/4UVRGVWwDQGghRKeqIGbkX5R7pgdXADDlxo4/XzqHTteJE/
-         4b4Nx8TIzRJfzk5Qbes7ZnexpdkcDfKo9o2l9Sv4KiP/fl2aBejqgTy9DUWiUdefNo/k
-         ao3Iz6YliMwX2Mn2xqeGzqOPjyS/51G5FbTlsN19dfQzCHG55Rey8XLRCA6NF3/7fMV8
-         NejAIGXp5l5w0Jsdaf2oeyNEVBI5fxy8Bx0hSAsa7aJY7G4aMoltHovUu0RgaFFqJv9z
-         6TDA==
-X-Forwarded-Encrypted: i=1; AKwUvByfpUbqKQS49ZSvF8CL2RntnLrYg5/l7zSCBwQW8IrHS9RjxqWVG9LtNJ0dYXmxcsbTJNeZ2FbML/0=@vger.kernel.org
-X-Gm-Message-State: AFq9FYJMYpe5SNryqFhvqMJbIaPnKOlYDdjtUiko4ScIL781gCrefHBJ
-	wSy8lajELu34QflWDVjLg+YEFJQE5sD04z7AgMEPmKmBCT8WDwrtkf0FvrL6C4LYq7oOOVVZ//7
-	dF++f+3AfVmh+gzn9uIPTxZOc4a6REdPZ4TSTX7pt7tgBlbDVp6Bz1NqT4/38HN+xab88xNiTGC
-	4GfmB8D0s6oRnWt6SjLyQdQWk7QKbPsWdNwhlAXyuksUKhDY7remM99JgjHPG9mrc5TOEK4oUEO
-	wMr3gLwktP+LjKExOjXjgk=
-X-Gm-Gg: AYBFou2gJhWKtwCm8bkVTbHh+5E16GxfATf86i7SYTf5JB60ZcmOW6KjDxPmbXBOYGC
-	DvIHGtwn7I61Xymg35xWFFLHl6UBpSTzZs04Phhmi5bFA/BL1+lSjZA3ObB2JHebrI5J2xN+NEw
-	Gy4u0IgMkYjhYivY8k7dmhar+W7FO3nh9iMPRprWeN7CC06keDMfaHvInWKRfkWdhR/BphaJAQe
-	39zG5dzbIg9xAnXUvPkyyJcXzYVx9Osx4aXR2srd5MWWh/M5YpA4vHqXXTMI7fhFAIH036lTkKP
-	jf36Iwg4g3uskgR9S3+1S3JdRzIJSrYBii8tt+vyKrqAi+zCIDtN8amcweJuOv7bG0cb3kdEigK
-	Jy7EwJ2EtpaNGaXvBVsO+gKV0P8w90W+kmje1N2KwPBzxxrLDqrdtQwWD4eFCXp3Arq19DRHmF0
-	W1WA1OvFJMpdCJSH8fEFc9GpNDp8E3S+PfPx3BRF8Z
-X-Received: by 2002:a05:6830:915:b0:826:b77:adef with SMTP id 46e09a7af769-850fe3ff51emr5434315a34.14.1793042303340;
-        Mon, 26 Oct 2026 12:18:23 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-23.dlp.protect.broadcom.com. [144.49.247.23])
-        by smtp-relay.gmail.com with ESMTPS id 46e09a7af769-850fa4af679sm82629a34.4.2026.10.26.12.18.22
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 26 Oct 2026 12:18:23 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-533928ef33aso41733861cf.1
-        for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 12:18:21 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=DUDTcG4m
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-48e47347279so1352866f8f.1
+        for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 13:25:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793042301; x=1793647101; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1793046325; x=1793651125; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aed4Rgnz6EIvDA20M5W9ZTUqmqT/8I65PlxJXFCzwH4=;
+        b=DUDTcG4m01pngZDHRm0vtPFiOHAjvOKTNBrJy4qLEyCDaX/4FvhKwMnM/B4N4dICPY
+         ZN0PpluhYDZ5mz+D/aKGoBDrXZPuXdmjwcVarXDdeygPP8yCZctQduU40Y1H+kU644z6
+         czhYGUD9XX4B2g52+eUdXWkWWZT1Iwjg39rB2CBRkQ3kx5H14H2EOuoJIT06bkWlxR1V
+         zqOFf1kGIQnKdc2wwPUge9u5DKN2M7IXGfo+hSksdnHJRXaWCG/Ycy0L3syVwSF7fvWu
+         HHPKhE8Gp53Pc9pxLqdCA/JYg+wzU1pRAdidExi+kSNz6cMUaLEFjM2M6mMpDkb3TJ8U
+         4PxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793046325; x=1793651125;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=p/JejeyXs+a2BV9S3GP+DdWRq7anNloDPZ8ebf8LoQg=;
-        b=XcvYzirKIjhjXk7bY8SwlMQKMqHjStk5+OICSrg8oX430GEdJLZeslTRrN5lZDvDiI
-         z3ePH4/DqX5EaDMarzx1kAp73rs/bDKaBVX+bC8QzD4uUfYCZwkHlQyRC3Nv+l5D+Zh/
-         Ti39SaROwdMLy2FTYegApSxhAMih0sTfsDTfs=
-X-Forwarded-Encrypted: i=1; AKwUvBy3VNYEdtua5gkoFAWPJwLdNF8VgDqHcpQAComHTNYO4T0twcnuNrYpcO6KPty3mJvD3MZaFYXBBP4=@vger.kernel.org
-X-Received: by 2002:ac8:6546:0:b0:535:a5fa:ee0c with SMTP id d75a77b69052e-5383b66652emr111406471cf.76.1793042301526;
-        Mon, 26 Oct 2026 12:18:21 -0700 (PDT)
-X-Received: by 2002:ac8:6546:0:b0:535:a5fa:ee0c with SMTP id d75a77b69052e-5383b66652emr111405901cf.76.1793042300941;
-        Mon, 26 Oct 2026 12:18:20 -0700 (PDT)
-Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91c62063dacsm33430996d6.37.2026.10.26.12.18.15
+        bh=aed4Rgnz6EIvDA20M5W9ZTUqmqT/8I65PlxJXFCzwH4=;
+        b=jimp8ujKr1lph2ur6/Dhze3Da6fnWGAMnwd5i6gMTnkl+Xgdh25vNbCoT39sa+DAg0
+         0SmUjfsoOP4Opj1+s6U40KL/15IlTXDtVEe8MN07hVs7e8BemxuLGoTR4AuuU2WCs6re
+         QTtBKJP0I/6lJ5rnwGi0ad4aEOqKqowL8De6GHM5lBzqzx3Mb6aBqpXIslT6t7u8DZpJ
+         xT3ZLXlw2rbb0epqoUq8jm0eACucM4PJFOA1sjM+lU/gX4HK7/f1uc45VAFYRGxfXCaC
+         kn2uPTLgkHhbbdk6h5z+QlFs55aOmshhVfIJd3hSGdwGBHN8P7q8t14alTb+5RuUceur
+         mTiA==
+X-Gm-Message-State: AFq9FYIAgCHRhvxPvjULbH0MrH36hdyjoaf4rEHYaXFLe1mVwFaqogUy
+	7DngksQwXorGRBFVxef2w9F+g96NhhVXq4KXR05/vwRM5xkEeiJVOqMu
+X-Gm-Gg: AYBFou1WM/zr8HgF7b5amnUZAQ+ODl+4wQg4DuapAoPAHcNZbDzPMOf81oIrKviNGLv
+	o7SPALKMhOZUWPub2ZgMZaznskDWqvTznWvfjEQLt0BRUp/7I7b9qc3guwvXdA/R6Lz2NeCNQjr
+	WMbsP2eBzAxs7qBVQT/DXxAMSfxa/vC4sGVijQ0kI8A6tmXxiCmWgIrWZYbbi/xnUWxnJN0zS7k
+	ZbFw7BU7jd9mX6qUtIT6dk8hT1AerptqeqhJdDE6Bv1MRdTwXumKvaLssJj0K7kU2pe1qvFioO8
+	nQTjHSX03MIOWGdNRsZP5Uqm9ZFJPGiG5WdmDInBlCc8s29YacweijfgpZVv5LIhu9q0SkWbXhI
+	quWMdEUx1fhYzsBNPsbNA/UOyMB31YtTYmpdPlEPFTM5xINP5OsFlBUAKqew8/6DlfUdVegogXw
+	uIpwta3rFh3yoLW8vX2gTMefR6MXx5fSmEztjK9O22dVVRxnLAJV4XKauHwnGswSWUIulnZxac4
+	19M0tsqDP6WGVOqkB284RXNOkACjvBqq1O60sOYoABeNPqPJGmBC4/vfMN5djCFm/I=
+X-Received: by 2002:a05:600c:3541:b0:4a1:fbf8:55c9 with SMTP id 5b1f17b1804b1-4a35acc6a2emr148103215e9.33.1793046325020;
+        Mon, 26 Oct 2026 13:25:25 -0700 (PDT)
+Received: from unicorn.lan.internal ([2a0d:3341:b894:4600:8f9a:af38:72d6:7c0e])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a046fefsm276685585e9.5.2026.10.26.13.25.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 12:18:18 -0700 (PDT)
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-To: linux-kernel@vger.kernel.org
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>,
-	linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)),
-	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
-	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM IPROC ARM ARCHITECTURE),
-	linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK)
-Subject: [PATCH v3 6/6] ARM: dts: broadcom: Enable SATA on BCM958625HR
-Date: Mon, 26 Oct 2026 12:16:18 -0700
-Message-ID: <20261026191618.3178830-7-florian.fainelli@broadcom.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261026191618.3178830-1-florian.fainelli@broadcom.com>
-References: <20261026191618.3178830-1-florian.fainelli@broadcom.com>
+        Mon, 26 Oct 2026 13:25:24 -0700 (PDT)
+From: Giuseppe Piscitelli <ooonea@gmail.com>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] ata: libata-core: Check device support before querying power state
+Date: Mon, 26 Oct 2026 21:25:11 +0100
+Message-ID: <20261026202513.669084-1-ooonea@gmail.com>
+X-Mailer: git-send-email 2.54.0
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -130,33 +93,55 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Commit 77416ab35f57 ("ARM: dts: NSP: Disable AHCI controller for HR NSP
-boards") disabled AHCI after reports of boot hangs. Both SATA PHYs
-remain enabled, but the disabled controller leaves the eSATA ports
-unavailable.
+The standby path queries the power state before checking whether the
+device accepts ATA power-management commands. This sends CHECK POWER MODE
+to ATAPI devices, including the QEMU DVD-ROM, which rejects it.
 
-With explicit IDM clock/reset setup and the corrected shared PHY
-register aperture in place, enable the controller on BCM958625HR.
+Run the existing taskfile initialization and device-class check first,
+as the active-power path already does.
 
-Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Fixes: 9cec467d0502 ("ata: libata-core: Do not call ata_dev_power_set_standby() twice")
+Signed-off-by: Giuseppe Piscitelli <ooonea@gmail.com>
 ---
- arch/arm/boot/dts/broadcom/bcm958625hr.dts | 1 +
- 1 file changed, 1 insertion(+)
+OpenAI Codex investigated the QEMU DVD power-command failures and wrote
+this fix and its local validation.
 
-diff --git a/arch/arm/boot/dts/broadcom/bcm958625hr.dts b/arch/arm/boot/dts/broadcom/bcm958625hr.dts
-index 53acae385822..f6717ca76aef 100644
---- a/arch/arm/boot/dts/broadcom/bcm958625hr.dts
-+++ b/arch/arm/boot/dts/broadcom/bcm958625hr.dts
-@@ -184,6 +184,7 @@ partition@700000 {
+Earlier validation covered 1,536 source-body dispatch cases, a Linux 7.3
+build and two ordinary corrected QEMU DVD cycles. No exhaustive ATA/ATAPI
+hardware matrix was run. This base was checked for applicability; no new
+build or runtime test was run.
+
+ drivers/ata/libata-core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 92233fb..c644e2c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2047,6 +2047,10 @@ void ata_dev_power_set_standby(struct ata_device *dev)
+ 	struct ata_taskfile tf;
+ 	unsigned int err_mask;
  
- &sata {
- 	/delete-property/ dma-coherent;
-+	status = "okay";
- };
++	/* Issue STANDBY IMMEDIATE command only if supported by the device */
++	if (!ata_dev_power_init_tf(dev, &tf, false))
++		return;
++
+ 	/* If the device is already sleeping or in standby, do nothing. */
+ 	if ((dev->flags & ATA_DFLAG_SLEEPING) ||
+ 	    !ata_dev_power_is_active(dev))
+@@ -2065,10 +2069,6 @@ void ata_dev_power_set_standby(struct ata_device *dev)
+ 	    system_entering_hibernation())
+ 		return;
  
- &sata_phy0 {
+-	/* Issue STANDBY IMMEDIATE command only if supported by the device */
+-	if (!ata_dev_power_init_tf(dev, &tf, false))
+-		return;
+-
+ 	ata_dev_notice(dev, "Entering standby power mode\n");
+ 
+ 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
+base-commit: 69be770908ae57354a41d7e1cc99ab46278d2e86
 -- 
-2.53.0
+2.54.0
 
