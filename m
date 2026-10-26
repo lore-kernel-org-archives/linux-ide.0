@@ -1,125 +1,121 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.97
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793039380;
-	b=36O/wTLfaBpak62Cp9v92Mb6IGa9xYAxtSOHLyKrLCttpCJIUxUeSneUGWI6nZIe/Zso
-	 LoIxZOIBbjqhCG2r1V8uCdHMRIc/Gg4LJHqgMDjc1/UbtA7f2WQ0pdD5wdiKSpoEH6Vlc
-	 BzrZ7hfsjlXGlEi/P+6BmWIqriachDSyWxTwOel0FjeQyLzlgH1lkTWVchCl0bR+dGuFQ
-	 s7Ro7iuxmkguVY5SD2C74YOaYO4GXE9J5spjYNtakjAk/b2U3s4XS+1fZv3EGKF/u1DAT
-	 gftxvsV9ryS0xE9Mu7vYlNHC+CzPK59kDFMO4uqIlu/qIuhGodxwapIRcVwCsKXu1uA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793039380;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:X-Relaying-Domain:
-	 X-CFilter-Loop:Received:DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Received:X-Received:Received:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-DetectorID-Processed;
-	bh=1MIbl2zx8FaPW7oX7ST7fbgJ9gFOgJZeuRxXV0E1qzg=;
-	b=nFasGnzMWMq5S1026VM7SW3pwbP7He8dCe2DNvGqF/rj9ts1S1LXBTCcEzzscM/imrDJ
-	 FEff3e4ZsTvynGtzfYEAs8/kPqCvVPeItt++8XEDfMRhyJMgB039gNOOXBuXZSfsOUmXu
-	 QdkZb7OeBcCX4jfJoTssO9ncM7JjlrGkpTdncsMbp0z+Nbg6StwF6A6bJw6GTCQmdOMTe
-	 snKtukeDdcbJF+LAMn7NkDBNsPpvidtAD73w9uZHirot968TKK1EtkU80BkMBL+U4rBKP
-	 HQPyTfZ4qVCmZeiJgZ7QR1vxWrWBcu3wEguBL86301OR5XYEj9z4NqHAb3nQyAHAcaQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=broadcom.com;
-	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=EDbe8JyM;
-	arc=none smtp.remote-ip=209.85.216.97
-Received: from mail-pj1-f97.google.com (mail-pj1-f97.google.com [209.85.216.97])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.129.124
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793041613;
+	b=XOQYt6I5Hdk55OAu1od3bUBKJEW3jm0b9s7N412Q8JMVVBaAJu+VhLU4TOMufRVus/yW
+	 3WJxoy8IK8utD12xoYbQoCoXIU90AIlp0oaI0wxvVQjFVExb59OcZswxzlgy80TybTMpU
+	 XLd3vRmg7sus+qfMOyTfDAxlunmALA7dCwvW4KVFRX+skz0JvzzoE69wEVVJkyCw+Taq0
+	 GcF9nGfrhwNwAZp+ssUKF2s9JRDMYQmAdPHwfPBamlIVsuFl9T37clpMxuB6cBIWebDOb
+	 QMU8h5Mvwfp5mcgN3JLRMRloMTK6xmhVwrP0ECjmTLpqHm+P2/nKzE1bYLxLi8IFHiQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793041613;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=5gkih5/wx3vmYI40ak3/gwEdZY900NhtCv0bh3FcnbY=;
+	b=et0dbvqpmgcqRUzHMUIndsBO+rEWxeuiFGZROOF2u872P5iBGj0BkGOBnaXAq4sj7X7s
+	 wBAZqYa87wQLMUqlAML2zuhQo3lqmKPXZN6cY7V6QIHs18N47x9fjUJXHn2Fxr10xlZO9
+	 BhKkv5LS4OBRWGHK0z9JvHej41RBHuwEb1vVHaIJuF7InkL2Z4/NNqsRGvc7rlz4Ug8ig
+	 LO1j30Gy17Ci6E6QBdOaT+vSZgC9kkCbOQwrxN71abCeN+4Zf2mU1YbrjPtvvkkDLkCUq
+	 0TK81Uu0bAi2+RRckS54LrQh1n7zd3NrUV4ucjkGJtgmAq0+h4BECKuXswfkCagfzHQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=XqdOnRiu;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=bP6EFq8q;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A450606A325
-	for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 18:29:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4A450606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00762606A31F
+	for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 19:06:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 00762606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=EDbe8JyM
-Received: by mail-pj1-f97.google.com with SMTP id 98e67ed59e1d1-3acdcfa2bd3so2420206a91.3
-        for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 11:29:35 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=XqdOnRiu;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=bP6EFq8q
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793041611;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5gkih5/wx3vmYI40ak3/gwEdZY900NhtCv0bh3FcnbY=;
+	b=XqdOnRiuXdJ2HHDylesoLIC+Vjy1Vpp1kv3hBDN8s0mWsSUAzvHgndhc+ybe5X/O5RCfOQ
+	5wuzN7w2XIdt35aJGApQ9cU8tVlQEJ3ul8o5maVbQnyHfPC4fVLtgKJI/YuPpfSbxwf9MU
+	X/9Zpsb8O9tEVW5QTa+f/q44CT5mI28=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-395-rM5R9sg3Oy2YJ_93eI09ZA-1; Mon, 26 Oct 2026 15:06:50 -0400
+X-MC-Unique: rM5R9sg3Oy2YJ_93eI09ZA-1
+X-Mimecast-MFC-AGG-ID: rM5R9sg3Oy2YJ_93eI09ZA_1793041610
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93e92aad34aso707515785a.0
+        for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 12:06:50 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793041610; cv=none;
+        d=google.com; s=arc-20260327;
+        b=VTnRdpkWso3Tu4glP3NPp79s/aovYbuy1k5nvBNSBzg7hxUB7bqPkXEgLwS9lL9Enn
+         qq0yG60A2jHyYCRVwxYZMBR7hDlPp81zTWKXgR9zO5dphb2Yy5WpgEfy2oJulFY899qt
+         5ukurnF6MWMIo+ypdEjTTa0HUmIxShUkMnmld+npfsOYyZLokul3wx+gcuxthqk3V8WU
+         /gGVND+8037x/UPmhIK+B+pLtSdylt/Adkn14qlrGYZPRHAhH0k9o3SMZQniiRc00Z/s
+         ZysnxK41P7LaggLVQtG/feGSIEfZBVrwbiMTr6soAx2C5knNYk5RiwTlVoP7OYMBQ4uI
+         Y68w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=5gkih5/wx3vmYI40ak3/gwEdZY900NhtCv0bh3FcnbY=;
+        fh=BhKX8lMe7ozHrnbBGI1KoAeHqFc3M23pReZT3Yb8PGY=;
+        b=nG7YRDSdB2ZIshYIYZPZfRQuR+XbDGlzWV5am0sfD+frpfnpLhv+h0i6jy5DsMPPCL
+         YYvOmr0AWeGh9aEefbzB+LSDtqPip+ts7ltfAgVpQ2ih9DMki311AQtfq7vP19sJLo3l
+         Y53ZZRPN+o8wy4+dJEmxAsg0wNsPa/+c2PDu6kdQ1LEyRUV/OyXKs+kT7fHZr/QkF4dE
+         lbXNOBp6njVKYAEa2/PUsK8oIBHqW9uGHzjTvpAMdaAcc6QKCT1nYpa01ypDO1J0Ik0/
+         j/JrFAolP42c4Tade/2Pe2OM2P5kIMvuX1ugXMKsonP2ASzZ9DpQQmIZo0wyI3GnR4/I
+         Uv+w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1793041610; x=1793646410; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=5gkih5/wx3vmYI40ak3/gwEdZY900NhtCv0bh3FcnbY=;
+        b=bP6EFq8qgYdrsA3ZL95Bf1KROGGD+OFjQYirUQrIhlMPPnq166o3/uI0Oh2JYm6Yil
+         lSkJqcMQbzS+kR5k+pxCq4Qk8S3wgUZ3aT39IfgyoeYP5djH/wwlCV8Yqr224UUD3IQB
+         DVzg5U88esyOup+OLupcnIClctTeueYkvpTr9uuYg2uBBTDE1Xx7amjquMpPo4TELuKT
+         lmOoX31pYczQa23BRJacNui0cebtMiH4ncUk/x9/7e8wdQ4jSaiEw/P2REEbe5G8iPcD
+         u9/8z8a4IO9J7QfPQeJAU6y0GJ0Lx2cF4te8GUc6Yp/NfB8Dv9FGt77z9kIsfO8tKfas
+         J5eg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793039375; x=1793644175;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
+        d=1e100.net; s=20260707; t=1793041610; x=1793646410;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=1MIbl2zx8FaPW7oX7ST7fbgJ9gFOgJZeuRxXV0E1qzg=;
-        b=xz+sYaI733ZGhQmrzM5UIkP4NCgI97gSLnnjNGMmplMSrg4Dwn9Q8pb0IVemgm/chh
-         B7VPNR0KN/uLPyiuCk4SeVg/rFatwryYEMEB5g5/86cj6JQ5Xh5ZFlMd6R1g0f96TBQc
-         i6zi8Bk7Kbu0/yXYWGck/p6z24lK+N0RPItdYiI0pelpQrKduGIuJUOLJedfVImadNdU
-         7fsXwizdqCJUg1BMjWZiJcSIXbUlunMH4B8gaVoK8arqFwoEJq/Z9oRx0FE5S9cIzIDu
-         5X0141bCtJNRIeGYBEoLIG7yBq3OWoE8EB4lFoG8+qb/GJqablOhULXNiAXsr11Aj/rN
-         tEKQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxLoM4BI1AZLh4RF97tpEuXbrViG3UEpZy+7zR+FZinrD4c3o4CUr7bVIbLA2qJ1bsLPohR1hft/rc=@vger.kernel.org
-X-Gm-Message-State: AFq9FYKhaor0qeZpnL+HfhYCniTqSXhaLYCF7dnMgxXjsujfLIAm2uC6
-	sIQXMglTIo0qalVDHfwy4W543r1pQv8oXYb7gKz7FYR6WCq86XZDnUnPQjlewXpjxuQ/7t5j/pz
-	qtO8AMlR6btfjB4Tphp4b33e9aNb2siXXIkfeGKoz0zjmq1Weno5PLhx9XhZBTYcxOSd6zSMtJp
-	sfpLCkPCgjoka12krkPQ/l3sJx13I7z9z/TcENdBVvxbD7teLM3CB11/PeXru31lNGznVBlbVx/
-	Y4cKcronvLs1NfhXtBG3Q8=
-X-Gm-Gg: AYBFou32xjX0BCZ5c3ur8eh9xouU88egFhGO9FUVOT0VEtROdc2rOBF4p2la7cax+kF
-	sYkRF4kZgCIVfKSeiRH255hcBErX+zsCzqiy3cIpV/+6P2ET9JRT1XJkrwJ/xqy+FDTeiOeso4y
-	FUDdvN/4ON2HdjUSqk4WK3jUajvwBvP2sNl+UcvBowkcxrNpnw3pwQ/PGMdlHJsN0QFXjrHcK91
-	qr0J7SZWjdcZvbxyaTWYxo1Aykm/9TmGJM0xOR/5JuqmTu1WIAML/sn8DwSJIar0LmGMwHrb3P/
-	mFd9ErglWcqmuwim1j60MnyCa/Et84XJZHveAPveWxFGfWUqnE7tlFgXuLnipUIZ/cqM/b4rZBb
-	SLmSetjqe30pGVFn0iMpZjsxZl2Cd61/kTyfXB5+aD2yswUQJJzXCA7W0YCudUSCujryO7LXuX6
-	fYd0/VP8Kq6h5Uf2YAhfRNoSIPwR7AQADsbAOyO5/n+RE=
-X-Received: by 2002:a17:90b:1fc4:b0:3ac:9f00:3bc7 with SMTP id 98e67ed59e1d1-3adead4b1bdmr6708965a91.33.1793039374650;
-        Mon, 26 Oct 2026 11:29:34 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-120.dlp.protect.broadcom.com. [144.49.247.120])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3adeba6ac8fsm3433964a91.2.2026.10.26.11.29.33
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 26 Oct 2026 11:29:34 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-35c5aef2a74so15640374eec.0
-        for <linux-ide@vger.kernel.org>; Mon, 26 Oct 2026 11:29:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793039372; x=1793644172; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1MIbl2zx8FaPW7oX7ST7fbgJ9gFOgJZeuRxXV0E1qzg=;
-        b=EDbe8JyM1HEA7j7H+aiMBu3jKwqskRBAJ0LqbkNmp0bd+lNRV7bq+OVr/KpUvuNCyd
-         gpT6RbtbBWzxFxzPld2nJptYQjepp/WUVsyiLvvArWlPBuSEHON2OW+DbvZtzaFY1UQW
-         EoJ3v3vDU5E5dWcXRkbx+/XnX+x/J9PlOT8b4=
-X-Forwarded-Encrypted: i=1; AKwUvBwDbe1Mib3nNHCxM3mBWiYKwkbNb3+O2cCpk23RwLzZBY8Y2wg+J/oQoUQ3MipO1oWUym+YsWU0dFM=@vger.kernel.org
-X-Received: by 2002:a05:693c:68db:b0:369:f7d2:d7a0 with SMTP id 5a478bee46e88-369f7d2edf6mr7300544eec.25.1793039371683;
-        Mon, 26 Oct 2026 11:29:31 -0700 (PDT)
-X-Received: by 2002:a05:693c:68db:b0:369:f7d2:d7a0 with SMTP id 5a478bee46e88-369f7d2edf6mr7300511eec.25.1793039370933;
-        Mon, 26 Oct 2026 11:29:30 -0700 (PDT)
-Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a01fa4c58sm24657259eec.21.2026.10.26.11.29.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 11:29:30 -0700 (PDT)
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-To: linux-kernel@vger.kernel.org
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>,
-	linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)),
-	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
-	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM IPROC ARM ARCHITECTURE),
-	linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK)
-Subject: [PATCH v2 4/6] ARM: dts: broadcom: Add the NSP SATA IDM registers
-Date: Mon, 26 Oct 2026 11:28:54 -0700
-Message-ID: <20261026182856.3168686-5-florian.fainelli@broadcom.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261026182856.3168686-1-florian.fainelli@broadcom.com>
-References: <20261026182856.3168686-1-florian.fainelli@broadcom.com>
+        bh=5gkih5/wx3vmYI40ak3/gwEdZY900NhtCv0bh3FcnbY=;
+        b=z6ldQHLoIEvajZZhZFbwUkjrHTI6uIi0bC3EDDtVAI2uEcvkD3gAr6mVw6k6caLPKO
+         JvJaWQETZdEqOgvMHWdYmZzT7o3CItEtC+lUUxyH/8k8rPmT6JrNwX0Q2h4AG/A+j+OH
+         TwQluw7AgqyJEHS0RJNChCJl678hD+fkeq9N/92GOnXB+sVuBxJxm3QtMEBW+mg4RNqI
+         LrneD81GOhMn4+WaqfVlJGlTvMUzd0Uj+ob2tq1D2zqKwvI60gSldea7PLoxUSOXwRRQ
+         JaVCjjho/Lg+huOk2GxEERLWirW0R4CbnDDiZDcMm5wbZU+AOr1qX0QXXLJJjEVfhvqL
+         jhYg==
+X-Forwarded-Encrypted: i=1; AKwUvBzen4ojTkJIJHe6qtQ2Ons5ob5GGUOD1+2CWBnyX0unoC58X7GxoI/gKRHyj2vG8J/Yz/i4tu9bxnE=@vger.kernel.org
+X-Gm-Message-State: AFq9FYItO6sLa20BDWU5mD/3jrNe+kcXU+R7SKtig7BYtWOaK8Ug/InD
+	/n8tZHW3LgkenhfO+TttOQQP77qi+ueJ+xIzXRS2grJmCFEhjJdknLENTWoXG5h7jSewXRoqR8H
+	izE8BM+eFft+tSvkjt3XoUSze10QRndo7nloV0YGrhRAiC5J9HqMLzgBy9weV+zweokYN3bOkoz
+	RYPQSiQaHt+S6Fgf5PWV2+ajJ6BSXMNXSnUpEdf2OebmBI
+X-Gm-Gg: AYBFou3EoyaSYcd72+CvPDZXU9F/LdZ93evpDqHujj4UOEyY+/ceQzILLvC6OIxsFCY
+	KTDtpaU7esYoDMEf66SlOiEBAQxlcT/nznr8SriCLhM6vGc9RUKm1whrcCtMOvHKX/1UM8zSqXx
+	VtzjlCcUMS0NVS4LDb7aMqZtV20rCyZn1PizkxtE0bgfm31g6G8aUNGq1Syx9OipGj6WkivpP/t
+	ff65Q7I3nR1QZbb8Q==
+X-Received: by 2002:a05:620a:17a0:b0:93f:3646:7a57 with SMTP id af79cd13be357-940ef9844b3mr1191490085a.57.1793041609775;
+        Mon, 26 Oct 2026 12:06:49 -0700 (PDT)
+X-Received: by 2002:a05:620a:17a0:b0:93f:3646:7a57 with SMTP id
+ af79cd13be357-940ef9844b3mr1191485185a.57.1793041609242; Mon, 26 Oct 2026
+ 12:06:49 -0700 (PDT)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -129,47 +125,109 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+References: <CAHSMvrH4YRmNaw3+FnKv9-Dwf9PS6R_kNMPGEoOe2=pKwewgBA@mail.gmail.com>
+ <CAHSMvrFn+gvgsfM9WPJgPCWFUy2cjR+A7-fqFtDJc=JOD9L7Jg@mail.gmail.com>
+ <at9wk18uhg-H18ge@ryzen> <CAHSMvrHur59qCpyVk_qd_epVGrntWMeKhogKtutTpJaA_V3VLg@mail.gmail.com>
+ <at-CrMH85_pI7QYn@ryzen>
+In-Reply-To: <at-CrMH85_pI7QYn@ryzen>
+From: Thierry Vignaud <tvignaud@redhat.com>
+Date: Mon, 26 Oct 2026 20:06:38 +0100
+X-Gm-Features: AclHuK-wB_ryRKZBnL2ko4KVJjqB31xBm84GCCJeHRUx_v4APc3-4y2c5RHBnUU
+Message-ID: <CAHSMvrFSfE9NLo8BfCXq3C9EycosnCPhJF5dxeM3KSsu2uqt8g@mail.gmail.com>
+Subject: Re: [PATCH] ata: libata-core: Add NOLPM quirk for PNY 1TB SATA SSD 916a
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The NSP SATA description omits the IDM block at 0x1811e000, leaving the
-interface clock and core reset dependent on firmware initialization.
+On Mon, Oct 26, 2026 at 5:41=E2=80=AFPM Niklas Cassel <cassel@kernel.org> w=
+rote:
+>
+> > This patch survived heavy I/O such as compiling a kernel multiple times=
+.
+> > However I hit the NCQ issue after trying suspending (which I remember w=
+as
+> > an issue too).
+> > On resume, I hit
+> > I've attached dmesg to https://bugzilla.kernel.org/show_bug.cgi?id=3D22=
+2187
+> > See https://bugzilla.kernel.org/attachment.cgi?id=3D311297
+> >
+> > Note the following (one hour before suspending?):
+> > [12014.334779] sd 0:0:0:0: [sda] tag#25 timing out command, waited 7s
+> > [12612.911419] sd 0:0:0:0: [sda] tag#16 timing out command, waited 7s
+> >
+> > Then when suspending/resuming:
+> >
+> > [16199.520287] PM: suspend entry (deep)
+> > [16199.525373] Filesystems sync: 0.005 seconds
+> > [16199.532331] Freezing user space processes
+> > [16199.533685] Freezing user space processes completed (elapsed 0.001
+> > seconds)
+> > [16199.533689] OOM killer disabled.
+> > [16199.533690] Freezing remaining freezable tasks
+> > [16199.534837] Freezing remaining freezable tasks completed (elapsed 0.=
+001
+> > seconds)
+> > [16199.534881] printk: Suspending console(s) (use no_console_suspend to
+> > debug)
+> > [16199.553767] e1000e: EEE TX LPI TIMER: 00000011
+> > [16199.578187] sd 3:0:0:0: [sdb] Synchronizing SCSI cache
+> > [16199.578249] serial 00:02: disabled
+> > [16199.578307] sd 4:0:0:0: [sdc] Synchronizing SCSI cache
+> > [16199.578315] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+> > [16199.579852] ata1.00: Entering standby power mode
+> > =E2=80=A6
+> > Resuming:
+> > [16200.017987] PM: suspend exit
+> > [16200.101972] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> > [16200.101995] ata6: SATA link down (SStatus 4 SControl 300)
+> > [16200.102060] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > [16200.102076] ata3: SATA link down (SStatus 4 SControl 300)
+> > [16200.102590] sd 0:0:0:0: [sda] Starting disk
+> > [16200.103016] ata1.00: configured for UDMA/133
+> > [16200.118929] ata2.00: configured for UDMA/100
+> > [16200.240742] mei_hdcp 0000:00:16.0-b638ab7e-94e2-4ea2-a552-d1c54b627f=
+04:
+> > bound 0000:00:02.0 (ops i915_hdcp_ops [i915])
+> > [16203.543281] e1000e 0000:00:1f.6 eno2: NIC Link is Up 1000 Mbps Full
+> > Duplex, Flow Control: Rx/Tx
+> > [16205.102517] ata4: link is slow to respond, please be patient (ready=
+=3D0)
+> > [16205.103508] ata5: link is slow to respond, please be patient (ready=
+=3D0)
+> > [16215.160283] ata5: link is slow to respond, please be patient (ready=
+=3D0)
+> > [16215.160305] ata4: link is slow to respond, please be patient (ready=
+=3D0)
+> > [16217.967230] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> > [16218.011741] sd 4:0:0:0: [sdc] Starting disk
+> > [16218.045035] ata5.00: configured for UDMA/133
+> > [16218.274151] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> > [16218.310512] sd 3:0:0:0: [sdb] Starting disk
+> > [16218.343817] ata4.00: configured for UDMA/133
+> > [16306.847985] ata1.00: exception Emask 0x0 SAct 0x7fc00000 SErr 0x0 ac=
+tion
+> > 0x6 frozen
+> > [16306.848009] ata1.00: failed command: WRITE FPDMA QUEUED
+> > [16306.848015] ata1.00: cmd 61/40:b0:18:70:44/05:00:39:00:00/40 tag 22 =
+ncq
+> > dma 688128 out
+> >                         res 40/00:01:00:00:00/00:00:00:00:00/40 Emask 0=
+x4
+> > (timeout)
+> > [16306.848034] ata1.00: status: { DRDY }
+> >
+> > ata1 being the SSD:
+> > [    0.654757] ata1.00: ATA-11: PNY 1TB SATA SSD, H220916a, max UDMA/13=
+3
+> >
+> > Any idea what I could try  (besides disabling suspending)?
+>
+> I'm guessing it is a drive firmware bug.
+>
+> Have you checked if there is any more recent firmware version for your SS=
+D?
 
-Supply the IDM as the third controller register region so ahci_brcm can
-perform the downstream clock/reset sequence. Extend the AXI bus range to
-cover the complete IDM aperture.
-
-Fixes: 8dbcad020f2e ("ARM: dts: nsp: Add sata device tree entry")
-Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
----
- arch/arm/boot/dts/broadcom/bcm-nsp.dtsi | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi b/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
-index 6a4482c93167..9dbcd810e27b 100644
---- a/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
-+++ b/arch/arm/boot/dts/broadcom/bcm-nsp.dtsi
-@@ -168,7 +168,7 @@ periph_clk: periph_clk {
- 
- 	axi: axi@18000000 {
- 		compatible = "simple-bus";
--		ranges = <0x00000000 0x18000000 0x0011c40c>;
-+		ranges = <0x00000000 0x18000000 0x0011f000>;
- 		#address-cells = <1>;
- 		#size-cells = <1>;
- 
-@@ -538,8 +538,9 @@ sata_phy1: sata-phy@1 {
- 
- 		sata: sata@41000 {
- 			compatible = "brcm,bcm-nsp-ahci";
--			reg-names = "ahci", "top-ctrl";
--			reg = <0x41000 0x1000>, <0x40020 0x1c>;
-+			reg-names = "ahci", "top-ctrl", "idm";
-+			reg = <0x41000 0x1000>, <0x40020 0x1c>,
-+			      <0x11e000 0x1000>;
- 			interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
- 			#address-cells = <1>;
- 			#size-cells = <0>;
--- 
-2.53.0
+Sadly this vendor doesn't appear to offer any firmware update.
 
