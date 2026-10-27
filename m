@@ -1,60 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.111
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.8
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793092114;
-	b=Qed5xbcPcMowmBDwPNLl/cAmymLJrncufeLWWUZ8vmGGh89QjoacZP38Mht7ncc65aWU
-	 cvtEEadzvbr/iV8Oql0MqVp/JCf56kpaSZgtVbRlCl3WmAQKhp81l6W4tzeoc2iM6PnId
-	 v0xoGJWiizddUVKXaoxnZZsGXz1IqbMJyGA/ilgHPgF8ieUMdO5+fpx5A2qnfpAW+Djfm
-	 UDiIqODdf35W1/0SpvLMpT49J1YY9dgUrI1ejNuJpd/elSqA0KETq1iXh0+zaVdlMLbGD
-	 3+e5ZNMcgYNkJCMZm3zoI/jqHrYBkc+l209Xyc8/2l5UKa8yDHk5y3904aFYqhsITnQ==
+	t=1793110420;
+	b=r41W3mJTqsEEacphWzsco1pG0mYnNkLPiyPYhyZz+nEy6O5m6417AmNtHh2LMj/96qZV
+	 YCxpjtD7MtTlw4QzRusdlZOcW84ecQXRHgpnI6jSyOcM1FR94df7QfnqK+ULYyYyJXDq9
+	 pEY4svAAGjpf+nz6UhOf+MmyFbx0P1mhxmJ7/yCcaTUpyw7OY3XiO5Krs0ngIC6zARifC
+	 s8ZPtZZS3zhjN8AZB58mqxw25XUudzaXCUaFYSGRyjcInXJlLVNbHAncUnefM5XPNprko
+	 +sBBGRoC6DUDQ5xVdrD5JbRNlexkmFxn/ZVDFyz1HnmD1sZbwdx5pgmk4Lq3z1Xu2oQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793092114;
-	h=DMARC-Filter:DKIM-Signature:Content-Transfer-Encoding:Content-Type:
-	 Date:Message-Id:X-Original-From:X-Lms-Return-Path:Cc:Subject:To:
-	 X-Mailer:From:Mime-Version;
-	bh=kDiKhnpR+rplcMQYgHFJZgudNbuciPpjRLcKNluE7GY=;
-	b=tn6vF4Nr+d49pEzg/eYe1TT1oiJj9KRiD7VWRdmyJnPtWS4XYcYHIGbpAYHKuubu1q0/
-	 n4Yn1SxzkqDMY2dPisKnujs1hRkXeo91iuCiwtXrqhG6Ht3ChVOVLKQjsOyU92lmwD8NG
-	 Jijn4Y7W3ouDo6b74TXixfnlU82GvrGecLoDdisNHZKl/Sl8qNt60KkIgrSpCuGZ8fEj8
-	 Do0rhuDy7rHmEn1mbibnnq+7j98IwcBnQhP5x2SKeyucpT/SylKXZfsjqvHajAT72AFxe
-	 4PmHM9bQ/YlaUz8UW2gCUydSbMYVOnzmoBj4kfKbHw2yfyJ4ZSc0SJ3CZzxZlh9miDg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793110420;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=Njyr1sXC6BTc6KpjDCCPrThZrn5w31hYsQpyOkaUFX8=;
+	b=lyhK2sM83ojBIQHO35rdQRN8+frTAqr1fwX6+TdRm5Y4uCuwb+HiC7Prnp6lvL7IApgy
+	 Ssm91W5MGjcMga28kGCY2OgLJusg89HIteEZBFEdSQkx9HB5zvZQTZFcnKkb00p90mSe+
+	 pFUtgiOKTxhuIIOpi+C6+yTn0WyWOqsoTQQNaG8638Ay92bjKiL+x+dKYv8tH7F3CQOVx
+	 gnVgdVop0A3DgrEtok3mep+KhpseIsgjDW3Qi9EwtAUNphCAPGK1iKdwvhvLHu5WQCqmW
+	 ZfM4jUNIQ02PAj6IJfIn6PyU1pUsQCCKBw6UvwJ2fH3xxHGH7cugTtSYlRLfwIg+Q2A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bytedance.com;
-	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=gQGQpjDE;
-	arc=none smtp.remote-ip=209.127.231.111
-Received: from va-2-111.ptr.blmpb.com (va-2-111.ptr.blmpb.com [209.127.231.111])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Sxly0D54;
+	arc=none smtp.remote-ip=192.198.163.8
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12B9F606A31B
-	for <linux-ide@vger.kernel.org>; Tue, 27 Oct 2026 09:08:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12B9F606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 744E5606A335;
+	Tue, 27 Oct 2026 14:13:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 744E5606A335
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=gQGQpjDE
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1793092107; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=kDiKhnpR+rplcMQYgHFJZgudNbuciPpjRLcKNluE7GY=;
- b=gQGQpjDEdaGyWcrFixPWZ8NkgZEsMhzYSUKuftf0r1z1eGIvs9jukVvzAM/BPSIoVJook2
- qZkSBF9hWuafthUcbVHuE6GbYO8Nn5zM3o1dMZliJQGNIEyqeCbPIrZK9QpPhpzf6VuFnb
- gSldzqV2mXGwu3yf7WMRqRuB/AamIlF32vkJVyeYeZDG1vz+eYdKeQ08GmTWzIECOTo9Gh
- A2c2bLySVU+0/HsckPghzPkj7aHQv3DGL32IgQlnjQSRxq1aGOToXwGFq/E5+pW+yytodN
- CmjKeeNlnnz+PTy/po36ABcftXygiwEqIvpJmadl3nps1DGQHcu7YlWYqV3Mng==
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 27 Oct 2026 17:08:09 +0800
-Message-Id: <20261027090809.94126-1-zhaogongyi@bytedance.com>
-X-Original-From: Zhao Gongyi <zhaogongyi@bytedance.com>
-X-Lms-Return-Path: <lba+26ae06a09+93a4b4+vger.kernel.org+zhaogongyi@bytedance.com>
-Cc: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Zhao Gongyi" <zhaogongyi@bytedance.com>
-Subject: [PATCH] ata: libata-scsi: reject to-device transfers for simulated commands
-To: <dlemoal@kernel.org>, <cassel@kernel.org>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
-From: "Zhao Gongyi" <zhaogongyi@bytedance.com>
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Sxly0D54
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793110420; x=1824646420;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ZY4wfgpH0hUWAMDpOH4bafZli/xxULyQBlE1t566/+0=;
+  b=Sxly0D54AqHL6syY2zMWwiaeEETWqTC77UQW/Pruz8+uKlHAqmvYuxPF
+   JvFBk4SFLsBvX79AmWyi3b9914u5kmdyGB7Q/NSwlarahiJgUhQ96RH4c
+   Eu1TbiD1wyCmkt0neT9uC/3PMVcpmYRHvysgkLCp+AbfD9amcR/w71bD/
+   lK5vlaU47ANqP17/VVcR0lJYvtA+Q0Nm3s6IjPYQ5uQb9SacAik2BcC0A
+   mvzJznjY8LEknb8dGRTuwAgyJHpnQRs2prn03OQkBd8WWLosSn3dEO7GG
+   ljMZ5mpNoZFBjYcfUaVEXHIIuXk2lB9/TcmNI8ogO1tZyKpWKFT/whSrT
+   g==;
+X-CSE-ConnectionGUID: 3Ib54G10QLysynAt3YsNGQ==
+X-CSE-MsgGUID: EcmEr4YnTMOhzCP0OIlZAA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11948"; a="1705463"
+X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
+   d="scan'208";a="1705463"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 07:13:34 -0700
+X-CSE-ConnectionGUID: btlMCU9iQlmskLJy1x/KXg==
+X-CSE-MsgGUID: a766eGApTgC3xKlX8Ik3OA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,181,1787036400"; 
+   d="scan'208";a="4577942"
+Received: from user-columbia-beach-bmc.igk.intel.com ([10.102.116.147])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 07:13:25 -0700
+From: Roman Gardzinski <romanx.gardzinski@linux.intel.com>
+To: dlemoal@kernel.org,
+	cassel@kernel.org,
+	szczepan.durawa@intel.com,
+	szymon.durawa@linux.intel.com,
+	romanx.gardzinski@linux.intel.com
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v1] ATA: ahci: Add Intel PCH-S RAID device ID
+Date: Tue, 27 Oct 2026 15:12:40 +0100
+Message-ID: <20261027141240.7850-1-romanx.gardzinski@linux.intel.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -63,87 +80,34 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-ata_scsi_rbuf_fill() emulates commands that only return data to the
-initiator (INQUIRY, MODE SENSE, READ CAPACITY, REPORT LUNS and
-MAINTENANCE IN).  It builds the reply in a kernel buffer and then copies
-it into the request's scatterlist without looking at the transfer
-direction.
+Add support for SATA devices in RAID mode for Nova Lake.
+No functional changes.
 
-The scatterlist is built from the user buffer by the passthrough paths
-(bsg/SG_IO), which derive the data direction from the transfer lengths
-supplied by userspace.  A request can therefore carry a data-in command
-while declaring a to-device transfer.  The buffer is then pinned for
-reading only.  In the observed crash, an anonymous VMA covered the
-buffer address, but its page was not populated; the read-only pin
-resolved to the shared zero page.  Copying the reply into that
-scatterlist attempted to write to a read-only kernel page:
-
-  BUG: unable to handle page fault for address: ffff888005140038
-  #PF: supervisor write access in kernel mode
-  #PF: error_code(0x0003) - permissions violation
-  PGD 7d00067 P4D 7d00067 PUD 7d01067 PMD 80000000050001a1
-  RIP: 0010:memcpy_orig+0x68/0x140
-  Call Trace:
-   sg_copy_buffer+0x1e2/0x250
-   ata_scsi_rbuf_fill+0xe6/0x280
-   __ata_scsi_queuecmd+0x12e4/0x1580
-   scsi_queue_rq+0x1ff7/0x33d0
-   blk_execute_rq+0x1c5/0x390
-   scsi_bsg_sg_io_fn+0x3bc/0xb00
-   bsg_ioctl+0x3ef/0x550
-
-The faulting address falls inside the kernel rodata mapping and matches
-empty_zero_page (Kernel rodata 05000000-05dc2fff, empty_zero_page at
-physical 0x5140000), which confirms the reply copy attempted to write
-to the shared read-only zero page.
-
-Even when the pinned page happens to be writable the reply silently
-corrupts the user buffer, since it was not mapped for writing.  Reject
-to-device transfers for these commands with an ILLEGAL REQUEST sense
-instead of copying the reply into them.  This is the same class of
-problem as commit 5da5231bb478 ("libata: if T_LENGTH is zero, dma
-direction should be DMA_NONE"), which rejects inconsistent data
-directions for ATA pass-through commands.
-
-Reproduced on 7.3.0-rc6 with the syzkaller C reproducer against an
-ata_piix disk (/dev/bsg/0:0:0:0): the unpatched kernel panics on every
-attempt (4/4), while with this change the request completes with CHECK
-CONDITION and the reproducer survives 5/5 runs.
-
-Standard-length CDBs behave the same way.  A correctly directed 6-byte
-INQUIRY still completes normally, while a 6-byte INQUIRY and a 10-byte
-READ CAPACITY(10) declared as to-device are rejected with CHECK
-CONDITION; on the unpatched kernel those same requests silently write
-the reply into the caller's page (the transfer has to be page aligned to
-take the zero-copy mapping path, otherwise it bounces through a kernel
-buffer and nothing is visible to the caller).
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Zhao Gongyi <zhaogongyi@bytedance.com>
+Suggested-by: Szczepan Durawa <szczepan.durawa@intel.com>
+Reviewed-by: Szymon Durawa <szymon.durawa@linux.intel.com>
+Signed-off-by: Roman Gardzinski <romanx.gardzinski@linux.intel.com>
 ---
- drivers/ata/libata-scsi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/ata/ahci.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b3666519b..8b65b896e 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2009,6 +2009,12 @@ static void ata_scsi_rbuf_fill(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	unsigned long flags;
- 	unsigned int len;
- 
-+	/* A data-out request may contain pages pinned without write access. */
-+	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
-+		ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x24, 0x0);
-+		return;
-+	}
-+
- 	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
- 
- 	memset(ata_scsi_rbuf, 0, ATA_SCSI_RBUF_SIZE);
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9b8c0935001c..c60e7ba24502 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -283,6 +283,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 		/* Comet Lake PCH-H RAID */
+ 		PCI_VDEVICE(INTEL, 0x06d6),
+ 		.driver_data = board_ahci_pcs_quirk,
++	}, {
++		/* Nova Lake PCH-S RAID */
++		PCI_VDEVICE(INTEL, 0x6e66),
++		.driver_data = board_ahci_pcs_quirk,
+ 	}, {
+ 		/* ICH6 */
+ 		PCI_VDEVICE(INTEL, 0x2652),
 -- 
-2.39.5 (Apple Git-154)
+2.53.0
+
