@@ -1,53 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.114
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793187571;
-	b=Qug8H8rH4LMFTvfTss/Q+AfOSAD+57qAH/fR1QEH8lVImFuxjHWI3lDmsTYUBrhLkrIY
-	 nXmdI7hzuH2xBzdqA6KzCtIqBzaU/TIpUzPM4s9oSJ8O4N18019CAt1iBY32s6vZfAUHo
-	 N/yz1MmLRl5moYZqkU2eC/NkPvaBLM8weP4xwr2CgI/UFdB5sd4NoBaGfZNxVdkM62Gcb
-	 AFJa89s6PMhvS/LHLfRoVA2/aiSAYNGLbjI1EwBTXQH44prLxWD7MQBXLj4h0WSe+oEuQ
-	 ccJxCJvkbmKuZDeGyvrjSDXT3eEH3DrTEZ/rPO5+4lxKK4OEOoNNMkEiLKyW4s/kS0A==
+	t=1793188418;
+	b=q0wVTObTMLozgANxmhwud3JM6CNGt8vj0j+GMhXeCrvEZMURFd/94TLjlkci9gTXsKsl
+	 eoK3zClmU7OrD1nKfmRZYGJL44qkuSCM/AY2RTk7h2BLVPF9UCol5w+2tX5FIMlPUbKP5
+	 ohcbZZdgORt+goqJuliaT0d9ak6RL0OketFYnJ07h3oogHtBJE4H1pQXfdmtELEWMKCvz
+	 qqY++fkJGcYFH5tg13j2t2pAWU8S/s8f/BJh8FtMFDg/QtnXwjVFgUzLQaxKjd2vTWghS
+	 gsTKCG7lndb4Bwmqr2tBnJqjEYuqxNSp9eVp5nV0v3G4sK1LURRRt8f/ABzp6FDJEvw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793187571;
-	h=DMARC-Filter:DKIM-Signature:To:Cc:Date:Mime-Version:References:
-	 X-Original-From:From:Content-Type:Subject:Message-Id:X-Mailer:
-	 In-Reply-To:X-Lms-Return-Path:Content-Transfer-Encoding;
-	bh=N8AoCKZvvK133MhCYQj3502MyrqrutxmSZ+xIyFehZg=;
-	b=AE8hAggufV7tuwBuVBVANPyG4P+4dJFnRM4pdKOTqBJQ4IoNNwgPk2/bG9ujoX5rZEIk
-	 PN/Jih9PCgcPSPyKpL9JFmSgmzjGCDHFUqFQZ6now7ZJLXusEOoxbaRItt4N/qOjZXU0J
-	 Zqu90WW7rXfY+sie/OlkUd+0v+QPDb6lQbGMg4AWU+e7x2l2xe5dDoQwxyosyBppcFNvB
-	 +r4r2fp6Mpmu/cA2DREYws6tPFF+PJBuQbCZegUS9zwNLeWlwnpWNG306nfzxs90tcVCr
-	 uTw9F6TaDe4Jfvb1YkZ9tHvGZ/49R4yz9wY91fEmauYEXlBUIaB6d2jxJsrrKKtOk+Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793188418;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=xY/5bM4rnMmAe5PGTgfZ1C+5Na9dqVsgFUfPAzE/x/4=;
+	b=oJdVNfZv530yLQErIphOCy82Sbmqhhu8xuPRROj1EDhxRtHfrz20/WRvmVvcqlmdPURQ
+	 KPrDBceQ9spymz+UM//KpNtPgqFjue3qhHM7ghZBTVMLUopxDcDcNOgwtErtfzjWRa2FU
+	 hqKILinjhHQFvecbt9rLnaI6pzEu/Uz4Mo7FoChwBxGIZM+d9gN3B5fmVNnLA8am7OGWj
+	 yC2GXS+Gskhj4WzF1EHuzm3m70/7N/Y+Bg8BI1fUzwPiL9OqekR+js+WPDqB9gQCsZUUj
+	 hhlFUSOnFu5hMwaZlmgvQAl1oBapNnUvX+Zg6haKKaM2jDg28I613Six9PGMbMb4KEw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bytedance.com;
-	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=S4sijXbp;
-	arc=none smtp.remote-ip=209.127.230.114
-Received: from va-1-114.ptr.blmpb.com (va-1-114.ptr.blmpb.com [209.127.230.114])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jhrXtBfS;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EFC8606A31E
-	for <linux-ide@vger.kernel.org>; Wed, 28 Oct 2026 11:39:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5EFC8606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 464CF606A322
+	for <linux-ide@vger.kernel.org>; Wed, 28 Oct 2026 11:53:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=S4sijXbp
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1793187564; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=N8AoCKZvvK133MhCYQj3502MyrqrutxmSZ+xIyFehZg=;
- b=S4sijXbpLGH7GkiCwJoSQnxQXYhxhUYwlvouJtkWPTMFB1XswAaCy0Lu4sQONm0G8Pb42g
- OHxgK06Wo32cD/DGWJ/o2tOvvBnmUnEnPLom3toy3mQ1XS3b43T1YATWV1QhBdV//EUS6C
- xksmSQ6EX0eVgjK4+pJgObuIdqinaIPJ62Vm1hz8EAxxucthvOEnQ+xZzsDMg1Z+qW7f4x
- ZRlC9l0xzS1RYAMSRZI69Z3tQnnR1VFT4tYe8a6kE8Y5nB7ap9GKf1BpH5WpsCM+6JwHoO
- uDPNMEzRajAtgfjTWZ0YYr1wa94xML4Kzpp5JowrQQFBvLry8PsBzAb+vYHk9Q==
-To: "Damien Le Moal" <dlemoal@kernel.org>, 
-	"Niklas Cassel" <cassel@kernel.org>
-Cc: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Zhao Gongyi" <zhaogongyi@bytedance.com>, <stable@vger.kernel.org>
-Date: Wed, 28 Oct 2026 19:39:03 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jhrXtBfS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85E2C1F01825;
+	Wed, 28 Oct 2026 11:53:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793188417;
+	bh=xY/5bM4rnMmAe5PGTgfZ1C+5Na9dqVsgFUfPAzE/x/4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=jhrXtBfSU0JTS+5fmQ0dFrqT7IoPNTzxShHgLfIn5OjymVewCHu5qFzUQWXKvU3bJ
+	 hn4faUtptETIgYxle5tO3CPzrihet9pqSi1ZXUXUrTyqClXkZUwZFqRQWlxRhOVazL
+	 WL/q9Owr8F8uTbnKCUfoHHEPtWHLZHgSlrM+n77ynPML4yuzyvMBohBrrSPYuMc9ea
+	 8Ha4dNWSF8uF9B1TnX+MeA0wb37/AatADwvIDiE8CELIZGpMKJrgasm6r1tqxzkHSR
+	 PCGKWXA/aN7nAce6VGJzYUqqEtam521b5OCnEsawN3VrO1VI/EwNFiGMB8NW2iRWyl
+	 /l7JBUk+Zc+BA==
+Message-ID: <sashiko-outbox-187849@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] ata: libata-scsi: reject data-in commands with a
+ data-out buffer
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Zhao Gongyi" <zhaogongyi@bytedance.com>
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
+In-Reply-To: <20261028113903.19569-1-zhaogongyi@bytedance.com>
+References: <20261027090809.94126-1-zhaogongyi@bytedance.com>
+ <20261028113903.19569-1-zhaogongyi@bytedance.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 28 Oct 2026 11:53:37 +0000
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -56,100 +60,143 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261027090809.94126-1-zhaogongyi@bytedance.com>
-X-Original-From: Zhao Gongyi <zhaogongyi@bytedance.com>
-From: "Zhao Gongyi" <zhaogongyi@bytedance.com>
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v2] ata: libata-scsi: reject data-in commands with a data-out buffer
-Message-Id: <20261028113903.19569-1-zhaogongyi@bytedance.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
-In-Reply-To: <20261027090809.94126-1-zhaogongyi@bytedance.com>
-X-Lms-Return-Path: <lba+26ae1deeb+e964b8+vger.kernel.org+zhaogongyi@bytedance.com>
-Content-Transfer-Encoding: 7bit
 
-ata_scsi_rbuf_fill() copies simulated data-in replies to the SCSI
-scatterlist without checking the request direction. SG_IO can supply a
-data-in CDB with DMA_TO_DEVICE, in which case the pages may have been
-pinned without write access. In the reported case, copying the reply
-into the shared zero page caused a kernel page fault.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] ata: libata-scsi: ata_scsi_translate() direction check misses atap=
+i_xlat()
+- [Medium] ata: libata-scsi: missing ascq argument in ata_scsi_set_sense() =
+calls
+--
 
-Translated commands can reach the same kind of mismatch. In particular,
-the ZBC IN and GET PHYSICAL ELEMENT STATUS completion handlers rewrite
-the receive buffer, including when the device aborts the command.
-Checking the direction only in ata_scsi_rbuf_fill() leaves those paths
-unprotected.
+commit 876b457d8b81c6b456e4cdb4d8967b7f266646de
+Author: Zhao Gongyi <zhaogongyi@bytedance.com>
 
-Reject DMA_TO_DEVICE requests in the simulated-command path. After
-translation, reject a DMA_TO_DEVICE request whose ATA taskfile performs
-a data-in transfer, before issuing it to the device. Return ILLEGAL
-REQUEST / INVALID FIELD IN CDB for both cases.
+ata: libata-scsi: reject data-in commands with a data-out buffer
 
-The original reproducer panicked in ata_scsi_rbuf_fill() on all four
-runs with the unpatched kernel. With this patch applied, it completed
-without a crash. A diagnostic run confirmed CHECK CONDITION with
-ILLEGAL REQUEST / INVALID FIELD IN CDB.
+This commit rejects simulated and translated data-in SCSI commands that are
+submitted with a DMA_TO_DEVICE data direction to prevent writing replies in=
+to
+pages pinned without write access.
 
-Built an x86_64 defconfig kernel from the current Linus tree and booted it
-in QEMU with an ata_piix disk. Normal INQUIRY and READ(10) SG_IO requests
-succeeded. Each command declared as SG_DXFER_TO_DEV returned CHECK
-CONDITION with ILLEGAL REQUEST / INVALID FIELD IN CDB. No kernel
-warnings or oopses appeared. ZBC IN and GET PHYSICAL ELEMENT STATUS
-were checked by code inspection; the test disk does not support them.
+Link: https://lore.kernel.org/r/20261027090809.94126-1-zhaogongyi@bytedance=
+.com
 
-Suggested-by: Niklas Cassel <cassel@kernel.org>
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Link: https://lore.kernel.org/r/20261027090809.94126-1-zhaogongyi@bytedance.com
-Cc: stable@vger.kernel.org
-Signed-off-by: Zhao Gongyi <zhaogongyi@bytedance.com>
----
-Changes since v1:
-  - Rebase on Linus' tree and use INVALID_FIELD_IN_CDB with the current
-    ata_scsi_set_sense() signature.
-  - Reject mismatched translated data-in commands before issuing them,
-    as suggested by Niklas Cassel.
-  - Remove the deprecated Assisted-by trailer.
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 115b75a313bc5..6f1c0e6769bbf 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1978,6 +1978,19 @@ static int ata_scsi_translate(struct ata_device *d=
+ev, struct scsi_cmnd *cmd,
+>  	if (xlat_func(qc))
+>  		goto done;
+> =20
+> +	/*
+> +	 * A data-out request may contain pages pinned without write access.
+> +	 * Reject a translated data-in command before issuing it, since its
+> +	 * completion handler may write to the buffer even if the device fails.
+> +	 */
+> +	if (unlikely(cmd->sc_data_direction =3D=3D DMA_TO_DEVICE &&
+> +		     ata_is_data(qc->tf.protocol) &&
+> +		     !(qc->tf.flags & ATA_TFLAG_WRITE))) {
 
- drivers/ata/libata-scsi.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+[Severity: High]
+Does this direction check in ata_scsi_translate() catch ATAPI commands
+translated via atapi_xlat()?
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a61fb0331..a5170a36a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2048,6 +2048,19 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	if (xlat_func(qc))
- 		goto done;
- 
-+	/*
-+	 * A data-out request may contain pages pinned without write access.
-+	 * Reject a translated data-in command before issuing it, since its
-+	 * completion handler may write to the buffer even if the device fails.
-+	 */
-+	if (unlikely(cmd->sc_data_direction == DMA_TO_DEVICE &&
-+		     ata_is_data(qc->tf.protocol) &&
-+		     !(qc->tf.flags & ATA_TFLAG_WRITE))) {
-+		ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST,
-+				   INVALID_FIELD_IN_CDB);
-+		goto done;
-+	}
-+
- 	return ata_scsi_qc_issue(ap, qc);
- 
- done:
-@@ -2079,6 +2092,13 @@ static void ata_scsi_rbuf_fill(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	unsigned long flags;
- 	unsigned int len;
- 
-+	/* A data-out request may contain pages pinned without write access. */
-+	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
-+		ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST,
-+				   INVALID_FIELD_IN_CDB);
-+		return;
-+	}
-+
- 	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
- 
- 	memset(ata_scsi_rbuf, 0, ATA_SCSI_RBUF_SIZE);
--- 
-2.39.5 (Apple Git-154)
+In drivers/ata/libata-scsi.c, atapi_xlat() unconditionally sets
+ATA_TFLAG_WRITE whenever scmd->sc_data_direction is DMA_TO_DEVICE, without
+checking whether the SCSI CDB is a data-in command:
+
+drivers/ata/libata-scsi.c:atapi_xlat() {
+	...
+	qc->tf.flags |=3D ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+	if (scmd->sc_data_direction =3D=3D DMA_TO_DEVICE) {
+		qc->tf.flags |=3D ATA_TFLAG_WRITE;
+	}
+	...
+}
+
+Because ATA_TFLAG_WRITE is set, the !(qc->tf.flags & ATA_TFLAG_WRITE) check
+in ata_scsi_translate() evaluates to false for ATAPI commands.
+
+If userspace submits an SG_IO request to an ATAPI device with
+SG_DXFER_TO_DEV (DMA_TO_DEVICE), a non-empty buffer backed by read-only pag=
+es
+such as the shared zero page, and a standard INQUIRY CDB with allocation
+length 0 (cmnd =3D {0x12, 0, 0, 0, 0, 0}), the device completes the PACKET
+command without a data phase and without error.
+
+On completion, atapi_qc_complete() invokes atapi_fixup_inquiry():
+
+drivers/ata/libata-scsi.c:atapi_qc_complete() {
+	...
+	/* successful completion path */
+	if (cmd->cmnd[0] =3D=3D INQUIRY && (cmd->cmnd[1] & 0x03) =3D=3D 0)
+		atapi_fixup_inquiry(cmd);
+	...
+}
+
+atapi_fixup_inquiry() then writes modified INQUIRY header bytes into the
+command scatterlist via sg_copy_from_buffer():
+
+drivers/ata/libata-scsi.c:atapi_fixup_inquiry() {
+	u8 buf[4];
+
+	sg_copy_to_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, 4);
+	if (buf[2] =3D=3D 0) {
+		buf[2] =3D 0x5;
+		buf[3] =3D 0x32;
+	}
+	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, 4);
+}
+
+Wouldn't this still trigger a kernel page fault when writing to the read-on=
+ly
+DMA_TO_DEVICE scatterlist pages?
+
+> +		ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST,
+> +				   INVALID_FIELD_IN_CDB);
+> +		goto done;
+> +	}
+> +
+>  	return ata_scsi_qc_issue(ap, qc);
+> =20
+>  done:
+> @@ -2009,6 +2022,13 @@ static void ata_scsi_rbuf_fill(struct ata_device *=
+dev, struct scsi_cmnd *cmd,
+>  	unsigned long flags;
+>  	unsigned int len;
+> =20
+> +	/* A data-out request may contain pages pinned without write access. */
+> +	if (cmd->sc_data_direction =3D=3D DMA_TO_DEVICE) {
+> +		ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST,
+> +				   INVALID_FIELD_IN_CDB);
+
+[Severity: Medium]
+Does this compile when CONFIG_ATA is enabled?
+
+In drivers/ata/libata-scsi.c, ata_scsi_set_sense() takes five arguments
+(dev, cmd, sk, asc, ascq):
+
+void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
+			u8 sk, u8 asc, u8 ascq)
+{
+	bool d_sense =3D (dev->flags & ATA_DFLAG_D_SENSE);
+
+	scsi_build_sense(cmd, d_sense, sk, asc, ascq);
+}
+
+And in include/scsi/scsi_proto.h, INVALID_FIELD_IN_CDB is defined as a sing=
+le
+byte constant for asc:
+
+#define INVALID_FIELD_IN_CDB		0x24
+
+Both new calls to ata_scsi_set_sense() in ata_scsi_translate() and
+ata_scsi_rbuf_fill() pass only four arguments, omitting the fifth ascq
+argument (0x0), which causes a build failure.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028113903.1956=
+9-1-zhaogongyi@bytedance.com?part=3D1
