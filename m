@@ -1,53 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.12
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793271802;
-	b=H8aQ5zhXa8wGMwAjvMZof96E2qtIpnHcqqPEyMudExOTGvFt4h0OxBp67BnFS1vc0bp5
-	 l+mpCKIT1q3nDs1KRJuPKvUpG3x/KPZUSek5JbZ4bL0yZi0Av4vWPLAAhhifldzOhaMkH
-	 tRN9Pc6c4kkUAEw/uy4y2aWE10j4R9SRD8wAvKvVKHkLfFQiTyLJfwh2ZQ5PGBiy3p/ul
-	 dbLwo/5tO/X8FLMqB6LcwtezXhzm5fDQKg4/ivGd0Y+choyGvaB1VSidX7BVvVF4XjSO8
-	 YvA9Z1vThNblHx6E+q+6ZQRo8/ZB0nT6hYLiSoQ44u8wT7n2CEwA3uR5DOVma/hh5Og==
+	t=1793282465;
+	b=TYPmlz3OLd0bAMdAfAenG6lOWdtNzCgryh84ECmQRepDa0u8KS/4Et/gVA2QJLbuilw1
+	 BW/XIulBXl64GbQbtowNj03pjeq9RVHtl/J06A79EZjvk0JXrCy8K9uflHTtXiUsPdRHj
+	 IcNrQRFz4GOE0nuZzgrxUksltsNlghgzNZ5OT1aq15t7qoYDXDMPH2nj3B/ksU2TLy/j6
+	 JlELwTJNzpSOo3FE0jA1pnHGCtL2LHB1Op2cKxAQQeqZe321Aay/UkAPt9dixSQCcP/gt
+	 8lyJm6qOsbRmTsoUSFasKMy89D8a3NAirJ/1B17oVGFgthbBP9qNob9UZfZyLCar+xw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793271802;
-	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
-	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
-	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
-	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=KfmDwcMrjK2ZAGraZ+4RY99djt++qfZZqI79X0qnDYI=;
-	b=kU7bHzjgGGEv8+r3XJCsH3OS859tlMHL32xUw+p2wiPSKySYEJkaEtblToJ+W1IlW1X8
-	 EMbh95e9GosCNvafFPLfCY9XTAtMZk8co5AlsL0OKzarRBuk6RVPIofy0TpVY4LbXjIJj
-	 6MWFcpfpryP0LMZjHqvPSZdK/YPWGAU2zEa3JJwoz0IBgcLQDaObvV+rpzBUfXNH2qwz9
-	 ItymQMueCAwbA8oTlBkJDc1A72zV/hWXdg5Tr384lqc6xw4nwpt6Ng1VrCfM/7ln0GdEO
-	 kDe2Lcb+pgip8B4XhUQqVjdpo4DrwkW2a9f+JWKVHFVwh+HnksaxSlmOZBv0gv1okOA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793282465;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=1NW8f2FaSFykGnch/E9fgBTLK2+pxRc9w1tLk9Rm0p8=;
+	b=L41dXYrk/u+qrFE8FLFf9YLkGcn/c2tDSffclzsBIqkw5wbtndXgibbCHc6F5FptQDN7
+	 I4V8f8IYN8cf7K52D9VtRG76AXku6mfUlljC4t0l6Ab5ChmB1OQKZv19GlkVW3DTaIX2r
+	 TyYk966nJwMkGPZ21IJVGPW/MyfbAQCDhUSNMTD4BCW1+uRmthieWMzFA5NrnLpad45lL
+	 7mVd9lfhggKrjEDDy3BsZv1hJz0+pzyd2owwL7htN7C5qdR9DpVlBI507YCi3m5u2wYM+
+	 il9dguGZOe80nx0FZn2Xc2DV7ZzwDZRZCINIeU9rN70RfYKPLJR78gwwYtorZBKxkxw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=160.30.148.35
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=linux.intel.com;
+	spf=pass smtp.mailfrom=linux.intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Ac45ANIN;
+	arc=none smtp.remote-ip=198.175.65.12
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2470606A323;
-	Thu, 29 Oct 2026 11:03:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B2470606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jFhD76rkpz8Xrrb;
-	Thu, 29 Oct 2026 19:03:19 +0800 (CST)
-Received: from xaxapp04.zte.com.cn ([10.99.98.157])
-	by mse-fl2.zte.com.cn with SMTP id 69TB3Cwl071868;
-	Thu, 29 Oct 2026 19:03:12 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp02[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Thu, 29 Oct 2026 19:03:14 +0800 (CST)
-X-Zmail-TransId: 2afa6ae327f2272-0a40c
-X-Mailer: Zmail v1.0
-Message-ID: <202610291903148135Df-fh-xl3zWuRJkq8AXn@zte.com.cn>
-Date: Thu, 29 Oct 2026 19:03:14 +0800 (CST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB666606A32F;
+	Thu, 29 Oct 2026 14:01:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB666606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=Ac45ANIN
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793282465; x=1824818465;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=/JK4egaMQ6o9Sf/I5NjAvigrmy36ltelcrOmAGCM6cg=;
+  b=Ac45ANINYUgTG9fMIikgQ0Wy6Sc6tPeUplmrpm9oQw9JGCHJi1Vvyqgd
+   42pdZ4fFqFQwHMelM7PlHm3+Z8nXJZ+c1+1YMCpTu29aJ5KgYL5FY71si
+   eej7HXNFAa17AeabQ3hr2Wwi96MbXgphRBhIhV4wmOOWl8F78NYeWm1hT
+   wRsNqWLK8S1DJsR0zCNh7b5zRz2sgAlBt95Nbf1W83PZYKBqzkN+HpKaw
+   zp7Ow7c9FX4CeyllLWPXUn7ZSpCq/QXQl9GcqJAzmPOu78J9DRkW2KBOP
+   FEniwIGQJgKnrGlX/OLJ+UmKLZF/dC293cUlIfygIMSUYTfsTpp9Ryas+
+   w==;
+X-CSE-ConnectionGUID: PCURvS/gTc22VHt9uLnjWg==
+X-CSE-MsgGUID: DzJGl45NRJCToU5ZiYjtwQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11949"; a="1907774"
+X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
+   d="scan'208";a="1907774"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 07:01:04 -0700
+X-CSE-ConnectionGUID: M2tkaBdlTPeKtpn5j+Hmvg==
+X-CSE-MsgGUID: cotb+veYQjmTZ9uV40QkYg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,184,1787036400"; 
+   d="scan'208";a="5279292"
+Received: from user-columbia-beach-bmc.igk.intel.com ([10.102.116.147])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2026 07:01:02 -0700
+From: Roman Gardzinski <romanx.gardzinski@linux.intel.com>
+To: dlemoal@kernel.org,
+	cassel@kernel.org,
+	szczepan.durawa@intel.com,
+	szymon.durawa@linux.intel.com,
+	romanx.gardzinski@linux.intel.com
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] ATA: ahci: Add Intel PCH-S RAID device ID
+Date: Thu, 29 Oct 2026 15:00:03 +0100
+Message-ID: <20261029140004.6991-1-romanx.gardzinski@linux.intel.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -56,48 +80,43 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIXSBhdGE6IGxpYmF0YS1zY3NpOiBzZXQgdGhlIGZpZWxkIHBvaW50ZXIgd2hlbiByZWplY3RpbmcgQ0RM?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 69TB3Cwl071868
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Thu, 29 Oct 2026 19:03:19 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AE327F7.000/4jFhD76rkpz8Xrrb
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+When the Intel Nova Lake SATA controller is configured in RAID mode (rather
+than AHCI), the generic entry in ahci_pci_tbl which matches any device with
+the PCI class code for AHCI, is not sufficient, since the SATA controller
+in RAID mode uses a different PCI class code.
 
-ata_mselect_control_ata_feature() rejects enabling CDL while NCQ
-priority is enabled, but unlike its other error branches it returns
-without setting *fp.
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>
 
-ata_scsi_mode_select_xlat() initializes fp to 0xffff and, when the
-handler fails, adds the mode select header and block descriptor lengths
-to it.  The resulting sense data then reports a field pointer far
-outside of the submitted parameter list instead of the byte that has to
-be changed.
-
-Set *fp to the beginning of the mode page data, as the other branches of
-this function do.
-
-Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+Suggested-by: Szczepan Durawa <szczepan.durawa@intel.com>
+Reviewed-by: Szymon Durawa <szymon.durawa@linux.intel.com>
+Signed-off-by: Roman Gardzinski <romanx.gardzinski@linux.intel.com>
 ---
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 5cde90fe594e..c07c1ff09757 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -4494,6 +4494,7 @@ static int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
- 		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED) {
- 			ata_dev_err(dev,
- 				"NCQ priority must be disabled to enable CDL\n");
-+			*fp = 0;
- 			return -EINVAL;
- 		}
- 		ata_dev_dbg(dev, "Enabling CDL\n");
+v1 -> v2:
+ - update RAID entry in ahci_pci_tbl to board_ahci from board_ahci_pcs_quirk
+ - update commit description
+
+ drivers/ata/ahci.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9b8c0935001c..cee67c64fbea 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -280,6 +280,10 @@ static const struct ata_port_info ahci_port_info[] = {
+ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* Intel */
+ 	{
++		/* Nova Lake PCH-S RAID */
++		PCI_VDEVICE(INTEL, 0x6e66),
++		.driver_data = board_ahci,
++	}, {
+ 		/* Comet Lake PCH-H RAID */
+ 		PCI_VDEVICE(INTEL, 0x06d6),
+ 		.driver_data = board_ahci_pcs_quirk,
+-- 
+2.53.0
+
