@@ -1,57 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.115
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793330388;
-	b=cOATKea/qdxbo7ZPPV/cAaqcMiV/7Xm/2dbzZOT62jq0JApTA9bGaIgctwk8h6qXeFbQ
-	 jLwU650sAOIHmXuc9bDuuzEoOu6+wtbnUGKr9SJgGnIy1mu/W2lDmXqzlZoF+P6ft0wpB
-	 YCWkZlNZZ8+5ThnI9knKQ38m5qyn/LeQ1jYoHsreaAm0RB//W70EJWfh9c2DwrqD54jmW
-	 yikVsMS86Ch4lrE7l74e7DvfPqlBKM2rwiSnkj3auZv+Cz+NIk5VbpE/c+M4OqsK8K+Tm
-	 4WV5RPja20eTBbcHHx5LR7a/N0HiUjsZHCkqxtQXn3rgTwHSHTLw0FFpKVgKsOPjQtg==
+	t=1793350852;
+	b=PfL7IFOvxpjn5ScjkEL5SnkmuYCPgDRxAD2B5Oa3ox2dw3hTAcpetqI8CqJeztER8L1c
+	 oS6IYEoHJvGGwiUjONUFLPxD6dsdDERV9IE2Pwo0qsw1ENGcm1IqjvwmTjEWibd8/pd3n
+	 Wr30GlBqPnTBgeLn2Rl7e3AX8Cm8C/8GuomeBjTNSV9U5D6lsfEnC7Kb1J7+4CnD/PLsU
+	 pL0tPqIftyymRwqt0Bj+7E+b7DWo7U9W9TJv9FXbvzofuicQX7K6ElM1dtwS1SkNdGSd1
+	 t7bfd8ch+Uy+dfGhnO0syfKFMYNmRsvmjbR0uZ8VUmZc56+e72ikFQ9YAvbah/LuQog==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793330388;
-	h=DMARC-Filter:DKIM-Signature:Subject:Date:Message-Id:
-	 Content-Transfer-Encoding:In-Reply-To:To:Content-Type:Cc:Mime-Version:
-	 X-Original-From:From:References:X-Lms-Return-Path:User-Agent;
-	bh=Aq9v+lR+69tefJzwDk3e5NEUrfsI19OpP1La3FWUUsQ=;
-	b=VI69ye1yeqkRWFmzpCk725TOVtaIp8gR0NpQo5vAkJnkr4V5uz/wlmDZs65Q3O5qTn0b
-	 3702as8vZYeYlrIsMDpNqWbcumY8gXTmi1X0fmEttTd3MaugOX3HpEH9iz2WFlVcTeQii
-	 zaXwn5hDcqX/ZHdmY6huzbqVw5L/NzMXZ37jeoK091/qr35pALlgg2M0e6OVaRTVNvJSz
-	 vAGJYLl7b5Ud+ofvcXFF61E4e5HYCD2O1I91hmK3/fE91PPNxzE9cL/9Noof70pc07GNq
-	 b2EqQDJNiSveblVZQv/Uc1JRK/n4rRp8N2pFuWuRD25moxyh+/3lYubwFaCX38g3IiQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793350852;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=HVB3/ENMbgWRySaxq3NIxaKC+aOEmDhLWkwa7TWeRC8=;
+	b=zxBv1m9R1VJkSPEEtu/uClC3K8z3AEPSiftfnnA4YlAg1qcLwy2957jbt2zgEeGB1b0q
+	 G0oOMRYUm7PK1+nSjKjoWlIQ5RLHOFna7HNZ+zITDgY2+bp/3dyVYii1eqtsRmZz4uVJD
+	 b0NLtVim84Ob4rXx121xjjigszY27elsyuZorwKIKCEHWqw2rMMnP8EP3hB3dW9XqFhbX
+	 lRnzvqxUJYu8APXlFbQ2R3KdLskcwJUnlVW+PY1dTNBJfoxspw3rrVrVwDj19C2/dw2EW
+	 fwuVRW4alSwJyj/lM1EM8z03aBtCKFlLAgSz40jnub0pSE4xRxEQnZU9OgRq24l027A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bytedance.com;
-	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=aG296nZc;
-	arc=none smtp.remote-ip=209.127.230.115
-Received: from va-1-115.ptr.blmpb.com (va-1-115.ptr.blmpb.com [209.127.230.115])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lhQsxvYt;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67655606A31C
-	for <linux-ide@vger.kernel.org>; Fri, 30 Oct 2026 03:19:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67655606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A66F1606A31A
+	for <linux-ide@vger.kernel.org>; Fri, 30 Oct 2026 09:00:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=aG296nZc
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1793330381; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=Aq9v+lR+69tefJzwDk3e5NEUrfsI19OpP1La3FWUUsQ=;
- b=aG296nZcS8xM5SqFXaLXGJ5NDgsOvHtMk7swfpcSt8WDDCpYKJf4PKaSgZlcjClBiqu1nj
- H6NT5BM58GVmu2/ne0HP67D/a3BnwG0L3oS26GqD8/hiRrV/7/eEWs1XUAtoD+x5QjSeZ/
- HZvRIeWvrO/I1J2/zgbK/SqDqhv7vsNcZHDARExOIIIa3opwY59Fr3zdrohb+b1NocAZOo
- SivHmWpb58MNIBax31MsRVuEYtm7Ftli8OhPgtdfM3c42uksiG79eHpMs1sPVZZ5PHIzhQ
- 0nhdVSwgWKl3xmznwJY+Mrq44Fvw76GUcwpYBnYQ2901bt7Eyvy2/hN6Gp135g==
-Subject: Re: [PATCH v2] ata: libata-scsi: reject data-in commands with a data-out buffer
-Date: Fri, 30 Oct 2026 11:19:28 +0800
-Message-Id: <0a4822fe-f283-4cac-8ca3-91f4e8f017e2@bytedance.com>
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <2def2444-0b73-4371-9ba2-78af235e64cb@kernel.org>
-To: "Damien Le Moal" <dlemoal@kernel.org>, 
-	"Niklas Cassel" <cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Cc: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lhQsxvYt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD0991F000C1;
+	Fri, 30 Oct 2026 09:00:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793350851;
+	bh=HVB3/ENMbgWRySaxq3NIxaKC+aOEmDhLWkwa7TWeRC8=;
+	h=From:To:Cc:Subject:Date;
+	b=lhQsxvYtizT/SIby5Qix4NLZILeu65+TtnWIBMOuRx2bWrUG+iY5p/JZAO1F8Z87o
+	 yTyRWPvu6Qmp8qEN3vL+vL1BW+yWPZ8QXmzaaef+/+O3tOqABIdCpeRbWG3getJ5md
+	 A4/T+qDApBPfiJs1HRTMwr1OY7yiWoBi/9/UmoIqWIU225mua3ZOyfUVAcGvT2D6xn
+	 nwOh+DxKFZ5dEwnHiGQucFwURYFhWkhIqn13cnuCa2Z5TXF//eWUyup1GMZ546bxIf
+	 3RTD9PonQrK45sv5X3dPi2rUTbA+r/U97WKMxKqe4W8EtpB6+IbDMfNVZ02e0ORjiY
+	 tad/c+PXUpJig==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH] ata: libata-eh: Retry non-NCQ commands when their sense data asks for it
+Date: Fri, 30 Oct 2026 10:00:48 +0100
+Message-ID: <20261030090047.407906-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -60,48 +56,72 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-X-Original-From: Zhao Gongyi <zhaogongyi@bytedance.com>
-From: "Zhao Gongyi" <zhaogongyi@bytedance.com>
-References: <20261027090809.94126-1-zhaogongyi@bytedance.com> <20261028113903.19569-1-zhaogongyi@bytedance.com> <8ec9e401-4c00-42fe-b997-228e05ed9c2a@kernel.org> <36648b88-c295-4acb-8b6e-25d742d50946@bytedance.com> <2def2444-0b73-4371-9ba2-78af235e64cb@kernel.org>
-X-Lms-Return-Path: <lba+26ae40ccb+7d6144+vger.kernel.org+zhaogongyi@bytedance.com>
-User-Agent: Mozilla Thunderbird
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2838; i=cassel@kernel.org; h=from:subject; bh=fxRqa3EYfJS9cfZAxSB/OOZMXQ4Fp7iBJj0FpnYFqOI=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLKexOyf5WTzk9FoJ4v3/1CbeLmpyv18uStsmR8dNWGOn X2nYsn2jlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEzEro3hv4+Iwfuyp7Eq6+I8 yrp+LPIIiLu3J2P31Ojyu9z/jTa7sTAyvO7WU4h6cfC5o29I569HzHtCJE8yM+1+mPzd9pSGz8+ TTAA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On 10/30/26 9:18 AM, Damien Le Moal wrote:
-> Yep, these are the only ones we can catch easily. Other commands we do not look
-> at/know about will keep potentially triggering iommu page faults, but that is
-> fine as that is not a crash. However, ideally, that should lead to the command
-> being failed, which it seems we are unable to do... Did you check if we can
-> propagate the fault into a the request to indicate a failure?
-> 
+When a failed command has valid sense data, ata_eh_analyze_tf() asks
+scsi_check_sense() whether the command should be retried, and sets
+ATA_QCFLAG_RETRY if it should. ata_eh_link_autopsy() then clears
+AC_ERR_DEV and AC_ERR_OTHER from qc->err_mask, relying on that decision.
 
-Hi Damien,
+For an NCQ command, qc->err_mask still has AC_ERR_NCQ, so
+ata_eh_finish() honors ATA_QCFLAG_RETRY. For a non-NCQ command, whose
+sense data comes from REQUEST SENSE DATA EXT, qc->err_mask is now zero,
+and ata_eh_finish() completes the command with scmd->retries set to
+scmd->allowed, without looking at ATA_QCFLAG_RETRY. Such a command is
+thus never retried, even when its sense data asks for a retry, e.g. a
+transient error reported as ABORTED COMMAND.
 
-I checked the DMA mapping and IOMMU fault paths.
+Make ata_eh_finish() honor ATA_QCFLAG_RETRY for commands with valid
+sense data. ata_eh_qc_retry() cannot be used for this: as qc->err_mask
+is zero, it increments scmd->allowed, so every retry would allow one
+more, and a persistent error would be retried forever. Instead,
+complete the command without touching scmd->allowed or scmd->retries,
+so that the SCSI midlayer retries it at most scmd->allowed times, like
+any other failed command.
 
-For DMA commands, ata_sg_setup() calls dma_map_sg() using qc->dma_dir,
-which is derived from the direction supplied with the SG_IO request.
-Therefore, for a request declared as DMA_TO_DEVICE, the mapping itself
-succeeds with device-read permissions.
+Fixes: 3852e3738266 ("libata: evaluate SCSI sense code")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-If the device subsequently attempts to write through that mapping, the
-permission violation is reported asynchronously by the IOMMU. I could
-not find a generic mechanism that associates such a fault with the
-corresponding ata_queued_cmd or scsi_cmnd and turns it into a
-per-command failure.
+---
+Tested in QEMU: blkdebug fails a non-NCQ (PATA) read with EIO, and the
+disk reports ABORTED COMMAND sense data. Before this patch, the read was
+not retried (1 attempt); after it, a transient error is retried and the
+read succeeds, and a persistent error is retried 5 times. NCQ commands,
+and errors without sense data, were already retried and are unchanged.
+---
+ drivers/ata/libata-eh.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-Some host controllers may also report a host-bus or interface error for
-the command, but that appears to be controller-specific and cannot be
-relied upon by libata.
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index b7e8545e569e..f99e422dfd9f 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -4080,8 +4080,20 @@ void ata_eh_finish(struct ata_port *ap)
+ 				ata_eh_qc_complete(qc);
+ 			}
+ 		} else {
+-			if (qc->flags & ATA_QCFLAG_SENSE_VALID ||
+-			    qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) {
++			if (qc->flags & ATA_QCFLAG_SENSE_VALID &&
++			    qc->flags & ATA_QCFLAG_RETRY) {
++				/*
++				 * The sense data asks for a retry, see
++				 * ata_eh_analyze_tf(). ata_eh_link_autopsy()
++				 * cleared qc->err_mask, so ata_eh_qc_retry()
++				 * would increment scmd->allowed. Leave
++				 * scmd->allowed alone, so that upper layer
++				 * only retries the command if it has not
++				 * already been retried too many times.
++				 */
++				__ata_eh_qc_complete(qc);
++			} else if (qc->flags & ATA_QCFLAG_SENSE_VALID ||
++				   qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) {
+ 				ata_eh_qc_complete(qc);
+ 			} else {
+ 				/* feed zero TF to sense generation */
+-- 
+2.56.0
 
-Therefore, for the mismatches that libata can identify, rejecting the
-command before issuing it still seems necessary. For arbitrary ATAPI or
-vendor-specific CDBs whose actual direction libata does not know, I do
-not think the generic IOMMU fault can be reliably propagated to the
-request.
-
-I will wait for your guidance on the appropriate sense code before
-posting v3.
-
-Thanks,
-Gongyi
