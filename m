@@ -1,125 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.97
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793309145;
-	b=sJVlB6UK5xDpiv6bqf/31edEOU1ipOmoKT6Sj/zI3jU7u7jY+GwBEZIkNzCBmwOp2DrN
-	 NW5w4qdqIm1SbULoCQHUbhbgj5u/9tNAWW10jUv6ofhjhDdHZeVyOisLsLdlMrGLLURfj
-	 gKO1RkcL6TIVdefnfFV+xuqBlJ4TaeEY30TUcrjjdlRJfLU2RX9lDW9H/jpjoze1f/3bz
-	 8r8kOPsNin0VU/41wloRet8rQiWipQmmS5VVGtF6HvWbEmxvfwlhE/gSQsLscpQ85GJkz
-	 s4tyOr9kb05CDd3dUDwH43yNbC7qQY0PJxSlyGKuYyePgpAF8aIGtaNt7wwcUrk9g1g==
+	t=1793323089;
+	b=1Gf0sMuRDGi6CQVqjLQ+BaMNuHwVZnBBbF7uKJPBExqnfyZH32IJrtJeghLFBxs0E5wL
+	 BnL6QCPwEEPuhLF8cSf9OZ2gkUMaDkUsT4BHv3DX+ktz6obNjtPhqG+YEy9qc5ENfRgyL
+	 +qS/go7FGAhFy2k77vpxEJel8pVdI+NWNAwsDN7xMy8lt4Jyyy4UMeCPCKFHd8EOAh3qd
+	 vzJK95gRstDqLJ59UeL9WYhs0hZLcg8OcJDUVHF+8asUPX+Bjod75oNr+9r8ZxxqZb+T0
+	 lpc8PQGnFFJBpIz25gL/CR8Lpoc9uJHymbNWCaCFutgk3upwInPO8p139/c6B+WeVkg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793309145;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:X-Relaying-Domain:
-	 X-CFilter-Loop:Received:DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Received:X-Received:Received:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-DetectorID-Processed;
-	bh=p/JejeyXs+a2BV9S3GP+DdWRq7anNloDPZ8ebf8LoQg=;
-	b=nHOUeotA1eue5feDR7gUoKpzxM4BzXziWwSVTEbYPfAkixcfz9Q7QLUFkx/zGobXS5I9
-	 gHZhGj/obe8rVjrIaSkwZWKQc2jWzWHTBz9jnU2mJ5SUW76wk7eRlzbfBGzfCzS3AjKm2
-	 g62GcIAUmDdDhtlbpRqnntxt63lpAfhIZcoIit9y3m1cbM/gHWBmhbMRtDVMLeVEfKqT1
-	 CDyc6ptqA1x+aHj6j4YVIU48EPIjrRq14guZSrL7RnGiyJgUGDFRD2bRWx6xHcaqBEP+g
-	 ImPh51qQSBYBw/Gq+XxzI5TLNNtFfC6twm+NmgArx1jxNkjk9e7uMaXWMBq27k+BnCQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793323089;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:Content-Language:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=+RfaDMTpW0gHuPAQJwyUf5tqfXJoAbY8G1el9WGL2Ng=;
+	b=eIFvaBoo1D6tKCWco3eiWMywf7QRCeAsM0mcNpc7b1T0BLsHEwf2QZcqLEP+1PxIT/D3
+	 xYeaVc48UHTZpveDaBAjmrcKA/+AoORLXaUZedusWfzQgdeXCFTonKkckKrxQCJeQ4WKN
+	 V06nKfwaRv4GTB+nh9vLUf4LRhsEg6PXHJC956AUl+a5IXFrMk8YjYDbdNrdafj52YbmL
+	 oAh5W+522CfNyq0AEI59nFn4giVl+iWFfI0TO5oYL8TZpYKoso3cq9PPZU+QUyqjBNd+G
+	 9nBGsV0A0HArUM2r0sh2VkwsieQYiFdABShc1pknEVKymD9tit9qRNU7c2/RnHW4UhA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=broadcom.com;
-	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=Rs2bK4nk;
-	arc=none smtp.remote-ip=74.125.82.97
-Received: from mail-dl1-f97.google.com (mail-dl1-f97.google.com [74.125.82.97])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MA5iGJW4;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFBC3606A32E
-	for <linux-ide@vger.kernel.org>; Thu, 29 Oct 2026 21:25:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AFBC3606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3EA2606A31A;
+	Fri, 30 Oct 2026 01:18:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=Rs2bK4nk
-Received: by mail-dl1-f97.google.com with SMTP id a92af1059eb24-1846bc43c28so43066c88.0
-        for <linux-ide@vger.kernel.org>; Thu, 29 Oct 2026 14:25:44 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793309144; x=1793913944;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=p/JejeyXs+a2BV9S3GP+DdWRq7anNloDPZ8ebf8LoQg=;
-        b=GyivlIfS41qXraS6ek03j0ilfARk4lz9PpgdLAtPo+bsYYmK1+Ztm2K3W7Nn2ODK5O
-         2iVumq7Kr7TlogkfsDpLwSivc3hpv6Y1Y+OAdStO3655AzrS19iAW98hDGdUxBcg/PPK
-         IN5oFigpHCbRuvm1FnGZF89iq/F2ag24xF//CMqlSS4ZYdC0vbWxX0qAfHK54fMn1YMO
-         OArxN2NJ31DZ8hQG9RG44T3hW+nF1MrvmNcMGAzzB03XaxsQabuIvzXM4TPDFH96NdII
-         XXafA/A2loPHdMABa9L+mm2PYFzS6Nw1YeMCbW5eaBWbES392E7+UDgw5br1VDB5zTS0
-         cVNQ==
-X-Forwarded-Encrypted: i=1; AKwUvByNAbUgOCNNVQzii5NzVvKx9hJE/ujGlf/oF0C1uE2j4Teiz5AjqTm6OB7+D9Zu091PpIod/03/LlY=@vger.kernel.org
-X-Gm-Message-State: AFq9FYLBJsRgN4JagqmgZ/arncPiCICU0m86wnjtxwamUkjCc7Y/0WeH
-	Jl8w2hxmlFtYuLjVH7OWLsGWB2KrlG95N0GaD0Pkneou0bx20ISmAvPWVizNdYkMEG6mM2zR022
-	7GoovswNAvxRW+BQrdm9czPwUI3BDryg+jTMeLibZ3ZBYjA7yYeLRBylOoc/dP3keB5o7pXdqmh
-	jdG1KIXfLlILGizFyjCTTq1kCC2RU9l70uWAmqjMNziPwbUpPZ8ksjW9iGKgudjb/6uPgStHev4
-	hW9eg7NDwAR/B1HAUx9lkQ=
-X-Gm-Gg: AYBFou3g7Vnel8YHPOX5vZeB5zt+77acIKxNH4NWWlllnaQ1KCF3eKO6lb3+ElE51Le
-	sanNBqncd9wH5Sy43EZTD70mWdJbXPvUekuG2S9I3a7rZEEqpZw2q/LMCSvlzWHrPsaoZjgVGJ5
-	ajDTOr+zS7cAtpPCdvSNTqmyv2T1naUFi7hjIbD65EARApaMEqRty4mGV4dxrgcVWa16PZoSxNg
-	OPV1mhl5fHDZvldDLfvWndYCM3itecOTAsDkclIO7YazNOm+7vGkD+naE8OphX97OxxB60Lds/T
-	Or3Bq4yOOEPVEhgBL1hJzRXE7Ix2Z4pJRAgeNMAvGigvcoO3lex9CikpxSN/yppaRA+F0MyxJDO
-	9dJqeHTuoxletoj1wTQ77taKYHYGrLuFPdxQKKKMIZQ4gsHNHgqhkQWomIDUgtuaxDvXVA1mqvL
-	He5K429L+gJlnBDoJuckHyu8BTxMHl39/Zp3zw9NgD
-X-Received: by 2002:a05:701b:4211:10b0:1a7:99b9:2eb9 with SMTP id a92af1059eb24-1ac5de4e8a1mr340169c88.27.1793309142786;
-        Thu, 29 Oct 2026 14:25:42 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
-        by smtp-relay.gmail.com with ESMTPS id a92af1059eb24-1ac17e90c4csm11054c88.4.2026.10.29.14.25.42
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 29 Oct 2026 14:25:42 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-5339739b343so56030991cf.2
-        for <linux-ide@vger.kernel.org>; Thu, 29 Oct 2026 14:25:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793309141; x=1793913941; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=p/JejeyXs+a2BV9S3GP+DdWRq7anNloDPZ8ebf8LoQg=;
-        b=Rs2bK4nkBOivnc52MHFqCl1oW9Lha/BFHMGDBU/VMkaLsFOcAS5QQzdQwc4x/CTH9D
-         upkYTM+uNILLD+eGTWWMIm0I1s/60qZ538/h1SE5TxsKbE7G4PftioJKnsEXnd3Ctl/G
-         ZcV6iLeiYXWdGpYBAWrKbMTsiH/V42F+C6PHU=
-X-Forwarded-Encrypted: i=1; AKwUvByeAk4wJebdbm9ngAi96FeObK1KAEOVaQzh8Q41rvPrnhfz53lkfi2tdJ9DcV8vQtkEVLQh0h+V7vc=@vger.kernel.org
-X-Received: by 2002:ac8:5dd1:0:b0:536:7cc1:4b6b with SMTP id d75a77b69052e-542b6d60c04mr5567321cf.27.1793309141412;
-        Thu, 29 Oct 2026 14:25:41 -0700 (PDT)
-X-Received: by 2002:ac8:5dd1:0:b0:536:7cc1:4b6b with SMTP id d75a77b69052e-542b6d60c04mr5566901cf.27.1793309140847;
-        Thu, 29 Oct 2026 14:25:40 -0700 (PDT)
-Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91ca314fb6csm6384936d6.34.2026.10.29.14.25.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Oct 2026 14:25:40 -0700 (PDT)
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-To: linux-kernel@vger.kernel.org
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>,
-	linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)),
-	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
-	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM IPROC ARM ARCHITECTURE),
-	linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK)
-Subject: [PATCH v4 6/6] ARM: dts: broadcom: Enable SATA on BCM958625HR
-Date: Thu, 29 Oct 2026 14:25:13 -0700
-Message-ID: <20261029212513.4126083-7-florian.fainelli@broadcom.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261029212513.4126083-1-florian.fainelli@broadcom.com>
-References: <20261029212513.4126083-1-florian.fainelli@broadcom.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MA5iGJW4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2595F1F000C1;
+	Fri, 30 Oct 2026 01:18:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793323088;
+	bh=+RfaDMTpW0gHuPAQJwyUf5tqfXJoAbY8G1el9WGL2Ng=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=MA5iGJW4r6NLeVkToPA9s6HHHyInUpxd6vghADZIV389uwelVvwSbG9hJa+J2P7VU
+	 +OCC9D2m9S17v+WBugZn1XM9xMzj/h7VrN4f3NElt+7clM81aj6HyzhNXgMeiNVer/
+	 OVV7Tg7BX06ZPqWppnLjgWQD58MC0eQ+UY+I9SV8qNUdvkB6Ylz/8GXrUr3wqYqcg1
+	 vZUuK+v3BKnaGCCezVVfuvXxWEMRrIwF+ADYyfHJH44yhbmnCKAG74lBnsMUd/uQr/
+	 EVaHyyGd26gNHkGOvGB/cOVE9w9gRWho2x5AToBooyNuVczTSsW2xuNFW65BjsHyP8
+	 ifuEVJ84jZU4w==
+Message-ID: <2def2444-0b73-4371-9ba2-78af235e64cb@kernel.org>
+Date: Fri, 30 Oct 2026 08:18:04 +0700
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -129,34 +51,79 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ata: libata-scsi: reject data-in commands with a
+ data-out buffer
+To: Zhao Gongyi <zhaogongyi@bytedance.com>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261027090809.94126-1-zhaogongyi@bytedance.com>
+ <20261028113903.19569-1-zhaogongyi@bytedance.com>
+ <8ec9e401-4c00-42fe-b997-228e05ed9c2a@kernel.org>
+ <36648b88-c295-4acb-8b6e-25d742d50946@bytedance.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <36648b88-c295-4acb-8b6e-25d742d50946@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Commit 77416ab35f57 ("ARM: dts: NSP: Disable AHCI controller for HR NSP
-boards") disabled AHCI after reports of boot hangs. Both SATA PHYs
-remain enabled, but the disabled controller leaves the eSATA ports
-unavailable.
+On 2026/10/29 11:37, Zhao Gongyi wrote:
+> Hi Damien,
+> 
+> Thanks for the review.
+> 
+> On 10/28/26 9:59 PM, Damien Le Moal wrote:
+>> On 2026/10/28 18:39, Zhao Gongyi wrote:
+>>
+>> No they cannot, as long as the kernel is correct for internally issued commands.
+>> But t is not clear here if you are still talking about commands passed through
+>> SG_IO.
+>>
+> 
+> Yes, by "translated commands" I meant commands submitted through SG_IO
+> and subsequently translated by libata, not commands issued internally
+> by the kernel. I will make that explicit and narrow the description to
+> the affected ZBC IN and GET PHYSICAL ELEMENT STATUS paths.
+> 
+>>
+>> Why is this being checked here and not in the SCSI layer (sg driver and bsg)? It
+>> seems sensible to check this there.
+>>
+> 
+> I checked the SG and BSG submission paths. For data-direction purposes,
+> they derive the request direction from the SG_IO descriptor and otherwise
+> treat the CDB as opaque. I could not find a generic helper that derives
+> the transfer direction of arbitrary standard, service-action, ATA
+> pass-through, and vendor-specific CDBs.
 
-With explicit IDM clock/reset setup and the corrected shared PHY
-register aperture in place, enable the controller on BCM958625HR.
+Yeah, forgot about that. Ideally, we should get the ioctl(SG_IO) to return
+-EINVAL for an invalid data direction but that indeed requires parsing the
+commands, which we do *not* want to do.
 
-Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
----
- arch/arm/boot/dts/broadcom/bcm958625hr.dts | 1 +
- 1 file changed, 1 insertion(+)
+> For simulated commands, libata itself performs the CPU-side write. For
+> the ZBC IN and GET PHYSICAL ELEMENT STATUS translation paths, the actual
+> ATA data direction is known after xlat_func() has built qc->tf, and their
+> completion handlers may modify the receive buffer.
 
-diff --git a/arch/arm/boot/dts/broadcom/bcm958625hr.dts b/arch/arm/boot/dts/broadcom/bcm958625hr.dts
-index 53acae385822..f6717ca76aef 100644
---- a/arch/arm/boot/dts/broadcom/bcm958625hr.dts
-+++ b/arch/arm/boot/dts/broadcom/bcm958625hr.dts
-@@ -184,6 +184,7 @@ partition@700000 {
- 
- &sata {
- 	/delete-property/ dma-coherent;
-+	status = "okay";
- };
- 
- &sata_phy0 {
+Yep, these are the only ones we can catch easily. Other commands we do not look
+at/know about will keep potentially triggering iommu page faults, but that is
+fine as that is not a crash. However, ideally, that should lead to the command
+being failed, which it seems we are unable to do... Did you check if we can
+propagate the fault into a the request to indicate a failure?
+
+>> The CDB may be perfectly correct. The error is in the SG_IO descriptor setup,
+>> NOT in the CDB. So returning invalid field in CDB seems very misleading.
+>> This is not something that SAT defines as far as I know, so we need to find a
+>> sense code that is more informative. Please have a loo at
+>> include/scsi/scsi_sense.h to see if something better exist.
+>>
+> 
+> Agreed. INVALID FIELD IN CDB is misleading here. I propose returning
+> ABORTED COMMAND / DATA PHASE ERROR (4b/00) instead.
+
+Not sure if that one is ideal either. Let me check and get back to you next week.
+
+
 -- 
-2.53.0
-
+Damien Le Moal
+Western Digital Research
