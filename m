@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793739312;
-	b=5WulrjeKTZD9hygsJUWhkKstW/dCPucZzXddV4V6ixV5+FrCKlwtM3XfjpYkIdNLRhet
-	 4sVrNuIfM4CxLSgKd08uD+ceDjWfxvExxCpGFeUyzsfC1FvxW4WmOBU9PdL2vRDvy10IR
-	 7LRn05JMJNfV/FLRk1IXxYCrYnlQSaooJNImjBKXrspqYYWko+NHSdLj7HfTA7quQP407
-	 kp92xeVA6ey4MPcBNLVfL2ewV5dByuq9rIxZl7EfLins1YlkT8g6H6m0H+tz2+eL/hQr9
-	 lFWV2QFLze8Uz4X7DL0gB+gs8Dy2ldEZifBOHdMePCEoP2ROlw00YNWIqWH08wbMFjw==
+	t=1793739313;
+	b=PuCOtMq20c/6i6ahkmrgt+uJ4EGthK+MpLnXmcaUvRfR/fp4PU3zILXG3Mcx+FU4RtRY
+	 h9+DPjJ1FIepI11MieCCygm3bfwgXERH/XPgGu630VG7WL/zmGUyvY/CTyFMaPJ5ex9PW
+	 SBl+GP9bk/DS+BSfRcPa5lM+o3y1cHR0izyTTNtHAL5wKGnyP+irPJsZ3Sf+YjiEyUjlq
+	 7GP1k0h5oc6VzFjNAjiOHnfznxZjxwsJ164yEKDAOFl1aJ8w8utLN8vJD1lxMTNgdss/V
+	 QCiP/a9qmAhRxAmP7yEjagIUhDuKhlOSkcXK68OyfonZ1Z7kRvOoQgLcFmGFDzIN5uw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793739312;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793739313;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:X-Developer-Signature:
 	 X-Developer-Key:Content-Transfer-Encoding;
-	bh=FG+ZrGEvHAyxgERwK6R84GUMYx7SDGGKimLNWBEwIvg=;
-	b=WldDh3rhhMCOaL3/FwmZ6RqFZVShzm396ixBJ4Gn2VwXIxXDp1CfRpQeZsjg2TDu9imn
-	 59Qfe5z6McfoM1wBcowyMxN4G+h9BqOv85UGY53zNVCv5eMZnUl2jucp+5N4zesRkNlik
-	 148FblBpRy9qvZ/hAf1YxE2zw/Fh4svFY7J7qPnQzxBhle8qw4USysMnu2yCublwi1mjj
-	 TmxhqmoqjimztlA5kYH/2mI7gpn6HpbW/k/8ttJ64sKT9by4+pFvXuCDEvcFbslin5q1X
-	 ZPJBTI1KwjxDl48tHjfe6qcDgImzlXjNYH8R+4z1PCWmpnHWt3zEaoiShBoKxsv2u6Q==
+	bh=cD/l8Qg2U+khxOgm5rsYBpuFN9u/NIcZofMfVCBmKAE=;
+	b=Ph/AIfI5MBacTEKKg+NRPGShjxmZYv3C3+t4FukDgEbApnOhxK2q/c64et9+0nrtksFC
+	 rBF2xq2Gxak6lXlHnQZXrqI7H3f+uZzk7dpoQwIi+CKP0wnuR8yRmcVHCH+WxFV3WLNLg
+	 DkJjk+Dc8TnkZDm5TFypvis7Rwy2u+bUwW/Htm4N+XlDC3Fprq7lORigsMA+zPjCZi9s1
+	 z8nMFPbxr+V9x2vGtctaP3j6eszBNTTXzYdSLM1vf5i7fOtvpTrd7LHxtgbOg9yceh8hL
+	 GiU/al5eBI748WdYPHEfzeVtclH5/VdZq2fxQGJSYZEyBwKFJeLSjIqFhKcm3wuyqBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B+X0utQm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IN6ZeTiN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0B4A606A31B
-	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 20:55:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C923606A32E
+	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 20:55:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B+X0utQm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DEBF1F000C1;
-	Tue,  3 Nov 2026 20:55:10 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IN6ZeTiN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E97E1F00919;
+	Tue,  3 Nov 2026 20:55:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793739311;
-	bh=FG+ZrGEvHAyxgERwK6R84GUMYx7SDGGKimLNWBEwIvg=;
+	s=k20260515; t=1793739313;
+	bh=cD/l8Qg2U+khxOgm5rsYBpuFN9u/NIcZofMfVCBmKAE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=B+X0utQmJF+RefeRarbmD8M4Eb3RD79KnNs82T5OS1b9MUL8u+eNiC6lcr+HBv7g4
-	 6Z0C5NW/dtzLkU7KeNhKc1sI3Ok3JvPexlF/VaomAkrs6fBCBJozl4G1GqmBWzWZdA
-	 He+vND/wCK3kJC8sNPxtA0gMFGOIsb0HG/mXN5zZjXOdRzciPs7IYytks4nSs2EZ1X
-	 xNH+RV+DnPLiQoIBSAGUvfrFwlvDqguhgSfwdZ/XUvjNP6PuuFmcIv5FkSWma9sh4M
-	 Y4QTPGSEtyvTsrrt7i5Ewv8ToBq9WXKqhPMkMR5ZzQala0FXLpVvRHFbDOQXBmgHTZ
-	 VUH58Qzt1XPgw==
+	b=IN6ZeTiNS0sRyFR/lTMnVAIsosGPQgnwrdngPmIIebTl0490/Zb6r/xMGuaO4nNW1
+	 j54L1WEPUA4Ev1AXwpg4nJe+J/EgV59oPdAmyrxZioK0AE7br06NGRBYkZ5v5lOnVx
+	 jYXft0aWCXSWv0b0Taw6qpz46ClfDgPpqkH6alVpnmHRdPHQH0x+yVoPhL/Sqqs61u
+	 cC03zW7ZLU//085XNKldKYqoR30pX/nzIhhU/wQpxIu2A54/Q4EIQvauLKFXk7+VEC
+	 /6nmpZQl/rLgo4Y2MMep3dPSSN+yj18XDgs9XncxiH/MlwkncQPSVB+vjFGft3RuVf
+	 Pa+XfalRNrw/Q==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org,
@@ -47,9 +47,9 @@ Cc: linux-ide@vger.kernel.org,
 	Shao Mingyin <shao.mingyin@zte.com.cn>,
 	Hannes Reinecke <hare@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH 7/8] ata: libata-scsi: set the field pointer when rejecting CDL
-Date: Tue,  3 Nov 2026 21:54:56 +0100
-Message-ID: <20261103205448.931471-17-cassel@kernel.org>
+Subject: [PATCH 8/8] ata: libata-scsi: document the MODE SENSE mode page functions
+Date: Tue,  3 Nov 2026 21:54:57 +0100
+Message-ID: <20261103205448.931471-18-cassel@kernel.org>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261103205448.931471-10-cassel@kernel.org>
 References: <20261103205448.931471-10-cassel@kernel.org>
@@ -62,48 +62,194 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1615; i=cassel@kernel.org; h=from:subject; bh=+Q6HXjL0jV2HGsQt6j+nOkmu26XwOiYrVgUT8R42ccQ=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJeeckeW8wruPBXA0NYu4NSxtHPqisjmRd1c9+PXHEwM 3brRM/FHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZhI+kaGn4x6Ej3rHn+Xe35s 5eQYycuTyqu29i4/pnrF1OCMXOk/gzcM/3NDpO6wGTzQkZgSHbxC+9a0Qr/3ixjMLRomed0zL7W +zwEA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7245; i=cassel@kernel.org; h=from:subject; bh=1UgNMzD9leWGP3CAsq08Ke2EwpfxNR1srTC0kGDEpko=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJeecn+cmZ3PXDnRNGRCifdpadKlbkUP9SxPsjl++jE/ C9aolyjo5SFQYyLQVZMkcX3h8v+4m73KccV79jAzGFlAhnCwMUpABO5spqRYRJzafBhkf62h+Iy val7k+00zoY5LlGo0d5lsnptUOgbd0aGezuNFSv/6ykITS3VWrORrSlLV7HE+tn1lobX8d+lt9/ jBQA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+The ata_msense_*() functions generate the mode pages returned by MODE
+SENSE, and are also used by the MODE SELECT mode page handlers to check
+the mode page data. They do not document where their buf argument points
+and what they return, and some of them do not have a kernel-doc comment
+at all.
 
-ata_mselect_control_ata_feature() rejects enabling CDL while NCQ
-priority is enabled, but unlike its other error branches it returns
-without setting *fp.
+Add kernel-doc comments for all of them, stating that the mode page is
+written to buf starting with its mode page header, which matches how
+the MODE SELECT mode page handlers get the mode page, and that they
+return the length of the mode page, including the mode page header.
 
-ata_scsi_mode_select_xlat() initializes fp to 0xffff and, when the
-handler fails, adds the offset of the mode page in the parameter list
-to it, i.e. the length of the mode parameter header and of the block
-descriptors. As fp is a u16, this wraps around, so the resulting sense
-data reports the byte before the mode page, i.e. the last byte of the
-mode parameter header or of the block descriptors, as the FIELD
-POINTER, instead of the byte containing the CDL_CTRL field that
-requests enabling CDL.
+No functional change.
 
-Set *fp to 4, i.e. to the byte containing the CDL_CTRL field, like the
-branch rejecting an invalid CDL_CTRL value does.
-
-Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
-[cassel: set *fp to 4, the offset of CDL_CTRL in the mode page]
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/ata/libata-scsi.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ata/libata-scsi.c | 100 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 88 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3257bbbba5b6..e91920659c22 100644
+index e91920659c22..efdaf20b0ca4 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -4521,6 +4521,7 @@ static int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
- 		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED) {
- 			ata_dev_err(dev,
- 				"NCQ priority must be disabled to enable CDL\n");
-+			*fp = 4;
- 			return -EINVAL;
- 		}
- 		ata_dev_dbg(dev, "Enabling CDL\n");
+@@ -2645,15 +2645,23 @@ static void modecpy(u8 *dest, const u8 *src, int n, bool changeable)
+ /**
+  *	ata_msense_caching - Simulate MODE SENSE caching info page
+  *	@id: device IDENTIFY data
+- *	@buf: output buffer
++ *	@buf: Output buffer for the mode page, including the mode page header
+  *	@changeable: whether changeable parameters are requested
+  *
+  *	Generate a caching info page, which conditionally indicates
+  *	write caching to the SCSI layer, depending on device
+  *	capabilities.
+  *
++ *	The mode page is written to @buf starting with its mode page header,
++ *	so offsets in @buf are the byte numbers of the mode page. For MODE
++ *	SENSE, the mode parameter header and the block descriptors are written
++ *	by ata_scsiop_mode_sense().
++ *
+  *	LOCKING:
+  *	None.
++ *
++ *	RETURNS:
++ *	Length of the mode page, including the mode page header.
+  */
+ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
+ {
+@@ -2667,8 +2675,25 @@ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
+ 	return sizeof(def_cache_mpage);
+ }
+ 
+-/*
+- * Simulate MODE SENSE control mode page, sub-page 0.
++/**
++ *	ata_msense_control_spg0 - Simulate MODE SENSE for control sub-page 0
++ *	@dev: ATA device of interest
++ *	@buf: Output buffer for the mode page, including the mode page header
++ *	@changeable: whether changeable parameters are requested
++ *
++ *	Simulate MODE SENSE control mode page, sub-page 0, which reports the
++ *	sense data format (D_SENSE) used for the device.
++ *
++ *	The mode page is written to @buf starting with its mode page header,
++ *	so offsets in @buf are the byte numbers of the mode page. For MODE
++ *	SENSE, the mode parameter header and the block descriptors are written
++ *	by ata_scsiop_mode_sense().
++ *
++ *	LOCKING:
++ *	None.
++ *
++ *	RETURNS:
++ *	Length of the mode page, including the mode page header.
+  */
+ static unsigned int ata_msense_control_spg0(struct ata_device *dev, u8 *buf,
+ 					    bool changeable)
+@@ -2700,9 +2725,27 @@ static inline u16 ata_xlat_cdl_limit(u8 *buf)
+ 	return min_t(u32, limit / 10000, 65535);
+ }
+ 
+-/*
+- * Simulate MODE SENSE control mode page, sub-pages 07h and 08h
+- * (command duration limits T2A and T2B mode pages).
++/**
++ *	ata_msense_control_spgt2 - Simulate MODE SENSE for CDL T2A/T2B pages
++ *	@dev: ATA device of interest
++ *	@buf: Output buffer for the mode page, including the mode page header
++ *	@spg: Sub-page code, CDL_T2A_SUB_MPAGE or CDL_T2B_SUB_MPAGE
++ *
++ *	Simulate MODE SENSE control mode page, sub-pages 07h and 08h
++ *	(command duration limits T2A and T2B mode pages), from the command
++ *	duration limit descriptors read from the device.
++ *
++ *	The mode page is written to @buf starting with its mode page header,
++ *	so offsets in @buf are the byte numbers of the mode page. For MODE
++ *	SENSE, the mode parameter header and the block descriptors are written
++ *	by ata_scsiop_mode_sense().
++ *
++ *	LOCKING:
++ *	None.
++ *
++ *	RETURNS:
++ *	Length of the mode page, including the mode page header, or 0 if the
++ *	device does not support command duration limits.
+  */
+ static unsigned int ata_msense_control_spgt2(struct ata_device *dev, u8 *buf,
+ 					     u8 spg)
+@@ -2759,9 +2802,25 @@ static unsigned int ata_msense_control_spgt2(struct ata_device *dev, u8 *buf,
+ 	return CDL_T2_SUB_MPAGE_LEN;
+ }
+ 
+-/*
+- * Simulate MODE SENSE control mode page, sub-page f2h
+- * (ATA feature control mode page).
++/**
++ *	ata_msense_control_ata_feature - Simulate ATA Feature Control page
++ *	@dev: ATA device of interest
++ *	@buf: Output buffer for the mode page, including the mode page header
++ *
++ *	Simulate MODE SENSE control mode page, sub-page f2h (ATA feature
++ *	control mode page), which reports whether command duration limits are
++ *	enabled.
++ *
++ *	The mode page is written to @buf starting with its mode page header,
++ *	so offsets in @buf are the byte numbers of the mode page. For MODE
++ *	SENSE, the mode parameter header and the block descriptors are written
++ *	by ata_scsiop_mode_sense().
++ *
++ *	LOCKING:
++ *	None.
++ *
++ *	RETURNS:
++ *	Length of the mode page, including the mode page header.
+  */
+ static unsigned int ata_msense_control_ata_feature(struct ata_device *dev,
+ 						   u8 *buf)
+@@ -2787,14 +2846,23 @@ static unsigned int ata_msense_control_ata_feature(struct ata_device *dev,
+ /**
+  *	ata_msense_control - Simulate MODE SENSE control mode page
+  *	@dev: ATA device of interest
+- *	@buf: output buffer
++ *	@buf: Output buffer for the mode pages, including the page headers
+  *	@spg: sub-page code
+  *	@changeable: whether changeable parameters are requested
+  *
+- *	Generate a generic MODE SENSE control mode page.
++ *	Generate sub-page @spg of the control mode page, or all supported
++ *	sub-pages of the control mode page if @spg is ALL_SUB_MPAGES.
++ *
++ *	The mode pages are written to @buf one after the other, each starting
++ *	with its mode page header. For MODE SENSE, the mode parameter header
++ *	and the block descriptors are written by ata_scsiop_mode_sense().
+  *
+  *	LOCKING:
+  *	None.
++ *
++ *	RETURNS:
++ *	Total length of the mode pages written to @buf, including their mode
++ *	page headers.
+  */
+ static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
+ 				       u8 spg, bool changeable)
+@@ -2822,13 +2890,21 @@ static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
+ 
+ /**
+  *	ata_msense_rw_recovery - Simulate MODE SENSE r/w error recovery page
+- *	@buf: output buffer
++ *	@buf: Output buffer for the mode page, including the mode page header
+  *	@changeable: whether changeable parameters are requested
+  *
+  *	Generate a generic MODE SENSE r/w error recovery page.
+  *
++ *	The mode page is written to @buf starting with its mode page header,
++ *	so offsets in @buf are the byte numbers of the mode page. For MODE
++ *	SENSE, the mode parameter header and the block descriptors are written
++ *	by ata_scsiop_mode_sense().
++ *
+  *	LOCKING:
+  *	None.
++ *
++ *	RETURNS:
++ *	Length of the mode page, including the mode page header.
+  */
+ static unsigned int ata_msense_rw_recovery(u8 *buf, bool changeable)
+ {
 -- 
 2.56.0
 
