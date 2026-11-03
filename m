@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793740930;
-	b=OwRVj0E8ppGHA4PyCWOEmqC0bbLYJ7phLy7Yk9CGe4AJpwMokxfO/uSWUrTrQNwgZhWd
-	 45Nr8v40A9BvZNtdyFhD8zXUEmavpOs6ZnvXLcF2cGmeokJfzYQfkCm2DP10Dj5MCN0G4
-	 d6EeE0DklE7owu/dhMsaYCGTKM9lkemAdzZJTebSNaYulgepxpp2AmAE9TOcmoMsIME66
-	 pdBoUOY0D8pzeGwCQO0Vb0JDOu1WexK5Bj3m0xzNrROyAWxxmXt5O30slEROgE4SLi/DZ
-	 ScAT5Tggcipo9R5mpY9WDFbWkdgBUGB7Esxk3YC79actcrr0vN3ygDx0YRC+eMOmksQ==
+	t=1793741017;
+	b=vCIlrCExWcjhSPgj4WZTThVcC+KRVOQpEFA6/qvMRnHkj4yOIbEueXdJUsi4woYuPh51
+	 pMsMB6MoKgG0n5qssZEtXqxSAJSYAZjY7C1Xmfarc4LgTshIBBYPTg+YczIqpNrwfD9u6
+	 Uw8jxLeMCLhS/B3r/kyFt6ji4yAQzou6EF10d7LWDaz5ls/8pu+LcvmfivvM9dtPORjMR
+	 HAJ0igY38zlelLs4VUsBOvftf+0PzN8rWqgdrpUC9Lpq+gyT1FGyST0DhRznp8cX9fQHR
+	 Rf8jHVD532wOo10aKYxOLnL3u9sFYD1iUXjZlUbG8YueNTBEjYP3+TBNchvQqwqTFaw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793740930;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793741017;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:Organization:
 	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=Z8e1HnUg9iMsADgE9unttqDA2pOjy4iXtj9giCbUdD4=;
-	b=eTsXjE18GE2Vl3dkGkQVgh8dsX63J+b6TulmMUh1wltnw/PQ35Kbje23VgftNh228psm
-	 NBYIRJLlZNCRvvE1ySAGrOdmBE106XsiRaPDLzdmTG2z11XHfPtxoQ5ENPTf/3Qm77NLT
-	 bo3zxPnr6J3GPa9ky7hq2OxyTh1hZc5ajcxqseHo0SH89Mao3NEjuQA6OtIwJnEL+2zuR
-	 wZWUUJtpaTOc3+rqSXcgZOxZ/K9xLxQ3/Fi4K9TVg2gWWhjRl8fRsJFm1h+DrS3DCObCY
-	 nuC+vd0kD5aRTiE07BHN+WY3e0JnLNOeKJXF9rbIEOgehFe3jvaeGbrIy6he2XgE5+A==
+	bh=CFZx0qWCtR4+5717af6FQ4kEqHOAYHOKNZFKWXHpsHw=;
+	b=a3tGqrP3Dou19UkvRGni/MGL1tu6kFPMka3i845/eAKUbTUaZuSIR7x68looLWUIqKMz
+	 ch7RLNRBmw0tzeUJ+3MsSdiJZR1pjMzLCkxeCGneGn0DJ8eNQyC2sW/+qmljBipkc5+qc
+	 FS6t1vj7KtC2R0ayT7hZpRtZ3KXhu037jbdpdnJWFunxn3q/Etxvv2xbfTuHIQpn1gcX/
+	 3yZygMrb3kY5tNYwqHdAyj3yrbcdC/TqRdZyIUOmCjTDAWO9pO7TWMJZWdnJ9nrFwGfkf
+	 qh1H8MGGMk4gX+VL+vOtIf+Nguh7rj/6Cqr7GSMjyPcge2/7wE5H4LZOXwGBvvdw5jA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J7sQw2sI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KKd4tPxA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BA0606A31B
-	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 21:22:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0CE606A337
+	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 21:23:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J7sQw2sI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45FDF1F000C1;
-	Tue,  3 Nov 2026 21:22:09 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KKd4tPxA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C33B1F000C1;
+	Tue,  3 Nov 2026 21:23:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793740930;
-	bh=Z8e1HnUg9iMsADgE9unttqDA2pOjy4iXtj9giCbUdD4=;
+	s=k20260515; t=1793741016;
+	bh=CFZx0qWCtR4+5717af6FQ4kEqHOAYHOKNZFKWXHpsHw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=J7sQw2sI+XLpwXCvJTn2mI7VkhYKje6zrjA2XYiAHR/p3gyxJqhE1CYF8vTEiASd2
-	 P/jKURuHFHmGkh+MJiBWwlzC3CnN/jbeifKY//HIYcTwAJtK7QS0+S6QT2XTWC9iJ2
-	 tq5izvGkcqilPBCBT00QObMvY8zCzoVDb3ZdNzglYJgKGgqCETlaSi+TafRyE5D6CQ
-	 4DoLG38/RJZl6YEJDHDyYgkoM+Sps0aD+3rabMZwvI/EklgDT4BWSBWH1Vy2/RqBW6
-	 3nEI0rb7kfOoqfaXu0YXbmSyCljsOxP7yR48SkFikSthQ3A5eZH/+0dUG0Hv1an2Gw
-	 W8p8h8+EzXCDA==
-Message-ID: <1af3f18a-5595-4591-8fbc-e5e4d889b036@kernel.org>
-Date: Wed, 4 Nov 2026 06:22:08 +0900
+	b=KKd4tPxAsL9nZYSS7HXQMJvBVhKOgfnsraLqD+ViWcs+ifGvSd0/Srpr0y+DHxLBL
+	 0JhI8iES8qPVySU+Y6hxm8hkN80mwjeaPAzxGqM4k+yS7Cz5AAoesWA8E+rYDZ23Dy
+	 DofnQAGl9LT6m5jeHP7KGS7BWc4o04jCHGCiYJRvdFhUFefaXdn9LR78XGX4GWzqAS
+	 67yUFPG88Gvo9gPs2ejJi+S1G8wI4rurcGGTSgfUs7e+OTTdT/E3h31reKieWnmrtA
+	 FhuDB17tyK6X9/5O7VyPcmgU9TPvTmSENIX1FaxsZ2Vswctu5YGMpVDxXBAHQ/j/Pm
+	 3plIZnVq6N6vQ==
+Message-ID: <dbeb6c83-6b57-4985-9c1d-bfe31b76175b@kernel.org>
+Date: Wed, 4 Nov 2026 06:23:34 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -52,76 +52,46 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/8] ata: libata-scsi: reject MODE SELECT mode pages with
- a wrong SPF bit
+Subject: Re: [PATCH 4/8] ata: libata-scsi: fix MODE SELECT field pointer for
+ unsupported subpages
 To: Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
  Shao Mingyin <shao.mingyin@zte.com.cn>, Hannes Reinecke <hare@kernel.org>
 References: <20261103205448.931471-10-cassel@kernel.org>
- <20261103205448.931471-13-cassel@kernel.org>
+ <20261103205448.931471-14-cassel@kernel.org>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20261103205448.931471-13-cassel@kernel.org>
+In-Reply-To: <20261103205448.931471-14-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 11/4/26 05:54, Niklas Cassel wrote:
-> ata_scsi_mode_select_xlat() accepts the caching and control mode pages
-> both in page_0 format and in sub_page format with SUBPAGE CODE 00h.
+> When the mode page of a MODE SELECT parameter list has an unsupported
+> SUBPAGE CODE, ata_scsi_mode_select_xlat() sets the FIELD POINTER of the
+> INVALID FIELD IN PARAMETER LIST sense data to the SUBPAGE CODE byte of
+> the mode page header (byte 1 of the page) if the SPF bit is set, and to
+> the PAGE CODE byte (byte 0 of the page) otherwise.
 > 
-> However, SAT-2 and later versions of SAT define the SPF bit of the
-> Caching mode page and of the Control mode page as not changeable and
-> set to zero (see SAT-6, 10.4.9 and 10.4.6), and SPC-7 (6.12, MODE
-> SELECT(10) command) requires the device server to terminate a MODE
-> SELECT command with INVALID FIELD IN PARAMETER LIST if the application
-> client sets any field that is reported as not changeable to a value
-> other than its current value.
+> However, the SPF bit is tested on p[0] after p has already been advanced
+> past the mode page header, so the test reads bit 6 of the first byte of
+> the mode page data instead. If the parameter list ends with the mode
+> page header, it even reads the byte that follows the parameter list in
+> buffer, which is not initialized when no data beyond the parameter list
+> was transferred.
 > 
-> Reject a mode page with the SPF bit set to one and SUBPAGE CODE 00h,
-> with the FIELD POINTER set to the byte containing the SPF bit. The only
-> mode page with the SPF bit set to one that remains accepted is the ATA
-> Feature Control mode page (control mode page, sub-page f2h), for which
-> SAT-6 (12.3.4) requires the SPF bit to be set to one. The opposite case
-> does not need a check: a mode page in page_0 format always has subpage
-> code 00h, so it can never be the ATA Feature Control mode page.
+> The test is not needed anyway: spg can only be non-zero for a mode page
+> in sub_page format, i.e. with the SPF bit set, and the field in error is
+> the SUBPAGE CODE. Always set the FIELD POINTER to the SUBPAGE CODE byte,
+> which follows the mode parameter header, the block descriptors and the
+> PAGE CODE byte.
 > 
-> This also allows the mode page handlers to rely on the format of their
-> mode page, which a later patch will make use of.
-> 
-> Fixes: 1b26d29ccd59 ("[libata] scsi: implement MODE SELECT command")
+> Fixes: 7780081c1f04 ("libata-scsi: Set information sense field for invalid parameter")
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/ata/libata-scsi.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index d7923bc664d6..7b0a02903fda 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -4629,6 +4629,16 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
->  			goto invalid_param_len;
->  
->  		spg = p[1];
-> +		/*
-> +		 * Mode pages with subpage code 00h use the page_0 format: SAT
-> +		 * defines the SPF bit of the Caching and Control mode pages,
-> +		 * for subpage code 00h, as not changeable and set to zero.
-> +		 */
-> +		if (!spg) {
-> +			fp = hdr_len + bd_len;
-> +			goto invalid_param;
-> +		}
 
-The comment block in-between the assignment and test is odd. Can you move the
-assignment right before the if, after the comment block? That makes the code a
-lot prettier :)
+Looks good.
 
-> +
->  		pg_len = get_unaligned_be16(&p[2]);
->  		p += 4;
->  		len -= 4;
-
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
