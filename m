@@ -1,53 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793740710;
-	b=ShJTCzyPQHQ0+X/nJLiz8ech0Y4o+ED6fgeFMav5OuR3r1tHZWD0etm+yLshzKtlgvbw
-	 GdwXSj0uIkW6wA5gv8t2qju8vj8Sre4bI9HdPDYjcIAymI8i4DqG5fDOYgwLHeCFGLZf3
-	 aRB0O4VLI1BWiexHiZXfZAww1kUQTanJ0YiUnfKOh7nacG0QU8Rul6F1GiQgyGAGi+vs/
-	 GQ9YIYwqBPIgF0yzIZUi7OYS86KiHOGK+3/6BaZSlzf6voHDAiPpngdz/RqVBC/CqrrGO
-	 usAfplBAZ8nyUypRP16wZNTIj/asr4804oNY+5UOfDSFOeiBeVk+I5oY3mVqUGd0YMg==
+	t=1793740828;
+	b=rYuz6i8lVG2a3AlpfRIgQeEfMvf5preLaC8KXW/e1ObDarcRFkiBvKr6LdMeLfnzpCqZ
+	 vhou0MSZVN8CL/M2A68D5EvmWsAoGen3rPVWkXD6g/NLdFSpd3KwBwOZ4Rq0j+MspOqGu
+	 wOFL1Grt4r0aB5kLNxd0PaTCYbiLvpMfbDr+gflY4eI5PQth/cFT2PHtZNIxQFAYEtZtP
+	 nqZ5ApQ0+ABhcL6OyTKjqoQto2OhU56i5l7lcO0BLeGl8EZKeECp65Nq44rRm2xYAZjdP
+	 KFjDWSYQGgorvlj1JC5pNsfUTDX3+tcOJyQWk0eoYzavcZuKcjCEoyBKERckMVKnSeg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793740710;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=AQeTKRIXaKBHBv9GRp0SBIJBwg8ZzQZgPBC+KPG3sx0=;
-	b=daToh7KM/CWaKSzQIcJnQp9WTTl6hPeIkoN12G638D0ZggiHDHmQ6hfXCQ6U2MpymPxE
-	 bIZR/YXhrywJWOxf9nzt+tyeb6HDHk206Y9fZdAE/1hU33mhwcgCKSVTSiUgGpvOiq2kD
-	 WYks7mbwSmWyklnj7WpIKKl/4PEiYphydeNnB1QxQKsKraOv9FLB414vq2pnxMhg2GWzT
-	 JT/G39I0d7Bw7qd5RQsaR+9m1HpK0P3rgMk6FDCNsn1gwdL7w+TKMZGh/UxRyCYrWbACZ
-	 ImLaFQJ3n/3w6WB7UjCRTIMqKKRHFHJcf46iGWZDjDpjgaAO8eoqABkP6fRzsHRaRBA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793740828;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=D2hNKScl49Xls9Nm7v0ACs2301WttSNa3LVqAIIntio=;
+	b=VaDCIy4uKrksWPo9d/z30CDVVyfeYtL1y4+uXAPnBEJO+Y9gSXyR6AZAneI1Ke28to46
+	 baPfY+9Iy5gkLbnkny4alZQcxpe/ct/xNt0OwWNVNP+b3dlvIWpDjyXN7ueNCggLyoX1Y
+	 GaWj9vP3T9Gje0jrkD49MJWqbNPmOmwc5/KtBLkbtADb/SqMNTGj8K82qhvISpTgAdJrf
+	 VObJ/pBomsG3kQPAY3QLBvyDRDND3fhtEalMCcLy7EkKVeKS08KMWrdlX1xLwycl2l6lK
+	 EoLJ3jC8SKh4daRQIuHSMU6+l4UvzQG4f4Z+hSvU25YyyDg3pBcNX5n2uAqQwZe2yvA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cbRUW6Sk;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vip0umon;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30938606A324
-	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 21:18:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E2D1606A32F
+	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 21:20:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cbRUW6Sk
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED02E1F00919;
-	Tue,  3 Nov 2026 21:18:28 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vip0umon
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E5F71F00A1A;
+	Tue,  3 Nov 2026 21:20:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793740709;
-	bh=AQeTKRIXaKBHBv9GRp0SBIJBwg8ZzQZgPBC+KPG3sx0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cbRUW6SkMMDqlVAHRoD/UsA0MC3VIECpnWgdnElK2Fn6soMC3C2PCxC4x1x6aEJgC
-	 3z2WF0iPgYFNLmmnKqCk14+EDOTbW6zsf3TmttefuCyrxpYisLTNa4K6uWjh6j2D5j
-	 2cyXGpf/G+Ce6qJZKhxOu95OCU0bM0Qa7M8wDga+LlGtprXnHvAS98xRHPAUpLgm+7
-	 O75hE9IQvSySDqOFcpggZ9JZxghC4goqppenJEJLzuaVPDuJRI/lKTy921HyRgiSLX
-	 KuQnBkr6JVLDl3myXfY660mVhnafyA+VLj2WMSCqipc6U0h+51nZ+GdpQGYADDWKAO
-	 mRAbQtOxIf1sA==
-Date: Tue, 3 Nov 2026 22:18:26 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: shao.mingyin@zte.com.cn
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-scsi: set the field pointer when rejecting
- CDL
-Message-ID: <aupPouIrF_SkU0jz@ryzen>
-References: <202610291903148135Df-fh-xl3zWuRJkq8AXn@zte.com.cn>
- <aupMUrNn7PkrJg6W@ryzen>
+	s=k20260515; t=1793740828;
+	bh=D2hNKScl49Xls9Nm7v0ACs2301WttSNa3LVqAIIntio=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Vip0umonXKR0wt5ln5wMSSafW+2U6sopmeScoP0ys42kodW0muUHPwlwcyplGTu0X
+	 Ek7lRm2ezcVDHpM3u4S6P/u+BbkJx3vnrACUswuHuNxmfg6FvwmpHaLnM92HQfkJxH
+	 BDShZ4GI2W6W3ek7Wf10+59CnrtqPGEiX5wp7gqrgho44C2UCZe6Hfes8BB+cWOx+d
+	 jEeArszOdmK0h1XYVuOhpsEaff3Mn4J6Sk+KAAmEiNVzxeFBDG8y3Cx9QTbxSwbpCU
+	 AzKZ2j2/RDKQxGAXl9V5oFh0LNwSippxvcTfVlN2LZAFTl6lnc3GwFl4xT0HYqOYUY
+	 t1xvv0/RJzvQg==
+Message-ID: <57395e07-2f16-4f69-a7c0-1ef0e2f9afa4@kernel.org>
+Date: Wed, 4 Nov 2026 06:20:25 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -57,58 +51,54 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aupMUrNn7PkrJg6W@ryzen>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/8] ata: libata-scsi: fix MODE SELECT handling of data
+ after the mode page
+To: Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
+ Shao Mingyin <shao.mingyin@zte.com.cn>, Hannes Reinecke <hare@kernel.org>
+References: <20261103205448.931471-10-cassel@kernel.org>
+ <20261103205448.931471-11-cassel@kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20261103205448.931471-11-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Nov 03, 2026 at 10:04:18PM +0100, Niklas Cassel wrote:
-> Hello Shao,
+On 11/4/26 05:54, Niklas Cassel wrote:
+> ata_scsi_mode_select_xlat() only supports one mode page per MODE SELECT
+> command, and rejects a parameter list with data after the mode page with
+> INVALID FIELD IN PARAMETER LIST. However:
 > 
-> On Thu, Oct 29, 2026 at 07:03:14PM +0800, shao.mingyin@zte.com.cn wrote:
-> > From: Shao Mingyin <shao.mingyin@zte.com.cn>
-> > 
-> > ata_mselect_control_ata_feature() rejects enabling CDL while NCQ
-> > priority is enabled, but unlike its other error branches it returns
-> > without setting *fp.
-> > 
-> > ata_scsi_mode_select_xlat() initializes fp to 0xffff and, when the
-> > handler fails, adds the mode select header and block descriptor lengths
-> > to it.  The resulting sense data then reports a field pointer far
-> > outside of the submitted parameter list instead of the byte that has to
-> > be changed.
-> > 
-> > Set *fp to the beginning of the mode page data, as the other branches of
-> > this function do.
-> > 
-> > Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
-> > Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
-> > ---
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index 5cde90fe594e..c07c1ff09757 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -4494,6 +4494,7 @@ static int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
-> >  		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED) {
-> >  			ata_dev_err(dev,
-> >  				"NCQ priority must be disabled to enable CDL\n");
-> > +			*fp = 0;
-> >  			return -EINVAL;
-> >  		}
-> >  		ata_dev_dbg(dev, "Enabling CDL\n");
+> - It does not set the field pointer, so the sense data reports 0xffff as
+>   the FIELD POINTER.
 > 
+> - It only checks for data after the mode page after the mode page
+>   handler has been called. ata_mselect_control_ata_feature() has then
+>   already updated the CDL enabled flag of the device, even though the
+>   command is rejected and the CDL setting of the device is not changed.
 > 
-> Setting fp to zero looks very wrong to me, even though with the current
-> overly complicated code where buf and fp was using completely different
-> offsets, it was actually correct.
+> - For the control mode page, ata_mselect_control_spg0() does not need an
+>   ATA command, so the check is skipped, and the data after the mode page
+>   is silently ignored.
+> 
+> Check for data after the mode page before calling the mode page
+> handlers, and set the FIELD POINTER to the first byte after the mode
+> page, i.e. to the first byte of the next mode page.
+> 
+> The reason why only one mode page per command is supported is that a
+> MODE SELECT command is translated into at most one ATA command, so
+> update the comment accordingly.
+> 
+> Fixes: 1b26d29ccd59 ("[libata] scsi: implement MODE SELECT command")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Sorry, to clarify, 0 would have been wrong anyway, but because of existing
-bugs in ata_scsi_mode_select_xlat() related to fp, not because your patch
-was wrong:
-https://lore.kernel.org/linux-ide/20261103205448.931471-10-cassel@kernel.org
+Looks good.
 
-  Parameter list                                     Before After Correct
-  CDL enable while NCQ priority is enabled                7    12      12
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 
-Kind regards,
-Niklas
+-- 
+Damien Le Moal
+Western Digital Research
