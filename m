@@ -1,47 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.47
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793741970;
-	b=fdIF3oj+J+XBwXkF+Sy0xwKVZIppVbTjCMohofLFnELLhPDDCFJ8jO6rp2jTvWE1TzZU
-	 u5xU8CIOse3ta4GR7M+YtR3tjiM69eYi0RdBcWB3AbFVtaZj0I0iYn7XtIxyXK67+JHkH
-	 W0A+9cAzGGJ2aEsdWOM66Ft76dwYKTAZ/+oYomR4VSAa/EC6uO3GJxCjkzynQ3XIiXq23
-	 HtGZN1pxrycJwR+c00OC48gpi/OwD3V4vkkjt8nUAiH13tLvRqGDDvIq5V1hUDsGq1Te/
-	 hH1ut8cwzP2SLtP+THYpStoBWGFCXxHM39tuAOEFzlKDHUI4pL6fQsie4h9DvkLHE+w==
+	t=1793743030;
+	b=Y0ZSahKqpt9Pj/3LctaGMMNMAxkBpE4I9b181UIG1tPOXLavhfIjmbw0+PyzPpmkPHy1
+	 Ef45BNNiA27A49IK2jghBtR3DyXQ59c4mHqOMyjbx1hh4Ym2w6q128kD/EcxLWzCtcEW+
+	 pptl3ekdfR7KCtSlDqgKud2WdgCbzXLvwC8E9zh7UHJx/Dbgk3Fxh4ruNG79JVm1JzrPI
+	 QuEvITMu3MlabYCiz0tANVB5rWVo7Henk7epSbObjknee3SDH6wWXPIvlMRXnigP4a/mx
+	 9siHj+SJHF/E/nf4Xt81V/s4JorWyumfqNyW7Hkoxs3nfzbnd6PTUqI5l37L32BnRmA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793741970;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:Organization:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=wKpZs5RzrMNeVmhNeOjdgF9Vze96viW5ervd9xgeUVk=;
-	b=JJBUdvfK2cun5VvZ7fbZvzjiGWkBwPUe3B3RJSnNdEX+kcialovlxtFkcc4Kewbv301e
-	 EPWj04GzRH4A8fjgT/c0g/PuXNCctiOddFffaC4VCeVqQKBg3dDdu992l9o6PV5NLKBjT
-	 iHqt8oHYR6Uh6TUwuWEIs481Eh0FbaAwBAVRF+sORcsE6+f/8Ckq6tASl+diwCp0lNr8E
-	 Q/T4lS7zyr8sgW8HSWYn9U/oZB7HzkWhlL8qvKkTbmO5K8lCmqRTNpXsE1NDgJGjjp8b2
-	 BJc8zQKPGVt6DOlKrasVvrFCHDmqvc4w8ItA+vMlPUxJJV8dN/47RxN9gJOJhpuyukg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793743030;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=aPYR7zTfRsNXlDBSGzOY2duMQ2hzSOH+insezsayCR4=;
+	b=a1CG5GNwNtAQY2Wty/Xy+TRqwgpcQ/hozpNXTQvgDef+sorXm4Ld/664aknNvIVu/KxF
+	 2UuSPBmauc5Mu2rpu60SxU5ivki2+GfgZlVrTcWpN1J9PH9YCB8E/DCUxDjJqs0wzhE0a
+	 bPPNEK/xUNA5mY566tgkp+1tvXaf+p3ugdL/mFDPj+r/FBK+k6rfHJOVj96B3SkSmlARC
+	 54tqpWy4euu9oz8cY14SVbd6Bna74cAj5vZ2ELyDbrKPr4Wlf3/8nrEDroX5lnFiYzXEX
+	 HBGTvPjm23qoTSY6/xA9NV6TFpPv3AAhROpSsSoOD/C+o9bVuZeZ6skzhMNPtS/XklA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M9K4D53u;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tubLW7bn;
+	arc=none smtp.remote-ip=209.85.218.47
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1988606A31B;
-	Tue,  3 Nov 2026 21:39:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E817606A31B
+	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 21:57:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E817606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M9K4D53u
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55C291F000C1;
-	Tue,  3 Nov 2026 21:39:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793741970;
-	bh=wKpZs5RzrMNeVmhNeOjdgF9Vze96viW5ervd9xgeUVk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=M9K4D53uEsZ5Ll1NJ3ntc0pNLmmPyRDWljChg0378psGWVO31qMfeHO1+NqcZwgRP
-	 r0E3qqAZWOoQ4cGhV56zS7OBmRVgWzC3Q31wYx9CE+nhxQcRc+ZinTZ0Cp2P8givmN
-	 EdqCX9awOgtRB3LTGBDnrZ/DBzp3hYL2eazlX364bXmws/tjHl39gNiPy5S4uU+DoO
-	 p+wANBazpemRwFaPro+nr8ReSZbmd8XkzRQhvUuXh8FLsZO3t1QqJIRZPbZWOWcyC7
-	 K2k9TdSILnuK38RhvqYhBt2OjExde2K+8CmWEsUC9tRRaFIeQJx46TO8gydcjkLdzn
-	 586dequwb2UUQ==
-Message-ID: <2acc3ea7-bc36-4940-87f0-90c02bd33e51@kernel.org>
-Date: Wed, 4 Nov 2026 06:39:28 +0900
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tubLW7bn
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-c46bd7a7345so258839066b.0
+        for <linux-ide@vger.kernel.org>; Tue, 03 Nov 2026 13:57:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793743028; x=1794347828; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aPYR7zTfRsNXlDBSGzOY2duMQ2hzSOH+insezsayCR4=;
+        b=tubLW7bnYjfWqdPm2oGDw5PfxnGrX3czHSKi31HUXnFOcrxrOa6+OLs95+7frtrRyq
+         GhtrNCDB/x8RvE+XHeqfkuxc4V2DejccpHCwOIrR65Bwf1Hy1URQ3Th/iEPrrcDS8M55
+         iuUYRl5p0RoSaJ0W77WD6zp6+wYSAlO/NrTRlOpVjHhZUMBpfTzcgaQM/mn32v3R4EJP
+         k7IBLQs1uXMTjduHml1DmTXVrptlDT6F3vYg3hdWTTgrjUqYnaafou2TRwUM8DdxUnkd
+         5P7/Mw9VGFSDvM8FTs0dEpf4e79B0LF5V8yvbxNUa2DeLyXc7HFNXH/TwxDaQ6CU0NU4
+         oSaw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793743028; x=1794347828;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aPYR7zTfRsNXlDBSGzOY2duMQ2hzSOH+insezsayCR4=;
+        b=OkfzwwjOBA1yhvGmjyuc7Iff5PpynJyP8xAcggUMvmxvkrgI3nZRvI1xcuFdxY44sg
+         qealrJpdLvQoMBGws52gNibkgtnENWS6YB4CMxhsqSEXwhvqaXmSe42Cw/evzWCRzDe4
+         BtrwMM+KzJEIt8E1vxr5fFE893Qs4N8CY1vTG29aq5rVyDjfvpxtSapEXItw3BsI74mC
+         HkYFC2trTfDloAwimHEQQRejLomukbBmUI0dwzCQitFeHmUZuwSKJaxjdESrXQakVXik
+         WcBTmrVnjTB9FbBoOdfqhQVhQ0XBMJsrBu1Jv8ddnn+iNc1y9UdsuybfcagxL18vET/d
+         lqBg==
+X-Forwarded-Encrypted: i=1; AKwUvBxvvkFiMTwh1ETBe/XbccZrb2AKmFdwuKWRVHoJw6CLnar3hSfV6QCPefxPIFLzrJTUv8jw2AzJy4U=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9+ViBAEjIfyrfEy8RqSAKWrj0Ue8HN8JqD4SvPIvCsrbm8KbYX
+	X39g/S7X7ldCp6S0wabgAJyV4mAGfstViyPZJmHuoqmZ09kXpMb0dyDB
+X-Gm-Gg: AYBFou3Wk19Whh/rPTaMofoXpTiPCIPDYn+xkRVZkQFA+FTeyZVcC/OldXQT5ZlfJ57
+	RQMb7khW+kanhfZDL+E7Q3n+ndEBmxBtYAb42lNBjZBDTq/G0z4mwALSQ+WDClJ9P+Z4QDZ0O70
+	BI8BRWKBWBhzizaXWf8fRvYgni6a4FnUIQ0/uoWjGulN/uK2rwnXWcaMTSjbZikCXITjmzqUx4O
+	IPPHjll9xlXBjYNAI3Mw2Kr1g2+tWK6cJPj/J69hq6aDwUv+ARQWKCfE9ytBVi0luX7CFTRHOLL
+	KEWggBS/1Jf1RbzN2OjH5qNwOQIsfBTO3/2+NYtg3evYTvLfIJYlQeDPEm0UnztWxHJ6A0D+/1t
+	tvGuT2QJT76OnYrAqieLs1wanICMWEBeTpqh5uxX72hVrR+IkXA5dbc7ngY/VMbyvEQfU9IGLGA
+	wejOSSJFLhhWZDHCFvcIyaRqB6YTJx9t0lU/jaSUmu2/iwpUUIpfDbCPhHK3pcHs4G6zPsCPGK9
+	BTVBoFTAyU2ZBXa86z6tGGP0Zk80/lOASyh2W3o98hDU2QntrG5OlscuVjkOSm57Jp++N2d/9mW
+	UWiacbB/B3gysf+FbgvZpiQZl0/9DfLpUzskrW40vC4CbVCGzA14AYQsQGMPUaXtzXfaSYTFV5t
+	XtTFa3lTY6+eDaqWam5A8MP0=
+X-Received: by 2002:a17:907:7247:b0:c46:7de7:e41d with SMTP id a640c23a62f3a-c49d13b3532mr1528577666b.18.1793743028344;
+        Tue, 03 Nov 2026 13:57:08 -0800 (PST)
+Received: from localhost.localdomain (87-205-122-125.dynamic.inetia.pl. [87.205.122.125])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c4d0e495f70sm3697866b.76.2026.11.03.13.57.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Nov 2026 13:57:07 -0800 (PST)
+From: Kyrylo Biryuk <illofspeed@gmail.com>
+To: cassel@kernel.org
+Cc: rylos78@gmail.com,
+	dlemoal@kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] ata: libata-pmp: disable the SEMB port on Marvell 88SM9705
+Date: Tue,  3 Nov 2026 22:57:06 +0100
+Message-ID: <20261103215706.508495-1-illofspeed@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <aui0uB-EkF7MKOGb@ryzen>
+References: <aui0uB-EkF7MKOGb@ryzen>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -51,44 +101,13 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] ata: replace chan->device->dev with
- dmaengine_get_provider_device()
-To: Frank.Li@oss.nxp.com, Niklas Cassel <cassel@kernel.org>,
- "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
- <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Cc: imx@lists.linux.dev, vkoul@kernel.org, Frank Li <Frank.Li@nxp.com>
-References: <20261103212427.1769922-1-Frank.Li@oss.nxp.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20261103212427.1769922-1-Frank.Li@oss.nxp.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 11/4/26 06:24, Frank.Li@oss.nxp.com wrote:
-> From: Frank Li <Frank.Li@nxp.com>
-> 
-> Use the dmaengine_get_provider_device() API instead of directly
-> accessing chan->device->dev to get the DMA provider device.
-> 
-> No functional change intended. Prepare make to struct dma_device private
-> to the DMA engine.
-> 
-> Assisted-by: LLM
+Niklas Cassel wrote:
+> A Tested-by would be nice here :)
 
-Please drop this.
+Happy to test, I just need to prepare the hardware first. I will send
+a Tested-by once that is done. Please do not wait for me if the patch
+is otherwise ready.
 
-> Signed-off-by: Frank Li <Frank.Li@nxp.com>
-
-The commit title should be:
-
-ata: sata_dwc_460ex: use dmaengine_get_provider_device() in sata_dwc_dma_filter()
-
-With that fixed, looks OK to me, so feel free to add:
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
--- 
-Damien Le Moal
-Western Digital Research
+Kyrylo Biryuk
