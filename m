@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793741801;
-	b=c7hYH4pr4hZ37aR8SNYi53flLW8krTo7ZL2Xr/SeQ4nTA+VeqeY2RP00dlxiWOCqoHsH
-	 Zw7ohPlET48OKn+BDnPKBRaVGvVu9UIC+y10vK0LHiqgHTKWSxyh/eTuVz2c4+2KtZ60j
-	 UGtSPB5gWoi6UfPg8OpWrfraUmcg7p88pXU/tWSm7pLxFnB4FjRQvCq2yYUq9U33o/TgF
-	 Vz3Q3dRNeU06zxdBgig/Rb+orirqKoOcQr7ymOGrQFJA3XY3RQiKBQE1Den/zuAajYnht
-	 /FmiwpE2TXvO0NjHYmmsDowDeB0taWxZB3h3NyVPircvhbjr/MN45USH0/I/pp8R6Rw==
+	t=1793741970;
+	b=fdIF3oj+J+XBwXkF+Sy0xwKVZIppVbTjCMohofLFnELLhPDDCFJ8jO6rp2jTvWE1TzZU
+	 u5xU8CIOse3ta4GR7M+YtR3tjiM69eYi0RdBcWB3AbFVtaZj0I0iYn7XtIxyXK67+JHkH
+	 W0A+9cAzGGJ2aEsdWOM66Ft76dwYKTAZ/+oYomR4VSAa/EC6uO3GJxCjkzynQ3XIiXq23
+	 HtGZN1pxrycJwR+c00OC48gpi/OwD3V4vkkjt8nUAiH13tLvRqGDDvIq5V1hUDsGq1Te/
+	 hH1ut8cwzP2SLtP+THYpStoBWGFCXxHM39tuAOEFzlKDHUI4pL6fQsie4h9DvkLHE+w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793741801;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793741970;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:Organization:
 	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=XefquohLVsnYnykA/hXZvzcPbulywIgpgIsGpyApaF0=;
-	b=frdshOC3OngQg5FjCHYV7eLRvRdLex7Amxd7UAhL0FiObplFHP2pXPt98E+Mq+FVPUDQ
-	 X83XRQaDOsnY2hxRa194JCl6K+krsTjgtWtk8d1moGZscHbWIbFmc2dSH/ocYACmMBSca
-	 V/mB0ahsxlPRe7JmRNuMtHVm6E79ZMS3lHv3F9peILdoVu08OBlYPt2WObGppqTV2dDpS
-	 pV6slchF3L3s7RzZ8rpLIHCsZAS4md39xZujMsp0NqP1Hkf72T7Fq9VorOQxOCZyot6Sk
-	 PlmHzXvEUL3mzKHFQd9sy3hRZpGMtWAUOs+rzdqd2KP7mA5Xrw2+RqY56/1VpLW74WA==
+	bh=wKpZs5RzrMNeVmhNeOjdgF9Vze96viW5ervd9xgeUVk=;
+	b=JJBUdvfK2cun5VvZ7fbZvzjiGWkBwPUe3B3RJSnNdEX+kcialovlxtFkcc4Kewbv301e
+	 EPWj04GzRH4A8fjgT/c0g/PuXNCctiOddFffaC4VCeVqQKBg3dDdu992l9o6PV5NLKBjT
+	 iHqt8oHYR6Uh6TUwuWEIs481Eh0FbaAwBAVRF+sORcsE6+f/8Ckq6tASl+diwCp0lNr8E
+	 Q/T4lS7zyr8sgW8HSWYn9U/oZB7HzkWhlL8qvKkTbmO5K8lCmqRTNpXsE1NDgJGjjp8b2
+	 BJc8zQKPGVt6DOlKrasVvrFCHDmqvc4w8ItA+vMlPUxJJV8dN/47RxN9gJOJhpuyukg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GX1rwI4k;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M9K4D53u;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C185606A31B
-	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 21:36:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1988606A31B;
+	Tue,  3 Nov 2026 21:39:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GX1rwI4k
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D18C1F0093A;
-	Tue,  3 Nov 2026 21:36:40 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M9K4D53u
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55C291F000C1;
+	Tue,  3 Nov 2026 21:39:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793741800;
-	bh=XefquohLVsnYnykA/hXZvzcPbulywIgpgIsGpyApaF0=;
+	s=k20260515; t=1793741970;
+	bh=wKpZs5RzrMNeVmhNeOjdgF9Vze96viW5ervd9xgeUVk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=GX1rwI4kR/gav9zlQBC7lAapk23oFe1AxJfNV4wdLVG2hdiFeBX4XxVJBllrzrA3l
-	 buE/3SuRdJ9j9SFEz9gGOzb8dEv0NDMGfjs2jffaPJFoypkqD43KxYR+/NFhlgVZBM
-	 NPdY+gWgDq8iVrDQAfzyH0E3krtrEKlo35b5e46syvdssTtNPgMHMLXQA5SbyJBp3Z
-	 q0q1Qwrz46Vn60d9Lx8MKOm8dd4Jhfo23HGIFUILUS3R6nvkkhUv6nyS48+bYCIg4O
-	 GwHqEUVqN0vdtfQBSEBVOwcwQQZhJSC/zl5/04g+cN5LGKb2MWP6Zwxqcsro+faoKh
-	 jOiyyNtQaxP6A==
-Message-ID: <5b424f29-29ba-4363-b071-db37dfaf94c0@kernel.org>
-Date: Wed, 4 Nov 2026 06:36:38 +0900
+	b=M9K4D53uEsZ5Ll1NJ3ntc0pNLmmPyRDWljChg0378psGWVO31qMfeHO1+NqcZwgRP
+	 r0E3qqAZWOoQ4cGhV56zS7OBmRVgWzC3Q31wYx9CE+nhxQcRc+ZinTZ0Cp2P8givmN
+	 EdqCX9awOgtRB3LTGBDnrZ/DBzp3hYL2eazlX364bXmws/tjHl39gNiPy5S4uU+DoO
+	 p+wANBazpemRwFaPro+nr8ReSZbmd8XkzRQhvUuXh8FLsZO3t1QqJIRZPbZWOWcyC7
+	 K2k9TdSILnuK38RhvqYhBt2OjExde2K+8CmWEsUC9tRRaFIeQJx46TO8gydcjkLdzn
+	 586dequwb2UUQ==
+Message-ID: <2acc3ea7-bc36-4940-87f0-90c02bd33e51@kernel.org>
+Date: Wed, 4 Nov 2026 06:39:28 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -52,37 +52,40 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 8/8] ata: libata-scsi: document the MODE SENSE mode page
- functions
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
- Shao Mingyin <shao.mingyin@zte.com.cn>, Hannes Reinecke <hare@kernel.org>
-References: <20261103205448.931471-10-cassel@kernel.org>
- <20261103205448.931471-18-cassel@kernel.org>
+Subject: Re: [PATCH 1/1] ata: replace chan->device->dev with
+ dmaengine_get_provider_device()
+To: Frank.Li@oss.nxp.com, Niklas Cassel <cassel@kernel.org>,
+ "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
+ <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: imx@lists.linux.dev, vkoul@kernel.org, Frank Li <Frank.Li@nxp.com>
+References: <20261103212427.1769922-1-Frank.Li@oss.nxp.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20261103205448.931471-18-cassel@kernel.org>
+In-Reply-To: <20261103212427.1769922-1-Frank.Li@oss.nxp.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 11/4/26 05:54, Niklas Cassel wrote:
-> The ata_msense_*() functions generate the mode pages returned by MODE
-> SENSE, and are also used by the MODE SELECT mode page handlers to check
-> the mode page data. They do not document where their buf argument points
-> and what they return, and some of them do not have a kernel-doc comment
-> at all.
+On 11/4/26 06:24, Frank.Li@oss.nxp.com wrote:
+> From: Frank Li <Frank.Li@nxp.com>
 > 
-> Add kernel-doc comments for all of them, stating that the mode page is
-> written to buf starting with its mode page header, which matches how
-> the MODE SELECT mode page handlers get the mode page, and that they
-> return the length of the mode page, including the mode page header.
+> Use the dmaengine_get_provider_device() API instead of directly
+> accessing chan->device->dev to get the DMA provider device.
 > 
-> No functional change.
+> No functional change intended. Prepare make to struct dma_device private
+> to the DMA engine.
 > 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> Assisted-by: LLM
 
-Looks good.
+Please drop this.
+
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+
+The commit title should be:
+
+ata: sata_dwc_460ex: use dmaengine_get_provider_device() in sata_dwc_dma_filter()
+
+With that fixed, looks OK to me, so feel free to add:
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
