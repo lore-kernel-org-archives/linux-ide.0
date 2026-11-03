@@ -1,55 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793699246;
-	b=xv0bhEBQgUXkteXlYWekRG333cE8+IY+G7LrFsspKu5uxbFFvTnAXfC9NhpBHq8MSwqG
-	 A+yfkir0X+afqD/VLtczsAga9inlKBkdErTSe4E/8Oqkiw/HUy5Ke2Qv9IdBhFWYxwrLS
-	 knMGT0wlzm+E54CfX2RwQXzmZ+sPstsVVpFDvSlLWN1Q6SV3ntpN1E9eXCnqkI2/+OCTe
-	 fUbMcHPdIeQWnybIsgOM3DW6rFSTIZ2kG5REInusYBmaywXIsp+Hk5Ju3tRtd3+3mCKOA
-	 EtIw+ZqUd8Phblj02iixfrH2x4OV2olqVMiDGIPbpXSx6C9VIxu3/MQ16FK9TuaztmQ==
+	t=1793703240;
+	b=fx/Lubr2bNaD/RU174UJL3uZ9r8WFM6MM1BDG+jU8pdofJJ6xtpl+ZSaRRn+us7Dq0ka
+	 f32u3M/R+Kly9bDPc2+XydfQW6x/+9jcLeJ8ngX4k+XYFEXS7+qaH7fplsDX64dWyF7AO
+	 rkt8JdozUUpHwtJ/WMStftTuz8s/s2w2A/JP2C97lJc+e56mncZZfQRKAuev24M3ApiOJ
+	 z6hf/4F0a6bce+YouMxNIsC/AWnwF/rCAaKUi1nfdY8wcWgjpd4wpOgRxvvlSi8A754EY
+	 zuZ14NyuCeRy0bo2wj3TLQoXiLEnlhbqShmZEwSPuY9Fjb63QXGGiOyzniSXhV1OH5A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793699246;
-	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
-	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Mailer;
-	bh=FicnvFKxeSZZxDsqkATTizCSYcpguqKwirBa2ehbQWc=;
-	b=Ki3PkVaIx6ldzNZ/5vBz8YhR8tOxtCSaLMBbcS6+7dmh+E2XZxJ+khy5WR8aTbW9mv9l
-	 QZT23aO0wedusaVmS4/xbaLl2k2MYwV3CmPgH/xp/7ib9t0WoHJ4qioq2jX1Mcvz8aGr0
-	 hgOiMmdIx6iW2ho5qNCbwCMYNpyoZQucvpSQu9kWn4OcV3AYn3TFQyJ9Z6mwKW4poAOiA
-	 l3WuDnHmyBMn9GZhtDewSkbVNifsOU51meq6ZC9M6JZVsrCjPmiD8OxL3wZhk+pxvyu+2
-	 LczMVYocyfHl0KX+nnf6b0DckHf39yvPiSN3n7ig02zplziSalHkNYcKyVJIPlNlhZg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793703240;
+	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
+	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
+	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
+	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=wRbkREsmbd8xND+sjDx4eLFzRxEy7ZDf+k352JEwzd8=;
+	b=C08wbYr9WHsRLGPqRCXL5v4Oehftms+LeHpAy0krAIn2UTYRfzJP4GqTUJSs91Z4zQvX
+	 NxrPFI3Axj/vAezmN0m/Wt7MYburlJNkXDmhAyG03cJCF2sRcY5Xbn8cafYYQrEWXFEtG
+	 VnG8VpB6TczteG4U5f+CpeS2FzrZasUbWkCAzNsSayeRy5ifKJE3luxJTKTePDCCCWYhX
+	 c9TfwKu1vJU7cGknwIpqczKSpT3gwAkfICFAOfutuoZ4nvFSFWF6MzOzvBzoOKyVAAbIl
+	 VSndjOWOuky3PnlORZbLTieRxrTGuVwv+l13OIGZJ8BMvN1zV+za5x2ckSGJeXcGJcg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vqb4EMaI;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	arc=none smtp.remote-ip=160.30.148.35
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8384E606D822;
-	Tue,  3 Nov 2026 09:47:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vqb4EMaI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 998221F000C1;
-	Tue,  3 Nov 2026 09:47:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793699246;
-	bh=FicnvFKxeSZZxDsqkATTizCSYcpguqKwirBa2ehbQWc=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=Vqb4EMaIZjfRUOXG0g9LrY7EG6YCjSMm4DFAAOJh/vqHoJeVp8GTErtbqT0mfsg9f
-	 aV7DHYXxtw7KsFDULksJ7PW3Z8a9OAcaef9z1PV68ghzMbM1QgWjBYk498jLOnPUDj
-	 4PK/XoD7ZgeVAqnJpOj3/Rf7JRNsvEKz7qpb2VgHtfgpnlVyFCYr5dskbH5v2EMhcg
-	 pArk4KxjxJf5/KwWzEwXebwErJ5XUzvZyN3ODa1V+X5+v3y2kcK1w0Isgqf1c16NnV
-	 Dzyv1Z0aw7XT8ZzL66NiCbaKvNmi9e7+Y/gxTJzkYIpwQ85AkCqWv5Ky8UXDw90z7i
-	 iNaFbW4W55YVA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Viresh Kumar <vireshk@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
- linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Frank.Li@oss.nxp.com
-Cc: imx@lists.linux.dev, vkoul@kernel.org, Frank Li <Frank.Li@nxp.com>
-In-Reply-To: <20261102163141.3812536-1-Frank.Li@oss.nxp.com>
-References: <20261102163141.3812536-1-Frank.Li@oss.nxp.com>
-Subject: Re: [PATCH 1/1] ata: use dmaengine_desc_set_callback()
-Message-Id: <179369924435.1823794.16997924682170944810.b4-ty@kernel.org>
-Date: Tue, 03 Nov 2026 10:47:24 +0100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C543D6082BDB;
+	Tue,  3 Nov 2026 10:53:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C543D6082BDB
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jJln23GrZz8Xrrb;
+	Tue, 03 Nov 2026 18:53:58 +0800 (CST)
+Received: from xaxapp01.zte.com.cn ([10.88.99.176])
+	by mse-fl2.zte.com.cn with SMTP id 6A3AriP5053317;
+	Tue, 3 Nov 2026 18:53:44 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp05[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Tue, 3 Nov 2026 18:53:46 +0800 (CST)
+X-Zmail-TransId: 2afc6ae9bd3a622-aad8e
+X-Mailer: Zmail v1.0
+Message-ID: <20261103185346937YqEZr3t5lq7FdnTzM3-TY@zte.com.cn>
+Date: Tue, 3 Nov 2026 18:53:46 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -58,26 +56,47 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+Mime-Version: 1.0
+From: <shao.mingyin@zte.com.cn>
+To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIXSBhdGE6IGxpYmF0YS1zY3NpOiBhdm9pZCBSRUFEIENBUEFDSVRZIDE2IHVuZGVyZmxvdw==?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl2.zte.com.cn 6A3AriP5053317
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.133 unknown Tue, 03 Nov 2026 18:53:58 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AE9BD46.000/4jJln23GrZz8Xrrb
 
-On Mon, 02 Nov 2026 11:31:40 -0500, Frank.Li@oss.nxp.com wrote:
-> Replace open-coded assignments to callback and callback_param fields
-> of struct dma_async_tx_descriptor with calls to the
-> dmaengine_desc_set_callback() helper.
-> 
-> No functional change intended. Prepare make to struct
-> dma_async_tx_descriptor private to the DMA engine.
-> 
-> [...]
+ata_scsiop_read_cap() starts with
 
-Applied to libata/linux.git (for-7.5), thanks!
+	u64 last_lba = dev->n_sectors - 1;
 
-[1/1] ata: use dmaengine_desc_set_callback()
-      https://git.kernel.org/libata/linux/c/6ba53556
+ata_dev_configure() sets n_sectors to zero for security locked drives, to
+prevent any I/O.  The READ CAPACITY 10 branch clamps the resulting
+underflow to 0xffffffff (still wrong, but bounded), while READ CAPACITY 16
+has no clamp and reports 0xffffffffffffffff, i.e. a capacity of about
+8 ZiB, to the SCSI layer.
 
-Kind regards,
-Niklas
+Use a zero last LBA when the device has no sectors.
 
+Fixes: 61d79a8eb362 ("libata: Report disk alignment and physical block size")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+---
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a61fb0331279..eaf86dc2cefc 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2984,7 +2984,7 @@ static unsigned int ata_scsiop_read_cap(struct ata_device *dev,
+ 					struct scsi_cmnd *cmd, u8 *rbuf)
+ {
+ 	u8 *scsicmd = cmd->cmnd;
+-	u64 last_lba = dev->n_sectors - 1; /* LBA of the last block */
++	u64 last_lba = dev->n_sectors ? dev->n_sectors - 1 : 0; /* LBA of the last block */
+ 	u32 sector_size; /* physical sector size in bytes */
+ 	u8 log2_per_phys;
+ 	u16 lowest_aligned;
