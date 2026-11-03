@@ -1,55 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793707160;
-	b=l9fsI6kcdorstxM3hPr1iHcAponkWdm2ppT8Kn22VdqB7rDCEbLsqeNnfRSnMFvGs48O
-	 S7eqlcqDEmWf7di0yESPrP/IWiNTq09osl+Qpfj2NEtlH0O9J7vCag4emllCqb0FNcr8H
-	 1WlP1YEw8rveiBuYkq8XSbPj9UY8jAwLJ1a3+MqJoaufiFN0nijKQVnrH4E98LjlAwBAX
-	 aYKv2bRnAkoxytdFBQo/lBFqI+0XGQrJOK/tVwVCVVZTWOG4IDNdYWZyVdsY2Wi2tgci1
-	 i+D4FHlNdva1vGEOXMB1EmzhPVUB0XvQaU/30kmC+v4+zDcFj/NNY/BEltUXc7QL66g==
+	t=1793737506;
+	b=I9RuDzBsRB9MWb5Sky6siKrNadfsNLcPFdoECpP5HEaR4G+Ki/dgx8DZq+9B8AKupEMP
+	 e8CagqxUlQREnPTSSR0s5Kf35kkzwljp3Tn/wghkRT+EvxNVinNPaCe0BKbsOEoAX1ASL
+	 /FEVsOXHgDQiBC6QhEwgl8x4GYMTHAGpjM2bpGiHNgy9EMEUziROjHB0C1FnA5lVSCUQx
+	 SuMP1qWNu892Tj5cla2v0FrbMFnsGMvVbtAsc4Wr/dmkKaFrZxwTbe/El2f6rMIufrykF
+	 4mXV3JRJ/txzOMiw7NMvn+J8JYms271etzH4OzLAganmCl4ulUBAD/JicPUiaifdF3Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793707160;
-	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
-	 Message-ID:In-Reply-To:References:Date:Mime-Version:From:To:Cc:
-	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
-	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=QdiQxeuZdR2NFe4vs9IUq6UmiGzYNXC1G+HPFNcf42Q=;
-	b=b7xtLpazO302G4Gpfu2Pyv6+AYFGLIh5VeoUuOxvyzcNcrSYaQaxw4Onr+MPWQehRdjx
-	 RCSOQQQEjT+fMvOEDSZFMZ5wHWcfCd+Zy26klg/GByVFzXI8YQ5w2HGtw3ADFoPOTneJA
-	 04a0xvs0bqmbYPTemue0bmwGMuIy0x7bHucQEqEzEzvSbgHEGTfMCWn9cO9VC3s2vL5EJ
-	 auUnQWXmre0XFSmExDd/Xs55d8nzxpqjdwAje2rcwXi5ENdhMvCR0gwp/4W1NKhUd2BRe
-	 926hEDFCKmTV4Q3rpE9tOnZs/XBPkNM1xqPisnJHfHodWFBk9TMDxBJmetq1ockluGQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793737506;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=ey3bmLuO/tccwPs6bses4tdGWflrXeb+2JX3HuYScV4=;
+	b=so4uPWZ6PptUph0sHBgfQB0UkTKKYBIS5NL7Yjup1vwhmV74Na6hRxuzhgdj4pTvmaOX
+	 LOWhdxepZbSKMhfrM1aTLlwxaeAfNkwY2Hm3rKdtmsYPII7inLckLNZm5iyd/Tdy3jxoW
+	 UgxdKu/oeAcrB8iOFzprfXwDwJ8u9iREc1LfVgOYKXiDKe6PjO6fyH/mEiM97iF5G2JcV
+	 Kt00Uk5cv7c48QuQ9LjDvBYeIgugwc0thE3oO5l7ASB5SR7SNwxbvbEqXHymmd6mB0OUf
+	 EkG1sdWvEia/tQ92yEeioU5B/L8Brlqsdd24FG+lz2R+g2p2kPTbnTKAIxSa17h+NlA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=160.30.148.34
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=P5ssbrCV;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D26D606A327
-	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 11:59:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1D26D606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jJnDN3bNJz5B103;
-	Tue, 03 Nov 2026 19:59:16 +0800 (CST)
-Received: from xaxapp05.zte.com.cn ([10.99.98.109])
-	by mse-fl2.zte.com.cn with SMTP id 6A3Bx6qF011131;
-	Tue, 3 Nov 2026 19:59:07 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp02[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Tue, 3 Nov 2026 19:59:09 +0800 (CST)
-X-Zmail-TransId: 2afa6ae9cc8d5ce-15cd0
-X-Mailer: Zmail v1.0
-Message-ID: <20261103195909777Ka0kj46-6HT1fVak-hNq9@zte.com.cn>
-In-Reply-To: <sashiko-outbox-195104@kernel.org>
-References: 20261103185346937YqEZr3t5lq7FdnTzM3-TY@zte.com.cn,sashiko-outbox-195104@kernel.org
-Date: Tue, 3 Nov 2026 19:59:09 +0800 (CST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE431606A31B;
+	Tue,  3 Nov 2026 20:25:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=P5ssbrCV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D21D21F000C1;
+	Tue,  3 Nov 2026 20:25:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793737505;
+	bh=ey3bmLuO/tccwPs6bses4tdGWflrXeb+2JX3HuYScV4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=P5ssbrCVpBBYTmauqrVaBiDJEvktbbY3AHI740ST8cI80wQGavxxiKa+nooMEATRM
+	 eb+x8qWnvDiBDzKQqAEkckVPb55a0wbVtSTOTmgATo95zdHWFr2u/szy1NnV/DILke
+	 qb5+6RmUplemGrSjMO57a7YgiQbSXvbWiKKnasCZ+hOAh+0F22xgwavgwKbLaQCjbe
+	 0cyJq/eeJtzT57YExAprUOdYuuSh9L4bwPwdwJEn18tpJHV9pBKQ9qrKym22HgUq45
+	 Z/DC3+B5fGmmD1trrkD7HTXwDeFYsyAAGwu8OqzO1ZjislP5EOGxe0pEtxfA8eAs9/
+	 LoLsy+ATgqQgQ==
+Message-ID: <f72d88e0-553d-4cc9-af38-9cca183cb814@kernel.org>
+Date: Wed, 4 Nov 2026 05:25:03 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -58,27 +50,68 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <linux-ide@vger.kernel.org>
-Cc: <sashiko-bot@kernel.org>, <dlemoal@kernel.org>, <cassel@kernel.org>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSF0gYXRhOiBsaWJhdGEtc2NzaTogYXZvaWQgUkVBRCBDQVBBQ0lUWSAxNiB1bmRlcmZsb3c=?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6A3Bx6qF011131
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Tue, 03 Nov 2026 19:59:16 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AE9CC94.000/4jJnDN3bNJz5B103
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ata: libata-scsi: reject data-in commands with a
+ data-out buffer
+To: Zhao Gongyi <zhaogongyi@bytedance.com>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261027090809.94126-1-zhaogongyi@bytedance.com>
+ <20261028113903.19569-1-zhaogongyi@bytedance.com>
+ <8ec9e401-4c00-42fe-b997-228e05ed9c2a@kernel.org>
+ <36648b88-c295-4acb-8b6e-25d742d50946@bytedance.com>
+ <2def2444-0b73-4371-9ba2-78af235e64cb@kernel.org>
+ <0a4822fe-f283-4cac-8ca3-91f4e8f017e2@bytedance.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <0a4822fe-f283-4cac-8ca3-91f4e8f017e2@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-You are right, and thanks for catching it.  Please drop this patch.
+On 10/30/26 12:19, Zhao Gongyi wrote:
+> On 10/30/26 9:18 AM, Damien Le Moal wrote:
+>> Yep, these are the only ones we can catch easily. Other commands we do not look
+>> at/know about will keep potentially triggering iommu page faults, but that is
+>> fine as that is not a crash. However, ideally, that should lead to the command
+>> being failed, which it seems we are unable to do... Did you check if we can
+>> propagate the fault into a the request to indicate a failure?
+>>
+> 
+> Hi Damien,
+> 
+> I checked the DMA mapping and IOMMU fault paths.
+> 
+> For DMA commands, ata_sg_setup() calls dma_map_sg() using qc->dma_dir,
+> which is derived from the direction supplied with the SG_IO request.
+> Therefore, for a request declared as DMA_TO_DEVICE, the mapping itself
+> succeeds with device-read permissions.
+> 
+> If the device subsequently attempts to write through that mapping, the
+> permission violation is reported asynchronously by the IOMMU. I could
+> not find a generic mechanism that associates such a fault with the
+> corresponding ata_queued_cmd or scsi_cmnd and turns it into a
+> per-command failure.
+> 
+> Some host controllers may also report a host-bus or interface error for
+> the command, but that appears to be controller-specific and cannot be
+> relied upon by libata.
+> 
+> Therefore, for the mismatches that libata can identify, rejecting the
+> command before issuing it still seems necessary. For arbitrary ATAPI or
+> vendor-specific CDBs whose actual direction libata does not know, I do
+> not think the generic IOMMU fault can be reliably propagated to the
+> request.
+> 
+> I will wait for your guidance on the appropriate sense code before
+> posting v3.
 
-The underflow to 0xffff_ffff_ffff_ffff is what keeps the capacity at
-zero: sd_read_capacity_16() computes sdkp->capacity = lba + 1, so the
-value wraps before it reaches the block layer, and the "8 ZiB" in my
-changelog was wrong for the same reason.  Reporting 0 turns a locked
-drive into a one block disk and brings the partition scan back.
+Looking at the list of scsi sense code, I think the data phase may be most
+appropriate, but with a qualifier. So why not use: DATA_IN_BUFFER_ERROR (0x4B0A).
 
-Sorry about the noise.
+The other one that I like would be SCSI_TO_HOST_SYSTEM_INTERFACE_FAILURE
+(0x5400), but the DATA IN BUFFER ERROR may be clearer.
+
+-- 
+Damien Le Moal
+Western Digital Research
