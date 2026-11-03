@@ -1,53 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793703240;
-	b=fx/Lubr2bNaD/RU174UJL3uZ9r8WFM6MM1BDG+jU8pdofJJ6xtpl+ZSaRRn+us7Dq0ka
-	 f32u3M/R+Kly9bDPc2+XydfQW6x/+9jcLeJ8ngX4k+XYFEXS7+qaH7fplsDX64dWyF7AO
-	 rkt8JdozUUpHwtJ/WMStftTuz8s/s2w2A/JP2C97lJc+e56mncZZfQRKAuev24M3ApiOJ
-	 z6hf/4F0a6bce+YouMxNIsC/AWnwF/rCAaKUi1nfdY8wcWgjpd4wpOgRxvvlSi8A754EY
-	 zuZ14NyuCeRy0bo2wj3TLQoXiLEnlhbqShmZEwSPuY9Fjb63QXGGiOyzniSXhV1OH5A==
+	t=1793703914;
+	b=R+T1GGu1W4RPJPVpPnxXxpYlFNDN8FHxI5MxKh1igAEY/jJdo9Ge4Qrw2CxXQ0Pb1JqY
+	 Xa/DKJ+uS/jEL4rAgSlMYj2ncJvpC6quoa2/ov7MFTryjXWR9F/6Ti+BTjnfTZCuNlXHw
+	 Rok6T3/EeR5gtTFPfZQEaQUsITeQlCl0bATaQPgiEWyTL5tIbRk+aKJsfQXTNrY9sIrlE
+	 7N4t0mBOxvkY65lBozeN6FGla0tiAZ0gR0jWIv9MTQN2ODkt3PyX+yuxnAdMp/l0fgLmz
+	 qUMsf0hDX6Dm+RsMaWZgTbb3CYtji/P+QsGsxmt4yj6uLCqkUJWWkQpalm1yiFo880A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793703240;
-	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
-	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
-	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
-	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=wRbkREsmbd8xND+sjDx4eLFzRxEy7ZDf+k352JEwzd8=;
-	b=C08wbYr9WHsRLGPqRCXL5v4Oehftms+LeHpAy0krAIn2UTYRfzJP4GqTUJSs91Z4zQvX
-	 NxrPFI3Axj/vAezmN0m/Wt7MYburlJNkXDmhAyG03cJCF2sRcY5Xbn8cafYYQrEWXFEtG
-	 VnG8VpB6TczteG4U5f+CpeS2FzrZasUbWkCAzNsSayeRy5ifKJE3luxJTKTePDCCCWYhX
-	 c9TfwKu1vJU7cGknwIpqczKSpT3gwAkfICFAOfutuoZ4nvFSFWF6MzOzvBzoOKyVAAbIl
-	 VSndjOWOuky3PnlORZbLTieRxrTGuVwv+l13OIGZJ8BMvN1zV+za5x2ckSGJeXcGJcg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793703914;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=z3H4Ww65n9OSywA4AGfHx8GXMfzLBT2T0dIKlDJr2xU=;
+	b=OmHJBhydsnqRH5k4SXkN5U2C19+eoeWgIzKA9dX5z00MElBVZicTp9xT7s/Pt72fVKY0
+	 T3Jr7+0EV24Tg6nxy8972/7Ni9rpGPoH/Mme/M18Kp8SScI4MEhJTBPv06pZInpdTGCBI
+	 t0YYzjMCyRyX11pClnTDekRLbzv0xiyk87mUPm5gu/k/pexUzpp7cEBEFXZuHKx+w5PtZ
+	 SoM4NEqsPdV4innDyR2aldNihX/Fvv/h0++0wMTVLg8HqWSr6l28aC+d8ByHjrYUkMb8K
+	 j0iqzXz+8/u+uPwu2fzgjyJQuFBDKt9sDH+5K3h79xlT6vSSTHQfrykdc1edZu7XelQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=160.30.148.35
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OQ2purFi;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C543D6082BDB;
-	Tue,  3 Nov 2026 10:53:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C543D6082BDB
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jJln23GrZz8Xrrb;
-	Tue, 03 Nov 2026 18:53:58 +0800 (CST)
-Received: from xaxapp01.zte.com.cn ([10.88.99.176])
-	by mse-fl2.zte.com.cn with SMTP id 6A3AriP5053317;
-	Tue, 3 Nov 2026 18:53:44 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp05[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Tue, 3 Nov 2026 18:53:46 +0800 (CST)
-X-Zmail-TransId: 2afc6ae9bd3a622-aad8e
-X-Mailer: Zmail v1.0
-Message-ID: <20261103185346937YqEZr3t5lq7FdnTzM3-TY@zte.com.cn>
-Date: Tue, 3 Nov 2026 18:53:46 +0800 (CST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 359B9606D80F
+	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 11:05:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OQ2purFi
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA5A41F000C1;
+	Tue,  3 Nov 2026 11:05:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793703914;
+	bh=z3H4Ww65n9OSywA4AGfHx8GXMfzLBT2T0dIKlDJr2xU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=OQ2purFiK9OsczzIUGmlDFppXzgxhvqkjsruMlQswHVM/Sb6NSI6V88VINa1i3psu
+	 Tggwbl2LAp+Wy82SErrxBv3yhCknatQv8QvgTyRAcYizy00odnUhqmt8A1h11OdE6r
+	 vlEOQu+nsbhBxdw6vlFZiVQyMsgviZSJaKr38A18fdme8Ut471VIWpd1Jb+DGFnG7D
+	 ok7yXy7wg+RoMXhCj2F+9GTxFYTI1ORy0fBf3fyetX8sB/Mgp0I1WAxeK/Sfhm2c9t
+	 d5mWbAlnaxKJkcP7HLwqS8qAmyA8eMDFCU4Ho0xn9BGUkrJPp7POXw33CivJtIT7q/
+	 8tCnJd80cXGUw==
+Message-ID: <sashiko-outbox-195104@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ata: libata-scsi: avoid READ CAPACITY 16 underflow
+Reply-To: sashiko-reviews@lists.linux.dev
+To: shao.mingyin@zte.com.cn, linux-ide@vger.kernel.org
+Cc: dlemoal@kernel.org, cassel@kernel.org
+In-Reply-To: <20261103185346937YqEZr3t5lq7FdnTzM3-TY@zte.com.cn>
+References: <20261103185346937YqEZr3t5lq7FdnTzM3-TY@zte.com.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 03 Nov 2026 11:05:13 +0000
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -56,47 +58,83 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIXSBhdGE6IGxpYmF0YS1zY3NpOiBhdm9pZCBSRUFEIENBUEFDSVRZIDE2IHVuZGVyZmxvdw==?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6A3AriP5053317
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Tue, 03 Nov 2026 18:53:58 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AE9BD46.000/4jJln23GrZz8Xrrb
 
-ata_scsiop_read_cap() starts with
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] ata: libata-scsi: ata_scsiop_read_cap() reports 1 block when n_sec=
+tors is 0
+--
 
-	u64 last_lba = dev->n_sectors - 1;
+commit 2baef3c64e10a35b658037f12f8a9575c158e978
+Author: shao.mingyin@zte.com.cn <shao.mingyin@zte.com.cn>
 
-ata_dev_configure() sets n_sectors to zero for security locked drives, to
-prevent any I/O.  The READ CAPACITY 10 branch clamps the resulting
-underflow to 0xffffffff (still wrong, but bounded), while READ CAPACITY 16
-has no clamp and reports 0xffffffffffffffff, i.e. a capacity of about
-8 ZiB, to the SCSI layer.
+ata: libata-scsi: avoid READ CAPACITY 16 underflow
 
-Use a zero last LBA when the device has no sectors.
+This commit updates ata_scsiop_read_cap() to set last_lba to 0 instead of
+underflowing dev->n_sectors - 1 when dev->n_sectors is zero, such as on
+security-locked drives.
 
-Fixes: 61d79a8eb362 ("libata: Report disk alignment and physical block size")
-Cc: stable@vger.kernel.org
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
----
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a61fb0331279..eaf86dc2cefc 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2984,7 +2984,7 @@ static unsigned int ata_scsiop_read_cap(struct ata_device *dev,
- 					struct scsi_cmnd *cmd, u8 *rbuf)
- {
- 	u8 *scsicmd = cmd->cmnd;
--	u64 last_lba = dev->n_sectors - 1; /* LBA of the last block */
-+	u64 last_lba = dev->n_sectors ? dev->n_sectors - 1 : 0; /* LBA of the last block */
- 	u32 sector_size; /* physical sector size in bytes */
- 	u8 log2_per_phys;
- 	u16 lowest_aligned;
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index a61fb03312793..eaf86dc2cefc0 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2984,7 +2984,7 @@ static unsigned int ata_scsiop_read_cap(struct ata_=
+device *dev,
+>  					struct scsi_cmnd *cmd, u8 *rbuf)
+>  {
+>  	u8 *scsicmd =3D cmd->cmnd;
+> -	u64 last_lba =3D dev->n_sectors - 1; /* LBA of the last block */
+> +	u64 last_lba =3D dev->n_sectors ? dev->n_sectors - 1 : 0; /* LBA of the=
+ last block */
+
+[Severity: High]
+Does setting last_lba to 0 when dev->n_sectors is 0 cause the SCSI disk
+driver to report a capacity of 1 block instead of 0 blocks?
+
+In the SCSI READ CAPACITY (10) and READ CAPACITY (16) parameter data, the
+returned logical block address is the 0-based LBA of the last logical block
+on the medium (capacity - 1), so returning 0 indicates that LBA 0 is a valid
+block on a 1-block disk.
+
+When sd_revalidate_disk() -> sd_read_capacity() calls read_capacity_16() or
+read_capacity_10() in drivers/scsi/sd.c, both functions add 1 to the
+returned LBA:
+
+drivers/scsi/sd.c:read_capacity_16() {
+	...
+	lba =3D get_unaligned_be64(&buffer[0]);
+	...
+	sdkp->capacity =3D lba + 1;
+}
+
+Previously, when dev->n_sectors was 0, last_lba underflowed to
+0xffffffffffffffffULL, and lba + 1 in read_capacity_16() wrapped around in
+64-bit unsigned arithmetic to set sdkp->capacity =3D 0.
+
+With last_lba set to 0, sdkp->capacity becomes 1, and sd_revalidate_disk()
+sets a non-zero gendisk capacity via set_capacity_and_notify(). In
+drivers/ata/libata-core.c, ata_dev_configure() sets dev->n_sectors =3D 0 on
+security-locked drives specifically to prevent partition scanning:
+
+drivers/ata/libata-core.c:ata_dev_configure() {
+	...
+		if (ata_id_is_locked(id)) {
+			/*
+			 * If Security locked, set capacity to zero to prevent
+			 * any I/O, e.g. partition scanning, as any I/O to a
+			 * locked drive will result in user visible errors.
+			 */
+			ata_dev_info(dev,
+				"Security locked, setting capacity to zero\n");
+			dev->n_sectors =3D 0;
+		}
+}
+
+Because bdev_disk_changed() in block/partitions/core.c checks
+if (get_capacity(disk)) before calling blk_add_partitions(disk), won't a
+reported capacity of 1 block cause the block layer to issue partition-scan
+reads to LBA 0 on security-locked drives, resulting in I/O errors?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103185346937Yq=
+EZr3t5lq7FdnTzM3-TY@zte.com.cn?part=3D1
