@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793741017;
-	b=vCIlrCExWcjhSPgj4WZTThVcC+KRVOQpEFA6/qvMRnHkj4yOIbEueXdJUsi4woYuPh51
-	 pMsMB6MoKgG0n5qssZEtXqxSAJSYAZjY7C1Xmfarc4LgTshIBBYPTg+YczIqpNrwfD9u6
-	 Uw8jxLeMCLhS/B3r/kyFt6ji4yAQzou6EF10d7LWDaz5ls/8pu+LcvmfivvM9dtPORjMR
-	 HAJ0igY38zlelLs4VUsBOvftf+0PzN8rWqgdrpUC9Lpq+gyT1FGyST0DhRznp8cX9fQHR
-	 Rf8jHVD532wOo10aKYxOLnL3u9sFYD1iUXjZlUbG8YueNTBEjYP3+TBNchvQqwqTFaw==
+	t=1793741087;
+	b=ntdMzXw/BYUXMSu6AKHLH9vV2UGKF6NTWX1lSBGjI8VzHR/cM8RLEhsnYbh+m7cJpqjZ
+	 1lXeDitofyx9ljyEjJOJfP/+vx30NkuAdksk0cB5bKaoX9DSvi3mqgYtz1b+3173UMTvK
+	 RuWfqlH1BX4RPh66QAoh1RqFhAORZrlQI6CIWomcSGEe5b55eYZZpsrTtydmXe0ysvzEH
+	 LIyZYLzt/G/0aCr5Nxr6SQdSESqZGoOpMeoLHLpdy4v4nx3tMTR2UyCVxFITzx9TvP7eO
+	 /gIxUUQPs9EU4DYuuhqH14f3fToS9Vq5KVJRy7bpJRuqjs0bNZbtireLQ/8CrB8hPMQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793741017;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793741087;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:Organization:
 	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=CFZx0qWCtR4+5717af6FQ4kEqHOAYHOKNZFKWXHpsHw=;
-	b=a3tGqrP3Dou19UkvRGni/MGL1tu6kFPMka3i845/eAKUbTUaZuSIR7x68looLWUIqKMz
-	 ch7RLNRBmw0tzeUJ+3MsSdiJZR1pjMzLCkxeCGneGn0DJ8eNQyC2sW/+qmljBipkc5+qc
-	 FS6t1vj7KtC2R0ayT7hZpRtZ3KXhu037jbdpdnJWFunxn3q/Etxvv2xbfTuHIQpn1gcX/
-	 3yZygMrb3kY5tNYwqHdAyj3yrbcdC/TqRdZyIUOmCjTDAWO9pO7TWMJZWdnJ9nrFwGfkf
-	 qh1H8MGGMk4gX+VL+vOtIf+Nguh7rj/6Cqr7GSMjyPcge2/7wE5H4LZOXwGBvvdw5jA==
+	bh=49htRd0D3rQ+WWBybn7NnT4lf0wMxN6Ic+Lcl8IDZJM=;
+	b=V3pICjXsAlgwe+dnw0iHe3DFZFcetQIwV6erRvm+YPM4gAIBGGoHqh+x5GENEZhKDTS1
+	 poji//2HK0dR4+iHg4lHsaQP/blZaHl8iUXQHfPeliqxyi0tV2cGYRkTIaUnb9cndQqUd
+	 3pEsvCVo2r0EsD3rKPmYeliY9PkLaWVMH19nBFWMZftGVYvIrWd6WibrMv8Zpnyu3SshK
+	 HJWtW/tOb+0ylRtXX6R1V/YlLsd3lZVVdDfS6msqTnpKPDUXQoJQoJWdAFqfoAlxDgRzG
+	 rQFgbcv6VUTRbhUMJh8ZA0SB5RsZ4Z19wEEULfmMlSBILZpsJsU/Uh2nsLXAVla3B5A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KKd4tPxA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dzofG0Vf;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0CE606A337
-	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 21:23:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2B0606A339
+	for <linux-ide@vger.kernel.org>; Tue,  3 Nov 2026 21:24:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KKd4tPxA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C33B1F000C1;
-	Tue,  3 Nov 2026 21:23:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dzofG0Vf
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F6301F00A16;
+	Tue,  3 Nov 2026 21:24:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793741016;
-	bh=CFZx0qWCtR4+5717af6FQ4kEqHOAYHOKNZFKWXHpsHw=;
+	s=k20260515; t=1793741086;
+	bh=49htRd0D3rQ+WWBybn7NnT4lf0wMxN6Ic+Lcl8IDZJM=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=KKd4tPxAsL9nZYSS7HXQMJvBVhKOgfnsraLqD+ViWcs+ifGvSd0/Srpr0y+DHxLBL
-	 0JhI8iES8qPVySU+Y6hxm8hkN80mwjeaPAzxGqM4k+yS7Cz5AAoesWA8E+rYDZ23Dy
-	 DofnQAGl9LT6m5jeHP7KGS7BWc4o04jCHGCiYJRvdFhUFefaXdn9LR78XGX4GWzqAS
-	 67yUFPG88Gvo9gPs2ejJi+S1G8wI4rurcGGTSgfUs7e+OTTdT/E3h31reKieWnmrtA
-	 FhuDB17tyK6X9/5O7VyPcmgU9TPvTmSENIX1FaxsZ2Vswctu5YGMpVDxXBAHQ/j/Pm
-	 3plIZnVq6N6vQ==
-Message-ID: <dbeb6c83-6b57-4985-9c1d-bfe31b76175b@kernel.org>
-Date: Wed, 4 Nov 2026 06:23:34 +0900
+	b=dzofG0VfiTPuBZlyr/3gHdoXn0kcM2xEKth+jW0TDqt7YDQAuBEN9NsRLlY0uv+nG
+	 ENO080M3LwIhGRpDkJRNbgDfc0fxI0sssa8EPEXaO/Lx/WfjO/YrEwGX9bZM2u+SCp
+	 PKtOh5DLdTk9S/Tf4iw0cXAWlXqBddJmzrZ7sq6MSHnqh3fZ6DGhbIFOIbMqwhSpAV
+	 CydwPY2nZrH1RCY0XhYyolAAP/N3x9VlVgKjWKC9noALgopaQ2BciRHXtL9PlYpt7M
+	 TdB6SnmMD+B1zIstzeCWoZkKampBwPQKnVquimIDP6gRaSysu63coLHULdO6thTdJL
+	 AjHOyzeIbyVFQ==
+Message-ID: <ad77ed01-772e-4adf-a0ea-f7a7f3e394d5@kernel.org>
+Date: Wed, 4 Nov 2026 06:24:44 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -52,39 +52,37 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/8] ata: libata-scsi: fix MODE SELECT field pointer for
- unsupported subpages
+Subject: Re: [PATCH 5/8] ata: libata-scsi: fix MODE SELECT field pointer for
+ block descriptor length
 To: Niklas Cassel <cassel@kernel.org>
 Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
  Shao Mingyin <shao.mingyin@zte.com.cn>, Hannes Reinecke <hare@kernel.org>
 References: <20261103205448.931471-10-cassel@kernel.org>
- <20261103205448.931471-14-cassel@kernel.org>
+ <20261103205448.931471-15-cassel@kernel.org>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20261103205448.931471-14-cassel@kernel.org>
+In-Reply-To: <20261103205448.931471-15-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 11/4/26 05:54, Niklas Cassel wrote:
-> When the mode page of a MODE SELECT parameter list has an unsupported
-> SUBPAGE CODE, ata_scsi_mode_select_xlat() sets the FIELD POINTER of the
-> INVALID FIELD IN PARAMETER LIST sense data to the SUBPAGE CODE byte of
-> the mode page header (byte 1 of the page) if the SPF bit is set, and to
-> the PAGE CODE byte (byte 0 of the page) otherwise.
+> ata_scsi_mode_select_xlat() only accepts MODE SELECT parameter lists
+> without block descriptors or with a single 8 byte block descriptor. For
+> any other BLOCK DESCRIPTOR LENGTH, it terminates the command with
+> INVALID FIELD IN PARAMETER LIST, and the FIELD POINTER should point at
+> the BLOCK DESCRIPTOR LENGTH field, i.e. at byte 3 of the mode parameter
+> header(6) or at byte 6 of the mode parameter header(10), as SPC requires
+> the FIELD POINTER of a multiple-byte field to point at its first byte.
 > 
-> However, the SPF bit is tested on p[0] after p has already been advanced
-> past the mode page header, so the test reads bit 6 of the first byte of
-> the mode page data instead. If the parameter list ends with the mode
-> page header, it even reads the byte that follows the parameter list in
-> buffer, which is not initialized when no data beyond the parameter list
-> was transferred.
+> However, the mode parameter header length and the BLOCK DESCRIPTOR
+> LENGTH are added to the offset of the field, so the FIELD POINTER points
+> 3 or 6 bytes after the end of the block descriptors instead. For
+> example, a MODE SELECT(10) with a BLOCK DESCRIPTOR LENGTH of 16 reports
+> byte 30 instead of byte 6.
 > 
-> The test is not needed anyway: spg can only be non-zero for a mode page
-> in sub_page format, i.e. with the SPF bit set, and the field in error is
-> the SUBPAGE CODE. Always set the FIELD POINTER to the SUBPAGE CODE byte,
-> which follows the mode parameter header, the block descriptors and the
-> PAGE CODE byte.
+> Do not add the mode parameter header length and the BLOCK DESCRIPTOR
+> LENGTH to the offset of the BLOCK DESCRIPTOR LENGTH field.
 > 
 > Fixes: 7780081c1f04 ("libata-scsi: Set information sense field for invalid parameter")
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
