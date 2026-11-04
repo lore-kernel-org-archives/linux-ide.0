@@ -1,55 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793801522;
-	b=2DwXZQfp1KkZ/nedBtUbS3WBb0f+OEf4IjKCCmgqAZyRASnJP092oqF4wTOqRCh7UinH
-	 OMFZUhnxdBdzJ0cjk0DIBvQijsL2xC/s0orF+mlxxFROZ7DrL8Ifhe0CdIvZltavi1XL3
-	 39Xu5xB5GwGoEmeAKfVEAnJBQ0u2xto6D4EpEoZ5ab7mbGl/ZL4jWQks/1KAh+5gWbNph
-	 WwMOUvdCqbCHM44bABWEJgYgts+UY/8pFUALSezDanrkms3tRbyQzATbm9A84Anrh0VCc
-	 67zeb3fz2eR4Vb07iPcECu9XVXx9OvtDqlbexfXWTjl8SaYSQEAta9UVe+sdf0b3pJw==
+	t=1793801574;
+	b=NtwG8jN4RyMDRFWYqSzZ+z8wW/2LPmqeJ0k0OEgomDFp7kpqt1hWq5e0mIYlYZF3r6MP
+	 RFmFI24I6UIc+d9YOzX/XY0/LtFh/c/PzAjQ3KY+XT7UUk2pH3bKTlIQtNVaLIQFhwl8q
+	 vh7gFsvAXXJxmQpGl0H9HiMfJcdpnVqjtKFbllORZ0SP5qmC8v71XqxMOLiWNueELDW9o
+	 +qn9fwWtjolViPvvZuuQWdKN81fkel7gv2a0IDQiwmuB8rknYovbuz4gYu8APEzTAYpuA
+	 o1S+5ib8N6vwMcG1b4zi5QdZvlIC/idW+wDwCnjInJyFwUNtwcktNn7QNCRk0whcmaA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793801522;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793801574;
 	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
-	 Message-ID:In-Reply-To:References:Date:Mime-Version:From:To:Cc:
-	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
-	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=74b4nHIZAeQuqtuQ72Ye91l6Q/AeJy4o4XPQ9n+gcBg=;
-	b=gMxNvD4oBLoUWS+LylzADJKyFzyHDh7u9kbYcn9+DgbBo6GB+2pPiOKcUs4pGXsjRBpT
-	 A4byhh7dcznt1gYViUROKJnpX/wmuxmH2v7vVoGDV3fNFeh+PRB1dxMj3/JFNT6ET0nD0
-	 eZHa1Nfdv7XCVqRHy7yzgZHGuDltk/vyoJfS/mRRxYK3BDQOtpRNCOc7UK8YS0iR/Q0VL
-	 wnMz6SZoNgiqTDaEOILTW8PiC+e03ExeQJyd+US1vZUpyRXHoQmfUqosUiIKI58Qa+z69
-	 CTiJd6W9ALY36xKr1MK0Lxwh+O2uBNKWHH2VNi+tH27aLs/Rts4YXbxLFF03GSG62aA==
+	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
+	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
+	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=6AJSYYW5ZAgrqBGJS0OC9W3bPQi0BhlyPP+rFdFD3pI=;
+	b=OBd+sDly22rspCxlR7hmjMgcY8k3tv1U+LwplY1dtzPt+ZO/UvqFRDOFEVxrJz0U/nYf
+	 kguMJuvfSe30vug9Kthok/RVv85ppi6GYIwHfpAvOKvSmNqm/OPAuJs1ZjnacJzH3h6Mj
+	 OJANNXRx8OYdOClh+XDcqev59yjwQQjPw6vPveoFVWF9FAzSM3N3DOODangdFsw9mpmm4
+	 ytW9s6b3HnMjI3YHq5d0jG7L1mrY3cNOarV2nH96KRsaKapRLQUcDG80Ku35Ym/5Ms6BU
+	 XU/f0bir4QrMNo4n9LSJK4l7lJ/0COY/43XVHLHGF+/b/KJbnB6aZ0BfqIXfz75Elog==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=160.30.148.34
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	arc=none smtp.remote-ip=183.62.165.209
+Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00BDA606A32D;
-	Wed,  4 Nov 2026 14:12:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 00BDA606A32D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E1C606A33B;
+	Wed,  4 Nov 2026 14:12:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 58E1C606A33B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jKS741mRbz4yjjB;
-	Wed, 04 Nov 2026 22:12:00 +0800 (CST)
-Received: from xaxapp04.zte.com.cn ([10.99.98.157])
-	by mse-fl1.zte.com.cn with SMTP id 6A4EBpAp033807;
-	Wed, 4 Nov 2026 22:11:51 +0800 (+08)
+	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jKS7y5jVyz5B15L;
+	Wed, 04 Nov 2026 22:12:46 +0800 (CST)
+Received: from xaxapp05.zte.com.cn ([10.99.98.109])
+	by mse-fl1.zte.com.cn with SMTP id 6A4ECj8P034143;
+	Wed, 4 Nov 2026 22:12:45 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
 Received: from mapi (xaxapp05[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Wed, 4 Nov 2026 22:11:54 +0800 (CST)
-X-Zmail-TransId: 2afc6aeb3d2a41b-2d30d
+	Wed, 4 Nov 2026 22:12:49 +0800 (CST)
+X-Zmail-TransId: 2afc6aeb3d61529-2e41a
 X-Mailer: Zmail v1.0
-Message-ID: <202611042211545962bhKeo8yjWPGFgya4g6LG@zte.com.cn>
-In-Reply-To: <20261104220832716LXKf7OaS9dt1VJ8Q959AG@zte.com.cn>
-References: 20261104220832716LXKf7OaS9dt1VJ8Q959AG@zte.com.cn
-Date: Wed, 4 Nov 2026 22:11:54 +0800 (CST)
+Message-ID: <20261104221249196PEndOlhSBLk0FozQ1xnab@zte.com.cn>
+Date: Wed, 4 Nov 2026 22:12:49 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -61,72 +59,64 @@ Precedence: list
 Mime-Version: 1.0
 From: <shao.mingyin@zte.com.cn>
 To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIDMvM10gYXRhOiBsaWJhdGEtc2NzaTogZ2VuZXJhdGUgU0FUIHNlbnNlIGRhdGEgZm9yIEFUQSBQQVNTLVRIUk9VR0goMzIp?=
+Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIXSBhdGE6IGxpYmF0YS1hY3BpOiBjaGVjayB0aGUgX0dUTSByZXR1cm4gb2JqZWN0IGJlZm9yZSB1c2luZyBpdA==?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl1.zte.com.cn 6A4EBpAp033807
+X-MAIL:mse-fl1.zte.com.cn 6A4ECj8P034143
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.132 unknown Wed, 04 Nov 2026 22:12:00 +0800
+X-SOURCE-IP: 10.5.228.132 unknown Wed, 04 Nov 2026 22:12:46 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AEB3D30.000/4jKS741mRbz4yjjB
+X-Fangmail-MID-QID: 6AEB3D5E.000/4jKS7y5jVyz5B15L
 
 From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-ata_scsi_qc_complete() detects ATA pass-through commands by the ATA_12
-and ATA_16 opcodes only.  ATA PASS-THROUGH (32) uses the variable
-length CDB opcode 7Fh with service action ATA_32, so for those commands
-the function takes the ordinary completion path: the CK_COND bit is
-never honored and the ATA Status Return sense descriptor is never
-built.  A successful command with CK_COND set is reported as GOOD
-instead of CHECK CONDITION, and a failed command gets the generic ATA
-sense data without the ATA register values.
+ata_acpi_gtm() evaluates _GTM with acpi_evaluate_object() and, after
+checking the status, dereferences output.pointer without checking it.
 
-The byte that carries T_LENGTH and CK_COND is byte 2 for 12- and
-16-byte CDBs, but byte 11 for a 32-byte CDB, whose byte 2 is part of the
-variable length CDB header.  Detect ATA PASS-THROUGH (32) through its
-service action and read CK_COND from the correct byte.
+acpi_evaluate_object() can return AE_OK with a zero-length result and a
+NULL output.pointer.  A _GTM method returning a reference to a method
+local does exactly that: ACPICA clears the reference when the method
+terminates, so the caller ends up with no object.  ata_acpi_gtm() then
+dereferences the NULL pointer while probing the ATA port.
 
-Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
+ata_dev_get_GTF(), the sibling function in this file, already checks both
+output.length and output.pointer before using the result.  Add the same
+check to ata_acpi_gtm().
+
+Fixes: 64578a3de723 ("libata-acpi: implement _GTM/_STM support")
 Cc: stable@vger.kernel.org
 Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 ---
-Tested on 7.3.0-next-20261030 (QEMU/TCG guest) with an ATA disk
-(ata_piix, /dev/sda); no special hardware is needed.
-
-A 32-byte ATA PASS-THROUGH(32) READ SECTORS CDB with CK_COND set in
-cdb[11] and a 512-byte data-in buffer is sent with SG_IO.  The same
-CDB with CK_COND clear is the control and completes GOOD on both.
+Tested on 7.3.0-next-20261030 (QEMU/TCG guest) with a PIIX3 IDE
+controller.  A TEST-ONLY SSDT, loaded with -acpitable on both kernels,
+adds a _GTM method that returns a reference to a method local.  ACPICA
+clears that reference when the method terminates, so
+acpi_evaluate_object() returns AE_OK with a NULL object.
 
   unpatched                            patched
-  status 0x00, no sense data           status 0x02 (CHECK CONDITION)
-                                       sk 0x01, asc/ascq 0x00/0x1d
-                                       ATA descriptor 0x09 present
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a61fb0331279..97adeecc7736 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1888,9 +1888,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 	struct ata_link *link = qc->dev->link;
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	u8 *cdb = cmd->cmnd;
-+	u16 cdb_offset = cdb[0] == VARIABLE_LENGTH_CMD ? 9 : 0;
- 	bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
--	bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12;
--	bool is_ck_cond_request = cdb[2] & 0x20;
-+	bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12 ||
-+		(cdb[0] == VARIABLE_LENGTH_CMD &&
-+		 get_unaligned_be16(&cdb[8]) == ATA_32);
-+	bool is_ck_cond_request = cdb[2 + cdb_offset] & 0x20;
- 	bool is_error = qc->err_mask != 0;
- 
- 	/* For ATA pass thru (SAT) commands, generate a sense block if
-@@ -3389,6 +3392,6 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	tf->protocol = ata_scsi_map_proto(cdb[1 + cdb_offset]);
- 	if (tf->protocol == ATA_PROT_UNKNOWN) {
--		fp = 1;
-+		fp = 1 + cdb_offset;
- 		goto invalid_fld;
+  BUG: kernel NULL pointer             no panic; ata1/ata2 probe
+  dereference in ata_acpi_gtm          /dev/sda probes
+  Kernel panic - not syncing
+
+The diagnostic is emitted with ata_port_dbg(): a _GTM method that keeps
+returning no object is a permanent firmware deviation and the check runs
+on every reset, so a KERN_ERR would spam the log indefinitely.
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 4433f626246b..a0b85f74eabb 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -376,6 +376,11 @@ int ata_acpi_gtm(struct ata_port *ap, struct ata_acpi_gtm *gtm)
  	}
+ 
+ 	out_obj = output.pointer;
++	if (!out_obj || !output.length) {
++		ata_port_dbg(ap, "_GTM returned no object\n");
++		goto out_free;
++	}
++
+ 	if (out_obj->type != ACPI_TYPE_BUFFER) {
+ 		ata_port_warn(ap, "_GTM returned unexpected object type 0x%x\n",
+ 			      out_obj->type);
