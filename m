@@ -1,55 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793801406;
-	b=Tw46G8AppSWxSxmIS3I8rGTykYaeLa9taC+ZZWB+0LB3uUzUN6xyDxTdLT8bxFNVbhwj
-	 kaskZqyQpurX8dKuTumhTf+eWT7qTfZu/Vy2dC0LatY5zYApwvm8ogvn+t7rv1iOgWGV3
-	 WnDxvlE8D0FGGwgLoBCI21rTSxr7Pzwai1m/0jITuNilg8VBlNrc0SydvM7pmTD+fCZuh
-	 Hsbkk6iac0hk2JB6vhlH6b+rGViut0zHGc3KsmlQDqkSwf+QP7wYd0eTFP1Z8DJnAvnSL
-	 7bISWVXHmJZ1fa0h4vQqq1a3ng8H3HZdVlpzbRakkLbXF++6sBoCDxkJAu+L/b1ng0w==
+	t=1793801472;
+	b=O5MtesnbfkGTZgsSqS2AvC1ldUh8hm6Zgc9ZIrHOYB8lNry6S8/sEGix1Uri+qsLsjgE
+	 wZ6sKWAybettoruuNYyF4D/P0kF0n7eEE0aXTiivTCdVIY5PpFCTQjS21aDfY/O9yODpa
+	 BU0C7acRf8o1Vf4MWiaBr4YTkkWBK8bAOOZLyCa9L0R7pSwdzQ3yIClsjBjF9n7IP1Lux
+	 fQfEB+xL3EWcDgO0dbG6GTiXWOSIwSund5u0PUAABtU4KsPw/MS0twS+oTSpqU1qbO9Y1
+	 khaoVm9RYpXw5pkrBlFfDGHkCgEWrUoJXJzSFvDvaNva5DY9HxDgj8yGONdv295I/4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793801406;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793801472;
 	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
 	 Message-ID:In-Reply-To:References:Date:Mime-Version:From:To:Cc:
 	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
 	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=b2CCWMjvgZNz5FP+7DNpzCei+hZeiZgmRKq9Ltb4IxM=;
-	b=NHdgY/ZTwFFuIyIqpA77/psljCFg5FSPY8Ia7GNLATgurcKwDQnk8GA64ugIiPjpgzAs
-	 5ZHst8KclHMULSOuBoFQV4lo3h32Bkre9+Igl5iZFcI0dWc2dpV7lhg3is5T9MF+l8Wrr
-	 g3NBhoVac+Jc7AoJznRnP9HDHlBXFRsnyaVMrY7HTYR+nHeBCrvjGsSooBlOPiWYfYbuJ
-	 TPMlfFc9iNcLgv4h5JSdruv8nIpKeUS9rLGaoNsoPDmEk/W64YDv1XFf5PldUhB9ixS+8
-	 KgvnAyE50s6cC1lod2yYweIr/NpHutQnSS6Z8z61Mds7geuQYAaDKoueB1fcwrDMaiQ==
+	bh=5v/IeceO5lEoHHhAzzAauPQ1V+NlTtQgDK8PwjgXsvo=;
+	b=QyLn1SAB7u5GoToyChgADlW2eMck8bkB7GBCPTx53gx9HXe4dm2MK2y4NOBXwF2X74dk
+	 Oalq5PfhB8R6zu2hxuLHsBfgsLgmYNartj5FOdRQakdx+Fp8NlZV1IJdH9zKRGQBmkT3F
+	 2shN+/kumvSffEYYkj63rnJqKEt9Z3yfRHEtxVwOtCNIGPaJ+zY4FK8fwk7zLKE6rAlFW
+	 gEKeJzG+TlZ/4aoIoKt5OzPe1/XaOeLSvOQRC7gTJTIcBsmszOpFmuH2mwNlgkqFZq2/9
+	 5XhjIO200v4+SKAS4OLmk5UYSPxKEfPnFXSYjm4g5puLdxENIRhLC8NXgzuQ3loKO3w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=160.30.148.34
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	arc=none smtp.remote-ip=160.30.148.35
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F1EE606A332;
-	Wed,  4 Nov 2026 14:10:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F1EE606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25BEE606A31B;
+	Wed,  4 Nov 2026 14:11:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25BEE606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jKS4j6qJGz4yjjY;
-	Wed, 04 Nov 2026 22:09:57 +0800 (CST)
-Received: from xaxapp01.zte.com.cn ([10.88.99.176])
-	by mse-fl2.zte.com.cn with SMTP id 6A4E9aCA075538;
-	Wed, 4 Nov 2026 22:09:36 +0800 (+08)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jKS650Q6Qz8Xrrd;
+	Wed, 04 Nov 2026 22:11:09 +0800 (CST)
+Received: from xaxapp04.zte.com.cn ([10.99.98.157])
+	by mse-fl1.zte.com.cn with SMTP id 6A4EAx4n033482;
+	Wed, 4 Nov 2026 22:10:59 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp05[null])
+Received: from mapi (xaxapp02[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Wed, 4 Nov 2026 22:09:39 +0800 (CST)
-X-Zmail-TransId: 2afc6aeb3ca3b3f-2aa34
+	Wed, 4 Nov 2026 22:11:02 +0800 (CST)
+X-Zmail-TransId: 2afa6aeb3cf6ea8-37d90
 X-Mailer: Zmail v1.0
-Message-ID: <20261104220939917jqg8_alGN5sACGWq5M9D-@zte.com.cn>
+Message-ID: <20261104221102824qAKUWNkiSgZ1yRnQM8hI9@zte.com.cn>
 In-Reply-To: <20261104220832716LXKf7OaS9dt1VJ8Q959AG@zte.com.cn>
 References: 20261104220832716LXKf7OaS9dt1VJ8Q959AG@zte.com.cn
-Date: Wed, 4 Nov 2026 22:09:39 +0800 (CST)
+Date: Wed, 4 Nov 2026 22:11:02 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -62,79 +62,64 @@ Mime-Version: 1.0
 From: <shao.mingyin@zte.com.cn>
 To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
 Cc: <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIDEvM10gYXRhOiBsaWJhdGEtc2NzaTogZml4IHRoZSBtdWx0aV9jb3VudCBjaGVjayBmb3IgMzItYnl0ZSBwYXNzdGhydQ==?=
+Subject: =?UTF-8?B?W1BBVENIIDIvM10gYXRhOiBsaWJhdGEtc2NzaTogcmVqZWN0IHVuc3VwcG9ydGVkIEFUQS0zMiBzZXJ2aWNlIGFjdGlvbnM=?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6A4E9aCA075538
+X-MAIL:mse-fl1.zte.com.cn 6A4EAx4n033482
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Wed, 04 Nov 2026 22:09:58 +0800
+X-SOURCE-IP: 10.5.228.132 unknown Wed, 04 Nov 2026 22:11:09 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AEB3CB5.00B/4jKS4j6qJGz4yjjY
+X-Fangmail-MID-QID: 6AEB3CFD.000/4jKS650Q6Qz8Xrrd
 
 From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-ata_scsi_pass_thru() translates 12, 16 and 32-byte ATA pass-through CDBs.
-For a 32-byte CDB (VARIABLE_LENGTH_CMD with the ATA_32 service action) the
-ATA command descriptor starts at byte offset 9, so the function adds
-cdb_offset when reading the protocol (cdb[1 + cdb_offset]) and T_LENGTH
-(cdb[2 + cdb_offset]) fields.
+ata_scsi_var_len_cdb_xlat() handles a variable length CDB only when its
+service action is ATA_32 (ATA PASS-THROUGH (32)).  For any other service
+action it returns 1, which tells ata_scsi_translate() that the command
+has been handled and that scmd->result and the sense buffer were set by
+the translation function.
 
-The PIO multi-sector sanity check and the multi_count computation,
-however, still read cdb[1] without adding cdb_offset:
+No sense data is set in that path, so ata_scsi_translate() frees the qc
+and calls scsi_done() with scmd->result still zero.  The command thus
+completes with SAM_STAT_GOOD even though no ATA command was issued and
+no data was transferred.  Before ATA PASS-THROUGH (32) support was added,
+such CDBs were not claimed by ata_get_xlat_func() and were rejected by
+ata_scsi_simulate() with ILLEGAL REQUEST/INVALID COMMAND OPERATION CODE.
 
-	if ((cdb[1] & 0xe0) && !is_multi_taskfile(tf))
-	...
-	unsigned int multi_count = 1 << (cdb[1] >> 5);
-
-For a 32-byte CDB, cdb[1] is the variable length CDB control byte and
-its bits 7:5 do not carry MULTIPLE_COUNT.  As a result, the sanity check
-that rejects a multi-sector count on a non-multi taskfile is silently
-skipped, and multi_count is always computed as 1 << 0 = 1, so the
-comparison against dev->multi_count either emits a spurious
-"invalid multi_count 1 ignored" warning for devices configured with a
-different multi-sector size or misses a real mismatch.
-
-Read the count field from cdb[1 + cdb_offset], matching the rest of the
-function, and report the field pointer relative to the same byte so that
-a rejected multi-sector count points at the MULTIPLE_COUNT field instead
-of byte 1.  For 12 and 16-byte CDBs cdb_offset is zero, so their
-behavior is unchanged.
+Fail unsupported service actions with ILLEGAL REQUEST/INVALID FIELD IN
+CDB and point the field pointer at the SERVICE ACTION field.
 
 Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
 Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 ---
 Tested on 7.3.0-next-20261030 (QEMU/TCG guest) with an ATA disk
-(ata_piix / QEMU IDE) at /dev/sda.  A 32-byte ATA PASS-THROUGH(32)
-CDB for a non-multi command (READ SECTORS) with the multi-sector
-count field set (cdb[10] bits 7:5) is sent via SG_IO; a control CDB
-with the count field clear is accepted on both kernels.
+(ata_piix, /dev/sda); no special hardware is needed.
+
+A 32-byte VARIABLE_LENGTH_CMD CDB with service action 0x1234 (not
+ATA_32) and a 512-byte data-in buffer is sent with SG_IO.  A valid
+ATA PASS-THROUGH(32) READ SECTORS CDB is the control and is accepted
+on both kernels.
 
   unpatched                            patched
-  command accepted,                    rejected with
-  read completes (status GOOD)         CHECK CONDITION,
-                                       ILLEGAL_REQUEST,
-                                       INVALID FIELD IN CDB (0x5/0x24)
-
+  status 0x00 (SAM_STAT_GOOD)          status 0x02 (CHECK CONDITION)
+                                       sk 0x05, asc 0x24
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a61fb0331279..927e75b7498d 100644
+index a61fb0331279..d29b54688b53 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -3574,13 +3574,13 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	}
+@@ -5027,7 +5027,13 @@ static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
+ 	if (sa == ATA_32)
+ 		return ata_scsi_pass_thru(qc);
  
- 	/* sanity check for pio multi commands */
--	if ((cdb[1] & 0xe0) && !is_multi_taskfile(tf)) {
-+	if ((cdb[1 + cdb_offset] & 0xe0) && !is_multi_taskfile(tf)) {
--		fp = 1;
-+		fp = 1 + cdb_offset;
- 		goto invalid_fld;
- 	}
- 
- 	if (is_multi_taskfile(tf)) {
--		unsigned int multi_count = 1 << (cdb[1] >> 5);
-+		unsigned int multi_count = 1 << (cdb[1 + cdb_offset] >> 5);
- 
- 		if (!dev->multi_count) {
- 			ata_scsi_set_sense(dev, scmd, ABORTED_COMMAND,
+-	/* unsupported service action */
++	/*
++	 * Unsupported service action.  Set the sense data explicitly, as
++	 * returning 1 without it makes ata_scsi_translate() complete the
++	 * command with the SCSI result still zero, that is, with
++	 * SAM_STAT_GOOD.
++	 */
++	ata_scsi_set_invalid_field(qc->dev, scmd, 8, 0xff);
+ 	return 1;
+ }
