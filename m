@@ -1,23 +1,23 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793798093;
-	b=kQ5jSl8iuHHK+hSINPRsrGK99acnDxoxNdjvY9Pw1l9FRJi9ape2jnHhB1URY0EhQw9c
-	 KXLL60JlRsUpy06aFQ49BLKoblfzFOfwF5Qy69tKl1XGy4EUZr3JvsbOdG+7AgSoFav/1
-	 74MJ4Jp1Za+1hp/wFp9FYvPuo/bN/4Zeaha9q9UuDX52e6FgeiaCQfVis+3VEgP7spjas
-	 4O1wIlX693MKYBYHPQRD5/7yRebhIQrs89o9PqGgYCRqFWis9eAxilpJZdZPPbEMyS+yP
-	 BM+NjkUMKXrcDvTeHwMf0zuwsQwHdhDmQ9AzP7AVOqwGMA42olRcTsieIH34LGYC9yw==
+	t=1793798094;
+	b=DFLzNMMm1UNuiRCsVbr3R4h5Uvoj6RQiTmmgSRPxUUMuuGj9C/S1wCzqc1tzBOo3WO+U
+	 33kEPQRscrvRlhyJIqdnhIEOxIK/OFJ3DSIEwKjQMsLDLUf8GQlRaFBjgzXRWu3Xw5Hbk
+	 to2AOZrcwjWtADirIzJM+fBPFF9pbuB5S9ODw1s4J2g/C5xx0esYB+TjdbCsArk0CL0Aw
+	 Xv8YIbU7WXdU+tbvxebpd/svrA6q2vUSiQUdlMOKWRCB5Zk4cLlQ9ZAj1gdXJNZ7JllfU
+	 DOMF3YWoov3y2C1kWFxjDkbsoOMYYiZ+rhwXkED47EjE79u0liivanX0TtAp/GMbk/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793798093;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793798094;
 	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
 	 Message-ID:In-Reply-To:References:Date:Mime-Version:From:To:Cc:
 	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
 	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=uHecZIIQqP97hAU47h2EfArgPNJ7XX7U72jD992xnME=;
-	b=t02DQQy63kv+X3C2Tzo2sA+JhCFgFxIYj7Gq7Y1d5HSrzxaMz5qs3wkIvsbJbo8u32Qz
-	 lWernHai2G7uJMFsoYVyN8/bo3tkqBKt42NTkbV+e+pyZwOQPnpRU1o7S8VjyzfUw5FAD
-	 SauiQtlPgjtogSgwHTV2Rokc4+RtslR+tHhLfzOm9dkGTpL9ZwVyy0Z9TQ2OmejwZgG0l
-	 JEM3RbFX9jiiqqHoPTu1P4LqwrWBb3JaSolUWar/h7Bfy9H4ATy5NZiVSg7HuNk5SHkji
-	 ZRMR6IUi5QUkBUfeI+b7m+wCVOIhT4IKF4q6+SiI8hKmm4V0o56VshJA5wi1N+cUcog==
+	bh=VowS9xVzMEQrXVDmWDkONvYBWHoxc8NpMkl4qXPAec8=;
+	b=COoVlC9umhmoB8cZ7bu4zardjaxSljmNK+OHheBii5LJN2zLZu1JKb9jhh8Se4nc3Ngr
+	 JqxUbN3p4w/dCFJmjUI23AmMyC/i7esdv7rfCd6Ri/OPBL4IE1bR4i8YrWtQ7SVAzHwHk
+	 eedRo3fBpKa7tJolyKYC27mNBOkChNjABD+z9RMauP0iT+n1cKH3dyAva13Ue9P/LkJGy
+	 nRnulhwnCUFf9Ee42B9mkZ/MDROW1k/48INZsVGzsFqwXYOMfiubh6D4WEbLCTOlntJh6
+	 Y4glXY9bXObRM95HtBc+SfoFLBRIUbApw0OzpCee+HG3W/VvY+Poje6HiJb8gNRtmhw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
@@ -26,30 +26,30 @@ Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EBF7606A32F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EB40606A32E;
 	Wed,  4 Nov 2026 13:14:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5EBF7606A32F
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5EB40606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jKQrv5htBz57HS6;
-	Wed, 04 Nov 2026 21:14:39 +0800 (CST)
-Received: from xaxapp02.zte.com.cn ([10.88.97.241])
-	by mse-fl2.zte.com.cn with SMTP id 6A4DEbdV038305;
-	Wed, 4 Nov 2026 21:14:37 +0800 (+08)
+	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jKQrt6VbFz57HS0;
+	Wed, 04 Nov 2026 21:14:38 +0800 (CST)
+Received: from xaxapp05.zte.com.cn ([10.99.98.109])
+	by mse-fl2.zte.com.cn with SMTP id 6A4DEa9L038303;
+	Wed, 4 Nov 2026 21:14:36 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp02[null])
+Received: from mapi (xaxapp05[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Wed, 4 Nov 2026 21:14:39 +0800 (CST)
-X-Zmail-TransId: 2afa6aeb2fbf463-f738a
+	Wed, 4 Nov 2026 21:14:38 +0800 (CST)
+X-Zmail-TransId: 2afc6aeb2fbe83a-eb76d
 X-Mailer: Zmail v1.0
-Message-ID: <20261104211439250EftPg5v8hldkC4dnKtOxA@zte.com.cn>
+Message-ID: <20261104211438037bcIKTaLPaIlyGxIkLtstZ@zte.com.cn>
 In-Reply-To: <20261104211432688UOs4v84BESagMmLFH30Er@zte.com.cn>
 References: 20261104211432688UOs4v84BESagMmLFH30Er@zte.com.cn
-Date: Wed, 4 Nov 2026 21:14:39 +0800 (CST)
+Date: Wed, 4 Nov 2026 21:14:38 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -63,37 +63,36 @@ From: <shao.mingyin@zte.com.cn>
 To: <dlemoal@kernel.org>, <cassel@kernel.org>, <hansg@kernel.org>,
         <linux-ide@vger.kernel.org>
 Cc: <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIDIvM10gYXRhOiBsaWJhaGNpX3BsYXRmb3JtOiBkcm9wIHRoZSBkZWFkIGVycm9yIGNoZWNr?=
+Subject: =?UTF-8?B?W1BBVENIIDEvM10gYXRhOiBsaWJhdGEtdHJhbnNwb3J0OiBkcm9wIHRoZSBkZWFkIEdTQ1IgbmV3bGluZSBjaGVjaw==?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6A4DEbdV038305
+X-MAIL:mse-fl2.zte.com.cn 6A4DEa9L038303
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Wed, 04 Nov 2026 21:14:39 +0800
+X-SOURCE-IP: 10.5.228.133 unknown Wed, 04 Nov 2026 21:14:38 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AEB2FBF.002/4jKQrv5htBz57HS6
+X-Fangmail-MID-QID: 6AEB2FBE.000/4jKQrt6VbFz57HS0
 
 From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-IS_ERR(hpriv->ahci_regulator) is true here, so PTR_ERR() is negative
-and "rc != 0" is always true.  Jump to the error path directly.
+SATA_PMP_GSCR_DWORDS is 128, so "SATA_PMP_GSCR_DWORDS & 3" is always
+zero and the branch is dead.  The loop already terminates every fourth
+dword with a newline.
 
 No functional change.
 
 Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 ---
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index ae342080556a..819fbf200dc0 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -557,8 +557,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 	hpriv->ahci_regulator = devm_regulator_get(dev, "ahci");
- 	if (IS_ERR(hpriv->ahci_regulator)) {
- 		rc = PTR_ERR(hpriv->ahci_regulator);
--		if (rc != 0)
--			goto err_out;
-+		goto err_out;
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index 95862dc34419..bebccda4d710 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -447,8 +447,6 @@ show_ata_dev_gscr(struct device *dev,
+ 				    ata_dev->gscr[i],
+ 				    ((i+1) & 3) ? ' ' : '\n');
  	}
- 
- 	hpriv->phy_regulator = devm_regulator_get(dev, "phy");
+-	if (SATA_PMP_GSCR_DWORDS & 3)
+-		buf[written-1] = '\n';
+ 	return written;
+ }
