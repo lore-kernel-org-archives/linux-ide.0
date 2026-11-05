@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793848590;
-	b=KpW4zjuk78X2/Se1wTYXI1GEHRcM0eFANyr1qdbTBdi+Dw3AE4CHcIDuCbeuN9I+ZY1V
-	 FoiJJR7++TfRYDrBg5Ffe6B6cuH2wUBKg3wNm/jWa8TulRx1s2/f8FmLCZcswoYDH2Lxg
-	 hr7VMfrBWFE+0goMRi5Bx/nmR/TfSP6f7Gtmt9QNHAX3t4BRE+RfFfQ07QOPgptRuErpj
-	 ZCk6B+hRGnQ1e6zY6d2Oh7FN5zCSSil6nwBfvjo6XQP7f2rxxr/viIfuHLqShNx1GHKce
-	 RLDzY/b8HQgbIygRiwkGq+eDeLhPWq76UpV6P5/CJo4pGfizbczSQj3Hh77l7+ImkeQ==
+	t=1793848689;
+	b=PBzdGY7TWQTOpS9HKHq5/aNTJ20tCfs8MbjdonZlNegLi+dCHAp062xb/hBDboomWXck
+	 uKhOZfw+Q9b9OQk313Dzd2uZu6brks9CZSRq/U5Jj6iaasy9MSlUxre1brCPE0hZV5IED
+	 1KPXI9BMuEpTyeG94ZBqvGCpWUMkS9VMZsZyDXLg7MRtxxroNh4Y5eWcmDGBOI4qCapN4
+	 284AHus61XTy+O/Azl/tficb+lnthSTvwu+Wg4qF11pAoO8XtWV0jYcq4Ahoy2YfgELYA
+	 9o/rhPszJWRRlc79VqeHE+ks7uXESAMvLHgBO2C4aP2QZwdkBcAnIIUAEjtGkXf3J1g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793848590;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793848689;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:Organization:
 	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=UyHtLL1HLltieDeV4rWCRiPVTte4r/yeIEGF8Rty6pI=;
-	b=MjgqOh2UFXo+npaaGgKgzb3ujbTBHw1m3Ady3KzpBsEfDpUrJvzmMloXg7LnhL+m7mrs
-	 EOgxKeo3XWrB1mD7FgX2w/L9s8+UMrc08YQtBu1Dof6uuprQOKhzyh5+ypy/ovW1BFhjn
-	 ErUKnpmGPotbGVJKfdmn3Dqj30gF5kwI0Q28+/gDD/qpFDA4YUKJXSQj5xfCr+u0FaJ98
-	 weM1U84c/sEK+4eOTnIpQlji1NcleSPAGaNTtycIdQ1Tm/Q2n5wUnqha33zENYnJNqj3g
-	 BtII67VAYI1MUwv/C1Ey8hhxSKH4mE7u62VxRcKtfzZPrq+pkbwaym5CmOmTZc5BjjQ==
+	bh=dqt22jZQdl3uFkX9KbcuN7mROihP6n3vK69td7OPSoY=;
+	b=cfbbHFi4tUC2gLfPY9qARvuflswHcbKgNfNlzzuiB+xRHdBF7IJt+rwRLnkOaWLcAwQv
+	 ovwuuTdLBopDgQ0oP+Ohj99DSrmDiss7K92AkOykfeZ/gEGSzCUGBhTekJCKAiTJ2FwgY
+	 75xtZzu174WdpXjVKsFY+RqPeMRMnfpXDHLEALRxaqlHMEeDb6YpzrvLvS21a5znILCpP
+	 XNdyw4/HFa07Sct3dwwq4quyW4v6eeFXXxVM5vNwfMHm0wkQtvVhLryCkuPEDaN/G30GD
+	 anF/EMkSt1m7SM+CBiqEPe63qOqbo2G+3vI8nKvv2Ob36Ne+XJ+vGqdB1RXD2fzxt7A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="FZVzI2o/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="kcgaA/OL";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35C7A606A329;
-	Thu,  5 Nov 2026 03:16:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FC89606A31B;
+	Thu,  5 Nov 2026 03:18:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FZVzI2o/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BB971F000C1;
-	Thu,  5 Nov 2026 03:16:29 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kcgaA/OL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40D3F1F000C1;
+	Thu,  5 Nov 2026 03:18:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793848589;
-	bh=UyHtLL1HLltieDeV4rWCRiPVTte4r/yeIEGF8Rty6pI=;
+	s=k20260515; t=1793848688;
+	bh=dqt22jZQdl3uFkX9KbcuN7mROihP6n3vK69td7OPSoY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=FZVzI2o/1Va5PAWd/b2x94WPq1ogJQILLVxvz36+KYSj4J9jIRkF2SD52Q6vIr+2/
-	 G0zaJAx7HHWIfFV2bV23xFfOULPUwO4QTdcbnmPQIMgGiZznHvWas1JVu0HcOdrJri
-	 ijdf6k3jAoZquwUaZS0JOjABGGzG5ObemJnx5IMGrC+wQSVS3YM7eGHQNANMV88VD1
-	 mRx8Tp+ZkffzGzDgRhiOcfPmz2F30VVdF1nL36J+IuGh6/IGslezZg+akbth5VDQA2
-	 0oWcrRKPURxpMaOF+G9ee2cGhpZx8Ls0b03+I2FmD6LH3u2Q5IWE6b1RC2KU/KCKBH
-	 5LD5Yc3DHWMOw==
-Message-ID: <5cbd975c-0f2c-4c52-8c88-2bd64874ab86@kernel.org>
-Date: Thu, 5 Nov 2026 12:16:27 +0900
+	b=kcgaA/OLIKBPI/kAe7gL9uydPd1KXuB2k4qc6rmmZ7bdansH7ggrViDTvqpH3C1GT
+	 Au3AVmdhzG8z3IPN5/gznzwOGrNIpbowdz6TTc3RfDFD2jj+Fg4zZCeIFLsI2pkW/Q
+	 wAPQGsYaLLMmIP1m/lipqIIsYlx+BGzDJakXoX+tJoZToUIfg5f8QKSafKHeQn2ZhU
+	 66aVJwlJ+5xsFOxAK3fMJKAE350naQ6eXMTfa6mAAmAW92lZ93Jz0KTsm2ABgcwiXV
+	 oH6cxEELsctm+y+eo6ll/m3L6vNwMYakE0BpvYvuXRyfPXwpJv9Msxy/Pi50hWizND
+	 h+rXweZq7cpbQ==
+Message-ID: <2fab8b9a-999f-4163-9827-0c09eb3ce815@kernel.org>
+Date: Thu, 5 Nov 2026 12:18:06 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -52,47 +52,36 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] ata: libata-scsi: fix the multi_count check for
- 32-byte passthru
+Subject: Re: [PATCH 2/3] ata: libata-scsi: reject unsupported ATA-32 service
+ actions
 To: shao.mingyin@zte.com.cn, cassel@kernel.org, linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-References: <20261104220939917jqg8_alGN5sACGWq5M9D-@zte.com.cn>
+References: <20261104221102824qAKUWNkiSgZ1yRnQM8hI9@zte.com.cn>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20261104220939917jqg8_alGN5sACGWq5M9D-@zte.com.cn>
+In-Reply-To: <20261104221102824qAKUWNkiSgZ1yRnQM8hI9@zte.com.cn>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 11/4/26 23:09, shao.mingyin@zte.com.cn wrote:
+On 11/4/26 23:11, shao.mingyin@zte.com.cn wrote:
 > From: Shao Mingyin <shao.mingyin@zte.com.cn>
 > 
-> ata_scsi_pass_thru() translates 12, 16 and 32-byte ATA pass-through CDBs.
-> For a 32-byte CDB (VARIABLE_LENGTH_CMD with the ATA_32 service action) the
-> ATA command descriptor starts at byte offset 9, so the function adds
-> cdb_offset when reading the protocol (cdb[1 + cdb_offset]) and T_LENGTH
-> (cdb[2 + cdb_offset]) fields.
+> ata_scsi_var_len_cdb_xlat() handles a variable length CDB only when its
+> service action is ATA_32 (ATA PASS-THROUGH (32)).  For any other service
+> action it returns 1, which tells ata_scsi_translate() that the command
+> has been handled and that scmd->result and the sense buffer were set by
+> the translation function.
 > 
-> The PIO multi-sector sanity check and the multi_count computation,
-> however, still read cdb[1] without adding cdb_offset:
+> No sense data is set in that path, so ata_scsi_translate() frees the qc
+> and calls scsi_done() with scmd->result still zero.  The command thus
+> completes with SAM_STAT_GOOD even though no ATA command was issued and
+> no data was transferred.  Before ATA PASS-THROUGH (32) support was added,
+> such CDBs were not claimed by ata_get_xlat_func() and were rejected by
+> ata_scsi_simulate() with ILLEGAL REQUEST/INVALID COMMAND OPERATION CODE.
 > 
-> 	if ((cdb[1] & 0xe0) && !is_multi_taskfile(tf))
-> 	...
-> 	unsigned int multi_count = 1 << (cdb[1] >> 5);
-> 
-> For a 32-byte CDB, cdb[1] is the variable length CDB control byte and
-> its bits 7:5 do not carry MULTIPLE_COUNT.  As a result, the sanity check
-> that rejects a multi-sector count on a non-multi taskfile is silently
-> skipped, and multi_count is always computed as 1 << 0 = 1, so the
-> comparison against dev->multi_count either emits a spurious
-> "invalid multi_count 1 ignored" warning for devices configured with a
-> different multi-sector size or misses a real mismatch.
-> 
-> Read the count field from cdb[1 + cdb_offset], matching the rest of the
-> function, and report the field pointer relative to the same byte so that
-> a rejected multi-sector count points at the MULTIPLE_COUNT field instead
-> of byte 1.  For 12 and 16-byte CDBs cdb_offset is zero, so their
-> behavior is unchanged.
+> Fail unsupported service actions with ILLEGAL REQUEST/INVALID FIELD IN
+> CDB and point the field pointer at the SERVICE ACTION field.
 > 
 > Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
 > Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
