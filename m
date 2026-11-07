@@ -1,64 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794055558;
-	b=wSQFXdNicIfnlk0lfsCV8mATr9t/XZj8OOpJ2KMjEbAdGMPxJtxCr19C/24OstAGaUHy
-	 ouDjIS08aF8Xst3zLEIweBr0fRoMtI+54LIOyECU8oO6kVtngovDq+HqU0vCoYKJ5hjbu
-	 2Bd5bday7IvJiEfjOR+oNROMq/WL763A8tPMBLpxBMcirqDw51/fQYZjJaVMDHuBMSO+O
-	 Jy6b4OnQaeZQVMcb+63zh+TFp22VlG0QKpXNXREJgEB8DObACDQkuIv0uiiYYX9BGahl2
-	 4OI4gpOK9USBtHtpHe0ZNICoBBw2PKIQHfNvNikVIpV9Z6Z+aq4+LzF24GGUmE8/K/A==
+	t=1794055988;
+	b=Ibm32ye2W2jX6yyoRzkh3+UKHkJbVSLuyfEwmfqPW9jBRSA6HGXgcUUP1GNvbREJ6YXT
+	 vf0VhUJATdm6axl8w4BO0LHZvIJI/z7+0dcL/R62nHWS6haI1id7iDtJkxmtOWVW4NXkm
+	 1A0CU/M32tQn3pIiJHScDCt3ysI5I4nQwZEkQ2u7X30CFvFBJ558XCF3cJCYeeWRFJ6bz
+	 2cwN97bSxPXom4audd5Lq17xSgXH4LW864Oxti7shw3b7siT6zepV9LK1368dTQJ8rbMN
+	 appHHy7I8bpPkbHUz9ZktBZZjqFugJVtPS4KUWVRodRwqq2s+eSF2Lqo2Qa9P0yzsvA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794055558;
-	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
-	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Mailer;
-	bh=CiL1HQxfgsOcvm9vKFk1DVPeae6fGl4/cDDijU+Teks=;
-	b=2jA0/+N9VcMpWKlf+JTdbd5YPeyySyH3Y80NUQ6nbOH44TXEQN67av36lbkrqzwJMYfO
-	 UbUx9in8lusRPOpCAQx9ioqJo5ZUeIEBX8rVTRMNg3yjPzrQE/t/1zvknyggpnJL07Lp4
-	 ItAQ3nkLxWJwN6IlLLNLuC8s9Dr6GEU/YHu3ncKlC6/DRyFsbzQ0T4t2LI8pWlF+dqjNb
-	 Oajtjg8ZHSU3o2WDGij8RFFZBgBPWp8HZKBQZdgs3h90KwkfTukTIbS1fTmSVlVp/4eeX
-	 vYGOU0cfKlS7ZRz87va6ScjPc97BdaNRiaVSrMAEH2GlQEC22IjAyckreRsiol1qgJg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794055988;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=MUfEtLiUW9DhGw36OlKm3YAzs0/n7nApDJKkTMlhLPs=;
+	b=igP9pGkR/3tlZ6w/XrripsJk2Q0zrkB6EWmYo1STV0F2JvRocduKxpBHZN2fueC2cuLG
+	 EP5wHqwCwDvMYs95jVYVSqTBgTUy12w86xPdNsw4VMOWP/pM8VfAoHp2sHUNYcRyBL2hq
+	 ceZ5KpYiSjJX6PDyA4GIqAqobdQAlhM1SVQMZYAMdrxhLof9/hk5PWjw2AGLHHUEu+DNt
+	 6XNCOoYAPQ6kzVkpwF6Ho9DTEE3rg9E6JagO7eWmP7OqjwlrFCimkLc6giyOZS6ErPP7L
+	 uOxQsF9n/6fmy/umoeA5huNTIwgIPgR8aXR41ObJ5G2lToauqfGKXAO073SKHfpEx5w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=asZGQ3aT;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="WcF5xZQ/";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B1E606A326;
-	Sat,  7 Nov 2026 12:45:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29999606A32E;
+	Sat,  7 Nov 2026 12:53:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=asZGQ3aT
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E9201F0089F;
-	Sat,  7 Nov 2026 12:45:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WcF5xZQ/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DDDE1F008A1;
+	Sat,  7 Nov 2026 12:53:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794055557;
-	bh=CiL1HQxfgsOcvm9vKFk1DVPeae6fGl4/cDDijU+Teks=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=asZGQ3aTW9/wx50mVmL+G2Ag83l/u/ystE8ygXlcryWvsuZcC5vngRH9EwK7E6gWq
-	 7u5dCW5hg+lyGKdAkG/Vx+ZZOJCG3IB8oUXTChL8zXvM9zQOE4CTyxvES7CS6qNNZ/
-	 oxiYbI1Nn3ZxDOhRqe0FbX3oJir7kmjAPTpFV3SlufjiKH0yvxCYnfBvfePpyPbeil
-	 iT6Q2T3Lu/39C+0VJBYOWcnkNzynnLjVaXzQ3f5tv8eH3qlJ2FYGjbHLoYX2q1N3Hk
-	 NE/Fkka48M/NpXxRVeiZBQxlSuEsgYs/HDqfbQMO17wKvLpHGtuPT9VLQSMW847JgJ
-	 kTefC58ivt7lg==
+	s=k20260515; t=1794055987;
+	bh=MUfEtLiUW9DhGw36OlKm3YAzs0/n7nApDJKkTMlhLPs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WcF5xZQ/dsy7NTFNufK6dq4ME5wjKHZpO3v1PczfMqD2eBOKu8Yq9Wx21FbjD95/X
+	 Ur8ndzbxRS9sRSSgp96Q5Qgue+bTPHCebDkAg9BSV8es68utBOWJdkApLP32tIRX91
+	 2DDFWC3WJzEyxpzxlIEGa/2aexspShXDyqDI5UyKvUcaJ3eks2Gd2B9xUnHK6ceSkx
+	 mc1wXQ939o3WHhFp50FGgJ6E1Z/MxwjOGSLuTWIcciFcc/LlnzdvtbBHvuzjMYNBxc
+	 i+QKtYl+O6R5n/Fn1tbwmeTVU+PcWUTgwuLyAcp/wAIFu18RM0YSdGOryF9Jb1y98g
+	 zANbq2SHTZw8A==
+Date: Sat, 7 Nov 2026 13:53:03 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: linux-kernel@vger.kernel.org, 
- Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Ray Jui <rjui@broadcom.com>, 
- Scott Branden <sbranden@broadcom.com>, 
- Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
- Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, Tejun Heo <tj@kernel.org>, 
- Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>, 
- linux-ide@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org
-In-Reply-To: <20261029212513.4126083-1-florian.fainelli@broadcom.com>
-References: <20261029212513.4126083-1-florian.fainelli@broadcom.com>
-Subject: Re: (subset) [PATCH v4 0/6] Fix SATA support for NSP SoCs
-Message-Id: <179405555432.938034.8271032337892944854.b4-ty@kernel.org>
-Date: Sat, 07 Nov 2026 13:45:54 +0100
+To: Marco Ziliani <rylos78@gmail.com>
+Cc: Kyrylo Biryuk <illofspeed@gmail.com>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] ata: libata-pmp: disable the SEMB port on Marvell
+ 88SM9705
+Message-ID: <au8fL13gKEtKwlQY@ryzen>
+References: <20261107081335.3360920-1-illofspeed@gmail.com>
+ <20261107105333.19934-1-rylos78@gmail.com>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -68,31 +59,36 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261107105333.19934-1-rylos78@gmail.com>
 
-On Thu, 29 Oct 2026 14:25:07 -0700, Florian Fainelli wrote:
-> This patch series fixes SATA on the Northstar Plus (BCM58xxx/8831x)
-> which was broken due to a number of things:
+On Sat, Nov 07, 2026 at 11:53:33AM +0100, Marco Ziliani wrote:
+> Hi Kyrylo,
 > 
-> - the SATA PHY assumed separate PCB windows when a shared one is used
->   for this generation of SoCs
-> - the clock/reset (IDM) was not being configured by the driver which
->   meant that depending upon what the boot loader did, or did not, we
->   could have had the AHCI controller still in reset by then
-> - on some reference boards, the AHCI controller is not DMA coherent,
->   assuming so leads to all sorts of timeouts, data corruption, etc.
+> On Sat, Nov 07, 2026 at 09:13:35AM +0100, Kyrylo Biryuk wrote:
+> >                                     softreset  reset failed,  last disk
+> >                                     failed     giving up      attached
+> >   7.4-rc1, no libata.force          60         12             197 s
+> >   7.4-rc1, libata.force=N.05:norst   0          0              70 s
+> >   7.4-rc1 + this patch, no force     0          0              11 s
 > 
-> [...]
+> Thanks a lot for testing, and on a second unit with a different setup.
+> 
+> The norst row shows that the commit message is too strong where it
+> says libata.force cannot work around the problem: norst on port 5
+> removes the retry loop, but the last disk still comes up about a
+> minute later than with the patch. Niklas, Damien, I can send a v2
+> that says so, or you can reword that sentence when applying, as you
+> prefer.
 
-Applied to libata/linux.git (for-7.5), thanks!
+Please send a v2.
 
-[2/6] dt-bindings: ata: sata-brcm: Describe the NSP IDM registers
-      https://git.kernel.org/libata/linux/c/262e3bbc
-[3/6] ata: ahci_brcm: Initialize the NSP interface clock and reset
-      https://git.kernel.org/libata/linux/c/14d30246
+You can pick up the Tested by tag.
+
+Please also remove any references to Debian, we usually don't reference
+downstream distros unless there is a very strong reason to do so.
+
 
 Kind regards,
 Niklas
-
