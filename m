@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794054369;
-	b=FA0K83ZC/ayaVpL5+qkTfcRs6lh6SBIniwMYPC0ew2LZnNRFKut/q3M4aUuOWygVZZq9
-	 geDxfAuU61rKvUxYPY1B+YdKoxudpe7ysuD+2H0Y8xoE0QtSM3jFIRikR1y/TMPu5k29t
-	 ZvHBQ9hy+XLsHEyKdxcw4hsdOLGXV605wcvp4bcZWs+pewOQoNjZmFrZ2x9AwPb5+p0ZB
-	 rFm/fPiAdHOJ5UHLqUwSBLz58zW7Vi0hOCqtqk7sp3CXRrat1/4BmI+gGHO8tJ2Fv0PDM
-	 LoTiPLDEeJ9aJCeSI5JEMUu5ZR5BAKwBr+8ctaOzzSnMK5IuKsoIQYDDr4aeR61F4LA==
+	t=1794054438;
+	b=mrdCvzQBfWp79hlSgOu8eL8kurSkZ2a7hxnrZAojUHrHwcLvELN7xZ6WIk/XSWHlg3wl
+	 N/8uBmfcHM7f51cTmU/GNe8Je3fpI6m1nqCR0bsdLzLtSA9qli46hVtu6hh3+xXdz5PGk
+	 XIAjBFXzFihHyZ0IyyVZRATtUfgMRrLXynfL0oC/dy3uBfRciqDrX0Ss8SDw2/1+3E8GZ
+	 SYZv9jBYWAXNP1pV9pwyYWv2siMP7JTIjZpJxmerCXhMzweBXJZ4CEaR1WN45Bn4JIvDS
+	 4VMy76nrkWWFV3UsXSj3SbMbwtXbpwbJI3XsbSq9ts769Z6nBKZ5bTWhDIrYo5bJmrw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794054369;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794054438;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=BJRSGcvQMFPpFwAghe7ImMxKahRAtB4NPS9oeeeM5qE=;
-	b=v31ssrXdbDenzpMtDVk/SKbzV+AUjlKuMj97jfWiL2ZD7ESRbpsNwauV2AlmicBhmpIV
-	 LB5D6pBwWt4XthmSgjpJmqLvrOJUpfgxmGE4AdRIF1pk2xIK5hWhM9+pUwenOIEI+deFv
-	 zuTunKEoa9RD/RJM2tvYnkd1amJNtKiUftRSr9tW6WeYqcXm893hAJHw4/+D+bKhkR70i
-	 vZfh7Bykq6qaHInLKbxTd4Bwhqt/tGcWKZYPSSlXvKp98GaUJrUuiYdfRgNq0qXFzyD5X
-	 3shLV09qokHozRhDO411ghTCGuSW/T3tJsWa+9uh8oAmmYRerA+JdQFNHPLTX/0NgPQ==
+	bh=QQCTKdcd1ecR5j1kfgc1gthhf7pvFfj5JD9U1a0aRxI=;
+	b=oVg8K64hhTWMhxEvkRVXUvdLSO33COKGJaubC/Z/meGaLFaw6qFWFauEd3IR3bLRtw/s
+	 L4bA5l5UUfKfZQb4bU9dWyrOjF52MK/duYYXVG3SIOwnW3NJc4dxN8hF8fT31LohfSa1/
+	 ABY0UUPe1maxv0dLShBMEIT1gG2/kMD/7O2SQu9WXYxuarlj8g6aRo3o/J0/fUYDO2/n7
+	 Jxw7NOQSOtn6UJ3KyPJP7L8q+mvcT+5Oyibjrjh6A0d3fNqEy8m8C4DGGMn/fU5+8fbl0
+	 LttSpnCevbpv3vDUVI37gtv+nCGSfxLXBa+vINc6/f52I1cEexd576B8ez9YjiSAc0w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TN5kuaPx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mpIpFrMV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00034606A326
-	for <linux-ide@vger.kernel.org>; Sat,  7 Nov 2026 12:26:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA836606A32C
+	for <linux-ide@vger.kernel.org>; Sat,  7 Nov 2026 12:27:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TN5kuaPx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C2B81F0089F;
-	Sat,  7 Nov 2026 12:26:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mpIpFrMV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3952A1F0089F;
+	Sat,  7 Nov 2026 12:27:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794054368;
-	bh=BJRSGcvQMFPpFwAghe7ImMxKahRAtB4NPS9oeeeM5qE=;
+	s=k20260515; t=1794054437;
+	bh=QQCTKdcd1ecR5j1kfgc1gthhf7pvFfj5JD9U1a0aRxI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=TN5kuaPxxS0StgzzUGs1mTN3Ta93FVxYP9HLxJ3TSS2zcYvK1sME6GFNuWH1wNHwt
-	 2mzloQvDUZsFSH6UkotCtMZs1mTrqdLUJyJoAHklLOIVMP7ymnyjidhjhCNG7z7ZEt
-	 Ok117+zlOrJIROBMVh7hrA+vtwetFVoYOfwFRH+YBcpgjgrYUeNZ9EMKWW6401g0nF
-	 hjytGO4QDrF2t2JwkKbfwEW0bvWlu5CuzSswUQl0jwbrviCjbVwpHUJ1aUg4iGHdAQ
-	 93H+9RcDOY36q9HDtOBqYY1zELfpMxa2f0MTboon8Y84Nhylicr2hWCpGR5cq1b0Zt
-	 Iva2UJ7E85CrQ==
+	b=mpIpFrMV40Y3RDmB8bPQ8rEBG2bwk2Gl+vNzYpAkh8pVQV440x5ENqdySueK7ZHAp
+	 N8gMvRRxQwG5dkgRMXbve9CV0AaV/r30yoFkymXtPgrS5hpUCNVhr8upwOlL1yh1QK
+	 Jv4CNKV8MVzpBabtILJVVDR6RizbldFVEL9izo7M2iIiGCx6YPCFy+EZtObbI8FLLr
+	 JAYHKRt4b9+fTM/dKa+gA/i6Z1sOXXde/f3CeDWT4jO/5D9x7dHzbG+j4Qr9Z3ypWD
+	 tK22Y5+o7N6aJ9qfEW2oYjrec5rXnp5YyEl+yb7SScYKFnRqUi0q3o6kOZz2UMCcLx
+	 Wy+Mery4Hcffg==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>
@@ -48,8 +48,8 @@ Cc: linux-ide@vger.kernel.org,
 	Shao Mingyin <shao.mingyin@zte.com.cn>,
 	Hannes Reinecke <hare@kernel.org>
 Subject: Re: (subset) [PATCH 0/8] ata: libata-scsi: MODE SELECT fixes and cleanups
-Date: Sat,  7 Nov 2026 13:25:34 +0100
-Message-ID: <179405421066.921267.17063227827127270512.b4-ty@kernel.org>
+Date: Sat,  7 Nov 2026 13:27:10 +0100
+Message-ID: <179405431037.928477.10767362848113156987.b4-ty@kernel.org>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261103205448.931471-10-cassel@kernel.org>
 References: <20261103205448.931471-10-cassel@kernel.org>
@@ -63,7 +63,7 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1447; i=cassel@kernel.org; h=from:subject:message-id; bh=2AN97UBWEYJrR4vUaBmWocXWeHrdkCdrd0OCFHlVa6k=; b=kA0DAAoWyWQxo5nGTXIByyZiAGrvGL+jpTu8Lyx34ZnKU8Be3fzveOelGBQl1TJK5FzuwHdsY 4h1BAAWCgAdFiEETfhEv3OLR5THIdw8yWQxo5nGTXIFAmrvGL8ACgkQyWQxo5nGTXIwIQD6A9z3 d7rlRyr+Q9D1WS84iJf/fWoECNBDWnmFN+50Mv4A/RNkcmsWW0P/wVIFDt8z2tMUBYkGLXCgQOW 5/46br94L
+X-Developer-Signature: v=1; a=openpgp-sha256; l=654; i=cassel@kernel.org; h=from:subject:message-id; bh=ftXhFsnP9AZvWyzEzDVCc+koVkq9zAYFQLLIoiRtNg0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLLeS8rNnyrKpu35xem/nr7qW+M2CYay7k33j0703ftKt mQqj3dXRykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACbC+5rhr5Doy1WqMYYB1y0C BFe3PHYV0fjLtXvh+e+rj3w35ou+v4WR4cfhR2HFJt0MHe9tqjsb/y1oTeBzdekItP9vXPe2sUS JEwA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
@@ -79,22 +79,10 @@ On Tue, 03 Nov 2026 21:54:49 +0100, Niklas Cassel wrote:
 > 
 > [...]
 
-Applied to libata/linux.git (for-7.4-fixes), thanks!
+Applied to libata/linux.git (for-7.5), thanks!
 
-[1/8] ata: libata-scsi: fix MODE SELECT handling of data after the mode page
-      https://git.kernel.org/libata/linux/c/6fde0444
-[2/8] ata: libata-scsi: do not accept subpage code FFh in MODE SELECT
-      https://git.kernel.org/libata/linux/c/b29c40dc
-[3/8] ata: libata-scsi: reject MODE SELECT mode pages with a wrong SPF bit
-      https://git.kernel.org/libata/linux/c/073cee4a
-[4/8] ata: libata-scsi: fix MODE SELECT field pointer for unsupported subpages
-      https://git.kernel.org/libata/linux/c/c25252c0
-[5/8] ata: libata-scsi: fix MODE SELECT field pointer for block descriptor length
-      https://git.kernel.org/libata/linux/c/d1fa37c6
-[6/8] ata: libata-scsi: pass the whole mode page to the MODE SELECT handlers
-      https://git.kernel.org/libata/linux/c/83339ee5
-[7/8] ata: libata-scsi: set the field pointer when rejecting CDL
-      https://git.kernel.org/libata/linux/c/54f42006
+[8/8] ata: libata-scsi: document the MODE SENSE mode page functions
+      https://git.kernel.org/libata/linux/c/8e23563b
 
 Kind regards,
 Niklas
