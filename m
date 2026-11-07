@@ -1,56 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794055082;
-	b=W7oxTpQv8Oyz3InvOyjm7PW2lg2wSCLY0oDSZOLsya6g9xdBuCkNgnahCg2sTBiQc/A7
-	 eVChKVUJO1fEQhlj5PpNsNe8dDZOltGS032FdLISdwD0fChwBoVpikpsW+CcTxOg/CiQn
-	 v8Fyrbx3mvhtCL7TOMOJ4ifxU94tQOSfw1oM6y+r9ug+5OtIHSlFMHPb3pKV8iu8MovH8
-	 P/5hpfklHjYoTKt4IXVvqaNEZVn/eOL9i2UVKJP0Q/+vHKKAv4XX3gfSg+uEPiC/ixnzy
-	 +1k6dPx8jsiVRu+mj5ah7KM8B0wPkoaiwbVXmnLomWuUPNytGz8tTTILJxOoH7VA9TQ==
+	t=1794055558;
+	b=wSQFXdNicIfnlk0lfsCV8mATr9t/XZj8OOpJ2KMjEbAdGMPxJtxCr19C/24OstAGaUHy
+	 ouDjIS08aF8Xst3zLEIweBr0fRoMtI+54LIOyECU8oO6kVtngovDq+HqU0vCoYKJ5hjbu
+	 2Bd5bday7IvJiEfjOR+oNROMq/WL763A8tPMBLpxBMcirqDw51/fQYZjJaVMDHuBMSO+O
+	 Jy6b4OnQaeZQVMcb+63zh+TFp22VlG0QKpXNXREJgEB8DObACDQkuIv0uiiYYX9BGahl2
+	 4OI4gpOK9USBtHtpHe0ZNICoBBw2PKIQHfNvNikVIpV9Z6Z+aq4+LzF24GGUmE8/K/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794055082;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=NvkwIN4EAH0B95Zf7QTnzHR3SOpoXYA3xI6kKuWgeIk=;
-	b=bDMR6R4dsBRBTAsXhCk+gwVycUYq5a5s7xRBQN0Ud8ji50aIt3sfNqOdgVNCrCvco5ui
-	 tL5oju/y5UEEs9wTM7i8ykAU1LFLN/T6f14hgKQnKSsgChLHnjOZ97DSJcG65DhMT1ZMf
-	 7QWmrFvRfQwxJo01Y7Id/dzl3ZNSApDs1AetPG+cs4pkF+A1/QAdbILSQgiQOUKTTNYB6
-	 tYfD8rlBL8/PFKVk9KG2cMAxH9DRMYMrKf457CmTdgYvFf8cEg6vI38hKZNqlezSUqN3P
-	 MtRq0a4Dz51lhPuBinqXcZ9EX6cIazQ80ZqyOrsHhqiSzqN0SR5x8n4LxiSmE1gy/SA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794055558;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
+	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Mailer;
+	bh=CiL1HQxfgsOcvm9vKFk1DVPeae6fGl4/cDDijU+Teks=;
+	b=2jA0/+N9VcMpWKlf+JTdbd5YPeyySyH3Y80NUQ6nbOH44TXEQN67av36lbkrqzwJMYfO
+	 UbUx9in8lusRPOpCAQx9ioqJo5ZUeIEBX8rVTRMNg3yjPzrQE/t/1zvknyggpnJL07Lp4
+	 ItAQ3nkLxWJwN6IlLLNLuC8s9Dr6GEU/YHu3ncKlC6/DRyFsbzQ0T4t2LI8pWlF+dqjNb
+	 Oajtjg8ZHSU3o2WDGij8RFFZBgBPWp8HZKBQZdgs3h90KwkfTukTIbS1fTmSVlVp/4eeX
+	 vYGOU0cfKlS7ZRz87va6ScjPc97BdaNRiaVSrMAEH2GlQEC22IjAyckreRsiol1qgJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MdRhpUsT;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=asZGQ3aT;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 246BA606A326
-	for <linux-ide@vger.kernel.org>; Sat,  7 Nov 2026 12:38:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B1E606A326;
+	Sat,  7 Nov 2026 12:45:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MdRhpUsT
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADB791F0089F;
-	Sat,  7 Nov 2026 12:38:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=asZGQ3aT
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E9201F0089F;
+	Sat,  7 Nov 2026 12:45:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794055082;
-	bh=NvkwIN4EAH0B95Zf7QTnzHR3SOpoXYA3xI6kKuWgeIk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MdRhpUsTQoaHruVe6nKpO7l0FGVZuk8trUPocFw3O8XrnskJHpH1EnbeJk0yo1hwC
-	 e+SRt7F2GWR6oSinybphUxcDpddzAcLE04ssDTFf3r8o4nOnsZiilAyUZ2tpRDq7Du
-	 e0zkGVhm6qzgco28pkSbmVRsyH3wirGwYQITba84Vf6wSxBZ7AAJhm2G2OHndLrpRP
-	 1kCAjT/rIMWvu+ukDI8cju/rQD4N0j/eTYzsHcnwDN3XKDk2bSxKWPDW49YOOBvRO1
-	 U5kmdePHbJcFoGByxyMYWLeEBpuaXZgQtrQYPcLzE914GYgppVlB/VFpaqa5CPI1b7
-	 +lMxcbpjD4zog==
-Date: Sat, 7 Nov 2026 13:37:57 +0100
+	s=k20260515; t=1794055557;
+	bh=CiL1HQxfgsOcvm9vKFk1DVPeae6fGl4/cDDijU+Teks=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=asZGQ3aTW9/wx50mVmL+G2Ag83l/u/ystE8ygXlcryWvsuZcC5vngRH9EwK7E6gWq
+	 7u5dCW5hg+lyGKdAkG/Vx+ZZOJCG3IB8oUXTChL8zXvM9zQOE4CTyxvES7CS6qNNZ/
+	 oxiYbI1Nn3ZxDOhRqe0FbX3oJir7kmjAPTpFV3SlufjiKH0yvxCYnfBvfePpyPbeil
+	 iT6Q2T3Lu/39C+0VJBYOWcnkNzynnLjVaXzQ3f5tv8eH3qlJ2FYGjbHLoYX2q1N3Hk
+	 NE/Fkka48M/NpXxRVeiZBQxlSuEsgYs/HDqfbQMO17wKvLpHGtuPT9VLQSMW847JgJ
+	 kTefC58ivt7lg==
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>,
-	Shao Mingyin <shao.mingyin@zte.com.cn>,
-	Hannes Reinecke <hare@kernel.org>
-Subject: Re: [PATCH 3/8] ata: libata-scsi: reject MODE SELECT mode pages with
- a wrong SPF bit
-Message-ID: <au8bpVOcd2JrPmwe@ryzen>
-References: <20261103205448.931471-10-cassel@kernel.org>
- <20261103205448.931471-13-cassel@kernel.org>
- <1af3f18a-5595-4591-8fbc-e5e4d889b036@kernel.org>
+To: linux-kernel@vger.kernel.org, 
+ Florian Fainelli <florian.fainelli@broadcom.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Ray Jui <rjui@broadcom.com>, 
+ Scott Branden <sbranden@broadcom.com>, 
+ Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+ Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, Tejun Heo <tj@kernel.org>, 
+ Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>, 
+ linux-ide@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-phy@lists.infradead.org
+In-Reply-To: <20261029212513.4126083-1-florian.fainelli@broadcom.com>
+References: <20261029212513.4126083-1-florian.fainelli@broadcom.com>
+Subject: Re: (subset) [PATCH v4 0/6] Fix SATA support for NSP SoCs
+Message-Id: <179405555432.938034.8271032337892944854.b4-ty@kernel.org>
+Date: Sat, 07 Nov 2026 13:45:54 +0100
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -60,64 +68,31 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1af3f18a-5595-4591-8fbc-e5e4d889b036@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On Wed, Nov 04, 2026 at 06:22:08AM +0900, Damien Le Moal wrote:
-> On 11/4/26 05:54, Niklas Cassel wrote:
-> > ata_scsi_mode_select_xlat() accepts the caching and control mode pages
-> > both in page_0 format and in sub_page format with SUBPAGE CODE 00h.
-> > 
-> > However, SAT-2 and later versions of SAT define the SPF bit of the
-> > Caching mode page and of the Control mode page as not changeable and
-> > set to zero (see SAT-6, 10.4.9 and 10.4.6), and SPC-7 (6.12, MODE
-> > SELECT(10) command) requires the device server to terminate a MODE
-> > SELECT command with INVALID FIELD IN PARAMETER LIST if the application
-> > client sets any field that is reported as not changeable to a value
-> > other than its current value.
-> > 
-> > Reject a mode page with the SPF bit set to one and SUBPAGE CODE 00h,
-> > with the FIELD POINTER set to the byte containing the SPF bit. The only
-> > mode page with the SPF bit set to one that remains accepted is the ATA
-> > Feature Control mode page (control mode page, sub-page f2h), for which
-> > SAT-6 (12.3.4) requires the SPF bit to be set to one. The opposite case
-> > does not need a check: a mode page in page_0 format always has subpage
-> > code 00h, so it can never be the ATA Feature Control mode page.
-> > 
-> > This also allows the mode page handlers to rely on the format of their
-> > mode page, which a later patch will make use of.
-> > 
-> > Fixes: 1b26d29ccd59 ("[libata] scsi: implement MODE SELECT command")
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> > ---
-> >  drivers/ata/libata-scsi.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> > 
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index d7923bc664d6..7b0a02903fda 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -4629,6 +4629,16 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
-> >  			goto invalid_param_len;
-> >  
-> >  		spg = p[1];
-> > +		/*
-> > +		 * Mode pages with subpage code 00h use the page_0 format: SAT
-> > +		 * defines the SPF bit of the Caching and Control mode pages,
-> > +		 * for subpage code 00h, as not changeable and set to zero.
-> > +		 */
-> > +		if (!spg) {
-> > +			fp = hdr_len + bd_len;
-> > +			goto invalid_param;
-> > +		}
+On Thu, 29 Oct 2026 14:25:07 -0700, Florian Fainelli wrote:
+> This patch series fixes SATA on the Northstar Plus (BCM58xxx/8831x)
+> which was broken due to a number of things:
 > 
-> The comment block in-between the assignment and test is odd. Can you move the
-> assignment right before the if, after the comment block? That makes the code a
-> lot prettier :)
+> - the SATA PHY assumed separate PCB windows when a shared one is used
+>   for this generation of SoCs
+> - the clock/reset (IDM) was not being configured by the driver which
+>   meant that depending upon what the boot loader did, or did not, we
+>   could have had the AHCI controller still in reset by then
+> - on some reference boards, the AHCI controller is not DMA coherent,
+>   assuming so leads to all sorts of timeouts, data corruption, etc.
+> 
+> [...]
 
-Fixed up while applying.
+Applied to libata/linux.git (for-7.5), thanks!
 
+[2/6] dt-bindings: ata: sata-brcm: Describe the NSP IDM registers
+      https://git.kernel.org/libata/linux/c/262e3bbc
+[3/6] ata: ahci_brcm: Initialize the NSP interface clock and reset
+      https://git.kernel.org/libata/linux/c/14d30246
 
 Kind regards,
 Niklas
+
