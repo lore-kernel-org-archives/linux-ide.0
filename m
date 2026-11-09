@@ -1,52 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794237600;
-	b=2trozRvF0Gww6b+kdJAi8l9hwjqlmHGW/A3WuM2IvslHtd8C5txHqyESowp6KNGPdk83
-	 0BUhuhZizuFtTzaQkZfiyLIBa9XZ+GEqTRJ8Dn+h0KiSpIA+LVwcEpQt0dDIinA1fGOrH
-	 sZzpV3x+hW+Plw9TRva+z6tNpNva5D6erDWjNzdwpOD/dE0d4yJPNhMiwQjuFrPB0Ff03
-	 9UPz0aTu23IIirNgWkHfGgXT9Hx4uuILLRZtztLUP0Iz0fC4bHQHfirdbgO6wPzNtbVwp
-	 CjkjcAa+oJT8LXWObdnV5ud+p2n3YislsQj0h6v7xpEAdS6YtSOvOHapm7h9st+6Ykg==
+	t=1794240182;
+	b=WVISXuqAa4DwSN2Nk/r1n3I5G8xhpXIOc1sIQqtQhfNHBcijL+nrrN0UbniVQSoEgVX4
+	 eu1AM4WLv4R6Jn/VhZ4GXvDwLzHmonvg4dYgSVGyBidLI3vomshNCXN4ptsSpTkFv6gxg
+	 i0EZw+j4HCmylJymzBp1tvVOvtKMSgjJXbfwLRNvYV3LfqpFsVSWtuVVhLCusKXNU0U7V
+	 vik6m9d2enm+YsARvPeYfY3BY5gSko9DSk+N9xSeKhz5/OWWDHWfdKTy/1cRQLK6ritGk
+	 U5GCAfNdLw/jaWd3S0hwWP+I4+W0UmLtrSsenX5mO++iOSQKpDUiDfp9PGnuIVenUDw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794237600;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=qvqUJi1pItpI83LRxCu4hVk1nrPP0WYemL0+nUGEoTg=;
-	b=Kh8HXEwwCTgq0gKX01Yyc8UWRvwQ6oIr++L3DBlkMi1xQfgsaY3Qnkevzg94HA6lt0S3
-	 zszHOEkeioDfoDAG/iacvweKhZ8G2sw5wTyhI8k5BH13kQKCKUV9Lr5vMJSmeRsXwvlWR
-	 U1qrBfgAteotiO33GAlJBN1FqCApC+QxQYi9SDwcbuFp8KqPAiayt1OsHOU4fdaXutTVI
-	 qjJ7nnzzhpa4W9TIgKmScgiJaCN3SNF8HxAuBjysxsiZjaNPk+F4HCLCPvkILFX/ix2My
-	 VEWQ6fHfje/fbJgfkUdFnLRkEn7jV93rxHghz9k5RofwqCTu8xFm0tK/S6YYjZBQ2BA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794240182;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
+	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
+	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
+	 X-Fangmail-MID-QID;
+	bh=HNCbvLN8ICuoCz0fHhWsUE+dzGmKKqmDwgj4AtvdWT0=;
+	b=VwSTOVkoCIyrvYVIN5nroh5b7eBrSaTCNWpbIj30XGHWBgFkmLZ71uXHxx2yxktePmlq
+	 RhJO1QvxZsM2pn2xTVBx3ih0IAI4GVM/rC4/UI4K8qhClmhCkSEPDO0kEwqeLJwgF+KIh
+	 0jE7YhMboDUrqo0ChYOJEhTf7swA2PTSx15D2d3pXzH/3sxqN5eKxm3r7vn1YoDto5hvl
+	 9vGati9a1hExlMMW99OtSQ/UdzKqIUqDc0OpX58zxaXsXP8JmG8DOze0m/rr61QASnTYD
+	 BQu3Z7t3yqzRErcycW47UUH6WxmteZ/DJbdBjsoV46C2eY+QTmCFERFx7OyDW1Yt+ng==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BMGinqmy;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=MRE3mumK;
+	arc=none smtp.remote-ip=160.30.148.34
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE0E606A333;
-	Mon,  9 Nov 2026 15:20:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16752606A338;
+	Mon,  9 Nov 2026 16:03:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 16752606A338
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BMGinqmy
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E13541F0089F;
-	Mon,  9 Nov 2026 15:19:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794237600;
-	bh=qvqUJi1pItpI83LRxCu4hVk1nrPP0WYemL0+nUGEoTg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BMGinqmyNNhf2sLE4SZGpI3cb8Pr6q1qNFUmrSxSLaa/W7Bn8+uhWD3vp1CgKS05a
-	 N/tO+aJjrGdjlFZHN4HH5hsQEdLWlSH5PqsLPb5rS2cVqTt/EH/aEVkCv6GTZiw+c+
-	 xcG6vOpE2SJCWRrzOrXb+OcwmlZt4joJFu0O+lHgpXFB4REAZvYDFkd4zdj6XPr0V9
-	 q0QSE3vj+xpm0g2SQheGI49I/yMxz0DbegiNL5t0XpphXYnhAnWrlsqTwm1FRkEE3m
-	 wsLTKmmIuyZqYHfE6sTBEtdHAG3Sm3JW0ev6wvm3PKVIskGelF9ylPpMwIpxhuRtLe
-	 X7tCPHUeCveTg==
-Date: Mon, 9 Nov 2026 16:19:56 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: shao.mingyin@zte.com.cn
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] ata: ahci_dwc: reject invalid device tree port numbers
-Message-ID: <avHknBRJnZPpAIke@ryzen>
-References: <20261104221318841yKO89PGcSNeaV4KutBOUJ@zte.com.cn>
+	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=MRE3mumK
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jNZLq0j7pz58fdb;
+	Tue, 10 Nov 2026 00:02:59 +0800 (CST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
+	s=z202610; t=1794240179;
+	bh=M/RNTyCTnYXRawQXr7b5ifRdZQAzhOIHwOMjs9PSuU4=;
+	h=In-Reply-To:References:Date:From:To:Cc:Subject;
+	b=MRE3mumKgI6wo5VuNEaQ0r2fZJdBoOxD+/tUb0NIv2EQZ88ctiUIbViR8LIBfVxsg
+	 chdhNq8D+iQtfnrAREvEEUX7+RAt9iIVfpnPSV87ahbgVCTjXpizhkvyudx7WbMq6t
+	 ov8lQ81WjkKxfT2Uf291IVXmO6A/O3EGkfHOyapW9V2FsPSkfO55CZP0oa0KE5vj9D
+	 FfZ0kepD6GwEtW/DJihBiESTKc6lHfS5EeOMV6uhm9Kdr2FK5kcxUoIUT3mGEln/18
+	 G/lQJiHEQZpsC0zKBgcDBLks/swfbHeGTYLzmwQrOJwE5JjS9vMjovUeBDBOvLORhy
+	 nJtBVRfocQVug==
+Received: from xaxapp01.zte.com.cn ([10.88.99.176])
+	by mse-fl1.zte.com.cn with SMTP id 6A9G2Tf4043123;
+	Tue, 10 Nov 2026 00:02:29 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp04[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Tue, 10 Nov 2026 00:02:31 +0800 (CST)
+X-Zmail-TransId: 2afb6af1ee97dd4-a9b69
+X-Mailer: Zmail v1.0
+Message-ID: <20261110000231218wQzBUXC6z9Ptr1Rb3WqYR@zte.com.cn>
+In-Reply-To: <avHkMosHVOXCpVPD@ryzen>
+References: 20261029190111138tS0yRo0lL1zJZ_IutobE1@zte.com.cn,avHkMosHVOXCpVPD@ryzen
+Date: Tue, 10 Nov 2026 00:02:31 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -55,74 +72,35 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261104221318841yKO89PGcSNeaV4KutBOUJ@zte.com.cn>
+Mime-Version: 1.0
+From: <shao.mingyin@zte.com.cn>
+To: <cassel@kernel.org>
+Cc: <dlemoal@kernel.org>, <hansg@kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: =?UTF-8?B?UmU6IFtQQVRDSF0gYXRhOiBsaWJhaGNpX3BsYXRmb3JtOiByZWplY3QgaW52YWxpZCBwb3J0IG51bWJlcnM=?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl1.zte.com.cn 6A9G2Tf4043123
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.132 unknown Tue, 10 Nov 2026 00:02:59 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AF1EEB3.000/4jNZLq0j7pz58fdb
 
-On Wed, Nov 04, 2026 at 10:13:18PM +0800, shao.mingyin@zte.com.cn wrote:
-> From: Shao Mingyin <shao.mingyin@zte.com.cn>
-> 
-> ahci_dwc_init_dmacr() reads the "reg" property of every available child
-> node and uses it directly as a port number, both to compute the port
-> MMIO base and as an index into dpriv->dmacr[], which has AHCI_MAX_PORTS
-> entries.  ahci_platform_get_resources(), which runs earlier, checks the
-> same property against hpriv->nports and skips invalid child nodes, but
-> this second walk does not.
-> 
-> A device tree that describes one valid port and one port with a "reg"
-> value above AHCI_MAX_PORTS therefore makes the driver write past
-> dpriv->dmacr[] and access MMIO beyond the mapped region.  Apply the same
-> check as the resource loop and skip invalid child nodes with a warning.
-> 
-> Fixes: 33629d35090f ("ata: ahci: Add DWC AHCI SATA controller support")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
-> ---
-> Tested on 7.3.0-next-20261030 (QEMU/TCG arm64 guest, KASAN) with a
-> TEST-ONLY device tree.  The DT adds a snps,dwc-ahci node with port@0
-> and port@100; the TEST-ONLY printk hook in ahci_dwc_init_dmacr() is
-> applied to both kernels.  mem=512M keeps the fake MMIO window outside
-> System RAM.
-> 
->   unpatched                            patched
->   KASAN: slab-out-of-bounds            no KASAN report
->   in ahci_dwc_probe                    port 100 skipped, boot
-> 
-> diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-> index feb8a8539b8e..9094eb19e19f 100644
-> --- a/drivers/ata/ahci_dwc.c
-> +++ b/drivers/ata/ahci_dwc.c
-> @@ -225,6 +225,12 @@ static int ahci_dwc_init_dmacr(struct ahci_host_priv *hpriv)
->  		if (of_property_read_u32(child, "reg", &port))
->  			return -EINVAL;
->  
-> +		if (port >= hpriv->nports) {
-> +			dev_warn(&dpriv->pdev->dev,
-> +				 "invalid port number %u\n", port);
-> +			continue;
-> +		}
+On Mon, Nov 09, 2026 at 04:18:10PM +0100, Niklas Cassel wrote:
+> The warning is redundant.
+>
+> ahci_platform_get_resources() already prints a warning for this.
 
-Again, this warning is reduntant, as it is already printed by
-ahci_platform_get_resources().
+Right, thanks.  It walks the same child nodes earlier and warns for the
+same condition, so I'll drop the warning and only skip the node:
 
-Perhaps:
---- a/drivers/ata/ahci_dwc.c
-+++ b/drivers/ata/ahci_dwc.c
-@@ -225,6 +225,10 @@ static int ahci_dwc_init_dmacr(struct ahci_host_priv *hpriv)
-             if (of_property_read_u32(child, "reg", &port))
-                     return -EINVAL;
+	/* Already reported by ahci_platform_get_resources() */
+	if (port >= hpriv->nports)
+		continue;
 
-+            /* Already reported by ahci_platform_get_resources() */
-+            if (port >= hpriv->nports)
-+                    continue;
-+
-             port_mmio = __ahci_port_base(hpriv, port);
+I'll resend as 1/2, with the ahci_dwc fix as 2/2.
 
-
-And please send this as a patch 2/2 with the libahci_platform patch as a
-patch 1/2.
-
-
-Kind regards,
-Niklas
+Best,
+Shao Mingyin
