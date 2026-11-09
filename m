@@ -1,53 +1,52 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794236206;
-	b=kVuBr3FiXHJ7rus9PukupAhPUAvwzpV0OmeI/bMTYWg0eeVGMdRbJgQ1gCORoTfsBARF
-	 /5n4ckMxZHOb6LYKqXZfswKC44hfdEhPs+JGkaZuravXDTxU0IhuoNfuspmmBI05UIK5n
-	 +9ejeuWoipg10DNqAOWxjPZT3Yd3ikO/5/gcfbQySzjpK+c6Zqfb7Bdf0MZHtWUB6F+GS
-	 v1bMFAe7UCnfa+ye+EVEcx1UNsKsyxhIQFv0Kd0gL7i1ekpehz0ZjrK4ZO6R7rniWF9kj
-	 o0+ZH0ppo19blNrHztdlb9V8PTHFAYXMsZ351gI9Pu23jS0GDA1wFt0E7tx7PlIwHeg==
+	t=1794237495;
+	b=vZ8dAiOpuADBkPS1AXjlWOIPlhzSFHodMAE8r0lNDuqkRmgnVry+TNPa9OoboRvHuuoi
+	 d6/fWm47jKjuzTG9qR7UtIHK8HRDqVJhBg/b8O11kxOW/ws6ufAL1ZZ1srgQlvlCdg6ZW
+	 fjukQrFf4VOvLEGFUFkBsMGxFz41LI3wIVsRV7Zqa9gBzaCBhseFCKp14iHPGotjazofe
+	 cXwd9o1mYvjoULZXVFcxxVZNAYFotCkEjWO0sBIOgRMCb0e3EEcKGNeJUdsf4ZKTn7iAQ
+	 ErEAX1hnkxdP0Ep/KRX32EAyRLLDIHM3uHRV9+vFaVTqKh4dMFKjmZS0IOJjTAJRctA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794236206;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794237495;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=SemDBtKLwrfbPZLwR+LX5x5eoAOLCTArAvt1XOzS2hs=;
-	b=d8T2BCaEWwf9dphT7b9Zn1vMDTiuCAyRtYENjj8mXzchmMCoymTXlK2uQDSkSynIBdbv
-	 XfFFYPiFeY7a7AdC5X92PzFbslWLcPtEDIjXKAKo6w1wUVAjI8E7yisQvOgjP7cQj40Pl
-	 qunVpX5R59xc0bcLADVFWlf6/oFVlIhB4Ogjr9IPes50rhaeq8gYAPPW1NcpIxtEHTWDo
-	 lhc0AiR+r00ufPE4zvTdOUK5aZRgZ4dq5tDkk0+vmGLsaQcDNjtuTGAQQYAupc/wXb39S
-	 cUgaT9N4lhInodfGhOVnfVLMDjRR8no8vheQ8J2uDX/RF4Gcj8bCyniBnQ9ZLcIYZ6Q==
+	bh=Tq7znQYoOkVkkKUAJEz3ffT9r3etLqc1I3E3TM6MEIs=;
+	b=SbETgp3qmbP2Wy84PKwJ0tEHLHRBWkV+iwS+SC7SOZIY12ZadZfWnuPzD1gEDdmLMkPM
+	 TbDapwz2VfgFEYS5pb3pxk+6XN9qfHLsr1BES5i+JC1qlgPmatJ/G7CRwev1OAPIzlvva
+	 Zw8ht4OjkGgDk80+7lXaOz7OpOQpuJbOweQnEI6qobNS3w9TiCDFZrrfSvgO9XffR4OWl
+	 1wqe2sYeXQjUg1CQAETyZLV8uhXevQSvc1lGuurnL+QJGzEQLynXWz/eAz3sHZWhT1r7i
+	 gGPzhvDtiIXTqGd/isPjYRPY56KIqTL05vGRriJ7eQydQzLoRE3/NvHViCWSaxJCrYg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JQXDyNKB;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mMtsYynC;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04377606A31C;
-	Mon,  9 Nov 2026 14:56:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BBF6606A31C;
+	Mon,  9 Nov 2026 15:18:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JQXDyNKB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63C7E1F0089F;
-	Mon,  9 Nov 2026 14:56:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mMtsYynC
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 590151F0089F;
+	Mon,  9 Nov 2026 15:18:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794236205;
-	bh=SemDBtKLwrfbPZLwR+LX5x5eoAOLCTArAvt1XOzS2hs=;
+	s=k20260515; t=1794237494;
+	bh=Tq7znQYoOkVkkKUAJEz3ffT9r3etLqc1I3E3TM6MEIs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JQXDyNKBNRqHNLoZgiIEi2j10l3uSHijHbnXRdkZO4eolUWQmHto641HSSV057+Q6
-	 510Mow01Gmk0d+VNLO9dkxsnDoJktmGd3bD2ItDcv9LrznVct1xYWxfDRkrBcXmNAH
-	 6qAKQnHq1U+w0jYfeZFb2x0FnlAhmielDCDaJiOx6Rv645rP7o/PirTjclOeCfs+wA
-	 Bcqgz96NeRtXrt4aulnJ0f5faaogo2AoDxp2AuARb8a/rWt8Y1uoCkbYLcHQ/ul9GS
-	 3iiuLzskV56ja/lGHM++PwpewhbrRFbTtFKipMUg9K70deT/rbujjnn/Lvn5urTwBO
-	 /VCHbOwiyVv0w==
-Date: Mon, 9 Nov 2026 15:56:41 +0100
+	b=mMtsYynCXwjp4wFVSfTB+WMYc9bEkSz8dXbr5A4wAf2r3TLVTwtBhuu4KOjp3r/Oj
+	 jlNdm83/MEwKNzBGxiS6Guc65dq3pOWTcV+YV0qVX7aCFnIkOeOu7/Vz+ADhjVlFjF
+	 49eD19yTNa3KaqvZYyG9Dglyy7dDxYT+gbyFA8+0pQn+tJXbJaKwSba4wOTBKHES1j
+	 8LX88GIHcqa+76mhtZ8KOpeP6ubpVbWidk+fiF9YqcDEHLjW2Esry2c667/qrxqWC0
+	 PL6JJU72/WfpBiN+YyXqz7Ng0IeZuDcGZTlxj6cq55PAlNZPXdWWxdcyGgEFQpQqgt
+	 woUptyOQ5RP2g==
+Date: Mon, 9 Nov 2026 16:18:10 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Tobias Kriebisch <tobias.kriebisch@tecbeast.gmbh>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+To: shao.mingyin@zte.com.cn
+Cc: dlemoal@kernel.org, hansg@kernel.org, linux-ide@vger.kernel.org,
 	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-core: Add NO_NCQ_TRIM quirk for Samsung
- PM893 (MZ7L3)
-Message-ID: <avHfKaY-skamodEr@ryzen>
-References: <20261109134541.3766394-1-tobias.kriebisch@tecbeast.gmbh>
+Subject: Re: [PATCH] ata: libahci_platform: reject invalid port numbers
+Message-ID: <avHkMosHVOXCpVPD@ryzen>
+References: <20261029190111138tS0yRo0lL1zJZ_IutobE1@zte.com.cn>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -59,74 +58,62 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261109134541.3766394-1-tobias.kriebisch@tecbeast.gmbh>
+In-Reply-To: <20261029190111138tS0yRo0lL1zJZ_IutobE1@zte.com.cn>
 
-Hello Tobias,
-
-On Mon, Nov 09, 2026 at 02:45:41PM +0100, Tobias Kriebisch wrote:
-> Samsung PM893 SATA SSDs (model prefix MZ7L3), the successor of the PM883
-> (MZ7LH), misbehave during trim on an AMD 600 Series chipset AHCI
-> controller (1022:43f6). The drives are three SAMSUNG MZ7L37T6HBLA-00A07
-> with firmware JXTC304Q, and the kernel reports "Features: Trust
-> NCQ-sndrcv" for them.
+On Thu, Oct 29, 2026 at 07:01:11PM +0800, shao.mingyin@zte.com.cn wrote:
+> From: Shao Mingyin <shao.mingyin@zte.com.cn>
 > 
-> During a full-device trim, queued DSM TRIM commands are aborted:
+> ahci_platform_get_firmware() reads the "reg" property of every child
+> node of the AHCI controller and uses the value as an index into
+> hpriv->saved_port_cap[], which has AHCI_MAX_PORTS (32) entries, without
+> checking it first.
 > 
->   ata3.00: exception Emask 0x0 SAct 0x40e0740 SErr 0x0 action 0x0
->   ata3.00: irq_stat 0x40000001
->   ata3.00: failed command: SEND FPDMA QUEUED
->   ata3.00: cmd 64/01:88:00:00:00/00:00:00:00:00/a0 tag 17 ncq dma 512 out
->   ata3.00: status: { DRDY ERR }
->   ata3.00: error: { ABRT }
+> ahci_platform_get_resources() checks the same property against
+> hpriv->nports, but only in its own loop, and hpriv->nports is itself
+> clamped to AHCI_MAX_PORTS.  A device tree describing a port with a
+> "reg" value of 32 or more therefore reaches
+> ahci_platform_get_firmware(), where the "hba-port-cap" property is then
+> written past the end of the array.  Values just above the end corrupt
+> the following fields of struct ahci_host_priv, larger ones write outside
+> of the devres allocation.
 > 
-> In the same time windows, queued reads and writes time out and the link
-> is hard reset:
+> Apply the same validity check as the resource loop and skip such child
+> nodes.
 > 
->   ata2.00: exception Emask 0x0 SAct 0x4 SErr 0x0 action 0x6 frozen
->   ata2.00: failed command: READ FPDMA QUEUED
->   ata2.00: cmd 60/08:10:c0:82:f0/00:00:d4:02:00/40 tag 2 ncq dma 4096 in
->   ata2.00: status: { DRDY }
->   ata2: hard resetting link
-> 
-> Both kinds of errors occur on all three ports. In one case the system
-> hung and panicked shortly after the trim started.
-> 
-> Booting with libata.force=noncqtrim,nolpm makes the same full trim
-> complete without any ATA errors.
-> 
-> Add an entry for "SAMSUNG*MZ7L3*" with the same quirks as the existing
-> PM883 entry, which was added in commit ead089577e0f ("ata: libata-core:
-> Disable READ LOG DMA EXT for Samsung MZ7LH") for SEND FPDMA QUEUED
-> failures on AMD controllers.
-> 
-> Only ATA_QUIRK_NO_NCQ_TRIM and ATA_QUIRK_NO_LPM_ON_ATI_AND_AMD (the
-> equivalent of noncqtrim and nolpm on this controller) were tested.
-> ATA_QUIRK_ZERO_AFTER_TRIM and ATA_QUIRK_NO_NCQ_ON_ATI mirror the PM883
-> entry. ATA_QUIRK_NO_NCQ_ON_ATI only applies to ATI (1002) controllers,
-> which were not available for testing.
-> 
+> Fixes: 18ee7c49f75b ("ata: ahci: Introduce firmware-specific caps initialization")
 > Cc: stable@vger.kernel.org
-> Signed-off-by: Tobias Kriebisch <tobias.kriebisch@tecbeast.gmbh>
+> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 > ---
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index ae342080556a..d7106ab9ff3d 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -434,6 +434,11 @@ static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
+>  		if (of_property_read_u32(child, "reg", &port))
+>  			return -EINVAL;
 > 
-> Notes:
->     The patch itself was only build-tested (defconfig,
->     drivers/ata/libata-core.o on top of for-7.4-fixes) and has not been
->     booted. The runtime test was the equivalent
->     libata.force=noncqtrim,nolpm on 6.18.60.
+> +		if (port >= hpriv->nports) {
+> +			dev_warn(dev, "invalid port number %d\n", port);
 
+The warning is redundant.
 
-6.18 was released a year ago.
+ahci_platform_get_resources() already prints a warning for this.
 
-Please boot the latest kernel, 7.4-rc2, and verify that the problem still
-exists.
+So perhaps something like:
 
-If the problem still exist on the latest kernel, apply the minimal set of
-quirks needed to fix the problem.
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -434,6 +434,10 @@ static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
+             if (of_property_read_u32(child, "reg", &port))
+                     return -EINVAL;
 
-And yes, build and boot a kernel with your patch to verify that the problem
-is actually solved. (Don't take for granted that your patch will behave the
-same as libata.force.)
++            /* Already reported by ahci_platform_get_resources() */
++            if (port >= hpriv->nports)
++                    continue;
++
+             if (!of_property_read_u32(child, "hba-port-cap", &hpriv->saved_port_cap[port]))
+                     hpriv->saved_port_cap[port] &= PORT_CMD_CAP;
+
 
 
 Kind regards,
