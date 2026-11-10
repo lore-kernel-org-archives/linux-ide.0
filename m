@@ -1,69 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=49.13.36.206
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794281233;
-	b=R78zj456Q47eojTsJB6Pnacn4UjW+jYYQIXiEWy0qrtg0XxoPxDjOtng3UmurQsB4TLk
-	 1362JynUu4FMDAU4P2/sCGrFlakhthThTaiJvGgKVjGFCtfsDjU9XS9DfntIE4tIcCyJw
-	 n88Q0jsN7rL+ZFJM8MIRyvIrFZLo5Mps0gYIMQ//sWXV9VZqBGeQUM4cLXdFqqqY5E7x3
-	 lvvYUYqaBiCjNPKyT+BBep4CagM/2r+sY6Y7/Yf6JaPBtljaM1l0sjSm7GJFe0Wtdt77d
-	 Y+HoXxOeGhvF9TsgyZJlWlbjE56xAjWwCdt1BO5QSw2DYdTjgat50mzuVuSjg76W4KA==
+	t=1794298805;
+	b=5JHt8FzEaH0JCWVKAbZdfIEHGKxBGtzqCN3AqDitueXlYC9zoLoyf+prQuoOVfdJbQDR
+	 qHCLIXNglWbRyVSXmPNSvnOBHCJVB+GuXgj8w9N3LxJD0KMn9NJlNL4jFFXlYeFicbI9S
+	 z946MxryoVy8Qvezm46CEBdHSKJYy5HNlR0dYiWgDT2yJjiOK6mRpGiX6VQfVKJEADNLf
+	 dv9N3iRAiGCHyH3VtwR8zru7jq9WDw3h5vIYBLHx0W69sHbhfGhTHfPyHG7IbK79e+g+v
+	 p9rWQPfFqRRQgrf3h5Ml7E7GZv208R+qcMEMGxcml82ui2P28u4pY+QFlRSdL/wfpKw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794281233;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
-	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
-	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
-	 X-Fangmail-MID-QID;
-	bh=eawXPhK/eFBjtNe/1dhvjiN3YjyzwNQYK82Vhcgxmlk=;
-	b=zO1eg27oNwGZyodpDxUUrHiv2x5oHT1h6oPwWWv1bifcjde6hj9WOODPBeLFWPdfye2J
-	 AfiWCcIHXgvd0AlGO2VTTpqYHqNAdH29/N7ieAyL7BNr4JkCRRhCDheRUPFoIaLsITR1Z
-	 LjL7jb2jR3/rdgnPeUdSjGVDE2nI2hp/he2O7shwz7QCE3SMx0685UY3IPXw4KRu+nyww
-	 ciVuVV01BZJFE+AIg/tJoZJTTcKZSf+xyK87FHtQVLY6KeDO2YJBgXKH2v794cuxU0nvL
-	 G+cQiH83SmJpFgYY2RrxSpaOTcdI38JKy4dNBMYBoNRPLtFKwaIbj7bF7nREAMTLttQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794298805;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=BwIHpdE+xgxXaWtsJRsjH/VFAQazTWJ4GCATHhX63qc=;
+	b=qWo/NDquMpCxvCr6Ke0JTYrefkBlfeuoF8h0yEMYR0+UZo7QW1EWR4PFVHPwpq2pPoHZ
+	 0HKxixaxxXHNWbsXFTTLB1BHX5+8RyT7k8kphNSEplN1bjX+3mezBBH7jv+W6CrKI7ovH
+	 DpE2MFyU+/R8PJ8HOsKZT8a/SUVOji/INx9ZP0Uu0NbgG8ToDtWDJwgsYvxk+dkPTfBGk
+	 ZJ8tOtAbAQR/zsppSK4omem7mBbkmHSd7djTiVCT7FtpUFUxnyOOcWPOVU7S+bP8701Aq
+	 kbpn3K0+pWzrCiz1Qz3ne2jsyAO1FxsVviNnG+fUNuI/F7TFnwVOzwNuwr5qkufNgWA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=N0EjzIiS;
-	arc=none smtp.remote-ip=160.30.148.35
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
+	dmarc=pass header.from=tecbeast.gmbh;
+	spf=pass smtp.mailfrom=tecbeast.gmbh;
+	dkim=pass header.d=tecbeast.gmbh header.i=@tecbeast.gmbh header.a=rsa-sha256 header.s=mail header.b=Q22fl9yA;
+	arc=none smtp.remote-ip=49.13.36.206
+Received: from smtp.tecbeast.gmbh (smtp.tecbeast.gmbh [49.13.36.206])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534C4606A332
-	for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2026 03:27:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 534C4606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EC24606A325;
+	Tue, 10 Nov 2026 08:20:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1EC24606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tecbeast.gmbh
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tecbeast.gmbh
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=N0EjzIiS
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jNsXF6SCPz8Xrrh;
-	Tue, 10 Nov 2026 11:27:09 +0800 (CST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794281229;
-	bh=gT98MkiGoiBsoc873Q+qJViCbrAze7Un+ECFq6d66kQ=;
-	h=In-Reply-To:References:Date:From:To:Cc:Subject;
-	b=N0EjzIiSrl/WN+1TX+py10fOT9Y5X9XObFvccG289kXzXD8cN00HQ2NWaYvHJWI+B
-	 eNYwoowBldEHRkQvT8YY72x+Wi48ObFSmu8itpyN+QrZcxCAtZj6s9XKrLCx6Alq/t
-	 fOgW66EN5JVQdFuoWmDmXYflszSz3xW8ix8oqeSyJfJrXElcFmuqlWLu7OJBcJy4kY
-	 UfknhtYxXdo4xRx8jK0XIRV4zlZ7I/Jx7Sa8sPGecfLeoHexlm7iTigt+2L77iod53
-	 RZIbORz7iAcIEwiJPaEX0nLIEA/49q7xBXb1JzWTj9QHNpcPPBQKRYIO//Wm8+LJ5c
-	 GKGwRzANgn1Ng==
-Received: from xaxapp04.zte.com.cn ([10.99.98.157])
-	by mse-fl2.zte.com.cn with SMTP id 6AA3R27I018370;
-	Tue, 10 Nov 2026 11:27:02 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp05[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Tue, 10 Nov 2026 11:27:03 +0800 (CST)
-X-Zmail-TransId: 2afc6af28f07637-d10a7
-X-Mailer: Zmail v1.0
-Message-ID: <20261110112703284t5yS94EoCghFvLKCn4-SB@zte.com.cn>
-In-Reply-To: <avI7-lrzsRL_Gz75@ryzen>
-References: 20261104220832716LXKf7OaS9dt1VJ8Q959AG@zte.com.cn,avI7-lrzsRL_Gz75@ryzen
-Date: Tue, 10 Nov 2026 11:27:03 +0800 (CST)
+	dkim=pass (1024-bit key, unprotected) header.d=tecbeast.gmbh header.i=@tecbeast.gmbh header.a=rsa-sha256 header.s=mail header.b=Q22fl9yA
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tecbeast.gmbh;
+	s=mail; t=1794298801;
+	bh=ACqy4zmqYt1x+ih2C5AXeNzO1+1/kWKPdhA2AaQ7tTE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Q22fl9yAnng9tpUaINqOg+sMtWPVLuU0eGJYxzyCkDAlerxoafCkeh2m+vz+8E5V5
+	 wB4TQAJA5UfF0b6IMZBiBVcJwyLhp/tAN7PrCWoJdHjJIRz39AVe0CiAhZIJ8SAD04
+	 4vF53cObsmVQodj1Dj2djB4IvSWbvZXW2aauyia0=
+Received: from [192.168.2.10] (unknown [91.106.186.171])
+	by smtp.tecbeast.gmbh (Postfix) with ESMTPSA id 6962611F805;
+	Tue, 10 Nov 2026 08:19:59 +0000 (UTC)
+Message-ID: <71332274-ae9d-4d2d-bbc6-22c559102c4c@tecbeast.gmbh>
+Date: Tue, 10 Nov 2026 09:19:58 +0100
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -72,58 +53,52 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <cassel@kernel.org>
-Cc: <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSCAwLzNdIGF0YTogbGliYXRhLXNjc2k6IGZpeCBBVEEgUEFTUy1USFJPVUdIKDMyKSBoYW5kbGluZw==?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6AA3R27I018370
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Tue, 10 Nov 2026 11:27:10 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF28F0D.001/4jNsXF6SCPz8Xrrh
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata-core: Add NO_NCQ_TRIM quirk for Samsung PM893
+ (MZ7L3)
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20261109134541.3766394-1-tobias.kriebisch@tecbeast.gmbh>
+ <avHfKaY-skamodEr@ryzen>
+Content-Language: en-US
+From: Tobias Kriebisch <tobias.kriebisch@tecbeast.gmbh>
+In-Reply-To: <avHfKaY-skamodEr@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Nov 09, 2026 at 10:32:42PM +0100, Niklas Cassel wrote:
-> I looked at the SAT specs, and the comments appears to be valid:
+Hi Niklas,
 
-They are, thanks for checking.  All three need action.
+thanks for the review.
 
-> Does the ATA PASS-THROUGH (32) CDB have a MULTIPLE_COUNT field at all?
-> ...
-> so bits 7:5 of byte 10 are reserved, not a count.
+On Mon, Nov 09, 2026 at 03:56:41PM +0100, Niklas Cassel wrote:
+ > Please boot the latest kernel, 7.4-rc2, and verify that the problem still
+ > exists.
 
-Right, and the commit message was wrong.  With those bits zero,
-multi_count is always 1, so the warning it describes is still emitted.
+The three drives hold a ZFS pool on a production server. OpenZFS does
+not support 7.4 yet (the latest release supports up to 6.19), so I
+cannot run 7.4-rc2 on that machine, and I don't have a spare machine
+with this drive and controller.
 
-v2 drops the MULTIPLE_COUNT handling for the 32-byte CDB instead of
-moving the offset: the sanity check and the comparison are skipped for
-VARIABLE_LENGTH_CMD.  Field pointer changes remain only for fields that
-are actually validated.
+Would results from the newest kernel that a released OpenZFS supports
+be acceptable? On that kernel I can test noncqtrim and nolpm separately,
+and then boot a kernel with only the needed quirks and no libata.force.
 
-> The index line of this patch records 927e75b7498d ... applying the
-> posted diff results in 20ba572c0e37 ... That would also explain the
-> interleaved - and + lines above, which git does not produce.
+ > If the problem still exist on the latest kernel, apply the minimal set of
+ > quirks needed to fix the problem.
 
-Confirmed, and sorry.  Those hunks were hand-added to the emails after
-the patches were generated.  v2 comes from git format-patch on the
-tested tree, and the test notes now include the field pointer.
+Understood, the v2 will only contain the quirks that are actually needed.
 
-> This isn't a bug, but this hunk changes the field pointer ... Would
-> this fit better in the first patch ...
->
-> Should the remaining field pointers ... also take cdb_offset into
-> account? ... PROTOCOL is in byte 10, FEATURES (7:0) in byte 21 and
-> COMMAND in byte 25.
+ > And yes, build and boot a kernel with your patch to verify that the 
+problem
+ > is actually solved.
 
-Yes.  It moves into 1/4.  v2 is four patches: reworked 32-byte passthru
-(no MULTIPLE_COUNT, PROTOCOL field pointer), the unchanged service
-action patch, SAT sense data without the extra hunk, and a new patch for
-the remaining field pointers (PROTOCOL/count, FEATURES, COMMAND) mapped
-per CDB format.  The cover letter will say what is really left.
+If testing on 6.19 is helpful here, I will build and boot 6.19 with the
+patch, verify that the problem is solved, and send a v2 with the results.
 
 Kind regards,
-Shao Mingyin
+Tobias
+
+--
+
