@@ -1,52 +1,52 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794300097;
-	b=SCCwCXdiUIYQE2LO5q04DxXyyA0a/IBDHy+WcwdHA42kHawTOZ08agX5MZ7QRRNE1AZZ
-	 qCl9WS9EguX3e7a6kn4JwD6YpWQDAbqPJil9ypeXF4OTYXusXgu1n1PgVVsy1ig3X3LAP
-	 K/qCeuWHfC4n9bIhBggZP+QwtIgLXhA38H0NfI0I/BYbo/AjuAQw4gOZDTxcsHi6DrVIg
-	 gOASn2AYfZdTSbywwUYwzwoLrL2YvOiBEyCu6wFNIFqH2do4fx5sFaQxZvhe+CafQbQuU
-	 hrcqdbJyyejSlJHvaAGONgw8ASpt1zBB622Dw6HFSIOybfUqEzqOqWjv4hhZEF78khQ==
+	t=1794300580;
+	b=1BxcsEC2fhsy1ybf/Yo6W7tBoq8rkHc9+LQmewOERsI+Q+5I6tfuM14gv22/Tr1Hf7vs
+	 m/xH7UDQRYg3Sc6zyN5HJSQdfjNiToWo5veSnm94UUuBVb2BTwFix5+x7rDcVzDIQbI2S
+	 l5PsAHjEwIj2UvmPMk6iNII564evaUdv7BCGJxFF0t38H6GX2eArXxGqJwJEMytLim8t2
+	 iglMjY8N+IzJfMlPd+lOkG0H8/QW2yct8Y/QjRYxcwI+q1nXfqVKMYhE+O0KGjRreVOzx
+	 ZuoyR31+h24A19Oh2ujnWOrP+4FuWfUgbVWc47CMqfrDzcLVRHm5RW3xl3x6DaRMudA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794300097;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794300580;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=StFoDPIqS5hrk5H7dyooA3aSHFFt/8LJ4+jaEMtL/so=;
-	b=AAc2aYNHIP+/DD90iocwZl+DBKX1VBM1vVG2DMeLwRkrD7/xCLY5Izpz6JDAFi300zgQ
-	 Bt8Z0D8B796DIonYSFlPBjzXmbb19u09hsGO5THgfzgI6VQgZI6LjnexSsutpBJuKPBg/
-	 lPYPjhh0EcOKRrVK26xNMcpSsNOygKXOG42ZOoQbtdJNgw0MgnjJomasv+CLC6sYz/EpG
-	 p49Rgq+EkqbZ/dJEinYbf98IfQVZRowm8axz0X1VRVNCV9RCotDVQrfpwn2I2aE+3skff
-	 sKX4jj2EW3FAztmWgbzq/z8PWa0RNtMSluLJmUp/XQCM6wg2E3mK4rQufz0UrCUmtsA==
+	bh=p+flVXfOz1d1DD2FXAo8MGB/ssFrb+LHoSfddkoa3mw=;
+	b=dsnIUKLzbTdBuLl18rjCq9uCqIU8rWfybOzfdAhmpdyjM20cg0+B91ZW3szBCZTcJ8SJ
+	 jb4x6yV/NSchlSilTMrXW9l3f8fYd7X1WkE8ChV4d7wrZJFeHnGDYve+WuKz1FWNFc/MD
+	 05kv7p5FMQg+CECR01B+TJCdZ7L2nKfj8soFqkBYoMahhNgdXdWnCQDWAsq9tEgGhNLXh
+	 533UPxi9iz5TGuat+8ooW/fbzIoNxh9sBG8A7aIETNZqnij2XwLuzRx+OJLV6ub4H3kMZ
+	 4N49Ag/fN/aC3jXpvE+N2ZdpPWX505AdQ3MoO6p++NK1oHsix5pt9OKzMLMdHACfDsw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BLxkFaBe;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OqkKl8Ao;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90C06606A31C
-	for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2026 08:41:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11526606A332
+	for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2026 08:49:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BLxkFaBe
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A3AE1F008A1;
-	Tue, 10 Nov 2026 08:41:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OqkKl8Ao
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C71941F008A6;
+	Tue, 10 Nov 2026 08:49:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794300097;
-	bh=StFoDPIqS5hrk5H7dyooA3aSHFFt/8LJ4+jaEMtL/so=;
+	s=k20260515; t=1794300579;
+	bh=p+flVXfOz1d1DD2FXAo8MGB/ssFrb+LHoSfddkoa3mw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BLxkFaBeMUoXI7aO8cPuJkN1PmvinZZTQjfiqXAkJXJTEzRKzVoOdt+qPtqt3wCbH
-	 CjOd/lCPDy2/fbQMncqVEdC8BnTRZrK+1Z29Fu1Gu/ctuNIHSi/FGPIkV0buj9mgaY
-	 Q7kaBtfRpoqTDm9KSyh/lLLvxP5xl++GC71+Su4BrMvDvt/Ewuym2hCyYoyNaJE6Ak
-	 204sOZfqLTH4DJ4Q3TwSo5PnBc93oDMv3cU8HRjUUkGaP+kjXfiffB+VhoO8Phubv0
-	 3hJkUhEa4ekyX6Q6H/ZfOLNgccxeeeOtG9UTHDtCJlzERxCyK+sFDwMMCTitCzO7co
-	 ZrYaEY3hBPSZg==
-Date: Tue, 10 Nov 2026 09:41:34 +0100
+	b=OqkKl8AoZ4TyHiu7OsAYs1B76x5UxqFgxaVOwXOFAvKptrGL31UAvSjapZ6INLp13
+	 +iQR2JaMDoIYE6Y5lWBCb/dgSPJ1EiUHf/vJz+1mNcb9XV3fbKwqyqfyIT7TUhZJxJ
+	 jeryLQATNLsJIoS5Ylx996fFhXEvO8b3qsgYmOWDGicUuV2qONbiniHvfJznVF/Qog
+	 3CNP42wZe2bt3SV4OvTL2JoEZ4iS0uROTzV4i6C2OYyE/cfs87TtgvwQi+CeuYLdcp
+	 qHt3oP884quOvuPPl162tH4hBBHRhoO06STdVBXg0iVjY5+gt+V3HuUYxTPOIXfryO
+	 HhMIYVhL6T4WQ==
+Date: Tue, 10 Nov 2026 09:49:36 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Zhao Gongyi <zhaogongyi@bytedance.com>
+To: hyunjungg <hj351016@gmail.com>
 Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-scsi: reject non-PIO protocols for
- READ/WRITE MULTIPLE
-Message-ID: <avLYvtmnedp5FXSX@ryzen>
-References: <20261028140432.20489-1-zhaogongyi@bytedance.com>
+Subject: Re: [PATCH v2] ata: libahci: delete the SW activity blink timer on
+ port stop
+Message-ID: <avLaoEN7bbCS30Jc@ryzen>
+References: <20261109092415.1436149-1-hj351016@gmail.com>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -58,103 +58,98 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261028140432.20489-1-zhaogongyi@bytedance.com>
+In-Reply-To: <20261109092415.1436149-1-hj351016@gmail.com>
 
-Hello Zhao,
-
-On Wed, Oct 28, 2026 at 10:04:32PM +0800, Zhao Gongyi wrote:
-> From: Zhao Gongyi <zhaogongyi@BYTEDANCE.COM>
+On Mon, Nov 09, 2026 at 06:24:15PM +0900, hyunjungg wrote:
+> From: Hyunjung Ko <hj351016@gmail.com>
 > 
-> The commands recognized by is_multi_taskfile() are ATA READ/WRITE
-> MULTIPLE variants, which transfer data using PIO. ata_scsi_pass_thru()
-> validates the MULTIPLE_COUNT field for these commands, but accepts any
-> protocol selected by the ATA PASS-THROUGH CDB.
+> The software activity LED support arms a per-EM-port timer (emp->timer,
+> ahci_sw_activity_blink) from ahci_sw_activity() on I/O, and the timer
+> callback re-arms itself while the LED is blinking. emp->timer lives in
+> struct ahci_em_priv inside the port's ahci_port_priv, which is allocated
+> with devm_kzalloc() and freed when the port is torn down.
 > 
-> This allows userspace, for example, to combine WRITE MULTIPLE with the
-> DMA protocol. With a QEMU PIIX disk, the device enters its PIO data phase
-> and waits with DRQ asserted while the host waits for DMA completion. The
-> request remains active until the user-selected command timeout. Since
-> the disk has a single tag, filesystem writeback and later SG_IO requests
-> block behind it.
+> ahci_port_stop() never deletes this timer, so when the SW activity LED is
+> in use and the port is stopped (driver unbind / module unload) while the
+> blink timer is pending, ahci_sw_activity_blink() runs after
+> ahci_port_priv has been freed and dereferences the freed ahci_em_priv
+> (use-after-free).
 > 
-> Require the protocol to map to ATA_PROT_PIO when is_multi_taskfile()
-> recognizes the command. Reject any other protocol as an invalid CDB
-> field before issuing the taskfile. Keep the check local to the existing
-> READ/WRITE MULTIPLE handling so pass-through behavior for other ATA
-> commands is unchanged.
+> Shut the timer down in ahci_port_stop() before the port private data is
+> released; timer_shutdown_sync() also stops the self re-arm. The timers are
+> only set up (ahci_init_sw_activity()) when ATA_FLAG_SW_ACTIVITY is set, so
+> gate on that flag and skip slots whose timer was never initialised --
+> timer_shutdown_sync() on an uninitialised timer trips the debug-object and
+> lockdep checks. Sweep all EM_MAX_SLOTS em_priv slots rather than the
+> current links, so a detached Port Multiplier's fan-out timer is not missed.
 > 
-> Fixes: 1dce589c38c3 ("libata passthru: support PIO multi commands")
+> Not tested on real hardware (needs an AHCI controller with SGPIO
+> enclosure management and the software activity LED enabled).
+> 
+> Fixes: 18f7ba4c2f4b ("libata/ahci: enclosure management support")
 > Cc: stable@vger.kernel.org
-> Signed-off-by: Zhao Gongyi <zhaogongyi@BYTEDANCE.COM>
+> Signed-off-by: Hyunjung Ko <hj351016@gmail.com>
 > ---
-> Tested on a QEMU PIIX disk with 16-sector transfers and a multiple count
-> of 16:
-> 
-> - WRITE MULTIPLE with DMA was rejected with ILLEGAL REQUEST/INVALID
->   FIELD IN CDB and a field pointer of 1.
-> - READ MULTIPLE with DMA was rejected with the same sense data.
-> - WRITE MULTIPLE with PIO data-out completed successfully.
-> - READ MULTIPLE with PIO data-in completed successfully and returned the
->   8192 bytes written by the preceding command.
-> 
-> Both invalid commands completed in less than 1 ms. No ATA timeout or
-> hung-task warning was reported, and subsequent I/O remained responsive.
-> The modified libata-scsi.o also builds successfully.
-> 
->  drivers/ata/libata-scsi.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 115b75a313..31d822d78e 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3507,6 +3507,11 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
->  	if (is_multi_taskfile(tf)) {
->  		unsigned int multi_count = 1 << (cdb[1] >> 5);
+> Changes in v2 (thanks to the Sashiko AI review):
+>  - gate the shutdown loop on ATA_FLAG_SW_ACTIVITY and skip slots whose
+>    timer was never set up (emp->timer.function == NULL): calling
+>    timer_shutdown_sync() on an uninitialised timer trips the debug-object
+>    and lockdep checks
+>  - sweep all EM_MAX_SLOTS em_priv slots instead of the current links, so a
+>    detached Port Multiplier's fan-out timer is not missed
+>  - correct the Fixes: tag to 18f7ba4c2f4b (which introduced emp->timer and
+>    ahci_sw_activity_blink) instead of the later code-move commit
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 001a6f5e4172..3f6844acb413 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -2605,9 +2605,32 @@ static void ahci_port_stop(struct ata_port *ap)
+>  {
+>  	const char *emsg = NULL;
+>  	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +	struct ahci_port_priv *pp = ap->private_data;
+>  	void __iomem *host_mmio = hpriv->mmio;
+>  	int rc;
 >  
-> +		if (tf->protocol != ATA_PROT_PIO) {
-> +			fp = 1 + cdb_offset;
-> +			goto invalid_fld;
-> +		}
+> +	/*
+> +	 * The SW activity LED blink timer (emp->timer) is armed from the I/O
+> +	 * path and re-arms itself, and the ahci_em_priv it lives in is part of
+> +	 * the devm-allocated ahci_port_priv; shut it down before that is freed
+> +	 * or it can fire against freed memory.  Only slots whose timer was set
+> +	 * up by ahci_init_sw_activity() may be touched -- timer_shutdown_sync()
+> +	 * on a never-initialised timer trips the debug-object/lockdep checks --
+> +	 * and all EM_MAX_SLOTS slots are swept, not just the current links, so a
+> +	 * detached Port Multiplier's fan-out timer is not missed.
+> +	 * timer_shutdown_sync() also stops the self re-arm.
+> +	 */
+> +	if (ap->flags & ATA_FLAG_SW_ACTIVITY) {
+> +		int i;
 > +
->  		if (!dev->multi_count) {
->  			ata_scsi_set_sense(dev, scmd, ABORTED_COMMAND, 0, 0);
->  			return 1;
+> +		for (i = 0; i < EM_MAX_SLOTS; i++) {
+> +			struct ahci_em_priv *emp = &pp->em_priv[i];
+> +
+> +			if (emp->timer.function)
+> +				timer_shutdown_sync(&emp->timer);
+> +		}
+> +	}
+> +
+>  	/* de-initialize port */
+>  	rc = ahci_deinit_port(ap, &emsg);
+>  	if (rc)
+> -- 
+> 2.43.0
 > 
 
-I'm a bit conflicted about this patch.
-
-There is nothing in SAT specs that requires us to validate the protocol field.
-When using normal (non-passthrough commands), the protocol field is initialized
-by the regular SCSI to ATA translation done by libata.
-
-For passthrough commands, it comes from the user.
-
-Not only does it come from the user, it requires CAP_SYS_RAWIO:
-
-scsi_cmd_allowed() {
-        if (capable(CAP_SYS_RAWIO))
-                return true;
-    ...
+Patch looks good to me, but the code comment is a bit overly verbose.
 
 
-(ATA_12 / ATA_16 / ATA_32 will all return false, so not allowed for a regular
-user.)
+Perhaps something like:
 
-And... even if the user sends a command with a protocol that is not as per
-ACS spec, the command should time out and EH should reset the device.
+        /*
+         * Stop the SW activity blink timers before devres frees pp, skipping
+         * the slots that ahci_init_sw_activity() never set up.
+         */
 
-
-So... If the user sends a passthrough command with the wrong protocol...
-Well, that is on the user, no?
-(It also requires CAP_SYS_RAWIO)
-
-
-If we were to add protocol checks all passthrough commands, then we should
-not only check READ/WRITE MULTIPLE, we should check other commands like
-WRITE SECTORS (30h) and IDENTIFY DEVICE (ECh) too.
-
-But, I don't think we want that. Damien, thoughts?
 
 
 Kind regards,
