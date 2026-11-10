@@ -1,58 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794312403;
-	b=QoCvpPp2B8Q6eUjijVarlY3vS+VLpFnpCIlEUQ506pIVkYr+LslWuU3J7QQD4cErx5Il
-	 RZf4PcyYYkZ7OiVuNxtuPR352G3OTIqMhoMc2B2m9l5snXv6Z3G6xvk59k4F06Egujyz5
-	 URUAmVJl2dXUjtg3TYrDoVC9oMopLez9ASVbV3H+nlBGRxPOSNtv+QTLiX5AA2sxbLwwV
-	 bgtmJfjGMJ+tq8qk0fJwX6CjJU5Tq7TOVYZRtKM9xqHp5scIwgYQd//AxWrDYS8SjMEWS
-	 /bzC400NyJUfCpSTNlO60gLHPLVuEn14GuRuIXFSR3IlHnbtWki2+xRBRXORaUNWREw==
+	t=1794314867;
+	b=wSHS+uANRRJwZuZ8ucm8HhivfCNOLexmUEJQdZDy+lJI5EVbCWP2j3Ftlan1O4SX9ufH
+	 SU2TDYUHOGxOWUdwMZVub1ha6RbMwXYW0oWjBKMbCs5XaotUD2qZPDtbCncJQ1m4D9gns
+	 AvBBhVSlSgsu+TP5AOcIIRU3U0nw9krjEzs86RbRh7C/E/YY+/WY6liHBqrDwopM9u0xe
+	 mZGv8clVpPnNoagXlu+UhmpCdolMp+aNQcNy5rjAICcFYXpytLIsK3GcGV1GjRcEU+YD+
+	 hg+dQDu2rtPMDMrGJF9VXpIh0RknBaVvB+76hHCWCvjbigoYqvsY75kJDFbInX6LDJg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794312403;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794314867;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=0Y3uJ0syuEB+M6JsDkOhH+hTZjk9QMarfG2dMbQOK9E=;
-	b=CEnbYDD21T96Ijz2pijlIw3Gw38v/qntVmuAzkJpjgRtcTNbk/t3t1DcJLaw3HkUCa9T
-	 Qxt47kqIBs8ZOO9BLajYoccISOnDwxs3It0jCaYYw4FMzNp+YG0fTuZ2W5LdZIhi+jkCu
-	 zAJSg3fIVQ9h7sGP9Zv5oH0QaqvAZNVMj25fRCFM7dvG5Xjaevc19Yyufd5NJWAIB+k28
-	 DIXop99YK4QhzzBf7Kks1Kq2daznqI6kmUKl65XpFPr1W1X6jJNU89iK4zfZe7DDsvBiF
-	 H6znCWz8sMRnjMkO7zhhe+CbeD4Ah568OmYRCKw/KZM4w1DqoXAhFdXkABB/i+eUaNQ==
+	 MIME-Version:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=TfBO+LCxAQ+g2436mdDoIGBH1lCYYEh5xPtEafTn2ck=;
+	b=KDrG1UaWhT2M29OmpLUlQ8XU6/s12tb2JVT3XRDNymKnrMdHGWEmKhb+qdgYtrW6Bu9D
+	 /on7L3gvvtImrAk3OMm/7NDzEO9ZcAqwSs2IDyC1KhBXmdKsDg7YgHg23pLgQM961dhAw
+	 wbKPvozQJBA7pGh54K5qZUxZECL9sLncztGt3FyK7V7bdtjqfugrhqS1d23U9d3F2zjlp
+	 gi5C4YwIFI0myvbOnjZrwdf/THvurafx9GoY0hUHq8BsbBwFsfsa9RxG06Lm3GLuWaCtm
+	 58UFW6/P1+WoD0FVWH+s/d8B3iPj2azIAhAM+WNTH3h9n4Vo7QU9UuzKoVuvXznMFtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gIdBtlJo;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=f1FFDOOu;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA209606A321;
-	Tue, 10 Nov 2026 12:06:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFDC7606A321;
+	Tue, 10 Nov 2026 12:47:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gIdBtlJo
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC2961F008A1;
-	Tue, 10 Nov 2026 12:06:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=f1FFDOOu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F98F1F0089F;
+	Tue, 10 Nov 2026 12:47:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794312402;
-	bh=0Y3uJ0syuEB+M6JsDkOhH+hTZjk9QMarfG2dMbQOK9E=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=gIdBtlJoSOGehU2ycNn7tJ7KGjJrUZtmC9Arkc7KARa3VY0je96bTmGNLPiBOwemZ
-	 eXTQJH3GjGmbY9Umcka3FS7afVKxVLtZkTsBxgdK729NIEVytCjPi7ETxtmrwoqYk8
-	 z5s1Q+efgzFs1z9gEFcyP0pPr3nxAL+PMRiUTYdwEat7k4ICPEJO2mur0MVlIoinip
-	 jW4dOLacJj+glkmtmxrrywy77j53oOoeKlAdiHGC+BSLGxDJoA+4S2yD/ZQ/GY8E/+
-	 LNMmoMYRXDBkVF3S+I5qExtiMW3fTq/b5lABSnorjHY1F6DnmJbGBNgVR7RF7wDX0y
-	 SgfDHzh/wzIvQ==
+	s=k20260515; t=1794314866;
+	bh=TfBO+LCxAQ+g2436mdDoIGBH1lCYYEh5xPtEafTn2ck=;
+	h=From:To:Cc:Subject:Date;
+	b=f1FFDOOuB5wmqHPBFyeykcZsmy17UT+Ost6tqoubXHBFQq81h16aUN1JO5ilj4XKr
+	 1AY/RrFu4cI8xqBJZlBo7N7fjoIUJ+pCGy053DI/Jttcl/oJhGwaSJ5AgEPvmjUZqz
+	 GzWNV+keA/mnH8EL8iXDK4kzPJKN/5XecHsFV5MEuYjcJHY1FsoIrJYnRHmP5P8muh
+	 YIrOe62MkIDE42xU7zntLjjIpirXNOy87a954jvmN1KNQ4KxcvFWrDm6cWsHTsD0JI
+	 Ple0FqxeeE/O/gf+8z3Zsb0oYrP+ByifHOidTJqMHVHId/Q/qjqi4B6ko9qlo67C7+
+	 FwuGDGB60aiBA==
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Hyunjung Ko <hj351016@gmail.com>
-Cc: Niklas Cassel <cassel@kernel.org>,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>,
 	stable@vger.kernel.org
-Subject: Re: [PATCH v4] ata: libahci: delete the SW activity blink timer on port stop
-Date: Tue, 10 Nov 2026 13:05:53 +0100
-Message-ID: <179431233675.231492.2022512763173311216.b4-ty@kernel.org>
+Subject: [PATCH] ata: libahci: Do not use an EM slot for the PMP control port
+Date: Tue, 10 Nov 2026 13:47:43 +0100
+Message-ID: <20261110124742.275022-2-cassel@kernel.org>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261110105040.2483806-1-hj351016@gmail.com>
-References: <20261110105040.2483806-1-hj351016@gmail.com>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -62,30 +58,66 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=979; i=cassel@kernel.org; h=from:subject:message-id; bh=cL3XFvquJ8SBPm6BxcBI6grUqhwtLU9qFgskVPhWfK4=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLI+c2yXc9kfcXGl47Tej6XTN6eq+W1u/R+qc0/Q6f7dq 5w9TG2FHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZgI03KG/7kPT0mE/uvKL5xe 5NB1VUmDJyt+Ue7k6zdVOz0ezxWwOMnIsP2Q4/uXx5v+1XAfOpOl8i5tncCr3U+qlshvao9NbN/ dwQAA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2450; i=cassel@kernel.org; h=from:subject; bh=iMeYow2RsAdZRduRLqWuQqAZmQ8Xox+xNjr0VleBCNw=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLI+C+W5Pl6SeJP1tVJQ2cS9QVGSLs4eK2daudkzXyyYK ieyoV2ro5SFQYyLQVZMkcX3h8v+4m73KccV79jAzGFlAhnCwMUpABMRZGdkmL3KeXFl7bzbK0Wi W3o3iRvqrBcteMK88aX9vFqbv3m3fzAyrFuaEtF8Zf3VJyJZ5jPrDrO/eKreLxQQPbnIpVJclNO AFQA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-On Tue, 10 Nov 2026 19:50:40 +0900, Hyunjung Ko wrote:
-> The software activity LED support arms a per-EM-port timer (emp->timer,
-> ahci_sw_activity_blink) from ahci_sw_activity() on I/O, and the timer
-> callback re-arms itself while the LED is blinking. The timer lives in
-> struct ahci_em_priv inside the port's ahci_port_priv, which is allocated
-> with devm_kzalloc() and freed when the port is torn down.
-> 
-> ahci_port_stop() never deletes this timer - nothing in libahci does - so
-> when the SW activity LED is in use and the AHCI port is stopped (driver
-> unbind / module unload) while the blink timer is still pending,
-> ahci_sw_activity_blink() runs after ahci_port_priv has been freed and
-> dereferences the freed ahci_em_priv (use-after-free).
-> 
-> [...]
+When a Port Multiplier is attached, sata_pmp_attach() sets the pmp
+number of the host link to SATA_PMP_CTRL_PORT (15), and every PMP
+register access then goes through ahci_qc_issue() -> ahci_sw_activity()
+on the host link. ahci_sw_activity() uses link->pmp as an index into
+pp->em_priv[], which only has EM_MAX_SLOTS (15) entries, so for the
+control port it ends up one past the end of the array.
 
-Applied to libata/linux.git (for-7.5), thanks!
+Commit 1e41e693f458 ("ata: ahci: Match EM_MAX_SLOTS with
+SATA_PMP_MAX_PORTS") grew em_priv[] from 8 to 15 entries for a UBSAN
+report about this very index, but index 15 is still out of bounds.
+UBSAN stopped complaining because &pp->em_priv[15] is now a
+one-past-the-end address, which its bounds check accepts, while the
+accesses through it are still out of bounds.
 
-[1/1] ata: libahci: delete the SW activity blink timer on port stop
-      https://git.kernel.org/libata/linux/c/0c5f6cd1
+These accesses happen when the host link has ATA_LFLAG_SW_ACTIVITY set.
+Enabling SW activity via sysfs for a disk attached directly to the port
+sets the flag on the host link, and it stays set when the disk is
+unplugged. If a PMP is then connected, each PMP register access makes
+ahci_sw_activity() increment a counter past the end of em_priv[] and
+pass the address of a nonexistent timer_list to timer_pending() and
+mod_timer().
 
-Kind regards,
-Niklas
+The flag cannot simply be cleared when the disk is unplugged: enclosure
+LEDs belong to the bay, which is why em_priv[] is indexed by slot and
+the blink policy outlives the disk, so a replacement disk in the same
+bay should keep blinking.
+
+Fixes: 18f7ba4c2f4b ("libata/ahci: enclosure management support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libahci.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 9e970408916d..ef760d81d1d1 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1033,11 +1033,16 @@ static void ahci_sw_activity(struct ata_link *link)
+ {
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
+-	struct ahci_em_priv *emp = &pp->em_priv[link->pmp];
++	struct ahci_em_priv *emp;
+ 
+ 	if (!(link->flags & ATA_LFLAG_SW_ACTIVITY))
+ 		return;
+ 
++	/* The PMP control port (SATA_PMP_CTRL_PORT) has no EM slot */
++	if (link->pmp >= EM_MAX_SLOTS)
++		return;
++
++	emp = &pp->em_priv[link->pmp];
+ 	emp->activity++;
+ 	if (!timer_pending(&emp->timer))
+ 		mod_timer(&emp->timer, jiffies + msecs_to_jiffies(10));
+-- 
+2.56.0
+
