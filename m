@@ -1,69 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794276477;
-	b=Ts13IBuEJACXRzB3Inim3GQRcFKukXSBxQuxeINo5OL0McAFnyMnMq2OpzDL3keL4uxa
-	 6DTFKuTUyasGJdzTqIBGRQjESA37hpK8bwPpS4jI6hdpt6VtLvqVoRBfcVZ7+B+5A8iio
-	 rp0kqVXKOVp1QHRJiByxts2BLKrEjGT4fkbhKIVcRg0Myu5dzsyOWx5eyT3vp53rl5To4
-	 iRWJjLd+/i/CyZqzRpEy9sm4wd8WoYlHpFe0bCpGL7jzrEvHfq8AO/oQk/L2ecqfLHacO
-	 JFdmYLpkLXbIv0GoLNmad8ZaRCW2h5ylMT3jxkohX1+sdwnSZ6rPY+jPZcTQ9jWtUxA==
+	t=1794281233;
+	b=R78zj456Q47eojTsJB6Pnacn4UjW+jYYQIXiEWy0qrtg0XxoPxDjOtng3UmurQsB4TLk
+	 1362JynUu4FMDAU4P2/sCGrFlakhthThTaiJvGgKVjGFCtfsDjU9XS9DfntIE4tIcCyJw
+	 n88Q0jsN7rL+ZFJM8MIRyvIrFZLo5Mps0gYIMQ//sWXV9VZqBGeQUM4cLXdFqqqY5E7x3
+	 lvvYUYqaBiCjNPKyT+BBep4CagM/2r+sY6Y7/Yf6JaPBtljaM1l0sjSm7GJFe0Wtdt77d
+	 Y+HoXxOeGhvF9TsgyZJlWlbjE56xAjWwCdt1BO5QSw2DYdTjgat50mzuVuSjg76W4KA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794276477;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794281233;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
 	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
 	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
 	 X-Fangmail-MID-QID;
-	bh=Z4fiPdjuryHoPrnsvdKYYlxnv3G1wnCz9WlJstxSDKo=;
-	b=iQtnWEbA86e72ELQYdhv9/FuwRS4CzObHHG+8Zztn9wN5w8ByHNj4qlsD04LiL8js0qc
-	 LMfRtrMueTcM+hw3JvzFo8+YdWko+35XYnyuLgw46R/bxmppMFfiVW5uC1sZIK1g1PN14
-	 FYxlulPpupJdS2wL6cQ2EPuWT7p0fcT6ls1AQJr4rKcxX0p64BGI00nXQNeM8ncC3tueU
-	 JDwB1OOhXeGNkNDHQPfq4u296NbsX+8tHNJbCjpFP9QfL59Z5yxJZ8lsiSNnis6tWcwEl
-	 qhjbtF+u+KE7aTFnzV5Cmx+eEpmGWe0GIpWhrdfh8POmlCR02Gyp1xw7PY+0zN0MtpQ==
+	bh=eawXPhK/eFBjtNe/1dhvjiN3YjyzwNQYK82Vhcgxmlk=;
+	b=zO1eg27oNwGZyodpDxUUrHiv2x5oHT1h6oPwWWv1bifcjde6hj9WOODPBeLFWPdfye2J
+	 AfiWCcIHXgvd0AlGO2VTTpqYHqNAdH29/N7ieAyL7BNr4JkCRRhCDheRUPFoIaLsITR1Z
+	 LjL7jb2jR3/rdgnPeUdSjGVDE2nI2hp/he2O7shwz7QCE3SMx0685UY3IPXw4KRu+nyww
+	 ciVuVV01BZJFE+AIg/tJoZJTTcKZSf+xyK87FHtQVLY6KeDO2YJBgXKH2v794cuxU0nvL
+	 G+cQiH83SmJpFgYY2RrxSpaOTcdI38JKy4dNBMYBoNRPLtFKwaIbj7bF7nREAMTLttQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=BmRTNTCA;
-	arc=none smtp.remote-ip=183.62.165.209
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=N0EjzIiS;
+	arc=none smtp.remote-ip=160.30.148.35
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2C06606A321;
-	Tue, 10 Nov 2026 02:07:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F2C06606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534C4606A332
+	for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2026 03:27:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 534C4606A332
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=BmRTNTCA
+	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=N0EjzIiS
 Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jNqml0Jmqz57HS2;
-	Tue, 10 Nov 2026 10:07:51 +0800 (CST)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jNsXF6SCPz8Xrrh;
+	Tue, 10 Nov 2026 11:27:09 +0800 (CST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794276471;
-	bh=d9FkNtdpXKsoqZFBPF8zP0zgE5utmCIsm4jF9JD3q/s=;
+	s=z202610; t=1794281229;
+	bh=gT98MkiGoiBsoc873Q+qJViCbrAze7Un+ECFq6d66kQ=;
 	h=In-Reply-To:References:Date:From:To:Cc:Subject;
-	b=BmRTNTCAqXyNfvatUR416oMS98Ce9H+sFH7R/GM2yhzeM7v6TTeE4mEHbzKq7rVou
-	 quA9EoRRrC8XsQj6OIV253XXou1Wfy+7Wh+QOud0Jqo2yJ3BtGVf1AsGhAYJNyTDiV
-	 ghiGBP5P5J181PvpqGuWL+bFrasUvqroYpxgfH1qj1apa283Oyf1KM8zwDVMLWnmRb
-	 3ubQ+vwDilJ76XyYpikMeV/nUko43RTBMfi5uMA28RByN1viorHoWgs/AdXtx6Zofy
-	 HHuTNeDJijsoKHkBNky/vEXlxgTy+EnTCZxOFKmuGdHn7Zp8o7dwRvlBpPmB6Cb8T4
-	 OD7QVc/LTb/og==
+	b=N0EjzIiSrl/WN+1TX+py10fOT9Y5X9XObFvccG289kXzXD8cN00HQ2NWaYvHJWI+B
+	 eNYwoowBldEHRkQvT8YY72x+Wi48ObFSmu8itpyN+QrZcxCAtZj6s9XKrLCx6Alq/t
+	 fOgW66EN5JVQdFuoWmDmXYflszSz3xW8ix8oqeSyJfJrXElcFmuqlWLu7OJBcJy4kY
+	 UfknhtYxXdo4xRx8jK0XIRV4zlZ7I/Jx7Sa8sPGecfLeoHexlm7iTigt+2L77iod53
+	 RZIbORz7iAcIEwiJPaEX0nLIEA/49q7xBXb1JzWTj9QHNpcPPBQKRYIO//Wm8+LJ5c
+	 GKGwRzANgn1Ng==
 Received: from xaxapp04.zte.com.cn ([10.99.98.157])
-	by mse-fl2.zte.com.cn with SMTP id 6AA27gew014253;
-	Tue, 10 Nov 2026 10:07:42 +0800 (+08)
+	by mse-fl2.zte.com.cn with SMTP id 6AA3R27I018370;
+	Tue, 10 Nov 2026 11:27:02 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
 Received: from mapi (xaxapp05[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Tue, 10 Nov 2026 10:07:43 +0800 (CST)
-X-Zmail-TransId: 2afc6af27c6f35d-33e6a
+	Tue, 10 Nov 2026 11:27:03 +0800 (CST)
+X-Zmail-TransId: 2afc6af28f07637-d10a7
 X-Mailer: Zmail v1.0
-Message-ID: <20261110100743207gue5TpQyWMj3Sw1Fuwd6c@zte.com.cn>
-In-Reply-To: <avIjXxp3hu7xd_s9@ryzen>
-References: avHknBRJnZPpAIke@ryzen,20261110000234827nXRPQjzsInWFXaAaxeF6N@zte.com.cn,avIjXxp3hu7xd_s9@ryzen
-Date: Tue, 10 Nov 2026 10:07:43 +0800 (CST)
+Message-ID: <20261110112703284t5yS94EoCghFvLKCn4-SB@zte.com.cn>
+In-Reply-To: <avI7-lrzsRL_Gz75@ryzen>
+References: 20261104220832716LXKf7OaS9dt1VJ8Q959AG@zte.com.cn,avI7-lrzsRL_Gz75@ryzen
+Date: Tue, 10 Nov 2026 11:27:03 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -75,25 +75,55 @@ Precedence: list
 Mime-Version: 1.0
 From: <shao.mingyin@zte.com.cn>
 To: <cassel@kernel.org>
-Cc: <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSF0gYXRhOiBhaGNpX2R3YzogcmVqZWN0IGludmFsaWQgZGV2aWNlIHRyZWUgcG9ydCBudW1iZXJz?=
+Cc: <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>
+Subject: =?UTF-8?B?UmU6IFtQQVRDSCAwLzNdIGF0YTogbGliYXRhLXNjc2k6IGZpeCBBVEEgUEFTUy1USFJPVUdIKDMyKSBoYW5kbGluZw==?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6AA27gew014253
+X-MAIL:mse-fl2.zte.com.cn 6AA3R27I018370
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Tue, 10 Nov 2026 10:07:51 +0800
+X-SOURCE-IP: 10.5.228.133 unknown Tue, 10 Nov 2026 11:27:10 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF27C77.000/4jNqml0Jmqz57HS2
+X-Fangmail-MID-QID: 6AF28F0D.001/4jNsXF6SCPz8Xrrh
 
-On Mon, Nov 09, 2026 at 08:47:43PM +0100, Niklas Cassel wrote:
-> I think it is okay to keep his tag, since the only change is a dropped
-> warning.
+On Mon, Nov 09, 2026 at 10:32:42PM +0100, Niklas Cassel wrote:
+> I looked at the SAT specs, and the comments appears to be valid:
 
-Thanks, agreed.  I will keep Damien's Reviewed-by on the v2 and send it
-as patch 2/2, with the libahci_platform fix as patch 1/2.
+They are, thanks for checking.  All three need action.
 
-Best,
+> Does the ATA PASS-THROUGH (32) CDB have a MULTIPLE_COUNT field at all?
+> ...
+> so bits 7:5 of byte 10 are reserved, not a count.
+
+Right, and the commit message was wrong.  With those bits zero,
+multi_count is always 1, so the warning it describes is still emitted.
+
+v2 drops the MULTIPLE_COUNT handling for the 32-byte CDB instead of
+moving the offset: the sanity check and the comparison are skipped for
+VARIABLE_LENGTH_CMD.  Field pointer changes remain only for fields that
+are actually validated.
+
+> The index line of this patch records 927e75b7498d ... applying the
+> posted diff results in 20ba572c0e37 ... That would also explain the
+> interleaved - and + lines above, which git does not produce.
+
+Confirmed, and sorry.  Those hunks were hand-added to the emails after
+the patches were generated.  v2 comes from git format-patch on the
+tested tree, and the test notes now include the field pointer.
+
+> This isn't a bug, but this hunk changes the field pointer ... Would
+> this fit better in the first patch ...
+>
+> Should the remaining field pointers ... also take cdb_offset into
+> account? ... PROTOCOL is in byte 10, FEATURES (7:0) in byte 21 and
+> COMMAND in byte 25.
+
+Yes.  It moves into 1/4.  v2 is four patches: reworked 32-byte passthru
+(no MULTIPLE_COUNT, PROTOCOL field pointer), the unchanged service
+action patch, SAT sense data without the extra hunk, and a new patch for
+the remaining field pointers (PROTOCOL/count, FEATURES, COMMAND) mapped
+per CDB format.  The cover letter will say what is really left.
+
+Kind regards,
 Shao Mingyin
