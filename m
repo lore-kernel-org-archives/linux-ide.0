@@ -1,52 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794306454;
-	b=Z9zVy1jNpr5G1xGVLoybXPn3ANHXwcKwr8JEQIWbPRgmeExuMtHiCrzK1xIvJOY226dW
-	 60lEF86IodFFQIJbdRauqk/k2QASiWtK/2CgEyZkrsbjF7EGSitVzHpE3XEyLUwV3fkFl
-	 dDnWqz0HdT2iHpz9LlH4TahuCAHr+yWgTTJJzV3U+4R+j/1sqyA99Pi8gG0IGxLyhxEXm
-	 xhban9lvth3mxO+VX8otz7cdwwpyAMnd0JF8mymDhrYB+jxzgNezTc/eAiZvq0bmzkefM
-	 U/NP6YjFsr4myaXLcFLf0ExFgk9BJFndB/oRAwX7gKxQ9+dc5eXcwLoypb1UBtVPnXw==
+	t=1794307612;
+	b=JzWeXfL7ey9Hx6e9GlRADeIilgkG3iJG5gebxLT7eJ48Rx9ELmlCI7FkOYc/J+ObVfoi
+	 7HD1zinXKGNotUhbVFoMJuwR99XJ7iYSQxufeDPXM5KtNq6uIckSe90SKf2aT2PQrGx4T
+	 IyUxHjyKtFAbmWE8FDrErbqVr1Zm5FPJ+xMuc4kDkXz/nMSvqQYvpA1hktKchRAgnNyE4
+	 uHGujDQd0vusK4GljNL8jYYFXh1HgcxO76Zxk7dnAEb7UZvlzPs1TlWZjoDudfo/Neosu
+	 IlIajqUk2OC6RYgEt+nW7EKoF/adRa88Zjg+M/9MpgbjF45RAblUPcauMpwqFTt79rw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794306454;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794307612;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Qkkw/pVWch/kBFYIok040cLMtBM2B5mFBuS/q/6uGFQ=;
-	b=ndrvHNMc9YKscZYzQIDABBcI/I5j9mx/C9UOK2KD9WIpAg4gBYx81ELtQaieDs52pzNS
-	 t9nXU5az0CTGVvCayCSkZlonIOSlQ32jtx/zxBXokJ75485nC+0HgQNVbHO8gMC0ueHyy
-	 hkMDso6HMo7dg5L4fDK+z9Ir2/V1XswOzjepcoVdMST5VkuPD+3ms3t/U0E0VdHlp6XDi
-	 iaq3w+/BUPSy6gdh5TzG7sBg0XHWISumJkLBti3zqWcDaaS0zhBSYdnHN6wqYrsy6Rvr7
-	 GMn6PKdJggbY96RN+ejJQUTgLKV/Kndf5RAIFU24gznYAm+sK6zYARpOa7qrYoSaeOw==
+	bh=nODhUAwhKWYqEgyldjAn3rBqShEs7DVtSuNflrkrxUM=;
+	b=RGUlVnJKsh9rwdSsC7/4wLoQDOSMwZP3BNETil0pMtiw20IYoNrs+TKu0DSVOOnqpCKT
+	 sRs4cNWJ2OL1frf7x9yOMdob8oh8u58+flnb38SwfyGUPEHKZy+4FOAhOyjp15UaIsYlz
+	 FyjdNC5CcLuwtmgRM7qkIfRiOkH71Bq06slJFmj23+UpSxEoOyuXHxvRUEALuovUtMnsB
+	 g1z6zsrdbMiN8IOWdcyCVwwzwtVM2PSscuypCwuGBYgxeJ0adzVjWVehA90Xmjd0qhQK4
+	 ATJ5PEADbjShPby8AZtFTj/yTTqXm6APCXZa7r+ykOngTgMux769Rj9TV7CxNfttGVA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="JM8z/D6i";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bg0Fzj6O;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D5E7606A321
-	for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2026 10:27:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54FAD606A325
+	for <linux-ide@vger.kernel.org>; Tue, 10 Nov 2026 10:46:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JM8z/D6i
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A96F31F0089F;
-	Tue, 10 Nov 2026 10:27:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bg0Fzj6O
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6E6E1F008A1;
+	Tue, 10 Nov 2026 10:46:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794306453;
-	bh=Qkkw/pVWch/kBFYIok040cLMtBM2B5mFBuS/q/6uGFQ=;
+	s=k20260515; t=1794307611;
+	bh=nODhUAwhKWYqEgyldjAn3rBqShEs7DVtSuNflrkrxUM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JM8z/D6i7cM8RPHJgHogr7ESx8h1KBImzkX6bqVxWrUlh3jdmNTJJxsV0xjGZ5UrL
-	 9yCW2Z5OXnO2SeOP07RH3HY/LlZVi02cWI6TH8W4HAi2ugqfPZTMsJi2lEGF0QmIv5
-	 OsWO34OToZLjFMVK68vhENdKLvgkiV6fIQFAu+7bX86Acw5SzocqxBLQaKaX28wzzc
-	 hmx6jx4qPUHyDgSxteJCC/gAFmexTqSZRYqEmgvpB7alCzKp5+AQA4gHP0xSA46txJ
-	 81UHMD+oFuWfRCnTZhNYIW2hOJt7IT7YbwlMt9BrF7I18v3SsPDyyH8U5uFYGr96f1
-	 0eZvHg5k+IJyg==
-Date: Tue, 10 Nov 2026 11:27:30 +0100
+	b=bg0Fzj6OYfvWvWWHikH+DFQLk4sTfxEeeACYhYHw08aM8DAhj0Sv4BnBACuxbT/n2
+	 HmHiAlzsXwjF5c8UqgN8jMEWTp9++S483ZDIPjoiGxeyi3Qmkar1Fc9/qWTghx9nR8
+	 soiHDLLI+eDt365JJf7vcl51KrKHirM+Tu80Hp7zdBD+X7MHL1zqQuieoACBImKRvA
+	 FajYbjrZm+Tlz4d1TrPqMo7DWUui4E//EtsxkpfNC7ls5RCUDkd3U7ar4hKfKx1t7G
+	 f4vqGDOvjbnAd8O7W5/u/ZI9dP0BfYa7E3P13MUv2BKja9yluodqKaDga97/+iAG/K
+	 UCxNZxMOCznnQ==
+Date: Tue, 10 Nov 2026 11:46:48 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Hyunjung Ko <hj351016@gmail.com>
+To: Tobias Kriebisch <tobias.kriebisch@tecbeast.gmbh>
 Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3] ata: libahci: delete the SW activity blink timer on
- port stop
-Message-ID: <avLxkrcgP97hiUV1@ryzen>
-References: <20261110090303.2415681-1-hj351016@gmail.com>
+Subject: Re: [PATCH] ata: libata-core: Add NO_NCQ_TRIM quirk for Samsung
+ PM893 (MZ7L3)
+Message-ID: <avL2GHf5tXhiXmPb@ryzen>
+References: <20261109134541.3766394-1-tobias.kriebisch@tecbeast.gmbh>
+ <avHfKaY-skamodEr@ryzen>
+ <71332274-ae9d-4d2d-bbc6-22c559102c4c@tecbeast.gmbh>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -58,44 +60,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261110090303.2415681-1-hj351016@gmail.com>
+In-Reply-To: <71332274-ae9d-4d2d-bbc6-22c559102c4c@tecbeast.gmbh>
 
-On Tue, Nov 10, 2026 at 06:03:03PM +0900, Hyunjung Ko wrote:
-> The software activity LED support arms a per-EM-port timer (emp->timer,
-> ahci_sw_activity_blink) from ahci_sw_activity() on I/O, and the timer
-> callback re-arms itself while the LED is blinking. The timer lives in
-> struct ahci_em_priv inside the port's ahci_port_priv, which is allocated
-> with devm_kzalloc() and freed when the port is torn down.
-> 
-> ahci_port_stop() never deletes this timer - nothing in libahci does - so
-> when the SW activity LED is in use and the AHCI port is stopped (driver
-> unbind / module unload) while the blink timer is still pending,
-> ahci_sw_activity_blink() runs after ahci_port_priv has been freed and
-> dereferences the freed ahci_em_priv (use-after-free).
-> 
-> Shut the timers down in ahci_port_stop() before the port private data is
-> released, only when ATA_FLAG_SW_ACTIVITY is set and skipping em_priv slots
-> that ahci_init_sw_activity() never set up. Because the callback re-arms
-> itself, use timer_shutdown_sync() so a concurrent re-arm cannot resurrect
-> it.
-> 
-> Not tested on real hardware (needs an AHCI controller with SGPIO
-> enclosure management and the software activity LED enabled).
-> 
-> Fixes: 365cfa1ed5a3 ("ahci: Move generic code into libahci")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hyunjung Ko <hj351016@gmail.com>
-> ---
-> Changes in v3:
-> - Shorten the code comment (Niklas Cassel).
+Hello Tobias,
 
-It seems like you modified v1 instead of v2.
+On Tue, Nov 10, 2026 at 09:19:58AM +0100, Tobias Kriebisch wrote:
+> On Mon, Nov 09, 2026 at 03:56:41PM +0100, Niklas Cassel wrote:
+> > Please boot the latest kernel, 7.4-rc2, and verify that the problem still
+> > exists.
+> 
+> The three drives hold a ZFS pool on a production server. OpenZFS does
+> not support 7.4 yet (the latest release supports up to 6.19), so I
+> cannot run 7.4-rc2 on that machine, and I don't have a spare machine
+> with this drive and controller.
+> 
+> Would results from the newest kernel that a released OpenZFS supports
+> be acceptable? On that kernel I can test noncqtrim and nolpm separately,
+> and then boot a kernel with only the needed quirks and no libata.force.
 
-v3's index line is 001a6f5..873645c, exactly v1's. Applying v3
-to blob 001a6f5 actually produces ace66cd, so the patch was most
-likely hand-edited from v1 rather than regenerated.
+Normally, any problem where OpenZFS is involved is ignored, because the
+CDDL license is incompatible with the GPL...
 
-Please use git format-patch.
+
+> > If the problem still exist on the latest kernel, apply the minimal set of
+> > quirks needed to fix the problem.
+> 
+> Understood, the v2 will only contain the quirks that are actually needed.
+> 
+> > And yes, build and boot a kernel with your patch to verify that the
+> problem
+> > is actually solved.
+> 
+> If testing on 6.19 is helpful here, I will build and boot 6.19 with the
+> patch, verify that the problem is solved, and send a v2 with the results.
+
+... however, since it seems like almost all Samsung drives already have:
+
+ATA_QUIRK_ZERO_AFTER_TRIM and ATA_QUIRK_NO_NCQ_TRIM
+
+(ATA_QUIRK_ZERO_AFTER_TRIM is actually a whitelist, saying that the data
+after trim is guaranteed to be zero, so this one tells the upper layers
+about the FW behavior, so that it can use the most optimal commands.)
+
+I think it is reasonable to accept quirk(s) for this device if you test
+with 6.19 and actually verify that the patch solves your problem.
 
 
 Kind regards,
