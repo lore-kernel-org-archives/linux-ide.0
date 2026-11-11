@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794439724;
-	b=z9Xxo66/9tCl1hsedyMED45WCFX59mYOlgXCJI+39P36tKCcG9tA8xlhtLl4WdqgcAL7
-	 gnDiDup3fn0jTuF6OJZOMxvwEJtf1sTSJI6sGd9yBM+BweWf8wPbrhnqy6NdU1ec6RMP7
-	 VMpBBsUET+3R8il2+0EjbJnpJxyt67fEYQkb1xGqxXgL/8ycADuoERtAcMm87ezkub7el
-	 wN35Yf6Fnf3oub5WKnu+1PPf6cVzMwpZYEjKBx1TKixZoBgwCWrAeCxFGaSWSGDMFAtsF
-	 rawwjLMtCU/9Nvpk344ci26CUZsqNyuP/IyfISapebO9UsLzeta9kfIkd3Tl8Gtxp9Q==
+	t=1794439807;
+	b=wxxpD3CabMDvjyZk95bfZemczxM2hzC//1FOsXlT/JgRq0J7titzUmdR3TrQ6QGsWruS
+	 zBbn0RsyBljLMgvzbeFjzcfQigEhZdmQdGOydsdtQCBrXormy5ZjKbDUUgwmg9Tq8vHGI
+	 GbztgcR/aVvL9rN+zQ7p8QmsvdZs5kXMv0BniEmckuz03yFXujZLaJ1iEIWuwmCHWUr8G
+	 tzwu+yvsFXYA5R8dlcdvACOAHXCLbYMwTjcEiSGDCETj9W+GRCvQy6kKFBZP4rZq3uBQA
+	 GCN2uVmmMfFQe6x/F5aBH4FKcpPfjBW5vwiS+VWTJY2ZhdoPq0S+OZTem8LUYBJVgiA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794439724;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794439807;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:Organization:
 	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=IKsrCBoJXK+5BoP6HnPY8QEU5vTMg70Zu/Nh+kOhTzI=;
-	b=rqf4VNObulhDWuuZSrUd0A47gZBEQgOEevutcusANk4XPPrIhUHY1x8Hhch8VUsHI3Eo
-	 B1RW2Pjs1d6tE90wtqbFq148fDN/S50cJ15jLrKcEV78yjPl1G8pY2HnSJDOWGFTHdkWC
-	 +6TXd4HwNcMhkk4J1Pz5EYsv/dvd3ulxRRQnUxTS+Xe6/px6GGaSuWpSNpiADqNGr+oNV
-	 4WQrFjbUODVC2ZrTNUHh/W08HtbVlCowpgJ5dicCKypx+oX/d7rXaCnRgptuq53oM3zgp
-	 fIcS96EBDL0Nut4gqUjdgryDaTKKuYDjN+uLeDGDOZILiFWBZ7GlxunHCVztUjhcS/w==
+	bh=d8gt4vss1VJAghWGOTbd3Q31kkkyerJCYC99PqwnhfY=;
+	b=B7G1Mjbh+5DeKpMhK3a7QqFrkKwb8A7iy4l7kn0mfFzSfXybpcDuWDsfo71rSq4AEio+
+	 Uk/Jr3BQTf8v4T90FEfIVzk/IdccQyP4m0tvW/oYt8R2v0FGYh9o+6+55K2mBIXVSF14v
+	 klemGDXNuzHYKbxsBPmrtIAyplS9XJBHdt1K5HEStT2NUpg+CkC+R+U5aQsBqCLTBJxzN
+	 ZK8XswfnMix/FB7RKtJZwYwjiB8DGgmb95rMLP8e4ziHYp8iACw4SNFIidkgxYKc9wNEB
+	 XSZAWh1BJ0KarrmmXRpYWr6ZZLnFUZxfuHvOycRofrdaTrceHMb0WsnKWekUkovL0Ng==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mI+3Fden;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K3Xf7DTY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 924BB606A897;
-	Wed, 11 Nov 2026 23:28:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E642F606A324;
+	Wed, 11 Nov 2026 23:30:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mI+3Fden
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AC8D1F00A05;
-	Wed, 11 Nov 2026 23:28:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K3Xf7DTY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC4801F00A05;
+	Wed, 11 Nov 2026 23:30:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794439724;
-	bh=IKsrCBoJXK+5BoP6HnPY8QEU5vTMg70Zu/Nh+kOhTzI=;
+	s=k20260515; t=1794439806;
+	bh=d8gt4vss1VJAghWGOTbd3Q31kkkyerJCYC99PqwnhfY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=mI+3FdenraiaeiNHu/j2Q9YoZmOQJb+M/aJNZiifIJR4RWnqvpp5Eg1+YrJ3mGCoE
-	 r1neQvKFYSO7kpuxIEnYdAO2rP8CKQFWonZo71yDN1+J+EbCGBEAXIHo7bxM7fhpn6
-	 tPhClSs/y7EzKIxk2cytcQanr8AEVmPFfHw844oi4WBen1Ef6KYG0Hm1eOvOdGc1Tj
-	 o3m4n/yeVZqn4ioRpPmGuMo4rEJsT9VwX0qZ5D1fTp6n3Us6dlZHf6XQIMrb9TTVQy
-	 bvdQDwz0VBhTCAIWc1tkvJvX3tjjFHb+xH03ypLMhL/EqKKzjNrblooCswdyzCfmCg
-	 LsATA/xWk5nBA==
-Message-ID: <440db014-a58c-44e4-bc96-e950e69b6763@kernel.org>
-Date: Thu, 12 Nov 2026 08:28:41 +0900
+	b=K3Xf7DTYCLVLHaDe5VUyzIV0hhxz+D6otyW3n0nrvVQC0ygVy51dTyM4hsYFvKW/5
+	 nHzv/BKfJVt3ZyTys+k8pnIl8EyT11iw6w4+6yaWV5koB/3H8y8ODNJfH+hS5Sp6MN
+	 LdppUoDvydcDLHnPTK28ApfILrpUoljS8WpLR4SqNKEfUylT2r3pTFcrKfgKz2cJmP
+	 CT6wjcGyFFydV+hGyKoffrBgR/+j3c1w0yT1eaSZpJP3uWmDKBq+aHk6cEfrLkzRxR
+	 1Oa/d3Dx0iGAkf+dKp/KovjcLuqS9TpizdbZvugffVq0yklvtk4dMvQmRg8nFsx8tj
+	 6ULpunjvDTcdw==
+Message-ID: <2ac04d8a-5557-4c2f-b009-c0b02773b480@kernel.org>
+Date: Thu, 12 Nov 2026 08:30:03 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -52,119 +52,37 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/4] ata: libata-scsi: skip MULTIPLE_COUNT for 32-byte
- passthru
+Subject: Re: [PATCH v2 4/4] ata: libata-scsi: fix remaining passthru field
+ pointers
 To: shao.mingyin@zte.com.cn, cassel@kernel.org, linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20261111223129430zClEJF8TDgu_h8ZYM843Q@zte.com.cn>
+References: <20261111223133188VjHq0FbmnzuEZWakS-EYD@zte.com.cn>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20261111223129430zClEJF8TDgu_h8ZYM843Q@zte.com.cn>
+In-Reply-To: <20261111223133188VjHq0FbmnzuEZWakS-EYD@zte.com.cn>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 11/11/26 23:31, shao.mingyin@zte.com.cn wrote:
 > From: Shao Mingyin <shao.mingyin@zte.com.cn>
 > 
-> ATA PASS-THROUGH(32) has no MULTIPLE_COUNT field. Reading byte 1 as
-> that field instead interprets the variable-length CDB CONTROL byte,
-> which can reject a non-multiple command or cause a spurious count
-> mismatch warning for READ/WRITE MULTIPLE.
+> Several error paths in ata_scsi_pass_thru() report field pointers for
+> the 12- or 16-byte CDB when rejecting a 32-byte CDB. Initiators then
+> receive INVALID FIELD IN CDB sense data pointing at an unrelated byte.
+> READ/WRITE LONG also reports PROTOCOL when its sector count is invalid.
 > 
-> Skip the CDB count checks for the 32-byte form while retaining the
-> check that multiple mode is enabled on the device. Also report byte 10
-> for an invalid PROTOCOL, where that field resides in a 32-byte CDB.
-> The 12- and 16-byte MULTIPLE_COUNT checks remain unchanged.
+> Use the PROTOCOL offset and record the FEATURES, SECTOR COUNT and
+> COMMAND offsets for each CDB format. Report SECTOR COUNT separately
+> from PROTOCOL when validating READ/WRITE LONG.
 > 
 > Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
 > Suggested-by: Niklas Cassel <cassel@kernel.org>
 > Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
-> ---
-> Changes in v2 (Niklas Cassel):
-> - Skip the nonexistent MULTIPLE_COUNT field for the 32-byte CDB;
->   preserve the device multiple-mode check and the short-CDB checks.
-> - Move the invalid-PROTOCOL field pointer fix here from patch 3.
-> - Regenerate with git format-patch; do not edit diff hunks or indexes.
-> - Do not carry the v1 Reviewed-by tag over the reworked code.
-> v1: https://lore.kernel.org/all/20261104220939917jqg8_alGN5sACGWq5M9D-@zte.com.cn/
-> 
-> Validation on x86-64 with GCC 13 and UBSAN: a userspace harness compiled
-> ata_scsi_pass_thru() verbatim with SCSI/device stubs. An invalid PROTOCOL
-> in a 32-byte CDB passed field pointer 1 to the invalid-field helper before
-> the fix and 10 afterwards. CONTROL-byte variations no longer caused
-> false rejection or multiple-count warnings. A device with multiple mode
-> disabled still rejected READ/WRITE MULTIPLE; short-CDB checks were kept.
-> 
->  drivers/ata/libata-scsi.c | 23 ++++++++++++-----------
->  1 file changed, 12 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index a61fb03312793ca94d81d8061a16c66e786c4cf3..227240514651ada8b5feb87a154833fb2cddf064 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3388,7 +3388,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
->  
->  	tf->protocol = ata_scsi_map_proto(cdb[1 + cdb_offset]);
->  	if (tf->protocol == ATA_PROT_UNKNOWN) {
-> -		fp = 1;
-> +		fp = 1 + cdb_offset;
->  		goto invalid_fld;
->  	}
->  
-> @@ -3573,27 +3573,28 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
->  		goto invalid_fld;
->  	}
->  
-> -	/* sanity check for pio multi commands */
-> -	if ((cdb[1] & 0xe0) && !is_multi_taskfile(tf)) {
-> +	/* The 32-byte CDB has no MULTIPLE_COUNT field. */
-> +	if (cdb[0] != VARIABLE_LENGTH_CMD &&
-> +	    (cdb[1] & 0xe0) && !is_multi_taskfile(tf)) {
 
-Sinc ATA 32 defines these beets as reserved/obsolete, we should check that they
-are 0 and reject the command if they are not. So something like:
+Looks good.
 
-	/* Sanity check for pio multi commands (not supported with ATA 32). */
-	if (cdb[0] == VARIABLE_LENGTH_CMD && (cdb[1] & 0xe0)) {
-		fp = 1;
-		goto invalid_fld;
-	}
-
-	if ((cdb[1] & 0xe0) && !is_multi_taskfile(tf)) {
-		...
-
->  		fp = 1;
->  		goto invalid_fld;
->  	}
->  
->  	if (is_multi_taskfile(tf)) {
-> -		unsigned int multi_count = 1 << (cdb[1] >> 5);
-> -
->  		if (!dev->multi_count) {
->  			ata_scsi_set_sense(dev, scmd, ABORTED_COMMAND,
->  					   NO_ADDITIONAL_SENSE_INFORMATION);
->  			return 1;
->  		}
->  
-> -		/* compare the passed through multi_count
-> -		 * with the cached multi_count of libata
-> -		 */
-> -		if (multi_count != dev->multi_count)
-> -			ata_dev_warn(dev, "invalid multi_count %u ignored\n",
-> -				     multi_count);
-> +		if (cdb[0] != VARIABLE_LENGTH_CMD) {
-> +			unsigned int multi_count = 1 << (cdb[1] >> 5);
-> +
-> +			/* Compare with the cached multiple count of libata. */
-> +			if (multi_count != dev->multi_count)
-> +				ata_dev_warn(dev, "invalid multi_count %u ignored\n",
-> +					     multi_count);
-> +		}
->  	}
->  
->  	/*
-
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
