@@ -1,47 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.112
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794387600;
-	b=mkCWEz5P65NrlunfoPnvoWSCus5XFttqzn2fNcQcabUE46DJqiEVBzyiR7Kx7KrBhIBi
-	 h4luSt87lAv0v2aAB7Q+SNAUG73EskpgV048sr9vQ6LoXPUuwc3TxIRbVXBoNgmwDSBgO
-	 Xckqbrp5s+PQmQFjKdCW0YV3NKuIRbdbUAa05CJnyuomtw3Ga4oSQOyDzd3MoUJ3PtxMo
-	 nXyZX0CNulRiPCNgCZm2W3a9wme6qIE45OPBk9bQOIPmqGu3AR7Dy+k2FjHRCXZILgKY0
-	 ulOtNNuhI2aGB9cykh0kSZqAZnLoi/sMakys9BYvDREmDYNQ40peMm3kK+5/itF1v9w==
+	t=1794391985;
+	b=uiHh+4d8Ksj5YRd1uK6Dsh8/DwFTu5i7UxoRrPelzxZnnDUhlmcdWmLs1M8gcrJgdMpI
+	 jHnx+5ICl44KrOGIrnmjd0XiiwZVBSQbNl2da8UpD97FSTtnmoeejUg1y1TVnb01UAVzT
+	 9WUzWAX+F92+cYTl5J39SD0+Ahi9QnRxnfZkvJiUCNT2dNmj5XE/DIx4lkZKJL6gcY82M
+	 RNH9YyMh+sEtJ726lGZD29H76rT9YwIBhQMXtNfKK4beiIw/0qfH6iX5sTeYfcP33KFDx
+	 OP+OFHrkBIL9RSyTmcL6gZVb1D9prVBPqasQD6kEpH41KaIqDEemOqPAkTFBQ2KI6NQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794387600;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:Content-Language:Organization:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=50p3zI+Ws44mGPjo5k7TaGpGNQJ8ZUfr5PuOkAq9Jzw=;
-	b=LuGnaRTZhTpPm4Pmh6TAWBRJMeYZ6zdbHWJCblfLX3dA32sAnnCATKbazQQsLTmR0xmW
-	 4Ux8wk+8nnzpQ1vJXHG1vfiE4PKDsqi9kpc4P6Nb95lfsqotsk2aSzHaZB1ShCjSLEADc
-	 XM9Z9+0HEqLH8GYp6Ne3GOlaVwGmUvYodvA+fvoC4Dti5jXhDnoLwXhAH1e1Etiocr0BF
-	 jFF9gQoUIY0So88nFEEygqmTcR3yUg1Ho4jNTA5eAXpXrIrQs0YcjWswbQlDc6p1mSfkU
-	 ftkDNphXgkVgZlsZrr1Th3a8Dkf1LinwLTY7OK+KxvZRnXmYA5CI+tsLS0O0NRsecGg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794391985;
+	h=DMARC-Filter:DKIM-Signature:Cc:Date:X-Lms-Return-Path:References:To:
+	 From:Mime-Version:X-Original-From:In-Reply-To:Subject:Message-Id:
+	 User-Agent:Content-Transfer-Encoding:Content-Type;
+	bh=xx6TPToq5gieTMY527jOsgu4eVMLRX54BNjyVA+AhfU=;
+	b=admWtGfQIMInO8m2S8i4YVmQRe+0b8mZwbgdnJmN4h7dHxaQbg9nKuuV4rS11X+sUXzW
+	 yEfEtJ6PpkffnA4vZh2sYTwfxm3/iUlRfP387BWqWzGN7ANZYB8XenJqrJYkfMIX+er7J
+	 mXK4Qv7QrZ3+QzECotyJzBaTXn5URiX2XbPX4iMNNuIzfwtT/dwRnwPrybhkQQM7l9X2d
+	 YvDs2rzuC9LQ2mI78HJ4i6YKeOYTRP45b0XL/Nj2K5MFJcIcayi5dOMnj1KIXbjxBZJMa
+	 KN1WBMdxv/20qz78s0Hr6gR1BN1QaRKEedssz7t48tvPG8MxrOtz0SUL/NPcxBWBqag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dAhx6Y29;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=bytedance.com;
+	spf=pass smtp.mailfrom=bytedance.com;
+	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b="k/SGM2Of";
+	arc=none smtp.remote-ip=209.127.230.112
+Received: from va-1-112.ptr.blmpb.com (va-1-112.ptr.blmpb.com [209.127.230.112])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42BA5606A33B;
-	Wed, 11 Nov 2026 09:00:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3EF1606A326
+	for <linux-ide@vger.kernel.org>; Wed, 11 Nov 2026 10:13:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C3EF1606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dAhx6Y29
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9DB71F00A06;
-	Wed, 11 Nov 2026 08:59:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794387599;
-	bh=50p3zI+Ws44mGPjo5k7TaGpGNQJ8ZUfr5PuOkAq9Jzw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=dAhx6Y29SAnBcPk0PWPLRDlI0f6onEfsRrzeIclaRU2LbxS1OdsTakQUobxMt3Jut
-	 Iw2v22Xz16snkKrPfdbPLV5dUpVKjbbTwDGpgU3y71/XtrkKqSUMBd66rWXOyvszSG
-	 BhxhFWIkQQDXzcr8f8WberRFX5bPxTX98LFU9oCi7Awxl8A/neNapHUjDE0HmTTWC1
-	 VGrsTX05R0r9FU000VACBF9YsKMNIhMZotKrCvKLXSfZDQY0q26BUgRO381p6SNgHG
-	 jmLCrcOWgr5xYB3DcgK2EBYHl5mpXAZTDsVL7TumCK3jSWUbHqImhkHx9pkOGIbnk/
-	 rxLZEEeYXrjcQ==
-Message-ID: <fadd2cf4-5951-4e1d-bfba-1f107a191dd7@kernel.org>
-Date: Wed, 11 Nov 2026 17:59:55 +0900
+	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=k/SGM2Of
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1794391978; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=xx6TPToq5gieTMY527jOsgu4eVMLRX54BNjyVA+AhfU=;
+ b=k/SGM2OfXOwtgFzZbyLLsdABlWr3aP1GRYR5K47cxbXdTSIcYSLOoqFGr9EgJN0NxR9+Ay
+ SY/128MIzirNu7DfwU5PPbTzwPSB87W5I9TMqJ6K4k04VIl6CVulJ1trA9mjWaNQEinB2y
+ AK+OZ+d+8ur08549GafFIou+oMmOF33XWDTwrttu2Gv6qR5jqN830aveDx3gD8grj6cNz2
+ Nmm/cdvrDQZjiKFmuM2rRcLhK131vTpTut+uvaPhobpkjGRcC65cxfiP27INbpeOhUZtpF
+ YE00RxNJQSwkV1gTbytqexz+EoMnq9imZbnV8UHCuu9DFdJyg9PwvF8Tr6u/fg==
+Cc: <linux-ide@vger.kernel.org>
+Date: Wed, 11 Nov 2026 18:12:42 +0800
+X-Lms-Return-Path: <lba+26af43fa8+8cc7bc+vger.kernel.org+zhaogongyi@bytedance.com>
+References: <20261028140432.20489-1-zhaogongyi@bytedance.com> <avLYvtmnedp5FXSX@ryzen> <425aaec6-89bf-4150-ab87-360cc30dc72a@kernel.org>
+To: "Damien Le Moal" <dlemoal@kernel.org>, 
+	"Niklas Cassel" <cassel@kernel.org>
+From: "Zhao Gongyi" <zhaogongyi@bytedance.com>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -50,48 +58,37 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
+Mime-Version: 1.0
+X-Original-From: Zhao Gongyi <zhaogongyi@bytedance.com>
+In-Reply-To: <425aaec6-89bf-4150-ab87-360cc30dc72a@kernel.org>
+Subject: Re: [PATCH] ata: libata-scsi: reject non-PIO protocols for READ/WRITE MULTIPLE
+Message-Id: <a3f60789-0266-4c35-894e-79753b7593ce@bytedance.com>
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] ata: libahci_platform: reject invalid port numbers
-To: shao.mingyin@zte.com.cn, cassel@kernel.org, linux-ide@vger.kernel.org
-Cc: hansg@kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20261110230332609vrNKZhiIS1EGJIhlnmX1-@zte.com.cn>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20261110230332609vrNKZhiIS1EGJIhlnmX1-@zte.com.cn>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 
-On 2026/11/11 0:03, shao.mingyin@zte.com.cn wrote:
-> From: Shao Mingyin <shao.mingyin@zte.com.cn>
-> 
-> ahci_platform_get_firmware() reads the "reg" property of every child
-> node of the AHCI controller and uses the value as an index into
-> hpriv->saved_port_cap[], which has AHCI_MAX_PORTS (32) entries, without
-> checking it first.
-> 
-> ahci_platform_get_resources() checks the same property against
-> hpriv->nports, but only in its own loop, and hpriv->nports is itself
-> clamped to AHCI_MAX_PORTS.  A device tree describing a port with a
-> "reg" value of 32 or more therefore reaches
-> ahci_platform_get_firmware(), where the "hba-port-cap" property is then
-> written past the end of the array.  Values just above the end corrupt
-> the following fields of struct ahci_host_priv, larger ones write outside
-> of the devres allocation.
-> 
-> Apply the same validity check as the resource loop and skip such child
-> nodes.  That loop has already reported the invalid port number, so do
-> not print a second warning.
-> 
-> Fixes: 18ee7c49f75b ("ata: ahci: Introduce firmware-specific caps initialization")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+Hi Niklas and Damien,
 
-Looks OK.
+On 11/11/26 4:52 PM, Damien Le Moal wrote:
+> 
+> Unless we are talking about a command that libata-scsi emulates, passthrough
+> commands should not be parsed. We do not want that. So unless the bad SG_IO
+> command can crash the kernel, we should do nothing if the user sends a bad
+> command and it fails. We can let the drive fail it, even if that leads to drive
+> resets etc. As Niklas pointed out, SG_IO is priviledged, so it is not like any
+> user can create a DOS with bad SG_IO commands.
+> 
+> Also, the use case for this is a little silly in my opinion... Who wants to send
+> a PIO multi-sector IO using a modern command like ATA 32? libata supports that
+> if that is all that the drive can do. If the drive can do DMA and/or NCQ, then
+> better commands will be used without relaying on a PIO passthrough command.
+> 
+> 
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Thanks for the review and clarification. My testing showed the timeout
+and blocked I/O described in the patch, but I do not have evidence of a
+kernel crash. I understand the concern about parsing non-emulated ATA
+passthrough commands in libata-scsi.
 
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+Gongyi
