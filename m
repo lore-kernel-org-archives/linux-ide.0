@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794417133;
-	b=OcKJgyUI9k94E1iqDmsdhS8OWrgzngZqwimpaDk8yHAp6QMd2hnSfdLCrbXNVzzH48Ie
-	 xqonAOgWcs1cG7Niai9CtES/ceAo/hZHruSET7R35SafXYt4Mqzsdv15UQw6inEWI6wn8
-	 dkK+T0WysriJUbjewz2k9hax9umcd4tXj0kkXbdHT5pAsDNYTMLe5goe8+KAdAqy8Movc
-	 sdpRnASXi4tqigUu7XICeiSW5HQW9XC6sTe8teOAqV5ySOICtsxllIvIgU3xlouQ/pnKB
-	 vSGA97MYgOB9B9P5mD7aWNPG8DJkbSCk21PplZLDjnsOoecEMEVtSL0oB+ogiYZ2TGg==
+	t=1794417803;
+	b=KsLsivVgqFaX99pd4COKVL+mE8oQIR2BbuD3rgnmMZ0fIjevmR3atPWNP3g8RTuXi9O5
+	 KQKCGBkgOgaTYERLblFQEOiCT0u2UmcruNnpxveFQ3BCjigkLwJTl49+Limwf74hHx1kj
+	 eV9Iq8GyEk9j4N3tkcJHI/ucjMOsTm+bP85ijPccmloK/99MZI8y0P2rJ6BB9u17w87ih
+	 aGA8FO7NRPokwaQonpwCP6cpOD0GeBGwFwVYiJOIvLwwwdXf1O3s8W7fk7bXuRPJCjBk7
+	 mq522lJY7bPlzIB1zCqBVuOXSX6V4M0kN9RDyt3atvxkf1+eIVz58K7WyqesDul3McA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794417133;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794417803;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=A1dy58a3XbHUqT+nSKlUJY3AkEj6GkN+EA2AAQ+FlU4=;
-	b=vFBaD/x4UmFoUzasG7dBWq9LHsMGoLB2JNsn6uLqTtDm5iEN/gWvK9U70cIlc6PpuoxI
-	 YImYGkuVFjr1nUqb/I+D3GYtgPP9fal9xd2k+5Hf/E7PbIevTF/vAxTZEySBRiWEk5OLJ
-	 hzV8LnPmZZyQ/Uw/4pTd8OzeR1yXDDCB3GAQBkcdG23v3fHvSK2NTZD2zzcY1Hmon1Qtt
-	 Zpf+CQR1z/MSDL295u+eZ/RRQ2B2BosJNijGAfa7NWb/sjA5fBcyz5xBQrlmz7VEwWhi4
-	 PU4hQ0Pk0zz+GvwRa94cQT1VlBvbGGrgUTljoSD09sjo0wKeFKEZYA64R8iBmJOMC1w==
+	bh=kin+dSe0W0jSKNitImm3jJVSmpxuH2Z/fCP9V4M5omo=;
+	b=hFfGVm8xiaHDzRdq7kfCRgCcnXagpCr7QXxbMDLtD8Ga8M/KIcKnymMSmzIWTPwVkx5K
+	 2oI5yN9I+x1WK1bMnMSBb8F5ymUc/LkvaqIKcWzIZ9G3V4iQhoRQip4USTJFyXPHVJDj1
+	 2gCPMBrA3/hEOW2ByoeOEdWtSjcO6WCkzsjz5Di6Wz+h12nB2b2wIyy0mcw/XPJ+BfJ6q
+	 B9wuDp2dCvWqNwqDjJrzpvqfiouilO3LHbl1GpyhDSpG7gKzzZIKYulTYKHyqRknnBLoa
+	 +RI1BrAxkpVOsVlix4U9YJYEcg8Adrbh1MRAhZNTimsZ2gH+7Wcb5/CmQOEnk2pmgEA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fIDBmOMi;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y64oJUi8;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55246606A31C;
-	Wed, 11 Nov 2026 17:12:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 223C5606A31C;
+	Wed, 11 Nov 2026 17:23:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fIDBmOMi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3EBB1F00A05;
-	Wed, 11 Nov 2026 17:12:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y64oJUi8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 505D81F00A05;
+	Wed, 11 Nov 2026 17:23:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794417133;
-	bh=A1dy58a3XbHUqT+nSKlUJY3AkEj6GkN+EA2AAQ+FlU4=;
+	s=k20260515; t=1794417802;
+	bh=kin+dSe0W0jSKNitImm3jJVSmpxuH2Z/fCP9V4M5omo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fIDBmOMijgne+xy+ZDEPlStGsAFKtLX42VZV4p//zIVKFWV+tfidL0JF3bdVxzXec
-	 YbsvOVYmj5YXuMZxhfc2tehN5caBqY0BnlPK7fUp+bNdJDpi++/JI+IPtOfcdTJxk6
-	 wGlNuDltisB855Ea4YfqKaODi6coTnHhYm6it1kAtwhZpEk9lBLB1EqAq8nibicGtl
-	 PnHbwvWKxSONWPGYkWjHWg9iy+c/XkqCAKtlowp3ffTvit5lSHv8H9Qx4fK1KIXZ2c
-	 rHxzbYuhZNTDup+QcxzkyLLyRKsf46zVzFEUTHE6sAleJNPvUqUMWZboycP9vl/vSB
-	 jpqH/SXNZATUw==
-Message-ID: <sashiko-outbox-209383@kernel.org>
+	b=Y64oJUi88YZNdO7h7lkE3kaS2adY+4eISbYqqYd75/pjnIPPrHRZ21js+SAUBRp1U
+	 uY8g8A+uPE6tGqIxPGSS4ID14PfZZqF+lEQJ+KYcCMbYSq5mM4OhAXoKkGZwfyzov3
+	 LE9h/QxH42qBX6CTpFDcOa1PJayXBVHtnb8vGhWn/5mgZRCr/GaaUHiP5/YoBTsM3O
+	 wPhiX+x2VkmqZRkK5x0uftx/94H5GDnTiLDITx1A0DEjwsJ5SvyVoN/ZQyDz2v4Owj
+	 ML97bweYJzsjzxLLFEAErAGm8dkKGiGJRSiDegjTPwatjSyp/21GSy8t35TscSfD1w
+	 NwAW1E0IJX3pQ==
+Message-ID: <sashiko-outbox-209405@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 2/7] ata: pata_cswarp: bind to the Warp mfd cell
- instead of the Zorro device
+Subject: Re: [PATCH v1 4/7] zorro: warp mfd: add the dual-port RAM command
+ channel and expose the board identity
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Paolo Pisati" <p.pisati@gmail.com>
 Cc: linux-ide@vger.kernel.org, mfd@lists.linux.dev, dlemoal@kernel.org, cassel@kernel.org, lee@kernel.org
-In-Reply-To: <20261111163735.227286-3-p.pisati@gmail.com>
+In-Reply-To: <20261111163735.227286-5-p.pisati@gmail.com>
 References: <20261111163735.227286-1-p.pisati@gmail.com>
- <20261111163735.227286-3-p.pisati@gmail.com>
+ <20261111163735.227286-5-p.pisati@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 11 Nov 2026 17:12:12 +0000
+Date: Wed, 11 Nov 2026 17:23:21 +0000
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -63,72 +63,69 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [Low] ata: pata_cswarp: duplicate ata_platform_remove_one() and
-  module_platform_driver()
+- [Medium] zorro: warp-mfd: stale reg_cr irq flags not cleared in
+  warp_send_msg()
 --
 
-commit 0358845c5d4b9568f67a2b55aedc3acc1ebbdef0
+commit 4b5b6213bfa8c6be415c4e81b0b8ac501eb8e890
 Author: Paolo Pisati <p.pisati@gmail.com>
 
-ata: pata_cswarp: bind to the Warp mfd cell instead of the Zorro device
+zorro: warp mfd: add the dual-port RAM command channel and expose the board=
+ identity
 
-This commit converts pata_cswarp from a Zorro driver into a platform driver
-that binds to the "warp-pata" MFD cell provided by warp-mfd.
+This commit adds the dual-port RAM command channel and interrupt handling
+to communicate with the ARM co-processor, exposing boardname, fmwver, and
+hwver in sysfs.
 
-> diff --git a/drivers/ata/pata_cswarp.c b/drivers/ata/pata_cswarp.c
-> index 58fe6d0012dc5..41b4c93052cfd 100644
-> --- a/drivers/ata/pata_cswarp.c
-> +++ b/drivers/ata/pata_cswarp.c
+> diff --git a/drivers/zorro/warp-mfd.c b/drivers/zorro/warp-mfd.c
+> index 94af7c9d0ea5e..61866f678b613 100644
+> --- a/drivers/zorro/warp-mfd.c
+> +++ b/drivers/zorro/warp-mfd.c
 
 [ ... ]
 
-> @@ -145,34 +135,29 @@ static int pata_cswarp_probe(struct zorro_dev *z,
->  			  IRQF_SHARED, &pata_cswarp_sht);
->  }
-> =20
-> -static void pata_cswarp_remove(struct zorro_dev *z)
-> +static void pata_cswarp_remove(struct platform_device *pdev)
->  {
-> -	struct ata_host *host =3D dev_get_drvdata(&z->dev);
-> +	struct ata_host *host =3D dev_get_drvdata(&pdev->dev);
-> =20
->  	ata_host_detach(host);
->  }
-> =20
-> -static const struct zorro_device_id pata_cswarp_zorro_tbl[] =3D {
-> -	{ .id =3D ZORRO_PROD_CSLAB_WARP_1260 },
-> -	{ }
-> -};
-> -MODULE_DEVICE_TABLE(zorro, pata_cswarp_zorro_tbl);
-> -
-> -static struct zorro_driver pata_cswarp_driver =3D {
-> -	.name           =3D "pata_cswarp",
-> -	.id_table       =3D pata_cswarp_zorro_tbl,
-> +static struct platform_driver pata_cswarp_driver =3D {
-> +	.driver =3D {
-> +		.name	=3D "warp-pata",
-> +	},
->  	.probe          =3D pata_cswarp_probe,
->  	.remove         =3D pata_cswarp_remove,
->  };
-> =20
->  static int __init pata_cswarp_init(void)
->  {
-> -	return zorro_register_driver(&pata_cswarp_driver);
-> +	return platform_driver_register(&pata_cswarp_driver);
->  }
-> =20
->  static void __exit pata_cswarp_unregister(void)
->  {
-> -	zorro_unregister_driver(&pata_cswarp_driver);
-> +	platform_driver_unregister(&pata_cswarp_driver);
->  }
+> +/* send a message to the ARM coprocessor, optionally waiting for a reply=
+ */
+> +static int warp_send_msg(struct warp_mfd *warp, bool wait_reply)
+> +{
+> +	struct completion *done =3D wait_reply ? &warp->reply : &warp->recv;
+> +	long ret;
+> +
+> +	/* a previous exchange may have timed out and completed late */
+> +	reinit_completion(done);
+> +
+> +	/* enable 68k & ARM interrupts */
+> +	z_writel(DPREG_CR_SET | DPREG_CR_IE_68K | DPREG_CR_IE_ARM, warp->reg_cr=
+);
+> +
+> +	/* send irq to ARM */
+> +	z_writel(DPREG_CR_SET | DPREG_CR_MP_ARM, warp->reg_cr);
+> +
+> +	/* wait for a reply, or just wait for a receiver ack */
+> +	ret =3D wait_for_completion_interruptible_timeout(done,
+> +							WARP_MSG_TIMEOUT);
+> +
+> +	/* disable ARM & 68k interrupts */
+> +	z_writel(DPREG_CR_CLR | DPREG_CR_IE_68K | DPREG_CR_IE_ARM, warp->reg_cr=
+);
 
-[Severity: Low]
-Now that pata_cswarp is a platform_driver, could pata_cswarp_remove() be
-replaced with libata's ata_platform_remove_one(), and pata_cswarp_init() /
-pata_cswarp_unregister() with module_platform_driver(pata_cswarp_driver)?
+[Severity: Medium]
+Can an interrupted or timed-out wait leave DPREG_CR_MR_ARM and
+DPREG_CR_MP_68K latched in warp->reg_cr?
+
+When wait_for_completion_interruptible_timeout() returns early (such as on
+a signal during a sysfs read), warp_send_msg() clears DPREG_CR_IE_68K
+while the ARM is still processing the command.  When the ARM finishes, its
+status flags stay latched in warp->reg_cr because the interrupt is
+disabled.  On the next command, enabling DPREG_CR_IE_68K after
+reinit_completion(done) immediately triggers warp_irq() from the stale
+flags before the ARM processes the new request, so warp_exec_cmd() reads
+back the command opcode still in warp->dpram and warp_get_status() fails
+with -EIO.
+
+Clearing DPREG_CR_MR_ARM and DPREG_CR_MP_68K before reinit_completion()
+and enabling DPREG_CR_IE_68K would avoid completing on a stale flag.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111163735.2272=
-86-1-p.pisati@gmail.com?part=3D2
+86-1-p.pisati@gmail.com?part=3D4
