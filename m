@@ -1,69 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794407502;
-	b=Fr/vs571exKUeSHF14PwCY0SYU10j4gdCV1bP2pFKL7FK2cKXCht+O7ILAurQv7dyjLT
-	 V7+PFPt26inrL/dxusRzcihUf3bIkmfC5WstPa5xh5H+orSNxLcOsOC+3Xp91uKRHpvXY
-	 5RKbZSvmzhcDusB2KQ2RAfOyynAQv6M/2H8AWq/BjDbDrPmVyX4kun+tV1gU5YrvAQP1b
-	 ubqR8+QlZC4+3gUWngCgTFpL1U0a7XiYLmkRDpVAdDN45CSgVbMnwQhJQBk0aEWVnVBf4
-	 b2xx7d4APDueCh/GZinxGdfF+pofN64smvKr9tkUpUqOtlz81pD0XuCD6Op+/spbsGQ==
+	t=1794407504;
+	b=f1mxRiic/Csip9FQ2GjO2BqA7bE3kYgwpNZRl0R/0izhlG5VZN6vzkwwjtaxJA5Ws73w
+	 UH8di1mf/eeGyjsJH0aLr27EWS8Ex8DavhUKT4KyOa6h5nONFI2h5Gt+6sRWTzNPfBjeE
+	 nadO1wDVgNjMd1x/+F2Bel6jBPBdWJcMTCr1m7nTf0nW1EXLLoLjtoKV4y0LuDkZ4OzoM
+	 b35u2nYZwur/1mORTE5vuzM3SS638W3q1WwwQUtTQnA6+ucfl+j6tVk0+JQa2nG056hqO
+	 TQKEJRsMM8IvnH4dc/jOa7SKXoE9wD7SN4ELVFuqH53c6dcb6bc3JylHUJZRkg59QZQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794407502;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794407504;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
-	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
-	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
-	 X-Fangmail-MID-QID;
-	bh=Ku6PvA8anI4VizW9ORSubjedAc9yhlNyiGfPL92kmpQ=;
-	b=29+g0QWF3rimBzsKiHQt+25wZqz9DcJc5rBavhs5chf2sCL9OxJR+d35bE+7ENXheglD
-	 tg6Zsa2+/+Vsh4D3cTN4CRP5/rgIfXRyIzVZZgFx0z6vDcNfc8ZZmTtmFQnTB9CZz7wWn
-	 jIcqwMFgX86GMfk/6aKQVvbUEMq4fXChIxqmeHkLJJRsaTYSP4QrL09b39egEaMwoWtAr
-	 mLdJrFvoPw3zdce1vQWxLbf6L77FoExK1a8RPJM1AOPL/9ADJOqo3ArQ67t1mil802ODd
-	 cHbp6cGZXDdSCRnfX6mnHgFIvxbrJ9hzVRlzTKvkp8D7s5Ku/5bgKZux2PHFulvfIHw==
+	 X-Zmail-TransId:X-Mailer:Message-ID:Date:Mime-Version:From:To:Cc:
+	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
+	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=k3GqkpF5iyUVctU1/1Wg6hNtTxm+pAZ/Y9JlWm0GLxg=;
+	b=09obibkfxfEIyhcJiFfZlnB+ZJMdNpQXTbmCT3HdFoOoRLYvb/Lpk9lzDVHs0ipOj9E0
+	 6BiybolcEd0VSRPaWAuQ8X8eM1ghiMmJwOo3+G72YP5ypLGOnn6WZNGmmCYwXpiF4o3x+
+	 TCG4Ler3WjaIvX5gIqEGwZHZ6BTbJMfSvK44QCAwXCx7YXbd3M865PrT9rgi9eP6YdXqk
+	 A5Fa2Bq+w2OAjCBSkyaSRKLHu4uNDfLVWyzNbPCC2ldQK0bREBA3h+ONOeDdvt0G2HPTc
+	 a/QEGLvJDeA7+KJ18kMEhqaLLcWK3+RGG3L841EN+lAyvBaAFTqjF/lZE6p8ABF8fhQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=CNsQLDfq;
-	arc=none smtp.remote-ip=160.30.148.34
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=zmdJUOVO;
+	arc=none smtp.remote-ip=160.30.148.35
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78E3660A2610;
-	Wed, 11 Nov 2026 14:31:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 78E3660A2610
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 048E860A380D;
+	Wed, 11 Nov 2026 14:31:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 048E860A380D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=CNsQLDfq
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=zmdJUOVO
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jPmDV4VH1z4yjjF;
-	Wed, 11 Nov 2026 22:31:38 +0800 (CST)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jPmDS6SDWz8XrrJ;
+	Wed, 11 Nov 2026 22:31:36 +0800 (CST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794407498;
-	bh=6caPsKqXCgBq3tXaG00x236Z0t7ou43QCDHPtPKWJJ8=;
-	h=In-Reply-To:References:Date:From:To:Cc:Subject;
-	b=CNsQLDfqnLc4MFkjfHq4jccF5SVM7fRIARjm33PiiMoUxJZq5RRfNDha4jJB9MJit
-	 40ubiatgp+mJ62N77kIaqZgHBJSpkbqstIrHXXi0zmhlwaJPjxUhLiwHNpcoiCLdcg
-	 ShVNzFxI+0iLSY/xmEj/LRRC2f2A0msfMA4BMh1VcSgt9fHhPr7hhQV8ssTM4PxHfQ
-	 5JQ9jWE4M/VVvp51KJxFPWD4PTyK4CkGQieK4l+AcRqtyxF5YWxLWBvGrpdSpDD53Q
-	 QGmFd9NYNucSByPsqWOWYkJEKUtqM+ssEQqVsNpoP5ycAppJarmHssP2fhRXIQXlyX
-	 jH3D3fXByXPiA==
-Received: from xaxapp05.zte.com.cn ([10.99.98.109])
-	by mse-fl2.zte.com.cn with SMTP id 6ABEVUrF057227;
-	Wed, 11 Nov 2026 22:31:30 +0800 (+08)
+	s=z202610; t=1794407496;
+	bh=/6ujqmY3stzuOcN3MfIOUSRPKNj3+BNN/I2B02iF5gQ=;
+	h=Date:From:To:Cc:Subject;
+	b=zmdJUOVOlLLLlQfz+4BwPmSgJHW2sqTr/KcB7EgpC1GoKH71Jg0Yv8b8gFDjPgXXG
+	 92t+XrVAlB+JcZBZQI9qQHrkmjBY44eFmhRbj3av81QQEfTENLpeDQQF+1ZvfMZRJH
+	 Cp39m8G20OwfC5jr7iHeYKCEUcMr3DLBNVjVVM2ixQ+DGvDoGDXWK2jdEpZbDpBVgV
+	 qvQriZCJ1hBvvvzwEZmnbLiFaYqgXJJ1a7Ae63BRTZiUIoxDLlvnx7uukKUFA2nBml
+	 g4eXpNp4aG8FhqsuQydd3OGhSHMj9MjhsQXqwjsBfmxC6n/m9PyHoy/esKNIgc0FEL
+	 hl7jfL/lPtLog==
+Received: from xaxapp01.zte.com.cn ([10.88.99.176])
+	by mse-fl1.zte.com.cn with SMTP id 6ABEVLwZ088953;
+	Wed, 11 Nov 2026 22:31:21 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
 Received: from mapi (xaxapp04[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Wed, 11 Nov 2026 22:31:31 +0800 (CST)
-X-Zmail-TransId: 2afb6af47c43d4a-53c43
+	Wed, 11 Nov 2026 22:31:23 +0800 (CST)
+X-Zmail-TransId: 2afb6af47c3bb0f-53a08
 X-Mailer: Zmail v1.0
-Message-ID: <202611112231319337i08AK7ZzIXm9DYFhmtXx@zte.com.cn>
-In-Reply-To: <20261111223123952mgPDVsbO8uOyaDWL2KELB@zte.com.cn>
-References: 20261111223123952mgPDVsbO8uOyaDWL2KELB@zte.com.cn
-Date: Wed, 11 Nov 2026 22:31:31 +0800 (CST)
+Message-ID: <20261111223123952mgPDVsbO8uOyaDWL2KELB@zte.com.cn>
+Date: Wed, 11 Nov 2026 22:31:23 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -76,68 +73,51 @@ Mime-Version: 1.0
 From: <shao.mingyin@zte.com.cn>
 To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
 Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIHYyIDMvNF0gYXRhOiBsaWJhdGEtc2NzaTogZ2VuZXJhdGUgU0FUIHNlbnNlIGRhdGEgZm9yIEFUQSBQQVNTLVRIUk9VR0goMzIp?=
+Subject: =?UTF-8?B?W1BBVENIIHYyIDAvNF0gYXRhOiBsaWJhdGEtc2NzaTogZml4IEFUQSBQQVNTLVRIUk9VR0goMzIpIGhhbmRsaW5n?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6ABEVUrF057227
+X-MAIL:mse-fl1.zte.com.cn 6ABEVLwZ088953
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Wed, 11 Nov 2026 22:31:38 +0800
+X-SOURCE-IP: 10.5.228.132 unknown Wed, 11 Nov 2026 22:31:36 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF47C4A.001/4jPmDV4VH1z4yjjF
+X-Fangmail-MID-QID: 6AF47C48.000/4jPmDS6SDWz8XrrJ
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+ATA PASS-THROUGH(32) still has translation and completion paths that
+interpret fields as if the command used a 12- or 16-byte CDB.
 
-ata_scsi_qc_complete() only recognizes ATA PASS-THROUGH(12) and (16).
-The 32-byte form takes the ordinary completion path, so CK_COND is
-ignored and errors lack the ATA Status Return descriptor. Successful
-commands with CK_COND set therefore complete GOOD instead of returning
-CHECK CONDITION with the ATA register values.
+Patch 1 skips the nonexistent MULTIPLE_COUNT field and corrects the
+invalid-PROTOCOL field pointer. Patch 2 rejects unsupported service
+actions with sense data. Patch 3 honors CK_COND and generates SAT sense
+on completion. Patch 4 corrects the remaining invalid-field pointers,
+including distinguishing READ/WRITE LONG protocol and count errors.
+The four patches can be applied independently; the numbered order groups
+the related translation fixes together.
 
-Recognize ATA PASS-THROUGH(32) by its service action and read CK_COND
-from byte 11 instead of byte 2, which belongs to the variable-length
-CDB header.
+Changes in v2, following Niklas Cassel's review:
+- Do not interpret byte 10 bits 7:5 as MULTIPLE_COUNT. Skip the CDB
+  count checks for the 32-byte form, keeping the device-mode check.
+- Move the unrelated invalid-PROTOCOL hunk from patch 3 to patch 1.
+- Keep patch 2's code unchanged and add patch 4 for the remaining
+  PROTOCOL, FEATURES, COMMAND and sector-count field pointers.
+- Generate all diffs and indexes from Git commits. Validate the exact
+  resulting blobs and include observed field-pointer helper arguments
+  from userspace function tests in the per-patch notes.
+- Keep the Reviewed-by tags on patches 2 and 3: patch 2 is unchanged,
+  and patch 3 only loses the hunk moved to patch 1. Patch 1 changes the
+  MULTIPLE_COUNT handling itself, so its v1 tag does not apply.
+Link to v1: https://lore.kernel.org/all/20261104220832716LXKf7OaS9dt1VJ8Q959AG@zte.com.cn/
+Review: https://lore.kernel.org/all/avI7-lrzsRL_Gz75@ryzen/
 
-Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
-Cc: stable@vger.kernel.org
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+Shao Mingyin (4):
+  ata: libata-scsi: skip MULTIPLE_COUNT for 32-byte passthru
+  ata: libata-scsi: reject unsupported ATA-32 service actions
+  ata: libata-scsi: generate SAT sense data for ATA PASS-THROUGH(32)
+  ata: libata-scsi: fix remaining passthru field pointers
+
+ drivers/ata/libata-scsi.c | 64 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 44 insertions(+), 20 deletions(-)
+
 ---
-Changes in v2 (Niklas Cassel):
-- Move the unrelated invalid-PROTOCOL hunk to patch 1; this patch only
-  changes the completion path.
-- Regenerate with git format-patch so the index matches the diff.
-- Keep the Reviewed-by tag; apart from the moved hunk this patch is
-  unchanged from v1.
-v1: https://lore.kernel.org/all/202611042211545962bhKeo8yjWPGFgya4g6LG@zte.com.cn/
-
-Validation on x86-64 with GCC 13 and UBSAN: a userspace harness compiled
-ata_scsi_qc_complete() verbatim with sense/completion stubs. For ATA_32,
-CK_COND in byte 11 now selected pass-through sense and CHECK CONDITION;
-CK_COND clear remained GOOD. Error and preexisting-sense paths selected
-the pass-through helpers, and byte 2 did not act as CK_COND. The short
-CDB paths and unsupported service-action control were also checked.
-
- drivers/ata/libata-scsi.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3fffa2617339fb7aa8a9035bbd88258794e1bf63..645899c2625424c7e305c7a2d426cdcc217dde43 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1888,9 +1888,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 	struct ata_link *link = qc->dev->link;
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	u8 *cdb = cmd->cmnd;
-+	u16 cdb_offset = cdb[0] == VARIABLE_LENGTH_CMD ? 9 : 0;
- 	bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
--	bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12;
--	bool is_ck_cond_request = cdb[2] & 0x20;
-+	bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12 ||
-+		(cdb[0] == VARIABLE_LENGTH_CMD &&
-+		 get_unaligned_be16(&cdb[8]) == ATA_32);
-+	bool is_ck_cond_request = cdb[2 + cdb_offset] & 0x20;
- 	bool is_error = qc->err_mask != 0;
- 
- 	/* For ATA pass thru (SAT) commands, generate a sense block if
+base-commit: ddfe51b0a0f5dc9e415cc2c8ad8db17532dd426b
