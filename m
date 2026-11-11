@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794387133;
-	b=EEFYl0RJpAxBdBDe/1ZkxwwVnxksIuJ2kzTqn/XGttwHU//oqo0RAnOtd17qKvIOCL6P
-	 8T0fOiAp2rARPrtxM96TfADKXKziZyuEPuzGDNTjd4dfAF9Sq/Ew+iZo40vV88RP28MDw
-	 M+WA2NMSUxqwgDd+8g7J0IZ+qKDxkVt5MuyB+KoQzkbHzg8UMUpHV6QP/k40wYj4on+wL
-	 3gvezLv2JmUexsgAhfTeaZTH0QylQmwd5OkuJn3vxqpF3LGpdL6wks1MPiHkLaHJz/QVE
-	 6U3Wg55pcfcBDmSCsteupLdkJ7M0BPFlMdeJLVmZOyo8I2i8GKz3FgTQewUotin7KIw==
+	t=1794387600;
+	b=mkCWEz5P65NrlunfoPnvoWSCus5XFttqzn2fNcQcabUE46DJqiEVBzyiR7Kx7KrBhIBi
+	 h4luSt87lAv0v2aAB7Q+SNAUG73EskpgV048sr9vQ6LoXPUuwc3TxIRbVXBoNgmwDSBgO
+	 Xckqbrp5s+PQmQFjKdCW0YV3NKuIRbdbUAa05CJnyuomtw3Ga4oSQOyDzd3MoUJ3PtxMo
+	 nXyZX0CNulRiPCNgCZm2W3a9wme6qIE45OPBk9bQOIPmqGu3AR7Dy+k2FjHRCXZILgKY0
+	 ulOtNNuhI2aGB9cykh0kSZqAZnLoi/sMakys9BYvDREmDYNQ40peMm3kK+5/itF1v9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794387133;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794387600;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:From:Content-Language:Organization:
 	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=IsZlJEznupX65MpAD2DtsJopcnEgKKo3eP9+5upIq+E=;
-	b=fw+MJBjlEi50nLxvQCP4NfizaJ8cagcGTvDwf6TP9ZeIBTgEetfURbxNPt3JWgZFBaot
-	 6Tuec7LH1VV/1nYGfyjbZG3m4/0kpHSeLfZwgvzGrHSENUPVB96f9DgoOr+KYlHDyDF3W
-	 MmsKohX5v0razRkE0mYSsWmgi2JcjNsy6Z0FNUNZ2TmWHeC1wsmmA7OlrkXMAzEQ8eo6c
-	 K3M1QBF7Doc7p/qlrGF9zLiloVokOI5VqOPxY3gFtjrNw91ad1Kv9soo74+cbzibH417t
-	 iPxSrqqrbmXY9BWLwHiQMEIpjNq4A0d0zzXOviDzpENGAePoblGu4NzsUx7HNw9NrIA==
+	bh=50p3zI+Ws44mGPjo5k7TaGpGNQJ8ZUfr5PuOkAq9Jzw=;
+	b=LuGnaRTZhTpPm4Pmh6TAWBRJMeYZ6zdbHWJCblfLX3dA32sAnnCATKbazQQsLTmR0xmW
+	 4Ux8wk+8nnzpQ1vJXHG1vfiE4PKDsqi9kpc4P6Nb95lfsqotsk2aSzHaZB1ShCjSLEADc
+	 XM9Z9+0HEqLH8GYp6Ne3GOlaVwGmUvYodvA+fvoC4Dti5jXhDnoLwXhAH1e1Etiocr0BF
+	 jFF9gQoUIY0So88nFEEygqmTcR3yUg1Ho4jNTA5eAXpXrIrQs0YcjWswbQlDc6p1mSfkU
+	 ftkDNphXgkVgZlsZrr1Th3a8Dkf1LinwLTY7OK+KxvZRnXmYA5CI+tsLS0O0NRsecGg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LUTHK0BN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dAhx6Y29;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55E9606A321
-	for <linux-ide@vger.kernel.org>; Wed, 11 Nov 2026 08:52:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42BA5606A33B;
+	Wed, 11 Nov 2026 09:00:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LUTHK0BN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBE5B1F00A05;
-	Wed, 11 Nov 2026 08:52:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dAhx6Y29
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9DB71F00A06;
+	Wed, 11 Nov 2026 08:59:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794387133;
-	bh=IsZlJEznupX65MpAD2DtsJopcnEgKKo3eP9+5upIq+E=;
+	s=k20260515; t=1794387599;
+	bh=50p3zI+Ws44mGPjo5k7TaGpGNQJ8ZUfr5PuOkAq9Jzw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=LUTHK0BNjTOUro7c+S35NcHEc+WkYnup/QRoxNQUzq2ZrYVl1pd8idjzaeSaLBy1j
-	 TaSuvJKOXku8CXaKgzoEqg7T5yLiad7EvOEaAUkfWQKM8I3EYWQUlRgDC6S0WmoAdF
-	 QFNe4xGg72gD0Q9WZsliWlZkOmjOUOPHNJTvNvOpJBtQWAG+7aPu5KDbSyFXs/s5bS
-	 b1wT7b/og8usb6u6YFI73oRR6Na9Xjle/sr6HIKtJU6XFAxnM39MclxYk5/K1YBK7h
-	 AibD/bIu9xZHH4U34Kj/hciF7Q+iDRVZsOlqBUTtjCn8N0XWScjNYlea7R+OG6CAUU
-	 ErEktBpOn0gfQ==
-Message-ID: <425aaec6-89bf-4150-ab87-360cc30dc72a@kernel.org>
-Date: Wed, 11 Nov 2026 17:52:11 +0900
+	b=dAhx6Y29SAnBcPk0PWPLRDlI0f6onEfsRrzeIclaRU2LbxS1OdsTakQUobxMt3Jut
+	 Iw2v22Xz16snkKrPfdbPLV5dUpVKjbbTwDGpgU3y71/XtrkKqSUMBd66rWXOyvszSG
+	 BhxhFWIkQQDXzcr8f8WberRFX5bPxTX98LFU9oCi7Awxl8A/neNapHUjDE0HmTTWC1
+	 VGrsTX05R0r9FU000VACBF9YsKMNIhMZotKrCvKLXSfZDQY0q26BUgRO381p6SNgHG
+	 jmLCrcOWgr5xYB3DcgK2EBYHl5mpXAZTDsVL7TumCK3jSWUbHqImhkHx9pkOGIbnk/
+	 rxLZEEeYXrjcQ==
+Message-ID: <fadd2cf4-5951-4e1d-bfba-1f107a191dd7@kernel.org>
+Date: Wed, 11 Nov 2026 17:59:55 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -52,64 +52,45 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-scsi: reject non-PIO protocols for READ/WRITE
- MULTIPLE
-To: Niklas Cassel <cassel@kernel.org>, Zhao Gongyi <zhaogongyi@bytedance.com>
-Cc: linux-ide@vger.kernel.org
-References: <20261028140432.20489-1-zhaogongyi@bytedance.com>
- <avLYvtmnedp5FXSX@ryzen>
+Subject: Re: [PATCH v2 1/2] ata: libahci_platform: reject invalid port numbers
+To: shao.mingyin@zte.com.cn, cassel@kernel.org, linux-ide@vger.kernel.org
+Cc: hansg@kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20261110230332609vrNKZhiIS1EGJIhlnmX1-@zte.com.cn>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <avLYvtmnedp5FXSX@ryzen>
+In-Reply-To: <20261110230332609vrNKZhiIS1EGJIhlnmX1-@zte.com.cn>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026/11/10 17:41, Niklas Cassel wrote:
-> There is nothing in SAT specs that requires us to validate the protocol field.
-> When using normal (non-passthrough commands), the protocol field is initialized
-> by the regular SCSI to ATA translation done by libata.
+On 2026/11/11 0:03, shao.mingyin@zte.com.cn wrote:
+> From: Shao Mingyin <shao.mingyin@zte.com.cn>
 > 
-> For passthrough commands, it comes from the user.
+> ahci_platform_get_firmware() reads the "reg" property of every child
+> node of the AHCI controller and uses the value as an index into
+> hpriv->saved_port_cap[], which has AHCI_MAX_PORTS (32) entries, without
+> checking it first.
 > 
-> Not only does it come from the user, it requires CAP_SYS_RAWIO:
+> ahci_platform_get_resources() checks the same property against
+> hpriv->nports, but only in its own loop, and hpriv->nports is itself
+> clamped to AHCI_MAX_PORTS.  A device tree describing a port with a
+> "reg" value of 32 or more therefore reaches
+> ahci_platform_get_firmware(), where the "hba-port-cap" property is then
+> written past the end of the array.  Values just above the end corrupt
+> the following fields of struct ahci_host_priv, larger ones write outside
+> of the devres allocation.
 > 
-> scsi_cmd_allowed() {
->         if (capable(CAP_SYS_RAWIO))
->                 return true;
->     ...
+> Apply the same validity check as the resource loop and skip such child
+> nodes.  That loop has already reported the invalid port number, so do
+> not print a second warning.
 > 
-> 
-> (ATA_12 / ATA_16 / ATA_32 will all return false, so not allowed for a regular
-> user.)
-> 
-> And... even if the user sends a command with a protocol that is not as per
-> ACS spec, the command should time out and EH should reset the device.
-> 
-> 
-> So... If the user sends a passthrough command with the wrong protocol...
-> Well, that is on the user, no?
-> (It also requires CAP_SYS_RAWIO)
-> 
-> 
-> If we were to add protocol checks all passthrough commands, then we should
-> not only check READ/WRITE MULTIPLE, we should check other commands like
-> WRITE SECTORS (30h) and IDENTIFY DEVICE (ECh) too.
-> 
-> But, I don't think we want that. Damien, thoughts?
+> Fixes: 18ee7c49f75b ("ata: ahci: Introduce firmware-specific caps initialization")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-Unless we are talking about a command that libata-scsi emulates, passthrough
-commands should not be parsed. We do not want that. So unless the bad SG_IO
-command can crash the kernel, we should do nothing if the user sends a bad
-command and it fails. We can let the drive fail it, even if that leads to drive
-resets etc. As Niklas pointed out, SG_IO is priviledged, so it is not like any
-user can create a DOS with bad SG_IO commands.
+Looks OK.
 
-Also, the use case for this is a little silly in my opinion... Who wants to send
-a PIO multi-sector IO using a modern command like ATA 32? libata supports that
-if that is all that the drive can do. If the drive can do DMA and/or NCQ, then
-better commands will be used without relaying on a PIO passthrough command.
-
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
