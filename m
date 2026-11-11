@@ -1,55 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.112
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794391985;
-	b=uiHh+4d8Ksj5YRd1uK6Dsh8/DwFTu5i7UxoRrPelzxZnnDUhlmcdWmLs1M8gcrJgdMpI
-	 jHnx+5ICl44KrOGIrnmjd0XiiwZVBSQbNl2da8UpD97FSTtnmoeejUg1y1TVnb01UAVzT
-	 9WUzWAX+F92+cYTl5J39SD0+Ahi9QnRxnfZkvJiUCNT2dNmj5XE/DIx4lkZKJL6gcY82M
-	 RNH9YyMh+sEtJ726lGZD29H76rT9YwIBhQMXtNfKK4beiIw/0qfH6iX5sTeYfcP33KFDx
-	 OP+OFHrkBIL9RSyTmcL6gZVb1D9prVBPqasQD6kEpH41KaIqDEemOqPAkTFBQ2KI6NQ==
+	t=1794407502;
+	b=3bcoTMcvu4cwrNXu1vKS/CF1VRR3LPx/3TIyNQLEV2u9e9JjwhTowKyBe5vF12i9Jbzj
+	 PxMrkxrtrvp/CqQGze13Cz/iAjIFRzxLX38PL34wAd7nCnV315vWv0nXOeDftrZ5rpl8z
+	 5wblEtyLbjwPakUDDLUegZvKxVS9Ic6DUEdlEPMI1sfiesegXsRidmjE0qCwxY70vMBjg
+	 EGroXflcau6IW94GdgK9+0qdUelqPQnO/pXxMkbkhTFI7dpsToQdB4rLIAGaMluR5N6ZU
+	 gupVHEnIthP75E9iogBlmOqomT27RCO5Hk0ACXP0dZ0nB9Ir0tgn/Vep5EyhRfcUOqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794391985;
-	h=DMARC-Filter:DKIM-Signature:Cc:Date:X-Lms-Return-Path:References:To:
-	 From:Mime-Version:X-Original-From:In-Reply-To:Subject:Message-Id:
-	 User-Agent:Content-Transfer-Encoding:Content-Type;
-	bh=xx6TPToq5gieTMY527jOsgu4eVMLRX54BNjyVA+AhfU=;
-	b=admWtGfQIMInO8m2S8i4YVmQRe+0b8mZwbgdnJmN4h7dHxaQbg9nKuuV4rS11X+sUXzW
-	 yEfEtJ6PpkffnA4vZh2sYTwfxm3/iUlRfP387BWqWzGN7ANZYB8XenJqrJYkfMIX+er7J
-	 mXK4Qv7QrZ3+QzECotyJzBaTXn5URiX2XbPX4iMNNuIzfwtT/dwRnwPrybhkQQM7l9X2d
-	 YvDs2rzuC9LQ2mI78HJ4i6YKeOYTRP45b0XL/Nj2K5MFJcIcayi5dOMnj1KIXbjxBZJMa
-	 KN1WBMdxv/20qz78s0Hr6gR1BN1QaRKEedssz7t48tvPG8MxrOtz0SUL/NPcxBWBqag==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794407502;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
+	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
+	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
+	 X-Fangmail-MID-QID;
+	bh=qZDZuxhda9JFE9lFlRNWscv72CRMBaga3n+rnGubwk8=;
+	b=be46d+7r6WHmftrQaKsbCxhZP7FevmildmuR6KORxepnCFrOPTYDAMf440P+FRqFDo5E
+	 Z+eLTUYAOK0QYRtRpnJodY8IooVfkC4LnZ2hZ4/iccSNSWLOdm4XQccq3j3efdXP8/SJg
+	 qcXyjPrhW1LMYubFhnt5IRy9L85WAaUsFcTd89vH9hRjqjr5p6AvIbC8hAUdSNQngyqvI
+	 3NSMiHVsKT+16wI3KXlqgOmY5ZscGavhvbnjMr3tTrTDduIF0lJySdbSSM3wmSZkO/6Fk
+	 eqSZcD7JtL7+DD65tFPBzCrHuPgbTtWDHuhkIWMILNIfx/+0qaOFDTnIx7vbRXajEuA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bytedance.com;
-	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b="k/SGM2Of";
-	arc=none smtp.remote-ip=209.127.230.112
-Received: from va-1-112.ptr.blmpb.com (va-1-112.ptr.blmpb.com [209.127.230.112])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=PBKGUXb3;
+	arc=none smtp.remote-ip=160.30.148.34
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3EF1606A326
-	for <linux-ide@vger.kernel.org>; Wed, 11 Nov 2026 10:13:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C3EF1606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78E8C60A2611;
+	Wed, 11 Nov 2026 14:31:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 78E8C60A2611
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=k/SGM2Of
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1794391978; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=xx6TPToq5gieTMY527jOsgu4eVMLRX54BNjyVA+AhfU=;
- b=k/SGM2OfXOwtgFzZbyLLsdABlWr3aP1GRYR5K47cxbXdTSIcYSLOoqFGr9EgJN0NxR9+Ay
- SY/128MIzirNu7DfwU5PPbTzwPSB87W5I9TMqJ6K4k04VIl6CVulJ1trA9mjWaNQEinB2y
- AK+OZ+d+8ur08549GafFIou+oMmOF33XWDTwrttu2Gv6qR5jqN830aveDx3gD8grj6cNz2
- Nmm/cdvrDQZjiKFmuM2rRcLhK131vTpTut+uvaPhobpkjGRcC65cxfiP27INbpeOhUZtpF
- YE00RxNJQSwkV1gTbytqexz+EoMnq9imZbnV8UHCuu9DFdJyg9PwvF8Tr6u/fg==
-Cc: <linux-ide@vger.kernel.org>
-Date: Wed, 11 Nov 2026 18:12:42 +0800
-X-Lms-Return-Path: <lba+26af43fa8+8cc7bc+vger.kernel.org+zhaogongyi@bytedance.com>
-References: <20261028140432.20489-1-zhaogongyi@bytedance.com> <avLYvtmnedp5FXSX@ryzen> <425aaec6-89bf-4150-ab87-360cc30dc72a@kernel.org>
-To: "Damien Le Moal" <dlemoal@kernel.org>, 
-	"Niklas Cassel" <cassel@kernel.org>
-From: "Zhao Gongyi" <zhaogongyi@bytedance.com>
+	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=PBKGUXb3
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jPmDV29d6z5BNRx;
+	Wed, 11 Nov 2026 22:31:38 +0800 (CST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
+	s=z202610; t=1794407498;
+	bh=7OfLAPF6pu7h6kxQBFwMAL5ZiClxJ8f/Yl/56vP0i5o=;
+	h=In-Reply-To:References:Date:From:To:Cc:Subject;
+	b=PBKGUXb3+JoRLryUe3yrpn3Jx+5P4pWS82jwpKxCzX6qaHkD3WYM+BzacNZVxHgf0
+	 qzqslDJJuCdWNM+ObJVT3lm2sa17nEPBfLMWmQ10Ts5bpSqbgJsftW2yJygb1/F0f7
+	 gL35IH0XjruCOAC76pQdQPIPNXjveojirRFOfvPSzwOfB58iSc7QCw/e4VvFjUJUYV
+	 kHJHMuZxgN28BXDaLuYBwi8NcVgkA5aWNa9QTYu6xpkxBkQCX/qQHHRHxp8mQb2bUQ
+	 5LObDnNFHNCTjEQykZkL5MisuB90ID+1CDA+Z5hkRtUH84X2QMIH8ME9IWpYhMtA/U
+	 HoMb98ydGENIg==
+Received: from xaxapp01.zte.com.cn ([10.88.99.176])
+	by mse-fl1.zte.com.cn with SMTP id 6ABEVRCb089033;
+	Wed, 11 Nov 2026 22:31:27 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp05[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Wed, 11 Nov 2026 22:31:30 +0800 (CST)
+X-Zmail-TransId: 2afc6af47c42b2e-51a29
+X-Mailer: Zmail v1.0
+Message-ID: <20261111223130666omUZ0JoWtfZjRFRrWPse8@zte.com.cn>
+In-Reply-To: <20261111223123952mgPDVsbO8uOyaDWL2KELB@zte.com.cn>
+References: 20261111223123952mgPDVsbO8uOyaDWL2KELB@zte.com.cn
+Date: Wed, 11 Nov 2026 22:31:30 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -59,36 +73,63 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-X-Original-From: Zhao Gongyi <zhaogongyi@bytedance.com>
-In-Reply-To: <425aaec6-89bf-4150-ab87-360cc30dc72a@kernel.org>
-Subject: Re: [PATCH] ata: libata-scsi: reject non-PIO protocols for READ/WRITE MULTIPLE
-Message-Id: <a3f60789-0266-4c35-894e-79753b7593ce@bytedance.com>
-User-Agent: Mozilla Thunderbird
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=UTF-8
+From: <shao.mingyin@zte.com.cn>
+To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIIHYyIDIvNF0gYXRhOiBsaWJhdGEtc2NzaTogcmVqZWN0IHVuc3VwcG9ydGVkIEFUQS0zMiBzZXJ2aWNlIGFjdGlvbnM=?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl1.zte.com.cn 6ABEVRCb089033
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.132 unknown Wed, 11 Nov 2026 22:31:38 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AF47C4A.000/4jPmDV29d6z5BNRx
 
-Hi Niklas and Damien,
+From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-On 11/11/26 4:52 PM, Damien Le Moal wrote:
-> 
-> Unless we are talking about a command that libata-scsi emulates, passthrough
-> commands should not be parsed. We do not want that. So unless the bad SG_IO
-> command can crash the kernel, we should do nothing if the user sends a bad
-> command and it fails. We can let the drive fail it, even if that leads to drive
-> resets etc. As Niklas pointed out, SG_IO is priviledged, so it is not like any
-> user can create a DOS with bad SG_IO commands.
-> 
-> Also, the use case for this is a little silly in my opinion... Who wants to send
-> a PIO multi-sector IO using a modern command like ATA 32? libata supports that
-> if that is all that the drive can do. If the drive can do DMA and/or NCQ, then
-> better commands will be used without relaying on a PIO passthrough command.
-> 
-> 
+ata_scsi_var_len_cdb_xlat() returns 1 for an unsupported service action
+without setting sense data. ata_scsi_translate() then completes the
+command with the SCSI result still zero, reporting SAM_STAT_GOOD even
+though no ATA command was issued and no data was transferred.
 
-Thanks for the review and clarification. My testing showed the timeout
-and blocked I/O described in the patch, but I do not have evidence of a
-kernel crash. I understand the concern about parsing non-emulated ATA
-passthrough commands in libata-scsi.
+Set ILLEGAL REQUEST/INVALID FIELD IN CDB before returning, with the
+field pointer referring to the SERVICE ACTION field at byte 8.
 
-Thanks,
-Gongyi
+Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+---
+Changes in v2:
+- No code changes; regenerate against the series base and keep the
+  Reviewed-by tag.
+v1: https://lore.kernel.org/all/20261104221102824qAKUWNkiSgZ1yRnQM8hI9@zte.com.cn/
+
+Validation on x86-64 with GCC 13 and UBSAN: a userspace harness compiled
+the translation functions verbatim with SCSI/device stubs. For service
+action 0x1234, completion changed from result 0 to ILLEGAL REQUEST,
+INVALID FIELD IN CDB; the invalid-field helper received field pointer 8.
+A valid ATA_32 service action remained accepted.
+
+ drivers/ata/libata-scsi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 227240514651ada8b5feb87a154833fb2cddf064..3fffa2617339fb7aa8a9035bbd88258794e1bf63 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -5028,7 +5028,13 @@ static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
+ 	if (sa == ATA_32)
+ 		return ata_scsi_pass_thru(qc);
+ 
+-	/* unsupported service action */
++	/*
++	 * Unsupported service action.  Set the sense data explicitly, as
++	 * returning 1 without it makes ata_scsi_translate() complete the
++	 * command with the SCSI result still zero, that is, with
++	 * SAM_STAT_GOOD.
++	 */
++	ata_scsi_set_invalid_field(qc->dev, scmd, 8, 0xff);
+ 	return 1;
+ }
