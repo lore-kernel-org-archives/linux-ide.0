@@ -1,47 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794440159;
-	b=c+HWh3VYLiwzy39aCgSDYjYXccB12SVnWHknz1vzX64v61DsiSZz40ViA5mHtr0fhcb1
-	 EpMYdMaSpiim/O4dw/JbY4D0UzOPKmYoFllWPN+wBNfDyXsLPH2skJ+lehrc6cW6GSbcd
-	 SBaAWPx2ZW4bx274XPesARqUD5tgJhMZMfAB/R/+8SVF5QzYXYHUkUtK31e3g9WsnkN1S
-	 nLeX6egTn8sGfmZslEImyxtSCWd7YCAWSm2LWAAV779wzLXxGiiTX0DkoPwfWgNgahx4M
-	 vmy5rA4AkSzAQYLW7rVwVyr7mMWIPdF7liiQiK8B0hmdMWtWgI4KFrrRaXKcR/8cfpA==
+	t=1794456786;
+	b=HvlqSF/QTB9QD/RKiRtjK4hYVsWdGSAQTFNJP2JIvHBYu2PkV7g/Fxd1oIEBWMaibCIU
+	 QOHJ5pNL6r5mNakO6rsibNuNh7XOTTYuypGBnx8HXwm4wF7xIeKcVaGDpUWWPlnHWquZh
+	 ZdnB+XMLOFP4bjcidEc8cwFYpkkinuqELNyGzI+yGgSJEwtnPoqo1AE9cHw07A7Z1OdfY
+	 okQHvZ+WhNylnvYCjusHztqLe97XQqWuvKBad7RyJREAnKSDzyEg3GPwT+elc9ayOfYcP
+	 UtJQgsV6l9JkI2pApXLBqDZPckCn9syOGPBoMJ4FJX+jueC4PgYKKOrlc9j7mNq7EOQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794440159;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:Organization:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=LXD7gw2yiL/iHzNSHv7yzZLlAdtBMURofRbgu+y1eb0=;
-	b=PrCdkG2Z4ykI8Rt2XkmfmbZ526QXFUKFTYvS8+3yFk2VcvMI3kUiakNlc6FmP+vjrVNc
-	 tZhGyMbxEhNTp90BqhJHQtwNE22XJKBmsPKQhXeQH9VszOGvlsJp+Ekgw756vsN8Pux+6
-	 bKr0qdIFES9eWIjRW4ySDyN+LSH/dl8EmfM1+Zidvv/eQalG3aCBOlUHixdyDCM9dN5um
-	 ZUtp9AVZnAMfWnJu5IdTITKVwHC4+n6mhXHFDii53oUZeEQ4SiEO8NgNdhwU4mUi5UzWI
-	 pg6BQVuLscNfIBiiGJfzlQYZQ7pop9WxBRXrB6PGIDS7Q0Fx02Vlftzk7R/FXiAJSPw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794456786;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
+	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
+	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
+	 X-Fangmail-MID-QID;
+	bh=IpWUmRExnEtcbdALoE0Cr5qSf7fpbyBSfGicozo/2Fk=;
+	b=5cX/mdG7mHWAVQYL5SLswmEpnfw1MIQiMEPuJChwbiHXtbrXLiZkuRFUXV7b2jPChaTv
+	 zeNDkNG/YndbuLJHUsvZ41/YxGfTD1YNIdGOQl/Sr5mHf1kQsVdgto9exOERKACFsdqmt
+	 BjhDVK8hJQyhqAxAAkkVLlG6VnlD5Ynrgvdm/jSteRG1W12nv8jWJpRyt24t+q+jfZoY8
+	 Oaq9F8C6psLCd5V2g1UNP6zlAdn8PYaosg3cEJnkSHGPQ+49zl1eVKGNrf4Kxdpx7L3AF
+	 dD6r+zBIyn821/vRPmpTi0KrDpg94zJRtuAXphVk7dkuGzfBPAmXzQDCWiHckkomQ5g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DXUQWF9+;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=JvcMI2h3;
+	arc=none smtp.remote-ip=183.62.165.209
+Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46619606A31C;
-	Wed, 11 Nov 2026 23:35:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEB24606A31C;
+	Thu, 12 Nov 2026 04:13:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BEB24606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DXUQWF9+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2562D1F00A05;
-	Wed, 11 Nov 2026 23:35:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794440158;
-	bh=LXD7gw2yiL/iHzNSHv7yzZLlAdtBMURofRbgu+y1eb0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=DXUQWF9+zSlEJOPMIqg0Tipv7VHpDjFrUIrvJ6gifkaN65qS8YYIdLNQHzu7kWUwk
-	 nrkvgSQN8xEFm6JrTO27PWRn4xWqsF+vpghzxpz6BE4PbmfpUFKZV9Uy9rGUkZi/4s
-	 sLMxmSLyE/1zvZsx0Z2cVc9X7uGSXF4Ij/oUvPczsGU0MCFb4W0ZoiLAxESbUC02ZX
-	 jYEsultDiQ0tpHFyyaFTQZ8iZ4kWFSaXQKjRcDzkkHyL/4RRJZPXbPmxViXXt2xL1G
-	 OoohisamLkbzv6z/aj9LVzunRJHh9z0F+W+8UFvt/u3MEUd3EbpCfuZVio4vB96noz
-	 YZP1x05O3WMtg==
-Message-ID: <0ce11245-3da6-423c-9f54-175eed413182@kernel.org>
-Date: Thu, 12 Nov 2026 08:35:56 +0900
+	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=JvcMI2h3
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jQ6SC2vKtz57HS9;
+	Thu, 12 Nov 2026 12:12:59 +0800 (CST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
+	s=z202610; t=1794456779;
+	bh=IpWUmRExnEtcbdALoE0Cr5qSf7fpbyBSfGicozo/2Fk=;
+	h=In-Reply-To:References:Date:From:To:Cc:Subject;
+	b=JvcMI2h3JoKiI/KvRzu2NO1PF5ll+pfYF35RFM7evo9gTDOGXx5HtolaC5gtvQiNI
+	 sabWN068QBkccJ5MTwNMpKdd5tdaw79L5uCkSMk1b58do7vp4czmuJS7G6mH8nP7gX
+	 Ro/8XfsQgZ5uMGgDuO/IKsnJLAhv6SO3m9yB3SeknGBh7X5Gfz0F40etGx6Tk4sH0Z
+	 wxoUFkj1bUn/ukpXrqA7XV14X/sVhuYDZsnN6hNOC+qOokpWLbVe/2uw5sd+87+gX7
+	 oXYnE0SukjRkM+g5zL0hIa7Y8aGp8vMgxbqH0zddoV1hhA35r/jophBVq7csSv/t54
+	 C0E53NtO1uqYg==
+Received: from xaxapp02.zte.com.cn ([10.88.97.241])
+	by mse-fl2.zte.com.cn with SMTP id 6AC4Cr1t062157;
+	Thu, 12 Nov 2026 12:12:53 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp05[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Thu, 12 Nov 2026 12:12:54 +0800 (CST)
+X-Zmail-TransId: 2afc6af53cc6d55-44861
+X-Mailer: Zmail v1.0
+Message-ID: <20261112121254674Lwi5B4G97rdqfX-kLlNRj@zte.com.cn>
+In-Reply-To: <440db014-a58c-44e4-bc96-e950e69b6763@kernel.org>
+References: 20261111223129430zClEJF8TDgu_h8ZYM843Q@zte.com.cn,440db014-a58c-44e4-bc96-e950e69b6763@kernel.org
+Date: Thu, 12 Nov 2026 12:12:54 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -50,97 +72,30 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libahci: Stop the SW activity blink timers on port
- suspend
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
-References: <20261110135615.291884-2-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20261110135615.291884-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+From: <shao.mingyin@zte.com.cn>
+To: <dlemoal@kernel.org>
+Cc: <cassel@kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: =?UTF-8?B?UmU6IFtQQVRDSCB2MiAxLzRdIGF0YTogbGliYXRhLXNjc2k6IHNraXAgTVVMVElQTEVfQ09VTlQgZm9yIDMyLWJ5dGUgcGFzc3RocnU=?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl2.zte.com.cn 6AC4Cr1t062157
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.133 unknown Thu, 12 Nov 2026 12:12:59 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AF53CCB.001/4jQ6SC2vKtz57HS9
 
-On 11/10/26 22:56, Niklas Cassel wrote:
-> The SW activity blink timers are not stopped when a port is suspended.
-> Every command goes through ahci_qc_issue() -> ahci_sw_activity(), so
-> with SW activity enabled, a blink timer can still be pending when
-> ahci_port_suspend() runs, e.g. armed by the commands issued just before
-> it, and ahci_sw_activity_blink() re-arms it as long as there was
-> activity.
-> 
-> If the timer fires while the port is suspended, ahci_sw_activity_blink()
-> -> ahci_transmit_led_message() -> ahci_rpm_get_port() calls
-> pm_runtime_get_sync() from timer softirq context, and the EM registers
-> of a suspended controller get written. If the port is resumed while the
-> timer is still pending, ahci_port_resume() -> ahci_start_port() ->
-> ahci_init_sw_activity() calls timer_setup() on a timer that is still
-> queued in the timer wheel, corrupting it.
-> 
-> Stop the timers in ahci_port_suspend(). Use timer_delete_sync() rather
-> than timer_shutdown_sync(): the timers are only stopped until the port
-> is resumed, while timer_shutdown_sync() is meant for timers that are
-> torn down for good.
-> 
-> Fixes: 18f7ba4c2f4b ("libata/ahci: enclosure management support")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
-> Developed with the assistance of an LLM.
-> 
-> Tested in QEMU (q35, KVM) with KASAN, UBSAN, DEBUG_OBJECTS_TIMERS and
-> lockdep, using TEST-ONLY hooks: one fakes enclosure management (QEMU's
-> AHCI has none), the other arms the blink timer as ahci_qc_issue() does
-> and then calls ->port_suspend() and ->port_resume() back to back, while
-> the timer is still pending.
-> 
->   unpatched                              patched
->   ODEBUG: init active ... timer_list     no warnings,
->   hint: ahci_sw_activity_blink,          I/O after resume works
->   from ahci_port_resume()
-> 
-> The timer firing while the port is suspended is not covered, as the
-> fake EM support never reaches ahci_rpm_get_port().
-> 
->  drivers/ata/libahci.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index ef760d81d1d1..2e71ba7ea374 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -2491,8 +2491,21 @@ static void ahci_handle_s2idle(struct ata_port *ap)
->  
->  static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg)
->  {
-> +	struct ahci_port_priv *pp = ap->private_data;
->  	const char *emsg = NULL;
-> -	int rc;
-> +	int rc, i;
-> +
-> +	/*
-> +	 * Stop the SW activity blink timers, so that they cannot fire while
-> +	 * the port is suspended. ahci_init_sw_activity() sets them up again
-> +	 * on resume.
-> +	 */
-> +	for (i = 0; i < EM_MAX_SLOTS; i++) {
-> +		struct ahci_em_priv *emp = &pp->em_priv[i];
-> +
-> +		if (emp->timer.function)
-> +			timer_delete_sync(&emp->timer);
+Hi Damien,
 
-Looks OK. Did you check that the timer handler does not restart/requeue the
-timer? timer_delete_sync() states that it should not.
+You're right -- those bits are reserved in ATA 32 and must be zero, so
+silently ignoring them is wrong.
 
-> +	}
->  
->  	rc = ahci_deinit_port(ap, &emsg);
->  	if (rc == 0)
+I'll reject a 32-byte CDB with any of them set (fp = 1), keep the existing
+multiple-count check for the 12/16-byte forms, and resend the series as v3.
+2/4-4/4 are unchanged and keep their tags.
 
-
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+Shao
