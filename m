@@ -1,69 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794492774;
-	b=EVwqfnJplifftoWugTfkm/kTk2EpE+RsntVTIJWCQHml2fephL33FwJT0VPm5BsLpvrn
-	 WZUQAr7bXzaAT8Sa61XX61rkwBJqq0euwxer9Qqd8L6mjrAFT0IQgqtXPsfJIjkmC3CsC
-	 cq5l3kLPyqkdTksPQ/uWyCjJgDtC6JRUbenhGVd7LHryB9kenANw/fxh3DTzx1VKeWsu9
-	 XahVIVtTaaa3rQHeohRvq8KELz4+RoCsfkXD/6oi+0Kb0b4pA0Pq55COT8kvR3ETTZCJr
-	 3KbAhRNQep7TmFXFSR+XtkiVnwTo3RKD/p112T2rE4XWzl1ppewYqgm2FFqkgr+899Q==
+	t=1794496869;
+	b=qKT+/BfNEZdcV2E0w0xYMjeQeweLwZt8FVI/7DSJ7k4p5+37mVb7KNEBVU6cBGeOknuB
+	 sFvfqHkWAqobwYdTJBcB19r4w9iNeTJej58kaJ8ZEd2pclUpP8oZKXz+9sP6tURG3H22Y
+	 fjfXL3iTTaHJGXBAQrdW4vk2nVdc0bp2/nT7gy3wnSjQD0z60wgHP9sY41wjEl9V6Eiv+
+	 OHCC/MWwtAkriofjheo21AsXGYuIDHpZnC5eP2eFMZPJFaIralCdtYt032zYYwUlGXLbA
+	 R5rpFBktMvTw0+DDM+EfaKVZOiXRWh12BfyamfB+L7qZtXoQCIRYGBNrHObl1MJGPPQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794492774;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
-	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
-	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
-	 X-Fangmail-MID-QID;
-	bh=C33IcFxkCejtNL06E1fQzKXXWvVqitln+U/Dyb3IHY0=;
-	b=Mdtnla/fNi0NWu7nFStvxEZ0KfOoXLOvFVAxUAQoAdrjl1pY5KvgV/ipsGF8mE/6A6DC
-	 Wav1pYaEFWAghu2R4AxyjbNU0RdW4r9cY8w/TtYSHXm4/I2WnYgbn5qIE8/73KqwRlDwQ
-	 CMPllcKBZvykON1HVLjPDYGuO/7/MBYuq3+PBzUIYfBM8vw41b8nG00/MNjFVWTX9aBGT
-	 h9eGsXk0/hWczGj74lqDn9oFqb7bvv/PKb13bTNAKARz/OlmU2xE3gKOaCGUtP+fpZ7Zs
-	 NUnHVA9BUTtCQCywTGDe8cnezpgYus1I9dFlPFamVN1KWcCoYlAQJ00vaEQKSoz//Mw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794496869;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=qVYK4aF8DnlATPdvPW4rrz584ZowV56FwmQpG+kYD1c=;
+	b=kHKxG0bmzBc+pBn3B2CLzRHOPrlH9OYCDMW0m3qtpLmT2VWYy3PFQxEImgmoPsZalcEx
+	 YWLbg1NtHZKtvGw0/1u5y9TiBqYwmm0F089YIbc4QpiJT6JMwBGL/TqmAmS32kjmWVNyH
+	 yyNlcQPhEe7fNvFRWnZO5F1fB930qVfltvQDhyYPFaxMYxwsjKyqqjAMzamOVR4P7iO6C
+	 QAQ8KyMPGzlTprcX01EkqTDTFI3dAi7z1DeKZchWce81+Tfk+PsDVUyrk3vRb3jZgk9T+
+	 LGSc80hBnyX47xC7gcHXVG3hASKhf4pLROlbcFB04XF7IeAN4CQwKPaQ/smJhj0HSvw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=TBk7U3hX;
-	arc=none smtp.remote-ip=183.62.165.209
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ojrAJsQ+;
+	arc=none smtp.remote-ip=209.85.218.44
+Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D70F9606A33F;
-	Thu, 12 Nov 2026 14:12:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D70F9606A33F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE9B60A6F55
+	for <linux-ide@vger.kernel.org>; Thu, 12 Nov 2026 15:21:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5EE9B60A6F55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=TBk7U3hX
-Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jQMmG00mFz5B17f;
-	Thu, 12 Nov 2026 22:12:45 +0800 (CST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794492766;
-	bh=5AGiSFjrfxLpPQtCABfNmTgTRij8Rox0DcLnnsS33Cg=;
-	h=In-Reply-To:References:Date:From:To:Cc:Subject;
-	b=TBk7U3hXYhYY3xnN6uLkZ4S0SsC4L2YLU5gOMgZLyZMKFouZIE0ae94AwYgwSloZs
-	 Blol6AJRg4m/O907hvMAGR7jMSPrJ/7hRn1VmY2RqKeB57JYV92BAnAWwCplggvhN6
-	 RY9Uxk/fIeIX89TrYHurwKHmeAOTFRLyhRsoRtfS03IFnNDGAClkO+GTE9yIvkRrMl
-	 4ArBXdizAUM7RZvi2WIglwlZV6xPJHRAh+iEi0Bzm/HdJ6PV/L3SMeL2dCmL52fNzV
-	 aVZ7GbtbigbFyqBsEia1xwMIYm/jJwaeSHonHpMp0TYcIxx+libvSeIgMcpqKE0NbY
-	 tjjoet9urJjrg==
-Received: from xaxapp05.zte.com.cn ([10.99.98.109])
-	by mse-fl1.zte.com.cn with SMTP id 6ACECgsc063423;
-	Thu, 12 Nov 2026 22:12:42 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp04[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Thu, 12 Nov 2026 22:12:45 +0800 (CST)
-X-Zmail-TransId: 2afb6af5c95d1ce-e293e
-X-Mailer: Zmail v1.0
-Message-ID: <20261112221245617fVtCglossnmJqcYZwdF9-@zte.com.cn>
-In-Reply-To: <20261112221230052E8YTrPU5pi8AJJy6dnh9E@zte.com.cn>
-References: 20261112221230052E8YTrPU5pi8AJJy6dnh9E@zte.com.cn
-Date: Thu, 12 Nov 2026 22:12:45 +0800 (CST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ojrAJsQ+
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-c4d427836e9so580187466b.1
+        for <linux-ide@vger.kernel.org>; Thu, 12 Nov 2026 07:21:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794496867; x=1795101667; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=qVYK4aF8DnlATPdvPW4rrz584ZowV56FwmQpG+kYD1c=;
+        b=ojrAJsQ+er+qdKfS3kg2Lrs0YL46fXV6i2SK3zA34q4VWel1VXMiLVPEIRv2EFGHP5
+         B9yARF4NKXd4ewR32xHUy+m1lZt0mnZkD8Ngy8EIr1wIv5C2L68G1/kOa4b8i1zb99pU
+         q8m8JyHGgDrdQEomPhIRhCbnV6bGddji8rOziG/VnqWqHjk1U1o8GZ1BB1Gqmv0fItB+
+         sUhbdYnZjj4Ohqsk6vr28eudeCokiGG5XP+TvDMxld0CMM+NeEzp2+ouX/dZZAkDXJYL
+         oW6OEA+oPCFfpLdpfXMAu5+H2eKTGeVBaFrnCeEtBA1R69926pmur1LiLN/+UbdUmLct
+         SAqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794496867; x=1795101667;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qVYK4aF8DnlATPdvPW4rrz584ZowV56FwmQpG+kYD1c=;
+        b=mZ8xGeTQL1q1ikLk1xJYBc82OZOAjTVrrsEiI4R1S+0LvTiWMzARhPIy8N9jABw1tx
+         fP1ixkfzaRfFjE4g7NLMD4xuiJm8Z6w7OyFFHRsHOnrRxIRBVEsLMORnYrxMHiqx32li
+         MRkm/IfbxLitNnoLdefNFCirEClRtZlZ/2eNJPK/cGV2ZsY09380hVFXw9cTgso49wwv
+         2+aS6mOsrYykqLgCzT4aSJe/wlwljrg1udmLP6EBoGuEU/sBS067wHoOYCJtjmzL+66j
+         tFSZCFFobkBIp6lpp/ozLOYsPI8FWi6S8g6SsOLKlDSdpgSyFybaGnLWOvpgR7+x+Zki
+         +ZOQ==
+X-Forwarded-Encrypted: i=1; AL+hErEwGUiT5GstrPLezfSLpRpmCSyWxbkzqgPe6DLHNtYz26qKLsdev2Vq4lkjzJQq2226S21fK/B6BFg=@vger.kernel.org
+X-Gm-Message-State: APuU4Z9XNpkoHQPAp/m9+y3GR43JXxOUB+2rzJjyeocCh0yOIN2q/5+l
+	OaSPf738/0bfgAaVLy+qKYTc6Z1gkyed8MHpN4X9WVV3XcNJ5gRciPkwyAWX2FAo
+X-Gm-Gg: AYBFou1C9pOt9/fN00lr0eDmkbPcaCBirZ7OqsxHVkeb1mNqgzlYR9xpvEH98TqHdHc
+	YfIQZ8VdPP/Km8gg5/alS3n/jIq4wCOxs671VG9Yk+mb3QqqyE86fPA/mkk2vel+K4xQ6/HIc94
+	fyQgwylHd0ti+ShKSL6qLOlZc1g1uF0vfWhUdYH5/pSI134pDKT92RluL2GHkPhQI+FikprDmPb
+	4dWUzLNBazZE8Hmb1Gm7K0dldnv4fVO2o//mKsfLqzoWSHg0vjmI4zBxf2Mab+GPjpF+CzAt9wb
+	tYVR1l4fnzZb9oepnCYJodvkGWN21M1PvqUxKu/HaenYYwD86xlKdRlA383VK1Ek6de5H4QbTm4
+	vWTZZTFxqqxcehd+gkJdBJT5GGd8ugD9waueq7Z2HftcpLzSkhVQAP02l5Av75+fl8kCXnHrCVZ
+	GngtAtYdw/O+3DeucBQpawpfgMj3bZef864fzzLvpq4oJF/LEN5gbnUt1VLiaq5AFE0wtmskr1J
+	QSwWbLjY4ix1d4xuTIcUxNx5tUzFWc0zL999UUWE7e621LDaaJcJMCVAXZEFsbwMNrgCkQXtu3u
+	RbbTdyGHY6OZybTeklqzuPeN5NuClLBHmOt6llPGHHWeWlOmfaF5xnkJY9IQ06k80HNnpNaMG/H
+	a9j7rxt4X5FBu
+X-Received: by 2002:a17:907:3f11:b0:c4d:212a:192a with SMTP id a640c23a62f3a-c5066db88a8mr468170266b.48.1794496866215;
+        Thu, 12 Nov 2026 07:21:06 -0800 (PST)
+Received: from gmail.com ([2a01:e11:1403:8620:5984:fa71:7b11:41c5])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4983600bc8fsm16385724f8f.30.2026.11.12.07.21.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Nov 2026 07:21:05 -0800 (PST)
+Date: Thu, 12 Nov 2026 16:21:04 +0100
+From: Paolo Pisati <p.pisati@gmail.com>
+To: Lee Jones <lee@kernel.org>
+Cc: sashiko-reviews@lists.linux.dev, Paolo Pisati <p.pisati@gmail.com>, 
+	linux-ide@vger.kernel.org, mfd@lists.linux.dev, dlemoal@kernel.org, cassel@kernel.org
+Subject: Re: [PATCH v1 1/7] zorro: warp mfd: add the CS-Lab Warp
+ multifunction parent
+Message-ID: <wxsfjhxzk4zrmaf3ykjgwj6sulyylqfak24xhrwa3pqroxtwgw@w66gfa7yi7jb>
+References: <20261111163735.227286-1-p.pisati@gmail.com>
+ <20261111163735.227286-2-p.pisati@gmail.com>
+ <sashiko-outbox-209365@kernel.org>
+ <20261111180442.GE6323@joneslee-macbookpro.roam.internal>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -72,71 +100,38 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIDUvNV0gYXRhOiBhaGNpX3NlYXR0bGU6IHNlcmlhbGl6ZSBTR1BJTyByZWdpc3RlciB1cGRhdGVz?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl1.zte.com.cn 6ACECgsc063423
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.132 unknown Thu, 12 Nov 2026 22:12:46 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF5C95D.000/4jQMmG00mFz5B17f
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261111180442.GE6323@joneslee-macbookpro.roam.internal>
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+On Wed, Nov 11, 2026 at 06:04:42PM +0000, Lee Jones wrote:
+> On Wed, 11 Nov 2026, sashiko-bot@kernel.org wrote:
+> 
+> > Thank you for your contribution! Sashiko AI review found 4 potential
+> > issues to consider:
+> > - [Low] mfd: warp_mfd_probe() places new MFD core driver in
+> >   drivers/zorro/
+> > - [Low] mfd: warp_mfd_driver hard-codes mfd in names and uses wrong
+> >   subject prefix
+> > - [Low] mfd: warp_mfd_cells registers only a single child cell and
+> >   Kconfig mismatches code
+> > - [Low] mfd: warp_mfd_probe() passes z->dev.id instead of
+> >   PLATFORM_DEVID_AUTO
+> 
+> All of these are hard blockers.
+> 
+> Why are you adding a whole new subsystem for your device?
 
-seattle_transmit_led_message() updates a controller-wide SGPIO
-register before taking ap->lock. Concurrent LED updates for different
-ports can therefore read the same register value and overwrite each
-other's changes, leaving activity, locate or fault LEDs in the wrong
-state. The lock currently protects only the saved LED state.
+No hard reason: I took inspiration from Geert's Zorro MFD experiments[1], hence the
+weird location.
 
-Take the shared host lock before reading the SGPIO register and hold
-it through the write and the saved-state update, so that each update
-preserves the other ports' LED bits.
+> 
+> This clearly lives in drivers/mfd.
 
-Fixes: 535dac4ab5f4 ("ata: add AMD Seattle platform driver")
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
----
-Tested on next-20261105 in an x86-64 QEMU/KVM guest with KASAN and
-lock checking. Two kernel threads on separate CPUs call the original
-LED callback for synthetic libata ports verified to share the host
-lock, using a RAM-backed SGPIO register and TEST-ONLY MMIO observers.
-The observer waits only when unlocked, with IRQs enabled; it never
-waits for another thread while holding the callback's spinlock.
+Ack, I'll address Sashiko's comments and i'll resubmit.
 
-In 1025 controlled update pairs, the unpatched kernel loses register
-bits 897 times (including expected 0x900, actual 0x100); the patched
-kernel loses none. Another 256 pairs with IRQ-disabled entry preserve
-all updates after the fix. Saved PMP LED states and entry IRQ state
-are correct in both kernels; 482 invalid-PMP calls return -EINVAL.
-This tests callback synchronization, not Seattle hardware or LED I/O.
-
- drivers/ata/ahci_seattle.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
-index 9758fa0260..a398778ebf 100644
---- a/drivers/ata/ahci_seattle.c
-+++ b/drivers/ata/ahci_seattle.c
-@@ -92,6 +92,8 @@ static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32 state,
- 		return -EINVAL;
- 	emp = &pp->em_priv[pmp];
- 
-+	spin_lock_irqsave(ap->lock, flags);
-+
- 	val = ioread32(plat_data->sgpio_ctrl);
- 	if (state & ACTIVITY_MASK)
- 		val |= 1 << ACTIVITY_BIT_POS((ap->port_no));
-@@ -110,8 +112,6 @@ static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32 state,
- 
- 	iowrite32(val, plat_data->sgpio_ctrl);
- 
--	spin_lock_irqsave(ap->lock, flags);
--
- 	/* save off new led state for port/slot */
- 	emp->led_state = state;
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/geert/linux-m68k.git/commit/?id=0417ac04d4357f5c1bd2bd43bb188624a85149f5
+-- 
+bye,
+p.
