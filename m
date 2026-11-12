@@ -1,69 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794456786;
-	b=HvlqSF/QTB9QD/RKiRtjK4hYVsWdGSAQTFNJP2JIvHBYu2PkV7g/Fxd1oIEBWMaibCIU
-	 QOHJ5pNL6r5mNakO6rsibNuNh7XOTTYuypGBnx8HXwm4wF7xIeKcVaGDpUWWPlnHWquZh
-	 ZdnB+XMLOFP4bjcidEc8cwFYpkkinuqELNyGzI+yGgSJEwtnPoqo1AE9cHw07A7Z1OdfY
-	 okQHvZ+WhNylnvYCjusHztqLe97XQqWuvKBad7RyJREAnKSDzyEg3GPwT+elc9ayOfYcP
-	 UtJQgsV6l9JkI2pApXLBqDZPckCn9syOGPBoMJ4FJX+jueC4PgYKKOrlc9j7mNq7EOQ==
+	t=1794492085;
+	b=eev8s+0yZyLR3NcEfkewzuWKDapL4auoRpqwtvel5G8Pxd955+9TgF1e6rCr72MekcXf
+	 5mnvqGsCrIJgl8MsYU4A9gfynuubRHg6cp0BAXmVDh9BkQ9DwWp51CsycWVlHi8R8QjTo
+	 6fSH/pWNGk2vhLY8d2q4uKZPjarnjrTycvu2ogCybKcsKTynM0C8LQOb4gp3aK+vXjxGy
+	 H+q9P3vikeaQHhEsurmrGgc6gfleuwR9GEqKVmdz7ZcbKddD5+MunWSRA+VzdObBjPtP+
+	 E1FOVcUrcYA8/InUxWAk7Ga2HolYhvweK6U9p/8I9Cuy0FL0EGVYI718I544xXJDPDA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794456786;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794492085;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
-	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
-	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
-	 X-Fangmail-MID-QID;
-	bh=IpWUmRExnEtcbdALoE0Cr5qSf7fpbyBSfGicozo/2Fk=;
-	b=5cX/mdG7mHWAVQYL5SLswmEpnfw1MIQiMEPuJChwbiHXtbrXLiZkuRFUXV7b2jPChaTv
-	 zeNDkNG/YndbuLJHUsvZ41/YxGfTD1YNIdGOQl/Sr5mHf1kQsVdgto9exOERKACFsdqmt
-	 BjhDVK8hJQyhqAxAAkkVLlG6VnlD5Ynrgvdm/jSteRG1W12nv8jWJpRyt24t+q+jfZoY8
-	 Oaq9F8C6psLCd5V2g1UNP6zlAdn8PYaosg3cEJnkSHGPQ+49zl1eVKGNrf4Kxdpx7L3AF
-	 dD6r+zBIyn821/vRPmpTi0KrDpg94zJRtuAXphVk7dkuGzfBPAmXzQDCWiHckkomQ5g==
+	 X-Zmail-TransId:X-Mailer:Message-ID:Date:Mime-Version:From:To:Cc:
+	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
+	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=LOCwwsQ3nFCCuQn+92JBgFqZgHp6qjYKUsnX5/E4g/c=;
+	b=xk7Fm1XoXqQsQUNZKXxb4tX4+XVVqkKRdj/R2Zn22obVA/KEheCNJ8cITqplBv/sJzjU
+	 vKVz4che6jGiO7dl8ROChJGxp7FAPjxVqU4s0G+zFISimpS0f8fyv7eQzfzOLSMSjWA+x
+	 J78++IsGsLNRjBEBCiV4ZuSU4pWutAvv/bhcH0UEAEdXt3DzBJns+8iwA38uDYlookYPg
+	 kSpAjkZx8Zt8dd8IwMAEOzsji98RL0jzJ6IwG7ijrGwcwS1FIVO+Q+Q1CbpCwnhMgDmU0
+	 vtVv1sz1iMS5FmN8f6Xqj4Jop/4ekLU+KOWD1f6PZGUYOF3Ipyme04JzWDebzNXOy5w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=JvcMI2h3;
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=r245EHki;
 	arc=none smtp.remote-ip=183.62.165.209
 Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEB24606A31C;
-	Thu, 12 Nov 2026 04:13:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BEB24606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3855360A382C;
+	Thu, 12 Nov 2026 14:01:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3855360A382C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=JvcMI2h3
+	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=r245EHki
 Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jQ6SC2vKtz57HS9;
-	Thu, 12 Nov 2026 12:12:59 +0800 (CST)
+	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jQMW22Yfyz58fdJ;
+	Thu, 12 Nov 2026 22:01:18 +0800 (CST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794456779;
-	bh=IpWUmRExnEtcbdALoE0Cr5qSf7fpbyBSfGicozo/2Fk=;
-	h=In-Reply-To:References:Date:From:To:Cc:Subject;
-	b=JvcMI2h3JoKiI/KvRzu2NO1PF5ll+pfYF35RFM7evo9gTDOGXx5HtolaC5gtvQiNI
-	 sabWN068QBkccJ5MTwNMpKdd5tdaw79L5uCkSMk1b58do7vp4czmuJS7G6mH8nP7gX
-	 Ro/8XfsQgZ5uMGgDuO/IKsnJLAhv6SO3m9yB3SeknGBh7X5Gfz0F40etGx6Tk4sH0Z
-	 wxoUFkj1bUn/ukpXrqA7XV14X/sVhuYDZsnN6hNOC+qOokpWLbVe/2uw5sd+87+gX7
-	 oXYnE0SukjRkM+g5zL0hIa7Y8aGp8vMgxbqH0zddoV1hhA35r/jophBVq7csSv/t54
-	 C0E53NtO1uqYg==
-Received: from xaxapp02.zte.com.cn ([10.88.97.241])
-	by mse-fl2.zte.com.cn with SMTP id 6AC4Cr1t062157;
-	Thu, 12 Nov 2026 12:12:53 +0800 (+08)
+	s=z202610; t=1794492078;
+	bh=ABaa6UwTzHtZeufAAFYzwS4SgHiNV500JXrr9ADhf5U=;
+	h=Date:From:To:Cc:Subject;
+	b=r245EHkiNALuAH9Q2pF4Kh8g6LMGCQ7BNNIx7PViaZKYoGklD3pKmCj7HTq2cWPf0
+	 lWJEUsbyggxe4pbDBnU8r5IOg/gi+76byJsH3zOAv9QZqPtYbMpfIwQBdHxhQHoEvl
+	 hJVJF3YZmHNcT4XjRsUphKEpLpQ+GGMqKjTwzD2LO8XaOipGjsLl1BLMmiSMJZ11Hx
+	 9KhLa7QrlRydG8IIL2p99y6mMbXcIF4tOEKPNkbYz4hwYRfi8wC/Xu8XqUHiJWPYjn
+	 OAvBL7kPqYy/Ia0hJz+9mutVPnwIbK6p2qbcfT0DIe586u5vRy7gfjl8YxnzMNqHjj
+	 LHj7Vty31k3aQ==
+Received: from xaxapp04.zte.com.cn ([10.99.98.157])
+	by mse-fl2.zte.com.cn with SMTP id 6ACE1AkP036927;
+	Thu, 12 Nov 2026 22:01:10 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp05[null])
+Received: from mapi (xaxapp01[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Thu, 12 Nov 2026 12:12:54 +0800 (CST)
-X-Zmail-TransId: 2afc6af53cc6d55-44861
+	Thu, 12 Nov 2026 22:01:13 +0800 (CST)
+X-Zmail-TransId: 2af96af5c6a92b2-cfa35
 X-Mailer: Zmail v1.0
-Message-ID: <20261112121254674Lwi5B4G97rdqfX-kLlNRj@zte.com.cn>
-In-Reply-To: <440db014-a58c-44e4-bc96-e950e69b6763@kernel.org>
-References: 20261111223129430zClEJF8TDgu_h8ZYM843Q@zte.com.cn,440db014-a58c-44e4-bc96-e950e69b6763@kernel.org
-Date: Thu, 12 Nov 2026 12:12:54 +0800 (CST)
+Message-ID: <20261112220113627e1oAXj5lbAzyI0Xe6Joud@zte.com.cn>
+Date: Thu, 12 Nov 2026 22:01:13 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -74,28 +71,47 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
 From: <shao.mingyin@zte.com.cn>
-To: <dlemoal@kernel.org>
-Cc: <cassel@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSCB2MiAxLzRdIGF0YTogbGliYXRhLXNjc2k6IHNraXAgTVVMVElQTEVfQ09VTlQgZm9yIDMyLWJ5dGUgcGFzc3RocnU=?=
+To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIIHYzIDAvNF0gYXRhOiBsaWJhdGEtc2NzaTogZml4IEFUQSBQQVNTLVRIUk9VR0goMzIpIGhhbmRsaW5n?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6AC4Cr1t062157
+X-MAIL:mse-fl2.zte.com.cn 6ACE1AkP036927
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Thu, 12 Nov 2026 12:12:59 +0800
+X-SOURCE-IP: 10.5.228.133 unknown Thu, 12 Nov 2026 22:01:18 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF53CCB.001/4jQ6SC2vKtz57HS9
+X-Fangmail-MID-QID: 6AF5C6AE.000/4jQMW22Yfyz58fdJ
 
-Hi Damien,
+ATA PASS-THROUGH(32) still has translation and completion paths that
+interpret fields as if the command used a 12- or 16-byte CDB.
 
-You're right -- those bits are reserved in ATA 32 and must be zero, so
-silently ignoring them is wrong.
+Patch 1 rejects nonzero reserved CONTROL bits, skips the nonexistent
+MULTIPLE_COUNT comparison and corrects the
+invalid-PROTOCOL field pointer. Patch 2 rejects unsupported service
+actions with sense data. Patch 3 honors CK_COND and generates SAT sense
+on completion. Patch 4 corrects the remaining invalid-field pointers,
+including distinguishing READ/WRITE LONG protocol and count errors.
+The four patches can be applied independently; the numbered order groups
+the related translation fixes together.
 
-I'll reject a 32-byte CDB with any of them set (fp = 1), keep the existing
-multiple-count check for the 12/16-byte forms, and resend the series as v3.
-2/4-4/4 are unchanged and keep their tags.
+Changes in v3 (Damien Le Moal):
+- Patch 1: reject nonzero byte 1 bits 7:5 for ATA-32 with field pointer
+  1; retain the device multiple-mode and 12-/16-byte count checks.
+  Update its subject, commit message and CONTROL-byte tests.
+- Patches 2-4: code unchanged. Patches 2 and 3 keep Damien's
+  Reviewed-by tag; patch 4 gains the tag from his v2 review.
+Link to v2: https://lore.kernel.org/all/20261111223123952mgPDVsbO8uOyaDWL2KELB@zte.com.cn/
 
-Thanks,
-Shao
+Shao Mingyin (4):
+  ata: libata-scsi: reject reserved bits in 32-byte passthru
+  ata: libata-scsi: reject unsupported ATA-32 service actions
+  ata: libata-scsi: generate SAT sense data for ATA PASS-THROUGH(32)
+  ata: libata-scsi: fix remaining passthru field pointers
+
+ drivers/ata/libata-scsi.c | 64 ++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 46 insertions(+), 18 deletions(-)
+
+---
+base-commit: ddfe51b0a0f5dc9e415cc2c8ad8db17532dd426b
