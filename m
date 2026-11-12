@@ -1,69 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794492091;
-	b=GK7GdQ8XX4QAGelbiTgvFNDp4OvTxk125h5BLPmG3xBHlwv8vWg/dWvXQdFLKbl3O1Nc
-	 p2PZWrlMfDhUF4ftS17hAwmrbimEx5NMgvBUpGi7TbnRmSvbNZp5eGEtZv586Yv3uZXS1
-	 JyAOIEfMh/UeBOOeE5Gnu9FXWZL/3kS6ZDz6VpKkpi70xArOR6REOonDC8nroKzrEi6do
-	 g7PnYad173WwYzFK5x9sZ8frgIojzTkQ4hfYOlNa76w5NtU1dt2ZifXJOVT5/mCTjRwW7
-	 fOK4fbQ65SPRFXOnOg3fEDUmp4Kct/HaVrDZSiSmRR6T3Wna1HRsVNnFC3a8HgXqAqQ==
+	t=1794492758;
+	b=vZHLkKZ6nWyN7kTzWYBaALEwKtFcASrDqp7MXCvvjXyNEfMc6oySFNL7Y0TsqYqzmI/E
+	 XnZkS0i277LjcGPWGVv68TohI6PM3JyP37PeD7dmdQawPYUvT8qj5Fv5gzvaZAI2txa0H
+	 zbnkodtxhbsHFPloxoKq8q5fV0Lw/WVzk0FsMeQAOtur2nVMLD6hjSzUrzjPiLPxVKi4n
+	 t0gAKsZhQ/k7WK+xYAltrM52slwisX2/Dfh3ap1UfEcJCVy10K6ox4AUAoDihLyQ5PKO8
+	 r+ak9AlMFHv2CIODdU8+FN5eW3XKNZo6F2h/CtUc8O0eN06NemP7f75Xi9pSwUohFCg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794492091;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794492758;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
-	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
-	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
-	 X-Fangmail-MID-QID;
-	bh=qpWy8HCWSR0sa/eAfK/XviePDYIHsZVvhoo2sgpZsKU=;
-	b=nSX5vUjDZRbpYYstdIpNu12rwpt4XBUA1zpwbV9kRHhl86iqSwfdYXxBt6tdqcAi/O9/
-	 EchrU3rdjM5CykG0Lw3/eu3IJ36UQgEHLst9W+1Kv1859AezTO2lw0G9hcASB7dfyiv9y
-	 d5eOnLSoAxZjPCQlbxJcY2+lf9wdGgxGXNn2In3b7VsU++MnUGxA9XKyu3e5Ku5VcV87b
-	 dk8sM+aegmLxQCwwL7Xbnp+uxTTRUIGIi6CO92uFA2D3/B6RGz8kJUijOLCYTGzhWNlXE
-	 j8OKygvoUvWrVAFqByuyaSjpLV+/TXo8G7amyuaiHrS7VgP1u2NWzotAvLuItJdKomw==
+	 X-Zmail-TransId:X-Mailer:Message-ID:Date:Mime-Version:From:To:Cc:
+	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
+	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=TDbuZxkNvN8aowxyfC/X+PDPpn3jYmSKVZv63IIsnfI=;
+	b=1+Kl3bYN5e0N3677SS1IU+XeBz641617SVJeOmk6mw0F4V8nUwFzERjC9DCDRiBu/qjg
+	 ycC9bBdZFtD+hHTub0VtFdqXBjc5S+1V8orcd339D+6s7Wov9un5jyG+aFNGf5D+LOgtr
+	 s3SigrUoQt9WoaZX7AZBhpkbQV4WPq4J2TawteeeWa47D5qXy4mbcDqUrSGAULpGIE7MR
+	 QTZUESUN7wa/ZnocZIERQ4wMfvs5khiWNARgzVOyl3r+5TLu15iRmhStfMiIFSaB0jOZh
+	 rhaJ1in6vmSgLvuAiZoBuc0xcpzSKDTBe0boDJjTbsAjxICMMp4X19tsAxgkzOj7nlQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=uB0Ej9JY;
-	arc=none smtp.remote-ip=183.62.165.209
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b="bD/0ZNpr";
+	arc=none smtp.remote-ip=160.30.148.35
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 053F9606A8B1;
-	Thu, 12 Nov 2026 14:01:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 053F9606A8B1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FB5A606A323;
+	Thu, 12 Nov 2026 14:12:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9FB5A606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=uB0Ej9JY
+	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=bD/0ZNpr
 Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jQMW82BDgz58fdJ;
-	Thu, 12 Nov 2026 22:01:24 +0800 (CST)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jQMm35kmZz8Xrrd;
+	Thu, 12 Nov 2026 22:12:35 +0800 (CST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794492084;
-	bh=SoCPix3SJoM9vNBx7ZY70/VYrCDAhK4F/OrFZJVxrIQ=;
-	h=In-Reply-To:References:Date:From:To:Cc:Subject;
-	b=uB0Ej9JYIKsTXloN0nZbF3fVxI//THIMreXYBEAA2G8vfaWjMhoJnIqpMBzxwY9wF
-	 M5GS/MyMbho2W0fz6qOWba3ujv+dRNXap708oWH+ug+0/jDkIltCdS9SaJJ2OYTn+q
-	 33hih3WRyyl4MAIzdyvk0lXlBICVp8xawF6XPG5rny+0Uc5fWLrMBjd7GMhBhSK0yJ
-	 rbYu7LVHOmjNuenwUKCa+kPcJwp33J5JP7947e8Z8zPk2Sy9jzQfrFzC8Zo9Dz3UFF
-	 vahAdjh5Dr1Xy9a6divoW3k/rogAfNVRaw+TxuxZEBtWdygeDePGkw1A5NeJfStWxg
-	 bn++Tam00gENg==
+	s=z202610; t=1794492755;
+	bh=ZcRuN24Wmn6hU9IiLgVcQF+SwN9RnpHIPOCRI81K2QE=;
+	h=Date:From:To:Cc:Subject;
+	b=bD/0ZNprS7MupyjdbU4v5xfOZWyxzbTbA1Z5Tt9asJYD1KmpE+JjHvHf9+sXYKEAO
+	 0phmjCgHwG/QToZOHJVSeOnMtAzas/JGQ1c0iModaJXPeJnMrZJQCNbQSwLO1xEt5S
+	 h5T60Cf2F1ZRuUCvxiBsiKM4nnpxFEyS6bZVyNt8RIok0xnSYnW7RyIyKzoPnA+3K0
+	 fjl2fgnAuBHrRBEJXxvDpnNmr7RcpsltGSJNkbdKq23a/T8dsJwSqWDetNvy4y6sOh
+	 JQk5A8pBhywslJH/06Kv1VZ/z86rxbL9gnBsV2WF1EfhvE+mRtbAFFHOoK2EC9JwOn
+	 +CgMOUnjZl1CQ==
 Received: from xaxapp02.zte.com.cn ([10.88.97.241])
-	by mse-fl2.zte.com.cn with SMTP id 6ACE1JAX036965;
-	Thu, 12 Nov 2026 22:01:19 +0800 (+08)
+	by mse-fl2.zte.com.cn with SMTP id 6ACECQg5055419;
+	Thu, 12 Nov 2026 22:12:26 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp05[null])
+Received: from mapi (xaxapp01[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Thu, 12 Nov 2026 22:01:22 +0800 (CST)
-X-Zmail-TransId: 2afc6af5c6b2a7b-d71f7
+	Thu, 12 Nov 2026 22:12:30 +0800 (CST)
+X-Zmail-TransId: 2af96af5c94e674-dcdea
 X-Mailer: Zmail v1.0
-Message-ID: <20261112220122679csrHZJU28_17KSmt_fom7@zte.com.cn>
-In-Reply-To: <20261112220113627e1oAXj5lbAzyI0Xe6Joud@zte.com.cn>
-References: 20261112220113627e1oAXj5lbAzyI0Xe6Joud@zte.com.cn
-Date: Thu, 12 Nov 2026 22:01:22 +0800 (CST)
+Message-ID: <20261112221230052E8YTrPU5pi8AJJy6dnh9E@zte.com.cn>
+Date: Thu, 12 Nov 2026 22:12:30 +0800 (CST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -76,72 +73,50 @@ Mime-Version: 1.0
 From: <shao.mingyin@zte.com.cn>
 To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
 Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIHYzIDMvNF0gYXRhOiBsaWJhdGEtc2NzaTogZ2VuZXJhdGUgU0FUIHNlbnNlIGRhdGEgZm9yIEFUQSBQQVNTLVRIUk9VR0goMzIp?=
+Subject: =?UTF-8?B?W1BBVENIIDAvNV0gYXRhOiBmaXggcGxhdGZvcm0gZHJpdmVyIHByb2JlLCByZW1vdmFsIGFuZCBsb2NraW5nIGlzc3Vlcw==?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6ACE1JAX036965
+X-MAIL:mse-fl2.zte.com.cn 6ACECQg5055419
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Thu, 12 Nov 2026 22:01:24 +0800
+X-SOURCE-IP: 10.5.228.133 unknown Thu, 12 Nov 2026 22:12:35 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF5C6B4.000/4jQMW82BDgz58fdJ
+X-Fangmail-MID-QID: 6AF5C953.000/4jQMm35kmZz8Xrrd
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+The ATA platform drivers in this series have independent defects in
+their probe, removal or locking paths.  They share the same shape:
+state established in probe is not checked, torn down or serialized
+consistently.
 
-ata_scsi_qc_complete() only recognizes ATA PASS-THROUGH(12) and (16).
-The 32-byte form takes the ordinary completion path, so CK_COND is
-ignored and errors lack the ATA Status Return descriptor. Successful
-commands with CK_COND set therefore complete GOOD instead of returning
-CHECK CONDITION with the ATA register values.
+Patch 1 fixes recursive locking in the IXP4xx CF PIO callback, which
+can hang the first data transfer, including IDENTIFY during probe.  Patch 2
+returns the host activation error from the Buddha probe path instead of
+reporting a successful bind.  Patch 3 makes the QorIQ and Seattle
+drivers inherit ahci_platform_ops so that host teardown runs host_stop.
+Patch 4 stops only the Gemini SATA bridges that started successfully.
+Patch 5 serializes the controller-wide SGPIO update in the Seattle LED
+callback.
 
-Recognize ATA PASS-THROUGH(32) by its service action and read CK_COND
-from byte 11 instead of byte 2, which belongs to the variable-length
-CDB header.
+Each patch touches one driver, except patch 3, which covers the QorIQ
+and Seattle AHCI platform drivers.  The patches are independent and any
+subset can be applied; the order lists the more severe failures first.
 
-Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
-Cc: stable@vger.kernel.org
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+All five patches carry QEMU A/B test descriptions after the --- line.
+
+Shao Mingyin (5):
+  ata: pata_ixp4xx_cf: avoid recursive locking in the PIO callback
+  ata: pata_buddha: propagate host activation errors
+  ata: ahci: release QorIQ and Seattle platform resources on removal
+  ata: pata_ftide010: stop only successfully started Gemini bridges
+  ata: ahci_seattle: serialize SGPIO register updates
+
+ drivers/ata/ahci_qoriq.c     |  2 +-
+ drivers/ata/ahci_seattle.c   |  8 ++++----
+ drivers/ata/pata_buddha.c    |  6 ++----
+ drivers/ata/pata_ftide010.c  | 37 +++++++++++++++++++------------------
+ drivers/ata/pata_ixp4xx_cf.c |  5 +----
+ 5 files changed, 27 insertions(+), 31 deletions(-)
+
 ---
-Changes in v3:
-- Code unchanged; retain the Damien Le Moal Reviewed-by tag.
-Previous version: https://lore.kernel.org/all/202611112231319337i08AK7ZzIXm9DYFhmtXx@zte.com.cn/
-
-Changes in v2 (Niklas Cassel):
-- Move the unrelated invalid-PROTOCOL hunk to patch 1; this patch only
-  changes the completion path.
-- Regenerate with git format-patch so the index matches the diff.
-- Keep the Reviewed-by tag; apart from the moved hunk this patch is
-  unchanged from v1.
-v1: https://lore.kernel.org/all/202611042211545962bhKeo8yjWPGFgya4g6LG@zte.com.cn/
-
-Validation on x86-64 with GCC 13 and UBSAN: a userspace harness compiled
-ata_scsi_qc_complete() verbatim with sense/completion stubs. For ATA_32,
-CK_COND in byte 11 now selected pass-through sense and CHECK CONDITION;
-CK_COND clear remained GOOD. Error and preexisting-sense paths selected
-the pass-through helpers, and byte 2 did not act as CK_COND. The short
-CDB paths and unsupported service-action control were also checked.
-
- drivers/ata/libata-scsi.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2491e90fb1a5ec6e83234a07eef5342055875937..8ee68937e884369beb4d7ad218612d28c5a080ff 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1888,9 +1888,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 	struct ata_link *link = qc->dev->link;
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	u8 *cdb = cmd->cmnd;
-+	u16 cdb_offset = cdb[0] == VARIABLE_LENGTH_CMD ? 9 : 0;
- 	bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
--	bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12;
--	bool is_ck_cond_request = cdb[2] & 0x20;
-+	bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12 ||
-+		(cdb[0] == VARIABLE_LENGTH_CMD &&
-+		 get_unaligned_be16(&cdb[8]) == ATA_32);
-+	bool is_ck_cond_request = cdb[2 + cdb_offset] & 0x20;
- 	bool is_error = qc->err_mask != 0;
- 
- 	/* For ATA pass thru (SAT) commands, generate a sense block if
+base-commit: ddfe51b0a0f5dc9e415cc2c8ad8db17532dd426b
