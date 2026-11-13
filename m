@@ -1,54 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794584210;
-	b=WE+whdBXnlJZHV/XQToPR1MDqHjdaI7a3AEL8YaJjxHCV2ILDXSDHfHV6yyPk4oXuBZ3
-	 55LdXlizWZwc+UczehiBqVvSDATRjk83K+75ywbNP0gtlQeyGx0Z2mRLCfXydMUC6ne5B
-	 7nTXcHrzrmrsRsEv44Sm/oMAJOpxxxyvLaNI+vSeQ8UydLayA/KoUPt+eR4c/CE4a7ZX6
-	 dJQA0dtUHUj3Z1eNEWGIo2zbBnL6/YvvEOIlWxqf8I56DiEdITbhwp1r6NpS0tpEhAhUQ
-	 1ICTeWdenel9Y0uEca8ZmEVaArCqpxDY7BwPpz/mtZi5nmInaZ65cZPrDfzbheTP3SQ==
+	t=1794586120;
+	b=WOd0JwzerhW8d6D95rzxPfDju7hUQ5n95cQvNcdZxowwrqiCDJZmZqDnVcta82RYc4al
+	 Ug6Mw0vDgBY5EllEBsAC8IXaTMTScV4QhpzoFYqZIep88f4LpPzHLZGVLgZSi5tPtfsQ4
+	 Bb81ddkIrm2/mB2Fb0107sj5utoal38t7OA9epM8A6T5xGJIrX6xVWfq/j+zDN26g4NFw
+	 T+FVuH948nsgEInEBMLUmE7xstcTq7AbE67uckbj6Zxn88/qDTRSh3Ked7tz7tekXaRu3
+	 GIgWqur/fP4NQc4yW8RPVLn8TKp98rdpIIPXIfQsyMLJ2hTVXacrpksnuH6nwVAT8Sg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794584210;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794586120;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=7KZb1cW74jmBUh+q3Ymrsz3p/VddcH/rPDY7TKp0j3s=;
-	b=orHSt8jhw2eMiIC9IE9nrTp9faqu52Yg4Tvc40F2D1yoPf/+ZlK121NucOjCjpao6FBR
-	 n6m+QcuPSMntlW4Mu8eP7zG3QYNpMq6Lpw8CNvzCTcxXAMnoG106sWpzB4n2SOB6frTkQ
-	 +dg+vA2pVtUechr/yaVRTm2+QRIMNryiicXThYSJdWIf0OMw/nRSBsO6r7m0ACyh9wY+y
-	 odVSxwfNCQhZS8Hi2YdRjXwymRaCyTYaz3DNoskUPZEQyDcYLc/CtNZ5w1BeRTGV8k4t5
-	 M6GJgOWcIUWTfY2NFP5SIYWnbu+CWxvn3EPsYv8Uev64qWQTqXUCmYAKD/15WiLyPog==
+	bh=HbVfBGF5i6NrBYQHNTc1RyxivmXC34Bel18CQsY9ZRc=;
+	b=VeLA0DONzI/k2/CmQU+MnWKxy0M+XbpIh8xP5zdcXAEL+OEoLm1SVBWPY85C2AwpeCfg
+	 YTyObJksCsUgJcOWnUvKEs3R5RXtSQCXMI8pOQYd8NeHpczSv+teBClPiIqEZyiV6R9oD
+	 6nO/OInVBcBmwgM606XcI93AvjvIK42sOEObHXJM7WM+n0skvoDD2pplVd6OCXO7xtiog
+	 f8XbTUJvwGhl7j4pDDkTy6ppiKC5CI9QkNo9D3N3IolGekUC1kkHWD4+cqc1I6ZCWLI62
+	 d9eKUNcxNKhbADrprLXd/sgzwHs8jgxvttz3YOQlkoM9CNV9ICBi5OII5wYPT/0a/Mg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SzeuJCyX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MrEQGM0c;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D7FF606A331;
-	Fri, 13 Nov 2026 15:36:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877E6606AE05
+	for <linux-ide@vger.kernel.org>; Fri, 13 Nov 2026 16:08:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SzeuJCyX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAF0C1F000C5;
-	Fri, 13 Nov 2026 15:36:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MrEQGM0c
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A97231F000C4;
+	Fri, 13 Nov 2026 16:08:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794584209;
-	bh=7KZb1cW74jmBUh+q3Ymrsz3p/VddcH/rPDY7TKp0j3s=;
+	s=k20260515; t=1794586120;
+	bh=HbVfBGF5i6NrBYQHNTc1RyxivmXC34Bel18CQsY9ZRc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=SzeuJCyXPvEmsQ7fCLXFQyKc9fCoYgbv4b2fg6a/axB8WbgUj45/rnQzFOHWdOMh4
-	 pMnmE3MjjbWqibccZd1cqcYJfNL/MlWqthfdJhsM9hwBIsGMv1ATXHpTz4pUUjoyWA
-	 ec/7dYVjDx+F2/1pxEpxieL9huCmKmz3sMvZHj2E216Rh9v9jof+u8m8OLrnYgEnhg
-	 Ca+xIcm77WxSYI02AcjAy10VW+4WUfcZY6ACTofkkd8+ohU+tJJTtL6Yh8sTdUvQyt
-	 /IBQVxM4FMm11tls3IcW9zfV8BjZFcZQ7RnQheOjv157gon6W7udn64HnrnB7SlxxJ
-	 HhYwgS1iCPVng==
-Date: Fri, 13 Nov 2026 16:36:46 +0100
+	b=MrEQGM0cStIPfedHVA/3CVoP4tTqo4alrhfPBxjcR4//m+ntumu0e8nwrWsZjQ+m8
+	 4/i4UB1+ICeSvvdPBIdGYkDb1g+FS7mnHRUAL0Nrcz2Es6sxpEoA0MIRY3uGjvNT+Y
+	 CXs8OQ5bgLRSIWBNFVKBRVJysA7l4BY9iRypscZzBwSzkFctPI83mww4u0scLJUwx2
+	 O4IX6ZQnxYHAnh7NHlGnZ/ac6/3eu8cQ4J9WoP02Rr9tS+brjalXDKO4B8hHOLxMsc
+	 ynCnEtBfsFFaw3XutjA4MeDEDF0rxeljzM7sGMMvSJQG0QPFx7NkMqgJ33DvY8xz6k
+	 Y4vPJhoH05kJg==
+Date: Fri, 13 Nov 2026 17:08:37 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: shao.mingyin@zte.com.cn
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/4] ata: libata-scsi: reject reserved bits in 32-byte
- passthru
-Message-ID: <avcujpOaXJPfjgxQ@ryzen>
-References: <20261112220113627e1oAXj5lbAzyI0Xe6Joud@zte.com.cn>
- <20261112220120113cXLhRk6iDVvhfgGPoZ5vJ@zte.com.cn>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: libahci: Stop the SW activity blink timers on port
+ suspend
+Message-ID: <avc2BVUyA7rKqA7-@ryzen>
+References: <20261110135615.291884-2-cassel@kernel.org>
+ <0ce11245-3da6-423c-9f54-175eed413182@kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -60,97 +59,32 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261112220120113cXLhRk6iDVvhfgGPoZ5vJ@zte.com.cn>
+In-Reply-To: <0ce11245-3da6-423c-9f54-175eed413182@kernel.org>
 
-On Thu, Nov 12, 2026 at 10:01:20PM +0800, shao.mingyin@zte.com.cn wrote:
-> From: Shao Mingyin <shao.mingyin@zte.com.cn>
+On Thu, Nov 12, 2026 at 08:35:56AM +0900, Damien Le Moal wrote:
+> On 11/10/26 22:56, Niklas Cassel wrote:
+> > +	/*
+> > +	 * Stop the SW activity blink timers, so that they cannot fire while
+> > +	 * the port is suspended. ahci_init_sw_activity() sets them up again
+> > +	 * on resume.
+> > +	 */
+> > +	for (i = 0; i < EM_MAX_SLOTS; i++) {
+> > +		struct ahci_em_priv *emp = &pp->em_priv[i];
+> > +
+> > +		if (emp->timer.function)
+> > +			timer_delete_sync(&emp->timer);
 > 
-> ATA PASS-THROUGH(32) has no MULTIPLE_COUNT field. Byte 1 is CONTROL,
-> and bits 7:5 are reserved or obsolete. Interpreting these bits as a
-> multiple count can issue spurious count mismatch warnings for multiple
-> commands instead of rejecting the invalid CDB.
-> 
-> Reject nonzero byte 1 bits 7:5 with field pointer 1. Skip the CDB count
-> comparison for the 32-byte form while retaining the device multiple-mode
-> check. Also point to byte 10 for invalid PROTOCOL. The 12- and 16-byte
-> MULTIPLE_COUNT checks remain unchanged.
-> 
-> Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
-> Suggested-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
-> ---
-> Changes in v3 (Damien Le Moal):
-> - Reject nonzero reserved/obsolete bits 7:5 of byte 1 with fp=1.
-> - Retain the short-CDB count and device multiple-mode checks.
-> - Update the subject, description and CONTROL-byte test expectations.
-> v2: https://lore.kernel.org/all/20261111223129430zClEJF8TDgu_h8ZYM843Q@zte.com.cn/
-> 
-> Validation on x86-64 with GCC 13 and UBSAN: a userspace harness compiles
-> ata_scsi_pass_thru() verbatim with SCSI/device stubs. All 256 CONTROL
-> values are checked for both non-multiple and multiple commands. Nonzero
-> bits 7:5 are rejected with field pointer 1; values with those bits clear
-> are accepted without count warnings. The device multiple-mode check and
-> 12-/16-byte count checks still pass. Field pointers are observed helper
-> arguments; sense construction and device access use stubs.
-> 
->  drivers/ata/libata-scsi.c | 25 +++++++++++++++----------
->  1 file changed, 15 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index a61fb03312793ca94d81d8061a16c66e786c4cf3..0bc147cf4c0fa50c7d5b84029b7fb1a548c6f1a3 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3388,7 +3388,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
->  
->  	tf->protocol = ata_scsi_map_proto(cdb[1 + cdb_offset]);
->  	if (tf->protocol == ATA_PROT_UNKNOWN) {
-> -		fp = 1;
-> +		fp = 1 + cdb_offset;
->  		goto invalid_fld;
->  	}
->  
-> @@ -3573,27 +3573,32 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
->  		goto invalid_fld;
->  	}
->  
-> -	/* sanity check for pio multi commands */
-> +	/* Sanity check for pio multi commands (not supported with ATA 32). */
+> Looks OK. Did you check that the timer handler does not restart/requeue the
+> timer? timer_delete_sync() states that it should not.
 
-This comment is misleading.
+The handler does re-arm itself, but timer_delete_sync() handles that.
+It waits for a running handler, then dequeues the re-armed timer.
 
-READ/WRITE MULTIPLE commands are still accepted with the 32-byte CDB, it is
-only the count comparison that will be skipped.
+The rule is about re-arming from other code, and the only other path,
+ahci_qc_issue(), is not called once EH has frozen the port and called
+->port_suspend().
 
-libata reads dev->multi_count from IDENTIFY word 59, during probe/revalidate,
-and after receiving a ATA_CMD_SET_MULTI command.
-
-The MULTI_COUNT field is obsolete for 12-byte and 16-byte CDBs in SAT-6
-(tables 203 and 209), and the 32-byte CDB has no such field (table 210).
-
-The MULTI_COUNT field was only compared with dev->multi_count, and
-if there was a mismatch, libata simply printed a warning:
-"invalid multi_count %u ignored", yet the command was still sent and
-limited by dev->multi_count (see e.g. ata_pio_sectors() for SFF
-controllers).
-
-
-> +	if (cdb[0] == VARIABLE_LENGTH_CMD && (cdb[1] & 0xe0)) {
-> +		fp = 1;
-> +		goto invalid_fld;
-> +	}
-
-In the 32-byte CDB, byte 1 is CONTROL (SAT-6 r2 spec, table 210), and its
-bits 7:6 are vendor specific (6.5, table 10), not reserved or obsolete as
-the commit message says.
-
-The reserved bits in place of MULTIPLE_COUNT are bits 7:5 of byte 10.
-
-So I think the test should be:
-
-if (cdb[0] == VARIABLE_LENGTH_CMD && (cdb[10] & 0xe0)) {
-	fp = 10;
-	goto invalid_fld;
-}
+So we should be good.
 
 
 Kind regards,
