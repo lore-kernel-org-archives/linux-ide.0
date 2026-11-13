@@ -1,97 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.44
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794496869;
-	b=qKT+/BfNEZdcV2E0w0xYMjeQeweLwZt8FVI/7DSJ7k4p5+37mVb7KNEBVU6cBGeOknuB
-	 sFvfqHkWAqobwYdTJBcB19r4w9iNeTJej58kaJ8ZEd2pclUpP8oZKXz+9sP6tURG3H22Y
-	 fjfXL3iTTaHJGXBAQrdW4vk2nVdc0bp2/nT7gy3wnSjQD0z60wgHP9sY41wjEl9V6Eiv+
-	 OHCC/MWwtAkriofjheo21AsXGYuIDHpZnC5eP2eFMZPJFaIralCdtYt032zYYwUlGXLbA
-	 R5rpFBktMvTw0+DDM+EfaKVZOiXRWh12BfyamfB+L7qZtXoQCIRYGBNrHObl1MJGPPQ==
+	t=1794529218;
+	b=EctPZRS76BushtNhrLdcuKoeMEVLRG68h3AR5Ty3NDmChNJSZ1CmWASmY/qub0IXGPhk
+	 RNgusmtoZ5oh65P+Kd3x/8ewzzEI4+MHRvsGwh6/WjNjH9MglItS6Y7xXoZh6ij2tOWFN
+	 FKEiZ1bx0NMjtuWJA+rd8O5iiJlJ6rTkvAcfHFABTNf3h6ez3fFsEBpgpvNiCDQwJN1L6
+	 T+6LAPFPud9JHbTwcThROt38FMsogKtlPuHTowhGVHFcnlrc3zY9rbcfvAJafSMSwd7Mx
+	 nyypxLTn35M3S1nTLoprtkGlHB/h24aUBDpEFZLW9KKTxNJiekEfUOWidvYDfriFlGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794496869;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=qVYK4aF8DnlATPdvPW4rrz584ZowV56FwmQpG+kYD1c=;
-	b=kHKxG0bmzBc+pBn3B2CLzRHOPrlH9OYCDMW0m3qtpLmT2VWYy3PFQxEImgmoPsZalcEx
-	 YWLbg1NtHZKtvGw0/1u5y9TiBqYwmm0F089YIbc4QpiJT6JMwBGL/TqmAmS32kjmWVNyH
-	 yyNlcQPhEe7fNvFRWnZO5F1fB930qVfltvQDhyYPFaxMYxwsjKyqqjAMzamOVR4P7iO6C
-	 QAQ8KyMPGzlTprcX01EkqTDTFI3dAi7z1DeKZchWce81+Tfk+PsDVUyrk3vRb3jZgk9T+
-	 LGSc80hBnyX47xC7gcHXVG3hASKhf4pLROlbcFB04XF7IeAN4CQwKPaQ/smJhj0HSvw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794529218;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=irpFSAngvQPvQ/Z7PnpTpBU+snu8huRE0DfEz3rgdbw=;
+	b=aeJGIHuoaBWn0LqopJzWrdXfun+zBpCDNnxUvAEmlk6+TMKuZSYAA4ah6Wc7JOYP7knC
+	 WpnSIJUgSlS78OkIifMImW0lswcMXCLdM4IV3g282VmyB80mJK3M0IkdS4bu2JShSZhOv
+	 dZFBYnghQObjBV6GuPzhsBvrDVxDtdyOiXJDVBHL7XhaFoIpR1wj13GS5le7tigtf0CqS
+	 Zz3lF9KoD3oj+Wu8lxdeBfw9aYJLJVyQFAhSOiLFaBSS1D5GMecnO7pVxsvEkXxAy6n1D
+	 GwA7T5Lr+3zdr0T1I4/BfmlzM/pYSlKu2+tzQg3ftzWy5TB5efRGk0Ysgtb8NtXmTYg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ojrAJsQ+;
-	arc=none smtp.remote-ip=209.85.218.44
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="WkHgt//E";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE9B60A6F55
-	for <linux-ide@vger.kernel.org>; Thu, 12 Nov 2026 15:21:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5EE9B60A6F55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29AD4606A321;
+	Fri, 13 Nov 2026 00:20:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ojrAJsQ+
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-c4d427836e9so580187466b.1
-        for <linux-ide@vger.kernel.org>; Thu, 12 Nov 2026 07:21:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794496867; x=1795101667; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=qVYK4aF8DnlATPdvPW4rrz584ZowV56FwmQpG+kYD1c=;
-        b=ojrAJsQ+er+qdKfS3kg2Lrs0YL46fXV6i2SK3zA34q4VWel1VXMiLVPEIRv2EFGHP5
-         B9yARF4NKXd4ewR32xHUy+m1lZt0mnZkD8Ngy8EIr1wIv5C2L68G1/kOa4b8i1zb99pU
-         q8m8JyHGgDrdQEomPhIRhCbnV6bGddji8rOziG/VnqWqHjk1U1o8GZ1BB1Gqmv0fItB+
-         sUhbdYnZjj4Ohqsk6vr28eudeCokiGG5XP+TvDMxld0CMM+NeEzp2+ouX/dZZAkDXJYL
-         oW6OEA+oPCFfpLdpfXMAu5+H2eKTGeVBaFrnCeEtBA1R69926pmur1LiLN/+UbdUmLct
-         SAqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794496867; x=1795101667;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qVYK4aF8DnlATPdvPW4rrz584ZowV56FwmQpG+kYD1c=;
-        b=mZ8xGeTQL1q1ikLk1xJYBc82OZOAjTVrrsEiI4R1S+0LvTiWMzARhPIy8N9jABw1tx
-         fP1ixkfzaRfFjE4g7NLMD4xuiJm8Z6w7OyFFHRsHOnrRxIRBVEsLMORnYrxMHiqx32li
-         MRkm/IfbxLitNnoLdefNFCirEClRtZlZ/2eNJPK/cGV2ZsY09380hVFXw9cTgso49wwv
-         2+aS6mOsrYykqLgCzT4aSJe/wlwljrg1udmLP6EBoGuEU/sBS067wHoOYCJtjmzL+66j
-         tFSZCFFobkBIp6lpp/ozLOYsPI8FWi6S8g6SsOLKlDSdpgSyFybaGnLWOvpgR7+x+Zki
-         +ZOQ==
-X-Forwarded-Encrypted: i=1; AL+hErEwGUiT5GstrPLezfSLpRpmCSyWxbkzqgPe6DLHNtYz26qKLsdev2Vq4lkjzJQq2226S21fK/B6BFg=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9XNpkoHQPAp/m9+y3GR43JXxOUB+2rzJjyeocCh0yOIN2q/5+l
-	OaSPf738/0bfgAaVLy+qKYTc6Z1gkyed8MHpN4X9WVV3XcNJ5gRciPkwyAWX2FAo
-X-Gm-Gg: AYBFou1C9pOt9/fN00lr0eDmkbPcaCBirZ7OqsxHVkeb1mNqgzlYR9xpvEH98TqHdHc
-	YfIQZ8VdPP/Km8gg5/alS3n/jIq4wCOxs671VG9Yk+mb3QqqyE86fPA/mkk2vel+K4xQ6/HIc94
-	fyQgwylHd0ti+ShKSL6qLOlZc1g1uF0vfWhUdYH5/pSI134pDKT92RluL2GHkPhQI+FikprDmPb
-	4dWUzLNBazZE8Hmb1Gm7K0dldnv4fVO2o//mKsfLqzoWSHg0vjmI4zBxf2Mab+GPjpF+CzAt9wb
-	tYVR1l4fnzZb9oepnCYJodvkGWN21M1PvqUxKu/HaenYYwD86xlKdRlA383VK1Ek6de5H4QbTm4
-	vWTZZTFxqqxcehd+gkJdBJT5GGd8ugD9waueq7Z2HftcpLzSkhVQAP02l5Av75+fl8kCXnHrCVZ
-	GngtAtYdw/O+3DeucBQpawpfgMj3bZef864fzzLvpq4oJF/LEN5gbnUt1VLiaq5AFE0wtmskr1J
-	QSwWbLjY4ix1d4xuTIcUxNx5tUzFWc0zL999UUWE7e621LDaaJcJMCVAXZEFsbwMNrgCkQXtu3u
-	RbbTdyGHY6OZybTeklqzuPeN5NuClLBHmOt6llPGHHWeWlOmfaF5xnkJY9IQ06k80HNnpNaMG/H
-	a9j7rxt4X5FBu
-X-Received: by 2002:a17:907:3f11:b0:c4d:212a:192a with SMTP id a640c23a62f3a-c5066db88a8mr468170266b.48.1794496866215;
-        Thu, 12 Nov 2026 07:21:06 -0800 (PST)
-Received: from gmail.com ([2a01:e11:1403:8620:5984:fa71:7b11:41c5])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4983600bc8fsm16385724f8f.30.2026.11.12.07.21.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2026 07:21:05 -0800 (PST)
-Date: Thu, 12 Nov 2026 16:21:04 +0100
-From: Paolo Pisati <p.pisati@gmail.com>
-To: Lee Jones <lee@kernel.org>
-Cc: sashiko-reviews@lists.linux.dev, Paolo Pisati <p.pisati@gmail.com>, 
-	linux-ide@vger.kernel.org, mfd@lists.linux.dev, dlemoal@kernel.org, cassel@kernel.org
-Subject: Re: [PATCH v1 1/7] zorro: warp mfd: add the CS-Lab Warp
- multifunction parent
-Message-ID: <wxsfjhxzk4zrmaf3ykjgwj6sulyylqfak24xhrwa3pqroxtwgw@w66gfa7yi7jb>
-References: <20261111163735.227286-1-p.pisati@gmail.com>
- <20261111163735.227286-2-p.pisati@gmail.com>
- <sashiko-outbox-209365@kernel.org>
- <20261111180442.GE6323@joneslee-macbookpro.roam.internal>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WkHgt//E
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19A081F000C4;
+	Fri, 13 Nov 2026 00:20:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794529217;
+	bh=irpFSAngvQPvQ/Z7PnpTpBU+snu8huRE0DfEz3rgdbw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=WkHgt//EGCBfxs6kZIcK82f1xFpgitlyh6zLAxMYyZ2RSeiONeZFOWh29Z/gRy7dQ
+	 ACRxIyyZPzGD0zKxI810GUHRSQmlGY4u5L826OLvH+qDmSu3+Qt1nPojLaYZUgsyhW
+	 8bq+6+ke3OHug1DA5A0wsUJmLJL2n1FqCv5EppnaflTsz6MawSQHGmBWcBXVb+3WDo
+	 t4MAek9n9A/Skz6hSceqU0ydznDgmdjCm98s5UQA+pmS+dllVNvKguTa7PzDN0F6bS
+	 twCptfeX8v2Bl9dxSO66hArcM+HD0r9EDZDtu9AQicIeut6zZAyzWKq/1XHltcewOI
+	 JG5weBcb8E3Mw==
+Message-ID: <589669fc-4cb2-429c-9960-1c89efb597f9@kernel.org>
+Date: Fri, 13 Nov 2026 09:20:15 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -101,37 +51,53 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261111180442.GE6323@joneslee-macbookpro.roam.internal>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/4] ata: libata-scsi: reject reserved bits in 32-byte
+ passthru
+To: shao.mingyin@zte.com.cn, cassel@kernel.org, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20261112220120113cXLhRk6iDVvhfgGPoZ5vJ@zte.com.cn>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20261112220120113cXLhRk6iDVvhfgGPoZ5vJ@zte.com.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Nov 11, 2026 at 06:04:42PM +0000, Lee Jones wrote:
-> On Wed, 11 Nov 2026, sashiko-bot@kernel.org wrote:
+On 11/12/26 23:01, shao.mingyin@zte.com.cn wrote:
+> From: Shao Mingyin <shao.mingyin@zte.com.cn>
 > 
-> > Thank you for your contribution! Sashiko AI review found 4 potential
-> > issues to consider:
-> > - [Low] mfd: warp_mfd_probe() places new MFD core driver in
-> >   drivers/zorro/
-> > - [Low] mfd: warp_mfd_driver hard-codes mfd in names and uses wrong
-> >   subject prefix
-> > - [Low] mfd: warp_mfd_cells registers only a single child cell and
-> >   Kconfig mismatches code
-> > - [Low] mfd: warp_mfd_probe() passes z->dev.id instead of
-> >   PLATFORM_DEVID_AUTO
+> ATA PASS-THROUGH(32) has no MULTIPLE_COUNT field. Byte 1 is CONTROL,
+> and bits 7:5 are reserved or obsolete. Interpreting these bits as a
+> multiple count can issue spurious count mismatch warnings for multiple
+> commands instead of rejecting the invalid CDB.
 > 
-> All of these are hard blockers.
+> Reject nonzero byte 1 bits 7:5 with field pointer 1. Skip the CDB count
+> comparison for the 32-byte form while retaining the device multiple-mode
+> check. Also point to byte 10 for invalid PROTOCOL. The 12- and 16-byte
+> MULTIPLE_COUNT checks remain unchanged.
 > 
-> Why are you adding a whole new subsystem for your device?
+> Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
+> Suggested-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-No hard reason: I took inspiration from Geert's Zorro MFD experiments[1], hence the
-weird location.
+One nit below. With that fixed,
 
-> 
-> This clearly lives in drivers/mfd.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-Ack, I'll address Sashiko's comments and i'll resubmit.
+> +			/* Compare with the cached multiple count of libata. */
+> +			if (multi_count != dev->multi_count)
+> +				ata_dev_warn(dev, "invalid multi_count %u ignored\n",
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/geert/linux-m68k.git/commit/?id=0417ac04d4357f5c1bd2bd43bb188624a85149f5
+Long line. Please split it after "dev,".
+
+> +					     multi_count);
+> +		}
+>  	}
+>  
+>  	/*
+
+
 -- 
-bye,
-p.
+Damien Le Moal
+Western Digital Research
