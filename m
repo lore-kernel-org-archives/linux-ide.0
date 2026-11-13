@@ -1,79 +1,78 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
 	t=1794587931;
-	b=wr+2yTgk5KQlHhhbRcXlIzML6Bxl38MHk9MxbEtRkDx+7LwvPyq2tfwpRVLtrtRxLBGV
-	 1k5toPq2q7Eguplh0AdxlWeV5Y9xYAJlleam8ulaDPjyXqSh/UZRR2mcokqvSXLwQDGl2
-	 VeRbHDla9GdD1W5hpHogd8jQTZgX5hUKsUnN/uJYNb2CE9UVNSmm49a4z638hleRovV0b
-	 tPNRwZLXxMV3M6RQQeaMTOut2BV2e9lM6BkXVBieWvIZzbDSokXXB5X+NZ+U4mb3qzN6e
-	 1EZJUY8a6ZWce80vCmsPNU3Nyq43j8O/Qf6XZwiUui6001R3AD21lUGo1XaEUDyFJDw==
+	b=ynBX/0Gr/VkzXuRDrzhlF1/TgqaswMoPxrhIrgqIhHyq60blIwu9gJA4piGpKHoieAYk
+	 xYoLz3SZTnMc1kS+YkwYUnanZ8j4B9RKiDaQnPT4a0AnjT6jNrGpVZAoZFXBKznGlJpU1
+	 mlcUWDYmY/TVWyosy/SlYenCXeH7lKUaX3mdah/fDpiHEEJ1Is5m5ty5KChDGjCw9CKDm
+	 OKnRs+RCpFhC6KQ+CsdcIzPALS0U9sXXdyr2n5fV6rJPGFzlDYlVFLVjueSb6RxjaWfQk
+	 nBV66JjXc98+aN+iY7ehIQZ2OuTVuv6TxGre+MO41J63TZkvohURruEkq2cAy2uCz0w==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794587931;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=ElhyKJTPLC9sa0kKw8UjgPt6BJk/sHWMBZUKNWMIGmY=;
-	b=KF/TOl63P/0iC4hIc/H1FMyOOKWImMmYSynaYBfO3KzhDY994kx21eISZFZ13bnFMMSh
-	 ovp3jbvXWVQsUcVNw2WjK3nIUVZdkCjIECxb6hjKhAyvqbdpJBtVgCQj9HUBYyt3lWkec
-	 aaBkTrNtWEZxjesGHPBJ5AZL6d+mX2U3FGa1dEsa8cBJhko/K6soAJrDbXrtlIBEToEv8
-	 NikJZZXVsiACSCegvLERogRSMT0mOEYmfO2+P1EEiihbIl0BUeV8whuPJ5tLsQ4TLRX+g
-	 G4NgWQEyHn5eqlzPIgCcaptHBCiM9xO7q4WI3B4Zv6mgInQrYrqSqCd4WOt6TS/6Jlw==
+	bh=qZp0DD2KBXte+j7jcpltjfJG89AIh2m/LcHGQ9zJReg=;
+	b=iPpOQnnudQNL48eQUJTmmo7ybeKt/EgLJ1mthsYE+2ckam7aIapnVpvg/6LJxqvLNAXZ
+	 UQsjKYIb08/pln4RLhjBfG2ON7Y5SyQtIpY3pfCOY9DS3/LFkTPpCWhj//uKS40hpDGxP
+	 sLmA4mXA0jgR60Us87mV8PpeWhZEqdEsO9K4HF08PVsTBC1A7UlIzVacwlqb1tlzXoETU
+	 RCdgL2hFHPElslWgPlPztymGEBtA6WcnGZkyDvnWehGVKqWpeFEopRbGi/VWRoYvjDjR4
+	 OdzKDALsOd1lrzehUcITplH9Zw6sAhCQ6gNi9zsFZkNfssW1yto7BDwvDu2JZ1qkxaw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cPzVMMHC;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vixxz0Jn;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02F04606A8BA;
-	Fri, 13 Nov 2026 16:38:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C085606A8BE;
+	Fri, 13 Nov 2026 16:38:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cPzVMMHC
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vixxz0Jn
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
 	t=1794587930;
-	b=eCYk3kRts2hW0rqi5yY2hpCbcLTG5nvM096uMPAI9Ci3XgC0haaMYQ5eMK5R3Hi5xrX1
-	 TnZA5uXxjrYC6v73dBryKGovSCAkj2QdVLOaLAZrAMTk77SIE9yF0YuUNz9kXT5m/czW9
-	 +O7t2CWodgxLGBVxp2g8DGmvtrJY+pWFNu8iXAPiAGLZ0D86R0AqG1M9LJqZVm7GpvtKD
-	 r0xxcR5FztZO3zZUOACcQXckCV8X0sm2exwCmLXpMaN8yX0yTxj6WHPbKdppJ+mntO7xW
-	 ZEvOo1gQ7pVNbYghM7C6dCn5qsa7TvSaLWmuOvmkiqhQhszGl2mPLJ0SqtAzSh8EXcg==
+	b=tJ0pH8DQ5EMPK7096sISRqCoqQ4uT44CpXXi9W35Xi9QvYrs3Uf8Ct89a/wkQf77UQp+
+	 5JM4K+ApfyRohOhGVBmIh0D+KD/XglxmlkLf7rdOjTpG9rw5MrdDMtRNNgQrOHQHBnGdk
+	 EEFzXwxYBJz13Hgs+Dk08fJ4iNeBRai/SMgECQPucnkxWy6gmhPmwgtJLP0g3LihiJp0u
+	 /3FDP/73Q429i6MoL0x0h47aMXN7F1VYYUm7dKbxDT+RcIImABnA6PlH9fuFcTeMjYuRt
+	 ZhePgo7/qWKizyYqA2UcHfTT1He07GjgftQ0iqapWvtnyz0FFtnyk4CcFHrzPUa/SmA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
 	c=relaxed/relaxed; t=1794587930;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=ElhyKJTPLC9sa0kKw8UjgPt6BJk/sHWMBZUKNWMIGmY=;
-	b=u2vsrZeiTDfp4MBXxadgC9c6swTVf559ctO5UmpH6cepz/XxNKnnFP3kc6yYADt8hh7J
-	 KN/gWe3KBvrFvQGRUVr4FPoqzbWyiTgDKSiV5Pn2Bi7BFCdwmykYzqa/KJMvQ/UcFFCu0
-	 qK3g9Gr7j03WFE32gRgZX5wP25Q5M7nvgThCkmKmwf9reTYoZZiNWPGo8vJvZVWjq52z6
-	 SKJ8mxSXCpqT3EbRBPXm6FJ2O7otGXJ7M6pJJW6qpUgyXzvDh2gf8NellZ4S9tQcNb8lV
-	 JvCoeb3WEM25kNm1myaRhnFFbsuWlRJNjTkbqMkgHr24ewHxcOR0mkQMXfhydK9as8A==
+	bh=qZp0DD2KBXte+j7jcpltjfJG89AIh2m/LcHGQ9zJReg=;
+	b=aYzDKL4wGSg2zk9y2iRMfy/QgTur9KEC6rZonrFYnKw8sOWPvtX+MXZVVb9VI4av6Ld9
+	 la700QXQVASiNIN2eD1NZVf7fQekLE1f4jz+cTEW1AoqJXUocJTmYK6Hvjms2UhZ7hZk4
+	 Di7zXItLO6lNo2BjaGpmH/ij5QtlN6lIzPbp2moP6Ut27t632GU9y2mRywu2hB+0syyXa
+	 zaGCdqgzP5rw0kWc81/izvd7TbGa2+nDDdhOhUkreWHOhHcMzUAnZ+bs2ZhVxNKtrU8Em
+	 GAHfoNTIAVVSCtIw9+JaBgq1bTQ5p002ZQuPE9EafTFs68daZIthH8TFbAin3m7MYbA==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 0D29F1F000C7;
-	Fri, 13 Nov 2026 16:38:49 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 052141F000C5;
+	Fri, 13 Nov 2026 16:38:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1794587930;
-	bh=ElhyKJTPLC9sa0kKw8UjgPt6BJk/sHWMBZUKNWMIGmY=;
+	bh=qZp0DD2KBXte+j7jcpltjfJG89AIh2m/LcHGQ9zJReg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=cPzVMMHCyn+OFwhkw9aBWgxP3MJW3ucNQ66BKerP0uCRbp17X5SsigzIRb7P+o12E
-	 0VfqfHb0et6Hy0XooG3qhN93pMse1dOxerVVBO4ObkRl31Oy5aYuTnw1dZyOeneYo/
-	 Qe3/g1jTwEk+HPyDOGvyL43r8CmTbUiUplVI/goHU5uI8A5qBccbq+p12V0MRsPkE1
-	 iWfjhONG45Uy6mDOfYkDaHagFH/p3YR/bCjwMVfplATrahGzzcJE3ENojwQMjsxPJh
-	 O6rjTOI/4L2tPBW7o65813zDf+wAjBJEfYT0SQIY0tEHSkjXTTlDVVlvjUsUeW6gWJ
-	 rt3r4wu9LB9hg==
+	b=Vixxz0Jn+vo6Eh95k42RiilxmrcEq6xusz2YQjDtA7bvtnw6lmnQmCyrx4O4VK3sU
+	 t43nE2FM0wjIUQSHV05KP79EmynCkDbgCK60pv27JLvfXc/eeTenLfXcrU/X3FqeEz
+	 Ilk+NidMvoBf9PXzwpvHabLPtRmWndlTFmBQD4DEOnhRuRjD1GPSIETIa1DUdrqaUo
+	 4iduwe3lySX3yDAeH1pb1xCwcmn76GMLjjHQdh3ZFnj5Azcb0XRDV0zdDfard4MITp
+	 KkHfLPdUknMD0zoKo0E2z0swfdUulLbnKBv+3fBbDDQJxOm0JWlWi8YA7HrJYpfS+0
+	 5FcXafczfoLbA==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 8CD6A4999A;
+	by lkml.kernel.org (Postfix) with ESMTP id BE731499A2;
 	Fri, 13 Nov 2026 16:38:48 +0000 (UTC)
 From: Arun Iyengar via B4 Relay <devnull+aiyengar1990.gmail.com@kernel.org>
-Date: Fri, 13 Nov 2026 16:38:49 +0000
-Subject: [PATCH 3/9] dt-bindings: soc: rockchip: grf: Allow a clock for the
- RK3588 PHP GRF
+Date: Fri, 13 Nov 2026 16:38:51 +0000
+Subject: [PATCH 5/9] arm64: dts: rockchip: Add the PHP GRF clock on RK3588
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -84,7 +83,7 @@ List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261113-mmu600-php-v1-3-231196049a3b@gmail.com>
+Message-Id: <20261113-mmu600-php-v1-5-231196049a3b@gmail.com>
 References: <20261113-mmu600-php-v1-0-231196049a3b@gmail.com>
 In-Reply-To: <20261113-mmu600-php-v1-0-231196049a3b@gmail.com>
 To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -103,11 +102,11 @@ Cc: Andrew Lunn <andrew+netdev@lunn.ch>,
  Sebastian Reichel <sebastian.reichel@collabora.com>, 
  Arun Iyengar <aiyengar1990@gmail.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794587927; l=998;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794587927; l=874;
  i=aiyengar1990@gmail.com; s=20261110; h=from:subject:message-id;
- bh=B5gD6Ma73MQyMzaxyEvJStUcX9v8sHv/gtVo98dAf/c=;
- b=YT0aXhYrbKWY8wlrkZK/hEcyepwr4yg+gW6WEGC5ZSfHukSI3V4Bwa9sgPmHU73BoKkP5Tvm5
- /1hLXK4TftNA5gYYm+6NtnDIiiU7hbtYOagZcGdymdVu2rJRlg28B67
+ bh=kP/SM+y2vUxtKYfqhUjNYHPB7Pw9gQeqdsuzeyx9mdI=;
+ b=+IIxzB+4idJmJ+rG+mFd0cbUWQf03L8gHnWxfJK04I1uiUPqNXUDcCLSOZvJmSZzyLeYJ6//t
+ mrPxUsyexlEAi6WZD+LL42kYToUu+Enigmf7VBBOD8YlnxJZong8Ky7
 X-Developer-Key: i=aiyengar1990@gmail.com; a=ed25519;
  pk=zXpRgUTrhaFe6jLyPqbBy3ccfkj04w0g2690Wv3mg+0=
 X-Endpoint-Received: by B4 Relay for aiyengar1990@gmail.com/20261110 with
@@ -118,38 +117,27 @@ Content-Transfer-Encoding: 7bit
 
 From: Arun Iyengar <aiyengar1990@gmail.com>
 
-The RK3588 PHP GRF is clocked from pclk_php_root, which is gated when
-no PHP peripheral holds it. Allow the clock, so the syscon regmap
-enables it.
+Once the PHP peripherals suspend, pclk_php_root is gated and a PHP GRF
+access hangs; the syscore resume op of the next patch hung deep suspend
+this way. Add the clock, so the syscon regmap enables it.
 
 Signed-off-by: Arun Iyengar <aiyengar1990@gmail.com>
 ---
- Documentation/devicetree/bindings/soc/rockchip/grf.yaml | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ arch/arm64/boot/dts/rockchip/rk3588-base.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
-index e94c83d7c138..2525eb51f13b 100644
---- a/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
-+++ b/Documentation/devicetree/bindings/soc/rockchip/grf.yaml
-@@ -321,8 +321,16 @@ allOf:
-         - clocks
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
+index d0f364547ae5..8807ce6193bf 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
+@@ -619,6 +619,7 @@ usb_grf: syscon@fd5ac000 {
+ 	php_grf: syscon@fd5b0000 {
+ 		compatible = "rockchip,rk3588-php-grf", "syscon";
+ 		reg = <0x0 0xfd5b0000 0x0 0x1000>;
++		clocks = <&cru PCLK_PHP_ROOT>;
+ 	};
  
-     else:
--      properties:
--        clocks: false
-+      if:
-+        not:
-+          properties:
-+            compatible:
-+              contains:
-+                const: rockchip,rk3588-php-grf
-+
-+      then:
-+        properties:
-+          clocks: false
- 
- examples:
-   - |
+ 	csidphy0_grf: syscon@fd5b4000 {
 
 -- 
 2.55.0
