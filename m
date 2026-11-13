@@ -1,69 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794593007;
-	b=pR9Rm2MgBJRfUXoDKaD7zxYv1OO59sMgI9APDVgt45SzHwEeIsCOgHC9YitCO2uX5ped
-	 SmAfQv0cRRInLJ8t8qsZpDwJv5CrmT0rOOyC0m/Qv0cw5/Twl1aZ61fRct4sCmaH49KbU
-	 YdQLJiS3BPWxwvrviej+Hz5yaJtxMzB817sAqVjd4rKhJOTuvR2r+FvTsRxZlMYfZ+1nA
-	 W1whZuAlB3I0VIa3K0MK1ZTAX5Jo5Z1sbGr5YopkuKuu48lgE4q+SDJXjej5RnsdF7x6A
-	 MVEnm4C5RwX8WD5qM73nLDOYEnmJG0mDLp3K6dM4clXGAh3VvXZOz5n5uUVyrsv6X7Q==
+	t=1794593948;
+	b=eJdSpmBwAwWGT60N4eLUSlSpDX24/W1dE1Zvp0wc2e2gTGhMqFsGAbsLlJXAflfWHkJU
+	 p0pAVzZilGsGHd+hZg+m+1Eiy3Cl0G+GofgAPTs8T7ixQM/FVIiS6UcKbpj4Di+soo6Ke
+	 Hu4z+sfajBukeQwBkG7M9PnOoUL3Z1NHv0V2d7Jt7aRX3DyxWlEHmP0IVbQVCtTbG3uaP
+	 RK2hFfQmUGje1Hhr3IEFTXyj+Tk979ASo3pHekHR8yGORdxssqh/juGlMoBnGwbkOb99Z
+	 0RbBwJ6Kla+wfevFNF+3d4Nld4/8jU6R0bChLIDK5P/Pd1K/0nExyFlzkOGCeLdf8Lg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794593007;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
-	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
-	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
-	 X-Fangmail-MID-QID;
-	bh=JJNsA/o8ELYP7OKhTRd7t+GFqvdxUv9srxKUL6QVJdo=;
-	b=BxwCd+80KFR8lWH2YjB6dX6M0BHEWuC4SxhuNR0SWkkMATW1sObMmZvqyt5xJHYyrFRr
-	 xmnW07BaSaxVXJ1KiPVAGh4uDWA6eavjm0UQc4pvghl9Z9H5QEnJ6N0E8pp67WEQL8oge
-	 dtZ3PhYyqCTl7K2N+AdfOBHuuD+2QQMDihdeRmryGtdhkQyEaT35KuVJHyNHfAdFzto0U
-	 GqHlgT5zw+QlUCiDDH2Ud+YpW62Zv1J8KoGDXqhoRUWqWss5RET1ftf8kNl+nSkoULG0i
-	 Hx5v8qoKozZn6jbBiKo25W636N2mcSlzFGI+RIjiNMOHeDzYQd8R+yDgA/x6lFlZQog==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794593948;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=tY3hrmAgaHjp3VWbBdwPfASlyBa0YGJnlba8Eg0Cs1k=;
+	b=rAQi7fb2NycjxzrmhoM+CgKLgHY13uO93mIu36juFYWcuEcaxC21mI1Cs/jUmReq4ZAJ
+	 kiEE0JD8Q+g3v17ocQWVFTMh0optSLVkJhhDCnWyDuYbDvFtk3Y34J812LqkCh2CHJ6E/
+	 gILR+zOdeEDYVZWQkH4QhgaodxhsLfQ9iccIW4x5I8s3uC/FOaDrxXmFit/NJSULETTM7
+	 zOj/p4KObaHJLZFmUgi1bDhAHeUPUBFoulBsQFQ9J50aGwuz8jusqZZ8GMsoIuOcnMvHQ
+	 xmSCIBEnJCfKHKq57OC7NknxekKTvtuPozFEq4UtJB2uqYIFfXiYMeQOTXUfhmshVOA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=I0eQF3g4;
-	arc=none smtp.remote-ip=183.62.165.209
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eYRPkJPQ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 890AC606B216;
-	Fri, 13 Nov 2026 18:03:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 890AC606B216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A391A606A32E;
+	Fri, 13 Nov 2026 18:19:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=I0eQF3g4
-Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jR4qr2vz2z51Smx;
-	Sat, 14 Nov 2026 02:03:20 +0800 (CST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794593000;
-	bh=e/1ftnoL19LzV4jDwYrzKqd5zjFgzhBYF3wgdCOuF4Y=;
-	h=In-Reply-To:References:Date:From:To:Cc:Subject;
-	b=I0eQF3g4TJiE3lafu2OXnb8CMNwpZx+Ebh7QoNOreGs81DvAUjSbsgDVtEV4H6oD3
-	 JufP+UrQpGHO1aFvFwQpJiMYwdsYVhCxXvKez1dCL+nEo86WpdCQ4OKxF8qBnoyilv
-	 yXlrKpCNR4nHiCWR4ywbzc/Y5Gm/98e+eJbUQovmtz8ywuALUsoq9NzwfqPsQyHNXO
-	 +u963Ry/f4z5qLmU5U5xhJGZPQ6NmzU75l6aKV7z8cqxg8YeUU68EJSZI0cFYv4+h1
-	 xGJ5vdDOXd8edJhyMlK4WZCRRpyoEAl8dYe89W+NJYAUmO6CCvCzNqg2tknCzePOm4
-	 SauphjH0r/fKQ==
-Received: from xaxapp01.zte.com.cn ([10.88.99.176])
-	by mse-fl1.zte.com.cn with SMTP id 6ADI38cx099945;
-	Sat, 14 Nov 2026 02:03:08 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp02[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Sat, 14 Nov 2026 02:03:12 +0800 (CST)
-X-Zmail-TransId: 2afa6af750e09c3-3b8e3
-X-Mailer: Zmail v1.0
-Message-ID: <20261114020312969hzPj5VMaGjaujxVeWVaBD@zte.com.cn>
-In-Reply-To: <20261114020305026WLIRBj8VPB4JcDv_dhOQO@zte.com.cn>
-References: 20261114020305026WLIRBj8VPB4JcDv_dhOQO@zte.com.cn
-Date: Sat, 14 Nov 2026 02:03:12 +0800 (CST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eYRPkJPQ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 063D81F000C4;
+	Fri, 13 Nov 2026 18:19:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794593948;
+	bh=tY3hrmAgaHjp3VWbBdwPfASlyBa0YGJnlba8Eg0Cs1k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=eYRPkJPQkjFvhY8zmvJejgxxwbsSwaTH7o9dcrvqgqJ5oOVKOjdjgMShiszXa6s93
+	 1wEntHNdNRS9yRE39+lEB9jRJkI7uMynlGYah6lg+aB+X2jHNeAxYPreCfG10wSewp
+	 k1N/bM/MYYGQCeqTzYIjDca9zc61yP8C3XQfboCJ5DJA97mNygBAxugNOC2zKg+FLh
+	 nrXMWTZG42Ce38C0gjxQkyZnkULKsgJxruipU4ortDxiXaGnnGBcDBGNUZTCt4qGmz
+	 fcrncca+Hcx1S/5jbHhqXzSZOdfrZvdiIq5SrZ84Qlt7jmUbL02YMUvyxUq77jjvBJ
+	 61IUU7aRZ2sVw==
+Date: Fri, 13 Nov 2026 19:19:04 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: shao.mingyin@zte.com.cn
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH RESEND 0/5] ata: fix platform driver probe, removal and
+ locking issues
+Message-ID: <avdUmHKYnEyju1N1@ryzen>
+References: <20261114020305026WLIRBj8VPB4JcDv_dhOQO@zte.com.cn>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -72,74 +56,63 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIFJFU0VORCA1LzVdIGF0YTogYWhjaV9zZWF0dGxlOiBzZXJpYWxpemUgU0dQSU8gcmVnaXN0ZXIgdXBkYXRlcw==?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl1.zte.com.cn 6ADI38cx099945
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.132 unknown Sat, 14 Nov 2026 02:03:20 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF750E8.000/4jR4qr2vz2z51Smx
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261114020305026WLIRBj8VPB4JcDv_dhOQO@zte.com.cn>
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+Hello Shao,
 
-seattle_transmit_led_message() updates a controller-wide SGPIO
-register before taking ap->lock. Concurrent LED updates for different
-ports can therefore read the same register value and overwrite each
-other's changes, leaving activity, locate or fault LEDs in the wrong
-state. The lock currently protects only the saved LED state.
+On Sat, Nov 14, 2026 at 02:03:05AM +0800, shao.mingyin@zte.com.cn wrote:
+> The ATA platform drivers in this series have independent defects in
+> their probe, removal or locking paths.  They share the same shape:
+> state established in probe is not checked, torn down or serialized
+> consistently.
+> 
+> Patch 1 fixes recursive locking in the IXP4xx CF PIO callback, which
+> can hang the first data transfer, including IDENTIFY during probe.  Patch 2
+> returns the host activation error from the Buddha probe path instead of
+> reporting a successful bind.  Patch 3 makes the QorIQ and Seattle
+> drivers inherit ahci_platform_ops so that host teardown runs host_stop.
+> Patch 4 stops only the Gemini SATA bridges that started successfully.
+> Patch 5 serializes the controller-wide SGPIO update in the Seattle LED
+> callback.
+> 
+> Each patch touches one driver, except patch 3, which covers the QorIQ
+> and Seattle AHCI platform drivers.  The patches are independent and any
+> subset can be applied; the order lists the more severe failures first.
+> 
+> All five patches carry QEMU A/B test descriptions after the --- line.
+> 
+> This is a resend of [1].  Patches 1/5 and 3/5 lost their final
+> context line in transport, so git apply reported a corrupt patch;
+> 5/5 had the same trailing line.  The diff content is unchanged; all
+> five patches now end with the format-patch signature, which keeps the
+> blank context line in place.  Sorry for the noise.
+> 
+> [1] https://lore.kernel.org/all/20261112221230052E8YTrPU5pi8AJJy6dnh9E@zte.com.cn/
+> 
+> Shao Mingyin (5):
+>   ata: pata_ixp4xx_cf: avoid recursive locking in the PIO callback
+>   ata: pata_buddha: propagate host activation errors
+>   ata: ahci: release QorIQ and Seattle platform resources on removal
+>   ata: pata_ftide010: stop only successfully started Gemini bridges
+>   ata: ahci_seattle: serialize SGPIO register updates
+> 
+>  drivers/ata/ahci_qoriq.c     |  2 +-
+>  drivers/ata/ahci_seattle.c   |  8 ++++----
+>  drivers/ata/pata_buddha.c    |  6 ++----
+>  drivers/ata/pata_ftide010.c  | 37 +++++++++++++++++++------------------
+>  drivers/ata/pata_ixp4xx_cf.c |  5 +----
+>  5 files changed, 27 insertions(+), 31 deletions(-)
+> 
+> ---
+> base-commit: ddfe51b0a0f5dc9e415cc2c8ad8db17532dd426b
 
-Take the shared host lock before reading the SGPIO register and hold
-it through the write and the saved-state update, so that each update
-preserves the other ports' LED bits.
+This series looks good to me.
 
-Fixes: 535dac4ab5f4 ("ata: add AMD Seattle platform driver")
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
----
-Tested on next-20261105 in an x86-64 QEMU/KVM guest with KASAN and
-lock checking. Two kernel threads on separate CPUs call the original
-LED callback for synthetic libata ports verified to share the host
-lock, using a RAM-backed SGPIO register and TEST-ONLY MMIO observers.
-The observer waits only when unlocked, with IRQs enabled; it never
-waits for another thread while holding the callback's spinlock.
+Unless any review comment shows up, I will apply it early next week.
 
-In 1025 controlled update pairs, the unpatched kernel loses register
-bits 897 times (including expected 0x900, actual 0x100); the patched
-kernel loses none. Another 256 pairs with IRQ-disabled entry preserve
-all updates after the fix. Saved PMP LED states and entry IRQ state
-are correct in both kernels; 482 invalid-PMP calls return -EINVAL.
-This tests callback synchronization, not Seattle hardware or LED I/O.
 
- drivers/ata/ahci_seattle.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
-index 9758fa0260..a398778ebf 100644
---- a/drivers/ata/ahci_seattle.c
-+++ b/drivers/ata/ahci_seattle.c
-@@ -92,6 +92,8 @@ static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32 state,
- 		return -EINVAL;
- 	emp = &pp->em_priv[pmp];
- 
-+	spin_lock_irqsave(ap->lock, flags);
-+
- 	val = ioread32(plat_data->sgpio_ctrl);
- 	if (state & ACTIVITY_MASK)
- 		val |= 1 << ACTIVITY_BIT_POS((ap->port_no));
-@@ -110,8 +112,6 @@ static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32 state,
- 
- 	iowrite32(val, plat_data->sgpio_ctrl);
- 
--	spin_lock_irqsave(ap->lock, flags);
--
- 	/* save off new led state for port/slot */
- 	emp->led_state = state;
- 
--- 
-2.27.0
+Kind regards,
+Niklas
