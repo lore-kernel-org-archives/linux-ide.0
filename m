@@ -1,56 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794674385;
-	b=bWz958IS6gFxXud2pqb0HhVTFm74XY1FCDM+G/q4x0mKdmQjwiJoUf8n3NQ2xXp+c4Gu
-	 a4N30+0LSGhF9gy7YFwhTeV8GuZTYeLW19Ws0/UNoHufWV1IVvuhbPoPTgDoeV6sgRBuN
-	 mbaFi0hPpH3rrjxKlhNOD69JnoJWNClosyg5aYwJfMNHYlvGBrdll27j4TbNeoeOUFVFZ
-	 i6ybwWPbgVCuaD9LJefFyY/vYdFdyg4uN4QjlY1keRozftckQeleqbj473Tg4qwCTFbWb
-	 txRLXw/NYXIaaDQlqsC1crDOrRl0eCSb6ZBMAoReLy4WpRmorBXaTsFURO0rFkaJdYA==
+	t=1794707904;
+	b=BmCOyqeuIVJPF7eaRmbqNHcGECs0Tr6xDBtNPkQxWyXhMus6ikD1nUvL2r0qnW1qcdSj
+	 cXElzQU4x7c3X+B72nSgh/iVq8bcjdB7pg25ySVM0nspkEaY+AtZQL6y1vaL3BCOpFyXP
+	 Zn2Z8RnS2ecSeCJTqGL288TgluSP2iSinunHabtpDGIsE/pnfUzPrfi5SBgbXHa2eu+EP
+	 TdtlN7gSC3jorXDdpcszx9kFrSNVNVAdgh8oJnfCDbQ0AEKl64IyA3p6X5yRZCBiRAMLX
+	 gKkrcS0qhup1q3zU0an5yI0yRcjM5Avd2k+5GCsydYeb1NmFpXVi7DcdU7nNcXSOu1w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794674385;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=K3AcZ1sPTwV30Y79eO26Dn+oM0LZFpx1y8em5Z20wiE=;
-	b=N8hiwlCixOE3u3N58OZ7IDYkMvARUGHa3rK+c9PqCQN6FeFPQgYYSYP/NQhPBLppErul
-	 NZJ1JGeiKBoM21IFZCh1QplLJK0hOfeGVCvz0GzRFbwUxNQs6Q1EF4S31D5z9Tu9lEx/S
-	 xK4ZAqAW5WxtmzT9TIvI4lu7STbyWxUj4jBtBqvuQ6DBM5H5HjobzCgPuU0Tim9h2XRED
-	 7Rv9V1Q/DxRHhdaE+oDXo8oyK36Bl3T1nb1V9OGYgkZlEO8bkebD6AYhTdeEZ4HfE8IHb
-	 PrJbkUl2iN5c+V5wWPDsA9p47Tkt/XfzLtI/zRMj2td0WUfZhE1XjA4Tbt0+9vd4Z4Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794707904;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=t1NIFLAmVvQqYsF8K68iJnWNZPZlHSetWPUkvD5OZ8U=;
+	b=CQAQBvSgmJs6gJZ68LKipPeT8Bl7TyR71Z+GIVf0k/hV774LN4+AYL00lt2i48eWq7XC
+	 cOYXnbh4LdLTWL92yjNuqlocSB+a4yuE6bmrjEEOn50XvXm/jL309S3xjG3OfPCjIswMg
+	 369gEJn0AuliSZmdZQ1Kut4AkIRF2kAcTNvJWPNACfPY5TYx9dFjiT/2+RTDRYHQ4Kn1N
+	 Z/8g02XkXIjZB2OC1BM4xsyiT4jfTY3bkYqWVKte9KxEk3pJFWZqaOX0dW+UE5bxpK8x7
+	 fveyonHLBSlc3Cu6+nBOVFdf69Axn7jkTxtEyqBn1KM79wvJzuVcX50YBytid2bSiOg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h6BOE1ZM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HmkCR1ym;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4FF6606A323;
-	Sat, 14 Nov 2026 16:39:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9552606A329;
+	Sun, 15 Nov 2026 01:58:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h6BOE1ZM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 027A91F000C4;
-	Sat, 14 Nov 2026 16:39:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HmkCR1ym
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7743B1F000C4;
+	Sun, 15 Nov 2026 01:58:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794674385;
-	bh=K3AcZ1sPTwV30Y79eO26Dn+oM0LZFpx1y8em5Z20wiE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=h6BOE1ZM0fvFu6SDzi5cHGuv6BAlicg62rrPVKy4lxY3rytgQ1/PK2WwRYAdPpi1g
-	 G+0fqAh1Cxojd6eG3UF/KQVtKz+E0jci7aJklB9yaDX3cI7Fuhnhwn3nUHBMrocsGe
-	 Csf49sUd5LcRW4caSFXLwpu17ZoJFSDXm8/iLg2NjOQsXawpXR+I74y56aI9KKCCaY
-	 0KwG532OGdh9XnlBNLT2b5mnASCoL+l9g9n18vfFvTjXaPITxbworsN1BTL1BCL9PO
-	 jYLD41vfFzte8QT0i5ahdHX5vn1dIrmZCAeZDx+dSIDs3+XgoK5ugBSYHGJYU/W9G/
-	 ftEt1V5Wk8ltg==
-Message-ID: <sashiko-outbox-214777@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 9/9] arm64: dts: rockchip: Enable the RK3588 PHP SMMU
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Arun Iyengar" <aiyengar1990@gmail.com>
-Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20261113-mmu600-php-v1-9-231196049a3b@gmail.com>
-References: <20261113-mmu600-php-v1-0-231196049a3b@gmail.com>
- <20261113-mmu600-php-v1-9-231196049a3b@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 14 Nov 2026 16:39:44 +0000
+	s=k20260515; t=1794707904;
+	bh=t1NIFLAmVvQqYsF8K68iJnWNZPZlHSetWPUkvD5OZ8U=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=HmkCR1ymWVRtC167nqPrGcV7mnoJv1BG4NPCul8H5JxBfco+rxQP5h2EXe0PDPiVl
+	 8mZn+FjfCtpLL7uHueUxsrzprcZyGn6A9DvgwbBMwEiUKPqrrjYpbURVyeX7WTfK1v
+	 loiok76DXqCmwNSyBSyM4dRbPeubaMO9LEKsd2PyTCSoagWgpL/zSxO0y9Y63wzH0C
+	 l4E7K2B7NL51m2hRxpWBRm649Cmk1OqSHaUxPabLcfbxNbcwPkazL5CFmtkAkDQPNd
+	 oNku1Bfa45nmOhb7FMHTU9SOy5H/maob1cJjK2hgceiJZ1CWc5aC+gfTx7YdKqwe5S
+	 smss0AugfKM4A==
+Message-ID: <f72e653e-2cef-4920-89c3-f32ebc68de95@kernel.org>
+Date: Sun, 15 Nov 2026 10:58:21 +0900
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -59,48 +50,56 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata-scsi: fix REQUESTED MAX LBA field for REMOVE
+ ELEMENT AND TRUNCATE
+To: Nick Spooner <nicholas.spooner@seagate.com>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@kernel.org>,
+ "Martin K . Petersen" <mkp@kernel.org>, stable@vger.kernel.org
+References: <20261113151929.9586-1-nicholas.spooner@seagate.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20261113151929.9586-1-nicholas.spooner@seagate.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] arm64: dts: rockchip: mmu600_php enabled without arm-smmu-v3
-  sleep PM support
---
+On 11/14/26 00:19, Nick Spooner wrote:
+> ata_scsi_remove_element_and_truncate_xlat() copies the REQUESTED CAPACITY
+> field, req_capacity, to REQUESTED MAX LBA for every block count except 1.
+> 
+> However, SAT-6 specifies that if REQUESTED CAPACITY is greater than one,
+> the REQUESTED MAX LBA shall be set to REQUESTED CAPACITY minus one, since
+> the max LBA = count - 1 (see SAT-6 rev2, 9.16.1, Table 74). For example, if
+> a capacity C > 1 is requested, the capacity ends up one block larger if the
+> drive can provide C + 1. If the drive can provide C but not C + 1, a
+> request that should be valid is instead rejected with INVALID FIELD IN CDB
+> (see ACS-5 rev10, 7.33.3.3).
+> 
+> Modify ata_scsi_remove_element_and_truncate_xlat() to decrement
+> req_capacity, except when equal to 1 or 0 (rejected if 1, let the device
+> choose if 0).
+> 
+> Tested by issuing sg_rem_rest_elem on a Seagate drive ST32000NM001F,
+> firmware db02 and checking the taskfile.
+> 
+> Fixes: db496721cb0d ("ata: libata-scsi: add support for the REMOVE ELEMENT AND TRUNCATE command")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Nick Spooner <nicholas.spooner@seagate.com>
 
-commit 3839dbc025f5f6bf3346a2b85f6dda76ed471a93
-Author: Arun Iyengar <aiyengar1990@gmail.com>
+Good catch for the "- 1", but checking SAT, it says that:
 
-arm64: dts: rockchip: Enable the RK3588 PHP SMMU
+If the REQUESTED CAPACITY field is set to one, then the REMOVE
+ELEMENT AND TRUNCATE command shall be terminated with a
+CHECK CONDITION status with the sense key set to ILLEGAL
+REQUEST and the additional sense code set to INVALID FIELD IN
+CDB.
 
-This commit enables the mmu600_php IOMMU node on RK3588 SoCs by removing
-its disabled status.
+So we should not silently ignore the 1 case and fail it.
+Can you send a v2 with that failure added?
 
-Link: https://lore.kernel.org/r/20260929034510.2023173-1-praan@google.com [=
-1]
-
-> diff --git a/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi b/arch/arm64/b=
-oot/dts/rockchip/rk3588-base.dtsi
-> index 2b6e14e7e1a3c..ed54d888caba2 100644
-> --- a/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
-> +++ b/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
-> @@ -576,7 +576,6 @@ mmu600_php: iommu@fcb00000 {
->  		clocks =3D <&cru ACLK_MMU_PHP>;
->  		resets =3D <&cru SRST_A_MMU_PHP>;
->  		#iommu-cells =3D <1>;
-> -		status =3D "disabled";
->  	};
-
-[Severity: High]
-Does enabling mmu600_php break deep system suspend and resume while
-arm_smmu_driver lacks .driver.pm sleep callbacks?
-
-When PD_PHP is powered off during deep suspend, mmu600_php loses its
-register state and resumes from reset in bypass mode with its command
-queue disabled, while attached PHP masters (such as PCIe, SATA, GMAC, and
-USB) remain bound to translated IOMMU DMA domains.  On resume, DMA from
-those devices uses virtual IOVAs directly as physical addresses on the
-bus, corrupting memory, and subsequent command queue operations stall
-until CMD_SYNC times out.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261113-mmu600-php=
--v1-0-231196049a3b@gmail.com?part=3D9
+-- 
+Damien Le Moal
+Western Digital Research
