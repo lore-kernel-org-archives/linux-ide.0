@@ -1,47 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=52.26.1.71
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794861759;
-	b=vQLZkfE/lgKEJRxEPquTGLDfeuT3KBg2Co6DXRof0seSMw0h/3DGvD3aEzY4AxO6MNku
-	 9He++EwrvOBQHn0IYgHcyRMeQAZjPQwF/CgUgdr1AJnVeEsQ4EpWO212R/7jAJM66f4Dj
-	 lCa7wPxbLaARXhrFQzuyhhYvd+T9NRbTVZpNJYp4E/dBfu5Un6mfim4RfTfhSduBShlo3
-	 /vjrffkSWsR28Bf/q4c2nTBcPxokAzJhKJeeNgGevl8L2M9gd8TptVAdeaQghNjoFPn1M
-	 LuuRYnOTv3/mIfrlOFcqhKreoLtd1vKldzdFemt3+Y74fUZh/XISNJyNMUiQ1jS1Wqw==
+	t=1794862495;
+	b=3KdaP7/ePLGkxNHux+UyOxbTjvyBwUh+CmAqgBlPkT/RK9BaC1/6777RafyMTX6k4Hfd
+	 cnnZgaDvWVBovCZBOaZgAV3d1eYWNn2aJZjIxspYfGdjWiYJPS4tyWcPFXCz+55DPjAxx
+	 o1yqEQsXll27GAD0tKoodSvcOJSBXv3tTwiqVDrNyF28gSNrUJPjH8iZeV69/9wSIP4Uh
+	 gbjeXpvlvjLPGQo2kIpVPRhF9DmQhM6YjivTVOS7Z8T+DDLDqp7wycegCQKFlDsIOHJlR
+	 mLQEd0oGqRhLShmYMHmLdKJsdX47tOJ851B9UN2/8LDhVznUf2kuVr/SAyU+fRzCxUg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794861759;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:Organization:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=A+DIt5xU6Vu0VGIqtgySpbQoKnMSPgo+owOoPySLOEU=;
-	b=N4zWu983qv1QOFng/0Quw6Dn7ezEH/D3DHnmIY+z8YB8b+nSGV//ibP0cNoJ9ZQYH+r/
-	 hBSqesdGqXrbuETVxA5Qap9OWjpdJ4Q8IbqvgpuM2/Dk637nr52xk02FXdHTmu9drlspD
-	 GGHnFrjWOaOHgKa5Esz6GnIteg0H7RU+cd856fpUnxxwMU/qXTUXeorErMEA+Yn9jZWVW
-	 tH7FtjrkfrKdIQGWKQQfImq/DV1idX5FR8fuVcAFHqqzJ1SO7s5jeK5gDgc5VtPTB7WZs
-	 G6o6+OkQA8G27UEC2xX7Gib8Chtp0eII4vwFpDj7bukG0jwVfRYt/rw6IIOT8vdIAPA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794862495;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
+	 From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type:X-Originating-IP:
+	 X-ClientProxiedBy;
+	bh=UAG6ybXWhgd9D/xMXlE5TO4WMq8Qm8ocklmlYGwsIOo=;
+	b=ZaCKiMDVK9k0tbdwEGBpl0OyaSF1g3200/Re9Gqq19ng9C04tnsuCu1XhTiXXYZlC3tf
+	 9877cMwm/3W3uTxPQBK3YE0rAL1HGb+mbUCcV4L0uqGg29iVl2nPEh8idtPXuSS14O8jA
+	 qaJ/vMVzdabRC1vXRdZ134Df8Hf6RQCWJo4OeE0nXtJ6cSNUbhqwpn6m6zmVY5xxdoZdt
+	 V6uWY5DYPrIOAzQFkB3bmNCIjq+gGzKWHbBxi4iYw81bPaSKuEHtbJpNlJF9v+F2UML78
+	 SccBXfqIgT+/hRWhdreDvHcKQO+9nHAD+5mKBpR8fOb/mE9AdIk9y3C/R9gLUOrwWOw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BpT5X5yG;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=amazon.com;
+	spf=pass smtp.mailfrom=amazon.com;
+	dkim=pass header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=Et2ZYoFY;
+	arc=none smtp.remote-ip=52.26.1.71
+Received: from pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.26.1.71])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC858606A322;
-	Mon, 16 Nov 2026 20:42:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC5D606A322;
+	Mon, 16 Nov 2026 20:54:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6AC5D606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BpT5X5yG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA3671F000CB;
-	Mon, 16 Nov 2026 20:42:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794861758;
-	bh=A+DIt5xU6Vu0VGIqtgySpbQoKnMSPgo+owOoPySLOEU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=BpT5X5yGM48z9Sya/uX3eMmXkqz8dPfxel0GmlaNK39ypxTPS5Fyva3laguDWp46e
-	 EsVTyccoJXZJl5zKwVxGQRMh5gL0IctIkiG3QlQ5qfPIeiefRTzbqsZDZ03efFbPmI
-	 t9tGYpL5F2hWNcxlROjTjwekUqbvSCf2WUGEh347dGLj9/lk7gnc9PVKG+8vRZ7OeJ
-	 QubYd7hGDJT/Y4EdZgofq57DnaAlcKdrdXUpVWAX7S74jwBn8pSScCdDOajqL0KYZz
-	 bnAADxU8LgGhxrMKt+d6x6G6/o/rLrTjrtW29LeTrVuJQil4he5mnofdCWImFNySqR
-	 oVvfHs4HzMjnw==
-Message-ID: <ed90f523-62c6-4066-b67d-76d5de4c7544@kernel.org>
-Date: Mon, 16 Nov 2026 12:42:38 -0800
+	dkim=pass (2048-bit key, unprotected) header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=Et2ZYoFY
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1794862495; x=1826398495;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=UAG6ybXWhgd9D/xMXlE5TO4WMq8Qm8ocklmlYGwsIOo=;
+  b=Et2ZYoFYABwQm7Je6xGMxPOh8BU5mA6c8UjfTBpMJuBPSOW/XvO7Jw7x
+   /f3gmAuz/piuEqd/5xZGMgOIAfjcD5qH0GrT8ePw1wPQrzMQ7v+R+hSvg
+   vtusABMsv+pK/2LLC5GY7PP4cCv+28Dm5qGs6O9Ng+BuqwxY7JHm0dqwz
+   u4Jz7dvG8V5rbOx05B4JSqHu8pAOsQU8bSnSYKnHpF/r3XtFBQ99IRhjw
+   otp+ngFxXKbNZU5yJv9tFadS3q/Z4G9yHkT+OgLZvUGSYOOrWEBj0uuED
+   JNrYzkmrxyBj9eP9A7GnCWHBXR6rXCMKk+9r3lmq2wx83r4Zp4YJnUkGi
+   g==;
+X-CSE-ConnectionGUID: 8XwXTjfrTo6CcMYkgV2Zgw==
+X-CSE-MsgGUID: tXoOGXwOS1uP+4QVietCjw==
+X-IronPort-AV: E=Sophos;i="6.27,217,1787011200"; 
+   d="scan'208";a="34339671"
+Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
+  by internal-pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2026 20:54:55 +0000
+Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:8311]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.46.128:2525] with esmtp (Farcaster)
+ id b7c41268-69a0-46a3-be2e-c11ff2b8e151; Mon, 16 Nov 2026 20:54:54 +0000 (UTC)
+X-Farcaster-Flow-ID: b7c41268-69a0-46a3-be2e-c11ff2b8e151
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
+ Mon, 16 Nov 2026 20:54:54 +0000
+Received: from 80a9970eed1e.amazon.com (10.106.101.27) by
+ EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
+ Mon, 16 Nov 2026 20:54:53 +0000
+From: Justinien Bouron <jbouron@amazon.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>, "Martin K . Petersen"
+	<mkp@kernel.org>, John Garry <john.garry@linux.dev>, Hannes Reinecke
+	<hare@suse.de>, Jens Axboe <axboe@kernel.dk>, <linux-ide@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Justinien Bouron <jbouron@amazon.com>, Gunnar Kudrjavets
+	<gunnarku@amazon.com>, <stable@vger.kernel.org>
+Subject: [PATCH] ata: libata-core: Add max sector quirk to INTEL SSDSCKKB240G8
+Date: Mon, 16 Nov 2026 12:54:30 -0800
+Message-ID: <20261116205430.44305-1-jbouron@amazon.com>
+X-Mailer: git-send-email 2.50.1
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -51,34 +86,49 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-scsi: fix the INC_512 bit test for SECURITY
- PROTOCOL IN/OUT
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
-References: <20261116191008.2954277-2-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20261116191008.2954277-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D031UWA001.ant.amazon.com (10.13.139.88) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-On 11/16/26 11:10, Niklas Cassel wrote:
-> ata_scsi_security_inout_xlat() tests the INC_512 bit with cdb[4] & 7.
-> INC_512 is bit 7 of byte 4 of the SECURITY PROTOCOL IN and SECURITY
-> PROTOCOL OUT CDBs (SPC-6, tables 280 and 282), and bits 6:0 of that
-> byte are reserved.
-> 
-> Test bit 7 instead.
-> 
-> Fixes: 818831c8b22f ("libata: implement SECURITY PROTOCOL IN/OUT")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+INTEL SSDSCKKB240G8 with firmware version XC311102 runs into FPDMA
+timeout errors when queue/max_sectors_kb is set to
+BLK_DEF_MAX_SECTORS_CAP = 4096KiB / 8192 sectors. Similar to model
+SSDSC2KG480G8, the issue disappears when setting this max size to 8191
+sectors, thus apply the same quirk.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Firmware version X5A1ME59 for SSDSCKKB240G8 is un-affected by this bug
+thus keep the quirk specific to firmware XC311102.
 
+Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
+Signed-off-by: Justinien Bouron <jbouron@amazon.com>
+Reviewed-by: Gunnar Kudrjavets <gunnarku@amazon.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/ata/libata-core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 5ff45a5cbfe4a..2a5ca1b9ee5c0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4204,6 +4204,7 @@ static const struct ata_dev_quirk_value __ata_dev_max_sec_quirks[] = {
+ 	{ "LITEON EP1-*",		NULL,		1024 },
+ 	{ "DELLBOSS VD",		"MV.R00-0",	8191 },
+ 	{ "INTEL SSDSC2KG480G8",	"XCV10120",	8191 },
++	{ "INTEL SSDSCKKB240G8",	"XC311102",	8191 },
+ 	{ },
+ };
+ 
+@@ -4474,6 +4475,8 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+ 						ATA_QUIRK_MAX_SEC },
+ 	{ "INTEL*SSDSC2CT*",		NULL,	ATA_QUIRK_ZERO_AFTER_TRIM |
+ 						ATA_QUIRK_NO_FUA },
++	{ "INTEL SSDSCKKB240G8", "XC311102",	ATA_QUIRK_ZERO_AFTER_TRIM |
++						ATA_QUIRK_MAX_SEC },
+ 	{ "INTEL*SSD*",			NULL,	ATA_QUIRK_ZERO_AFTER_TRIM },
+ 	{ "SSD*INTEL*",			NULL,	ATA_QUIRK_ZERO_AFTER_TRIM },
+ 	{ "Samsung*SSD*",		NULL,	ATA_QUIRK_ZERO_AFTER_TRIM },
 -- 
-Damien Le Moal
-Western Digital Research
+2.47.3
+
