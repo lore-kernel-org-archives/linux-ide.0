@@ -1,54 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794921943;
-	b=zGCrYW7IkgtfoXfJLhoFsLzPGeUL24MBCl9WYE6iP0AICUPKc02b+w3F/6trH2MbmtiP
-	 GehvnCBWOm4HXyfKAa+ZtbKt8RndeFjEX1/yXNoPBRdV5DDBZjjO3JW+f3sOq5tKMasau
-	 slMd5F6WrF+ihiMW25IXA5Xyt8WDto+1rtA9WJY9uZFAiav5mXVHe7gfW3PE4br7iBOTu
-	 qVLBHQKBSMXHngxj9eWWTEl1W2epkB5M+2GDW4s50R7M3Z0h/n6mbrv3jjc1hW49nUg7e
-	 7YdpTrAyVMPnFof0SBqfXW4SB2jMQbVYi+xt3+vvjb9OwEvp5KbmUG2eexcJh/ddOiQ==
+	t=1794936913;
+	b=IK6AyUwll9V62s3iIs/EslcOibo/2DHrmQAJZYVjhERnpqd190wSZ/pZF5kTlkk8DkIW
+	 ItDtdwjrNEcm06qaKZrAAEYtccolH2i4S+Bt9n0Mv9OpLF+xY9xmobmuHULrXPwwlRatV
+	 fVwyWpQeoSUKSsjjF9EJ2Z/pwQnUuPa2bdJxVHeKbUIcyJcwqInuoZyfN/ybtIIOi0F8p
+	 YKpAxGhFWwSl0FlMqN39byy1snZEM6rW7W2nYfuLWuwHk2rVPB7hIHQkeWU141ArwsdwU
+	 jGB49k6q7HxSE51MI3ErD+F9jhd8srhEiokhdI0cPUxGaEh16W/ho44MbA4sQ/ah83Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794921943;
-	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
-	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Mailer;
-	bh=iSb/v1zYs8p1HSbeyXVMJ2Yw64KBQQw7WUT+uYE4SlE=;
-	b=Y8S2jiCfcMhroM8r+w1lW8q3ZoWKqyFEarraNWWMcWZLMvUqmTxd2BfMufwQ1CJ6FOsD
-	 hVlS/F12Kfpw5dxGXpFzZLZeQTWfVEBQXmpzXrQA91CIpYkt49WQl2+nsvNpiThDp96yy
-	 6q8iWuT9Qg44PKLYwS1+2WKNWrrESfmIQJlOliViwvxhGCjK5rCVy+tBhbJOwi27HOBVr
-	 Qt89v7n4+HN/X91QSTVKrFEmoOsRA+J/4rKC1TN4g9RcK6OvbWeHE4W6nXd0ENtz3L4wx
-	 XHX+z3kQObSAFSWJ9lRcKr4ot4LZePrAR1J67mb6hXRQL2SD03vGmc9hNXw0jP/JOgQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794936913;
+	h=Received:DKIM-Signature:Subject:From:To:Cc:Date:Message-ID:
+	 In-Reply-To:References:X-sashiko-severity:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=nB6Yq8d6ULrFd8IzeuoWmxpqPH/+v/zha4BrdYeZUfE=;
+	b=RlrYyGeeQf28DbFNjQgSBaHYt9nLt9Uddptcbdmyp1YFQRDIco55pIH+Gx3dn+Hup4+9
+	 2V1532/h36Vp0aI6eqxFqOqV7FiZA2tQ9YJQmgcJun43y7Y9qAN+RSD2fJ+sceGLI09JR
+	 c0gERjXPZvsW83Ej1whV6rIWARXJVuqslbsxqQpskArG/vg6dOwnuzvs1hr/IYmwZZ8OF
+	 iL1BW8eI+eVwvXivL79Cu188M6VmVueq34GSkkNhEA4func3SI9GqYBKduQEQdqFQ3tf8
+	 7CaQq9+EeM+WA55RgAMG3mEH7anF5XGvWfNULlFH55mOlJrcSYQoWC4Te6SGaYuizNQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ijn4NomM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=m+OoLnyK;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39CE606A323
-	for <linux-ide@vger.kernel.org>; Tue, 17 Nov 2026 13:25:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05AD7606A88C;
+	Tue, 17 Nov 2026 17:35:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ijn4NomM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D03321F000C4;
-	Tue, 17 Nov 2026 13:25:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=m+OoLnyK
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DABF1F000CA;
+	Tue, 17 Nov 2026 17:35:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794921943;
-	bh=iSb/v1zYs8p1HSbeyXVMJ2Yw64KBQQw7WUT+uYE4SlE=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=ijn4NomMUkWiUV7lV5d2juSDlZxmzsFtOptdy5g3V3GkLsV4NgHaE3FXXAKIfGJAe
-	 s6uKOPxNmtbb5Y805lSUD5zUPLgfAKh6TgSgD8SNwYaTUDJcczgzfo4FiGqwuhGshn
-	 bLlIlq7zPII0pz6M75SInHDftHLEwwBdr1z3XjZZPWrm5LH3/dGREEtnLxnh4bkCn2
-	 iy6b7Il1bnngOhc3UYhNWKXHQXgOSzPSXO9iUWoEjpSCt5JqGmoVjzTlEaYhUZP7uE
-	 1/PpH5azsd6ysLX0888z3gZdJGI4VF3X9vBmH6Taqrgz6EaZ0s4d3mvOijPH2hNko4
-	 NbWM0Pt+cBbog==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-In-Reply-To: <20261117130238.3472718-2-cassel@kernel.org>
-References: <20261117130238.3472718-2-cassel@kernel.org>
-Subject: Re: [PATCH] ata: libata-core: remove two WDC BROKEN_HPA quirks
- that never match
-Message-Id: <179492194257.3479490.1921940477268272673.b4-ty@kernel.org>
-Date: Tue, 17 Nov 2026 14:25:42 +0100
+	s=k20260515; t=1794936912;
+	bh=nB6Yq8d6ULrFd8IzeuoWmxpqPH/+v/zha4BrdYeZUfE=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=m+OoLnyKEqRzuR8W24SKYyqeH6WL7WtYTv9Yk+iWroEVoyZLBNbO3Y34RvRRI3Li6
+	 /dqFOQJYNXfrnUueeuBIWz/Pq55xJASipZl83hyCmOTvWei+1Qp2rFUZsB73vFGKtm
+	 35NfflWKQng5deftSY4vK2xDDXYheYikiiyUb5Q0Kcbktk7ZGkEdfKE9+8qnPoZ3qN
+	 haR1l3Sym7RSui+tJMYRXzDxK5wtrwbpjr72i54Gv/hCOuiF69sGojba3BwyK8pw83
+	 v2XOdBeqx0jm8zY6gQyw7yR8rBSPJgHHM4BG5gHI15d5XFldxiAdymXaSy7s7+hiPY
+	 xYZp9hwEuww5Q==
+Subject: Re: [PATCH 2/9] dt-bindings: ata: rockchip,dwc-ahci: Allow iommus
+From: netdev-bot+sashiko@kernel.org
+To: aiyengar1990@gmail.com
+Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, heiko@sntech.de,
+ andrew+netdev@lunn.ch, davem@davemloft.net, edumazet@kernel.org,
+ kuba@kernel.org, pabeni@redhat.com, david.wu@rock-chips.com,
+ dlemoal@kernel.org, cassel@kernel.org, fancer.lancer@gmail.com,
+ netdev@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
+ linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, praan@google.com,
+ will@kernel.org, robin.murphy@arm.com, iommu@lists.linux.dev,
+ shawn.lin@rock-chips.com, sebastian.reichel@collabora.com
+Date: Tue, 17 Nov 2026 17:35:10 +0000
+Message-ID: <179493691098.3136.12498888747300831285@kernel.org>
+In-Reply-To: <20261113-mmu600-php-v1-2-231196049a3b@gmail.com>
+References: <20261113-mmu600-php-v1-2-231196049a3b@gmail.com>
+X-sashiko-severity: Low
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -58,28 +68,79 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
 
-On Tue, 17 Nov 2026 14:02:39 +0100, Niklas Cassel wrote:
-> The second field of a __ata_dev_quirks[] entry is matched against the
-> firmware revision of the device, which ata_dev_quirks() reads into a
-> buffer of ATA_ID_FW_REV_LEN (8) characters. The ATA_QUIRK_BROKEN_HPA
-> entries for "WDC WD3200JD-00KLB0" and "WDC WD2500JD-00HBB0" instead
-> contain "WD-WCAMR1130137" and "WD-WMAL71490727", which look like drive
-> serial numbers. Without wildcards, these 15 character patterns can never
-> match a firmware revision, so the two entries have not applied to any
-> drive since they were added in commit 16c55b038033 ("libata: implement
-> BROKEN_HPA horkage and apply it to affected drives").
-> 
-> [...]
+Thank you for your contribution! Sashiko AI review found more severe
+issue(s) in other patches of this series. This mail is only an FYI, in case
+you want to address the nit picks below when you respin.
 
-Applied to libata/linux.git (for-7.5), thanks!
+Low priority / nit picks for your consideration:
 
-[1/1] ata: libata-core: remove two WDC BROKEN_HPA quirks that never match
-      https://git.kernel.org/libata/linux/c/3391ac40
+- [Low] The patch adds `iommus: maxItems: 1` at the top level of
+  `Documentation/devicetree/bindings/ata/rockchip,dwc-ahci.yaml` (lines…
 
-Kind regards,
-Niklas
+--
 
+dt-bindings: ata: rockchip,dwc-ahci: Allow iommus
+
+This adds an iommus property, limited to one item, to the Rockchip DWC
+AHCI binding. The commit message says the RK3588 SATA controllers sit
+behind the PHP SMMU.
+
+> diff --git a/Documentation/devicetree/bindings/ata/rockchip,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/rockchip,dwc-ahci.yaml
+> index b5ecaabfe2e25..e33e8b5591ee5 100644
+> --- a/Documentation/devicetree/bindings/ata/rockchip,dwc-ahci.yaml
+> +++ b/Documentation/devicetree/bindings/ata/rockchip,dwc-ahci.yaml
+> @@ -34,6 +34,9 @@ properties:
+>            - rockchip,rk3588-dwc-ahci
+>        - const: snps,dwc-ahci
+>  
+> +  iommus:
+> +    maxItems: 1
+> +
+
+[Severity: Low]
+Should iommus be limited to rockchip,rk3588-dwc-ahci?
+
+As added, the property is unconditional. That makes it valid for all
+three compatibles in the select block: rockchip,rk3568-dwc-ahci,
+rockchip,rk3576-dwc-ahci and rockchip,rk3588-dwc-ahci.
+
+The commit message only gives a hardware reason for RK3588:
+
+  The RK3588 SATA controllers are behind the PHP SMMU.
+
+The in-tree SoC descriptions match that. mmu600_php: iommu@fcb00000
+(arm,smmu-v3) exists only in rk3588-base.dtsi. In rk356x-base.dtsi and
+rk3576.dtsi, the only IOMMUs are for media blocks (vdpu, vepu, vicap,
+vop, vdec), and none of them sit in front of the SATA nodes.
+
+The binding already has a separate allOf entry for the older SoCs:
+
+  - if:
+      properties:
+        compatible:
+          contains:
+            enum:
+              - rockchip,rk3568-dwc-ahci
+              - rockchip,rk3576-dwc-ahci
+    then:
+      properties:
+        clocks:
+          maxItems: 3
+
+With this patch, dtbs_check would no longer flag an iommus property
+added by mistake to an RK3568 or RK3576 SATA node.
+
+One option is to add iommus: false to the rk3568/rk3576 then: branch.
+Another is to allow iommus only in the rk3588 branch.
+
+snps,dwc-ahci.yaml, which the commit message cites, does allow iommus
+unconditionally. This binding is per-SoC, though, and already has
+per-compatible constraints.
+
+>    ports-implemented:
+>      const: 1
+>
+
+-- 
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20261113-mmu600-php-v1-0-231196049a3b%40gmail.com
