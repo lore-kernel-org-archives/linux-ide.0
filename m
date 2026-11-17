@@ -1,47 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794936922;
-	b=kc89ppd6PIyKoP0+L4UNvKz0s0McHxNUrtI3RqrAI9K0M4WNn3WOyDGwVID09wXLVLci
-	 aszfm86D5U3ox6NVbAu3JV7SAohYcj/2zFATiBajoppkGNvlaKyxsFiWeGih979FL8h5+
-	 109c+kv3R4cArhQnu0AJGb+6ZOYnrI9uJ5v+vGshydv9uhl/vWVgzMBX7WFNw9MlE912c
-	 hsSR8oFwKfR+taV7JDI/QXY5CKyJ8LHUlwKcjOEgyI3qc2ehaOUfzjZWaOtYse31FYEz8
-	 1E3+2yM6SAT0QHnf2oos5XJnccBKDfmlgpdAcmGSUFnVYZxaT2pR4na/NVPCwtz71ng==
+	t=1794936925;
+	b=tWWtIy+Jvpny+ScdQjcSW4ZwtplQhsZOAi0+AN9dYTGa0OYnJz9WxB6JX73cqv9Vskqt
+	 1cBHAMXo81Ouu4bX93LC+sNaRZoQK2n8ZjqPAT3Z5LGIsaO41fEE5O2YQ+zaUAxkHDalZ
+	 IozClgPoURCtT5/bWe1JkZ9lNYCbt9punHWnn5NyDD5UD+nN2eodzGb3vDywndmGik+N3
+	 7Uj0Xig74R6/zJQQ2hMQGoFmO1ZfPirk3T2Pg42U28if3MeK+wK1v5GGy7Q6OVTRYP9Ep
+	 mfvJCwD6d8y+RIjceCqIgteHsWRzfLeUfiN8fucMOXWLkEaAK4/6mFyOUEw5mvzRNGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794936922;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794936925;
 	h=Received:DKIM-Signature:Subject:From:To:Cc:Date:Message-ID:
 	 In-Reply-To:References:X-sashiko-severity:Content-Type:
 	 Content-Transfer-Encoding:MIME-Version;
-	bh=7gBvz52KX2fm4JXHqvNvYct7fnC36l4OBFFtesBApY0=;
-	b=FUEH/6lM0+1/Upc+z2OECp9Rf81+yGzwwHQzlz7PcZjkay2uu+nbQKuInkascCHlfoBb
-	 JMhDkIqRN+XXIT6O8+gOZtBYpAs7LxNBJGK6tNc+0R3HRiU4J5Gxfm8knHzipq8WhSYXV
-	 cYswWA/jnzjmnlr7WWCB9+6B5PVcl3G2OoPayh3L1z9Glfiq6361W4uz2Aox9qsY71MaV
-	 cAYj70FeJumWQg5uk/3FByheo6bYkiBf4ykyR2TKQYRdTDBpcWIAnW2aZ+fbPHX8adM02
-	 P88VKnwtQgTbqukSj4U1W7pQYs5ymvKm8YOyv0SDJAB2IRT7UQdEvl5o3Vp+rbm6Mcg==
+	bh=yZ3I9vRuX9ylJnvAv8Fd/DK7PqgzivRoTz54b66hM4s=;
+	b=aWPUgx0Tjl7d917UhLN7uzDS1ewVdy88d9eUzPz5uEFyx+3KJCaD1KitPZUt7HRnQ9Z1
+	 f6NZetGGsLYQT86l6fV845oqMEifGZqdkfgh46kdYypkXSmnNBYmJHl2ZvyZLQIw41jLw
+	 tW6qJYZkYVUzJ91nRU9wPP6MjiJScCGj0j6OMKRvJygcMHhcbd5iDyK43BkfnHJXWVyE/
+	 3ZFDEqgSyOdC9QyM2r8s3JXsgv55/hKyzn8zAYfugDFOYHqE0fOTDOJg51oSKnaeb5eEU
+	 bO8UdlWI7kbPXXAJmsu/QRcF2C8qj3jDO5/sm7usDQS/tMgV5487S/hLFh8pedWUs1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k+fYEYZH;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ldprS0uN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD325606A889;
-	Tue, 17 Nov 2026 17:35:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14126606A8AB;
+	Tue, 17 Nov 2026 17:35:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k+fYEYZH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40EBF1F0092F;
-	Tue, 17 Nov 2026 17:35:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ldprS0uN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 437971F00923;
+	Tue, 17 Nov 2026 17:35:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794936922;
-	bh=7gBvz52KX2fm4JXHqvNvYct7fnC36l4OBFFtesBApY0=;
+	s=k20260515; t=1794936924;
+	bh=yZ3I9vRuX9ylJnvAv8Fd/DK7PqgzivRoTz54b66hM4s=;
 	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=k+fYEYZHzsmCqDcNgpuFCcgqIRs4iFOMw83ScY4DFsuvsiDbozMZ2gTj9Fwl8UN6Z
-	 Z+SpgCYr9xjTkqHvgnQerC1TZAyUW5fWrGQinTX+Q3f9r7vG8NN0r7C/FuppHc9bhO
-	 9GYhXXwkyzJPPjpTNxWKUdKSvKYAcFx0zQddXrFYk4ggF3T1XaZ53+nGl+7q8eBCey
-	 NJE3Uq/41w34WcR2bUT6ObIuiYmmDyUVNotmcWz3WrfDlrNemY4vqrTUtq9By/qm/T
-	 m+u8tpRRidEcCTy+Qd/aaEg5se4P/LigixqKdCEyR/T9PiiK7CPehALV6Kyl/x1C/U
-	 p83WSZ761hRwQ==
-Subject: Re: [PATCH 8/9] arm64: dts: rockchip: Attach the masters of the
- RK3588 PHP SMMU
+	b=ldprS0uNwFt+H1U3be8E2gOLAGnw8BZl5s5GVpiNWByV+Ly/0OSD22JIeeAxEMp/g
+	 vajUIU0EUhPQ6Grik6d7HoZo4QrEZCG/qbdNGA2DeRmLimaYUz3G22jERtSf0rlEsJ
+	 XdkI0kkGlwRriDnm0fVfu4H+JZKAVemm7juPMN6KScB8unOvuReiocyYvXxlLxcjrI
+	 jGnyjhxSnD1caR+wZ8oWP9VduidgsFBMr6HkihNTcuMyt0h8DBOB+F4f0IMukeKkOM
+	 aNCUusgK+8Is7lqQdWI9scgMjEIbl0y4zrdB5uLRljVPhKN+GZHQu7GSdlgYDZS3NS
+	 pDxvT9nAn7D5Q==
+Subject: Re: [PATCH 9/9] arm64: dts: rockchip: Enable the RK3588 PHP SMMU
 From: netdev-bot+sashiko@kernel.org
 To: aiyengar1990@gmail.com
 Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, heiko@sntech.de,
@@ -53,11 +52,11 @@ Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, heiko@sntech.de,
  linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, praan@google.com,
  will@kernel.org, robin.murphy@arm.com, iommu@lists.linux.dev,
  shawn.lin@rock-chips.com, sebastian.reichel@collabora.com
-Date: Tue, 17 Nov 2026 17:35:20 +0000
-Message-ID: <179493692082.3136.9767912829887161888@kernel.org>
-In-Reply-To: <20261113-mmu600-php-v1-8-231196049a3b@gmail.com>
-References: <20261113-mmu600-php-v1-8-231196049a3b@gmail.com>
-X-sashiko-severity: High
+Date: Tue, 17 Nov 2026 17:35:22 +0000
+Message-ID: <179493692280.3136.14096741635369747694@kernel.org>
+In-Reply-To: <20261113-mmu600-php-v1-9-231196049a3b@gmail.com>
+References: <20261113-mmu600-php-v1-9-231196049a3b@gmail.com>
+X-sashiko-severity: Critical
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -73,7 +72,7 @@ MIME-Version: 1.0
 Thank you for your contribution! Sashiko AI review found 3 potential
 issue(s) to consider.
 
-Critical: 0 · High: 1 · Medium: 1 · Low: 1
+Critical: 1 · High: 1 · Medium: 0 · Low: 1
 
 If you believe none of the issues are legitimate, please reply to each
 issue of Medium severity or higher and explain why the AI is wrong.
@@ -81,172 +80,141 @@ If any of them are legitimate and you plan to respin, please let patchwork
 know by including "pw-bot: cr" as a separate line at the end of your reply
 (one such reply per series is enough).
 
-- [High] Once mmu600_php is enabled, this patch makes all DMA from
-  GMAC0/1, SATA0-2 and USB3OTG_2 depend on SMMU state: CR0.SMMUEN, the…
-- [Medium] This patch points GMAC0/1, SATA0-2 and USB3OTG_2 at the
-  mmu600_php node.
-- [Low] The commit message describes StreamIDs 1-6 as a property of the
-  hardware: "GMAC0/1, SATA0-2 and USB3OTG_2 are behind MMU600_PHP with…
+- [Critical] This patch enables mmu600_php on every RK3588 board, but the
+  kernel cannot restore the SMMU after deep suspend.
+- [High] This patch's commit message says "the SMMU has its clock", and
+  the earlier series commit "arm64: dts: rockchip: Add the clock and…
+- [Low] The mmu600_php node that this patch enables has `clocks = <&cru
+  ACLK_MMU_PHP>;` and `resets = <&cru SRST_A_MMU_PHP>;`…
 
 --
 
-arm64: dts: rockchip: Attach the masters of the RK3588 PHP SMMU
+arm64: dts: rockchip: Enable the RK3588 PHP SMMU
 
-This patch adds iommus properties to GMAC0/1, SATA0-2 and USB3OTG_2 on
-RK3588. They point at the PHP SMMU (mmu600_php) with StreamIDs 1 to 6.
-The SMMU node is still disabled at this point in the series.
+This commit removes status = "disabled" from the mmu600_php node in
+rk3588-base.dtsi. That enables the arm-smmu-v3 instance in front of the
+PHP masters (GMAC, SATA, USB3 host2) on all RK3588 boards. The commit
+message notes that PD_PHP loses power in deep suspend and that arm-smmu-v3
+system sleep support is needed.
 
-> GMAC0/1, SATA0-2 and USB3OTG_2 are behind MMU600_PHP with StreamIDs
-> 1-6. No effect until the SMMU is enabled.
-
-[Severity: Low]
-
-Are StreamIDs 1-6 a property of the hardware? An earlier patch in this
-series, "soc: rockchip: grf: Assign the StreamIDs of the RK3588 PHP SMMU
-masters", says the PHP GRF StreamID registers "reset to 0 and are never
-programmed".
-
-The values only become true because rockchip_grf_init() writes them, and
-rockchip_grf_resume() writes them again after suspend:
-
-drivers/soc/rockchip/grf.c:
-static const struct rockchip_grf_value rk3588_defaults_php_grf[] = {
-	{ "gmac0 write streamid", RK3588_PHP_GRF_GMAC0_SID_AW, 1 },
-	...
-	{ "usb3otg2 read streamid", RK3588_PHP_GRF_USB3OTG2_SID_AR, 6 },
-};
-
-So the iommus specifiers in this patch encode a choice made by a Linux
-driver, not fixed hardware.
-
-Some software could use this DT with the SMMU enabled but without that
-GRF programming. Examples are a stable backport that takes only the DTS
-patches, U-Boot passing this DT through, or another OS. In that case
-every master would emit SID 0. By the series' own design SID 0 is
-unused, so DMA from all six masters would be aborted.
-
-In-tree Linux sees no runtime effect here. The GRF patch comes earlier
-in the series and mmu600_php is still disabled.
-
-Could the commit message say this, and name the GRF patch as a hard
-prerequisite?
+Link: https://lore.kernel.org/r/20260929034510.2023173-1-praan@google.com
 
 > diff --git a/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
-> index 3bf8d0e4ff332..cb0a39f637887 100644
+> index cb0a39f637887..0c3d59a391826 100644
 > --- a/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
 > +++ b/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
-> @@ -534,6 +534,7 @@ usb_host2_xhci: usb@fcd00000 {
->  		compatible = "rockchip,rk3588-dwc3", "snps,dwc3";
->  		reg = <0x0 0xfcd00000 0x0 0x400000>;
->  		interrupts = <GIC_SPI 222 IRQ_TYPE_LEVEL_HIGH 0>;
-> +		iommus = <&mmu600_php 6>;
+> @@ -574,7 +574,6 @@ mmu600_php: iommu@fcb00000 {
+>  		clocks = <&cru ACLK_MMU_PHP>;
+>  		resets = <&cru SRST_A_MMU_PHP>;
 
-[Severity: Medium]
+[Severity: High]
 
-These iommus entries make the masters depend on mmu600_php, which in
-this tree has:
+The commit message says "the SMMU has its clock". Does anything actually
+enable ACLK_MMU_PHP for the SMMU?
 
-	mmu600_php: iommu@fcb00000 {
-		compatible = "arm,smmu-v3";
-		...
-		clocks = <&cru ACLK_MMU_PHP>;
-		resets = <&cru SRST_A_MMU_PHP>;
-		#iommu-cells = <1>;
-		status = "disabled";
-	};
+The arm-smmu-v3 driver has no clk_get()/clk_prepare_enable(), reset_control
+or pm_runtime handling. The node has no power-domains, so genpd pm_clk
+does not apply. The platform core does not enable DT clocks by itself
+either.
 
-Does anything accept or use these two properties?
-
-Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml defines no
-clocks or resets and ends with additionalProperties: false. The series
-does not change that binding. Would dtbs_check then reject mmu600_php on
-every RK3588 DTB?
-
-The arm-smmu-v3 driver also has no clk_* or reset_control_* calls
-anywhere under drivers/iommu/arm/arm-smmu-v3/. So the SMMU never holds
-this clock.
-
-The series says the clock is there "so the SMMU keeps its clock while
-its masters are idle". The final commit "arm64: dts: rockchip: Enable
-the RK3588 PHP SMMU" relies on "the SMMU has its clock". In
-drivers/clk/rockchip/clk-rk3588.c it is a plain gate without
-CLK_IS_CRITICAL:
+In drivers/clk/rockchip/clk-rk3588.c the clock is a plain gate with no
+flags:
 
 	GATE(ACLK_MMU_PHP, "aclk_mmu_php", "aclk_php_root", 0,
 			RK3588_CLKGATE_CON(34), 8, GFLAGS),
 
-Its only enablers are its children: ACLK_GMAC0/1, ACLK_SATA0/1/2 and
-ACLK_USB3OTG2.
+Its only enable references come from its children ACLK_GMAC0/1,
+ACLK_SATA0/1/2 and ACLK_USB3OTG2. Two things can turn it off:
 
-Can clk_disable_unused, or the masters going idle, gate this clock while
-the SMMU is live? Some examples:
+- clk_disable_unused at late_initcall_sync, when no master is bound
+  (modular drivers, or a board that enables only some PHP masters).
+- The last master disabling its ACLK on runtime suspend or remove.
 
-  - arm_smmu_attach_dev() runs before a modular master driver enables
-    its clocks
-  - all masters are runtime suspended
-  - a board enables none of these masters
+The SMMU driver still touches the hardware after that. It issues CMDQ
+TLBI/CFGI plus CMD_SYNC on unmap and on flush-queue timeouts, it runs the
+eventq/gerror handlers, and at reboot it runs:
 
-The series implies that ACLK_MMU_PHP clocks the SMMU register interface.
-If so, could command queue accesses, CMD_SYNC polling or the IRQ
-handlers hang the bus or time out? That would look like the PHP GRF hang
-described in "Add the PHP GRF clock on RK3588".
+arm_smmu_device_shutdown()
+    arm_smmu_disable_action()
 
->  		clocks = <&cru REF_CLK_USB3OTG2>, <&cru SUSPEND_CLK_USB3OTG2>,
->  			 <&cru ACLK_USB3OTG2>, <&cru CLK_UTMI_OTG2>,
->  			 <&cru CLK_PIPEPHY2_PIPE_U3_G>;
-> @@ -2310,6 +2311,7 @@ gmac1: ethernet@fe1c0000 {
->  		interrupts = <GIC_SPI 234 IRQ_TYPE_LEVEL_HIGH 0>,
->  			     <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH 0>;
->  		interrupt-names = "macirq", "eth_wake_irq";
-> +		iommus = <&mmu600_php 2>;
+That usually happens after the consumer masters have already shut down.
 
-[Severity: High]
+Could this cause CMD_SYNC timeouts or a stalled bus access? The "Add the
+PHP GRF clock on RK3588" commit in this series describes a similar hang
+for pclk_php_root.
 
-Once mmu600_php is enabled, all DMA from GMAC0/1, SATA0-2 and USB3OTG_2
-depends on SMMU state:
+The earlier commit "arm64: dts: rockchip: Add the clock and reset of the
+RK3588 PHP SMMU" says the clock was added "so the SMMU keeps its clock
+while its masters are idle". Does that need clock handling in the driver
+(plus a binding update), or the gate marked as critical or
+ignore-unused, rather than only the DT property?
 
-  - CR0.SMMUEN
-  - the stream table and queue base registers
-  - the STEs for SIDs 1-6
+[Severity: Low]
 
-What restores that state after deep suspend?
+Will this node pass dtbs_check now that it is enabled? The binding in
+Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml does not define
+clocks, resets or power-domains, and it has:
 
-arm_smmu_driver in drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c has no
-.pm ops:
+additionalProperties: false
 
+No patch in the series updates this binding, although the dwmac, ahci and
+grf bindings are updated.
+
+Also, the "Add the clock and reset..." commit says the reset is added "as
+for the PCIe SMMU". The sibling mmu600_pcie node, which uses the same
+compatible, has neither clocks nor resets.
+
+>  		#iommu-cells = <1>;
+> -		status = "disabled";
+
+[Severity: Critical]
+
+The commit message says:
+
+  PD_PHP is powered off in deep suspend and the SMMU resumes from reset
+  in bypass, so this needs arm-smmu-v3 system sleep support [1].
+
+Is that support in the tree this patch applies to? No earlier patch in
+the series seems to add it.
+
+In drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c, arm_smmu_driver has no
+.pm:
+
+static struct platform_driver arm_smmu_driver = {
+	.driver	= { ... },
 	.probe	= arm_smmu_device_probe,
 	.remove = arm_smmu_device_remove,
 	.shutdown = arm_smmu_device_shutdown,
+};
 
-So arm_smmu_device_reset() only runs at probe.
+The only code that programs the stream table, the queues and SMMUEN is
+arm_smmu_device_reset(), and only arm_smmu_device_probe() calls it. The
+syscore op added to drivers/soc/rockchip/grf.c earlier in the series
+restores only the PHP GRF StreamID registers.
 
-The final commit of the series, "arm64: dts: rockchip: Enable the RK3588
-PHP SMMU", says:
+With this node enabled, the PHP masters get IOMMU DMA domains and their
+drivers program IOVAs. Those masters are usb_host2_xhci, gmac1, sata0 and
+sata2, plus gmac0 and sata1 from rk3588-extra.dtsi.
 
-  "PD_PHP is powered off in deep suspend and the SMMU resumes from reset
-  in bypass, so this needs arm-smmu-v3 system sleep support [1]"
+After a deep suspend cycle, does the SMMU stay in its reset bypass state
+while stmmac, ahci and xhci keep using descriptor rings and buffers at
+their old IOVAs?
 
-That support is not in this tree. Even so, that commit removes
-status = "disabled" from mmu600_php for every RK3588 board.
+If so, the IOVAs would be treated as physical addresses. On gmac RX the
+frame contents come from the network and would be written to whatever RAM
+or MMIO sits at that address. TX and SATA/USB reads could leak arbitrary
+memory.
 
-Take a board with an active PHP master and run
-echo mem > /sys/power/state. After resume, only the PHP GRF StreamIDs
-are restored, by rockchip_grf_resume(). The GMAC descriptor rings, AHCI
-command lists and xHCI rings still hold IOVAs.
+PD_PHP is also defined only in drivers/pmdomain/rockchip/pm-domains.c and
+the dt-bindings header. No DTS references it, and mmu600_php has no
+power-domains property, so genpd cannot order an SMMU save and restore
+either.
 
-Wouldn't their DMA go out untranslated, with the IOVAs used as physical
-addresses?
+Before this patch the node was disabled and these masters used direct
+DMA, so suspend did not hit this problem. Should enabling this node wait
+until the arm-smmu-v3 sleep support in [1] is merged?
 
-This patch alone does nothing while the SMMU is disabled. But it creates
-the dependency, and the problem is still present at the end of the
-series. Should the enable commit wait until arm-smmu-v3 system sleep
-support has landed?
-
->  		clocks = <&cru CLK_GMAC_125M>, <&cru CLK_GMAC_50M>,
->  			 <&cru PCLK_GMAC1>, <&cru ACLK_GMAC1>,
->  			 <&cru CLK_GMAC1_PTP_REF>;
-
-[ ... ]
+>  	};
 
 -- 
 Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20261113-mmu600-php-v1-0-231196049a3b%40gmail.com
