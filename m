@@ -1,54 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794910271;
-	b=uzVTKKpmmtbWmK1M6Ot2ZfuhryQW7x5gPvtltFWrQY3z2fm1f9zGZkvMLsIfp4KmAOCh
-	 vw5qnGVCOMu4bBu6+91A7MSTITJxFIj9mTizVoGhOxIWjd4R//pQkDP51EG+FgCaODDn2
-	 IFnPuku9KPO6+1X7Ey3SzgM4hevXZFVCxb+1pHTUXNVtynd1G7MYe4qdFeYt4amLpdQ49
-	 eSq2Bg35EbPnUbjLI7oLNS559I5SveaEqEbnyrqgbSU5NEG/Ykb46CAC9uyWRWdoGR+ru
-	 Fvw9H8kLZ31MIEHsz7l1iPFESDBZnTTGqlwjs7PiaMmcSbjmp21kqWTUd6CzNgAx93A==
+	t=1794917120;
+	b=XALs7Z3GfeMpSxm78AYifg1dHxhasyKTWbmePyzNPDsdxMGOqgcQviD6s5So9G//Wety
+	 tVlKmk2dbGzf84vZwPZ1K/7IxwxZ0i3i+Rj17NPgQKCDkTOPipwn3Qa54ItS+2zu/mj3p
+	 nXbpb8Cii9HdW5z2XjQ98JMzvq+ZYgcmbkSwscR61WhCsNZmekE+KHRCgwCLRi8QLD8fD
+	 fDORbPGXh/j6aWf/KFTZ8OdIinK9PRuuacd1QAFknDxpdBnMH6e3AI9hv8TDDmVzatRP3
+	 g8smy2D4i9XbbnpIB1RtuwPnUfxEeml2E3iFyhSt1pn1kJIF35OAQkTfIa+tkkZbroQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794910271;
-	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
-	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Mailer;
-	bh=Ppgm30tM3fo+UP/xYYdNk73qtDaf+xuOrqudiGSPRBM=;
-	b=OL7J174BwLJV4JwMb4Ct9g3t8+YUwJp6aTdd9ZC1LTg4LRD6rkkNeYPkhx4XWE5qDr3l
-	 bDfuvOzu6olDjZg3GROutiHSZGjMQSjT2Z1QdX8woCDvNCszgnnG1w9AbsZm1IKBUDIXe
-	 lnxpU9Kxq/NTZvKvTj0haYu2p+vZ673cFPQ1rH2cyyJ++Xq3M4hiBe1E2QsHRpQPCY7ay
-	 T9RURJyCk+hDmCPOQJq0FrRaYYd7d4oq5wfA8ndnT5+bGHc9wxLjWyekWb7mkkqPNvxVD
-	 eGRk8+pI7BW88jfPmtjAA2TyhT0okaaTnVoU2Y7SAsrf0GJI8n1hBBbQxDO8VvzEIhA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794917120;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=8s6a0MI7QPoKHwH1MbGEvMc5FXbEXeSN+WYeMG6Dhbc=;
+	b=Zl7AfmC/bGdQoA8Kb/DacDsTGhfp1qCFnHLOnzFbFL+dac/eNfAyxpbD/Nzf0w0VXndM
+	 gxsGk62E5lNgxYVbflhCqqOoLRXSs5gAZNQ91OvtKa1AzoKxVj78OmIBVV70tW4SBBL6x
+	 8kVyZ70H1UXtXTFCZ1YxYwj5cNxa150jBCkh7nunCGQEijmMfMtQCto0C2iRALooBtOOY
+	 wXR70pUfyRBqFrRWOnMX6PN+Zfd+5Nl7xQ/hBgLfWW54bjGuGEJrLdF+jYUdmbx2AFiiE
+	 pJ6T0dAnSAEf8G5ZuL2o6lz0/bVLBu9OTf7MSMp6H4gi+NtZXa9htqnYdxTuk8nJ6gg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DzDpiCNP;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K2TxyB2i;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F1AB606A329;
-	Tue, 17 Nov 2026 10:11:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E65BF606A31C;
+	Tue, 17 Nov 2026 12:05:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DzDpiCNP
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 128EF1F000CC;
-	Tue, 17 Nov 2026 10:11:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K2TxyB2i
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C02B51F000C5;
+	Tue, 17 Nov 2026 12:05:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794910271;
-	bh=Ppgm30tM3fo+UP/xYYdNk73qtDaf+xuOrqudiGSPRBM=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=DzDpiCNPxOOtzq9FA/PkBBMzCYCmnmd/dxFyzfUKtXlyYmS+H3cldSa8raPhVZz1L
-	 Tl75c+eIt/dOsajgIJhbGQud29igKk/aFnL8TMBzgbMp6pElXwoofGhHy3LWxBFX2J
-	 0i64rTpVdfBv4NO3L7rh0w5Dw2BaGsSmX6xj3i/Dmfuju65BKyM4W4ActZnzHWG0aw
-	 P3ZUvz+mRQs7qxb8Wi6bU1REJa5q8QuOlmOBtWVQ5S5ebnP5osrv1c9/xxJZxe9VPT
-	 rEwDrWUUY9iA60Q0BZRQ3LrvKL+luEBx5Vgip5iRzYtKc2zoryomizpTUBsny+Twil
-	 sya+3VVzANrkA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
-In-Reply-To: <20261116191008.2954277-2-cassel@kernel.org>
-References: <20261116191008.2954277-2-cassel@kernel.org>
-Subject: Re: [PATCH] ata: libata-scsi: fix the INC_512 bit test for
- SECURITY PROTOCOL IN/OUT
-Message-Id: <179491026977.3156950.15099204028645966141.b4-ty@kernel.org>
-Date: Tue, 17 Nov 2026 11:11:09 +0100
+	s=k20260515; t=1794917119;
+	bh=8s6a0MI7QPoKHwH1MbGEvMc5FXbEXeSN+WYeMG6Dhbc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=K2TxyB2imiIlT06s1lWMEKtSOysimmlF2tcen+oVKWilX9uFekLT8/Dob0WOUmWq5
+	 VuFWnEsyYiCQCzuuyf5kSy+5MtUTS3RngMAkkfi0BPt63hPi1PRLm77GtvQBzw9+8o
+	 58Deq9wogUbYnBUxBmM6StKLt/zWVYw90GHyOJ/ZPfTPv/8F7Axnm2vm1QriYQS9CP
+	 EZaCSLWZaY3EIKTIf7mLPuhXvWQ+ofcbpOy1FM0LrO4FWc8sD4IoIpB+KeMn9wGbnD
+	 jTcMVYpLc2AzA8+/5wNNQvoCoNc/bXMSeBy4zK7CxSDG606GVejj8wQ0mpd/uHbljk
+	 aijYTYKr9+5pg==
+Message-ID: <46a76a46-ff13-4298-b87d-22091fc8158f@kernel.org>
+Date: Tue, 17 Nov 2026 04:05:17 -0800
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -58,25 +51,34 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: sata_dwc_460ex: Fix DMA channel leak in
+ sata_dwc_port_start()
+To: Haoxiang Li <haoxiang_li2024@163.com>, cassel@kernel.org, mans@mansr.com,
+ tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261117094903.1282096-1-haoxiang_li2024@163.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20261117094903.1282096-1-haoxiang_li2024@163.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
 
-On Mon, 16 Nov 2026 20:10:09 +0100, Niklas Cassel wrote:
-> ata_scsi_security_inout_xlat() tests the INC_512 bit with cdb[4] & 7.
-> INC_512 is bit 7 of byte 4 of the SECURITY PROTOCOL IN and SECURITY
-> PROTOCOL OUT CDBs (SPC-6, tables 280 and 282), and bits 6:0 of that
-> byte are reserved.
+On 11/17/26 01:49, Haoxiang Li wrote:
+> If phy_power_on() fails in sata_dwc_port_start(), the error path
+> frees hsdevp without releasing the DMA channel acquired earlier.
+> Add a cleanup label to release the DMA channel before freeing
+> hsdevp on this failure path.
 > 
-> Test bit 7 instead.
-> 
-> [...]
+> Fixes: 0f48debdb906 ("ata: sata_dwc_460ex: add phy support")
+> Signed-off-by: Haoxiang Li <haoxiang_li2024@163.com>
 
-Applied to libata/linux.git (for-7.4-fixes), thanks!
+Looks good.
 
-[1/1] ata: libata-scsi: fix the INC_512 bit test for SECURITY PROTOCOL IN/OUT
-      https://git.kernel.org/libata/linux/c/e2954988
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-Kind regards,
-Niklas
 
+-- 
+Damien Le Moal
+Western Digital Research
