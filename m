@@ -1,64 +1,68 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794936925;
-	b=tWWtIy+Jvpny+ScdQjcSW4ZwtplQhsZOAi0+AN9dYTGa0OYnJz9WxB6JX73cqv9Vskqt
-	 1cBHAMXo81Ouu4bX93LC+sNaRZoQK2n8ZjqPAT3Z5LGIsaO41fEE5O2YQ+zaUAxkHDalZ
-	 IozClgPoURCtT5/bWe1JkZ9lNYCbt9punHWnn5NyDD5UD+nN2eodzGb3vDywndmGik+N3
-	 7Uj0Xig74R6/zJQQ2hMQGoFmO1ZfPirk3T2Pg42U28if3MeK+wK1v5GGy7Q6OVTRYP9Ep
-	 mfvJCwD6d8y+RIjceCqIgteHsWRzfLeUfiN8fucMOXWLkEaAK4/6mFyOUEw5mvzRNGg==
+	t=1795095259;
+	b=QU2o5iJVr3ORba7GP4csB6pzpXkaEj8AeaNheIXuQA+e6GYNRTphtZGMjHDnujuC16s6
+	 FyImgV98KRwE4cb/50Rr7js0j4qa+IdT8fsiGgHN0MsM4RYQD6wEKulwrc1RUqikjLM3H
+	 GuXapOOrMc8cAMc+MaCyrGL1iKCVDJu1krB8Sk6cGiN0xMKQFQdVS4oVaGGzTHdmiYBZz
+	 IZMHD5q4WGpDRCLjzFHGsfJQY0S4ctlwlg/rVQ9Wnj6bwu4X2ID+O9hOefNkDyLYdmJYZ
+	 q0AgObOqsX/hI8AzZqvF1iaO+jLc7LlxiL9ZgWIEX0yp31EB+TGa0NKMmNbf1q1i2EA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794936925;
-	h=Received:DKIM-Signature:Subject:From:To:Cc:Date:Message-ID:
-	 In-Reply-To:References:X-sashiko-severity:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version;
-	bh=yZ3I9vRuX9ylJnvAv8Fd/DK7PqgzivRoTz54b66hM4s=;
-	b=aWPUgx0Tjl7d917UhLN7uzDS1ewVdy88d9eUzPz5uEFyx+3KJCaD1KitPZUt7HRnQ9Z1
-	 f6NZetGGsLYQT86l6fV845oqMEifGZqdkfgh46kdYypkXSmnNBYmJHl2ZvyZLQIw41jLw
-	 tW6qJYZkYVUzJ91nRU9wPP6MjiJScCGj0j6OMKRvJygcMHhcbd5iDyK43BkfnHJXWVyE/
-	 3ZFDEqgSyOdC9QyM2r8s3JXsgv55/hKyzn8zAYfugDFOYHqE0fOTDOJg51oSKnaeb5eEU
-	 bO8UdlWI7kbPXXAJmsu/QRcF2C8qj3jDO5/sm7usDQS/tMgV5487S/hLFh8pedWUs1w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795095259;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=ZEhJOzyXKju3tKMEHQwkNUXNp0T51VucdQQfkmvqiQM=;
+	b=EQj48L4yjFUZFqABGaYV0M+Thbr/SMDvI98bH4a39EfjdJ7ronMfUI0T9q1HVR0pbhjp
+	 uKsVdXBZ8cGf6Kgt52+62mWm0tsSwR9IyvTcP31inEI9uAOtrvIXcm2tPfvUAx1PBZzKo
+	 +I6/SeYFpii8090QAIcIKJ8hfLhQ33yVUqmbuki56NksQ6R7Tnpx+vB/FuIJ4l4Hhlt1i
+	 qFc1FcyoxU4SWBLd9TYGpx/H9knTxq1vfR66IJXRYS6E2sPH5z3tgZvQedQAUpuHxm7EB
+	 s8mM9tHlqoWIn91XwywgC3yB78t8YbXgkMjv3R7hqMHKdui9PS5fj4r3GEEG/wm9YPQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ldprS0uN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="GrCxvm/1";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14126606A8AB;
-	Tue, 17 Nov 2026 17:35:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3144606A324;
+	Thu, 19 Nov 2026 13:34:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ldprS0uN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 437971F00923;
-	Tue, 17 Nov 2026 17:35:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GrCxvm/1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1FAA1F000C5;
+	Thu, 19 Nov 2026 13:34:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794936924;
-	bh=yZ3I9vRuX9ylJnvAv8Fd/DK7PqgzivRoTz54b66hM4s=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=ldprS0uNwFt+H1U3be8E2gOLAGnw8BZl5s5GVpiNWByV+Ly/0OSD22JIeeAxEMp/g
-	 vajUIU0EUhPQ6Grik6d7HoZo4QrEZCG/qbdNGA2DeRmLimaYUz3G22jERtSf0rlEsJ
-	 XdkI0kkGlwRriDnm0fVfu4H+JZKAVemm7juPMN6KScB8unOvuReiocyYvXxlLxcjrI
-	 jGnyjhxSnD1caR+wZ8oWP9VduidgsFBMr6HkihNTcuMyt0h8DBOB+F4f0IMukeKkOM
-	 aNCUusgK+8Is7lqQdWI9scgMjEIbl0y4zrdB5uLRljVPhKN+GZHQu7GSdlgYDZS3NS
-	 pDxvT9nAn7D5Q==
-Subject: Re: [PATCH 9/9] arm64: dts: rockchip: Enable the RK3588 PHP SMMU
-From: netdev-bot+sashiko@kernel.org
-To: aiyengar1990@gmail.com
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, heiko@sntech.de,
- andrew+netdev@lunn.ch, davem@davemloft.net, edumazet@kernel.org,
- kuba@kernel.org, pabeni@redhat.com, david.wu@rock-chips.com,
- dlemoal@kernel.org, cassel@kernel.org, fancer.lancer@gmail.com,
- netdev@vger.kernel.org, devicetree@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
- linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, praan@google.com,
- will@kernel.org, robin.murphy@arm.com, iommu@lists.linux.dev,
- shawn.lin@rock-chips.com, sebastian.reichel@collabora.com
-Date: Tue, 17 Nov 2026 17:35:22 +0000
-Message-ID: <179493692280.3136.14096741635369747694@kernel.org>
-In-Reply-To: <20261113-mmu600-php-v1-9-231196049a3b@gmail.com>
-References: <20261113-mmu600-php-v1-9-231196049a3b@gmail.com>
-X-sashiko-severity: Critical
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	s=k20260515; t=1795095258;
+	bh=ZEhJOzyXKju3tKMEHQwkNUXNp0T51VucdQQfkmvqiQM=;
+	h=From:To:Cc:Subject:Date;
+	b=GrCxvm/1lTIpcplkRdycUOpd8LVxmcPVO6UlPCcpghV8chsq66wX7A7O7TxLup21a
+	 pWIcbGGSrVmxkJTuFAJgNiOVC4ou3TGAx8Gmgh2LFsrtjcM1eYJ/sqRT7p+z09a5Ku
+	 +FkxP7Y4U+dV7F9m3UXNaWI544KdtoU5vOTRGSbMCrIrWYHK7h+NtQUXQHr/IZaZjM
+	 qv0yO2QAK4wQBVFeiYu7q0dMivT1CnGyBlmaULCWxP50XnjNFaACPP/IEUAgaYRg2e
+	 1uX5zf32+m1tKzZO5Hsp1MBL8GjysMxL372SXHLPLsPpadYgh/NfVjrC8Bx5G//qwU
+	 Soeyhs3nmUgpQ==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	bpf@vger.kernel.org
+Cc: Christian Brauner <brauner@kernel.org>,
+	lsf-pc@lists.linux-foundation.org,
+	linux-kernel@vger.kernel.org,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Jan Kara <jack@suse.cz>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Alexei Starovoitov <ast@kernel.org>
+Subject: LSF/MM/BPF: 2027: Call for Proposals
+Date: Thu, 19 Nov 2026 14:33:58 +0100
+Message-ID: <20261119-lsfmm-2027-cfp-b7edcf7eee48@brauner>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -68,153 +72,142 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4868; i=brauner@kernel.org; h=from:subject:message-id; bh=cENfH9cFzvlCJSmEwugWKvbkFTl+BgVyZRO6iqPrl+M=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWT9+3VG1DDxxd21Poei9nSxHb701fr/tFS26NI9pTvER DV/vPD37ChlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZhI/X+G/2H/jtyIlWyy/Kzx pkTjrv7suc3aO9J/f7a59nzzxGs/iw4xMnxfnLzy8SvWLZstLi0+oXpXekH66ZjLC5b3zF69ztR vrjULAA==
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential
-issue(s) to consider.
+The annual Linux Storage, Filesystem, Memory Management, and BPF
+(LSF/MM/BPF) Summit for 2027 will be held April 27-29, 2027 in Porto,
+Portugal.
 
-Critical: 1 · High: 1 · Medium: 0 · Low: 1
+LSF/MM/BPF is a small, invitation-only technical workshop for the
+people who develop and maintain the Linux storage, filesystem, memory
+management, and BPF subsystems. We get together to work through
+problems and to map out improvements that will make their way into the
+mainline kernel within the coming years.
 
-If you believe none of the issues are legitimate, please reply to each
-issue of Medium severity or higher and explain why the AI is wrong.
-If any of them are legitimate and you plan to respin, please let patchwork
-know by including "pw-bot: cr" as a separate line at the end of your reply
-(one such reply per series is enough).
+The summit runs for three days and has four subsystem-specific tracks.
+Topics that touch more than one subsystem get joint sessions with all
+affected tracks in the room. You're welcome to sit in on sessions of
+other tracks too. There's also time for BoFs, hacking sessions and the
+hallway track.
 
-- [Critical] This patch enables mmu600_php on every RK3588 board, but the
-  kernel cannot restore the SMMU after deep suspend.
-- [High] This patch's commit message says "the SMMU has its clock", and
-  the earlier series commit "arm64: dts: rockchip: Add the clock and…
-- [Low] The mmu600_php node that this patch enables has `clocks = <&cru
-  ACLK_MMU_PHP>;` and `resets = <&cru SRST_A_MMU_PHP>;`…
+The sessions are supposed to be interactive, inclusive discussions. The
+discussion leader outlines the problem and then the room works through
+it. Slides and visualizations are encouraged but please refrain from
+lengthy presentations.
 
---
+The agenda is built from the topics proposed on the mailing lists. The
+discussion a proposal gets on the list helps us figure out which topics
+are important. The program committee then selects the topics and sends
+out the invitations.
 
-arm64: dts: rockchip: Enable the RK3588 PHP SMMU
+Attendance is limited to keep the sessions productive. When you request
+an invitation, please tell us what you'd like to discuss and what
+expertise you bring. We also want to make sure that people who are new
+to the community get proper consideration. So if you're a maintainer or
+have been around for a while, please nominate newer contributors in the
+form.
 
-This commit removes status = "disabled" from the mmu600_php node in
-rk3588-base.dtsi. That enables the arm-smmu-v3 instance in front of the
-PHP masters (GMAC, SATA, USB3 host2) on all RK3588 boards. The commit
-message notes that PD_PHP loses power in deep suspend and that arm-smmu-v3
-system sleep support is needed.
+LSF/MM/BPF is an in-person event and we don't offer general remote
+participation. If you're needed for a topic but can't travel, let us
+know and we'll try to find a solution.
 
-Link: https://lore.kernel.org/r/20260929034510.2023173-1-praan@google.com
+Important dates
+===============
 
-> diff --git a/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
-> index cb0a39f637887..0c3d59a391826 100644
-> --- a/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
-> +++ b/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi
-> @@ -574,7 +574,6 @@ mmu600_php: iommu@fcb00000 {
->  		clocks = <&cru ACLK_MMU_PHP>;
->  		resets = <&cru SRST_A_MMU_PHP>;
+    January 27, 2027    Deadline for invitation requests
+    Mid-February        First round of invitations
+    April 27-29, 2027   LSF/MM/BPF 2027 in Porto, Portugal
 
-[Severity: High]
+Venue
+=====
 
-The commit message says "the SMMU has its clock". Does anything actually
-enable ACLK_MMU_PHP for the SMMU?
+The event will take place at the 
 
-The arm-smmu-v3 driver has no clk_get()/clk_prepare_enable(), reset_control
-or pm_runtime handling. The node has no power-domains, so genpd pm_clk
-does not apply. The platform core does not enable DT clocks by itself
-either.
+    Sheraton Porto Hotel & Spa
+    R. do Ten. Valadim 146
+    4100-476 Porto, Portugal
 
-In drivers/clk/rockchip/clk-rk3588.c the clock is a plain gate with no
-flags:
+Do note that for this years iteration it is of the utmost importance
+that you make use of the Linux Foundation hotel block.
 
-	GATE(ACLK_MMU_PHP, "aclk_mmu_php", "aclk_php_root", 0,
-			RK3588_CLKGATE_CON(34), 8, GFLAGS),
+All further details are availabe on the event site:
 
-Its only enable references come from its children ACLK_GMAC0/1,
-ACLK_SATA0/1/2 and ACLK_USB3OTG2. Two things can turn it off:
+    https://events.linuxfoundation.org/lsfmmbpf/
 
-- clk_disable_unused at late_initcall_sync, when no master is bound
-  (modular drivers, or a board that enables only some PHP masters).
-- The last master disabling its ACLK on runtime suspend or remove.
+Requesting an invitation
+========================
 
-The SMMU driver still touches the hardware after that. It issues CMDQ
-TLBI/CFGI plus CMD_SYNC on unmap and on flush-queue timeouts, it runs the
-eventq/gerror handlers, and at reboot it runs:
+To attend, please fill out this form by January 27, 2027. Proposing a
+topic on the list without filling out the form will lead to us discussing
+it without you!
 
-arm_smmu_device_shutdown()
-    arm_smmu_disable_action()
+    https://forms.gle/hhC9zXMsAJCR2dda6
 
-That usually happens after the consumer masters have already shut down.
+In the form, please tell us:
 
-Could this cause CMD_SYNC timeouts or a stalled bus access? The "Add the
-PHP GRF clock on RK3588" commit in this series describes a similar hang
-for pclk_php_root.
+    - what general areas you'd like to discuss and what expertise you bring
+    - whether you need a visa. We handle those requests in the first
+      round of invitations, so please don't wait.
 
-The earlier commit "arm64: dts: rockchip: Add the clock and reset of the
-RK3588 PHP SMMU" says the clock was added "so the SMMU keeps its clock
-while its masters are idle". Does that need clock handling in the driver
-(plus a binding update), or the gate marked as critical or
-ignore-unused, rather than only the DT property?
+We realize that travel is an ever-changing target, but the requests
+help us get an idea of possible attendance numbers.
 
-[Severity: Low]
+Proposing a topic
+=================
 
-Will this node pass dtbs_check now that it is enabled? The binding in
-Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml does not define
-clocks, resets or power-domains, and it has:
+In addition to the form, please send each topic as a new thread with
+[LSF/MM/BPF TOPIC] in the subject to:
 
-additionalProperties: false
+    lsf-pc@lists.linux-foundation.org
 
-No patch in the series updates this binding, although the dwmac, ahci and
-grf bindings are updated.
+and Cc the lists that are relevant for the topic:
 
-Also, the "Add the clock and reset..." commit says the reset is added "as
-for the PCIe SMMU". The sibling mmu600_pcie node, which uses the same
-compatible, has neither clocks nor resets.
+    FS:     linux-fsdevel@vger.kernel.org
+    MM:     linux-mm@kvack.org
+    Block:  linux-block@vger.kernel.org
+    ATA:    linux-ide@vger.kernel.org
+    SCSI:   linux-scsi@vger.kernel.org
+    NVMe:   linux-nvme@lists.infradead.org
+    BPF:    bpf@vger.kernel.org
 
->  		#iommu-cells = <1>;
-> -		status = "disabled";
+Please use exactly this subject prefix so we can find the topic
+proposals when putting together the schedule. The mailing list
+discussions will be linked from the schedule so other attendees can get
+a sense of whether a topic is of interest to them.
 
-[Severity: Critical]
+Previous years
+==============
 
-The commit message says:
+LWN has covered previous iterations of LSF/MM/BPF extensively:
 
-  PD_PHP is powered off in deep suspend and the SMMU resumes from reset
-  in bypass, so this needs arm-smmu-v3 system sleep support [1].
+    2014: https://lwn.net/Articles/LSFMM2014/
+    2015: https://lwn.net/Articles/lsfmm2015/
+    2016: https://lwn.net/Articles/lsfmm2016/
+    2017: https://lwn.net/Articles/lsfmm2017/
+    2018: https://lwn.net/Articles/lsfmm2018/
+    2019: https://lwn.net/Articles/lsfmm2019/
+    2020: 404 - Cancelled by The Plague
+    2021: 404 - Cancelled by The Plague
+    2022: https://lwn.net/Articles/lsfmm2022/
+    2023: https://lwn.net/Articles/lsfmmbpf2023/
+    2024: https://lwn.net/Articles/lsfmmbpf2024/
+    2025: https://lwn.net/Articles/lsfmmbpf2025/
+    2026: https://lwn.net/Articles/lsfmmbpf2026/
 
-Is that support in the tree this patch applies to? No earlier patch in
-the series seems to add it.
+Program committee
+=================
 
-In drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c, arm_smmu_driver has no
-.pm:
+    Kanchan Joshi      (Storage)
+    Martin K. Petersen (Storage)
+    Christian Brauner  (Filesystems)
+    Amir Goldstein     (Filesystems)
+    Jan Kara           (Filesystems)
+    Vlastimil Babka    (MM)
+    Matthew Wilcox     (MM)
+    Daniel Borkmann    (BPF)
+    Alexei Starovoitov (BPF)
 
-static struct platform_driver arm_smmu_driver = {
-	.driver	= { ... },
-	.probe	= arm_smmu_device_probe,
-	.remove = arm_smmu_device_remove,
-	.shutdown = arm_smmu_device_shutdown,
-};
-
-The only code that programs the stream table, the queues and SMMUEN is
-arm_smmu_device_reset(), and only arm_smmu_device_probe() calls it. The
-syscore op added to drivers/soc/rockchip/grf.c earlier in the series
-restores only the PHP GRF StreamID registers.
-
-With this node enabled, the PHP masters get IOMMU DMA domains and their
-drivers program IOVAs. Those masters are usb_host2_xhci, gmac1, sata0 and
-sata2, plus gmac0 and sata1 from rk3588-extra.dtsi.
-
-After a deep suspend cycle, does the SMMU stay in its reset bypass state
-while stmmac, ahci and xhci keep using descriptor rings and buffers at
-their old IOVAs?
-
-If so, the IOVAs would be treated as physical addresses. On gmac RX the
-frame contents come from the network and would be written to whatever RAM
-or MMIO sits at that address. TX and SATA/USB reads could leak arbitrary
-memory.
-
-PD_PHP is also defined only in drivers/pmdomain/rockchip/pm-domains.c and
-the dt-bindings header. No DTS references it, and mmu600_php has no
-power-domains property, so genpd cannot order an SMMU save and restore
-either.
-
-Before this patch the node was disabled and these masters used direct
-DMA, so suspend did not hit this problem. Should enabling this node wait
-until the arm-smmu-v3 sleep support in [1] is merged?
-
->  	};
-
--- 
-Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20261113-mmu600-php-v1-0-231196049a3b%40gmail.com
+Thank you,
+Christian Brauner
