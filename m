@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795422484;
-	b=jxZN0MGoNhQmFZFquDLYMkPaXInAfsZsU2lBKJx97ODD1k6dL0F4I2A1rEYxoALf04MT
-	 8/ibmqfaecouKY5Zi7ouR0OCN0uvMGpOSsNicrJaxlCc3zkNmic2wqPi0y5Lq3xj1MW7G
-	 xxeU8JGF5/7Z/TYQJ1Vbdtefm88MBA4T6oGy7Ate6LnRPLzGDybjXZkW0JsVlwOTXBpp0
-	 fHMLLQghyOgj5tYOxG/jzWEI9PPPDITLMkpTN8eAfNxnNo3jJ8LKI/yZTVMiJlb3jeG7k
-	 Hd4Z/IzDrIFJaZ67bFrKJNPty/Dk00rdSm1D01dO9zTKn66VQIgZkXC7Bdgy6NzeGjQ==
+	t=1795422503;
+	b=hHq6iWIlz3+HtFgGlkviCXh+KqycEkNPSv2j6ivPyTBgTtkIE+kgughcUoPxcsqJuazL
+	 A7MsjuQyBwy1h6dwkS8JmO65cBQJ0434S/sjPb7bwkj9fpy+b4+xu04jneH2mFyI9Jx4G
+	 Olt6z1VW3ouXc5uOuGOp74ROIRrSaR0dKFPRap2l9stY/xpbXxEltaWlWRybJqxWTqw/H
+	 Fz+IdYnvh7iGA5QLjHYKke4aYlSGKbb2Zsk7QMperQyc+La/uLQAx4wJDTe1rOCXGO0mZ
+	 Ev0xO1slySzbo+kUftFV8DJ/QxNXihhRc8zVeRsZmHoR3Qe9XrNvelzmaOY0X63mDPA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795422484;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795422503;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=ijyetjFveDyx8d2oHXD3zLUbbfnSn8RYdMkJF4ohCQ0=;
-	b=piOxAreywEL2ux0Hyn8t4ECDbRvI2FFvxJrtL8UxPtc6FC+/EO3PI8IZo3Maz7a774Qg
-	 Lkm0vKdUBTk1DStqM5yOSXiT66MIid2U+Vbpv4zAisc7tDiMGucx5KOOY5CYCK7iKDv2i
-	 VTuTQlpfWMK+tdjIt30VJOWUmCCG4pgkVc1Dtl4EqNe1E3yPAITc/hEL23KOBrOdMUV05
-	 fJvwDuj5aGJeeWBNgRpMzbXwL15NYBMT92VPUVau8nWN4y5gGNJFWfmda2RrIMBk8Ylmd
-	 mFqFLLZN+6PN2uSQEcF0jCFSL+rCdtv56aH4gAsIkOx/GdmPUE3ZFWNgvddZopzNqXA==
+	bh=b0SFDURPDtHYhsTYGEf5G56Lkm17f5tRBqoimhyc//E=;
+	b=u3QorE2/AdN+OLaRJkPhMfZiNXLq4DNtjBv1ojvD4JDnylrG5Uxknd6LD4gITWUA5+h3
+	 Pk2RqDqJAgsCsaFUbKEP5naZU2OOWjwlsHOxvcPXxSrMsaWPAAstqx0xR6ot5MAxJEDft
+	 NBTCoQ9yLgjPDI1ARMe9OZ3UMyhyqjs4dR75teVBtz5JoC60jbMPa0EMK39+na1FqaRDU
+	 4vAT5+G+LdfifwRaUfT4ef19p+tvzOJBX9rUFZUjd+bcO3WXgsdi8ZoS+A5wzeZ4wlX/s
+	 R/klvZHj9DP8UJu3Jwz63vc8adq+WSecQxUMKfWXMiw+v8R3L2v3+EWIbFNQ1nzTr6A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WRgNkBuA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i7M+DngD;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4BBC606A332;
-	Mon, 23 Nov 2026 08:28:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2952606A31A;
+	Mon, 23 Nov 2026 08:28:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WRgNkBuA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72EB41F000CF;
-	Mon, 23 Nov 2026 08:28:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i7M+DngD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E50D21F000C4;
+	Mon, 23 Nov 2026 08:28:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795422484;
-	bh=ijyetjFveDyx8d2oHXD3zLUbbfnSn8RYdMkJF4ohCQ0=;
+	s=k20260515; t=1795422503;
+	bh=b0SFDURPDtHYhsTYGEf5G56Lkm17f5tRBqoimhyc//E=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WRgNkBuATBZUt2Ophjkqvi6ZrUouc+KYnC048Q5TibJouB+gHeINVZ/p7qu1XI6a9
-	 2txgSp+ZKHXQfE0vmhNscwVpGA140KfyagginBxbivt4s6C/pAOeFMbXwaXqZZ7QSP
-	 OWMzC9jLT0fI4Py0ILZryqSbTU8GIktJTETeKRTVaVPo8jzsG/yXvEpLVdFbFKFT+z
-	 SJD3Ybhf1izLyCZY03EYBDRFg6pZbaLMj+Sruz/uY8xzOOvoiu8/fyuw6qveKVPixg
-	 hOvj69mcV+vW3jfmhBXn294OvOb8ZBkxX1dSmOOO6MXbqISEgZ6tEnxjCSFR/YvKVy
-	 AO2wss5/0hnrg==
-Date: Mon, 23 Nov 2026 09:28:00 +0100
+	b=i7M+DngD1SDR874UCBpw2SklVQofyZcfxMeTHvjGIKZa+v+g+DxJyHumXMA1YEUKH
+	 Kg4aSv1qTf1LMH7sul6cKuzOmamn8Lq2Ke8Ay3HHNLePNP1G4+kRR4O5F5XrqOya5F
+	 pw9qL+95yGDFAIFBJdDeFnYDD5C0qIxCNiEDIGrw1QFJmqdeVX9DwhHHxRBHy+zVfd
+	 /Jo9oR9rFS2karUpqaX4Tfo5GhSowux+fD98NCfnZHO3CDgvpyUSb0lV33zGrVuvu8
+	 jLZxcIGCaJQHKkyVIBsU4FLOVOtxerC2MF454BPc0eIU4yaS6WZIIrKGYsKYKczbHf
+	 4FjEffIC2WAQA==
+Date: Mon, 23 Nov 2026 09:28:20 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Arun Iyengar <aiyengar1990@gmail.com>
 Cc: Rob Herring <robh@kernel.org>, 
@@ -54,10 +54,10 @@ Cc: Rob Herring <robh@kernel.org>,
 	Pranjal Shrivastava <praan@google.com>, Will Deacon <will@kernel.org>, 
 	Robin Murphy <robin.murphy@arm.com>, iommu@lists.linux.dev, Shawn Lin <shawn.lin@rock-chips.com>, 
 	Sebastian Reichel <sebastian.reichel@collabora.com>
-Subject: Re: [PATCH 1/9] dt-bindings: net: rockchip-dwmac: Allow iommus
-Message-ID: <20261123-quirky-scallop-of-beauty-c662b7@quoll>
+Subject: Re: [PATCH 2/9] dt-bindings: ata: rockchip,dwc-ahci: Allow iommus
+Message-ID: <20261123-first-dark-griffin-a7d2a1@quoll>
 References: <20261113-mmu600-php-v1-0-231196049a3b@gmail.com>
- <20261113-mmu600-php-v1-1-231196049a3b@gmail.com>
+ <20261113-mmu600-php-v1-2-231196049a3b@gmail.com>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -69,18 +69,19 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261113-mmu600-php-v1-1-231196049a3b@gmail.com>
+In-Reply-To: <20261113-mmu600-php-v1-2-231196049a3b@gmail.com>
 
-On Fri, Nov 13, 2026 at 04:38:47PM +0000, Arun Iyengar wrote:
-> The RK3588 GMACs are behind the PHP SMMU. Allow iommus.
+On Fri, Nov 13, 2026 at 04:38:48PM +0000, Arun Iyengar wrote:
+> The RK3588 SATA controllers are behind the PHP SMMU. Allow iommus, as
+> snps,dwc-ahci does.
 > 
 > Signed-off-by: Arun Iyengar <aiyengar1990@gmail.com>
 > ---
->  Documentation/devicetree/bindings/net/rockchip-dwmac.yaml | 3 +++
+>  Documentation/devicetree/bindings/ata/rockchip,dwc-ahci.yaml | 3 +++
 >  1 file changed, 3 insertions(+)
 >
 
-No response to the report, so dropping from DT patchwork.
+Same here
 
 Best regards,
 Krzysztof
