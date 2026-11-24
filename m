@@ -1,55 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=188.68.63.102
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795504842;
-	b=fZOmSiLhYFLFaRBaVFL8YKbmgA7zBvrhaoAh+N45dEFYt3zp5I4DkBT6tE9qpGEf0UkW
-	 y4A5GYyp0lRBCxpQkni0I/mYIey24i1/UK0LgzY5eoryPFgzqPOJ1inqGFx8nbMpCou60
-	 sdrt+Wv3jjmY2jozZ2V3DGmkag1VC4RFef+NNpa/y4CjQRqqQDzXxurKarpqN5DK2vucM
-	 4cbWiTXyZ/rZZRxwvxEDHTy8cJ+E4K93lD6zULRcVnsY61XL+Tw1Lo2mU/8aqXUagrZlf
-	 Fn9wGb4ueW+9jLecMVgPJWPLK/9R6PqctzvAc8aibePPj6VzCwdUpMm1DP09tPmZ6cQ==
+	t=1795510553;
+	b=rfB8lndqLXEZuP4mzJSktfOj8tM4xPVKUnvZo2aTwyhDSqFgQpEedSrjIWBAHqiUW5EU
+	 BmXU5jIa+LVxU3ANfkVoQfeypdaXC/rC9SF9sCGWxHihRDrx18wx2SCGg3+r7J9TW+rlT
+	 ClUN1gwGcmxQfhIghGiPtXGxbFLvXe9pbD4ti2iVKdpUKBnXFyugSRC26eZ4tltVO49iC
+	 Vcmq9JDrzIW+FzjefqFi7ZRd5RJIDp5/86OGkPfB5oItiomU2LudjhQqcwIJRJp+RpgaB
+	 KA2dLGQd6yLB/TwTKqVegmrzLgqL24aay+tqhcm03Rd52HbkMHtUhXEcdtYv5ErgHPw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795504842;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:MIME-Version:Date:From:
-	 To:Cc:Subject:In-Reply-To:References:Message-ID:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=tHvSxvXCf5VkLnPhHQoHOjXTPcUMHCtMx3XeIE3rH08=;
-	b=Sa/eKGjdXfm70PKTUVpdMPHKbn2xnB0gKGsLR2/rtIZrtpeP3B3XBZwLPqXsmTJOk/oa
-	 roDFTi4kJ2ujrW00IDmsJOdqeT8MeYOw4jCayV0oVeYHunRDDAFf2lHZnkbozx7tXkwAm
-	 vSAxSLiTig+hbYGj/+LRDh2wLXqrXWCehmXyfFREWfbvZ29RcDMjYTeh2uAF98INmI3JT
-	 XDMMeETleTKhuH3C57PKKnKVfgfxzge0WDRWic8pyLoHlw+NxYLF3HL/nsPZxIJ9q+2bV
-	 yilTYZsRv2lGEyyMO4DcdKpZ1+U6lWwsdG7x/y0Ct71vG27tEzgC2yt2I4dOAhi45jw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795510553;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received-SPF:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:From:Content-Language:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-PPP-Message-ID:X-Rspamd-Server:
+	 X-Rspamd-Queue-Id:X-NC-CID;
+	bh=7PI24Hp56cbBIOzGihzdyiMCzKymcXcc/gN95e0vkU0=;
+	b=XAmF+bEecsGvI1gyjw14iuskomiLe3BNntuBJkhVIxArnFUdgHHplnS817nM7mzrKEeP
+	 lPLxhhOVKmIXHyiFdADzdqIkGPBYv98ti1xgdUgEG1r7I3Ep9Obx6mljqqYk64pmBUJko
+	 xLzUsyprPOhYT2VEwtUr82duiFcUTo4+8EK5i8JYUv5SsU9Tjy1CsMfztyCpBkkjYmSbX
+	 ONHiR+aMlvxBykgE3aslUi9ykIuYNBXOy9O01Xvq2GA0JO9Tt7PRJltvSIMkpai7KKW8Q
+	 BtRZmVGZxxjdcbyLlT+/TsoVm3gsnC2o3T1/vkF4+wxLQsUdqGWkqghrxx+m8wzb7tA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=posteo.de;
-	spf=pass smtp.mailfrom=posteo.de;
-	dkim=pass header.d=posteo.de header.i=@posteo.de header.a=rsa-sha256 header.s=1984.8680eb header.b=CsoC5hck;
-	arc=none smtp.remote-ip=185.67.36.65
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+	dmarc=pass header.from=leemhuis.info;
+	spf=pass smtp.mailfrom=leemhuis.info;
+	dkim=pass header.d=leemhuis.info header.i=@leemhuis.info header.a=rsa-sha256 header.s=key2 header.b=WeO8+g7k;
+	arc=none smtp.remote-ip=188.68.63.102
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.102])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05701606A32D
-	for <linux-ide@vger.kernel.org>; Tue, 24 Nov 2026 07:20:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 05701606A32D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58F78606A31E;
+	Tue, 24 Nov 2026 08:55:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 58F78606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.a=rsa-sha256 header.s=1984.8680eb header.b=CsoC5hck
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id E626D24002A
-	for <linux-ide@vger.kernel.org>; Tue, 24 Nov 2026 08:20:39 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1795504839;
-	bh=tHvSxvXCf5VkLnPhHQoHOjXTPcUMHCtMx3XeIE3rH08=;
-	h=MIME-Version:Date:From:To:Cc:Subject:Message-ID:Content-Type:
-	 Content-Transfer-Encoding:From;
-	b=CsoC5hcktA08PIURAy8uvdKnj1gYgr5vDUKTQma8mgYzRrKQ38bWNDlB8LJ97gi4w
-	 rK3727e8WOkEgU7XgZnOg5EMSySyOKmfVb+C061+W1AJ1wOCmg57Pf/VPG0Nu5uKCS
-	 fvlhYRQ5MLZBJbHORM3Jd6++PHSsXpnqSBCX6D8BqSn4lhRIfkJtynDJ/B2akwqWFQ
-	 P0ojy/ceRnTi8T7tf0dZOtuJJ3dh1xCbAQb7HN6/Iw+TgDU6Ixqwm87X5HSYG+0jnM
-	 GhsAsP7OioCl6JweO0wkLN68Xr2dqc4pvyorANu2ykPcgwb4lF9xBJ9uAkxoDu1Wtj
-	 iHKlpdzmsrTCQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4jYZ3B1gqXz6tsb;
-	Tue, 24 Nov 2026 08:20:38 +0100 (CET)
+	dkim=pass (2048-bit key, unprotected) header.d=leemhuis.info header.i=@leemhuis.info header.a=rsa-sha256 header.s=key2 header.b=WeO8+g7k
+Received: from mors-relay-2502.netcup.net (localhost [127.0.0.1])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4jYc921hBhz6VFl;
+	Tue, 24 Nov 2026 09:55:50 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1795510550;
+	bh=7PI24Hp56cbBIOzGihzdyiMCzKymcXcc/gN95e0vkU0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=WeO8+g7kYIbpdK/En8ogyNyW7BQQrzBKJfvljsFLHYi4PfmBhA8bj+lDSw/aCNhkG
+	 DxJHajwbbiQLEoRdi0qy8X4F1K/GCKO+K1wFW6IE5jTwiBbvaBSLFeE0nwa9YN0qn2
+	 vLL1izH5vrEBHSjbOdQI3YNq9XVNevyPYNPC/fdgAnSfOC8Y+uBi0ADrbMcAW3uDk9
+	 dZQM/YVJkzWt75hXo36SmeKPvL/peK/WN1WtowuL9N1mlJQlKpLzOJ1kvkq/zGiw0I
+	 F+rJvPvG98Jq80tczUTPnbyDxARB+GvvTAiFNrUCjRvkpb+E4LTGVv8MXRX9JxVz/5
+	 YuNbKz3UfuTFA==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4jYc920rZlz4xRy;
+	Tue, 24 Nov 2026 09:55:50 +0100 (CET)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4jYc903rKkz8sZw;
+	Tue, 24 Nov 2026 09:55:48 +0100 (CET)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id CCFB75F9CD;
+	Tue, 24 Nov 2026 09:55:42 +0100 (CET)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <ec36d13e-e4c2-4bfb-8b50-69d4a1628839@leemhuis.info>
+Date: Tue, 24 Nov 2026 09:55:41 +0100
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -59,105 +74,49 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Tue, 24 Nov 2026 07:20:39 +0000
-From: Tobias Laas <tobias.laas@posteo.de>
-To: Niklas Cassel <cassel@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] DMAR fault by Intel H97 SATA controller since
+ "block: Increase BLK_DEF_MAX_SECTORS_CAP" (6.17-rc1)
+To: Tobias Laas <tobias.laas@posteo.de>
 Cc: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
  regressions@lists.linux.dev, linux-block@vger.kernel.org,
  linux-ide@vger.kernel.org, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>, Lu
- Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>, Will
- Deacon <will@kernel.org>
-Subject: Re: [REGRESSION] DMAR fault by Intel H97 SATA controller since
- "block: Increase =?UTF-8?Q?BLK=5FDEF=5FMAX=5FSECTORS=5FCAP=22=20=28=36=2E?=
- =?UTF-8?Q?=31=37-rc=31=29?=
-In-Reply-To: <awSs5Cw3hFkf4O4T@ryzen>
+ linux-kernel@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+ Lu Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>,
+ Will Deacon <will@kernel.org>, Niklas Cassel <cassel@kernel.org>
 References: <5ad27a97aafbc08a8702d5b90d09cd59@posteo.de>
  <awSs5Cw3hFkf4O4T@ryzen>
-Message-ID: <572a3776f303846961d9897c55421a0e@posteo.de>
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <awSs5Cw3hFkf4O4T@ryzen>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-PPP-Message-ID: <179551054343.1350673.149703183801774800@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: CCFB75F9CD
+X-NC-CID: DCewlNIOHCbu9CVBhGpOPu7ikYcAXBgk+sLCzd4bkxfPEMobKqs=
 
-Am 23.11.2026 22:15 schrieb Niklas Cassel:
-> Hello Tobias,
-> 
-> On Mon, Nov 23, 2026 at 06:51:03PM +0000, Tobias Laas wrote:
->> One way forward could be to a new entry to __ata_dev_max_sec_quirks
->> similarly to the recent commit 
->> a12cc63129380a5364e787d92b30a3257f66c250
->> ("ata: libata-core: Add max sector quirk to INTEL SSDSCKKB240G8"). 
->> However,
->> I wonder, whether that would fix the underlying issue or rather be a
->> workaround, because 4088 does not fit the pattern of all other 
->> entries,
->> which specify either a power of 2 or a power of 2 minus 1.
-> 
-> Your attached kernel log shows that you have a
-> Samsung SSD 860 PRO 1TB, FW: RVM02B6Q
-> 
-> This SSD is probably quite common, so I somewhat doubt that it is the
-> SSD that is at fault here.
-Hello Niklas,
+[Reminder, this is not my area of expertise, so this might be sending
+everyone in the wrong direction -- so handle it carefully]
 
-thanks for the the quick reply. Indeed the Samsung SSD 860 PRO series is 
-quite common.
-> 
->> 
->> Furthermore, the first error messages are DMAR faults, and a SATA SSD 
->> that
->> isn't functioning properly shouldn't cause any DMAR faults, because 
->> the SATA
->> controller should never read from or write to areas outside its memory
->> region.
->> Since the issue with mounting the rootfs disappears with 
->> intel_iommu=off, I
->> wonder, whether there is a limitation on the maxmium block size either 
->> by
->> the hardware or from the configuration of the IOMMU and SATA 
->> controller by
+On 11/23/26 22:15, Niklas Cassel wrote:
+>> Since the issue with mounting the rootfs disappears with intel_iommu=off, I
+>> wonder, whether there is a limitation on the maxmium block size either by
+>> the hardware or from the configuration of the IOMMU and SATA controller by
 >> the kernel.
-> 
 > Considering how common your SSD is, my guess is that it is somehow an
-> IOMMU or a BIOS/ACPI bug (since the BIOS generates specific ACPI tables 
-> -
+> IOMMU or a BIOS/ACPI bug (since the BIOS generates specific ACPI tables -
 > DMAR on Intel).
-> 
-> 
-> We have seen similar reports here:
-> https://bugzilla.kernel.org/show_bug.cgi?id=220693
-> https://bugzilla.kernel.org/show_bug.cgi?id=221713
-Thanks for the pointer. The first report sounds as if it discusses 
-several issues. I agree with Ivan's comment at 
-https://bugzilla.kernel.org/show_bug.cgi?id=220693#c42 .
 
-I am afraid the second report is specific to HP server mainboards. In 
-contrast to the logs in the Debian bug report, I have never seen the 
-following error:
-DMAR: DRHD: handling fault status reg 2
-DMAR: [INTR-REMAP] Request device [01:00.0] fault index 0x1c [fault 
-reason 0x26] Blocked an interrupt request due to source-id verification 
-failure.
-On my mainboard, I have only observed DMAR errors with [fault reason 
-0x0c] non-zero reserved fields in PTE.
-> 
-> Does it work if you 
-> revert:https://posteo.de/webmail/?_task=mail&_id=4553111306b0538dd90e75&_action=compose#
-> d373449d8e97 ("iommu/vt-d: Use the generic iommu page table") ?
-To be honest I built many kernel versions between the increase in 
-BLK_DEF_MAX_SECTORS_CAP (~ 6.17-rc1) and HEAD for the bisection, and 
-since the change you mention was not included until 6.19-rc1, I have 
-tested kernels with and without this change, so I doubt a revert would 
-help.
+I just a few days privately was told that "intel_iommu=on,sp_off" solved
+problems wrt to one unresolved regression related to iommu with a
+similar generation intel hardware. The user wrote "[kernel] code
+improperly thinking that the CPU supports something called "superpages",
+which it does, but only when the integrated GPU is disabled (speciality
+of Intel Haswell)."
 
-Best regards,
-Tobias Laas
-> 
-> It would be nice if we could involve some Intel IOMMU experts.
-> 
-> If the ACPI DMAR is at fault, perhaps it is possible for the kernel to
-> patch the ACPI DMAR for your platform.
-> 
-> 
-> Kind regards,
-> Niklas
+Could that maybe related? Do you use the iGPU? Does that parameter
+prevent the problems? It's a long shot, but quickly tested, so I thought
+it was worth mentioning.
+
+Ciao, Thorsten
