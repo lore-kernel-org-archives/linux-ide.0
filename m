@@ -1,66 +1,128 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795631401;
-	b=svHqzj7/DIlFQbuDsr//eWb8G7bl4y/LAgHJNVy519+IhLwjY3WkYnlFQgX8oEZ9TIKb
-	 iJREX4wPQpEqy83xgyMQydbZSlPj2EyMacSHgiN/My6vUetE0MjEG9KdXys3P9r3hS7Us
-	 DMWh+HqsQKTQV38giFFoRZ0YJl4JlUCmBKVzCKz3NTlWYEonuPNzZCwUB1oyU3s/qE9+i
-	 D21+Z6sDHZQQ1/z3zfDyQ37rkOl1T7qrOqUuk7SVSRq7uNQJU7749D7cz8WowL5Pc2qPy
-	 W1sxCmMMtv6mQLH45FhjHWcCSvcLnrms6Ww89N8hOaWETsHRaVJiJuy5EhT64Hgu78w==
+	t=1795634767;
+	b=gbhHKIXHvtVGUrOAFOwK4xa7kKL08iKDBg3AZniEqPRANVIEdF3Vkb9pygOUlVdlBtsy
+	 xmaHlSZ5l7VRnelN58iEyRKM56QW2Vft0GSZ34rMmkxr/8vLvH/DW2Ly9BLCTBiZErFJr
+	 WyRT6rbsNdjaHBLwAQUKqoHbp7Wy1xMfB8qKaQvuCXJhBjH8r6lDbsV2tNE4O8wHRv2e0
+	 pbk8weKScCY81/FaNCasT1LvMNHUHFYY3sbtwweQykCflBRAgdMENA8i8JLu3fGgiMwUv
+	 nknGLyO46oJJhP7qy7vkqw5MV+KkZz+2DNAawH8HM4RiA07e5TMJVwC0bjEzl2x1dUQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795631401;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=thRt5lrTBHxA5kWjyhVc/0X4QbDWjOzyTASo1GnS3q4=;
-	b=ytIU68Q+O6InTaCRyNTJcc5mGi6p1ZDbuibLG4VQMKkPumQCGcReUPGd5V4186cd+N3s
-	 FzPcpIR+VaDy8kWyC1ZweotgkqR0FF8iZjDw+h95VwGh0BCVslBcE3BOmJt8/1N1dI6ii
-	 nVdJW2jNjUymnoKl8NoONP+GZVoQNCwZIu16Kh5uCxr3e8O4wDit3xoa/nZsuTi4bXzc9
-	 0dXP/UV9CVludjXSCfRx7gX43XalC9vLP1wFLhDKBzFelpkrhu7huXrhYXqtD6JQOosJs
-	 yKpvSXdodamSkE5WBWdBHJ/kytxVlk1y1Sla8Fo4FgcaSYb/NUaqSF/U1PL+zlsedmg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795634767;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=v6NmbSBdWpSm2uVrOp8tpZ65xhznrbrVh6qn8OyPhJ8=;
+	b=o7UY3PSxDVkvRy37vpXcB7NCeVw2gi8AS73BE1mUWFG71bjqTaEdV57It2jVJPFIKR3W
+	 GwZ6LJfEBPSq/oWMxn5o2JLKvnjiBG9QL4bHJBKhP0GomAevQG/BuGrVIToWy93DWdlKJ
+	 iize/jMnfg9m1lkeqcXuUIT3ubGIi7Ik7E/cKbHhJSV8oqJT1dpa1GbS7jVl+1x51+fR7
+	 aqQziqlJV5WZvuYjLOxWskD9P+AEcansV0mM5VO3W4ULk5zkZu6Z/YC6GTIlcO52fnqFs
+	 se9Epsjv2KVqdzfPzim7sC72Dt51TlPA/0HpBKsas8b69HYqjZ5dg/C+O9vk1exDMWg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=hel+7fhM;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=O+VUfJBu;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=h05KInbD;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B87CC606A323;
-	Wed, 25 Nov 2026 18:30:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B87CC606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7994606A32A
+	for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 19:26:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C7994606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=hel+7fhM
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jZSs413Jwzlfcpr;
-	Wed, 25 Nov 2026 18:30:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1795631391; x=1798223392; bh=thRt5lrTBHxA5kWjyhVc/0X4
-	QbDWjOzyTASo1GnS3q4=; b=hel+7fhMgAhDpO9lwN3vQjdkpPRQrMNgfcBdIYk7
-	Zym/OZdROp3JG3JHpJMLGxC0mmVte9UVjvSJaixDzEVLbtNGgVMTnjofBT3tindB
-	GqsVOF7E4qZHAWSVGKW6Z6crfPq3eTUiUdn41wuZ8gP0d6nmyX+RXuLrVdcNACoB
-	CI0fL6arkDFbUhOwaGnibDuLOEaxhxwUhWHQX6cZD7NCHnUzbLpaw9BhLVgntxL8
-	7fXBdqo+vOq51+jBwyxV2q6MImdGAZgTynFgJOiYu+nFYA7dP9l3i11slgsySrOt
-	MdUwqbzLXa12iVgZR0TRB6vyxTGVh9h06EMUCfv59gpGGQ==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 7EqdZkBp2pxE; Wed, 25 Nov 2026 18:29:51 +0000 (UTC)
-Received: from [192.168.0.215] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jZSrt62HMzlfvpT;
-	Wed, 25 Nov 2026 18:29:50 +0000 (UTC)
-Message-ID: <a0ff3156-add0-4f7d-8373-09f95bd7036b@acm.org>
-Date: Wed, 25 Nov 2026 10:29:49 -0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=O+VUfJBu;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=h05KInbD
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1795634765;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=v6NmbSBdWpSm2uVrOp8tpZ65xhznrbrVh6qn8OyPhJ8=;
+	b=O+VUfJBuUwvfCTh6UMFrjpPdFelDUWFhfNRQrnQDvTRgdFV5i4JOlyugv/ls/77E1ZNloZ
+	fxMe8v5LQWA//MDvIl7oR1a+cnowRAjsCwF81GJpD8wVthmBs8+KKqabfqEpFuG08/Xycx
+	UVqd/isMtyXcQiZpYbXdpntUWdZVpfg=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-396-UA6U3LdPNXCUDHhElABRQA-1; Wed, 25 Nov 2026 19:26:03 +0000
+X-MC-Unique: UA6U3LdPNXCUDHhElABRQA-1
+X-Mimecast-MFC-AGG-ID: UA6U3LdPNXCUDHhElABRQA_1795634763
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-93cb7f9bb86so1175826085a.2
+        for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 11:26:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1795634763; x=1796239563; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=v6NmbSBdWpSm2uVrOp8tpZ65xhznrbrVh6qn8OyPhJ8=;
+        b=h05KInbD86wfThg4dMAc096QIRLQ5/B7awsf5C2xH+PwlMMalzRWcFw4lh1Fs4P6ed
+         gK5tgJKkOjF49Ec04S/4skSHFhwePE7JT29OUQhUyA5+o7+AhIPsetEEils4g4+dpErg
+         BWEBF5ZbnAXHw3kpSiKaU6Fll8YtkbyMBdenz53JXa1+2RxL8IrcLMIP4eMpj1Xe6Yn2
+         FuKXhp85tnaeXojCtdaJp+x7iOEQkt36kokNGQP2yDGtfxEeSXr3L1PI60/qybTlfP5F
+         Tl006Elxdt4DFhnEgR79rKatGOvTpcCceYyaDUqbjBhJ25b0XCsi2u1GPvc402tSG6/6
+         9w8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795634763; x=1796239563;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=v6NmbSBdWpSm2uVrOp8tpZ65xhznrbrVh6qn8OyPhJ8=;
+        b=PbClG3NhAMn7UFMdZZy+wYKiIF8BjDZS0v04Lx4WuSMFbHtONEB2dVvp1MyubetZTd
+         mbREgGBM7q6KGIQRSzHXkQAEkNuZ3WLDD4sjKm2FYOxZbqKmlEKdrArGJT1x8c7v1kZ8
+         AdacTt+nJgIC0jNejrDysZsEH2UNdS5B+avJxiaHbeoLfdXIPoo1mmKKAuNk32YaMFqB
+         DGdgLfU4XwLn40fA3WC+J5oviFq7zD0op5F9xykMbtvLH27u/BeCTIJK7zR+D75s6tm9
+         zUxpKG1lVt1fiMgtzQQe3cdwHPjVbl+yXSrMLLAZzEpzRpU7TPKHgh7kZncpgqcUe48g
+         /X3g==
+X-Forwarded-Encrypted: i=1; AL+hErGB2Smnfmg7QzgpAxsyUudKUGwbEB1jczG3+wAxYEHR8DtR0YmsxRlx/SY0Jx+Z14NFpQqQPTjVRHU=@vger.kernel.org
+X-Gm-Message-State: APuU4Z+v+ZPEufUzuLwE0kyV4Vn79C1AFMvnxO7tt30RoZ78fSB2F4lz
+	GXVkgcqOPbcxnKzaJeQVr94bKVQz8hR1kgHQpXHwMA7OvqdhouqIYlh3PxhlS36/vKlkA5GGUag
+	WanWwHCyOGbO7y0Ygm0GMrYYSKlMCe7I34KGnpuFX/vgYnqDr6oMSLIRqQPVfqg==
+X-Gm-Gg: AZFdTZeKUb8+STjMq1l9xXBMn6VXGYwT1r/fAD+wfYn4Vns37bwRaXAIFW/bRp2q1os
+	ankNHrNJ38bGiHxbq5uzB1kaGaeNxztvnsxW4qX7lCIkwzZW+lshxg5Xex5iL0fKXVu97Q0S3uZ
+	POkcYBTXyUT6K2F5v3TrQb8yBIzf8GjdqyTeVH//W3xsRzRgFNvZ9dRiOlL/PPy4nVUYwThievu
+	F/iAAgSF094HKhyB8QN5vqVcTADyLacRUTsUTUCgxGqHdy8IzcWwqJ6MOyQhIF/VjI8eOW9FGmW
+	C5apBbu79bW+Asvn0CQdf1+4GlIN2KCc63Wsi9JQEm9qKNUSMRZ6pyaO9w0nHyM5s3PbCFXQSXy
+	o739NjLz3CJz28Rwau0YEpQRfRt5qcAk9QHQVnS/1QuiIaf03eFnWZj9E34hij+9pRG+Ia51DAJ
+	Z8k5BvknG5GEIArNaYTCuI9rfplqeUKtitUFtk8Jlya5IaELfVCF6zbP1lRynsjm4P71qHO6I=
+X-Received: by 2002:a05:620a:462a:b0:949:3302:1d9f with SMTP id af79cd13be357-949bab350e3mr3218670785a.78.1795634762631;
+        Wed, 25 Nov 2026 11:26:02 -0800 (PST)
+X-Received: by 2002:a05:620a:462a:b0:949:3302:1d9f with SMTP id af79cd13be357-949bab350e3mr3218663985a.78.1795634761937;
+        Wed, 25 Nov 2026 11:26:01 -0800 (PST)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9213515f467sm168088266d6.41.2026.11.25.11.26.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2026 11:26:01 -0800 (PST)
+Message-ID: <2adaf0ef9e1a2fa18590f7d8dbf203c0f7de2be7.camel@redhat.com>
+Subject: Re: [REGRESSION] DMAR fault by Intel H97 SATA controller since
+ "block: Increase BLK_DEF_MAX_SECTORS_CAP" (6.17-rc1)
+From: Laurence Oberman <loberman@redhat.com>
+To: Bart Van Assche <bvanassche@acm.org>, Thorsten Leemhuis
+	 <regressions@leemhuis.info>, Tobias Laas <tobias.laas@posteo.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	regressions@lists.linux.dev, linux-block@vger.kernel.org, 
+	linux-ide@vger.kernel.org, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org,  David Woodhouse <dwmw2@infradead.org>, Lu
+ Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>, Will
+ Deacon <will@kernel.org>, Niklas Cassel <cassel@kernel.org>, 70sp
+ <70sp@protonmail.com>
+Date: Wed, 25 Nov 2026 14:26:00 -0500
+In-Reply-To: <a0ff3156-add0-4f7d-8373-09f95bd7036b@acm.org>
+References: <5ad27a97aafbc08a8702d5b90d09cd59@posteo.de>
+	 <awSs5Cw3hFkf4O4T@ryzen>
+	 <ec36d13e-e4c2-4bfb-8b50-69d4a1628839@leemhuis.info>
+	 <87b1bbd8-8113-4890-8623-738b19a9cc7b@leemhuis.info>
+	 <a0ff3156-add0-4f7d-8373-09f95bd7036b@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -70,175 +132,198 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] DMAR fault by Intel H97 SATA controller since
- "block: Increase BLK_DEF_MAX_SECTORS_CAP" (6.17-rc1)
-To: Thorsten Leemhuis <regressions@leemhuis.info>,
- Tobias Laas <tobias.laas@posteo.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- regressions@lists.linux.dev, linux-block@vger.kernel.org,
- linux-ide@vger.kernel.org, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
- Lu Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>,
- Will Deacon <will@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- 70sp <70sp@protonmail.com>, Laurence Oberman <loberman@redhat.com>
-References: <5ad27a97aafbc08a8702d5b90d09cd59@posteo.de>
- <awSs5Cw3hFkf4O4T@ryzen> <ec36d13e-e4c2-4bfb-8b50-69d4a1628839@leemhuis.info>
- <87b1bbd8-8113-4890-8623-738b19a9cc7b@leemhuis.info>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <87b1bbd8-8113-4890-8623-738b19a9cc7b@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
 
-On 11/25/26 12:52 AM, Thorsten Leemhuis wrote:
-> For completeness, =C5=A0imon Posp=C3=ADchal (now CCed) shared findings =
-and a WIP
-> fix (both with the help of a LLM) meanwhile here:
+On Wed, 2026-11-25 at 10:29 -0800, Bart Van Assche wrote:
+> On 11/25/26 12:52 AM, Thorsten Leemhuis wrote:
+> > For completeness, =C5=A0imon Posp=C3=ADchal (now CCed) shared findings =
+and a
+> > WIP
+> > fix (both with the help of a LLM) meanwhile here:
+> >=20
+> > https://lore.kernel.org/all/QISmXFlpPMgvFUKmdIBDwqn4JHHXt2NZeJzerMLHF_5=
+icLo0lPKVlN0Ig9v8Vb52NmCeSFdyrao4x8KoN1DCXtDlnZS7eRIClC6vZyu-hPU%3D@protonm=
+ail.com/
 >=20
-> https://lore.kernel.org/all/QISmXFlpPMgvFUKmdIBDwqn4JHHXt2NZeJzerMLHF_5=
-icLo0lPKVlN0Ig9v8Vb52NmCeSFdyrao4x8KoN1DCXtDlnZS7eRIClC6vZyu-hPU%3D@proto=
-nmail.com/
-
-Thanks Thorsten for having shared that link. The LLM I'm using doesn't
-like that patch and came up with the patch shown below. Untested.
-
-Bart.
-
-
-Subject: [PATCH] iommu/vt-d: Disable superpages on Haswell with=20
-integrated graphics
-
-Disable Intel VT-d superpages on bare-metal Haswell client systems when
-integrated graphics (0000:00:02.0) is enabled and an active remapping
-unit advertises superpage support (CAP.SLLPS).
-
-Per the 4th Generation Intel Core Processor Family datasheets (document
-328897, section 3.1.2), the integrated graphics VT-d engine does not
-support super-pages and BIOS must disable super-pages in the default
-VT-d engine when integrated graphics is enabled. Several Haswell BIOSes
-leave CAP.SLLPS set on the default engine (dmar1). Whenever Linux install=
-s
-a 2 MiB or 1 GiB leaf entry (PS=3D1) on dmar1, hardware aborts DMA with
-fault reason 0x0c ("non-zero reserved fields in PTE"), breaking VFIO
-passthrough, discrete GPUs, audio, and AHCI storage (exposed by default
-once BLK_DEF_MAX_SECTORS_CAP increased to 4 MiB in v6.17).
-
-Prior to commit c376a3456d8b ("iommu/vt-d: Remove
-domain_update_iommu_cap()"), domain_update_iommu_superpage() intersected
-superpage support across all active IOMMUs, so the IGD unit (SLLPS=3D0)
-masked off superpages on dmar1. After that commit, dmar1 domains started
-honoring dmar1's advertised CAP.SLLPS.
-
-Detect bare-metal Haswell client CPUs (INTEL_HASWELL, INTEL_HASWELL_L,
-INTEL_HASWELL_G), verify that the Intel integrated graphics device at
-0000:00:02.0 is present and not on an untrusted PCI link, and clear
-intel_iommu_superpage during intel_iommu_init() before allocating any
-paging domains if an active IOMMU advertises CAP.SLLPS.
-
-Fixes: c376a3456d8b ("iommu/vt-d: Remove domain_update_iommu_cap()")
-Reported-by: Tobias Laas <tobias.laas@posteo.de>
-Closes:=20
-https://lore.kernel.org/linux-block/5ad27a97aafbc08a8702d5b90d09cd59@post=
+> Thanks Thorsten for having shared that link. The LLM I'm using
+> doesn't
+> like that patch and came up with the patch shown below. Untested.
+>=20
+> Bart.
+>=20
+>=20
+> Subject: [PATCH] iommu/vt-d: Disable superpages on Haswell with=20
+> integrated graphics
+>=20
+> Disable Intel VT-d superpages on bare-metal Haswell client systems
+> when
+> integrated graphics (0000:00:02.0) is enabled and an active remapping
+> unit advertises superpage support (CAP.SLLPS).
+>=20
+> Per the 4th Generation Intel Core Processor Family datasheets
+> (document
+> 328897, section 3.1.2), the integrated graphics VT-d engine does not
+> support super-pages and BIOS must disable super-pages in the default
+> VT-d engine when integrated graphics is enabled. Several Haswell
+> BIOSes
+> leave CAP.SLLPS set on the default engine (dmar1). Whenever Linux
+> installs
+> a 2 MiB or 1 GiB leaf entry (PS=3D1) on dmar1, hardware aborts DMA with
+> fault reason 0x0c ("non-zero reserved fields in PTE"), breaking VFIO
+> passthrough, discrete GPUs, audio, and AHCI storage (exposed by
+> default
+> once BLK_DEF_MAX_SECTORS_CAP increased to 4 MiB in v6.17).
+>=20
+> Prior to commit c376a3456d8b ("iommu/vt-d: Remove
+> domain_update_iommu_cap()"), domain_update_iommu_superpage()
+> intersected
+> superpage support across all active IOMMUs, so the IGD unit (SLLPS=3D0)
+> masked off superpages on dmar1. After that commit, dmar1 domains
+> started
+> honoring dmar1's advertised CAP.SLLPS.
+>=20
+> Detect bare-metal Haswell client CPUs (INTEL_HASWELL,
+> INTEL_HASWELL_L,
+> INTEL_HASWELL_G), verify that the Intel integrated graphics device at
+> 0000:00:02.0 is present and not on an untrusted PCI link, and clear
+> intel_iommu_superpage during intel_iommu_init() before allocating any
+> paging domains if an active IOMMU advertises CAP.SLLPS.
+>=20
+> Fixes: c376a3456d8b ("iommu/vt-d: Remove domain_update_iommu_cap()")
+> Reported-by: Tobias Laas <tobias.laas@posteo.de>
+> Closes:=20
+> https://lore.kernel.org/linux-block/5ad27a97aafbc08a8702d5b90d09cd59@post=
 eo.de/
-Reported-by: =C5=A0imon Posp=C3=ADchal <70sp@protonmail.com>
-Closes:=20
-https://lore.kernel.org/r/HYhMd0Klo0XE_yiVY7XmsgyKKFDwKHfKRy22KrycLcYd0V_=
-ykA4xdbBMJXkA07YX3os6qK-NhMIVi6ITo-CkNIIF0e-GcI0UwwZmdDhAJ0I=3D@protonmai=
-l.com
-Cc: stable@vger.kernel.org
----
-  drivers/iommu/intel/iommu.c | 53 +++++++++++++++++++++++++++++++++++++
-  1 file changed, 53 insertions(+)
+> Reported-by: =C5=A0imon Posp=C3=ADchal <70sp@protonmail.com>
+> Closes:=20
+> https://lore.kernel.org/r/HYhMd0Klo0XE_yiVY7XmsgyKKFDwKHfKRy22KrycLcYd0V_=
+ykA4xdbBMJXkA07YX3os6qK-NhMIVi6ITo-CkNIIF0e-GcI0UwwZmdDhAJ0I=3D@protonmail.=
+com
+> Cc: stable@vger.kernel.org
+> ---
+> =C2=A0 drivers/iommu/intel/iommu.c | 53
+> +++++++++++++++++++++++++++++++++++++
+> =C2=A0 1 file changed, 53 insertions(+)
+>=20
+> diff --git a/drivers/iommu/intel/iommu.c
+> b/drivers/iommu/intel/iommu.c
+> index 5a2e705a2f2e..dd37aa25e287 100644
+> --- a/drivers/iommu/intel/iommu.c
+> +++ b/drivers/iommu/intel/iommu.c
+> @@ -24,6 +24,8 @@
+> =C2=A0 #include <linux/tboot.h>
+> =C2=A0 #include <uapi/linux/iommufd.h>
+>=20
+> +#include <asm/cpu_device_id.h>
+> +
+> =C2=A0 #include "iommu.h"
+> =C2=A0 #include "../dma-iommu.h"
+> =C2=A0 #include "../irq_remapping.h"
+> @@ -43,6 +45,7 @@
+>=20
+> =C2=A0 #define DEFAULT_DOMAIN_ADDRESS_WIDTH 57
+>=20
+> +static void __init check_haswell_igfx_superpage(void);
+> =C2=A0 static void __init check_tylersburg_isoch(void);
+> =C2=A0 static int intel_iommu_set_dirty_tracking(struct iommu_domain
+> *domain,
+> =C2=A0=C2=A0					=C2=A0 bool enable);
+> @@ -2762,6 +2765,7 @@ int __init intel_iommu_init(void)
+> =C2=A0=C2=A0		pr_info("No SATC found\n");
+>=20
+> =C2=A0=C2=A0	init_no_remapping_devices();
+> +	check_haswell_igfx_superpage();
+>=20
+> =C2=A0=C2=A0	ret =3D init_dmars();
+> =C2=A0=C2=A0	if (ret) {
+> @@ -4266,6 +4270,55 @@ static void __init
+> check_tylersburg_isoch(void)
+> =C2=A0=C2=A0	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 vtisochctrl);
+> =C2=A0 }
+>=20
+> +static const struct x86_cpu_id haswell_cpu_ids[] __initconst =3D {
+> +	X86_MATCH_VFM(INTEL_HASWELL, NULL),
+> +	X86_MATCH_VFM(INTEL_HASWELL_L, NULL),
+> +	X86_MATCH_VFM(INTEL_HASWELL_G, NULL),
+> +	{}
+> +};
+> +
+> +/*
+> + * Per the 4th Generation Intel Core Processor Family datasheets
+> (e.g.
+> + * document 328897, section 3.1.2), the integrated graphics VT-d
+> engine
+> + * does not support super-pages and BIOS must disable super-pages in
+> the
+> + * default VT-d engine when integrated graphics is enabled. Some
+> Haswell
+> + * BIOSes leave CAP.SLLPS set on the default engine, causing fault
+> reason
+> + * 0x0c (non-zero reserved fields in PTE) when a 2 MiB or 1 GiB
+> superpage
+> + * mapping is used.
+> + */
+> +static void __init check_haswell_igfx_superpage(void)
+> +{
+> +	struct dmar_drhd_unit *drhd;
+> +	struct intel_iommu *iommu;
+> +	struct pci_dev *pdev;
+> +
+> +	if (!intel_iommu_superpage)
+> +		return;
+> +
+> +	if (cpu_feature_enabled(X86_FEATURE_HYPERVISOR) ||
+> +	=C2=A0=C2=A0=C2=A0 !x86_match_cpu(haswell_cpu_ids))
+> +		return;
+> +
+> +	pdev =3D pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(2, 0));
+> +	if (!pdev)
+> +		return;
+> +
+> +	if (pdev->vendor !=3D PCI_VENDOR_ID_INTEL ||
+> !IS_GFX_DEVICE(pdev) ||
+> +	=C2=A0=C2=A0=C2=A0 risky_device(pdev)) {
+> +		pci_dev_put(pdev);
+> +		return;
+> +	}
+> +	pci_dev_put(pdev);
+> +
+> +	for_each_active_iommu(iommu, drhd) {
+> +		if (cap_super_page_val(iommu->cap)) {
+> +			intel_iommu_superpage =3D 0;
+> +			pr_info("Disabling superpages on Haswell
+> with integrated graphics\n");
+> +			break;
+> +		}
+> +	}
+> +}
+> +
+> =C2=A0 /*
+> =C2=A0=C2=A0 * Here we deal with a device TLB defect where device may=20
+> inadvertently issue ATS
+> =C2=A0=C2=A0 * invalidation completion before posted writes initiated wit=
+h=20
+> translated address
 
-diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index 5a2e705a2f2e..dd37aa25e287 100644
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -24,6 +24,8 @@
-  #include <linux/tboot.h>
-  #include <uapi/linux/iommufd.h>
 
-+#include <asm/cpu_device_id.h>
-+
-  #include "iommu.h"
-  #include "../dma-iommu.h"
-  #include "../irq_remapping.h"
-@@ -43,6 +45,7 @@
+Hi Bart,
 
-  #define DEFAULT_DOMAIN_ADDRESS_WIDTH 57
+Tested-by: Laurence Oberman <loberman@redhat.com>
 
-+static void __init check_haswell_igfx_superpage(void);
-  static void __init check_tylersburg_isoch(void);
-  static int intel_iommu_set_dirty_tracking(struct iommu_domain *domain,
-  					  bool enable);
-@@ -2762,6 +2765,7 @@ int __init intel_iommu_init(void)
-  		pr_info("No SATC found\n");
+Tested on a non-affected platform to check the quirk does not
+misfire: Coffee Lake i7-8700, Cannon Lake PCH AHCI, both DRHDs report
+SLLPS =3D 2M|1G (dmar0 cap 1c0000c40660462, dmar1 cap d2008c40660462),
+7.4.0-rc1 with intel_iommu=3Don. The quirk does not trigger, superpages
+remain in use (2 MiB leaf PDEs, e.g. 0x000000018f400082, confirmed via
+domain_translation_struct during 2M O_DIRECT reads), and there are no
+DMAR or ATA errors. I don't have Haswell hardware, so Tobias's test is
+the one that confirms the fix itself.
 
-  	init_no_remapping_devices();
-+	check_haswell_igfx_superpage();
+The Fixes: tag looks right to me. c376a3456d8b is the commit that
+stopped intersecting superpage support across IOMMUs at attach time.
+In my earlier mail I pointed at 5bdd86ec5d19, which only removed the
+remaining hotplug user of domain_update_iommu_superpage(); both are in
+v6.13-rc1.
 
-  	ret =3D init_dmars();
-  	if (ret) {
-@@ -4266,6 +4270,55 @@ static void __init check_tylersburg_isoch(void)
-  	       vtisochctrl);
-  }
-
-+static const struct x86_cpu_id haswell_cpu_ids[] __initconst =3D {
-+	X86_MATCH_VFM(INTEL_HASWELL, NULL),
-+	X86_MATCH_VFM(INTEL_HASWELL_L, NULL),
-+	X86_MATCH_VFM(INTEL_HASWELL_G, NULL),
-+	{}
-+};
-+
-+/*
-+ * Per the 4th Generation Intel Core Processor Family datasheets (e.g.
-+ * document 328897, section 3.1.2), the integrated graphics VT-d engine
-+ * does not support super-pages and BIOS must disable super-pages in the
-+ * default VT-d engine when integrated graphics is enabled. Some Haswell
-+ * BIOSes leave CAP.SLLPS set on the default engine, causing fault reaso=
-n
-+ * 0x0c (non-zero reserved fields in PTE) when a 2 MiB or 1 GiB superpag=
-e
-+ * mapping is used.
-+ */
-+static void __init check_haswell_igfx_superpage(void)
-+{
-+	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
-+	struct pci_dev *pdev;
-+
-+	if (!intel_iommu_superpage)
-+		return;
-+
-+	if (cpu_feature_enabled(X86_FEATURE_HYPERVISOR) ||
-+	    !x86_match_cpu(haswell_cpu_ids))
-+		return;
-+
-+	pdev =3D pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(2, 0));
-+	if (!pdev)
-+		return;
-+
-+	if (pdev->vendor !=3D PCI_VENDOR_ID_INTEL || !IS_GFX_DEVICE(pdev) ||
-+	    risky_device(pdev)) {
-+		pci_dev_put(pdev);
-+		return;
-+	}
-+	pci_dev_put(pdev);
-+
-+	for_each_active_iommu(iommu, drhd) {
-+		if (cap_super_page_val(iommu->cap)) {
-+			intel_iommu_superpage =3D 0;
-+			pr_info("Disabling superpages on Haswell with integrated graphics\n")=
-;
-+			break;
-+		}
-+	}
-+}
-+
-  /*
-   * Here we deal with a device TLB defect where device may=20
-inadvertently issue ATS
-   * invalidation completion before posted writes initiated with=20
-translated address
+Regards,
+Laurence
 
