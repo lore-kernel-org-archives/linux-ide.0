@@ -1,128 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795634767;
-	b=gbhHKIXHvtVGUrOAFOwK4xa7kKL08iKDBg3AZniEqPRANVIEdF3Vkb9pygOUlVdlBtsy
-	 xmaHlSZ5l7VRnelN58iEyRKM56QW2Vft0GSZ34rMmkxr/8vLvH/DW2Ly9BLCTBiZErFJr
-	 WyRT6rbsNdjaHBLwAQUKqoHbp7Wy1xMfB8qKaQvuCXJhBjH8r6lDbsV2tNE4O8wHRv2e0
-	 pbk8weKScCY81/FaNCasT1LvMNHUHFYY3sbtwweQykCflBRAgdMENA8i8JLu3fGgiMwUv
-	 nknGLyO46oJJhP7qy7vkqw5MV+KkZz+2DNAawH8HM4RiA07e5TMJVwC0bjEzl2x1dUQ==
+	t=1795646928;
+	b=4TafBpHfg9dOAPoPz+sc/RNdIT+nuBxqoaH/89mhiEgGjV158XfgYJLelJyrBqBDUVQl
+	 snioXjIK6vhiYcxI+vxFccalpxOhYO0XxIdl+AYjY1+fk8Ar5wW904cyWgDXgOnFRIQDW
+	 lM2KLt1Cl/JJIEutKtcirit7iKZ+LqrvE87sHidP0resKZFLe7M6cUgYdeUBtgrTyxewx
+	 hRw+Bkrtq++MbWW4tKdxbGknq1YD+DjlZNlhPhWpX0bSf1pn+p5GcNqjXOLsfqPghlLF+
+	 D6A4Seapm1WL8j/6eZC0G0nj+1G9/TSGM5W71kS8PhUhWNR9/UKlYRlFmT5VN83AJmA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795634767;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version;
-	bh=v6NmbSBdWpSm2uVrOp8tpZ65xhznrbrVh6qn8OyPhJ8=;
-	b=o7UY3PSxDVkvRy37vpXcB7NCeVw2gi8AS73BE1mUWFG71bjqTaEdV57It2jVJPFIKR3W
-	 GwZ6LJfEBPSq/oWMxn5o2JLKvnjiBG9QL4bHJBKhP0GomAevQG/BuGrVIToWy93DWdlKJ
-	 iize/jMnfg9m1lkeqcXuUIT3ubGIi7Ik7E/cKbHhJSV8oqJT1dpa1GbS7jVl+1x51+fR7
-	 aqQziqlJV5WZvuYjLOxWskD9P+AEcansV0mM5VO3W4ULk5zkZu6Z/YC6GTIlcO52fnqFs
-	 se9Epsjv2KVqdzfPzim7sC72Dt51TlPA/0HpBKsas8b69HYqjZ5dg/C+O9vk1exDMWg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795646928;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=YDsDCXLkXL3cNo22jNaL7+utbyOJuM3+sdQzz79cB1A=;
+	b=48GaTgYZkvYp7+KxO7ifS5KZ81o04NGrjMA61Cj+sOJTX5gojHQepr55OFcNoQPjHpwG
+	 kO9bUX1Wil9j9002Rm0QaQTU+KupUCbxKfESGuo61rGPZwG5FtIub4bZEpalNHn2ZtD01
+	 0qaX12eKChgDEDBRC2rmulAlwPnbBE6WTH4NvB7wvQH4DNOKWZ/ZKOpP6BP5wASoJU0I2
+	 hBOctmhVx8w8rS823CmV9NwfNcz3R3vpH2BxiwTt1KB1CyCJGw84/iLQCPUrzmctZHwsI
+	 3Uu80pxb9SlnypZBgBhbLKN/0/oqpUkTxfI1BL+KGsHwOLjArj/xKJR0Wm8VG6DU2QA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=O+VUfJBu;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=h05KInbD;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lHhUDsm3;
+	arc=none smtp.remote-ip=209.85.216.48
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7994606A32A
-	for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 19:26:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C7994606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B17B4606A6B6
+	for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 22:48:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B17B4606A6B6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=O+VUfJBu;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=h05KInbD
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795634765;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=v6NmbSBdWpSm2uVrOp8tpZ65xhznrbrVh6qn8OyPhJ8=;
-	b=O+VUfJBuUwvfCTh6UMFrjpPdFelDUWFhfNRQrnQDvTRgdFV5i4JOlyugv/ls/77E1ZNloZ
-	fxMe8v5LQWA//MDvIl7oR1a+cnowRAjsCwF81GJpD8wVthmBs8+KKqabfqEpFuG08/Xycx
-	UVqd/isMtyXcQiZpYbXdpntUWdZVpfg=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-396-UA6U3LdPNXCUDHhElABRQA-1; Wed, 25 Nov 2026 19:26:03 +0000
-X-MC-Unique: UA6U3LdPNXCUDHhElABRQA-1
-X-Mimecast-MFC-AGG-ID: UA6U3LdPNXCUDHhElABRQA_1795634763
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-93cb7f9bb86so1175826085a.2
-        for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 11:26:03 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=lHhUDsm3
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3b0ae87069dso2716142a91.2
+        for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 14:48:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795634763; x=1796239563; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=v6NmbSBdWpSm2uVrOp8tpZ65xhznrbrVh6qn8OyPhJ8=;
-        b=h05KInbD86wfThg4dMAc096QIRLQ5/B7awsf5C2xH+PwlMMalzRWcFw4lh1Fs4P6ed
-         gK5tgJKkOjF49Ec04S/4skSHFhwePE7JT29OUQhUyA5+o7+AhIPsetEEils4g4+dpErg
-         BWEBF5ZbnAXHw3kpSiKaU6Fll8YtkbyMBdenz53JXa1+2RxL8IrcLMIP4eMpj1Xe6Yn2
-         FuKXhp85tnaeXojCtdaJp+x7iOEQkt36kokNGQP2yDGtfxEeSXr3L1PI60/qybTlfP5F
-         Tl006Elxdt4DFhnEgR79rKatGOvTpcCceYyaDUqbjBhJ25b0XCsi2u1GPvc402tSG6/6
-         9w8g==
+        d=gmail.com; s=20260707; t=1795646926; x=1796251726; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=YDsDCXLkXL3cNo22jNaL7+utbyOJuM3+sdQzz79cB1A=;
+        b=lHhUDsm3vzYxbrG0XKMHpULVIRUum6mQ2gyPAuoK9IQgAQ94X3IXkwhla9s9ac0/ar
+         zxJESCPJbraVYEhyqdQzsE4Vhp48XYK8zEeYSQjwUPqKPKvOCqX3GPwMWe82PhP8uHMj
+         O1jOXSnR9sTWpVtbFr6ptxyGM3tIOGbh3leES2Rh3ziQe4x1WnMDk88dXg1um6Fgu446
+         IHiVmFt4YKFpBhn3n/D8e3a3jHsSDkHXpPTa0P5f4HvsGDmJfRcyzd0L1VF+Ppah8klJ
+         MLICsutSRHytfv9zlJCgUL8z/5nvc678T4dYuYzY2AKebt4yVd8XOs5T6scTQbPnaUQ0
+         o+aA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795634763; x=1796239563;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+        d=1e100.net; s=20260707; t=1795646926; x=1796251726;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=v6NmbSBdWpSm2uVrOp8tpZ65xhznrbrVh6qn8OyPhJ8=;
-        b=PbClG3NhAMn7UFMdZZy+wYKiIF8BjDZS0v04Lx4WuSMFbHtONEB2dVvp1MyubetZTd
-         mbREgGBM7q6KGIQRSzHXkQAEkNuZ3WLDD4sjKm2FYOxZbqKmlEKdrArGJT1x8c7v1kZ8
-         AdacTt+nJgIC0jNejrDysZsEH2UNdS5B+avJxiaHbeoLfdXIPoo1mmKKAuNk32YaMFqB
-         DGdgLfU4XwLn40fA3WC+J5oviFq7zD0op5F9xykMbtvLH27u/BeCTIJK7zR+D75s6tm9
-         zUxpKG1lVt1fiMgtzQQe3cdwHPjVbl+yXSrMLLAZzEpzRpU7TPKHgh7kZncpgqcUe48g
-         /X3g==
-X-Forwarded-Encrypted: i=1; AL+hErGB2Smnfmg7QzgpAxsyUudKUGwbEB1jczG3+wAxYEHR8DtR0YmsxRlx/SY0Jx+Z14NFpQqQPTjVRHU=@vger.kernel.org
-X-Gm-Message-State: APuU4Z+v+ZPEufUzuLwE0kyV4Vn79C1AFMvnxO7tt30RoZ78fSB2F4lz
-	GXVkgcqOPbcxnKzaJeQVr94bKVQz8hR1kgHQpXHwMA7OvqdhouqIYlh3PxhlS36/vKlkA5GGUag
-	WanWwHCyOGbO7y0Ygm0GMrYYSKlMCe7I34KGnpuFX/vgYnqDr6oMSLIRqQPVfqg==
-X-Gm-Gg: AZFdTZeKUb8+STjMq1l9xXBMn6VXGYwT1r/fAD+wfYn4Vns37bwRaXAIFW/bRp2q1os
-	ankNHrNJ38bGiHxbq5uzB1kaGaeNxztvnsxW4qX7lCIkwzZW+lshxg5Xex5iL0fKXVu97Q0S3uZ
-	POkcYBTXyUT6K2F5v3TrQb8yBIzf8GjdqyTeVH//W3xsRzRgFNvZ9dRiOlL/PPy4nVUYwThievu
-	F/iAAgSF094HKhyB8QN5vqVcTADyLacRUTsUTUCgxGqHdy8IzcWwqJ6MOyQhIF/VjI8eOW9FGmW
-	C5apBbu79bW+Asvn0CQdf1+4GlIN2KCc63Wsi9JQEm9qKNUSMRZ6pyaO9w0nHyM5s3PbCFXQSXy
-	o739NjLz3CJz28Rwau0YEpQRfRt5qcAk9QHQVnS/1QuiIaf03eFnWZj9E34hij+9pRG+Ia51DAJ
-	Z8k5BvknG5GEIArNaYTCuI9rfplqeUKtitUFtk8Jlya5IaELfVCF6zbP1lRynsjm4P71qHO6I=
-X-Received: by 2002:a05:620a:462a:b0:949:3302:1d9f with SMTP id af79cd13be357-949bab350e3mr3218670785a.78.1795634762631;
-        Wed, 25 Nov 2026 11:26:02 -0800 (PST)
-X-Received: by 2002:a05:620a:462a:b0:949:3302:1d9f with SMTP id af79cd13be357-949bab350e3mr3218663985a.78.1795634761937;
-        Wed, 25 Nov 2026 11:26:01 -0800 (PST)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9213515f467sm168088266d6.41.2026.11.25.11.26.00
+        bh=YDsDCXLkXL3cNo22jNaL7+utbyOJuM3+sdQzz79cB1A=;
+        b=K8fi0PCvs8XvXGExltSgnT/O1xSRoIGWTCS+iBWGhtV8qhubdNOfZhIy6hyYykNODA
+         ExM4VjaDTDTJ4U8hse5+WEfT6cAUbintIC9f4ZbEi82vXrCRzpW+7N00VtbGxRwwiTE+
+         L7FtQspgUIriFpsowAQNj4nfqlfqZ0+vNKo7wTwnlNAgazElWNNMIlouFiHciWNLMdXM
+         fbSs9pTBdx89pgKjA8XFcPSazEApmeAFCRPhGE8hVtp04rcBCEAmNvS0hr2W7yQkUK5j
+         8QyWW9Ytocga6vVvKj1FWp7wQzrFyl5tl3a78aCU/dsarPfkal7YyMSToa00lin/SllD
+         aCew==
+X-Forwarded-Encrypted: i=1; AL+hErGZyqxw8jRTr9R+WLbzSvyd//gEdN0xpi492tG4+3ovnz2fqZc14lxhp/8aeKEGzA8MSVN7kfHqmIk=@vger.kernel.org
+X-Gm-Message-State: APuU4Z8XdSwcRDinkw/ENomI9onhNYwfEcMVMCsXh1YTyVyZJEAMDOAF
+	1YXdNFlBe2bVTGKCXf2UD25WjL+fnTHfH9pGBNmDlSFTVn3s35t2IUEK
+X-Gm-Gg: AZFdTZd0Xfe3xXXtvCXftIYFqI5UpNXtlV+eIkBD8frGrKYKNWEr6ZX5Qv4K+7UquH7
+	ey6pmg8COcMSgzoMucgjhb+StVy1uXF+YbMQX8NQVTRfW7floFPWn5eB+Fh5F4g7ms+iHvIvzGB
+	hdD05ZhLq139IxV3E4Xnh5RJAuEGds12Cnea1v5cGKnEsPgsubX/U/Pyj2BDgv0hu+jMYjqM9GO
+	29X+uep3m9FyHHgmMETgQIxBp1BfJBOY5q0yMUbdi7UZSo1qSQR94uY6ALeVzwoO4XGNZyNlqmu
+	VE3ARfOs5xybSO/ulxtA8A6DZXVju75Um2FOEokx4cD8lJxaJCTs//zoVN/2D/BEgsmXLQCdIrR
+	CweC87R11lnp5Rnvr2S8meiWoFnVvQAZJmFbF7F3fc+gXmoe2c+1e+rtl1S+a+xUYZBmGM1EoKC
+	jpusncgrRBxjS/N4OqBhanabuU84MoGZ8tobKXG8LCkdzoiDLH8dpl80KuCIBdlSI6jIpoKrCal
+	TCmch+kl1CPpM1BX/cR9FrXrBl05t9D1S8wJMl/eZFTlTvOi4Xbyao3ohml7V2KJpcipouiNRsw
+	lAJkyAsK6uA1o2suWsDadGg5ZZU=
+X-Received: by 2002:a17:90b:134e:b0:3ac:9a5e:9ce7 with SMTP id 98e67ed59e1d1-3b41c96764dmr18868042a91.49.1795646925992;
+        Wed, 25 Nov 2026 14:48:45 -0800 (PST)
+Received: from localhost ([2001:19f0:8000:4ce8:5400:7ff:fe0e:e6b2])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b4afeaaa84sm13819382a91.10.2026.11.25.14.48.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 11:26:01 -0800 (PST)
-Message-ID: <2adaf0ef9e1a2fa18590f7d8dbf203c0f7de2be7.camel@redhat.com>
-Subject: Re: [REGRESSION] DMAR fault by Intel H97 SATA controller since
- "block: Increase BLK_DEF_MAX_SECTORS_CAP" (6.17-rc1)
-From: Laurence Oberman <loberman@redhat.com>
-To: Bart Van Assche <bvanassche@acm.org>, Thorsten Leemhuis
-	 <regressions@leemhuis.info>, Tobias Laas <tobias.laas@posteo.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	regressions@lists.linux.dev, linux-block@vger.kernel.org, 
-	linux-ide@vger.kernel.org, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org,  David Woodhouse <dwmw2@infradead.org>, Lu
- Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>, Will
- Deacon <will@kernel.org>, Niklas Cassel <cassel@kernel.org>, 70sp
- <70sp@protonmail.com>
-Date: Wed, 25 Nov 2026 14:26:00 -0500
-In-Reply-To: <a0ff3156-add0-4f7d-8373-09f95bd7036b@acm.org>
-References: <5ad27a97aafbc08a8702d5b90d09cd59@posteo.de>
-	 <awSs5Cw3hFkf4O4T@ryzen>
-	 <ec36d13e-e4c2-4bfb-8b50-69d4a1628839@leemhuis.info>
-	 <87b1bbd8-8113-4890-8623-738b19a9cc7b@leemhuis.info>
-	 <a0ff3156-add0-4f7d-8373-09f95bd7036b@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+        Wed, 25 Nov 2026 14:48:45 -0800 (PST)
+Date: Thu, 26 Nov 2026 06:48:37 +0800
+From: Inochi Amaoto <inochiama@gmail.com>
+To: Niklas Cassel <cassel@kernel.org>, Inochi Amaoto <inochiama@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Randy Dunlap <rdunlap@infradead.org>, Damien Le Moal <dlemoal@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
+	Fabio Estevam <festevam@gmail.com>, Aksh Garg <a-garg7@ti.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Rhys Tumelty <rhys@tumelty.co.uk>, 
+	Manikandan K Pillai <mpillai@cadence.com>, "vladimir.oltean@nxp.com" <vladimir.oltean@nxp.com>, 
+	Qiang Yu <qiang.yu@oss.qualcomm.com>, Hans Zhang <18255117159@163.com>, Yao Zi <me@ziyao.cc>, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
+	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, 
+	linux-phy@lists.infradead.org, Yixun Lan <dlan@gentoo.org>, Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v5 8/8] ata: ahci_imx: Use bulk PHY APIs for calibration
+ PHYs
+Message-ID: <awdjOLoxBpS6t1KN@inochi.infowork>
+References: <20261125043639.249525-1-inochiama@gmail.com>
+ <20261125043639.249525-9-inochiama@gmail.com>
+ <awcFIJlCOxB7nXNz@ryzen>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -132,198 +111,198 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <awcFIJlCOxB7nXNz@ryzen>
 
-On Wed, 2026-11-25 at 10:29 -0800, Bart Van Assche wrote:
-> On 11/25/26 12:52 AM, Thorsten Leemhuis wrote:
-> > For completeness, =C5=A0imon Posp=C3=ADchal (now CCed) shared findings =
-and a
-> > WIP
-> > fix (both with the help of a LLM) meanwhile here:
-> >=20
-> > https://lore.kernel.org/all/QISmXFlpPMgvFUKmdIBDwqn4JHHXt2NZeJzerMLHF_5=
-icLo0lPKVlN0Ig9v8Vb52NmCeSFdyrao4x8KoN1DCXtDlnZS7eRIClC6vZyu-hPU%3D@protonm=
-ail.com/
->=20
-> Thanks Thorsten for having shared that link. The LLM I'm using
-> doesn't
-> like that patch and came up with the patch shown below. Untested.
->=20
-> Bart.
->=20
->=20
-> Subject: [PATCH] iommu/vt-d: Disable superpages on Haswell with=20
-> integrated graphics
->=20
-> Disable Intel VT-d superpages on bare-metal Haswell client systems
-> when
-> integrated graphics (0000:00:02.0) is enabled and an active remapping
-> unit advertises superpage support (CAP.SLLPS).
->=20
-> Per the 4th Generation Intel Core Processor Family datasheets
-> (document
-> 328897, section 3.1.2), the integrated graphics VT-d engine does not
-> support super-pages and BIOS must disable super-pages in the default
-> VT-d engine when integrated graphics is enabled. Several Haswell
-> BIOSes
-> leave CAP.SLLPS set on the default engine (dmar1). Whenever Linux
-> installs
-> a 2 MiB or 1 GiB leaf entry (PS=3D1) on dmar1, hardware aborts DMA with
-> fault reason 0x0c ("non-zero reserved fields in PTE"), breaking VFIO
-> passthrough, discrete GPUs, audio, and AHCI storage (exposed by
-> default
-> once BLK_DEF_MAX_SECTORS_CAP increased to 4 MiB in v6.17).
->=20
-> Prior to commit c376a3456d8b ("iommu/vt-d: Remove
-> domain_update_iommu_cap()"), domain_update_iommu_superpage()
-> intersected
-> superpage support across all active IOMMUs, so the IGD unit (SLLPS=3D0)
-> masked off superpages on dmar1. After that commit, dmar1 domains
-> started
-> honoring dmar1's advertised CAP.SLLPS.
->=20
-> Detect bare-metal Haswell client CPUs (INTEL_HASWELL,
-> INTEL_HASWELL_L,
-> INTEL_HASWELL_G), verify that the Intel integrated graphics device at
-> 0000:00:02.0 is present and not on an untrusted PCI link, and clear
-> intel_iommu_superpage during intel_iommu_init() before allocating any
-> paging domains if an active IOMMU advertises CAP.SLLPS.
->=20
-> Fixes: c376a3456d8b ("iommu/vt-d: Remove domain_update_iommu_cap()")
-> Reported-by: Tobias Laas <tobias.laas@posteo.de>
-> Closes:=20
-> https://lore.kernel.org/linux-block/5ad27a97aafbc08a8702d5b90d09cd59@post=
-eo.de/
-> Reported-by: =C5=A0imon Posp=C3=ADchal <70sp@protonmail.com>
-> Closes:=20
-> https://lore.kernel.org/r/HYhMd0Klo0XE_yiVY7XmsgyKKFDwKHfKRy22KrycLcYd0V_=
-ykA4xdbBMJXkA07YX3os6qK-NhMIVi6ITo-CkNIIF0e-GcI0UwwZmdDhAJ0I=3D@protonmail.=
-com
-> Cc: stable@vger.kernel.org
-> ---
-> =C2=A0 drivers/iommu/intel/iommu.c | 53
-> +++++++++++++++++++++++++++++++++++++
-> =C2=A0 1 file changed, 53 insertions(+)
->=20
-> diff --git a/drivers/iommu/intel/iommu.c
-> b/drivers/iommu/intel/iommu.c
-> index 5a2e705a2f2e..dd37aa25e287 100644
-> --- a/drivers/iommu/intel/iommu.c
-> +++ b/drivers/iommu/intel/iommu.c
-> @@ -24,6 +24,8 @@
-> =C2=A0 #include <linux/tboot.h>
-> =C2=A0 #include <uapi/linux/iommufd.h>
->=20
-> +#include <asm/cpu_device_id.h>
-> +
-> =C2=A0 #include "iommu.h"
-> =C2=A0 #include "../dma-iommu.h"
-> =C2=A0 #include "../irq_remapping.h"
-> @@ -43,6 +45,7 @@
->=20
-> =C2=A0 #define DEFAULT_DOMAIN_ADDRESS_WIDTH 57
->=20
-> +static void __init check_haswell_igfx_superpage(void);
-> =C2=A0 static void __init check_tylersburg_isoch(void);
-> =C2=A0 static int intel_iommu_set_dirty_tracking(struct iommu_domain
-> *domain,
-> =C2=A0=C2=A0					=C2=A0 bool enable);
-> @@ -2762,6 +2765,7 @@ int __init intel_iommu_init(void)
-> =C2=A0=C2=A0		pr_info("No SATC found\n");
->=20
-> =C2=A0=C2=A0	init_no_remapping_devices();
-> +	check_haswell_igfx_superpage();
->=20
-> =C2=A0=C2=A0	ret =3D init_dmars();
-> =C2=A0=C2=A0	if (ret) {
-> @@ -4266,6 +4270,55 @@ static void __init
-> check_tylersburg_isoch(void)
-> =C2=A0=C2=A0	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 vtisochctrl);
-> =C2=A0 }
->=20
-> +static const struct x86_cpu_id haswell_cpu_ids[] __initconst =3D {
-> +	X86_MATCH_VFM(INTEL_HASWELL, NULL),
-> +	X86_MATCH_VFM(INTEL_HASWELL_L, NULL),
-> +	X86_MATCH_VFM(INTEL_HASWELL_G, NULL),
-> +	{}
-> +};
-> +
-> +/*
-> + * Per the 4th Generation Intel Core Processor Family datasheets
-> (e.g.
-> + * document 328897, section 3.1.2), the integrated graphics VT-d
-> engine
-> + * does not support super-pages and BIOS must disable super-pages in
-> the
-> + * default VT-d engine when integrated graphics is enabled. Some
-> Haswell
-> + * BIOSes leave CAP.SLLPS set on the default engine, causing fault
-> reason
-> + * 0x0c (non-zero reserved fields in PTE) when a 2 MiB or 1 GiB
-> superpage
-> + * mapping is used.
-> + */
-> +static void __init check_haswell_igfx_superpage(void)
-> +{
-> +	struct dmar_drhd_unit *drhd;
-> +	struct intel_iommu *iommu;
-> +	struct pci_dev *pdev;
-> +
-> +	if (!intel_iommu_superpage)
-> +		return;
-> +
-> +	if (cpu_feature_enabled(X86_FEATURE_HYPERVISOR) ||
-> +	=C2=A0=C2=A0=C2=A0 !x86_match_cpu(haswell_cpu_ids))
-> +		return;
-> +
-> +	pdev =3D pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(2, 0));
-> +	if (!pdev)
-> +		return;
-> +
-> +	if (pdev->vendor !=3D PCI_VENDOR_ID_INTEL ||
-> !IS_GFX_DEVICE(pdev) ||
-> +	=C2=A0=C2=A0=C2=A0 risky_device(pdev)) {
-> +		pci_dev_put(pdev);
-> +		return;
-> +	}
-> +	pci_dev_put(pdev);
-> +
-> +	for_each_active_iommu(iommu, drhd) {
-> +		if (cap_super_page_val(iommu->cap)) {
-> +			intel_iommu_superpage =3D 0;
-> +			pr_info("Disabling superpages on Haswell
-> with integrated graphics\n");
-> +			break;
-> +		}
-> +	}
-> +}
-> +
-> =C2=A0 /*
-> =C2=A0=C2=A0 * Here we deal with a device TLB defect where device may=20
-> inadvertently issue ATS
-> =C2=A0=C2=A0 * invalidation completion before posted writes initiated wit=
-h=20
-> translated address
+On Wed, Nov 25, 2026 at 04:56:16PM +0100, Niklas Cassel wrote:
+> Hello Inochi,
+> 
+> On Wed, Nov 25, 2026 at 12:36:39PM +0800, Inochi Amaoto wrote:
+> > The i.MX8QM SATA PHY relies on the first two HSIO lanes for shared
+> > impedance calibration. Store these calibration PHYs in a bulk array
+> > and acquire them by name with devm_phy_bulk_get().
+> > 
+> > Initialize both calibration PHYs before powering them on in lane order,
+> > then keep the SATA PHY initialization, mode selection and power-on
+> > separate. Use the bulk helpers to release the calibration PHYs after
+> > SATA startup and to unwind failures without repeating power-off after
+> > a failed bulk power-on.
+> > 
+> > Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
+> > ---
+> >  drivers/ata/ahci_imx.c | 57 ++++++++++++++++--------------------------
+> >  1 file changed, 21 insertions(+), 36 deletions(-)
+> > 
+> > diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> > index 6aaa18e29abc..18faa033e44f 100644
+> > --- a/drivers/ata/ahci_imx.c
+> > +++ b/drivers/ata/ahci_imx.c
+> > @@ -25,6 +25,8 @@
+> >  
+> >  #define DRV_NAME "ahci-imx"
+> >  
+> > +#define NUM_CALIPHY		2
+> > +
+> >  enum {
+> >  	/* Timer 1-ms Register */
+> >  	IMX_TIMER1MS				= 0x00e0,
+> > @@ -66,8 +68,7 @@ struct imx_ahci_priv {
+> >  	struct clk *ahb_clk;
+> >  	struct regmap *gpr;
+> >  	struct phy *sata_phy;
+> > -	struct phy *cali_phy0;
+> > -	struct phy *cali_phy1;
+> > +	struct phy_bulk_data cali_phys[NUM_CALIPHY];
+> >  	bool no_device;
+> >  	bool first_time;
+> >  	u32 phy_params;
+> > @@ -428,30 +429,20 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
+> >  	 * Initialize the first two lane PHYs here, although only the
+> >  	 * third lane PHY is used by SATA.
+> >  	 */
+> > -	ret = phy_init(imxpriv->cali_phy0);
+> > +	ret = phy_bulk_init(NUM_CALIPHY, imxpriv->cali_phys);
+> >  	if (ret) {
+> >  		dev_err(dev, "cali PHY init failed\n");
+> >  		return ret;
+> >  	}
+> > -	ret = phy_power_on(imxpriv->cali_phy0);
+> > +	ret = phy_bulk_power_on(NUM_CALIPHY, imxpriv->cali_phys);
+> >  	if (ret) {
+> >  		dev_err(dev, "cali PHY power on failed\n");
+> > -		goto err_cali_phy0_exit;
+> > -	}
+> > -	ret = phy_init(imxpriv->cali_phy1);
+> > -	if (ret) {
+> > -		dev_err(dev, "cali PHY1 init failed\n");
+> > -		goto err_cali_phy0_off;
+> > -	}
+> > -	ret = phy_power_on(imxpriv->cali_phy1);
+> > -	if (ret) {
+> > -		dev_err(dev, "cali PHY1 power on failed\n");
+> > -		goto err_cali_phy1_exit;
+> > +		goto err_cali_phy_exit;
+> 
+> This changes the order the calibration PHYs are brought up in.
+> 
+> The commit message describes the new order:
+> 
+>   "Initialize both calibration PHYs before powering them on in lane
+>   order"
+> 
+> but doesn't say that it differs from the current sequence. Could the
+> commit message mention the change, and why it is safe for the shared
+> calibration?
+> 
 
+According to the document, there is no initialization order requirement
+mentioned, so I thought it will be safe to change that since the
+document shows that the calibration is independent in section 19.3.3.5.
 
-Hi Bart,
+> The cover letter mentions that the PHY timing requirements were checked
+> against the documentation. Has the new sequence also been tested on
+> i.MX8QM hardware?
+> 
 
-Tested-by: Laurence Oberman <loberman@redhat.com>
+I does not check it on real hardware, the only thing I find is the
+document.
 
-Tested on a non-affected platform to check the quirk does not
-misfire: Coffee Lake i7-8700, Cannon Lake PCH AHCI, both DRHDs report
-SLLPS =3D 2M|1G (dmar0 cap 1c0000c40660462, dmar1 cap d2008c40660462),
-7.4.0-rc1 with intel_iommu=3Don. The quirk does not trigger, superpages
-remain in use (2 MiB leaf PDEs, e.g. 0x000000018f400082, confirmed via
-domain_translation_struct during 2M O_DIRECT reads), and there are no
-DMAR or ATA errors. I don't have Haswell hardware, so Tobias's test is
-the one that confirms the fix itself.
+> 
+> >  	}
+> >  	ret = phy_init(imxpriv->sata_phy);
+> >  	if (ret) {
+> >  		dev_err(dev, "sata PHY init failed\n");
+> > -		goto err_cali_phy1_off;
+> > +		goto err_cali_phy_off;
+> >  	}
+> >  	ret = phy_set_mode(imxpriv->sata_phy, PHY_MODE_SATA);
+> >  	if (ret) {
+> > @@ -465,10 +456,8 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
+> >  	}
+> >  
+> >  	/* The cali_phy# can be turned off after SATA PHY is initialized. */
+> > -	phy_power_off(imxpriv->cali_phy1);
+> > -	phy_exit(imxpriv->cali_phy1);
+> > -	phy_power_off(imxpriv->cali_phy0);
+> > -	phy_exit(imxpriv->cali_phy0);
+> > +	phy_bulk_power_off(NUM_CALIPHY, imxpriv->cali_phys);
+> > +	phy_bulk_exit(NUM_CALIPHY, imxpriv->cali_phys);
+> >  
+> >  	/* RxWaterMark setting */
+> >  	val = readl(hpriv->mmio + IMX8QM_SATA_AHCI_PTC);
+> > @@ -480,14 +469,10 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
+> >  
+> >  err_sata_phy_exit:
+> >  	phy_exit(imxpriv->sata_phy);
+> > -err_cali_phy1_off:
+> > -	phy_power_off(imxpriv->cali_phy1);
+> > -err_cali_phy1_exit:
+> > -	phy_exit(imxpriv->cali_phy1);
+> > -err_cali_phy0_off:
+> > -	phy_power_off(imxpriv->cali_phy0);
+> > -err_cali_phy0_exit:
+> > -	phy_exit(imxpriv->cali_phy0);
+> > +err_cali_phy_off:
+> > +	phy_bulk_power_off(NUM_CALIPHY, imxpriv->cali_phys);
+> > +err_cali_phy_exit:
+> > +	phy_bulk_exit(NUM_CALIPHY, imxpriv->cali_phys);
+> >  
+> >  	return ret;
+> >  }
+> > @@ -839,19 +824,19 @@ static const struct scsi_host_template ahci_platform_sht = {
+> >  
+> >  static int imx8_sata_probe(struct device *dev, struct imx_ahci_priv *imxpriv)
+> >  {
+> > +	int ret;
+> > +
+> >  	imxpriv->sata_phy = devm_phy_get(dev, "sata-phy");
+> >  	if (IS_ERR(imxpriv->sata_phy))
+> >  		return dev_err_probe(dev, PTR_ERR(imxpriv->sata_phy),
+> >  				     "Failed to get sata_phy\n");
+> >  
+> > -	imxpriv->cali_phy0 = devm_phy_get(dev, "cali-phy0");
+> > -	if (IS_ERR(imxpriv->cali_phy0))
+> > -		return dev_err_probe(dev, PTR_ERR(imxpriv->cali_phy0),
+> > -				     "Failed to get cali_phy0\n");
+> > -	imxpriv->cali_phy1 = devm_phy_get(dev, "cali-phy1");
+> > -	if (IS_ERR(imxpriv->cali_phy1))
+> > -		return dev_err_probe(dev, PTR_ERR(imxpriv->cali_phy1),
+> > -				     "Failed to get cali_phy1\n");
+> > +	imxpriv->cali_phys[0].id = "cali-phy0";
+> > +	imxpriv->cali_phys[1].id = "cali-phy1";
+> > +
+> > +	ret = devm_phy_bulk_get(dev, NUM_CALIPHY, imxpriv->cali_phys);
+> > +	if (ret)
+> > +		return dev_err_probe(dev, ret, "Failed to get cali_phy\n");
+> 
+> phy_bulk_get() already reports which PHY failed:
+> 
+> drivers/phy/phy-core.c:phy_bulk_get() {
+>     ...
+>         for (i = 0; i < num_phys; i++) {
+>                 phys[i].phy = phy_get(dev, phys[i].id);
+> 
+>                 ret = PTR_ERR_OR_ZERO(phys[i].phy);
+>                 if (ret) {
+>                         phys[i].phy = NULL;
+> 
+>                         dev_err_probe(dev, ret, "Failed to get phy: (%s)\n",
+>                                       phys[i].id);
+>                         goto err;
+>                 }
+>         }
+>     ...
+> }
+> 
+> so a missing cali-phy1 entry in phy-names now prints two errors, and the
+> second one doesn't name the PHY.
+> 
+> A plain "return ret;" should be enough here.
+> 
+> 
 
-The Fixes: tag looks right to me. c376a3456d8b is the commit that
-stopped intersecting superpage support across IOMMUs at attach time.
-In my earlier mail I pointed at 5bdd86ec5d19, which only removed the
-remaining hotplug user of domain_update_iommu_superpage(); both are in
-v6.13-rc1.
+Thanks, I will fix it.
 
 Regards,
-Laurence
-
+Inochi
