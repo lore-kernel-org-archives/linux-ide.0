@@ -1,85 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795620517;
-	b=wCDtOEu6P4oH/TZ9HP9UK2lWyCrYdvuH2HpBUiRm7G85VkWuvTf6ZPHTq9y8EWomCXmO
-	 xK106DqkkepSf6hBb4MiIg4ZTJnnr7DPn+Ujej8X0LcbC4mFAjBDkJzmH8gAuAgfxLsGI
-	 OKlEMRIOABzZp14yZeGY9cRDMZw4OAaB/SkBsOOmIQOXfpjcKNG4q4kiJmpGjQ+qIkE5B
-	 xAhvQIjHV9h2fRUW2NJeosWrem2Y4o0UKioMKWRmJSezsMQVqHdTHHb81ba5zGA0F3S/6
-	 aZuyd0cTBOM74dAwhwTCNhZBmojVNryWHf5kOmoGiiOEOgRX1hw5YB01EKHMS93fX5A==
+	t=1795621185;
+	b=enhex6giUu3O5J3wwzQIlwwN25VWwxNZC48XaCNDl9NVv+BHy61xOZIBQ3KS0MCiPEW5
+	 C+r3lwrTHcnXDy+0DxxUOHuvc3242z0c+3Omeeiu5ZAaa4Mxs/CFetKvfwQzxf79MVucx
+	 vUTm3Rcyl3gavkeoNwbSN90ig8ToPsHtOLOfABe3cJMV0BgrsXj/P+euYSPdzD/lsRYTK
+	 gKZck3lE82dE3fe1RA9Az/7UZwPtR6GIMSfN+H53OzuQtCkQgOIyOB9AAfbwItqX5SXpK
+	 NyqE+ftH5pCg8bBOYQTfdRFVgtXUfjZV96gre4xjvCmCKqV+4CHodgcFuZFuFEqBrLg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795620517;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795621185;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
 	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=4tA4R3M1tGeqFN2000iz5S9/N8qTO7Ro+JjVYjnPFCI=;
-	b=IUEZH/X9Wk6UMJm4MgeVmOU3xQRdX7Qv5x7NCHvHj5MvCp4+xOKaO1tUNNBnIrVFEidn
-	 4dk5Tq4+iwSCzITup5WQR1oCY1g7nH/yHJExal7r6fPM8tGrRMH3bkEyrrSwMjwikaPte
-	 NN6LUHOtft8Fg6tf2zA4dhh7kY6sPgIKYOsG/0QQPhznRoWjA6xBwoOg0T7EVVJpIZO1e
-	 Qp+Xg/L/a3UJIJpy1pLGM0+lsiD1l9IbCg9vtT9t37z2bX4qewIT2tGi6wC1D7yn3Ose0
-	 yKaccYKqvBP2br51BOGaFWER+/6iAuzuL4OXLLDr93Ehsvo3lWYh+dU6FZDlKItCwKw==
+	bh=03OK5Wux5qBQjFwf+S+X4PZ6SO+iKxNmDWiFlrnb6so=;
+	b=4JfuZSJmwxm4LwG/HeLNfflfKClNGbnc7H5UN3lw0LtCXbrjFB6OgMOame544gExGPOs
+	 YXZoF7JD4/1iH4GGCXMf290Chaeoag/VftcpBC26TsQhk1S0F0UaJQOHQPjYvOzrVgYWC
+	 cwcG5lE35ecMk6QcHlGe4MnVNwTnlNixh0LBT6DJbRzvlx2RTM16A2oWorQiYEKg11bPB
+	 QwSoafB77vo7CBBPQsVgsa1Wfal8qsG7WsEFRc2FsO9rDDDpJncm02qQ8OW0XKB6APhtB
+	 UEXLx0cFK0v5vWahXlvHMUQoDXk2dRdIcKScHZ7q+zv4ZZDg8a4KZLGTlILjbzVKUAQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=d7AJtqC3;
-	arc=none smtp.remote-ip=209.85.221.51
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hZQkKpXf;
+	arc=none smtp.remote-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6D3C606A327
-	for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 15:28:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A6D3C606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF388606A323
+	for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 15:39:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF388606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=d7AJtqC3
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-49355a50d11so292463f8f.2
-        for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 07:28:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hZQkKpXf
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4bb72b6e1b2so4292335e9.2
+        for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 07:39:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795620515; x=1796225315; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795621183; x=1796225983; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=4tA4R3M1tGeqFN2000iz5S9/N8qTO7Ro+JjVYjnPFCI=;
-        b=d7AJtqC3ItPc1GagK909ghnkB75xgGBmrWvrF1nHM8yjGyUu+GypKXUncZze9Nq+em
-         a69o4b4ituyrhiECVj1p7plkFrQgUIAHrIxis+RvnVbp9yYs+5mUkE5PLtYA4u33cC5c
-         1KUIHM5bQsnKTMuT055SSpwdHcAmbHOMedkTsZiPv7QgQQWG1juRDlANZ4RRiyKQYlDJ
-         T3rivTor3/LtHWpWutwaNWl6dHxC4QnzKzuCigvarCYXWfApjNBqvMtYua4AYUH/i31f
-         IpTCuGm+6IP1nxHBi8ggylJQPkNIgdykWRDhfxz9Y3FNbbQW0EN5kMXsRIwEoZZcRjRQ
-         +YOA==
+        bh=03OK5Wux5qBQjFwf+S+X4PZ6SO+iKxNmDWiFlrnb6so=;
+        b=hZQkKpXfoPCNOyIPGt3na6gHRDhBZ+SSP/SQA3rJHJZdqSm7Rqn+twjMd52AxubyQy
+         vFD0Pnc3F4zWRaYn9vD46oH+u3j/NCE+HNKmR1h2U/ppARV1FO/vO2BXMGPp/imJBe7u
+         CvqNLaHed8HmgawaaW54JlJPeoQuqrxdGP/0oHfFzObIHwATnPXumKuRH8eMi2ZyEhZ6
+         qP0qxR9hxQZg2cwbh3S5OEBOng0kR2oEwMCPDOam3vgu64CMxGn4YxodQgsb4zQSAWWB
+         wr6OLfgnXVJ2zeJLop02n0YA29iRtXdPDVrr2CDA9IG/r8zn0oKNfI/MqSZEr7K/Errl
+         bQpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795620515; x=1796225315;
+        d=1e100.net; s=20260707; t=1795621183; x=1796225983;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=4tA4R3M1tGeqFN2000iz5S9/N8qTO7Ro+JjVYjnPFCI=;
-        b=iAn1qOd2y4EiiY0exutpcAiDNcu3uSl1QX0elkgGTPZqE8QmkQXnBYbb+clUwgTUE+
-         8MxCvx1ZKSX0Z44rvaSYIoIFlodZKnAfMGu+tJQBVoGhH1U2K1Cr6C5i4z3MtkXPGCTs
-         64MBike4QP5JV5BVwwGV0f0xp2TbgVYhbcN4tcyG7J01ZgcudQWUz75J6i9ylxs/HPUl
-         njjEbfrqgv98YYMrKz4z+WdINUz/LZ59mQenL3kGdUr2kkBEbq3WceiRF5U2ebGbTvay
-         pvMrFin1Epiut/m8Xd3KTvcxyZchW/NVzTVD64hixISjeyRwyIRNYoq21mY5E0bo4PaT
-         7ojg==
-X-Forwarded-Encrypted: i=1; AL+hErGOeFN/HDwZ4nJjEHLj/88SgFKgPQDKJDAP3SyuSV8+z2Y344z29BK+3AYoSZf0jWMnnAutpF4Dk7A=@vger.kernel.org
-X-Gm-Message-State: APuU4Z9a9EG1ptY/VgpoqWKXKfprennh/0oMYD5kMI7bejoTMbQsXV6B
-	ihc3D5MBFtubOMcxT7aSiJkT5hdSTuyxMIQTtDr4i9NCYICb3G8PpXpQ
-X-Gm-Gg: AZFdTZcY1fC6tA1sUNv5uyHQL6hxc1n5dvCaqC6+cqBwdl+SwNYgaZ3P60JrO0mj3La
-	KrIgKHVIEs0XZo/aibVhIz0Td/zeuBRAuUZOAXPW+4jMr7XOleeczYAv0GR2O/Dng6x1cCv8tsE
-	yg109+gI/y2Fe00vo/trg/2pO/FphiDurfupURpH/vQ+exDRbJnpPZK5/mUU/uMDuB/pxb509Z1
-	B6zVoS2I2SOwIvT5tFXXEBo1Ev29FYQ+9skQjHU1+CnBLDUivaUnCrIT3iixa/UVk32nkSlwbNx
-	DGirE3VO5AFa68+8spNw5aJ6r2C3Jx6iePA3KwMY12j8XieGWnxn5wHaaORFuw2al7dd+7NxEzK
-	RKojzyrouuiSnabCIJihoVeSmKObGSyO08oV55we+9DsnsoZYc4bRt4T1HNZVhT8A4EJseJ2AN0
-	jMgwuSTd1ta0ZQLi+sB9u4//DUfyqb2W80pGK3jZUnL2rGJ8rUXPnK0Jn6ozeyRFg8u/zAjC3VR
-	v9eNlapKmMlNdKUZHea23oN5mnk0u3+ConDOaNHgZ9Eh+Dl77D55GVwckR652Q7yrb44JME0moB
-	RRz8J7TubjgnqcwT9m2W
-X-Received: by 2002:a5d:5e01:0:b0:4a8:eed3:770 with SMTP id ffacd0b85a97d-4abb47b25eemr37771369f8f.4.1795620514919;
-        Wed, 25 Nov 2026 07:28:34 -0800 (PST)
+        bh=03OK5Wux5qBQjFwf+S+X4PZ6SO+iKxNmDWiFlrnb6so=;
+        b=pTuO4S6WvMdWeaOjF5lyFk3azxLkx5Y26neDITFAsrSBaFhdpzDqm5wIc4JsV5hjAh
+         GxJ6d9sjKU2MPKrisghq1wAA+gL9SXknqxFmv5sjcuFghc23DkgRd03/q1byD+HeYdTk
+         vOHwJJpJC9aGfD6bc1ecgCCnMZAZ+bb2kFwNupnWPwIcQ2Ov2WhTyMu/xqyunku4rPhU
+         Tu3gaSYi7QzW0xDpKJHufXp6wo5gXXoWbvMjORQE0dXdnX+XK/DSoZ0DDspyVWPYfaVR
+         XaeehGb2cfXqtpHuoAqfz+eVVFyehcEV9373vOKEMGX51QC0XTR/xIZKkzKe+EsTjPUT
+         fQNg==
+X-Forwarded-Encrypted: i=1; AL+hErF8gGICn+PgDqKsTKqh8iaWbsF0agXm8Kr6lgYzrtcT4cEHYDNkLPXZ7Y/wpp3IsPpPtZu2Uyn9DNo=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/wsjEZOnDbHDeLyyQYNjfhIb3p8WrnXIFtlVonlvUZZxG+71t9
+	QhtWM7Ndt5cBjS1SvZEv8ThSCOoKqSsHEEYQh3uDSH9UQN6kDsnCshke
+X-Gm-Gg: AZFdTZeHkJ6hR28FzWZWk9Dg6Woj5fOU8tO7jp/2aSkqMWos55Hfv0vnHMTBykM4ues
+	VlflJqMZbDwJ/AxEq4KNKJdu9XjsmNxTI5Z85OlefJC4cH0bgvKazLH9BRK4IyRGWNfqVc3nBg8
+	K0j9Dh382wkjvBqR+SDBksAdsGBO602lZ2YHi5+JbC81a0ZJZI5/xpvJPEOpyPanddEwjN93rCq
+	xIJ366LhiJ4GCb7hZ+8CyroeXYVZ94paBQSgsDH9UDGFsRuS7vU/E64bYszs6P3nKrRbQOHxV/r
+	r70q/BVnAA0lf9nlwK2wXjlhjXc6f3M/rm+w1ZFZUrubewrCsvwR5FIL8Xj9YGYaoW3SUBvdazp
+	EgtB6kyp3Z42Lp/Xu2EdaL+/Enmtn3CyV1STCaG4dlbVUqG1e2TrlWcZvGnrOCWh/Cimt+7R2Gx
+	9XYzwoLsde8Z5ntGbhuE3mlpeVpNEFDB/oAQRFfc0/gBrs22hKxdZhJqc5s9JfELzcLylNpx8Pv
+	2gnjcARA9XzxHGCYFxzmUyxTqBsRlIdi11+bMZcagLGEp4j1WSLOv8NMaiauljisysk1v+vaHjJ
+	eMKWSDqbdE9fLTbbUIdeYyVgFq4=
+X-Received: by 2002:a05:600c:828e:b0:4bb:7ad9:2f22 with SMTP id 5b1f17b1804b1-4bb887853e1mr340731425e9.0.1795621183256;
+        Wed, 25 Nov 2026 07:39:43 -0800 (PST)
 Received: from skbuf ([2a02:2f04:d401:2601:d3cc:6bc:a861:f9da])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab69bf6804sm34443459f8f.10.2026.11.25.07.28.32
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb884a15absm474497565e9.9.2026.11.25.07.39.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 07:28:34 -0800 (PST)
-Date: Wed, 25 Nov 2026 17:28:30 +0200
+        Wed, 25 Nov 2026 07:39:41 -0800 (PST)
+Date: Wed, 25 Nov 2026 17:39:38 +0200
 From: Vladimir Oltean <olteanv@gmail.com>
 To: Inochi Amaoto <inochiama@gmail.com>
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
@@ -97,10 +97,13 @@ Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
 	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
 	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, 
 	linux-phy@lists.infradead.org, Yixun Lan <dlan@gentoo.org>, Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v5 6/8] doc: phy: Document some bulk helper functions
-Message-ID: <awb-MUCgZJn94Lbx@skbuf>
+Subject: Re: [PATCH v5 8/8] ata: ahci_imx: Use bulk PHY APIs for calibration
+ PHYs
+Message-ID: <awcBID5pfFm2FadY@skbuf>
 References: <20261125043639.249525-1-inochiama@gmail.com>
- <20261125043639.249525-7-inochiama@gmail.com>
+ <20261125043639.249525-1-inochiama@gmail.com>
+ <20261125043639.249525-9-inochiama@gmail.com>
+ <20261125043639.249525-9-inochiama@gmail.com>
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -112,98 +115,21 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261125043639.249525-7-inochiama@gmail.com>
+In-Reply-To: <20261125043639.249525-9-inochiama@gmail.com>
+ <20261125043639.249525-9-inochiama@gmail.com>
 
-On Wed, Nov 25, 2026 at 12:36:37PM +0800, Inochi Amaoto wrote:
-> Document all newly added bulk helper function, it can be used to manage
-> a set of PHYs automatically. This is useful when the driver want to
-> simplify the management of multiple PHYs.
+On Wed, Nov 25, 2026 at 12:36:39PM +0800, Inochi Amaoto wrote:
+> The i.MX8QM SATA PHY relies on the first two HSIO lanes for shared
+> impedance calibration. Store these calibration PHYs in a bulk array
+> and acquire them by name with devm_phy_bulk_get().
+> 
+> Initialize both calibration PHYs before powering them on in lane order,
+> then keep the SATA PHY initialization, mode selection and power-on
+> separate. Use the bulk helpers to release the calibration PHYs after
+> SATA startup and to unwind failures without repeating power-off after
+> a failed bulk power-on.
 > 
 > Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
 > ---
->  Documentation/driver-api/phy/phy.rst | 40 ++++++++++++++++++++++++++++
->  1 file changed, 40 insertions(+)
-> 
-> diff --git a/Documentation/driver-api/phy/phy.rst b/Documentation/driver-api/phy/phy.rst
-> index 0865c2e94eec..cae3d4700814 100644
-> --- a/Documentation/driver-api/phy/phy.rst
-> +++ b/Documentation/driver-api/phy/phy.rst
-> @@ -114,6 +114,12 @@ it. This framework provides the following APIs to get a reference to the PHY.
->  	struct phy *devm_of_phy_get_by_index(struct device *dev,
->  					     struct device_node *np,
->  					     int index);
-> +	int devm_phy_bulk_get(struct device *dev, int num_phys,
-> +			      struct phy_bulk_data *phys);
-> +	int devm_phy_bulk_get_all(struct device *dev,
-> +				  struct phy_bulk_data **phys);
-> +	int devm_of_phy_bulk_get_all(struct device *dev, struct device_node *np,
-> +				     struct phy_bulk_data **phys);
->  
->  phy_get, devm_phy_get and devm_phy_optional_get can be used to get the PHY.
->  In the case of dt boot, the string arguments
-> @@ -129,6 +135,21 @@ Some generic drivers, such as ehci, may use multiple phys. In this case,
->  devm_of_phy_get or devm_of_phy_get_by_index can be used to get a phy
->  reference based on name or index.
->  
-> +The bulk helpers are useful when a controller operates several PHYs together,
-> +for example the lanes of a single PCIe port. To get a set of PHYs by name,
-> +the driver supplies an array of ``struct phy_bulk_data`` with the ``id`` of
-> +each entry set to the corresponding PHY name. devm_phy_bulk_get() returns
-> +zero if it obtains all the requested PHYs or a negative error code on failure.
-> +The driver owns the array and keeps it valid until driver detach, when the
-> +PHY references are released.
-> +
-> +When a controller needs every PHY listed in a device node's ``phys`` property,
-> +devm_phy_bulk_get_all() obtains them from the controller's device node.
-> +devm_of_phy_bulk_get_all() does the same for an explicitly supplied device
-> +node. These functions return the number of PHYs listed in the node, which may
-> +be zero, or a negative error code on failure. They store the allocated array
-> +in ``*phys`` only when the return value is positive.
-> +
->  It should be noted that NULL is a valid phy reference. All phy
->  consumer calls on the NULL phy become NOPs. That is the release calls,
->  the phy_init() and phy_exit() calls, and phy_power_on() and
-> @@ -149,6 +170,14 @@ The general order of calls should be::
->      phy_exit()
->      [[of_]phy_put()]
->  
-> +After acquiring a set of PHYs with a bulk helper, the order is::
-> +
-> +    phy_bulk_init()
-> +    phy_bulk_power_on()
-> +    ...
-> +    phy_bulk_power_off()
-> +    phy_bulk_exit()
-> +
->  Some PHY drivers may not implement :c:func:`phy_init` or :c:func:`phy_power_on`,
->  but controllers should always call these functions to be compatible with other
->  PHYs. Some PHYs may require :c:func:`phy_set_mode <phy_set_mode_ext>`, while
-> @@ -172,6 +201,12 @@ PHY framework provides 2 APIs to release a reference to the PHY.
->  Both these APIs are used to release a reference to the PHY and devm_phy_put
->  destroys the devres associated with this PHY.
->  
-> +For devm_phy_bulk_get_all() and devm_of_phy_bulk_get_all(), driver detach
-> +releases both the PHY references and the allocated array. To release them
-> +earlier, use::
-> +
-> +	void devm_phy_bulk_put_all(struct device *dev, struct phy_bulk_data *phy);
-> +
->  Destroying the PHY
->  ==================
->  
-> @@ -221,3 +256,8 @@ DeviceTree Binding
->  
->  The documentation for PHY dt binding can be found @
->  Documentation/devicetree/bindings/phy/phy-bindings.txt
-> +
-> +Missing Bulk Helpers
-> +====================
-> +Currently, only a few bulk helper functions are added as they have users.
-> +Function not upstreamed can be found at https://lore.kernel.org/linux-phy/20260904083709.425893-1-inochiama@gmail.com/
 
-s/Function/Functions/
-
-Other than that:
 Reviewed-by: Vladimir Oltean <olteanv@gmail.com>
-
-Thanks for updating the documentation, this is appreciated.
