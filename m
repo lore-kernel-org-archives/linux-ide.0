@@ -1,76 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795622185;
-	b=W0LWHePHIXZx1hp7C0Qm7aKoGsZBdHJtVD4OuPcc/lfS08qRTu6xXdADHmQbloCqJHlH
-	 2Py0tiwEhPCL2e3RmFqr3VM2sgCtpxrUFP7eHmYEddzl9St9oDPrmyrSV+wlVEKsLjcjA
-	 4j3AS3Pbzlqz99th348fU39two9B0S02B/j1XiYVo/HH96VOVbuNFdzbyynT//Z5vvtfg
-	 3YlULaSUoJLC8hJAufFYWJbdtY6u0ByN/JMwmAcxmNXkuc1WHzr57sQI7Jmp35TiFG8BB
-	 hNQQRfc/MquHBwnwxY6WiFTxo/HSPhqWp/6aAS1MV4HYMn0CqTJO6ydIabHHwRvtBQQ==
+	t=1795631401;
+	b=svHqzj7/DIlFQbuDsr//eWb8G7bl4y/LAgHJNVy519+IhLwjY3WkYnlFQgX8oEZ9TIKb
+	 iJREX4wPQpEqy83xgyMQydbZSlPj2EyMacSHgiN/My6vUetE0MjEG9KdXys3P9r3hS7Us
+	 DMWh+HqsQKTQV38giFFoRZ0YJl4JlUCmBKVzCKz3NTlWYEonuPNzZCwUB1oyU3s/qE9+i
+	 D21+Z6sDHZQQ1/z3zfDyQ37rkOl1T7qrOqUuk7SVSRq7uNQJU7749D7cz8WowL5Pc2qPy
+	 W1sxCmMMtv6mQLH45FhjHWcCSvcLnrms6Ww89N8hOaWETsHRaVJiJuy5EhT64Hgu78w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795622185;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=q4uv0asRR2dgGMXvOPx/Lal51OzeJ3KhJ9tib17HZ3c=;
-	b=1tcBtIwMaa+tYBd96Uk/63OcfRZ+qOGERd87GJx5snHpbJsBf5wZ2XZsg0DABbKkdKU6
-	 lL4POVKiMErTgG6Ej6iQvtDOHm6eymBRYrGBGi6dsql4IQDNO/ytbAOfptvHfCkz05tXV
-	 KCkw/zspEj8UVYt2gRzzQvoQjdcLEdrYiZbfvFTD/0F0DAivnzCzb08b/Qa81zbsxvSNC
-	 LHvwojsPnRoHjpP61oIg2WWPPttD6q75tzuP6fdcXNnmDk6GCV+QkU6XD4xcLF7Guw03V
-	 tRRC5EtHHD2HPBtcmOXhxxZbpRmXndgZKwiUPBDHBFLBBpVuzth8d3+KHsdIQId9ayA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795631401;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=thRt5lrTBHxA5kWjyhVc/0X4QbDWjOzyTASo1GnS3q4=;
+	b=ytIU68Q+O6InTaCRyNTJcc5mGi6p1ZDbuibLG4VQMKkPumQCGcReUPGd5V4186cd+N3s
+	 FzPcpIR+VaDy8kWyC1ZweotgkqR0FF8iZjDw+h95VwGh0BCVslBcE3BOmJt8/1N1dI6ii
+	 nVdJW2jNjUymnoKl8NoONP+GZVoQNCwZIu16Kh5uCxr3e8O4wDit3xoa/nZsuTi4bXzc9
+	 0dXP/UV9CVludjXSCfRx7gX43XalC9vLP1wFLhDKBzFelpkrhu7huXrhYXqtD6JQOosJs
+	 yKpvSXdodamSkE5WBWdBHJ/kytxVlk1y1Sla8Fo4FgcaSYb/NUaqSF/U1PL+zlsedmg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R1qv51xI;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=hel+7fhM;
+	arc=none smtp.remote-ip=199.89.1.16
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC99606A321;
-	Wed, 25 Nov 2026 15:56:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B87CC606A323;
+	Wed, 25 Nov 2026 18:30:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B87CC606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R1qv51xI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEF581F0093E;
-	Wed, 25 Nov 2026 15:56:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795622185;
-	bh=q4uv0asRR2dgGMXvOPx/Lal51OzeJ3KhJ9tib17HZ3c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=R1qv51xIK6Mx7z4WavGDaEQcFgwJQvutqhCXM+ZAKWIklnCkqRyE/V1eejVf+E3AL
-	 6AxKgPcQNqzrLC2qdJyMbBwrCyb19pNyVKaPQGesLvn56Tl/XBYq8eAYUat852bM/l
-	 5b3hi1x0qvJEt3xurKf6iBdGDD61GFMmLgwW+mXhjWa47oy/9IXL2ZCrpEj94sTRAd
-	 35S5nmvPcm81hxQX26Rjyh58U7nQU64f1wuLs6hQJkAdo5m+djbb8CjPbE8unnayN+
-	 URJAcJloXrqoOTpUay/QP4Ate0tEStRd/ddouTQgq5MGdiPC8ReUkspwuhWnSCOkQl
-	 HnNVLsx9NnT8Q==
-Date: Wed, 25 Nov 2026 16:56:16 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Inochi Amaoto <inochiama@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Damien Le Moal <dlemoal@kernel.org>, Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>, Aksh Garg <a-garg7@ti.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Rhys Tumelty <rhys@tumelty.co.uk>,
-	Manikandan K Pillai <mpillai@cadence.com>,
-	"vladimir.oltean@nxp.com" <vladimir.oltean@nxp.com>,
-	Qiang Yu <qiang.yu@oss.qualcomm.com>,
-	Hans Zhang <18255117159@163.com>, Yao Zi <me@ziyao.cc>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, imx@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-phy@lists.infradead.org, Yixun Lan <dlan@gentoo.org>,
-	Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v5 8/8] ata: ahci_imx: Use bulk PHY APIs for calibration
- PHYs
-Message-ID: <awcFIJlCOxB7nXNz@ryzen>
-References: <20261125043639.249525-1-inochiama@gmail.com>
- <20261125043639.249525-9-inochiama@gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=hel+7fhM
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jZSs413Jwzlfcpr;
+	Wed, 25 Nov 2026 18:30:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1795631391; x=1798223392; bh=thRt5lrTBHxA5kWjyhVc/0X4
+	QbDWjOzyTASo1GnS3q4=; b=hel+7fhMgAhDpO9lwN3vQjdkpPRQrMNgfcBdIYk7
+	Zym/OZdROp3JG3JHpJMLGxC0mmVte9UVjvSJaixDzEVLbtNGgVMTnjofBT3tindB
+	GqsVOF7E4qZHAWSVGKW6Z6crfPq3eTUiUdn41wuZ8gP0d6nmyX+RXuLrVdcNACoB
+	CI0fL6arkDFbUhOwaGnibDuLOEaxhxwUhWHQX6cZD7NCHnUzbLpaw9BhLVgntxL8
+	7fXBdqo+vOq51+jBwyxV2q6MImdGAZgTynFgJOiYu+nFYA7dP9l3i11slgsySrOt
+	MdUwqbzLXa12iVgZR0TRB6vyxTGVh9h06EMUCfv59gpGGQ==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 7EqdZkBp2pxE; Wed, 25 Nov 2026 18:29:51 +0000 (UTC)
+Received: from [192.168.0.215] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jZSrt62HMzlfvpT;
+	Wed, 25 Nov 2026 18:29:50 +0000 (UTC)
+Message-ID: <a0ff3156-add0-4f7d-8373-09f95bd7036b@acm.org>
+Date: Wed, 25 Nov 2026 10:29:49 -0800
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -80,185 +70,175 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261125043639.249525-9-inochiama@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] DMAR fault by Intel H97 SATA controller since
+ "block: Increase BLK_DEF_MAX_SECTORS_CAP" (6.17-rc1)
+To: Thorsten Leemhuis <regressions@leemhuis.info>,
+ Tobias Laas <tobias.laas@posteo.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ regressions@lists.linux.dev, linux-block@vger.kernel.org,
+ linux-ide@vger.kernel.org, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+ Lu Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>,
+ Will Deacon <will@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ 70sp <70sp@protonmail.com>, Laurence Oberman <loberman@redhat.com>
+References: <5ad27a97aafbc08a8702d5b90d09cd59@posteo.de>
+ <awSs5Cw3hFkf4O4T@ryzen> <ec36d13e-e4c2-4bfb-8b50-69d4a1628839@leemhuis.info>
+ <87b1bbd8-8113-4890-8623-738b19a9cc7b@leemhuis.info>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <87b1bbd8-8113-4890-8623-738b19a9cc7b@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Hello Inochi,
+On 11/25/26 12:52 AM, Thorsten Leemhuis wrote:
+> For completeness, =C5=A0imon Posp=C3=ADchal (now CCed) shared findings =
+and a WIP
+> fix (both with the help of a LLM) meanwhile here:
+>=20
+> https://lore.kernel.org/all/QISmXFlpPMgvFUKmdIBDwqn4JHHXt2NZeJzerMLHF_5=
+icLo0lPKVlN0Ig9v8Vb52NmCeSFdyrao4x8KoN1DCXtDlnZS7eRIClC6vZyu-hPU%3D@proto=
+nmail.com/
 
-On Wed, Nov 25, 2026 at 12:36:39PM +0800, Inochi Amaoto wrote:
-> The i.MX8QM SATA PHY relies on the first two HSIO lanes for shared
-> impedance calibration. Store these calibration PHYs in a bulk array
-> and acquire them by name with devm_phy_bulk_get().
-> 
-> Initialize both calibration PHYs before powering them on in lane order,
-> then keep the SATA PHY initialization, mode selection and power-on
-> separate. Use the bulk helpers to release the calibration PHYs after
-> SATA startup and to unwind failures without repeating power-off after
-> a failed bulk power-on.
-> 
-> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
-> ---
->  drivers/ata/ahci_imx.c | 57 ++++++++++++++++--------------------------
->  1 file changed, 21 insertions(+), 36 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-> index 6aaa18e29abc..18faa033e44f 100644
-> --- a/drivers/ata/ahci_imx.c
-> +++ b/drivers/ata/ahci_imx.c
-> @@ -25,6 +25,8 @@
->  
->  #define DRV_NAME "ahci-imx"
->  
-> +#define NUM_CALIPHY		2
-> +
->  enum {
->  	/* Timer 1-ms Register */
->  	IMX_TIMER1MS				= 0x00e0,
-> @@ -66,8 +68,7 @@ struct imx_ahci_priv {
->  	struct clk *ahb_clk;
->  	struct regmap *gpr;
->  	struct phy *sata_phy;
-> -	struct phy *cali_phy0;
-> -	struct phy *cali_phy1;
-> +	struct phy_bulk_data cali_phys[NUM_CALIPHY];
->  	bool no_device;
->  	bool first_time;
->  	u32 phy_params;
-> @@ -428,30 +429,20 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
->  	 * Initialize the first two lane PHYs here, although only the
->  	 * third lane PHY is used by SATA.
->  	 */
-> -	ret = phy_init(imxpriv->cali_phy0);
-> +	ret = phy_bulk_init(NUM_CALIPHY, imxpriv->cali_phys);
->  	if (ret) {
->  		dev_err(dev, "cali PHY init failed\n");
->  		return ret;
->  	}
-> -	ret = phy_power_on(imxpriv->cali_phy0);
-> +	ret = phy_bulk_power_on(NUM_CALIPHY, imxpriv->cali_phys);
->  	if (ret) {
->  		dev_err(dev, "cali PHY power on failed\n");
-> -		goto err_cali_phy0_exit;
-> -	}
-> -	ret = phy_init(imxpriv->cali_phy1);
-> -	if (ret) {
-> -		dev_err(dev, "cali PHY1 init failed\n");
-> -		goto err_cali_phy0_off;
-> -	}
-> -	ret = phy_power_on(imxpriv->cali_phy1);
-> -	if (ret) {
-> -		dev_err(dev, "cali PHY1 power on failed\n");
-> -		goto err_cali_phy1_exit;
-> +		goto err_cali_phy_exit;
+Thanks Thorsten for having shared that link. The LLM I'm using doesn't
+like that patch and came up with the patch shown below. Untested.
 
-This changes the order the calibration PHYs are brought up in.
-
-The commit message describes the new order:
-
-  "Initialize both calibration PHYs before powering them on in lane
-  order"
-
-but doesn't say that it differs from the current sequence. Could the
-commit message mention the change, and why it is safe for the shared
-calibration?
-
-The cover letter mentions that the PHY timing requirements were checked
-against the documentation. Has the new sequence also been tested on
-i.MX8QM hardware?
+Bart.
 
 
->  	}
->  	ret = phy_init(imxpriv->sata_phy);
->  	if (ret) {
->  		dev_err(dev, "sata PHY init failed\n");
-> -		goto err_cali_phy1_off;
-> +		goto err_cali_phy_off;
->  	}
->  	ret = phy_set_mode(imxpriv->sata_phy, PHY_MODE_SATA);
->  	if (ret) {
-> @@ -465,10 +456,8 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
->  	}
->  
->  	/* The cali_phy# can be turned off after SATA PHY is initialized. */
-> -	phy_power_off(imxpriv->cali_phy1);
-> -	phy_exit(imxpriv->cali_phy1);
-> -	phy_power_off(imxpriv->cali_phy0);
-> -	phy_exit(imxpriv->cali_phy0);
-> +	phy_bulk_power_off(NUM_CALIPHY, imxpriv->cali_phys);
-> +	phy_bulk_exit(NUM_CALIPHY, imxpriv->cali_phys);
->  
->  	/* RxWaterMark setting */
->  	val = readl(hpriv->mmio + IMX8QM_SATA_AHCI_PTC);
-> @@ -480,14 +469,10 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
->  
->  err_sata_phy_exit:
->  	phy_exit(imxpriv->sata_phy);
-> -err_cali_phy1_off:
-> -	phy_power_off(imxpriv->cali_phy1);
-> -err_cali_phy1_exit:
-> -	phy_exit(imxpriv->cali_phy1);
-> -err_cali_phy0_off:
-> -	phy_power_off(imxpriv->cali_phy0);
-> -err_cali_phy0_exit:
-> -	phy_exit(imxpriv->cali_phy0);
-> +err_cali_phy_off:
-> +	phy_bulk_power_off(NUM_CALIPHY, imxpriv->cali_phys);
-> +err_cali_phy_exit:
-> +	phy_bulk_exit(NUM_CALIPHY, imxpriv->cali_phys);
->  
->  	return ret;
->  }
-> @@ -839,19 +824,19 @@ static const struct scsi_host_template ahci_platform_sht = {
->  
->  static int imx8_sata_probe(struct device *dev, struct imx_ahci_priv *imxpriv)
->  {
-> +	int ret;
-> +
->  	imxpriv->sata_phy = devm_phy_get(dev, "sata-phy");
->  	if (IS_ERR(imxpriv->sata_phy))
->  		return dev_err_probe(dev, PTR_ERR(imxpriv->sata_phy),
->  				     "Failed to get sata_phy\n");
->  
-> -	imxpriv->cali_phy0 = devm_phy_get(dev, "cali-phy0");
-> -	if (IS_ERR(imxpriv->cali_phy0))
-> -		return dev_err_probe(dev, PTR_ERR(imxpriv->cali_phy0),
-> -				     "Failed to get cali_phy0\n");
-> -	imxpriv->cali_phy1 = devm_phy_get(dev, "cali-phy1");
-> -	if (IS_ERR(imxpriv->cali_phy1))
-> -		return dev_err_probe(dev, PTR_ERR(imxpriv->cali_phy1),
-> -				     "Failed to get cali_phy1\n");
-> +	imxpriv->cali_phys[0].id = "cali-phy0";
-> +	imxpriv->cali_phys[1].id = "cali-phy1";
-> +
-> +	ret = devm_phy_bulk_get(dev, NUM_CALIPHY, imxpriv->cali_phys);
-> +	if (ret)
-> +		return dev_err_probe(dev, ret, "Failed to get cali_phy\n");
+Subject: [PATCH] iommu/vt-d: Disable superpages on Haswell with=20
+integrated graphics
 
-phy_bulk_get() already reports which PHY failed:
+Disable Intel VT-d superpages on bare-metal Haswell client systems when
+integrated graphics (0000:00:02.0) is enabled and an active remapping
+unit advertises superpage support (CAP.SLLPS).
 
-drivers/phy/phy-core.c:phy_bulk_get() {
-    ...
-        for (i = 0; i < num_phys; i++) {
-                phys[i].phy = phy_get(dev, phys[i].id);
+Per the 4th Generation Intel Core Processor Family datasheets (document
+328897, section 3.1.2), the integrated graphics VT-d engine does not
+support super-pages and BIOS must disable super-pages in the default
+VT-d engine when integrated graphics is enabled. Several Haswell BIOSes
+leave CAP.SLLPS set on the default engine (dmar1). Whenever Linux install=
+s
+a 2 MiB or 1 GiB leaf entry (PS=3D1) on dmar1, hardware aborts DMA with
+fault reason 0x0c ("non-zero reserved fields in PTE"), breaking VFIO
+passthrough, discrete GPUs, audio, and AHCI storage (exposed by default
+once BLK_DEF_MAX_SECTORS_CAP increased to 4 MiB in v6.17).
 
-                ret = PTR_ERR_OR_ZERO(phys[i].phy);
-                if (ret) {
-                        phys[i].phy = NULL;
+Prior to commit c376a3456d8b ("iommu/vt-d: Remove
+domain_update_iommu_cap()"), domain_update_iommu_superpage() intersected
+superpage support across all active IOMMUs, so the IGD unit (SLLPS=3D0)
+masked off superpages on dmar1. After that commit, dmar1 domains started
+honoring dmar1's advertised CAP.SLLPS.
 
-                        dev_err_probe(dev, ret, "Failed to get phy: (%s)\n",
-                                      phys[i].id);
-                        goto err;
-                }
-        }
-    ...
-}
+Detect bare-metal Haswell client CPUs (INTEL_HASWELL, INTEL_HASWELL_L,
+INTEL_HASWELL_G), verify that the Intel integrated graphics device at
+0000:00:02.0 is present and not on an untrusted PCI link, and clear
+intel_iommu_superpage during intel_iommu_init() before allocating any
+paging domains if an active IOMMU advertises CAP.SLLPS.
 
-so a missing cali-phy1 entry in phy-names now prints two errors, and the
-second one doesn't name the PHY.
+Fixes: c376a3456d8b ("iommu/vt-d: Remove domain_update_iommu_cap()")
+Reported-by: Tobias Laas <tobias.laas@posteo.de>
+Closes:=20
+https://lore.kernel.org/linux-block/5ad27a97aafbc08a8702d5b90d09cd59@post=
+eo.de/
+Reported-by: =C5=A0imon Posp=C3=ADchal <70sp@protonmail.com>
+Closes:=20
+https://lore.kernel.org/r/HYhMd0Klo0XE_yiVY7XmsgyKKFDwKHfKRy22KrycLcYd0V_=
+ykA4xdbBMJXkA07YX3os6qK-NhMIVi6ITo-CkNIIF0e-GcI0UwwZmdDhAJ0I=3D@protonmai=
+l.com
+Cc: stable@vger.kernel.org
+---
+  drivers/iommu/intel/iommu.c | 53 +++++++++++++++++++++++++++++++++++++
+  1 file changed, 53 insertions(+)
 
-A plain "return ret;" should be enough here.
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index 5a2e705a2f2e..dd37aa25e287 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -24,6 +24,8 @@
+  #include <linux/tboot.h>
+  #include <uapi/linux/iommufd.h>
 
++#include <asm/cpu_device_id.h>
++
+  #include "iommu.h"
+  #include "../dma-iommu.h"
+  #include "../irq_remapping.h"
+@@ -43,6 +45,7 @@
 
-Kind regards,
-Niklas
+  #define DEFAULT_DOMAIN_ADDRESS_WIDTH 57
+
++static void __init check_haswell_igfx_superpage(void);
+  static void __init check_tylersburg_isoch(void);
+  static int intel_iommu_set_dirty_tracking(struct iommu_domain *domain,
+  					  bool enable);
+@@ -2762,6 +2765,7 @@ int __init intel_iommu_init(void)
+  		pr_info("No SATC found\n");
+
+  	init_no_remapping_devices();
++	check_haswell_igfx_superpage();
+
+  	ret =3D init_dmars();
+  	if (ret) {
+@@ -4266,6 +4270,55 @@ static void __init check_tylersburg_isoch(void)
+  	       vtisochctrl);
+  }
+
++static const struct x86_cpu_id haswell_cpu_ids[] __initconst =3D {
++	X86_MATCH_VFM(INTEL_HASWELL, NULL),
++	X86_MATCH_VFM(INTEL_HASWELL_L, NULL),
++	X86_MATCH_VFM(INTEL_HASWELL_G, NULL),
++	{}
++};
++
++/*
++ * Per the 4th Generation Intel Core Processor Family datasheets (e.g.
++ * document 328897, section 3.1.2), the integrated graphics VT-d engine
++ * does not support super-pages and BIOS must disable super-pages in the
++ * default VT-d engine when integrated graphics is enabled. Some Haswell
++ * BIOSes leave CAP.SLLPS set on the default engine, causing fault reaso=
+n
++ * 0x0c (non-zero reserved fields in PTE) when a 2 MiB or 1 GiB superpag=
+e
++ * mapping is used.
++ */
++static void __init check_haswell_igfx_superpage(void)
++{
++	struct dmar_drhd_unit *drhd;
++	struct intel_iommu *iommu;
++	struct pci_dev *pdev;
++
++	if (!intel_iommu_superpage)
++		return;
++
++	if (cpu_feature_enabled(X86_FEATURE_HYPERVISOR) ||
++	    !x86_match_cpu(haswell_cpu_ids))
++		return;
++
++	pdev =3D pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(2, 0));
++	if (!pdev)
++		return;
++
++	if (pdev->vendor !=3D PCI_VENDOR_ID_INTEL || !IS_GFX_DEVICE(pdev) ||
++	    risky_device(pdev)) {
++		pci_dev_put(pdev);
++		return;
++	}
++	pci_dev_put(pdev);
++
++	for_each_active_iommu(iommu, drhd) {
++		if (cap_super_page_val(iommu->cap)) {
++			intel_iommu_superpage =3D 0;
++			pr_info("Disabling superpages on Haswell with integrated graphics\n")=
+;
++			break;
++		}
++	}
++}
++
+  /*
+   * Here we deal with a device TLB defect where device may=20
+inadvertently issue ATS
+   * invalidation completion before posted writes initiated with=20
+translated address
+
