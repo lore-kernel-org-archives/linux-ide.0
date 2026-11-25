@@ -1,74 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=188.68.63.170
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795596802;
-	b=q9h9Ilzfi+VAP7IezQaQt+maLSoVaRC6z/JPp9MGIb54a3sjc6PgP/L6Y/54pyzdrO5+
-	 8zOvJ/xqunv2S7SWKiK0QwKWK59COnUqO3qyNLo02dZv1HoWsW8z8iFcuC2Vat50S+9Nk
-	 4MHKxFM8VLTYySDHRuPs0nIEniFQZgnpXTQk1efJAhQn1EIaDDRtZ4xYXJSkMJQVuqKUm
-	 kwuZcvHo9uxDnWj32dzl1IFH8D6L6KC7R2XrKuITlRZuqoZwd9At+fWxxGgK1VNvArFGt
-	 qAjMe9y+X8hmjcj69E/EG0bKovTbPWdxduX0q8Ff5BCtmF0I+AhckMzCKOe2Fc7m+hg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795596802;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:X-Virus-Scanned:
-	 X-Spam-Flag:X-Spam-Score:X-Spam-Level:X-Spam-Status:Received:Received:
-	 Received-SPF:Message-ID:Date:MIME-Version:User-Agent:Subject:From:To:
-	 Cc:References:Content-Language:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-PPP-Message-ID:X-NC-CID;
-	bh=yQ5oP8B/ewMdIJyV3jySqk1F2J/QMkaLPJwixo6jHK8=;
-	b=qsj/PSSIoRjXf0m2cC0bOVQ5GTHP88rsWtZ4txO7DEHa0wS7TsZBqyQVs73a1en1Yx1U
-	 Ng80rmkZXyYPXNpjYb9BYB9GR/BBEwhKIep4Eqey0aAb/YMrEngUuLRpV9bEtjt9rfTjO
-	 joDzfXlryJuzIeJUNxZcUX4aCumCq5Q9l4+HONrE+1EW/aYSbKZUCQ6D3BpaUL6WFel8M
-	 kzqHYo4t/y/OHZbBwsnjZovsJqOVdYTBATHCsoJ0Pqo6McHVQRIsc3w9cJdwUshPEySdH
-	 AMBcutDnsbFYbGjKLRiJ7T+rqCrcokCeEYwbaNybDVwo5+S+7tw4fu7bpZZa2MXc6kg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=leemhuis.info;
-	spf=pass smtp.mailfrom=leemhuis.info;
-	dkim=pass header.d=leemhuis.info header.i=@leemhuis.info header.a=rsa-sha256 header.s=key2 header.b="U/u/HCof";
-	arc=none smtp.remote-ip=188.68.63.170
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.170])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.170
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795600891;
+	b=a7ljNfrBZjWokL6+Kl3ICCzXsoaA9pKf4/86IcYYeqn0TDYCDOkiH5xGJDdYFpPJ4e0A
+	 sjpPfKV5c3Tw7dfJHDNWlgJNrkXNJ8LMBuFyQoUVtx02F3IwxnQK1kr38yqVfxhPS1uvm
+	 D2WZJWHcemcK23xCNSMMgffLnIT9rQxTRkUcY+E7tYBk8I16EA92Z55TWwhHfefNye3Dt
+	 ZBAqpidMih/8ZP9nuzPvWs3LrXtIw5JrgM5BxMCuIzD7k/Xxl2XZe3/oJZKsIgzZH9hNT
+	 FrB4dq7UlnUReupnp8FlKopS4o1TksLx2+gCXH6Hk5GDbXCXenPdmJTtAg9DQKA+TJA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795600891;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=0jNf9LvDeUT8dvX3mev+TB2gDDnK8ObeBjOtFwflXew=;
+	b=KlLo9ZA9pO+tGEzqLUymrMtQO6TuPt8Nb+xBpPdfEZg7Wk6tMD5LYoHBMZOOw82d4Gx/
+	 bg7XBrFw3IAdzwnYVXCKePtRrdpVnuus5siyJkP09lOb+D5uX90EZ6zMo/sr/00PK6dkC
+	 HsPeR1R5Xa5jUwf2U2eiKNuNGk2U90RMM4ST6j2UADEK+ajIwraqLUqwp6EwcT+DULlq3
+	 RphSl1Yejo/0RJXTzsk9JFG+7JWq4yodjK9R6y4CAeV3IM4YiO3MSY/p06wfLuoEtDq+z
+	 aUw7ZJR4Jw9gDrlOl8+wu2goIFEWWZjcVseypSKpg3tWVPQAISB/KIjgio0hczDIaTQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=IHqhO7XB;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.170
+Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FF20606A31E;
-	Wed, 25 Nov 2026 08:53:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1FF20606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BA5E606A321
+	for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 10:01:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6BA5E606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=leemhuis.info header.i=@leemhuis.info header.a=rsa-sha256 header.s=key2 header.b=U/u/HCof
-Received: from mors-relay8203.netcup.net (localhost [127.0.0.1])
-	by mors-relay8203.netcup.net (Postfix) with ESMTPS id 4jZD3Y0mRLz8rjd;
-	Wed, 25 Nov 2026 08:53:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1795596793;
-	bh=AlE/5na4fH2NUXIJkY/rENlw2S0DFjAKYsvCxIq5tLA=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=U/u/HCoff96pu2i1H5b/2oiNQRFeojCP8QwRojd8XWeiwzVAbKeydBXSac5mMIGM2
-	 vwEmwPAzOX+P1gXwRyMPYCmrt4q2ayMt7nF9YXhbmwMxvI00qYA5vn7o1fIvU3A9Hu
-	 yYV5DNBaz8znvMCOIKW5gPOCkjpUUU9kunqEBRJKrVmRWYdS91+XK9hY4TqkMGIScn
-	 Z3RDf7z87DwZhK7Zj31WGGpPTU+s6tkg4R+1LY8pqabMFtjQ3WDMfK/sg4KLOK+82P
-	 Z92ieAlUBWdH75gkx+H8FTiQ5c7GcNs1/+cMrCu0R7xvyAET5jKbpkhZbFRv8x47mI
-	 Ye3NcJPwU0Lvg==
-Received: from policy01-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay8203.netcup.net (Postfix) with ESMTPS id 4jZD3Y01pPz8rfS;
-	Wed, 25 Nov 2026 08:53:13 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at policy01-mors.netcup.net
-X-Spam-Flag: NO
-X-Spam-Score: -2.901
-X-Spam-Level: 
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy01-mors.netcup.net (Postfix) with ESMTPS id 4jZD3V2kGBz8vKH;
-	Wed, 25 Nov 2026 09:53:10 +0100 (CET)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id BEE4E5FA03;
-	Wed, 25 Nov 2026 09:52:53 +0100 (CET)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <87b1bbd8-8113-4890-8623-738b19a9cc7b@leemhuis.info>
-Date: Wed, 25 Nov 2026 09:52:49 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=IHqhO7XB
+Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-38431138772so7176667eec.1
+        for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 02:01:31 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795600890; cv=none;
+        d=google.com; s=arc-20260327;
+        b=SRYSpMqw/b6u4vsgkXS0AJF6sNHq++A0B0fpB7QpAz85UK2pSIbM6TKs1kyaubN2Lq
+         kTg9ezBaoVWCcPUqc82r9ebzXUvluGr5uZFDK/iuAsgla47TdDClkWDThm2Rdg/O0wLK
+         sTxmsHVA0f8MsBGe/PoxhX7h+6CfEsvP4iAMTngjLjyceNU1oFsAA1EkGPtP8HdjHUfb
+         1PIHwP9pCvhNKXdNoziUQNCfg4S1FhJ9XFZm6qhuEKsgGbWF4QrkSUVq81ys77Br+Qh7
+         yrAUW/8CW7LJRd0n+3Mm4qZMy5zm0TsezA82YkNdwdcLGUie00rhoU/gkYnG2sOfM/o8
+         dOvA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=0jNf9LvDeUT8dvX3mev+TB2gDDnK8ObeBjOtFwflXew=;
+        fh=hv9n3QdkbT0KdQouXqJ/38rIC39dTjG6oHXVQLvFqMQ=;
+        b=kHQbf77bM2iv2nX+MV23VczgL5MOq9yi4ITKsC6RC/vA3aU5V241dzAILMz6dfkem3
+         z3BUH1B4vNJZK1wFMPLZDcvf36FnvlxpmTC0Zj5YYEdlEFuzCKNeNiei3CNy2hE0mHJ3
+         LsPnvVtkciNnCYDeZ5bZDJqXhNV2QkN+H4Gvev6CG72fpRzKiiKhxNQ0C23QsRDmlGLI
+         guem6FLXxrT9DBYru3xQHbjG2JfTkePcuBGSsLv8SR4c1qY8lfIOuWTgFRkSeXHT3J3L
+         +T44hiGV/U+LdwMp7EVM7oJF+dEbiX89kLOCB3Y6Se1CcTeYA2tXFDJbZGm6WRcXlFAi
+         lbMg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795600890; x=1796205690; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=0jNf9LvDeUT8dvX3mev+TB2gDDnK8ObeBjOtFwflXew=;
+        b=IHqhO7XBb2m6VjigS6OmQDrdCPQsHL1CbqWkw10FyrmeJCMk2yfYtOz8vHO6NItTIY
+         cbhU5KxlSEpwmJvn8XgDttPQZUnzb/nIl55zQ7o6oWP6YaRH6oM6y5ImllzyA3r3QTCB
+         PMnpoON1MvI0E8nUCpEAXBBG64Z3bkR2mYCofzO1SHFcI5ldTH6fznTZqQslRWF2w+GC
+         NLqxmX5lY3iFfYD4WfXGzIoPmD/YTw8aKoKzAI/ABh0HjaO1K+WtqmzXrd1iVoJF/Efp
+         n+FraS4qa3uxVHbxg+yrSGio1Oro4wP4aG7KKQgsvarDVfCjbEeaqtUvw7twp1NK1nap
+         Vodw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795600890; x=1796205690;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0jNf9LvDeUT8dvX3mev+TB2gDDnK8ObeBjOtFwflXew=;
+        b=sZzhUJMa3dWZak8GeN8iP9NKVm7quB/+P5yaJuQJbhydemNXVSk/wkw+2WAGkit3+h
+         00PVJtr+0NnTo+0CaBUs82I+EU1L3SHQnVkyCKCiuuu+OM6+llWBKLGuECCNZSlVM6d2
+         hmcROsGkvfZbymsi593xbBoctj/oUDLYZgo2sHAZB0pzlCUSSwd7GTSthpxBsw7phRnE
+         PVJ7wCCv/xH26mMZZu427Y1SgpCADFWDaqBRpWtIHOZHIvUqLTV0XPHRX0g7L0xaOPKR
+         KYRq/CrzkD6bBRmyRGVScXEZ+VFFl9PaXXgQv8NZEvd7WNnbtQBlgo1z9l1rknWOqmsR
+         pD6g==
+X-Forwarded-Encrypted: i=1; AL+hErEqRBWo9xRLN2MSm2ogLcsnbm4GDh1o8dAWuHGuVxkcmpkulQTIKwCMTNjtMaB164w8+ydXbsSa4R0=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/FKGnW+0UKzDRSR7ShUprL/7erQ3Nod88fdrc8TudI/2JA57EJ
+	HMCtB5ato9sxGuvTr8IyEqSb1fPOJ8KqNq/CpFCTOKHq2FvCtUSeGDCS/DB/eqAVtCusKBrmq/p
+	OXpBtB2mkgpaT2wyUzAUDIy7yyuhg4X4=
+X-Gm-Gg: AZFdTZeYbX9zkcQaoRafTeoZaNAgDCOFIvGK+HLxO4D4ijTMc80KJIdtx64FEqJv6Cv
+	p8DcMftCAGtgKy4ZGI/xADumPRFpTQ3bH1iB4K5gTO5m858W9B0o9ITky/2/aG1u7bhGy84hgMU
+	EWzermcZ8yK7g3jQMc+gdBFETHxZ3h7hM2pnioF7c6frmto3keVrFuWCJCWnNCKXya3j/Pm6mtn
+	lZtMyEhmNd1u5ByTVQLJ28VJTmkhqzkfukwn/P8PuJuQpV7BPq0ToL+8P8pJj8vJVynBbGBE6aH
+	gi96dvij1KG1IsRheK7h4Nmy04IeRbyLo3LWk3RjnQQR7cMd1mI9owtKHc1ObPyXPGwDTy2IIRt
+	BaVKHEG88VEj8nCSf70eTZuZDHtpVI2iszIih
+X-Received: by 2002:a05:7301:dd8b:b0:372:32a1:b384 with SMTP id
+ 5a478bee46e88-38571510675mr19622055eec.33.1795600890367; Wed, 25 Nov 2026
+ 02:01:30 -0800 (PST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -78,48 +104,83 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] DMAR fault by Intel H97 SATA controller since
- "block: Increase BLK_DEF_MAX_SECTORS_CAP" (6.17-rc1)
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-To: Tobias Laas <tobias.laas@posteo.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- regressions@lists.linux.dev, linux-block@vger.kernel.org,
- linux-ide@vger.kernel.org, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
- Lu Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>,
- Will Deacon <will@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- 70sp <70sp@protonmail.com>, Laurence Oberman <loberman@redhat.com>
-References: <5ad27a97aafbc08a8702d5b90d09cd59@posteo.de>
- <awSs5Cw3hFkf4O4T@ryzen> <ec36d13e-e4c2-4bfb-8b50-69d4a1628839@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <ec36d13e-e4c2-4bfb-8b50-69d4a1628839@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: 
- <179559677445.1390226.15266907353962811620@mxe9fb.netcup.net>
-X-NC-CID: unDnwYxQmKKySfnwJIdL5+kRq/d1VVk2Z7PmvJii7yq21dAmEHM=
+References: <CAGvcwsDdKSZe0reeuT0eQabaSbM6+KAfwFimxiqhvKrjD2nQeg@mail.gmail.com>
+ <awX_cNOqtTjAP33a@ryzen>
+In-Reply-To: <awX_cNOqtTjAP33a@ryzen>
+From: Pe3k <pe3cek@gmail.com>
+Date: Wed, 25 Nov 2026 11:01:17 +0100
+X-Gm-Features: Aa3M54ouYqv21AOU9bWmU32JsLWokXrHwGO0cLR9AEzpEGq_IOCrbC6QpcKWpwA
+Message-ID: <CAGvcwsDwi9vNcCLxdBz-Arx=5i-fFvqxP+QbRKrx7hK4yqmvRg@mail.gmail.com>
+Subject: Re: iommu/vt-d: data corruption, AHCI gets IOVAs inside its RMRR (HP Gen8)
+To: Niklas Cassel <cassel@kernel.org>
+Cc: iommu@lists.linux.dev, Lu Baolu <baolu.lu@linux.intel.com>, 
+	David Woodhouse <dwmw2@infradead.org>, Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>, 
+	Robin Murphy <robin.murphy@arm.com>, Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 11/24/26 09:55, Thorsten Leemhuis wrote:
-> [Reminder, this is not my area of expertise, so this might be sending
-> everyone in the wrong direction -- so handle it carefully]
-> 
-> On 11/23/26 22:15, Niklas Cassel wrote:
->>> Since the issue with mounting the rootfs disappears with intel_iommu=off, I
->>> wonder, whether there is a limitation on the maxmium block size either by
->>> the hardware or from the configuration of the IOMMU and SATA controller by
->>> the kernel.
->> Considering how common your SSD is, my guess is that it is somehow an
->> IOMMU or a BIOS/ACPI bug (since the BIOS generates specific ACPI tables -
->> DMAR on Intel).
-> 
-> I just a few days privately was told that "intel_iommu=on,sp_off" solved
-> problems wrt to one unresolved regression related to iommu with a
-> similar generation intel hardware. [...]
+Hi Niklas,
 
-For completeness, Šimon Pospíchal (now CCed) shared findings and a WIP
-fix (both with the help of a LLM) meanwhile here:
+Thanks for the pointers.
 
-https://lore.kernel.org/all/QISmXFlpPMgvFUKmdIBDwqn4JHHXt2NZeJzerMLHF_5icLo0lPKVlN0Ig9v8Vb52NmCeSFdyrao4x8KoN1DCXtDlnZS7eRIClC6vZyu-hPU%3D@protonmail.com/
+bugzilla 221713 looks like the same bug. The ML10 v2 in comment 15 shows
+"DMA PTE for vPFN 0xf1f81 already set (to f1f81003 ...)", which is inside
+the same HP RMRR (0xf1f7e000-0xf1f94fff) that I see on 6.12, and its 7.x
+symptom is the same "Emask 0x40 (internal error)". Their bisect of the 7.x
+symptom points to d373449d8e97 ("iommu/vt-d: Use the generic iommu page
+table"), but the RMRR overlap is there long before that (they saw the
+PTE error back to 6.0, and I see it on 6.12). So my guess is that
+d373449d8e97 only changed how the overlap shows up.
 
-Ciao, Thorsten
+The H97 thread looks different to me. There the faults are "non-zero
+reserved fields in PTE" at 0xff4xxxxx, outside any RMRR, and they depend
+on the request size.
+
+sp_off: on this machine the only DRHD reports no superpage support
+(cap c9008020660262, SLLPS =3D 0), so I would not expect it to change
+anything. I tested it anyway:
+
+7.3.4 with intel_iommu=3Don,sp_off: no change. It still has 0 DMAR errors
+and 221 failed commands with "Emask 0x40 (internal error)" (121 READ
+FPDMA QUEUED, 100 WRITE FPDMA QUEUED). 3 of 6 copies lost 8 MiB each
+(zeros), and the iommu:map trace again shows 21 maps with
+iova=3D0xf1f7e000 size=3D0 from iommu_dma_map_sg.
+
+Thanks,
+Peter
+
+On Tue, Nov 24, 2026 at 10:19=E2=80=AFPM Niklas Cassel <cassel@kernel.org> =
+wrote:
+>
+> Hello Peter,
+>
+> On Tue, Nov 24, 2026 at 07:08:13PM +0100, Pe3k wrote:
+> > Hi,
+> >
+> > On the HP ProLiant MicroServer Gen8 (Xeon E3-1265L V2, C204, BIOS J06
+> > 04/04/2019) the AHCI controller is handed IOVAs inside an RMRR that the
+> > firmware declares for it. With the default translated DMA domain this
+> > corrupts disk data on every boot under write load. iommu=3Dpt avoids it=
+.
+> > Seen on two machines of this model, on 6.12.118, 7.3.4 and 7.4-rc4.
+>
+> You are not the only person who is having problems with HP ProLiant
+> MicroServer Gen8, see:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D221713#c16
+>
+> There is also:
+> https://lore.kernel.org/linux-ide/5ad27a97aafbc08a8702d5b90d09cd59@posteo=
+.de/T/#u
+> which I'm not sure if it is the same or a different IOMMU issue.
+>
+> Does:
+> intel_iommu=3Don,sp_off
+> on the kernel command line workaround the problem?
+>
+>
+> Kind regards,
+> Niklas
+
+
+
+--
