@@ -1,60 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.102
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795701137;
-	b=gNP60oYhsEXMyrK4o1oRCttOYCl0OKh5CmcBsh4vE5e1egoX0EFz83Y8k6G+jRSmS7Yn
-	 rGm9hrdqi8XZhGfrwfgSJNCnp23J60T+MeAQgGg9wKsHAzbq2LNJdmAoGvlH+9Pd5/DPP
-	 bvQJXiW1fogV753qGLrTVpQ9MTDulqUluMO5y5E/6AnpS65q+bDNEUY/2MCWiRAP1fjZB
-	 D4bTN1kvM2COCwCLZqzgv6ET8YxIgYcVQ6Z8YDmVjIshtYtUlc3Ze6JqE/8BQo1mLSf9w
-	 LY8GMiHjnIDJRivA8QrFE4OdVwZ6NP4bgfOLaBxrExeY3+Y9QxGK54PQtgai4UmHDjg==
+	t=1795703052;
+	b=Hht+nGccFPt1hIIi66c2AnYQB5G/ztbZAkrXsUHT7AKkaqeoO8mbBvoiII/LIT26Q1H7
+	 G8m1qLoKdagqncm/q5CvrDxFpX3KWK+iQyRwLDf/8chw3lsKi1DFrgNjMxZwUdH6bfHZr
+	 j14bVxAcpDXA3335t0fseoKtaNhNwJjSzvdCiFLh4qDkN9UC3dtP40avK/31wA5TAGUBQ
+	 eKGSyHt6zRc+hAHyggoN34x0SVJEHgsVe+FCtetVq86CQMFzqEbIK7SdDOJZl/LofYKXt
+	 XtvBYt40TVgAZVorKoJ4Ls3D9vukdGyM4dt3FcbjWQBPPfOWzIYQkkJzT2NEewPF2pg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795701137;
-	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
-	 In-Reply-To:References:Feedback-ID:X-Pm-Message-ID:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=qmxdQdsYvQsbP6RvRUa+YT9fFm8Eok7knWdEbEHTcbI=;
-	b=Vi987EnaGk4HrDuATWi8ga6glCBPWASp10quQnTSYyysr7MMdfhUacT1hw3gemeiXQ7Z
-	 ydyktVjNLiP2NlL0Z/lhqggb6yrHMo8VTl4CfKEaK8Y/8uqO3Tgbt/z9xixePHHUC6QCp
-	 RrrK/J5IcheN0jVewm1zLHF2d+k9FRqMGpbFRHjEtS3/5FT/IsDTPZVyS1moze9/ezcZB
-	 c7sbrt55HxwKxQN2v2aJxJBme0eEQSqA0JsB6RzEMWUlkO7bDbx758d08JBlloP6OBMhk
-	 KA+fpqccvv2hZvymgNloUomiiz27IwvK9DbH5pHcAQYKE+1ukftJFOks5bcYazlvNSQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795703052;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=SArX9XVqloIYHWw6ONOSTBfOAA3vGsK89GBFMyWKyoU=;
+	b=IcaQZx9SDnGU0kSFIS48LalUSvFs5G96bH9nmXLlYt+6DUAeoPfFxsx5/drjkR5q3fAT
+	 NrSwiYOGi8Uvqx33TV0ASLUg9d/UEry4qgeg2KA0nL4uJERrIDqlqFzSd+njQUOHIC6tT
+	 BOrpOkbsGrTIiSQJLV8d6KQpmmrQ7C70sO6HEvPep/34K4MTJEptkp2GzUAChOxdP3TZg
+	 ETsF6xgYnmxhi2NrXFbjZxqxLAhduH4T02384RWYOP2DTq9/E1FQtGQIjGsZVQlPpwoXt
+	 3tRyefLJ7cpl2tcpIeh8HJQdbp+NAgzWp5yoxIXQsvmLyfqB3FseK3ozhqcU4ulVaTQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=protonmail.com;
-	spf=pass smtp.mailfrom=protonmail.com;
-	dkim=pass header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=g8AKhFjV;
-	arc=none smtp.remote-ip=79.135.106.102
-Received: from mail-106102.protonmail.ch (mail-106102.protonmail.ch [79.135.106.102])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=laOsEpoH;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB086606A323;
-	Thu, 26 Nov 2026 13:52:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB086606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60753606A31E;
+	Thu, 26 Nov 2026 14:24:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=protonmail.com header.i=@protonmail.com header.a=rsa-sha256 header.s=protonmail3 header.b=g8AKhFjV
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1795701134; x=1795960334;
-	bh=qmxdQdsYvQsbP6RvRUa+YT9fFm8Eok7knWdEbEHTcbI=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=g8AKhFjVLx5n0flhoNPdBQjEI/6SYzS1dRgak75zH6x8o0E25JXSR2rroR0VKk4l3
-	 jpciua5jiCcM1aV9WgkuNhy16l9/NP+6cod+9oVPwEI/BfYySX13B0ZYrOyMndVzfd
-	 3Wr0rAWgb/Aq36wUyH94nsMmP+uYV/Ii+hFMl4hfKxdHRcTQ3SUHlfzUihrwbdvhbI
-	 8pzE05OlEN6qiagfeI7zPL5azBtLK0Vset80C/37J0HIpacCEDwpU7frUkM4ZNnZ3d
-	 aWeR/V1utsiAylTpGjhcIkFdj9Va1selggcP0+CcZddlnXpOf+BYs0tZeiphr0WADn
-	 yaWAAcX1GlhcA==
-Date: Thu, 26 Nov 2026 13:52:06 +0000
-To: Laurence Oberman <loberman@redhat.com>
-From: 70sp <70sp@protonmail.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Lu Baolu <baolu.lu@linux.intel.com>, Jason Gunthorpe <jgg@ziepe.ca>, Joerg Roedel <joro@8bytes.org>, Thorsten Leemhuis <regressions@leemhuis.info>, Tobias Laas <tobias.laas@posteo.de>, Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>, regressions@lists.linux.dev, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, iommu@lists.linux.dev, linux-kernel@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>, Will Deacon <will@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Subject: Re: [REGRESSION] DMAR fault by Intel H97 SATA controller since "block: Increase BLK_DEF_MAX_SECTORS_CAP" (6.17-rc1)
-Message-ID: <e_efhbm0Vxq0FxO3-QqPkyhGrjzTvBDYmUOsGgmebVSyd0qsXXxYFXwC9sSjRAP06gcpsttHunBLtc0Mmt0cIjEI_0sDXL61lnxHhmuaxWs=@protonmail.com>
-In-Reply-To: <f323c3d62265dfe90fa71514028af4d35f6e2420.camel@redhat.com>
-References: <5ad27a97aafbc08a8702d5b90d09cd59@posteo.de> <awSs5Cw3hFkf4O4T@ryzen> <ec36d13e-e4c2-4bfb-8b50-69d4a1628839@leemhuis.info> <87b1bbd8-8113-4890-8623-738b19a9cc7b@leemhuis.info> <a0ff3156-add0-4f7d-8373-09f95bd7036b@acm.org> <2adaf0ef9e1a2fa18590f7d8dbf203c0f7de2be7.camel@redhat.com> <uJluFNYGCCrdvnYT3MatN_4Om8UczTJX_dzxumJxyCAC7F-Ubrekb7LPwlRxhCW0J91UBf-TqeRoJQfgYIYBRvMsPmE-Qs1eAg5zbDP0s58=@protonmail.com> <0edb9525-5068-42e6-b6c3-a1dcebcbcea7@acm.org> <f323c3d62265dfe90fa71514028af4d35f6e2420.camel@redhat.com>
-Feedback-ID: 144929603:user:proton
-X-Pm-Message-ID: cb7dcd4e8530543ae7f0724237de0a0105a4e0b5
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=laOsEpoH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7379F1F000C6;
+	Thu, 26 Nov 2026 14:24:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795703051;
+	bh=SArX9XVqloIYHWw6ONOSTBfOAA3vGsK89GBFMyWKyoU=;
+	h=From:To:Cc:Subject:Date;
+	b=laOsEpoHZorQqq6k8gihrUT7wXes/JcWfpXet5cCfVyb9mPRNZbSZbTm7At5QqvGj
+	 qqOeBrFboJVcZgVItsn+QjuFO9618YHfsTGd/eo6HY/+wWu3rDIsK0dFeKnO+7eOXQ
+	 ZSBx93uTaeZeQQpccc/GnBNzwMfVbeV5JUARF8x1nonn6TZq3Owb3eLV4FM6crkTJr
+	 AMCvJh+WRbhS8rOvgTqZsdW6ZNhExmdbnLR7+5Vw0Vuq9mRg7aOt+b7Q7huOaAdAJ2
+	 xXppaOYD1C1cyk7LttXlNFxLqxIZOPqj/cA7nuIMVOEhGB46b3N3ank+TjfxnDKwxM
+	 gDr5h3ODDwj7g==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Mohammad Harsij Sani <mohammadsaniac@gmail.com>,
+	stable@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: [PATCH] ata: libata-core: Disable LPM on ADATA SU650 with firmware XD0R3C0F
+Date: Thu, 26 Nov 2026 15:24:07 +0100
+Message-ID: <20261126142406.2753290-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.56.1
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -64,23 +59,39 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1186; i=cassel@kernel.org; h=from:subject; bh=TB6y6btYn6kAJ9iIKpDD21WRYysuUToBajcCZalWPNE=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLI5HNnETk9ObjIV/d1hrvSq49Pf5ws1502a65v1KfnNB pmZz/+WdJSyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAitesZ/tlUtzl/YPoc9XMm y/OHtZpVjx6dS+j57Vk5R76n+VbAP1uG//kLfuxneBK7vD36dduljNfbpp3u+B24t9NzcfBC/Vq Z9WwA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-> @Simon,
-> To be clear, What I tested was the patch Bart suggested. Not your
-> original suggestion. We will still need a test from Tobias to make
-> sure.
->=20
-> Thanks
-> Laurence
+ADATA SU650 SSDs with firmware XD0R3C0F drop off the bus with NCQ command
+timeouts when LPM is enabled. Disable LPM for this firmware only, as the
+SU650 has shipped with several different controllers.
 
-I know. Mine and Barts patches work on the same basis. I just said my opini=
-on in general about this solution. I know we need a test from Tobias to con=
-firm whether it's exactly this and not something else related to superpages=
-. I just wanted to make sure everyone knows that it was just a patch made t=
-o confirm the exact issue, not the one that should be in mainline.
+Reported-by: Mohammad Harsij Sani <mohammadsaniac@gmail.com>
+Closes: https://lore.kernel.org/linux-ide/CACeOiPg=3_wY40upkFVkWQvJouomoTF6Ro+eL_DimkunYVSUFQ@mail.gmail.com/
+Cc: stable@vger.kernel.org
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+Mohammad, could you please test this patch and reply with your Tested-by
+tag if it fixes the problem?
 
-Thank you.
+ drivers/ata/libata-core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-=C5=A0imon Posp=C3=ADchal
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 2a5ca1b9ee5c..d234c83e0463 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4305,6 +4305,7 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
+ 						ATA_QUIRK_FIRMWARE_WARN },
+ 
+ 	/* ADATA devices with LPM issues. */
++	{ "ADATA SU650",	"XD0R3C0F",	ATA_QUIRK_NOLPM },
+ 	{ "ADATA SU680",	NULL,		ATA_QUIRK_NOLPM },
+ 
+ 	/* Seagate disks with LPM issues */
+
+base-commit: a12cc63129380a5364e787d92b30a3257f66c250
+-- 
+2.56.1
+
