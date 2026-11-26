@@ -1,82 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795670129;
-	b=EJnuecXrSSt/SGTJettvzUKVDMQryjb8BTZ+4j4hCuFrCXCO/O8jJ+32nJrblVAWc4GE
-	 jdcMLBckXYlHSXVkR/BGZek0JCFGhByPqFj7yrocJ3wUBp70a3ml5iVwRus55xD0V4yR5
-	 i58lB1sOfueMm33SVHhm1RFoSHZb9HR1blND6fJmoigEPctZdrQrwuGFYKgBhoZnVO5rF
-	 tspUhtmKMnYqhbUkJltprSwCxiNmyRgZgJiPothNzI85C7/xh4EhOfh86pAxpYqMSC9vI
-	 3WzxFbdg6MdLjc1sP5cjX3cZ7/7UzmK6XJI55K1EQPBpCgJKUBjn6tZAoj4R7d6lV3Q==
+	t=1795670130;
+	b=lqdXNh3rXMsBEjLqHxU5HjxjLD0IdRV5E4evcUMQCG+M/6FEJxlOpieZZhH3mHBOiUC8
+	 7BQBIBy7KXo0WUff/7QE+UA+apzz5ro1v1frpUn4HXkpKjZwcZsLAHlcJ5ML1f4vlBvx4
+	 IZ11pxQ3OWuPYUMqOkBQlM3Jz57gD0GJMB9KbrMl7CiOJipQZ7iLjkOMyhLoDxiNYYU7T
+	 BfMdrf/F6otigkNpaq332OZpEJPims4dYRuiOaMnYoqClYS4XuqL5TYhPVAVTJxMJ/721
+	 y1ds+i+tCqhmcRLYnKpxh2VLuHIJxWTnryvRLW8tRdDqwcMwGU/q9bdMexaA6ED8XOQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795670129;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795670130;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=sfUbONIJRZzSkeN35/5DeaV5OhOzoNFoPR2PNqWhlkI=;
-	b=g0vRFG4904euOmgVSHtLLRHvaPpxw4Pz6fT9XI0v2qFJzii6U7ZRGJuLlPXYEc1H/RcN
-	 0dFzdIOrWN0SmrpSKHQVS5eKIFF0EhJ7s4v5INGqQnD7iRJ+wzHIF/u72JafRhTlB5nBo
-	 SLkVK8S434jUEnqLagkuOvaTyb5a82vyalzcooD0/Rf/9ZaEwalZlKs8/IzGmYFpQ1fh1
-	 ru16JD8bVHHlJ365Ki1G5+M5RRYfmaVc8bcnCbGTlRLe0YkgD8488apBzdtr/oMBAvg02
-	 6ac3Wy+Hz5nl+uEJzDOay2St3R074c4UMRkOy3I4HYpwdzM1IqttOFelNxexEiUrMvQ==
+	bh=aBxl91IFHxSp98BX9SH0COzdVVb1RDUdXups0y1oPJc=;
+	b=eGk+//fmIdwFxD5eaoLDH1FARcDPthyadiPlWfrCrOS4ei0j/1UkCHYIYCo5omJI5ZSi
+	 /jbAsPmA1TjpudWo1GcynPOFLzH7CvADjVYZPSGe73OBtu502HMLjsmXVJyvCy2Hbciq/
+	 FVbsvzaXEZWEJM7ICz9EuGGQoT5/x987NEB7zi7yvRubH7A92URrnjHf65dtrtUb/j8/q
+	 nwCBI29vdpF+N2eofB2KgAGWEqjdsbWNq4RIMB3riUyaV5G6WgtictWtbOMTwEzuklOV0
+	 ISss4K6hnnjdp+tXUg1J9Z6AbUyNrOpVuClbGXBLLfDtL/eQaM47DYXvRSdTJVg/pBA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=TIP2iHs0;
-	arc=none smtp.remote-ip=209.85.215.178
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rqh43eIt;
+	arc=none smtp.remote-ip=209.85.210.179
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62215606A33F
-	for <linux-ide@vger.kernel.org>; Thu, 26 Nov 2026 05:15:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 62215606A33F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94BFB606A680
+	for <linux-ide@vger.kernel.org>; Thu, 26 Nov 2026 05:15:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 94BFB606A680
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=TIP2iHs0
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-cd6acc50b8dso3416958a12.3
-        for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 21:15:29 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rqh43eIt
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-8b5a6f2f27fso2678221b3a.3
+        for <linux-ide@vger.kernel.org>; Wed, 25 Nov 2026 21:15:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795670129; x=1796274929; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795670130; x=1796274930; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=sfUbONIJRZzSkeN35/5DeaV5OhOzoNFoPR2PNqWhlkI=;
-        b=TIP2iHs05QKdqbnsR8NUnCmlDN0vR0Jfs8j2dRxfBvrIUXtj1L71cPXJ/qR/UcOi46
-         I+xw6w18BMP5oqUYGlEAVddRAROFQmCbAlBhZX9JcbyvKyQEsoW9yQTosrvukl6q4ezA
-         5hmchn8hUcbp36m0xf5YiteVCRHX+umC1H6fvVk/5KHYAi4mud+JLRPMOJQHkUvYwCLh
-         tkyosnQCFMi+Cf2qr2X+HE0ZsjrzxFE0cuXukwkr79vdIzjre8Pv1/XFoSuH4V/k/gkl
-         3AdcLQck57ALoux15zK+Axbkjz1J7NKCoiyXjRctWGluWTjdghXbFxrkfsGvwEf0I5zh
-         k5Aw==
+        bh=aBxl91IFHxSp98BX9SH0COzdVVb1RDUdXups0y1oPJc=;
+        b=rqh43eItLw2VvBUu8/ab2PM+vFYDTvks8O7GhSnvGrrkV0IwT+OBLvnt2+k5oM7AkH
+         4EGMrSiOPtUmOsnmsFdVGXAp17J8K5Erz1xWdGyCX5wSSVu2TpDMlrqNx8nw2XYPE44H
+         QYUmvs0mZGiZAZyR/dEzR7ZnVgVDEEj2groWruErQaHCXSun8lchlU0NOYeZf+ne5sVx
+         exZIDgeRSlZg84S8pNMldg7c/GuwFsYotHQFMK1FSfkMU7trke11p9A/4EYE0coAqkDr
+         WgaieWFnAE19Mh8Y1X744Qs7YEN3Wqo2GT9Noudp/kjpFDCajHJeM4chrqSpK9McxuKE
+         8/aw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795670129; x=1796274929;
+        d=1e100.net; s=20260707; t=1795670130; x=1796274930;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=sfUbONIJRZzSkeN35/5DeaV5OhOzoNFoPR2PNqWhlkI=;
-        b=xMy4Jin/JZqbL36AUNQu5uI6Zv51KOZ5aQCcvkl/zrbDzuRz1lqnDzfvb42SAIgfnn
-         /7FtJFYHGPkHpvBFtbez2NSJe757QOaLeNmm3ZZHF2JCWVl795Iixw8BBFnP2Oi0cK6g
-         tdlYgQFFNsWUnwykCves5i44AkmVt1rsWf5F9bo98VmMZShR31/BD0LPaR/oV2SCINZA
-         fyeYV5687AS8zXb8w+oTIqoD5UVvtllGZFv1pbP7ReLHOtO0YBloUgwdPsCR+59BwKBx
-         fj0zwy8o+rJlOBedNT4K2dRPG24U7IApC6S1UQDRSlKybue4G/pQ2S0r7IoSo86rQaxk
-         azGg==
-X-Gm-Message-State: APuU4Z8y7SkrjpvI8D14EylK8GR1QahFX97dYPIbMAHCu9GaOWFdQlCO
-	b+EPnAZTm4sBFSWQf/ZCDWLrJyZz/UqMQsmJiGtrlRZLSQt3CfzSYtXd
-X-Gm-Gg: AZFdTZfvi2l/WU8UpwWKT+bYC2stqxK5GgjtMltyVhtiLnks5rgqekfm7WapQgLQsNe
-	J5hQ/d8yXAeigBmBxPyn9YTWxeuHYGrDZtNaMxgoV4fzz7AoKRpFw479rIl9Awvxl/dZfRWb9I2
-	It5ax/rGT3hNiJyhXbs8r+jC+EuTze4VWv6tNsx88v1INGaRC5EgZpLHqrEVLoWZADKKEQ5njCq
-	iZYhX5geRrzKZqgMjdGySi0FZvOhbtx/A9UOLk1b33hE6H5kHf968bMZjD2tCCJkfRFzypaWWWt
-	n+WWNrCTWl74tyY01PrWOM4wk/uLPX2rIP7Orw48nzTbo7nvTF2giMZ38O9umo54cQwiua9TVhx
-	90VmIoruhXTUdVcn6xG+c5tTpIkd7LWWzcdLV2J3oaugCJBL/GHrKYkA8lIi6gkITjc3Zf3P/hQ
-	VmOWbyzU21p4AFH941fskOOoXbx33Pta7TZipRG5CimjUU5Oz1xZQL5J5O2gpFs2wQOD29N7iX9
-	/DG6yqzHDVot5fQfPyUiFWrav3fUW+p9pLUW0KhYtzj24mGaSp/C1CQZ9DvJzEdQq2n6G8xMKGt
-	0WSba6mpEitn/VKIInzwNGukssRLbYrL+/OWke8Jom//ZfsxvNc=
-X-Received: by 2002:a05:6a21:8197:b0:402:9f7a:141 with SMTP id adf61e73a8af0-4029f7a01cfmr12921594637.11.1795670128755;
-        Wed, 25 Nov 2026 21:15:28 -0800 (PST)
+        bh=aBxl91IFHxSp98BX9SH0COzdVVb1RDUdXups0y1oPJc=;
+        b=X18Vqif+pEkOP3Kzq3FmIzjipLkvh44F83+y9K20DqjP1frIo4UPMEaz/NEtWz3UFI
+         8CvR1m7sJ0rflUJJCZWeScDUj58GoLfsh/iDyMP02/zHOnoD6oNhQaXHgjFuFPX2lOc6
+         r14PWmRbcX7my2WOB+FyT+CKHox9rDBX2MMqSM2V8j0BOA0Oylr6/UIREQRTJeUzVxBd
+         pdMR2lyy4ipzljcXGxZ/oTp+dJamzlKKZiyUpJMbT2xLFCYkVuO8bpfjzWkwHk0271sI
+         mXWR3XgqmzLifPmiPIRrY/MtFNitS2W/BuLuDWlyyQQAcyA8ZwylF2WucOsIVJ/+aB5t
+         iU0A==
+X-Gm-Message-State: APuU4Z/mFr7YH6mx/d3gYeicoQFj/e4yx3hSqsUkrpeYGmwoHKLQz0YE
+	kjRlL7+ZfdMBXYeoVFcsDAKnSit1H8mQ5eyMlbVH/Gw42v6R81+NUbEK
+X-Gm-Gg: AZFdTZe7+eiOllISOhWsZuZZEinZG1TSOE+B1QfrR24ILfj9n+uJwSxe0lRtypS/jb2
+	40vIEwzZjJDNk86cYiXUHYkUtQlG3+eQucDnSpNh8tCWnNhDIzRPWfUdDQZGEguKjOgTcAkr4W/
+	FxyZrWn7kORVFHID1XYagrBjwuN0HMFT47e1+qEs+U/fIUsaWfla2O/csWEF8Q+P4d+dBET7Btk
+	3hazJp/Uph8LAtheMwxxUONy08Rlz9ZVWvcVfcGEmcBa8jJLDGDmQDWdMJLiqYCrgerRN/wPtal
+	Rgpr7tNy1c4vKtlzHlcBA+Olwj0SRRLrFICrkRx+GsK6/8hCPWeP4gYXyV6LTYW6GFbfmtYz27k
+	xlJhw9rSV7VYwhBIYAvi4V8Hn+5D4yMEm//Zdf1tCifUsO/U6blY4o2PvIaUdN77+3/EqzKx7Ct
+	FZVw6cs728J6ByvCBPvhGqVhL0B4RjYJyzrMG1b+INAtYjyjYFadOiThTv9Rx+38GBgSX4traJ/
+	n4vfFKn7xNLgDtAGyQxtwrD00Y337rQiO0Rpq0T5mA9phlngCU9HCi7Q6he2hJxZfzDq0RZAdPT
+	MKZlry3ta+zsNRNZhsbllsU85AqntWQ+7A+dW/+v9nRbXGF5Aw==
+X-Received: by 2002:a05:6a21:6e82:b0:3f9:c2af:37d9 with SMTP id adf61e73a8af0-4014e06373dmr20130506637.56.1795670129999;
+        Wed, 25 Nov 2026 21:15:29 -0800 (PST)
 Received: from fedora.tailc1fb0a.ts.net ([172.219.65.15])
         by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8c87077a058sm10179820b3a.8.2026.11.25.21.15.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 21:15:28 -0800 (PST)
+        Wed, 25 Nov 2026 21:15:29 -0800 (PST)
 From: Artem Novak <artem122novak@gmail.com>
 To: vireshk@kernel.org,
 	dlemoal@kernel.org,
@@ -85,9 +85,9 @@ To: vireshk@kernel.org,
 Cc: linux-ide@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Artem Novak <artem122novak@gmail.com>
-Subject: [PATCH 3/4] ata: sata_dwc_460ex: add missing newlines to error messages
-Date: Wed, 25 Nov 2026 23:15:22 -0600
-Message-ID: <20261126051523.14431-4-artem122novak@gmail.com>
+Subject: [PATCH 4/4] ata: sata_gemini: add missing newlines to error messages
+Date: Wed, 25 Nov 2026 23:15:23 -0600
+Message-ID: <20261126051523.14431-5-artem122novak@gmail.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261126051523.14431-1-artem122novak@gmail.com>
 References: <20261126051523.14431-1-artem122novak@gmail.com>
@@ -102,52 +102,31 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Terminate the error messages with newlines so that subsequent
-kernel log messages are properly separated.
+Terminate the SATA clock lookup error messages with newlines
+to keep kernel log messages properly separated.
 
 Signed-off-by: Artem Novak <artem122novak@gmail.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/sata_gemini.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 486ea94a0184..f1237bb20a4a 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -498,7 +498,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
+diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+index 9d87603ef531..b69db749b49d 100644
+--- a/drivers/ata/sata_gemini.c
++++ b/drivers/ata/sata_gemini.c
+@@ -227,12 +227,12 @@ static int gemini_sata_bridge_init(struct sata_gemini *sg)
  
- 		qc = ata_qc_from_tag(ap, tag);
- 		if (unlikely(!qc)) {
--			dev_err(ap->dev, "failed to get qc");
-+			dev_err(ap->dev, "failed to get qc\n");
- 			handled = 1;
- 			goto DONE;
- 		}
-@@ -612,7 +612,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 		tag_mask &= ~(1U << tag);
- 		qc = ata_qc_from_tag(ap, tag);
- 		if (unlikely(!qc)) {
--			dev_err(ap->dev, "failed to get qc");
-+			dev_err(ap->dev, "failed to get qc\n");
- 			handled = 1;
- 			goto DONE;
- 		}
-@@ -707,7 +707,7 @@ static void sata_dwc_dma_xfer_complete(struct ata_port *ap)
- 	tag = ap->link.active_tag;
- 	qc = ata_qc_from_tag(ap, tag);
- 	if (!qc) {
--		dev_err(ap->dev, "failed to get qc");
-+		dev_err(ap->dev, "failed to get qc\n");
- 		return;
+ 	sg->sata0_pclk = devm_clk_get(dev, "SATA0_PCLK");
+ 	if (IS_ERR(sg->sata0_pclk)) {
+-		dev_err(dev, "no SATA0 PCLK");
++		dev_err(dev, "no SATA0 PCLK\n");
+ 		return -ENODEV;
  	}
- 
-@@ -1186,7 +1186,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 	 */
- 	err = ata_host_activate(host, irq, sata_dwc_isr, 0, &sata_dwc_sht);
- 	if (err) {
--		dev_err(dev, "failed to activate host");
-+		dev_err(dev, "failed to activate host\n");
- 		goto error_out;
+ 	sg->sata1_pclk = devm_clk_get(dev, "SATA1_PCLK");
+ 	if (IS_ERR(sg->sata1_pclk)) {
+-		dev_err(dev, "no SATA1 PCLK");
++		dev_err(dev, "no SATA1 PCLK\n");
+ 		return -ENODEV;
  	}
  
 -- 
