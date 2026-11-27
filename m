@@ -1,49 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=217.140.110.172
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795803415;
-	b=A3fYj2DqPov1i+5eB4WGUiJXOnh8bc8JWqpZ0r+DgsCtbZ0mLQFDt74RPdofXGmtr0QC
-	 QMgGMTLwur5YG721P9+sp520TZlLuHOO5/xigf3+N4ItMg5esyQS3qkwo4X9kNIK/8V0a
-	 jlDKfopEZaIl5bm3NyI+eyOQ7EQDRbeE1w0MNJ6frsYbfAimIbZ9kxXrTSp/Q5C5X9xHq
-	 lLX1Vi6ZgUNPWPnJWk2sW02IidllxmJMrQwEHQaWWFg9FsUXlFnT253nU4xnz0pNzc1zp
-	 csu7TBS0tnomg1eihKpTxH0kj3oWEOWbi5TnBrSir3Qjo/9YQW6xEhFkzVxtZ5d3neQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795803415;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:Message-ID:Date:
-	 MIME-Version:User-Agent:From:Subject:To:Cc:References:
-	 Content-Language:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=IRquHP6+JpDcME/70XQJzwgPUGu0D6NcBC9+C049/lA=;
-	b=VeT3rgIbo5gZMtI+onSUDrUwXrhQJdqM8N0dEkSPJPUOJUuuDQduyGcDCkx9IVAy2DFw
-	 fp2+3n047rZjgYxJxotmTwpMxHeVdQGHujpx30NUHWNaji8cKM/xT1EZA+5YJSdUywLeC
-	 Ej/he5XjlptvpaWRACnzYlsalMCFaaOAlSuHpqFdMXSJRqI7UStpbfM+kB+m6QnUaPFTj
-	 LbDOhGlHPu4fOCCWO7jCgKM/u0zTB1+kl4Ep0Mnq9BkYIDD7aXnyRV/YFpGCcQAGd3H0U
-	 ocVmKkPRpMdcpglhXu4dUFMtHK2mIjrxhHCVfKOJRSNU4efZGHNkaw9cmPxyVSDKq8w==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=arm.com;
-	spf=pass smtp.mailfrom=arm.com;
-	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=Cyrj0nr+;
-	arc=none smtp.remote-ip=217.140.110.172
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D3DF6606A324;
-	Fri, 27 Nov 2026 18:16:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3DF6606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.219.41
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795803529;
+	b=NIMmXG7h06SA1bp1ZV3P/zTVo9eERkvm21mxczqH7+348bKfGbpeBpyfacJRSBVaf6Gb
+	 HItfYZuxLsxqiJSXuiqGcgAT8BwrCCc2dvHJ2ndVOCGaCfyEiELJEfSB6tmVK1R//mKjO
+	 g5M9hNpa9mH5zdacSt/UJwiRKAV2PE9MPn8mw0JsiIpHiEx78mMSU+EhtoWHA+k2hxslq
+	 EVaX+KZPKxq2zsMj8EgrDMPzD53unBvTs62lN8legZAwcWnaIwV+KGURsfC+VNR/TGEKH
+	 atv9+LZNn3mrtW2e4VyNn1RwyFmdSDMJzz9nxlekWOEVV/7Tqwrj2IOHtDQKMhGIAuw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795803529;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=CnX7HINTr588U0bg9W4nQOssNhFb49IVZppErEdXcp8=;
+	b=hnG/iSLd80a4rSmD5yYJjebL4nr86cP46PyHlRu7uE7uaXfuE844A9KX/qjG4WPQpc8n
+	 oZuPvDHwKku2BKx6gclC0KdAZ6bIf2WqwPhY8aqELyIGsL5qU/LHcMXzca0zeDQSc/bsA
+	 SqTq9g9rYs8noPloURsTrAW+OsA59eSeA198ypJzIvHj0uNLJzk0OyH6ctt5IGFzmxGWP
+	 pKjKbm7HJuStKtH5X7nF1R3ghYHA4bHmLinpOw8InV8Ve1EE58QVy3H5lQdKIefA3yP7J
+	 1Ix0f6yuJwYrsqL85L62jA9dura7H1Wi+1HyUF1uBNaujcKiKjmQqTcpjSPFsUMwgEw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ftII0uZv;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.219.41
+Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C447E606A321
+	for <linux-ide@vger.kernel.org>; Fri, 27 Nov 2026 18:18:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C447E606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=foss header.b=Cyrj0nr+
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 699331575;
-	Fri, 27 Nov 2026 10:16:51 -0800 (PST)
-Received: from [10.2.212.23] (e121345-lin.cambridge.arm.com [10.2.212.23])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 4CC783F86C;
-	Fri, 27 Nov 2026 10:16:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=arm.com; s=foss;
-	t=1795803414; bh=6imln1W2Yy1aPN/smnTpJTPts3LNPdp2Py2G8tyPdSw=;
-	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
-	b=Cyrj0nr+Aawpo4a9zscl6bwOk0Ckq97a90PJDU6Zc5xrVZ/I3+WGA1BXAgrX+o+iB
-	 9D8+slEkc9p2uO0X7wiZF90OZfeY5xl+tPiJX6++jX9vm1PUww2Ws4dWeR+33FPyfQ
-	 RC1U0HfsJvGpo10Uyw8MvP8t+ubp08BZ5OSdJgEA=
-Message-ID: <03b2548c-e451-408e-b5df-a5dec8c290f8@arm.com>
-Date: Fri, 27 Nov 2026 18:16:48 +0000
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ftII0uZv
+Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-91ebf4cd218so71049556d6.3
+        for <linux-ide@vger.kernel.org>; Fri, 27 Nov 2026 10:18:48 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795803528; cv=none;
+        d=google.com; s=arc-20260327;
+        b=pkkoICZRED5jVnq23gGZ6OKfUrFSiS2ku8XNKzGz3QoFMZpPyxF14vh9L77qyA4RE1
+         3vyRzQdmzQSfiIwBKlZEJXf2Cofbgt/klc7n2A90h8+mf/5e6wsfBwmG7x99ofyax/VK
+         lZWJDGE2CZcYSodah0AEIkKAxQ5n3XYar8Drsloq4w13ymkdOX4YKxJonsF1fOKl7pfB
+         7NrAv2x4tmeyhR3sLn0m0VE3Ywf8YXzkHhO1/ou/dnAIOF+yRfVZuj+pW1jFSSj43GSQ
+         JLXflcMEQmGwKE9XW+TyYPMC+v0kFgqNTLgC/T5F5KA3mF0V1K4Ph3Divs4sydKY/Dab
+         ZrCw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=CnX7HINTr588U0bg9W4nQOssNhFb49IVZppErEdXcp8=;
+        fh=DehueyOrWjQXdr6hoYwi+c+gDaMi8EjtWft+wpgMzEA=;
+        b=GKym7TRwNJFyevDG8Azj12YgEIaFDqZzI+mQ18kmBhTY2BzOXawzCAPzpzp/tToAAs
+         DOJBl0v5r/9dezxhCHFo/mida6e4d/ZBNLOnjAIZ0Gw9YlbUFDjXrhKCwTs2/vvHl1Us
+         pyLpICMNrzwCbuNdTx7WDuXAnkI3EF9V/f8DwN7XJX989254DPn6fHXu+ozWNV9Bwl5M
+         gzGl1QXZ2n+bL2H5UhWu/YQFd00j4BKtewTUeKcfsIIOSv5zQeaeZXIR/5s8nhRSXLVh
+         YU58gm8RwooTilNo/YmfWAL7x2leJ3QVDJ2fBTIIT3WUgoezo47Rpka+Az4/kKtv1Ba9
+         EKSQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795803528; x=1796408328; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=CnX7HINTr588U0bg9W4nQOssNhFb49IVZppErEdXcp8=;
+        b=ftII0uZvL4qz8CEV4FYd3uFfw7yYEmkDAmIILC3TzCPzP+i5Cc9V+9BUYy5xYOipNI
+         14txHmg0ix4e+Jp2iJtCgue2/t8a/NkQkqvZVOaVZG6daSfKypA94/Z7JgU5UsXfON3G
+         nQGn6NR5qgxeqmIus5/uRt1vJj1caPeMfX7HRwnt/K1wAbUNblRivOsDyg4uTQcO/BWq
+         eN8gLVONRHG7hjosv7QuESlg0Y1CDXoM8Js7cHuVcYJPUpNmcWr1AmGOl3klrbvvSkDN
+         brjnQ4f9hxaMuIqf+4QSAaARLORg1L+CKN46Z+aDPqX9DaJBY9E2vLIIYUAaTRkFpSh+
+         /nQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795803528; x=1796408328;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=CnX7HINTr588U0bg9W4nQOssNhFb49IVZppErEdXcp8=;
+        b=t/m633/EP2ZgWzP6j6X1tbRQ7Vl4IihkRx162O/f7ay2qb0NRMja9u2tsm3+zRheHa
+         5qRbhvMJ6EmI7OycdQhIOMgoZiSnoJR3pohnhCc40/G4hbpvwSx4TpG0y+nlmqTspxHp
+         nm+PRMH2+B5hS+tDudSuUoMum2kMq2oCUwmZuvR4xUKx6WAynJZqrHf80+Okh2t25Le8
+         OKirCxqnHNvo4jiHPa3BqLOCZZD8sBvdRmfgbpCIiRRzN2hgxL2JzjNUUHTOHGzY1NTc
+         m6H31TLAv8VMEfpcc9ahZRDZhVwi+s4oB0jOfePONQhQacTeFGFx4ZlYvpZPB95jyb0p
+         5f1g==
+X-Forwarded-Encrypted: i=1; AL+hErFo7W4PwfHfcMkz4Vqitt2ZS1PY2HT+Xnf0tLsCE8E67ELjvaLg1lGaqzyIdYSEKRTFBgZ9DwsOj2Y=@vger.kernel.org
+X-Gm-Message-State: APuU4Z/YRrtcP89hGI/QOvuS3QoRcawcTsVDyYUNBxWluSFWLzruwvAD
+	dKIphXs6UPHo/ErOhuwBnfXsc3/yfYD3q5VLFtw4CgGztivKh4FFd/7LjoRJh7leNh5vI7h/ucG
+	xqWwDCpXBlQG0/tlzARFlLbIgoXyy1NM=
+X-Gm-Gg: AZFdTZfZufdbqOcMVFOsk33a2rZ/um0Ym6vAe0a7r0iD/pG8rWfnxMyxNktY7fJmI+R
+	eaY1V1/BIp3rdFOryB2Y9c3+WNxxmAq7LK+og8onLIkn0IOD9pRUuRKKQxW4komCK5gozgWqBaZ
+	tyBMbaWzZku5IBZkobZqEWFuU7Bn88Glls+PeKjMTWIv8XeVciTyxq3o/oSnK8UMWqfhdIl2GsX
+	JQqcJ9bqzTFrxo9U7VhKwJF2WOQR2fmIq2Q/OEdJebtYhQ2WZry5jHpdyJWhcTZAMHN8AO6ItMY
+	3hKQBoAl3v46SKDAXlheCupqZRzirmNvzL4SS2ZGxdBrB2UAAmLbqJRhtUrZnFz0md+yTw3erjy
+	CCCazZWRZEhBAlZXNUNSZuCk32jAfOSXf/IIx
+X-Received: by 2002:a05:6214:8605:b0:91f:808:3ca3 with SMTP id
+ 6a1803df08f44-9213497c81fmr482391956d6.1.1795803527693; Fri, 27 Nov 2026
+ 10:18:47 -0800 (PST)
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -53,123 +104,70 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Robin Murphy <robin.murphy@arm.com>
-Subject: Re: [PATCH 4/9] soc: rockchip: grf: Assign the StreamIDs of the
- RK3588 PHP SMMU masters
-To: aiyengar1990@gmail.com, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>
-Cc: Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@kernel.org>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- David Wu <david.wu@rock-chips.com>, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>, Serge Semin <fancer.lancer@gmail.com>,
- netdev@vger.kernel.org, devicetree@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
- linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
- Pranjal Shrivastava <praan@google.com>, Will Deacon <will@kernel.org>,
- iommu@lists.linux.dev, Shawn Lin <shawn.lin@rock-chips.com>,
- Sebastian Reichel <sebastian.reichel@collabora.com>
-References: <20261113-mmu600-php-v1-0-231196049a3b@gmail.com>
- <20261113-mmu600-php-v1-4-231196049a3b@gmail.com>
-Content-Language: en-GB
-In-Reply-To: <20261113-mmu600-php-v1-4-231196049a3b@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20261126214756.39027-1-artem122novak@gmail.com> <awk74XffmMjYTJ2j@ryzen>
+In-Reply-To: <awk74XffmMjYTJ2j@ryzen>
+From: Artem Novak <artem122novak@gmail.com>
+Date: Fri, 27 Nov 2026 12:18:36 -0600
+X-Gm-Features: Aa3M54oZ8HUGbd8-fH22ZUEZRMgFxjOe_Amsq0wahO5RnRYzQOIFu-_S1bcSZv8
+Message-ID: <CAPufuhYk8dZP6JOgmhqDOa1JXpY5w-GCLnPkeLe_+brxNb9utA@mail.gmail.com>
+Subject: Re: [PATCH v3 0/4] ata: add missing newlines to error messages
+To: Niklas Cassel <cassel@kernel.org>
+Cc: dlemoal@kernel.org, linus.walleij@linaro.org, viresh.kumar@linaro.org, 
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 13/11/2026 4:38 pm, Arun Iyengar via B4 Relay wrote:
-> From: Arun Iyengar <aiyengar1990@gmail.com>
-> 
-> The StreamIDs of the six masters behind the RK3588 PHP SMMU come from
-> PHP GRF registers that reset to 0 and are never programmed, so the SMMU
-> can not tell the masters apart.
-> 
-> Assign StreamIDs 1-6 on both AXI channels. 0 stays unused, so a master
-> that loses its ID is aborted instead of using another device's tables.
+Hey Niklas,
 
-Urgh... could you at least hide this in U-Boot and have that inject the 
-corresponding "iommus" entries into the DTB it's passing, similar to 
-what the NXP Layerscape platforms do for their "iommu-map" generation?
+On Fri, Nov 27, 2026 at 2:14=E2=80=AFAM Niklas Cassel <cassel@kernel.org> w=
+rote:
+>
+> This series does not apply.
+>
+> Please base it on:
+> https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=
+=3Dfor-next
+>
+> or linux-next.
+>
 
-StreamIDs are really not meant to be programmable, and even if they are 
-then that is not supposed to be exposed to OSes. The Arm Base System 
-Architecture[1] explicitly calls this out:
+I've rebased the series onto libata for-next for v4.
+Thanks.
 
-   R_ITS_DEV_9: The relationships between a device, its StreamID and
-   its DeviceID are considered static by OS or hypervisor software. If
-   the mapping is not fixed by hardware, the relationship between a
-   StreamID and a DeviceID must not change after system initialization,
-   and OS drivers must not be required to set it up.
+Artem
 
-Even just in practical terms, how is this going to work if someone boots 
-a new kernel with an older DT or vice-versa, and one set of hard-coded 
-values then fails to correspond to the other?
+>
+> Hello Artem,
+>
+> On Thu, Nov 26, 2026 at 03:47:52PM -0600, Artem Novak wrote:
+> > This series adds missing trailing newlines to error and warning message=
+s
+> > in four ATA drivers.
+> >
+> > The changes are formatting-only and do not alter driver behaviour.
+> >
+> > Changes in v3:
+> > - Carry Damien's Reviewed-by tag on all four patches; it was
+> >   inadvertently included only on the sata_dwc_460ex patch in v2.
+> >
+> > Changes in v2:
+> > - Fix an additional missing newline in sata_dwc_error_intr(), as pointe=
+d
+> >   out by Damien Le Moal.
+> > - Add Damien's Reviewed-by tag to the sata_dwc_460ex patch.
+> >
+> > Artem Novak (4):
+> >   ata: pata_arasan_cf: add missing newline to warning
+> >   ata: pata_pxa: add missing newline to DMA warning
+> >   ata: sata_dwc_460ex: add missing newlines to error messages
+> >   ata: sata_gemini: add missing newlines to error messages
+> >
+> >  drivers/ata/pata_arasan_cf.c |  2 +-
+> >  drivers/ata/pata_pxa.c       |  2 +-
+> >  drivers/ata/sata_dwc_460ex.c | 10 +++++-----
+> >  drivers/ata/sata_gemini.c    |  4 ++--
+> >  4 files changed, 9 insertions(+), 9 deletions(-)
 
-Thanks,
-Robin.
-
-[1] https://support.arm.com/documentation/den0094/latest/
-
-> Signed-off-by: Arun Iyengar <aiyengar1990@gmail.com>
-> ---
->   drivers/soc/rockchip/grf.c | 37 +++++++++++++++++++++++++++++++++++++
->   1 file changed, 37 insertions(+)
-> 
-> diff --git a/drivers/soc/rockchip/grf.c b/drivers/soc/rockchip/grf.c
-> index b459607c118a..3f0f82a2119f 100644
-> --- a/drivers/soc/rockchip/grf.c
-> +++ b/drivers/soc/rockchip/grf.c
-> @@ -168,6 +168,40 @@ static const struct rockchip_grf_info rk3588_sysgrf __initconst = {
->   	.num_values = ARRAY_SIZE(rk3588_defaults),
->   };
->   
-> +/* PHP SMMU StreamIDs: bits 15:0, no write-enable mask */
-> +#define RK3588_PHP_GRF_GMAC0_SID_AW	0x0074
-> +#define RK3588_PHP_GRF_GMAC1_SID_AW	0x007c
-> +#define RK3588_PHP_GRF_SATA0_SID_AW	0x0084
-> +#define RK3588_PHP_GRF_SATA1_SID_AW	0x008c
-> +#define RK3588_PHP_GRF_SATA2_SID_AW	0x0094
-> +#define RK3588_PHP_GRF_GMAC0_SID_AR	0x009c
-> +#define RK3588_PHP_GRF_GMAC1_SID_AR	0x00a4
-> +#define RK3588_PHP_GRF_SATA0_SID_AR	0x00ac
-> +#define RK3588_PHP_GRF_SATA1_SID_AR	0x00b4
-> +#define RK3588_PHP_GRF_SATA2_SID_AR	0x00bc
-> +#define RK3588_PHP_GRF_USB3OTG2_SID_AR	0x00c4
-> +#define RK3588_PHP_GRF_USB3OTG2_SID_AW	0x00cc
-> +
-> +static const struct rockchip_grf_value rk3588_defaults_php_grf[] __initconst = {
-> +	{ "gmac0 write streamid", RK3588_PHP_GRF_GMAC0_SID_AW, 1 },
-> +	{ "gmac0 read streamid", RK3588_PHP_GRF_GMAC0_SID_AR, 1 },
-> +	{ "gmac1 write streamid", RK3588_PHP_GRF_GMAC1_SID_AW, 2 },
-> +	{ "gmac1 read streamid", RK3588_PHP_GRF_GMAC1_SID_AR, 2 },
-> +	{ "sata0 write streamid", RK3588_PHP_GRF_SATA0_SID_AW, 3 },
-> +	{ "sata0 read streamid", RK3588_PHP_GRF_SATA0_SID_AR, 3 },
-> +	{ "sata1 write streamid", RK3588_PHP_GRF_SATA1_SID_AW, 4 },
-> +	{ "sata1 read streamid", RK3588_PHP_GRF_SATA1_SID_AR, 4 },
-> +	{ "sata2 write streamid", RK3588_PHP_GRF_SATA2_SID_AW, 5 },
-> +	{ "sata2 read streamid", RK3588_PHP_GRF_SATA2_SID_AR, 5 },
-> +	{ "usb3otg2 write streamid", RK3588_PHP_GRF_USB3OTG2_SID_AW, 6 },
-> +	{ "usb3otg2 read streamid", RK3588_PHP_GRF_USB3OTG2_SID_AR, 6 },
-> +};
-> +
-> +static const struct rockchip_grf_info rk3588_phpgrf __initconst = {
-> +	.values = rk3588_defaults_php_grf,
-> +	.num_values = ARRAY_SIZE(rk3588_defaults_php_grf),
-> +};
-> +
->   static const struct of_device_id rockchip_grf_dt_match[] __initconst = {
->   	{
->   		.compatible = "rockchip,rk3036-grf",
-> @@ -202,6 +236,9 @@ static const struct of_device_id rockchip_grf_dt_match[] __initconst = {
->   	}, {
->   		.compatible = "rockchip,rk3576-ioc-grf",
->   		.data = (void *)&rk3576_iocgrf,
-> +	}, {
-> +		.compatible = "rockchip,rk3588-php-grf",
-> +		.data = (void *)&rk3588_phpgrf,
->   	}, {
->   		.compatible = "rockchip,rk3588-sys-grf",
->   		.data = (void *)&rk3588_sysgrf,
-> 
-
+>
+> Kind regards,
+> Niklas
