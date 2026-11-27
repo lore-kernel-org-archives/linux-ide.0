@@ -1,52 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795767270;
-	b=Ytu6aqs/7+3SRUqXMB0BsdlzLP5oYU82e+GRT4Q2aS79aJmiS3IdmQkufHe6aF3s1osY
-	 /4seg9EiVtPDMt7MRFwoD9unCduXO/FeIV+7ArBRaH/NstMTWdAsqJgWTI9lVDg7Jq8e4
-	 pKmWDMEhPT+IhEsqRwpmFg1t3Wlw1ZnIlmnLVobvtFwhsrzg9nPyq7Qo3nRoasVEsp8G9
-	 bTgzWIVWnBnkrCW4H1U4wXHNP1jNFIGZluzTJCevn3mTLebK222KlVw2aWqrYthu+Gnau
-	 Eazbl9k3n93Mn3bwHbYXhfXV+N5TVSV4Rmaqh4RyWdo/Eqb3GkwvyUHdzYwSLqr87jw==
+	t=1795775134;
+	b=CYugLaeMjYFcj2HUfzOYS+r4oZi1e90Ifn5Ivzmkalz51sp4N9aJOPvlfp4bhiqAzqxP
+	 TgA7/0ff1Ov/FsN+Ir75QJutY9MDwhUVpKW8nXd1crpBa+zGlIfUbJCSL+odmo//agUYj
+	 hdHh3N6SjLDh5JNXvJ/0MA6D5v8H4cH3ArWZRLs5V47W+kIQRa4KLHCprFoM8RuG3ZKwe
+	 7M0ui3VymWuPDGaxJPeYJQcnXSrZgVQ7qzNv45aUgGMOZB4ZS8aM9rangcrcT8J9dhQrQ
+	 U0yBqMVelbmIffzg9XWzw3I01rINBh/C406wnjFYsT/M+gkKzcQWMEQSwkHDygiU9YA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795767270;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=+xRVDCQpYyYjeXDffVhzpmBvTxYsEAe9NPA3pfZk1cg=;
-	b=QzUTwuWggKLir1waeBgXBQX4vd2JDXsFDVM4zc1vS7G38G9QJ7qAQOLawor20QexTo5M
-	 9PlrNsr2dL9CP3yCdhY+JTHJ6L5abnfvP5XoRQGrNtmnyNs6OGDNQdhKHisUjHQF4doG3
-	 QbYQpCkUpSd/c6HlIKhUm2+eTk1wYQ97kK/2e5SVEJp3gwgjov7W61D5ELkytfDmUiWqk
-	 U8VZZN2aRRczG9tZyAiCLerwNM62YLDrHUG8BKVGuoz7xJaU5ZyvpPI9wYjFaw7AAgh0e
-	 Mt4iQJCjwgUfbEh8mvRNBk/lrTj1Pem2P+ORjIFudNznhbsXk+mAMYztSKXX14rYbZA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795775134;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
+	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Mailer;
+	bh=cqrCtQ+crZqq5Hl0OWUmOQl8evhsbaMGP9KCXVs5fc8=;
+	b=ZYGDcvJtSky2o4CkxOB+H7Ov17VJRv7h2yRdYM6J0POI2llbynFNxLqI1QWvg8mQcRXx
+	 Z6Hd/2dymeoavZUchtAn3argRXD88jHu1C30Zdi0vSfi0ELAyY7a8z5kg4Lab+YfQ7g0T
+	 pNxof9a6O9q/y6Vn473b5JoqAuGMrfcWtPMIp1YkwqPergCILio/XooEVNxZbKNhCSPaA
+	 lUVsRiHzUWFGLq0qgozK1d+NeN5D1doNejOAGSxB6dIdYixdASJNbRyHc1Uo1KH6k/cOh
+	 ZKZBYx5sm+SmLRiB9mEjxv+eKiZzUjrmUt0cudW7+6aJsR8I7Aysa1WIN8p7hWIVyWQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N2B3mT00;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gqClurjm;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA3A1606A31C;
-	Fri, 27 Nov 2026 08:14:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF43606A31C;
+	Fri, 27 Nov 2026 10:25:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N2B3mT00
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB9471F000C1;
-	Fri, 27 Nov 2026 08:14:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gqClurjm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 778471F00897;
+	Fri, 27 Nov 2026 10:25:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795767270;
-	bh=+xRVDCQpYyYjeXDffVhzpmBvTxYsEAe9NPA3pfZk1cg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=N2B3mT00365QXwGcTsUAFdNdoDlen+nhm77FM77Ll6dCgzUmvFTv7+k+EieRGxET+
-	 EdNMTYsUJHVpaCxH+K7yE2CJ8kMhNuzwQXe0GeFqPkWsTBys9xLHSTMWdVpprFISIQ
-	 affzYqT+wspr29jm2LiLCOqKE9t54pE3a5/vxcQMs7tBt/rMB2m2wM/zRSTwcwnYQc
-	 gSBj5irxiFtaOMLNw2Ef5XyF9wuey4uWB1hbxxJ63ugh4isDaHopiEGUF+wQ+/iQGz
-	 IzE+8Asf88nQNmN6cLBkrMeEY+ZWiJJdYLrOHb7N+52Qq316icyIb9Vom6beFxpXif
-	 G89nGKvvaQ3Ng==
-Date: Fri, 27 Nov 2026 09:14:25 +0100
+	s=k20260515; t=1795775133;
+	bh=cqrCtQ+crZqq5Hl0OWUmOQl8evhsbaMGP9KCXVs5fc8=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=gqClurjml9seBU1xNL1zqZ4uzDStIMLehmpB+cej0+4cKs82+vSC9/C8tY7OQp5Tj
+	 NgpCAtm2ai8FJ+WQvovJBFlLLlcQg+lAZbyE+/9O+reVV7ENvKO9c3qivCaMB6sfw2
+	 ddElOIehHuX8t2aUZjWpRXICBlq0g3dUKc0RdvJzQdHNo6ZFDR2ep4Gatb43Ilt+qi
+	 f5d9JTWHN6my3TfO8Lsso3nEmgJKo7niHutFwhzpwqC/WWvRWSuUvjMl5JQPrw6nqv
+	 5JPAxN4PPPRMZr2+bILO2+Rl+ktGmfqfkMI0DvgHKITomcCuPc5mn2aIdqiMlLXy/a
+	 6EAluObFoESyw==
 From: Niklas Cassel <cassel@kernel.org>
-To: Artem Novak <artem122novak@gmail.com>
-Cc: dlemoal@kernel.org, linus.walleij@linaro.org, viresh.kumar@linaro.org,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/4] ata: add missing newlines to error messages
-Message-ID: <awk74XffmMjYTJ2j@ryzen>
-References: <20261126214756.39027-1-artem122novak@gmail.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: Mohammad Harsij Sani <mohammadsaniac@gmail.com>, stable@vger.kernel.org, 
+ linux-ide@vger.kernel.org
+In-Reply-To: <20261126142406.2753290-2-cassel@kernel.org>
+References: <20261126142406.2753290-2-cassel@kernel.org>
+Subject: Re: [PATCH] ata: libata-core: Disable LPM on ADATA SU650 with
+ firmware XD0R3C0F
+Message-Id: <179577513220.3002126.6665251692747732688.b4-ty@kernel.org>
+Date: Fri, 27 Nov 2026 11:25:32 +0100
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Post: <mailto:linux-ide@vger.kernel.org>
@@ -56,46 +59,22 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-ide+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261126214756.39027-1-artem122novak@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-Hello Artem,
-
-On Thu, Nov 26, 2026 at 03:47:52PM -0600, Artem Novak wrote:
-> This series adds missing trailing newlines to error and warning messages
-> in four ATA drivers.
+On Thu, 26 Nov 2026 15:24:07 +0100, Niklas Cassel wrote:
+> ADATA SU650 SSDs with firmware XD0R3C0F drop off the bus with NCQ command
+> timeouts when LPM is enabled. Disable LPM for this firmware only, as the
+> SU650 has shipped with several different controllers.
 > 
-> The changes are formatting-only and do not alter driver behaviour.
 > 
-> Changes in v3:
-> - Carry Damien's Reviewed-by tag on all four patches; it was
->   inadvertently included only on the sata_dwc_460ex patch in v2.
-> 
-> Changes in v2:
-> - Fix an additional missing newline in sata_dwc_error_intr(), as pointed
->   out by Damien Le Moal.
-> - Add Damien's Reviewed-by tag to the sata_dwc_460ex patch.
-> 
-> Artem Novak (4):
->   ata: pata_arasan_cf: add missing newline to warning
->   ata: pata_pxa: add missing newline to DMA warning
->   ata: sata_dwc_460ex: add missing newlines to error messages
->   ata: sata_gemini: add missing newlines to error messages
-> 
->  drivers/ata/pata_arasan_cf.c |  2 +-
->  drivers/ata/pata_pxa.c       |  2 +-
->  drivers/ata/sata_dwc_460ex.c | 10 +++++-----
->  drivers/ata/sata_gemini.c    |  4 ++--
->  4 files changed, 9 insertions(+), 9 deletions(-)
 
-This series does not apply.
+Applied to libata/linux.git (for-7.4-fixes), thanks!
 
-Please base it on:
-https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-next
-
-or linux-next.
-
+[1/1] ata: libata-core: Disable LPM on ADATA SU650 with firmware XD0R3C0F
+      https://git.kernel.org/libata/linux/c/eca06bf5
 
 Kind regards,
 Niklas
+
